@@ -366,7 +366,11 @@ public class NGSecretServiceImpl implements NGSecretService {
       if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
           && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())
           && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
-        fileService.deleteFile(String.valueOf(encryptedData.getEncryptedValue()), CONFIGS);
+        try {
+          fileService.deleteFile(String.valueOf(encryptedData.getEncryptedValue()), CONFIGS);
+        } catch (Exception exception) {
+          return false;
+        }
       }
       return wingsPersistence.delete(encryptedData);
     }

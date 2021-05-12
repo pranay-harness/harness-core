@@ -116,6 +116,8 @@ public class ManagerToNGManagerEncryptedDataMigrationHandler implements Handler<
       encryptedData.setId(null);
       encryptedDataDao.save(encryptedData);
     }
+    getResponse(secretManagerClient.deleteAfterMigration(secret.getIdentifier(), secret.getAccountIdentifier(),
+        secret.getOrgIdentifier(), secret.getProjectIdentifier()));
     secret.setMigratedFromManager(true);
     secretRepository.save(secret);
     log.info(String.format(
@@ -124,7 +126,7 @@ public class ManagerToNGManagerEncryptedDataMigrationHandler implements Handler<
         secret.getIdentifier()));
   }
 
-  private NGEncryptedData fromEncryptedDataMigrationDTO(EncryptedDataMigrationDTO encryptedDataMigrationDTO) {
+  public static NGEncryptedData fromEncryptedDataMigrationDTO(EncryptedDataMigrationDTO encryptedDataMigrationDTO) {
     return NGEncryptedData.builder()
         .id(encryptedDataMigrationDTO.getUuid())
         .accountIdentifier(encryptedDataMigrationDTO.getAccountIdentifier())

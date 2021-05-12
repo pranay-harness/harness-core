@@ -8,6 +8,7 @@ import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.ng.core.migration.ManagerToNGManagerEncryptedDataMigrationHandler.fromEncryptedDataMigrationDTO;
 import static io.harness.remote.client.RestClientUtils.getResponse;
 import static io.harness.secretmanagerclient.SecretType.SecretFile;
 import static io.harness.secretmanagerclient.SecretType.SecretText;
@@ -56,6 +57,7 @@ import software.wings.settings.SettingVariableTypes;
 import com.google.common.io.ByteStreams;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -84,21 +86,26 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
   private final SecretsFileService secretsFileService;
   private final SecretManagerClient secretManagerClient;
   private final GlobalEncryptDecryptClient globalEncryptDecryptClient;
+  private final boolean ngSecretMigrationCompleted;
 
   @Inject
   public NGEncryptedDataServiceImpl(NGEncryptedDataDao encryptedDataDao, KmsEncryptorsRegistry kmsEncryptorsRegistry,
       VaultEncryptorsRegistry vaultEncryptorsRegistry, SecretsFileService secretsFileService,
-      SecretManagerClient secretManagerClient, GlobalEncryptDecryptClient globalEncryptDecryptClient) {
+      SecretManagerClient secretManagerClient, GlobalEncryptDecryptClient globalEncryptDecryptClient,
+      @Named("ngSecretMigrationCompleted") boolean ngSecretMigrationCompleted) {
     this.encryptedDataDao = encryptedDataDao;
     this.kmsEncryptorsRegistry = kmsEncryptorsRegistry;
     this.vaultEncryptorsRegistry = vaultEncryptorsRegistry;
     this.secretsFileService = secretsFileService;
     this.secretManagerClient = secretManagerClient;
     this.globalEncryptDecryptClient = globalEncryptDecryptClient;
+    this.ngSecretMigrationCompleted = ngSecretMigrationCompleted;
   }
 
   @Override
   public NGEncryptedData createSecretText(String accountIdentifier, SecretDTOV2 dto) {
+    validateSecretDoesNotExist(
+        accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), dto.getIdentifier());
     SecretTextSpecDTO secret = (SecretTextSpecDTO) dto.getSpec();
 
     SecretManagerConfigDTO secretManager = getSecretManagerOrThrow(accountIdentifier, dto.getOrgIdentifier(),
@@ -122,8 +129,23 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     return encryptedDataDao.save(encryptedData);
   }
 
+  private void validateSecretDoesNotExist(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    NGEncryptedData encryptedData = get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    if (encryptedData == null && !ngSecretMigrationCompleted) {
+      encryptedData = fromEncryptedDataMigrationDTO(getResponse(secretManagerClient.getEncryptedDataMigrationDTO(
+          identifier, accountIdentifier, orgIdentifier, projectIdentifier)));
+    }
+    if (encryptedData != null) {
+      throw new InvalidRequestException(
+          String.format("Secret with identifier %s already exists in this scope", identifier));
+    }
+  }
+
   @Override
   public NGEncryptedData createSecretFile(String accountIdentifier, SecretDTOV2 dto, InputStream inputStream) {
+    validateSecretDoesNotExist(
+        accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), dto.getIdentifier());
     SecretFileSpecDTO secret = (SecretFileSpecDTO) dto.getSpec();
 
     SecretManagerConfigDTO secretManager = getSecretManagerOrThrow(accountIdentifier, dto.getOrgIdentifier(),
@@ -185,21 +207,13 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     return encryptedDataDao.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
   }
 
-  private NGEncryptedData getOrThrow(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
-    NGEncryptedData encryptedData = get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    if (encryptedData != null) {
-      return encryptedData;
-    }
-    throw new InvalidRequestException("No such secret found", INVALID_REQUEST, USER);
-  }
-
   @Override
   public NGEncryptedData updateSecretText(String accountIdentifier, SecretDTOV2 dto) {
     SecretTextSpecDTO secret = (SecretTextSpecDTO) dto.getSpec();
 
-    NGEncryptedData existingEncryptedData =
-        getOrThrow(accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), dto.getIdentifier());
+    NGEncryptedData existingEncryptedData = getFromNGManagerThenManagerWithFileContentOrThrow(
+        accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), dto.getIdentifier());
+    validateUpdateRequest(existingEncryptedData, dto);
 
     SecretManagerConfigDTO secretManager = getSecretManagerOrThrow(accountIdentifier, dto.getOrgIdentifier(),
         dto.getProjectIdentifier(), secret.getSecretManagerIdentifier(), false);
@@ -239,12 +253,79 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     return encryptedDataDao.save(existingEncryptedData);
   }
 
+  private void validateUpdateRequest(NGEncryptedData existingEncryptedData, SecretDTOV2 dto) {
+    if (existingEncryptedData.getType() == SettingVariableTypes.CONFIG_FILE && !SecretFile.equals(dto.getType())) {
+      throw new InvalidRequestException("Cannot change secret type after creation.", INVALID_REQUEST, USER);
+    }
+    if (existingEncryptedData.getType() == SettingVariableTypes.SECRET_TEXT && !SecretText.equals(dto.getType())) {
+      throw new InvalidRequestException("Cannot change secret type after creation.", INVALID_REQUEST, USER);
+    }
+    String secretManagerIdentifier = getSecretManagerIdentifier(dto);
+    if ((existingEncryptedData.getSecretManagerIdentifier() != null
+            && !existingEncryptedData.getKmsId().equals(secretManagerIdentifier))
+        || (secretManagerIdentifier != null
+            && !secretManagerIdentifier.equals(existingEncryptedData.getSecretManagerIdentifier()))) {
+      throw new InvalidRequestException("Cannot change secret manager after creation.", INVALID_REQUEST, USER);
+    }
+  }
+
+  private String getSecretManagerIdentifier(SecretDTOV2 dto) {
+    if (SecretText.equals(dto.getType())) {
+      return ((SecretTextSpecDTO) dto.getSpec()).getSecretManagerIdentifier();
+    } else if (SecretFile.equals(dto.getType())) {
+      return ((SecretFileSpecDTO) dto.getSpec()).getSecretManagerIdentifier();
+    }
+    return null;
+  }
+
+  private NGEncryptedData getFromNGManagerThenManagerWithFileContentOrThrow(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    NGEncryptedData encryptedData = get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    if (encryptedData != null) {
+      if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
+          && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())
+          && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
+        char[] fileContent = secretsFileService.getFileContents(String.valueOf(encryptedData.getEncryptedValue()));
+        encryptedData.setEncryptedValue(fileContent);
+      }
+      return encryptedData;
+    } else if (!ngSecretMigrationCompleted) {
+      encryptedData = fromEncryptedDataMigrationDTO(getResponse(secretManagerClient.getEncryptedDataMigrationDTO(
+          identifier, accountIdentifier, orgIdentifier, projectIdentifier)));
+      if (encryptedData != null) {
+        encryptedData.setId(UUIDGenerator.generateUuid());
+        return encryptedData;
+      }
+    }
+    throw new InvalidRequestException(
+        String.format("Secret with identifier %s does not exist in this scope", identifier));
+  }
+
+  private NGEncryptedData getFromManagerWithFileContent(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    if (!ngSecretMigrationCompleted) {
+      return fromEncryptedDataMigrationDTO(getResponse(secretManagerClient.getEncryptedDataMigrationDTO(
+          identifier, accountIdentifier, orgIdentifier, projectIdentifier)));
+    }
+    return null;
+  }
+
   @Override
   public NGEncryptedData updateSecretFile(String accountIdentifier, SecretDTOV2 dto, InputStream inputStream) {
     SecretFileSpecDTO secret = (SecretFileSpecDTO) dto.getSpec();
-
     NGEncryptedData existingEncryptedData =
-        getOrThrow(accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), dto.getIdentifier());
+        get(accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), dto.getIdentifier());
+    boolean fromManager = false;
+    if (!Optional.ofNullable(existingEncryptedData).isPresent() && !ngSecretMigrationCompleted) {
+      existingEncryptedData = getFromManagerWithFileContent(
+          accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), dto.getIdentifier());
+      fromManager = true;
+    }
+    if (existingEncryptedData == null) {
+      throw new InvalidRequestException(
+          String.format("Secret with identifier %s does not exist in this scope", dto.getIdentifier()));
+    }
+    validateUpdateRequest(existingEncryptedData, dto);
 
     SecretManagerConfigDTO secretManager = getSecretManagerOrThrow(accountIdentifier, dto.getOrgIdentifier(),
         dto.getProjectIdentifier(), secret.getSecretManagerIdentifier(), false);
@@ -258,7 +339,7 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
       deleteSecretInSecretManager(
           accountIdentifier, existingEncryptedData, SecretManagerConfigMapper.fromDTO(secretManager));
     }
-    if (Optional.ofNullable(existingEncryptedData.getEncryptedValue()).isPresent()
+    if (!fromManager && Optional.ofNullable(existingEncryptedData.getEncryptedValue()).isPresent()
         && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(existingEncryptedData.getEncryptionType())) {
       secretsFileService.deleteFile(existingEncryptedData.getEncryptedValue());
     }
@@ -310,10 +391,12 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
 
   @Override
   public boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
-    NGEncryptedData encryptedData = getOrThrow(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-
+    NGEncryptedData encryptedData = get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    if (!Optional.ofNullable(encryptedData).isPresent()) {
+      return false;
+    }
     SecretManagerConfigDTO secretManager = getSecretManagerOrThrow(
-        accountIdentifier, orgIdentifier, projectIdentifier, encryptedData.getSecretManagerIdentifier(), true);
+        accountIdentifier, orgIdentifier, projectIdentifier, encryptedData.getSecretManagerIdentifier(), false);
 
     if (isReadOnlySecretManager(secretManager) && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
       throw new SecretManagementException(
