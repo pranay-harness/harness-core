@@ -46,6 +46,7 @@ import net.jodah.expiringmap.ExpirationPolicy;
 import net.jodah.expiringmap.ExpiringMap;
 import okhttp3.Credentials;
 import okhttp3.Headers;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import retrofit2.Response;
 
@@ -376,7 +377,10 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       case 401:
         throw new InvalidArtifactServerException("Invalid Docker Registry credentials", USER);
       default:
-        throw new InvalidArtifactServerException(response.message(), USER);
+        throw new InvalidArtifactServerException(StringUtils.isNotBlank(response.message())
+                ? response.message()
+                : String.format("Server responded with the following error code - %d", code),
+            USER);
     }
   }
 

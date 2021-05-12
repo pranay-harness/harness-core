@@ -41,6 +41,7 @@ public class PipelineExecuteHelper {
   private final PlanCreatorMergeService planCreatorMergeService;
   private final ValidateAndMergeHelper validateAndMergeHelper;
   private final PipelineRbacService pipelineRbacServiceImpl;
+  private final PrincipalInfoHelper principalInfoHelper;
 
   public PlanExecution runPipelineWithInputSetPipelineYaml(@NotNull String accountId, @NotNull String orgIdentifier,
       @NotNull String projectIdentifier, @NotNull String pipelineIdentifier, String inputSetPipelineYaml,
@@ -67,7 +68,7 @@ public class PipelineExecuteHelper {
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml);
     executionMetadataBuilder.setPipelineIdentifier(pipelineIdentifier);
     executionMetadataBuilder.setYaml(pipelineYaml);
-    executionMetadataBuilder.setPrincipalInfo(PrincipalInfoHelper.getPrincipalInfoFromSecurityContext());
+    executionMetadataBuilder.setPrincipalInfo(principalInfoHelper.getPrincipalInfoFromSecurityContext());
 
     return startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, executionMetadataBuilder.build());
   }
@@ -95,7 +96,7 @@ public class PipelineExecuteHelper {
     executionMetadataBuilder.setPipelineIdentifier(pipelineIdentifier);
     executionMetadataBuilder.setInputSetYaml(mergedRuntimeInputYaml);
     executionMetadataBuilder.setYaml(pipelineYaml);
-    executionMetadataBuilder.setPrincipalInfo(PrincipalInfoHelper.getPrincipalInfoFromSecurityContext());
+    executionMetadataBuilder.setPrincipalInfo(principalInfoHelper.getPrincipalInfoFromSecurityContext());
     return startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, executionMetadataBuilder.build());
   }
 

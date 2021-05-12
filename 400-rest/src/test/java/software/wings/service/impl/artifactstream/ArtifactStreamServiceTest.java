@@ -435,7 +435,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(yamlPushService, times(2))
         .pushYamlChangeSet(
             any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
-    verify(artifactService).deleteWhenArtifactSourceNameChanged(jenkinsArtifactStream);
+    verify(artifactService).deleteByArtifactStreamId(APP_ID, savedJenkinsArtifactStream.getUuid());
     verify(triggerService).updateByArtifactStream(savedJenkinsArtifactStream.getUuid());
     assertThat(updatedJenkinsArtifactStream.getCollectionStatus()).isEqualTo(UNSTABLE.name());
   }
@@ -465,7 +465,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(yamlPushService, times(2))
         .pushYamlChangeSet(
             any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
-    verify(artifactService).deleteWhenArtifactSourceNameChanged(jenkinsArtifactStream);
+    verify(artifactService).deleteByArtifactStreamId(GLOBAL_APP_ID, savedArtifactSteam.getUuid());
     //    verify(triggerService).updateByApp(APP_ID);
     assertThat(updatedJenkinsArtifactStream.getCollectionStatus()).isEqualTo(UNSTABLE.name());
   }
@@ -631,7 +631,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(yamlPushService, times(2))
         .pushYamlChangeSet(
             any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
-    verify(artifactService).deleteWhenArtifactSourceNameChanged(bambooArtifactStream);
+    verify(artifactService).deleteByArtifactStreamId(APP_ID, savedArtifactSteam.getUuid());
     verify(triggerService).updateByArtifactStream(savedArtifactSteam.getUuid());
   }
 
@@ -655,8 +655,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(yamlPushService, times(2))
         .pushYamlChangeSet(
             any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
-    verify(artifactService).deleteWhenArtifactSourceNameChanged(bambooArtifactStream);
-    //    verify(triggerService).updateByApp(APP_ID);
+    verify(artifactService).deleteByArtifactStreamId(GLOBAL_APP_ID, savedArtifactSteam.getUuid());
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -2610,7 +2609,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(yamlPushService, times(2))
         .pushYamlChangeSet(
             any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
-    verify(artifactService).deleteWhenArtifactSourceNameChanged(azureArtifactsArtifactStream);
+    verify(artifactService).deleteByArtifactStreamId(APP_ID, savedArtifactSteam.getUuid());
     verify(triggerService).updateByArtifactStream(savedArtifactSteam.getUuid());
   }
 
@@ -2625,7 +2624,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(yamlPushService, times(2))
         .pushYamlChangeSet(
             any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
-    verify(artifactService).deleteWhenArtifactSourceNameChanged(azureArtifactsArtifactStream);
+    verify(artifactService).deleteByArtifactStreamId(GLOBAL_APP_ID, savedArtifactSteam.getUuid());
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -3297,7 +3296,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     assertThat(artifactStreamService.get(updatedArtifactStream.getUuid())).isNull();
 
-    verify(artifactService, times(0)).deleteWhenArtifactSourceNameChanged(customArtifactStream);
+    verify(artifactService, times(0)).deleteByArtifactStreamId(anyString(), anyString());
     verify(triggerService).updateByArtifactStream(updatedArtifactStream.getUuid());
     verify(buildSourceService, times(1)).validateArtifactSource(savedArtifactSteam);
   }
@@ -3381,7 +3380,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     assertThat(artifactStreamService.get(updatedArtifactStream.getUuid())).isNull();
 
-    verify(artifactService, times(0)).deleteWhenArtifactSourceNameChanged(customArtifactStream);
+    verify(artifactService, times(0)).deleteByArtifactStreamId(anyString(), anyString());
     verify(triggerService).updateByArtifactStream(updatedArtifactStream.getUuid());
     verify(buildSourceService, times(1)).validateArtifactSource(savedArtifactSteam);
   }
@@ -3485,7 +3484,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     artifactStreamService.delete(APP_ID, updatedArtifactStream.getUuid());
     assertThat(artifactStreamService.get(updatedArtifactStream.getUuid())).isNull();
 
-    verify(artifactService, times(0)).deleteWhenArtifactSourceNameChanged(customArtifactStream);
+    verify(artifactService, times(0)).deleteByArtifactStreamId(anyString(), anyString());
     verify(buildSourceService, times(1)).validateArtifactSource(savedArtifactSteam);
   }
 
@@ -3566,7 +3565,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     artifactStreamService.delete(APP_ID, updatedArtifactStream.getUuid());
     assertThat(artifactStreamService.get(updatedArtifactStream.getUuid())).isNull();
 
-    verify(artifactService, times(0)).deleteWhenArtifactSourceNameChanged(customArtifactStream);
+    verify(artifactService, times(0)).deleteByArtifactStreamId(anyString(), anyString());
     verify(buildSourceService, times(0)).validateArtifactSource(savedArtifactSteam);
   }
 
@@ -4094,7 +4093,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(yamlPushService, times(2))
         .pushYamlChangeSet(
             any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
-    verify(artifactService).deleteWhenArtifactSourceNameChanged(nexusArtifactStream);
+    verify(artifactService).deleteByArtifactStreamId(APP_ID, savedArtifactSteam.getUuid());
     verify(triggerService).updateByArtifactStream(savedArtifactSteam.getUuid());
   }
 

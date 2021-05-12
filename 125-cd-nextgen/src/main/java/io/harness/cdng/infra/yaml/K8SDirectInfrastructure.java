@@ -6,12 +6,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.filters.ConnectorRefExtractorHelper;
 import io.harness.filters.WithConnectorRef;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 
@@ -66,11 +64,6 @@ public class K8SDirectInfrastructure implements Infrastructure, Visitable, WithC
       resultantInfra = resultantInfra.withReleaseName(config.getReleaseName());
     }
     return resultantInfra;
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.SPEC).isPartOfFQN(false).build();
   }
 
   @Override

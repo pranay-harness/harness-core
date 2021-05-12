@@ -235,7 +235,7 @@ components:
       scheme: bearer
   parameters:
     accountQueryParam:
-      name: account
+      name: accountIdentifier
       in: query
       required: true
       description: Account

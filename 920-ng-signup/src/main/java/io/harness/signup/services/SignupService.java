@@ -13,4 +13,6 @@ public interface SignupService {
   UserInfo signup(SignupDTO dto, String captchaToken) throws WingsException;
 
   UserInfo oAuthSignup(OAuthSignupDTO dto) throws WingsException;
+
+  void resendVerificationEmail(String userId);
 }

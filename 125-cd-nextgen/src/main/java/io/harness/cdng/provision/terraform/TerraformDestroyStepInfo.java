@@ -9,7 +9,6 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.validation.Validator;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.Visitable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -50,11 +49,6 @@ public class TerraformDestroyStepInfo extends TerraformDestroyBaseStepInfo imple
   @JsonIgnore
   public String getFacilitatorType() {
     return OrchestrationFacilitatorType.TASK;
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(StepSpecTypeConstants.TERRAFORM_DESTROY).isPartOfFQN(false).build();
   }
 
   @Override

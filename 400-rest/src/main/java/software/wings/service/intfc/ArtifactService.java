@@ -230,6 +230,8 @@ public interface ArtifactService extends OwnedByArtifactStream {
 
   void deleteWhenArtifactSourceNameChanged(ArtifactStream artifactStream);
 
+  void deleteByArtifactStreamId(String appId, String artifactStreamId);
+
   List<Artifact> listByIds(String accountId, Collection<String> artifactIds);
 
   List<Artifact> listByAccountId(String accountId);

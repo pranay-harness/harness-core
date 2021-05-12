@@ -3,7 +3,6 @@ package io.harness.cdng.pipeline.stepinfo;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.cdstepinfo.ShellScriptStepInfoVisitorHelper;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.executions.steps.StepSpecTypeConstants;
@@ -18,7 +17,6 @@ import io.harness.steps.common.script.ShellScriptSourceWrapper;
 import io.harness.steps.common.script.ShellScriptStep;
 import io.harness.steps.common.script.ShellScriptStepParameters;
 import io.harness.steps.common.script.ShellType;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.variables.NGVariable;
@@ -65,11 +63,6 @@ public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDSt
   @JsonIgnore
   public String getFacilitatorType() {
     return OrchestrationFacilitatorType.TASK;
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.SHELL_SCRIPT_STEP).isPartOfFQN(false).build();
   }
 
   @Override

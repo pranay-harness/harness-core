@@ -7,7 +7,6 @@ import io.harness.pms.contracts.plan.InitializeSdkRequest;
 import io.harness.pms.contracts.plan.PmsServiceGrpc;
 import io.harness.pms.contracts.plan.Types;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventListener;
 import io.harness.pms.sdk.core.execution.listeners.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.interrupt.InterruptEventListener;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
@@ -87,7 +86,6 @@ public class PmsSdkInitHelper {
 
   private static void registerQueueListeners(Injector injector) {
     QueueListenerController queueListenerController = injector.getInstance(Key.get(QueueListenerController.class));
-    queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 5);
     queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
     queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
     queueListenerController.register(injector.getInstance(InterruptEventListener.class), 1);

@@ -186,6 +186,27 @@ for tfConfigInspectVersion in v1.0; do
 
 done
 
+for scmVersion in 444bed53; do
+  echo "Adding scm" $scmVersion
+
+  SCM_LINUX_DIR="${IMAGES_DIR}/scm/linux/$scmVersion/"
+  SCM_MAC_DIR="${IMAGES_DIR}/scm/darwin/$scmVersion/"
+
+  SCM_LINUX_URL=https://app.harness.io/storage/harness-download/scm/"$scmVersion"/linux/amd64/scm
+  SCM_MAC_URL=https://app.harness.io/storage/harness-download/scm/"$scmVersion"/darwin/amd64/scm
+
+  echo "$SCM_LINUX_DIR"
+  echo "$SCM_MAC_DIR"
+
+  mkdir -p "$SCM_LINUX_DIR"
+  mkdir -p "$SCM_MAC_DIR"
+
+  curl -L -o "${SCM_LINUX_DIR}scm" "$SCM_LINUX_URL"
+  curl -L -o "${SCM_MAC_DIR}scm" "$SCM_MAC_URL"
+
+
+done
+
 
 
 function setupDelegateJars(){
@@ -219,7 +240,7 @@ function setupDelegateJars(){
 function setupClientUtils(){
    echo "################################ Setting up Client Utils ################################"
 
-   echo "Copying kubectl go-template helm chartmuseum tf-config-inspect and oc kustomize"
+   echo "Copying kubectl go-template helm chartmuseum tf-config-inspect oc kustomize and scm"
 
     for platform in linux darwin; do
         for kubectlversion in v1.13.2; do
@@ -260,6 +281,11 @@ function setupClientUtils(){
         for ocversion in v4.2.16; do
             mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-oc/release/$ocversion/bin/${platform}/amd64/
             cp images/oc/${platform}/$ocversion/oc ${STORAGE_DIR_LOCATION}/harness-download/harness-oc/release/$ocversion/bin/${platform}/amd64/
+        done
+
+        for scmVersion in 444bed53; do
+            mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-scm/release/$scmVersion/bin/${platform}/amd64/
+            cp images/scm/${platform}/$scmVersion/scm ${STORAGE_DIR_LOCATION}/harness-download/harness-scm/release/$scmVersion/bin/${platform}/amd64/
         done
     done
 }

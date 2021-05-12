@@ -3,8 +3,8 @@ package io.harness.serializer;
 import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cvng.cdng.beans.CVStepInfoBase;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.serializer.kryo.PmsContractsKryoRegistrar;
 import io.harness.serializer.kryo.CVNGKryoRegistrar;
 import io.harness.serializer.morphia.CVNextGenMorphiaRegister;
@@ -28,6 +28,7 @@ public class CvNextGenRegistrars {
           .add(PmsContractsKryoRegistrar.class)
           .addAll(NotificationClientRegistrars.kryoRegistrars)
           .addAll(OrchestrationBeansRegistrars.kryoRegistrars)
+          .addAll(OrchestrationStepsModuleRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -37,6 +38,8 @@ public class CvNextGenRegistrars {
           .addAll(NotificationClientRegistrars.morphiaRegistrars)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .addAll(OrchestrationBeansRegistrars.morphiaRegistrars)
+          .addAll(OrchestrationStepsModuleRegistrars.morphiaRegistrars)
+          .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
@@ -51,7 +54,7 @@ public class CvNextGenRegistrars {
                    .availableAtProjectLevel(true)
                    .availableAtOrgLevel(false)
                    .availableAtAccountLevel(false)
-                   .clazz(CVStepInfoBase.class)
+                   .clazz(StepElementConfig.class)
                    .build())
           .build();
 }

@@ -4,9 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.cdng.artifact.bean.ArtifactSpecWrapper;
 import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.artifact.ArtifactListConfigVisitorHelper;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -57,10 +55,5 @@ public class ArtifactListConfig implements Visitable {
       sidecars.forEach(sidecar -> children.add("sidecars", sidecar));
     }
     return children;
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.ARTIFACT_LIST_CONFIG).build();
   }
 }

@@ -325,6 +325,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         .thenReturn("http://localhost:" + port + "/delegateci.txt");
     when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
     when(mainConfiguration.getKubectlVersion()).thenReturn("v1.12.2");
+    when(mainConfiguration.getScmVersion()).thenReturn("542f4642");
     when(mainConfiguration.getOcVersion()).thenReturn("v4.2.16");
     when(mainConfiguration.getCdnConfig()).thenReturn(cdnConfig);
     HashMap<String, JreConfig> jreConfigMap = new HashMap<>();

@@ -1038,10 +1038,17 @@
               "type": "string"
             },
             "paths": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             "repoName": {
               "type": "string"

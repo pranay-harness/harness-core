@@ -27,6 +27,15 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class JsonNodeUtils {
   public static JsonNode merge(JsonNode mainNode, JsonNode updateNode) {
+    if (mainNode.isObject() && updateNode.isObject()) {
+      mergeInternal(mainNode, updateNode);
+    } else if (mainNode.isArray() && updateNode.isArray()) {
+      mergeJsonArray((ArrayNode) mainNode, (ArrayNode) updateNode);
+    }
+    return mainNode;
+  }
+
+  private static JsonNode mergeInternal(JsonNode mainNode, JsonNode updateNode) {
     Iterator<String> fieldNames = updateNode.fieldNames();
     while (fieldNames.hasNext()) {
       String fieldName = fieldNames.next();
@@ -41,6 +50,23 @@ public class JsonNodeUtils {
       }
     }
     return mainNode;
+  }
+
+  private static void mergeJsonArray(ArrayNode src, ArrayNode other) {
+    for (int i = 0; i < other.size(); i++) {
+      JsonNode s = src.get(i);
+      JsonNode v = other.get(i);
+      if (s == null) {
+        src.add(v);
+      } else if (v.isObject() && s.isObject()) {
+        merge(s, v);
+      } else if (v.isArray() && s.isArray()) {
+        mergeJsonArray((ArrayNode) s, (ArrayNode) v);
+      } else {
+        src.remove(i);
+        src.insert(i, v);
+      }
+    }
   }
 
   public static JsonNode deletePropertiesInJsonNode(ObjectNode jsonNode, String... properties) {

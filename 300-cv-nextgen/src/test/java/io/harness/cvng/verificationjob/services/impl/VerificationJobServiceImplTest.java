@@ -23,7 +23,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.activity.entities.CDNGActivitySource;
-import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.beans.job.TestVerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO;
@@ -43,7 +42,6 @@ import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.Arrays;
@@ -351,7 +349,6 @@ public class VerificationJobServiceImplTest extends CvNextGenTestBase {
     TestVerificationJobDTO testVerificationJobDTO = new TestVerificationJobDTO();
     testVerificationJobDTO.setIdentifier(identifier);
     testVerificationJobDTO.setJobName(generateUuid());
-    testVerificationJobDTO.setDataSources(Lists.newArrayList(DataSourceType.APP_DYNAMICS));
     testVerificationJobDTO.setMonitoringSources(Arrays.asList(generateUuid()));
     testVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM.name());
     testVerificationJobDTO.setServiceIdentifier(generateUuid());

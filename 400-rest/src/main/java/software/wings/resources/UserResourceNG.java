@@ -29,6 +29,7 @@ import software.wings.service.intfc.UserService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -64,6 +65,8 @@ public class UserResourceNG {
   private final UserService userService;
   private final TwoFactorAuthenticationManager twoFactorAuthenticationManager;
   private static final String ACCOUNT_ADMINISTRATOR_USER_GROUP = "Account Administrator";
+  private static final String CONFIRM_URL = "confirm";
+  private static final String VERIFY_URL = "verify";
 
   @POST
   public RestResponse<UserInfo> createNewUserAndSignIn(UserRequestDTO userRequest) {
@@ -203,6 +206,23 @@ public class UserResourceNG {
         twoFactorAuthenticationManager.disableTwoFactorAuthentication(userService.getUserByEmail(emailId)))));
   }
 
+  @POST
+  @Path("/{urlType}/url")
+  public RestResponse<Optional<String>> generateSignupNotificationUrl(
+      @PathParam("urlType") String urlType, @Body UserInfo userInfo) {
+    String url = null;
+    try {
+      if (VERIFY_URL.equals(urlType)) {
+        url = userService.generateVerificationUrl(userInfo.getUuid(), userInfo.getDefaultAccountId());
+      } else if (CONFIRM_URL.equals(urlType)) {
+        url = userService.generateLoginUrl(userInfo.getDefaultAccountId());
+      }
+    } catch (URISyntaxException e) {
+      throw new InvalidRequestException(String.format("URL type [%s] failed to be generated", urlType), e);
+    }
+    return new RestResponse<>(Optional.ofNullable(url));
+  }
+
   private List<UserInfo> convertUserToNgUser(List<User> userList) {
     return userList.stream()
         .map(user
@@ -216,6 +236,7 @@ public class UserResourceNG {
                                       y -> ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(y.getName()) && y.isDefault()))
                               .orElse(false))
                    .twoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled())
+                   .emailVerified(user.isEmailVerified())
                    .build())
         .collect(Collectors.toList());
   }
@@ -230,6 +251,7 @@ public class UserResourceNG {
         .uuid(user.getUuid())
         .defaultAccountId(user.getDefaultAccountId())
         .twoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled())
+        .emailVerified(user.isEmailVerified())
         .token(user.getToken())
         .admin(
             Optional.ofNullable(user.getUserGroups())

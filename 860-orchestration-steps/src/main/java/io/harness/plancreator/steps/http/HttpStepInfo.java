@@ -15,7 +15,6 @@ import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.http.HttpBaseStepInfo;
 import io.harness.steps.http.HttpStep;
 import io.harness.steps.http.HttpStepParameters;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -75,11 +74,6 @@ public class HttpStepInfo extends HttpBaseStepInfo implements PMSStepInfo, Visit
   @Override
   public VisitableChildren getChildrenToWalk() {
     return VisitableChildren.builder().build();
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(StepSpecTypeConstants.HTTP).isPartOfFQN(false).build();
   }
 
   @Override
