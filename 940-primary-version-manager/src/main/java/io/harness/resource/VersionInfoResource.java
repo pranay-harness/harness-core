@@ -1,4 +1,4 @@
-package io.harness.resources;
+package io.harness.resource;
 
 import io.harness.controller.PrimaryVersionController;
 import io.harness.rest.RestResponse;
@@ -11,6 +11,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -27,12 +28,13 @@ public class VersionInfoResource {
   @GET
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "get version for CVNG service", nickname = "getCvVersion")
   public RestResponse<VersionPackage> get() {
     return new RestResponse<>(VersionPackage.builder()
                                   .versionInfo(versionInfoManager.getVersionInfo())
                                   .runtimeInfo(RuntimeInfo.builder()
-                                                   .primary(primaryVersionController.isPrimary())
                                                    .primaryVersion(primaryVersionController.getPrimaryVersion())
+                                                   .primary(primaryVersionController.isPrimary())
                                                    .build())
                                   .build());
   }

@@ -28,6 +28,8 @@ public enum CEError {
 
   NODES_IS_FORBIDDEN("Nodes is forbidden, cannot list nodes"),
 
+  PVC_PERMISSION_ERROR("Cannot get resource persistentVolumeClaim"),
+
   METRICS_SERVER_NOT_FOUND("Metrics server is not installed in this Kubernetes Cluster %s. 404 page not found"),
 
   AWS_ECS_CLUSTER_NOT_FOUND("The ECS cluster %s received error code ClusterNotFoundException from Amazon ECS service."),
