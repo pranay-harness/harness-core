@@ -2,8 +2,8 @@ package io.harness.repositories.instance;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.dto.instance.Instance;
-import io.harness.dto.instance.Instance.InstanceKeys;
+import io.harness.entities.instance.Instance;
+import io.harness.entities.instance.Instance.InstanceKeys;
 
 import com.google.inject.Inject;
 import groovy.util.logging.Slf4j;

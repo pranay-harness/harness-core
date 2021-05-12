@@ -3,7 +3,7 @@ package io.harness.service.instancesync;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateResponseData;
-import io.harness.entity.DeploymentEvent;
+import io.harness.pojo.DeploymentEvent;
 
 @OwnedBy(HarnessTeam.DX)
 public interface InstanceSyncService {

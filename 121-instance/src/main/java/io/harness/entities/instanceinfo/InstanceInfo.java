@@ -1,4 +1,4 @@
-package io.harness.dto.instanceinfo;
+package io.harness.entities.instanceinfo;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;

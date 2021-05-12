@@ -1,7 +1,7 @@
 package io.harness.service;
 
-import io.harness.dto.DeploymentSummary;
-import io.harness.dto.infrastructureMapping.InfrastructureMapping;
+import io.harness.entities.DeploymentSummary;
+import io.harness.entities.infrastructureMapping.InfrastructureMapping;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 
 import java.util.List;

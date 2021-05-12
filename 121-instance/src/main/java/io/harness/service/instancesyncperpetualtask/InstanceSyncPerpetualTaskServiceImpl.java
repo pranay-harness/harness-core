@@ -3,9 +3,9 @@ package io.harness.service.instancesyncperpetualtask;
 import static java.util.Collections.emptyList;
 
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.dto.DeploymentSummary;
-import io.harness.dto.InstanceSyncPerpetualTaskInfo;
-import io.harness.dto.infrastructureMapping.InfrastructureMapping;
+import io.harness.entities.DeploymentSummary;
+import io.harness.entities.InstanceSyncPerpetualTaskInfo;
+import io.harness.entities.infrastructureMapping.InfrastructureMapping;
 import io.harness.ff.FeatureFlagService;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;

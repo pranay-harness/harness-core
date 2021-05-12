@@ -3,7 +3,7 @@ package io.harness.repositories.instancesyncperpetualtask;
 import io.harness.annotation.HarnessRepo;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.dto.InstanceSyncPerpetualTaskInfo;
+import io.harness.entities.InstanceSyncPerpetualTaskInfo;
 
 import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;

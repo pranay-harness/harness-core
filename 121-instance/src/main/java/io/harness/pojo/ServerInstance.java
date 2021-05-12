@@ -1,3 +1,3 @@
-package io.harness.entity;
+package io.harness.pojo;
 
 public abstract class ServerInstance {}

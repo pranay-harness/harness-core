@@ -4,7 +4,7 @@ import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.dto.infrastructureMapping.InfrastructureMapping;
+import io.harness.entities.infrastructureMapping.InfrastructureMapping;
 import io.harness.exception.UnexpectedException;
 import io.harness.service.InstanceHandler;
 

@@ -5,7 +5,7 @@ import static java.util.stream.Collectors.groupingBy;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.dto.instance.Instance;
+import io.harness.entities.instance.Instance;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.schemas.timeseriesevent.DataPoint;

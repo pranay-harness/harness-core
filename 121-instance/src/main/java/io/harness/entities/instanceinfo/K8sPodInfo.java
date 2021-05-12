@@ -1,4 +1,4 @@
-package io.harness.dto.instanceinfo;
+package io.harness.entities.instanceinfo;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -18,7 +18,7 @@ public class K8sPodInfo extends InstanceInfo {
   private String podName;
   private String ip;
   private String namespace;
-  private List<K8sContainerInfo> containers;
+  private List<io.harness.entities.instanceinfo.K8sContainerInfo> containers;
   private String blueGreenColor;
   private String clusterName;
 

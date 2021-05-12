@@ -1,4 +1,4 @@
-package io.harness.dto.instanceinfo;
+package io.harness.entities.instanceinfo;
 
 import lombok.Builder;
 import lombok.Data;

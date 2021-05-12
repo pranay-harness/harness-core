@@ -3,7 +3,7 @@ package io.harness.repositories.syncstatus;
 import io.harness.annotation.HarnessRepo;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.dto.SyncStatus;
+import io.harness.entities.SyncStatus;
 
 import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;

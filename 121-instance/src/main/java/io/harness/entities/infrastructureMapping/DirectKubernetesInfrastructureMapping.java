@@ -1,11 +1,10 @@
-package io.harness.dto.infrastructureMapping;
+package io.harness.entities.infrastructureMapping;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import org.springframework.data.annotation.TypeAlias;
 
 @EqualsAndHashCode(callSuper = true)
 @OwnedBy(HarnessTeam.DX)

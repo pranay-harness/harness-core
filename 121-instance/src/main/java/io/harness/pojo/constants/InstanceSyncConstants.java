@@ -1,4 +1,4 @@
-package io.harness.entity.constants;
+package io.harness.pojo.constants;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;

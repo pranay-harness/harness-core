@@ -3,7 +3,7 @@ package io.harness.repositories.instancesyncperpetualtask;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.dto.InstanceSyncPerpetualTaskInfo;
+import io.harness.entities.InstanceSyncPerpetualTaskInfo;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;

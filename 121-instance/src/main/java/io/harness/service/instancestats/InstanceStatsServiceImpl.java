@@ -1,6 +1,6 @@
 package io.harness.service.instancestats;
 
-import io.harness.entity.InstanceStats;
+import io.harness.pojo.InstanceStats;
 import io.harness.repositories.instancestats.InstanceStatsRepository;
 
 import com.google.inject.Inject;

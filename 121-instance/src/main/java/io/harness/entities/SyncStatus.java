@@ -1,4 +1,4 @@
-package io.harness.dto;
+package io.harness.entities;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessTeam;
