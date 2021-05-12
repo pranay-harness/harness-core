@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.common.dtos.GitFileContent;
+import io.harness.gitsync.common.dtos.SaasGitDTO;
 import io.harness.ng.beans.PageRequest;
 
 import java.util.List;
@@ -18,4 +19,6 @@ public interface ScmClientFacilitatorService {
 
   GitFileContent getFileContent(String yamlGitConfigIdentifier, String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String filePath, String branch, String commitId);
+
+  SaasGitDTO isSaasGit(String repoURL);
 }

@@ -1,6 +1,10 @@
 package io.harness.pms.ngpipeline.inputset.mappers;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
+import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.pms.merger.PipelineYamlConfig;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
@@ -22,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(PIPELINE)
 @UtilityClass
 public class PMSInputSetElementMapper {
   public InputSetEntity toInputSetEntity(
@@ -86,6 +91,7 @@ public class PMSInputSetElementMapper {
         .description(entity.getDescription())
         .tags(TagMapper.convertToMap(entity.getTags()))
         .version(entity.getVersion())
+        .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(entity))
         .build();
   }
 
@@ -109,6 +115,7 @@ public class PMSInputSetElementMapper {
         .version(entity.getVersion())
         .isErrorResponse(isError)
         .invalidInputSetReferences(invalidReferences)
+        .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(entity))
         .build();
   }
 
@@ -121,6 +128,7 @@ public class PMSInputSetElementMapper {
         .inputSetType(entity.getInputSetEntityType())
         .tags(TagMapper.convertToMap(entity.getTags()))
         .version(entity.getVersion())
+        .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(entity))
         .build();
   }
 

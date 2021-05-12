@@ -7,6 +7,7 @@ import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.common.YamlConstants;
 import io.harness.gitsync.common.dtos.GitFileContent;
+import io.harness.gitsync.common.dtos.SaasGitDTO;
 import io.harness.gitsync.common.service.ScmClientFacilitatorService;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.OrgIdentifier;
@@ -28,6 +29,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -97,5 +99,12 @@ public class ScmFacilitatorResource {
       @QueryParam(YamlConstants.BRANCH) String branch, @QueryParam(YamlConstants.COMMIT_ID) String commitId) {
     return ResponseDTO.newResponse(scmClientFacilitatorService.getFileContent(
         yamlGitConfigIdentifier, accountIdentifier, orgIdentifier, projectIdentifier, filePath, branch, commitId));
+  }
+
+  @POST
+  @Path("isSaasGit")
+  @ApiOperation(value = "Checks if Saas is possible", nickname = "isSaasGit")
+  public ResponseDTO<SaasGitDTO> isSaasGit(@QueryParam(NGCommonEntityConstants.REPO_URL) String repoURL) {
+    return ResponseDTO.newResponse(scmClientFacilitatorService.isSaasGit(repoURL));
   }
 }

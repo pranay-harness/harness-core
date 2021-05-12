@@ -13,7 +13,6 @@ import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.beans.ConstructorProperties;
 import javax.validation.constraints.NotNull;
@@ -29,14 +28,13 @@ import org.springframework.data.annotation.TypeAlias;
 @EqualsAndHashCode
 @JsonTypeName("Verify")
 @TypeAlias("verificationStepInfo")
-@ApiModel
 @OwnedBy(HarnessTeam.CV)
 public class CVNGStepInfo implements CVStepInfoBase {
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String name;
   @NotNull String identifier;
   ParameterField<String> description;
-  String verificationJobRef;
-  String type;
+  @NotNull String verificationJobRef;
+  @NotNull String type;
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true) VerificationJobSpec spec;
   @Builder
   @ConstructorProperties({"name", "identifier", "verificationJobRef", "type", "spec"})

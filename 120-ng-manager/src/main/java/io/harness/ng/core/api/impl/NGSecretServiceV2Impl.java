@@ -32,7 +32,6 @@ import io.harness.remote.NGObjectMapperHelper;
 import io.harness.repositories.ng.core.spring.SecretRepository;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.services.SshKeySpecDTOHelper;
-import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
@@ -63,7 +62,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Slf4j
 public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
   private final SecretRepository secretRepository;
-  private final SecretManagerClientService secretManagerClientService;
   private final DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   private final SshKeySpecDTOHelper sshKeySpecDTOHelper;
   private final NGSecretActivityService ngSecretActivityService;
@@ -74,13 +72,11 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
       "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
 
   @Inject
-  public NGSecretServiceV2Impl(SecretRepository secretRepository, SecretManagerClientService secretManagerClientService,
-      DelegateGrpcClientWrapper delegateGrpcClientWrapper, SshKeySpecDTOHelper sshKeySpecDTOHelper,
-      NGSecretActivityService ngSecretActivityService, OutboxService outboxService,
-      @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate) {
+  public NGSecretServiceV2Impl(SecretRepository secretRepository, DelegateGrpcClientWrapper delegateGrpcClientWrapper,
+      SshKeySpecDTOHelper sshKeySpecDTOHelper, NGSecretActivityService ngSecretActivityService,
+      OutboxService outboxService, @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate) {
     this.secretRepository = secretRepository;
     this.outboxService = outboxService;
-    this.secretManagerClientService = secretManagerClientService;
     this.delegateGrpcClientWrapper = delegateGrpcClientWrapper;
     this.sshKeySpecDTOHelper = sshKeySpecDTOHelper;
     this.ngSecretActivityService = ngSecretActivityService;

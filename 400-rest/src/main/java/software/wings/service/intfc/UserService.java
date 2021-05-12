@@ -574,4 +574,8 @@ public interface UserService extends OwnedByAccount {
   void addUserToAccount(String userId, String accountId);
 
   boolean safeDeleteUser(String userId, String accountId);
+
+  String generateVerificationUrl(String userId, String accountId) throws URISyntaxException;
+
+  String generateLoginUrl(String accountId) throws URISyntaxException;
 }

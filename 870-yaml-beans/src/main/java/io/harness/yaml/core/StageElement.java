@@ -11,7 +11,6 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.visitor.helpers.stage.StageElementHelper;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -88,12 +87,5 @@ public class StageElement implements StageElementWrapper, WithIdentifier, Visita
     VisitableChildren children = VisitableChildren.builder().build();
     children.add("stageType", stageType);
     return children;
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder()
-        .qualifierName(LevelNodeQualifierName.STAGES_ELEMENT + LevelNodeQualifierName.PATH_CONNECTOR + identifier)
-        .build();
   }
 }

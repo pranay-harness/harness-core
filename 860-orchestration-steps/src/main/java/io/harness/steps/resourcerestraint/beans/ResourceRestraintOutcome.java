@@ -21,9 +21,4 @@ public class ResourceRestraintOutcome implements Outcome {
   String resourceUnit;
   int usage;
   int alreadyAcquiredPermits;
-
-  @Override
-  public String getType() {
-    return "resourceRestraintOutcome";
-  }
 }

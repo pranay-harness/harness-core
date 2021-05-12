@@ -9,7 +9,6 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.validation.Validator;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.Visitable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -59,10 +58,5 @@ public class TerraformApplyStepInfo extends TerraformApplyBaseStepInfo implement
         .provisionerIdentifier(provisionerIdentifier)
         .configuration(terrformStepConfiguration.toStepParameters())
         .build();
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(StepSpecTypeConstants.TERRAFORM_APPLY).isPartOfFQN(false).build();
   }
 }

@@ -8,6 +8,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import static java.util.Arrays.asList;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -22,10 +23,14 @@ import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
+import software.wings.beans.DockerConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
+import software.wings.beans.artifact.NexusArtifactStream;
+import software.wings.beans.config.NexusConfig;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.settings.SettingValue;
 
 import com.google.inject.Inject;
 import java.util.Collections;
@@ -85,7 +90,54 @@ public class ArtifactStreamSettingAttributePTaskManagerTest extends CategoryTest
     verify(perpetualTaskService, times(1)).resetTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID), eq(null));
   }
 
-  @Test(expected = Test.None.class)
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testOnUpdatedForDocker() {
+    SettingAttribute newSetting = prepareSettingAttribute();
+    SettingAttribute oldSetting =
+        prepareSettingAttribute(DockerConfig.builder().dockerRegistryUrl("http://registry.hub.docker.com/v2/").build());
+    ArtifactStream artifactStream = prepareArtifactStream();
+    artifactStream.setPerpetualTaskId(PERPETUAL_TASK_ID);
+    when(artifactStreamService.listAllBySettingId(SETTING_ID)).thenReturn(Collections.singletonList(artifactStream));
+    disableFeatureFlag();
+
+    manager.onUpdated(oldSetting, newSetting);
+    manager.onUpdated(newSetting, newSetting);
+    verify(perpetualTaskService, never()).resetTask(any(), any(), any());
+    verify(artifactStreamService, times(1)).deleteArtifacts(ACCOUNT_ID, artifactStream);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testOnUpdatedForNexus() {
+    SettingAttribute newSetting =
+        prepareSettingAttribute(NexusConfig.builder().version("3.x").nexusUrl("https://nexus").build());
+    SettingAttribute oldSettingVersion2 =
+        prepareSettingAttribute(NexusConfig.builder().version("2.x").nexusUrl("https://nexus").build());
+    SettingAttribute oldSettingDifferentUrl =
+        prepareSettingAttribute(NexusConfig.builder().version("3.x").nexusUrl("https://nexus3").build());
+    ArtifactStream artifactStream = NexusArtifactStream.builder()
+                                        .accountId(ACCOUNT_ID)
+                                        .appId(APP_ID)
+                                        .uuid(ARTIFACT_STREAM_ID)
+                                        .settingId(SETTING_ID)
+                                        .autoPopulate(true)
+                                        .serviceId(SERVICE_ID)
+                                        .build();
+    artifactStream.setPerpetualTaskId(PERPETUAL_TASK_ID);
+    when(artifactStreamService.listAllBySettingId(SETTING_ID)).thenReturn(Collections.singletonList(artifactStream));
+    disableFeatureFlag();
+
+    manager.onUpdated(oldSettingVersion2, newSetting);
+    manager.onUpdated(oldSettingDifferentUrl, newSetting);
+    manager.onUpdated(newSetting, newSetting);
+    verify(perpetualTaskService, never()).resetTask(any(), any(), any());
+    verify(artifactStreamService, times(2)).deleteArtifacts(any(), any());
+  }
+
+  @Test
   @Owner(developers = OwnerRule.GARVIT)
   @Category(UnitTests.class)
   public void testOnDeleted() {
@@ -100,8 +152,13 @@ public class ArtifactStreamSettingAttributePTaskManagerTest extends CategoryTest
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK, ACCOUNT_ID)).thenReturn(false);
   }
 
-  private SettingAttribute prepareSettingAttribute() {
-    return aSettingAttribute().withUuid(SETTING_ID).withAccountId(ACCOUNT_ID).build();
+  private static SettingAttribute prepareSettingAttribute(SettingValue value) {
+    return aSettingAttribute().withUuid(SETTING_ID).withValue(value).withAccountId(ACCOUNT_ID).build();
+  }
+
+  private static SettingAttribute prepareSettingAttribute() {
+    return prepareSettingAttribute(
+        DockerConfig.builder().dockerRegistryUrl("https://registry.hub.docker.com/v2/").build());
   }
 
   private ArtifactStream prepareArtifactStream() {

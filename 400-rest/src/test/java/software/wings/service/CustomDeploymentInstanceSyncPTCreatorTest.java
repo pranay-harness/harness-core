@@ -1,7 +1,13 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
 import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_NAME;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV_NAME;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_NAME;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -19,7 +25,10 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
@@ -29,25 +38,60 @@ import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
-import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentSummary;
+import software.wings.beans.Application;
 import software.wings.beans.CustomInfrastructureMapping;
+import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.Service;
+import software.wings.service.impl.instance.InstanceSyncTestConstants;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.ServiceResourceService;
 
 import com.google.protobuf.util.Durations;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-public class CustomDeploymentInstanceSyncPTCreatorTest extends WingsBaseTest {
+@OwnedBy(CDP)
+public class CustomDeploymentInstanceSyncPTCreatorTest extends CategoryTest {
   @Mock private PerpetualTaskService perpetualTaskService;
   @InjectMocks private CustomDeploymentInstanceSyncPTCreator perpetualTaskCreator;
+  @Mock private AppService appService;
+  @Mock private EnvironmentService environmentService;
+  @Mock private ServiceResourceService serviceResourceService;
+
+  @Before
+  public void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
+    when(environmentService.get(any(), any()))
+        .thenReturn(Environment.Builder.anEnvironment()
+                        .accountId(InstanceSyncTestConstants.ACCOUNT_ID)
+                        .appId(InstanceSyncTestConstants.APP_ID)
+                        .name(ENV_NAME)
+                        .build());
+    when(serviceResourceService.get(any(), any()))
+        .thenReturn(Service.builder()
+                        .accountId(InstanceSyncTestConstants.ACCOUNT_ID)
+                        .appId(InstanceSyncTestConstants.APP_ID)
+                        .name(SERVICE_NAME)
+                        .build());
+    when(appService.get(any()))
+        .thenReturn(Application.Builder.anApplication()
+                        .appId(InstanceSyncTestConstants.APP_ID)
+                        .accountId(InstanceSyncTestConstants.ACCOUNT_ID)
+                        .name(APP_NAME)
+                        .build());
+  }
 
   ArgumentCaptor<PerpetualTaskClientContext> captor = ArgumentCaptor.forClass(PerpetualTaskClientContext.class);
 
@@ -124,6 +168,8 @@ public class CustomDeploymentInstanceSyncPTCreatorTest extends WingsBaseTest {
     infrastructureMapping.setEnvId(ENV_ID);
     infrastructureMapping.setServiceId(SERVICE_ID);
     infrastructureMapping.setInfraMappingType(InfrastructureMappingType.CUSTOM.name());
+    infrastructureMapping.setName(INFRA_MAPPING_NAME);
+    infrastructureMapping.setDisplayName("infraName");
     return infrastructureMapping;
   }
 }

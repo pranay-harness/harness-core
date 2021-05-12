@@ -1,5 +1,7 @@
 package io.harness.pms.plan.execution.data.service.expressions;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.service.EngineExpressionProtoServiceGrpc.EngineExpressionProtoServiceImplBase;
 import io.harness.pms.contracts.service.ExpressionEvaluateBlobRequest;
 import io.harness.pms.contracts.service.ExpressionEvaluateBlobResponse;
@@ -10,6 +12,7 @@ import io.harness.pms.expression.PmsEngineExpressionService;
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class EngineExpressionGrpcServiceImpl extends EngineExpressionProtoServiceImplBase {
   private final PmsEngineExpressionService pmsEngineExpressionService;
 
@@ -21,7 +24,8 @@ public class EngineExpressionGrpcServiceImpl extends EngineExpressionProtoServic
   @Override
   public void renderExpression(
       ExpressionRenderBlobRequest request, StreamObserver<ExpressionRenderBlobResponse> responseObserver) {
-    String value = pmsEngineExpressionService.renderExpression(request.getAmbiance(), request.getExpression());
+    String value = pmsEngineExpressionService.renderExpression(
+        request.getAmbiance(), request.getExpression(), request.getSkipUnresolvedExpressionsCheck());
     responseObserver.onNext(ExpressionRenderBlobResponse.newBuilder().setValue(value).build());
     responseObserver.onCompleted();
   }

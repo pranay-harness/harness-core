@@ -39,10 +39,10 @@ func Handler(db db.Db, tidb tidb.TiDB, config config.Config, log *zap.SugaredLog
 			sr.Use(AuthMiddleware(config))
 		}
 
-		sr.Post("/write", HandleWrite(db, config, log))
-		sr.Get("/summary", HandleSummary(db, config, log))
-		sr.Get("/test_cases", HandleTestCases(db, config, log))
-		sr.Get("/test_suites", HandleTestSuites(db, config, log))
+		sr.Post("/write", HandleWrite(db, log))
+		sr.Get("/summary", HandleSummary(db, log))
+		sr.Get("/test_cases", HandleTestCases(db, log))
+		sr.Get("/test_suites", HandleTestSuites(db, log))
 		return sr
 	}())
 
@@ -53,9 +53,9 @@ func Handler(db db.Db, tidb tidb.TiDB, config config.Config, log *zap.SugaredLog
 			sr.Use(AuthMiddleware(config))
 		}
 
-		sr.Post("/select", HandleSelect(tidb, db, config, log))
-		sr.Get("/overview", HandleOverview(db, config, log))
-		sr.Post("/uploadcg", HandleUploadCg(tidb, log))
+		sr.Post("/select", HandleSelect(tidb, db, log))
+		sr.Get("/overview", HandleOverview(db, log))
+		sr.Post("/uploadcg", HandleUploadCg(tidb, db, log))
 		return sr
 	}())
 

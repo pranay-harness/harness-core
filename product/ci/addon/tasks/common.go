@@ -91,7 +91,11 @@ func collectCg(ctx context.Context, stepID, cgDir string, log *zap.SugaredLogger
 	if err != nil {
 		return err
 	}
-	branch, err := external.GetSourceBranch()
+	source, err := external.GetSourceBranch()
+	if err != nil {
+		return err
+	}
+	target, err := external.GetTargetBranch()
 	if err != nil {
 		return err
 	}
@@ -105,7 +109,8 @@ func collectCg(ctx context.Context, stepID, cgDir string, log *zap.SugaredLogger
 		StepId: stepID,
 		Repo:   repo,
 		Sha:    sha,
-		Branch: branch,
+		Source: source,
+		Target: target,
 		CgDir:  cgDir,
 	}
 	log.Infow(fmt.Sprintf("sending cgRequest %s to lite engine", req.GetCgDir()))
@@ -128,6 +133,14 @@ func collectTestReports(ctx context.Context, reports []*pb.Report, stepID string
 		return err
 	}
 	defer client.CloseConn()
+	repo, err := external.GetRepo()
+	if err != nil {
+		return err
+	}
+	sha, err := external.GetSha()
+	if err != nil {
+		return err
+	}
 	for _, report := range reports {
 		var rep testreports.TestReporter
 		var err error
@@ -159,7 +172,7 @@ func collectTestReports(ctx context.Context, reports []*pb.Report, stepID string
 		for _, t := range tests {
 			curr = append(curr, t)
 			if len(curr)%batchSize == 0 {
-				in := &pb.WriteTestsRequest{StepId: stepID, Tests: curr}
+				in := &pb.WriteTestsRequest{StepId: stepID, Tests: curr, Repo: repo, Sha: sha}
 				if serr := stream.Send(in); serr != nil {
 					log.Errorw("write tests RPC failed", zap.Error(serr))
 				}
@@ -167,7 +180,7 @@ func collectTestReports(ctx context.Context, reports []*pb.Report, stepID string
 			}
 		}
 		if len(curr) > 0 {
-			in := &pb.WriteTestsRequest{StepId: stepID, Tests: curr}
+			in := &pb.WriteTestsRequest{StepId: stepID, Tests: curr, Repo: repo, Sha: sha}
 			if serr := stream.Send(in); serr != nil {
 				log.Errorw("write tests RPC failed", zap.Error(serr))
 			}

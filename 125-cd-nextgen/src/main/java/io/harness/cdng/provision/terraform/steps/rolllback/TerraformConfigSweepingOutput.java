@@ -20,9 +20,4 @@ import org.springframework.data.annotation.TypeAlias;
 public class TerraformConfigSweepingOutput implements ExecutionSweepingOutput {
   TerraformConfig terraformConfig;
   TFTaskType tfTaskType;
-
-  @Override
-  public String getType() {
-    return "TerraformConfigSweepingOutput";
-  }
 }

@@ -1,6 +1,7 @@
 package software.wings.service.impl.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.FeatureName.GITHUB_WEBHOOK_AUTHENTICATION;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
@@ -49,6 +50,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.CreatedByType;
+import io.harness.beans.EncryptedData;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
@@ -1546,6 +1548,7 @@ public class TriggerServiceImpl implements TriggerService {
         WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
         WebHookToken webHookToken = generateWebHookToken(trigger, getExistingWebhookToken(existingTrigger));
         webHookTriggerCondition.setWebHookToken(webHookToken);
+        validateWebHookSecret(trigger, webHookTriggerCondition);
         if (BITBUCKET == webHookTriggerCondition.getWebhookSource()
             && isNotEmpty(webHookTriggerCondition.getActions())) {
           throw new InvalidRequestException("Actions not supported for Bit Bucket", USER);
@@ -1606,6 +1609,20 @@ public class TriggerServiceImpl implements TriggerService {
         break;
       default:
         throw new InvalidRequestException("Invalid trigger condition type", USER);
+    }
+  }
+
+  private void validateWebHookSecret(Trigger trigger, WebHookTriggerCondition webHookTriggerCondition) {
+    if (featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, trigger.getAccountId())) {
+      if (webHookTriggerCondition.getWebHookSecret() != null
+          && !GITHUB.equals(webHookTriggerCondition.getWebhookSource())) {
+        throw new InvalidRequestException("WebHook Secret is only supported with Github repository", USER);
+      }
+
+      EncryptedData encryptedData =
+          wingsPersistence.get(EncryptedData.class, webHookTriggerCondition.getWebHookSecret());
+      notNullCheck(
+          "No encrypted record found for webhook secret in Trigger: " + trigger.getName(), encryptedData, USER);
     }
   }
 

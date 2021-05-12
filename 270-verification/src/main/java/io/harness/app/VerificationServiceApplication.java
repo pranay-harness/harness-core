@@ -23,6 +23,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.cf.AbstractCfModule;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
+import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
@@ -59,6 +60,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.UserProvider;
 import io.harness.redis.RedisConfig;
+import io.harness.resource.VersionInfoResource;
 import io.harness.resources.LogVerificationResource;
 import io.harness.scheduler.ServiceGuardAccountPoller;
 import io.harness.scheduler.WorkflowVerificationTaskPoller;
@@ -67,7 +69,6 @@ import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.VerificationRegistrars;
-import io.harness.serializer.morphia.VerificationMorphiaRegistrar;
 
 import software.wings.app.CharsetResponseFilter;
 import software.wings.beans.Account;
@@ -154,6 +155,10 @@ public class VerificationServiceApplication extends Application<VerificationServ
    * @throws Exception the exception
    */
   public static void main(String[] args) throws Exception {
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      log.info("Shutdown hook, entering maintenance...");
+      MaintenanceController.forceMaintenance(true);
+    }));
     new VerificationServiceApplication().run(args);
   }
 
@@ -206,17 +211,13 @@ public class VerificationServiceApplication extends Application<VerificationServ
       @Provides
       @Singleton
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
-        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-            .addAll(VerificationRegistrars.kryoRegistrars)
-            .build();
+        return VerificationRegistrars.kryoRegistrars;
       }
 
       @Provides
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
-        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-            .add(VerificationMorphiaRegistrar.class)
-            .build();
+        return VerificationRegistrars.morphiaRegistrars;
       }
 
       @Provides
@@ -321,6 +322,8 @@ public class VerificationServiceApplication extends Application<VerificationServ
 
     initializeServiceTaskPoll(injector);
 
+    injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
+
     log.info("Leaving startup maintenance mode");
     MaintenanceController.resetForceMaintenance();
 
@@ -359,6 +362,8 @@ public class VerificationServiceApplication extends Application<VerificationServ
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
   }
 
   private void registerManagedBeans(Environment environment, Injector injector) {

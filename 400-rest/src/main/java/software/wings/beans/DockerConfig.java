@@ -30,6 +30,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
 /**
@@ -102,6 +103,14 @@ public class DockerConfig extends SettingValue implements EncryptableSetting, Ar
   @Override
   public String fetchResourceCategory() {
     return ResourceType.ARTIFACT_SERVER.name();
+  }
+
+  @Override
+  public boolean shouldDeleteArtifact(SettingValue prev) {
+    if (!(prev instanceof DockerConfig)) {
+      return true;
+    }
+    return !StringUtils.equals(((DockerConfig) prev).getDockerRegistryUrl(), dockerRegistryUrl);
   }
 
   @Data
