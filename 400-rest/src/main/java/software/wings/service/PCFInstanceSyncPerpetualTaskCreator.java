@@ -16,7 +16,6 @@ import static java.util.stream.Collectors.toSet;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
-import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskClientParams;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 
@@ -25,10 +24,8 @@ import software.wings.api.PcfDeploymentInfo;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
-import software.wings.service.intfc.instance.InstanceService;
 
 import com.google.common.collect.Sets;
-import com.google.inject.Inject;
 import com.google.protobuf.util.Durations;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,11 +39,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(CDP)
-public class PCFInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetualTaskCreator {
-  @Inject InstanceService instanceService;
-  @Inject private PerpetualTaskService perpetualTaskService;
-
-  public String create(String accountId, PcfInstanceSyncPerpetualTaskClientParams clientParams) {
+public class PCFInstanceSyncPerpetualTaskCreator extends AbstractInstanceSyncPerpetualTaskCreator {
+  public String create(PcfInstanceSyncPerpetualTaskClientParams clientParams, InfrastructureMapping infraMapping) {
     Map<String, String> paramMap = new HashMap<>();
     paramMap.put(HARNESS_ACCOUNT_ID, clientParams.getAccountId());
     paramMap.put(INFRASTRUCTURE_MAPPING_ID, clientParams.getInframappingId());
@@ -60,16 +54,13 @@ public class PCFInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetua
                                          .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))
                                          .build();
 
-    return perpetualTaskService.createTask(PCF_INSTANCE_SYNC, accountId, clientContext, schedule, false, "");
+    return perpetualTaskService.createTask(PCF_INSTANCE_SYNC, infraMapping.getAccountId(), clientContext, schedule,
+        false, getTaskDescription(infraMapping));
   }
 
   @Override
   public List<String> createPerpetualTasksForNewDeployment(List<DeploymentSummary> deploymentSummaries,
       List<PerpetualTaskRecord> existingPerpetualTaskRecords, InfrastructureMapping infrastructureMapping) {
-    String appId = deploymentSummaries.iterator().next().getAppId();
-    String infrastructureMappingId = deploymentSummaries.iterator().next().getInfraMappingId();
-    String accountId = deploymentSummaries.iterator().next().getAccountId();
-
     Set<String> applicationsWithPerpetualTaskAlreadyPresent = getApplicationNames(existingPerpetualTaskRecords);
 
     Set<String> applicationsOfNewDeployment =
@@ -78,8 +69,7 @@ public class PCFInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetua
     Sets.SetView<String> applicationsToCreatePerpetualTasksFor =
         Sets.difference(applicationsOfNewDeployment, applicationsWithPerpetualTaskAlreadyPresent);
 
-    return createPerpetualTasksForPcfApplications(
-        appId, infrastructureMappingId, accountId, applicationsToCreatePerpetualTasksFor);
+    return createPerpetualTasksForPcfApplications(applicationsToCreatePerpetualTasksFor, infrastructureMapping);
   }
 
   private Set<String> getApplicationNames(List<PerpetualTaskRecord> perpetualTaskRecords) {
@@ -98,22 +88,21 @@ public class PCFInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetua
     Set<String> applicationNames =
         getApplicationNames(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
 
-    return createPerpetualTasksForPcfApplications(infrastructureMapping.getAppId(), infrastructureMapping.getUuid(),
-        infrastructureMapping.getAccountId(), applicationNames);
+    return createPerpetualTasksForPcfApplications(applicationNames, infrastructureMapping);
   }
 
   private List<String> createPerpetualTasksForPcfApplications(
-      String appId, String infraMappingId, String accountId, Set<String> applicationNames) {
+      Set<String> applicationNames, InfrastructureMapping infrastructureMapping) {
     List<String> perpetualTaskIds = new ArrayList<>();
     for (String applicationName : applicationNames) {
       PcfInstanceSyncPerpetualTaskClientParams pcfInstanceSyncParams =
           PcfInstanceSyncPerpetualTaskClientParams.builder()
-              .accountId(accountId)
-              .appId(appId)
-              .inframappingId(infraMappingId)
+              .accountId(infrastructureMapping.getAccountId())
+              .appId(infrastructureMapping.getAppId())
+              .inframappingId(infrastructureMapping.getUuid())
               .applicationName(applicationName)
               .build();
-      perpetualTaskIds.add(create(accountId, pcfInstanceSyncParams));
+      perpetualTaskIds.add(create(pcfInstanceSyncParams, infrastructureMapping));
     }
 
     return perpetualTaskIds;
