@@ -23,7 +23,7 @@ paths:
             value: default
         explode: true
         in: query
-        name: account
+        name: accountIdentifier
         required: true
         schema:
           type: string
@@ -104,6 +104,7 @@ paths:
           description: Internal server error
       security:
       - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Retrieve all feature activations.
       x-accepts: application/json
     post:
@@ -116,7 +117,7 @@ paths:
             value: default
         explode: true
         in: query
-        name: account
+        name: accountIdentifier
         required: true
         schema:
           type: string
@@ -222,6 +223,7 @@ paths:
           description: Internal server error
       security:
       - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Create a feature
       x-contentType: application/json
       x-accepts: application/json
@@ -244,7 +246,7 @@ paths:
             value: default
         explode: true
         in: query
-        name: account
+        name: accountIdentifier
         required: true
         schema:
           type: string
@@ -297,6 +299,7 @@ paths:
           description: Internal server error
       security:
       - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Delete a feature
       x-accepts: application/json
     get:
@@ -318,7 +321,7 @@ paths:
             value: default
         explode: true
         in: query
-        name: account
+        name: accountIdentifier
         required: true
         schema:
           type: string
@@ -383,6 +386,7 @@ paths:
           description: Internal server error
       security:
       - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Retrieve a feature
       x-accepts: application/json
     patch:
@@ -403,7 +407,7 @@ paths:
             value: default
         explode: true
         in: query
-        name: account
+        name: accountIdentifier
         required: true
         schema:
           type: string
@@ -511,6 +515,7 @@ paths:
           description: Internal server error
       security:
       - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Modify a feature using instructions
       x-contentType: application/json
       x-accepts: application/json
@@ -523,7 +528,7 @@ components:
           value: default
       explode: true
       in: query
-      name: account
+      name: accountIdentifier
       required: true
       schema:
         type: string
@@ -1519,6 +1524,10 @@ components:
       - offVariation
       - state
   securitySchemes:
+    ApiKeyAuth:
+      in: header
+      name: api-key
+      type: apiKey
     BearerAuth:
       scheme: bearer
       type: http
