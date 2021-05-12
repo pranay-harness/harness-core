@@ -95,6 +95,7 @@ import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.resource.VersionInfoResource;
 import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -689,6 +690,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
         environment.jersey().register(injector.getInstance(resource));
       }
     });
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
     log.info("Registered all the resources. Time taken(ms): {}", System.currentTimeMillis() - startTimeMs);
   }
 
