@@ -143,31 +143,9 @@ public interface DelegateService extends OwnedByAccount {
 
   void saveDelegateTask(DelegateTask task, DelegateTask.Status status);
 
-  String queueParkedTask(String accountId, String taskId);
-
-  byte[] getParkedTaskResults(String accountId, String taskId, String driverId);
-
-  DelegateTaskPackage acquireDelegateTask(String accountId, String delegateId, String taskId);
-
-  DelegateTaskPackage reportConnectionResults(
-      String accountId, String delegateId, String taskId, List<DelegateConnectionResult> results);
-
-  void failIfAllDelegatesFailed(String accountId, String delegateId, String taskId);
-
   void clearCache(String accountId, String delegateId);
 
-  void publishTaskProgressResponse(
-      String accountId, String driverId, String delegateTaskId, DelegateProgressData responseData);
-
   boolean filter(String accountId, String delegateId);
-
-  boolean filter(String delegateId, DelegateTaskAbortEvent taskAbortEvent);
-
-  DelegateTask abortTask(String accountId, String delegateTaskId);
-
-  String expireTask(String accountId, String delegateTaskId);
-
-  List<DelegateTaskEvent> getDelegateTaskEvents(String accountId, String delegateId, boolean syncOnly);
 
   Delegate updateHeartbeatForDelegateWithPollingEnabled(Delegate delegate);
 
@@ -178,8 +156,6 @@ public interface DelegateService extends OwnedByAccount {
 
   List<Integer> getCountOfDelegatesForAccounts(List<String> collect);
 
-  Optional<DelegateTask> fetchDelegateTask(String accountId, String taskId);
-
   boolean validateThatDelegateNameIsUnique(String accountId, String delegateName);
 
   void delegateDisconnected(String accountId, String delegateId, String delegateConnectionId);
@@ -188,20 +164,13 @@ public interface DelegateService extends OwnedByAccount {
 
   CEDelegateStatus validateCEDelegate(String accountId, String delegateName);
 
-  void convertToExecutionCapability(DelegateTask task);
-
   List<DelegateSizeDetails> fetchAvailableSizes();
 
   List<String> getConnectedDelegates(String accountId, List<String> delegateIds);
 
   List<DelegateInitializationDetails> obtainDelegateInitializationDetails(String accountID, List<String> delegateIds);
 
-  void executeBatchCapabilityCheckTask(String accountId, String delegateId,
-      List<CapabilitySubjectPermission> capabilitySubjectPermissions, String blockedTaskSelectionDetailsId);
-
   void regenerateCapabilityPermissions(String accountId, String delegateId);
-
-  String obtainCapableDelegateId(DelegateTask task, Set<String> alreadyTriedDelegates);
 
   DelegateGroup upsertDelegateGroup(String name, String accountId, K8sConfigDetails k8sConfigDetails);
 }
