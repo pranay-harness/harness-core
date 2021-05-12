@@ -16,9 +16,7 @@ import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.govern.ProviderModule;
 import io.harness.ng.core.activityhistory.service.NGActivityService;
 import io.harness.ng.core.api.NGSecretManagerService;
-import io.harness.ng.core.api.NGSecretService;
 import io.harness.ng.core.api.impl.NGSecretManagerServiceImpl;
-import io.harness.ng.core.api.impl.NGSecretServiceImpl;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
 import io.harness.outbox.api.OutboxService;
 import io.harness.redis.RedisConfig;
@@ -139,10 +137,6 @@ public class SecretManagementModuleTest extends CategoryTest {
     NGSecretManagerService ngSecretManagerService = injector.getInstance(NGSecretManagerService.class);
     assertThat(ngSecretManagerService).isNotNull();
     assertThat(ngSecretManagerService).isInstanceOf(NGSecretManagerServiceImpl.class);
-
-    NGSecretService ngSecretService = injector.getInstance(NGSecretService.class);
-    assertThat(ngSecretService).isNotNull();
-    assertThat(ngSecretService).isInstanceOf(NGSecretServiceImpl.class);
 
     SecretManagerClientService secretManagerClientService =
         injector.getInstance(Key.get(SecretManagerClientService.class, Names.named(SECRET_MANAGER_CLIENT_SERVICE)));
