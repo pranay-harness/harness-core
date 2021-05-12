@@ -17,7 +17,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
-@Builder
 @FieldNameConstants(innerTypeName = "InfrastructureMappingKeys")
 @Entity(value = "InfrastructureMapping")
 @JsonIgnoreProperties(ignoreUnknown = true)

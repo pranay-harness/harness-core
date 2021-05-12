@@ -108,14 +108,11 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
 
     validateAndReturnDeploymentInfo(deploymentSummary);
 
-    // Check use of generics here
-    Multimap<T, Instance> deploymentToInstanceMap = createDeploymentInstanceMap(deploymentSummary);
-
     // Infrastructure mapping is already present in deployment summary
     U infrastructureMapping = validateAndReturnInfrastructureMapping(deploymentSummary.getInfrastructureMapping());
 
-    syncInstancesInternal(infrastructureMapping, deploymentToInstanceMap, deploymentSummary, rollbackInfo, null,
-        InstanceSyncFlowType.NEW_DEPLOYMENT);
+    syncInstancesInternal(
+        infrastructureMapping, deploymentSummary, rollbackInfo, null, InstanceSyncFlowType.NEW_DEPLOYMENT);
   }
 
   public final void processInstanceSyncResponseFromPerpetualTask(
@@ -124,24 +121,24 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
 
     validatePerpetualTaskDelegateResponse(response);
 
-    syncInstancesInternal(infrastructureMappingDetails, ArrayListMultimap.create(), null,
-        RollbackInfo.builder().isRollback(false).build(), response, InstanceSyncFlowType.PERPETUAL_TASK);
+    syncInstancesInternal(infrastructureMappingDetails, null, RollbackInfo.builder().isRollback(false).build(),
+        response, InstanceSyncFlowType.PERPETUAL_TASK);
   }
 
   public final void syncInstances(String accountId, String orgId, String projectId, String infrastructureMappingId,
       InstanceSyncFlowType instanceSyncFlowType) {
     U infrastructureMapping = getDeploymentInfrastructureMapping(accountId, orgId, projectId, infrastructureMappingId);
 
-    syncInstancesInternal(infrastructureMapping, ArrayListMultimap.create(), null,
-        RollbackInfo.builder().isRollback(false).build(), null, instanceSyncFlowType);
+    syncInstancesInternal(
+        infrastructureMapping, null, RollbackInfo.builder().isRollback(false).build(), null, instanceSyncFlowType);
   }
 
-  protected ServiceOutcome getServiceOutcomeFromAmbiance(Ambiance ambiance) {
+  protected final ServiceOutcome getServiceOutcomeFromAmbiance(Ambiance ambiance) {
     return (ServiceOutcome) outcomeService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.SERVICE));
   }
 
-  protected InfrastructureOutcome getInfrastructureOutcomeFromAmbiance(Ambiance ambiance) {
+  protected final InfrastructureOutcome getInfrastructureOutcomeFromAmbiance(Ambiance ambiance) {
     return (InfrastructureOutcome) outcomeService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
   }
@@ -166,9 +163,9 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
   }
 
   // TODO need to check how to handle rollback
-  private void syncInstancesInternal(U infrastructureMapping, Multimap<T, Instance> instanceHandlerKeyVsInstanceMap,
-      DeploymentSummary newDeploymentSummary, RollbackInfo rollbackInfo, X delegateResponseData,
-      InstanceSyncFlowType instanceSyncFlow) {
+  private void syncInstancesInternal(U infrastructureMapping, DeploymentSummary newDeploymentSummary,
+      RollbackInfo rollbackInfo, X delegateResponseData, InstanceSyncFlowType instanceSyncFlow) {
+    Multimap<T, Instance> instanceHandlerKeyVsInstanceMap = ArrayListMultimap.create();
     loadInstanceHandlerKeyVsInstanceMap(infrastructureMapping, instanceHandlerKeyVsInstanceMap);
 
     // If its a perpetual task response, then delegate response data contains new instances info

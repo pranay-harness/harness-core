@@ -6,10 +6,12 @@ import io.harness.annotations.dev.OwnedBy;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 @OwnedBy(HarnessTeam.DX)
 public class K8sPodInfo extends InstanceInfo {
   private String releaseName;
