@@ -1,4 +1,4 @@
-package io.harness.pojo;
+package io.harness.models;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;

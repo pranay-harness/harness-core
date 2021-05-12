@@ -11,14 +11,14 @@ import io.harness.entities.deploymentinfo.DeploymentInfo;
 import io.harness.entities.infrastructureMapping.InfrastructureMapping;
 import io.harness.entities.instance.Instance;
 import io.harness.entities.instanceinfo.InstanceInfo;
+import io.harness.models.InstanceHandlerKey;
+import io.harness.models.InstanceSyncFlowType;
+import io.harness.models.RollbackInfo;
+import io.harness.models.ServerInstance;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
-import io.harness.pojo.InstanceHandlerKey;
-import io.harness.pojo.InstanceSyncFlowType;
-import io.harness.pojo.RollbackInfo;
-import io.harness.pojo.ServerInstance;
 import io.harness.repositories.infrastructuremapping.InfrastructureMappingRepository;
 import io.harness.repositories.instance.InstanceRepository;
 

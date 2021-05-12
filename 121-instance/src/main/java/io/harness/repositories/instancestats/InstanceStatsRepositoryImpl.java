@@ -1,6 +1,6 @@
 package io.harness.repositories.instancestats;
 
-import io.harness.pojo.InstanceStats;
+import io.harness.models.InstanceStats;
 import io.harness.timescaledb.TimeScaleDBService;
 
 import com.google.inject.Inject;
