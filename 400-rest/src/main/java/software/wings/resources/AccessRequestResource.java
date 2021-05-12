@@ -9,7 +9,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.rest.RestResponse;
 
-import software.wings.beans.security.AccessRequest;
 import software.wings.beans.security.AccessRequestDTO;
 import software.wings.security.annotations.ApiKeyAuthorized;
 import software.wings.service.intfc.AccessRequestService;
@@ -48,17 +47,19 @@ public class AccessRequestResource {
   @Path("{accountId}")
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT)
-  public RestResponse<AccessRequest> create(
+  public RestResponse<AccessRequestDTO> create(
       @PathParam("accountId") String accountId, @RequestBody @NotNull AccessRequestDTO accessRequestDTO) {
-    return new RestResponse<>(accessRequestService.createAccessRequest(accessRequestDTO));
+    return new RestResponse<>(
+        accessRequestService.toAccessRequestDTO(accessRequestService.createAccessRequest(accessRequestDTO)));
   }
 
   @POST
   @Path("{accountId}/createAccessRequest")
   @Consumes(MediaType.APPLICATION_JSON)
-  public RestResponse<AccessRequest> createAccessRequest(
+  public RestResponse<AccessRequestDTO> createAccessRequest(
       @PathParam("accountId") String accountId, @RequestBody @NotNull AccessRequestDTO accessRequestDTO) {
-    return new RestResponse<>(accessRequestService.createAccessRequest(accessRequestDTO));
+    return new RestResponse<>(
+        accessRequestService.toAccessRequestDTO(accessRequestService.createAccessRequest(accessRequestDTO)));
   }
 
   @DELETE
@@ -78,21 +79,24 @@ public class AccessRequestResource {
 
   @GET
   @Path("{accountId}/listAccessRequest")
-  public RestResponse<AccessRequest> listAccessRequest(
+  public RestResponse<AccessRequestDTO> listAccessRequest(
       @PathParam("accountId") String accountId, @QueryParam("accessRequestId") String accessRequestId) {
-    return new RestResponse<>(accessRequestService.get(accessRequestId));
+    return new RestResponse<>(accessRequestService.toAccessRequestDTO(accessRequestService.get(accessRequestId)));
   }
 
   @GET
   @Path("{accountId}/listAccessRequest/harnessUserGroup")
-  public RestResponse<List<AccessRequest>> listActiveAccessRequest(
+  public RestResponse<List<AccessRequestDTO>> listActiveAccessRequest(
       @PathParam("accountId") String accountId, @QueryParam("harnessUserGroupId") String harnessUserGroupId) {
-    return new RestResponse<>(accessRequestService.getActiveAccessRequest(harnessUserGroupId));
+    return new RestResponse<>(
+        accessRequestService.toAccessRequestDTO(accessRequestService.getActiveAccessRequest(harnessUserGroupId)));
   }
 
   @GET
   @Path("{accountId}/listAccessRequest/account")
-  public RestResponse<List<AccessRequest>> listActiveAccessRequestForAccount(@PathParam("accountId") String accountId) {
-    return new RestResponse<>(accessRequestService.getActiveAccessRequestForAccount(accountId));
+  public RestResponse<List<AccessRequestDTO>> listActiveAccessRequestForAccount(
+      @PathParam("accountId") String accountId) {
+    return new RestResponse<>(
+        accessRequestService.toAccessRequestDTO(accessRequestService.getActiveAccessRequestForAccount(accountId)));
   }
 }

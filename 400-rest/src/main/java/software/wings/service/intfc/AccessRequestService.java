@@ -24,6 +24,10 @@ public interface AccessRequestService {
 
   List<AccessRequest> getActiveAccessRequestForAccountAndUser(String accountId, String userId);
 
+  AccessRequestDTO toAccessRequestDTO(AccessRequest accessRequest);
+
+  List<AccessRequestDTO> toAccessRequestDTO(List<AccessRequest> accessRequestList);
+
   boolean delete(String accessRequestId);
 
   void checkAndUpdateAccessRequests(AccessRequest accessRequest);

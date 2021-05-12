@@ -98,6 +98,29 @@ public class AccessRequestServiceImpl implements AccessRequestService {
     return wingsPersistence.get(AccessRequest.class, accessRequestId);
   }
 
+  public AccessRequestDTO toAccessRequestDTO(AccessRequest accessRequest) {
+    AccessRequestDTO accessRequestDTO = AccessRequestDTO.builder()
+                                            .accessRequestId(accessRequest.getUuid())
+                                            .accessType(accessRequest.getAccessType())
+                                            .accountId(accessRequest.getAccountId())
+                                            .accessStartAt(accessRequest.getAccessStartAt())
+                                            .accessEndAt(accessRequest.getAccessEndAt())
+                                            .build();
+    if (AccessRequest.AccessType.MEMBER_ACCESS.equals(accessRequest.getAccessType())) {
+      accessRequestDTO.setEmailIds(getEmailIds(accessRequest));
+    } else {
+      accessRequestDTO.setHarnessUserGroupName(
+          harnessUserGroupService.get(accessRequest.getHarnessUserGroupId()).getName());
+    }
+    return accessRequestDTO;
+  }
+
+  public List<AccessRequestDTO> toAccessRequestDTO(List<AccessRequest> accessRequests) {
+    List<AccessRequestDTO> accessRequestDTOList = new ArrayList<>();
+    accessRequests.forEach(accessRequest -> accessRequestDTOList.add(toAccessRequestDTO(accessRequest)));
+    return accessRequestDTOList;
+  }
+
   @Override
   public List<AccessRequest> getActiveAccessRequest(String harnessUserGroupId) {
     HarnessUserGroup harnessUserGroup = harnessUserGroupService.get(harnessUserGroupId);
@@ -185,5 +208,22 @@ public class AccessRequestServiceImpl implements AccessRequestService {
       output.add(tokenizer.nextToken().replaceAll(" ", ""));
     }
     return output;
+  }
+
+  private Set<String> getEmailIds(AccessRequest accessRequest) {
+    Set<String> emailIds = new HashSet<>();
+    accessRequest.getMemberIds().forEach(memberId -> {
+      User user = userService.get(memberId);
+      if (user != null) {
+        if (isNotEmpty(user.getEmail())) {
+          emailIds.add(user.getEmail());
+        } else {
+          log.info("User userId {} doesn't have emailId", memberId);
+        }
+      } else {
+        log.info("Invalid userId {}", memberId);
+      }
+    });
+    return emailIds;
   }
 }
