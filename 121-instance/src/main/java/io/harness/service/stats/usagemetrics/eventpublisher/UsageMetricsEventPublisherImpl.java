@@ -8,8 +8,8 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.entities.instance.Instance;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
-import io.harness.eventsframework.schemas.timeseriesevent.DataPoint;
-import io.harness.eventsframework.schemas.timeseriesevent.TimeseriesBatchEventInfo;
+import io.harness.eventsframework.schemas.instancestatstimeseriesevent.DataPoint;
+import io.harness.eventsframework.schemas.instancestatstimeseriesevent.TimeseriesBatchEventInfo;
 import io.harness.service.stats.Constants;
 
 import com.google.common.collect.ImmutableMap;

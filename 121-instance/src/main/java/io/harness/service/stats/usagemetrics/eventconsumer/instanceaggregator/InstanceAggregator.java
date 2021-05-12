@@ -2,7 +2,7 @@ package io.harness.service.stats.usagemetrics.eventconsumer.instanceaggregator;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.eventsframework.schemas.timeseriesevent.TimeseriesBatchEventInfo;
+import io.harness.eventsframework.schemas.instancestatstimeseriesevent.TimeseriesBatchEventInfo;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;

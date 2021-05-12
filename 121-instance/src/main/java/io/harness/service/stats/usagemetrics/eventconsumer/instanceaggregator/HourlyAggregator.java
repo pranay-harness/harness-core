@@ -4,7 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.timeseries.processor.instanceeventprocessor.InstanceEventAggregator;
 import io.harness.event.timeseries.processor.utils.DateUtils;
-import io.harness.eventsframework.schemas.timeseriesevent.TimeseriesBatchEventInfo;
+import io.harness.eventsframework.schemas.instancestatstimeseriesevent.TimeseriesBatchEventInfo;
 import io.harness.service.stats.Constants;
 
 import java.sql.PreparedStatement;
