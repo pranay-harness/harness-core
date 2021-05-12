@@ -3,7 +3,7 @@ Var groupByQuery = " FACET appId,appName SINCE 30 days ago  LIMIT 1000"
 Var emptySpace = ""
 Var partialQuery
 if Env:filter != Var:emptySpace {
-  Var appsQuery = concat(Var:appsQuery, " WHERE appName LIKE '%", Env:filter, "%'")
+  appsQuery = concat(Var:appsQuery, " WHERE appName LIKE '%", Env:filter, "%'")
 }
 
 Var fullQuery = concat(Env:baseUrl, Var:appsQuery, Var:groupByQuery)
