@@ -19,6 +19,7 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -43,11 +44,12 @@ public class Instance {
         .build();
   }
 
+  @Id @org.mongodb.morphia.annotations.Id private String id;
   private String accountIdentifier;
   private String orgIdentifier;
   private String projectIdentifier;
+  private InstanceKey instanceKey;
   @NotEmpty private InstanceType instanceType;
-  private PodInstanceKey podInstanceKey;
 
   private String envId;
   private String envName;
