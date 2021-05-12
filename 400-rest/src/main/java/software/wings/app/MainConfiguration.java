@@ -114,6 +114,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("awsInstanceTypes") private List<String> awsInstanceTypes;
   @JsonProperty("awsRegionIdToName") private Map<String, String> awsRegionIdToName;
   @JsonProperty("apiUrl") private String apiUrl;
+  @JsonProperty("exportAccountDataBatchSize") private int exportAccountDataBatchSize;
   @JsonProperty("supportEmail") private String supportEmail;
   @JsonProperty("envPath") private String envPath;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;

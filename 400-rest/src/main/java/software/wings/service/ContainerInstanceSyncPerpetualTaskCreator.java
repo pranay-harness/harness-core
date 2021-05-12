@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -16,12 +17,11 @@ import static software.wings.service.impl.ContainerMetadataType.K8S;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
-import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskType;
-import io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskClientParams;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 
@@ -39,13 +39,11 @@ import software.wings.beans.infrastructure.instance.info.K8sPodInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.service.impl.ContainerMetadata;
 import software.wings.service.impl.ContainerMetadataType;
-import software.wings.service.intfc.instance.InstanceService;
 import software.wings.utils.Utils;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
-import com.google.inject.Inject;
 import com.google.protobuf.util.Durations;
 import java.util.Collections;
 import java.util.HashMap;
@@ -60,21 +58,17 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ContainerInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetualTaskCreator {
-  @Inject InstanceService instanceService;
-  @Inject PerpetualTaskService perpetualTaskService;
-  @Inject ContainerInstanceSyncPerpetualTaskClient containerInstanceSyncPerpetualTaskClient;
-
+@OwnedBy(CDP)
+public class ContainerInstanceSyncPerpetualTaskCreator extends AbstractInstanceSyncPerpetualTaskCreator {
   static final boolean ALLOW_DUPLICATE = false;
 
   @Override
   public List<String> createPerpetualTasks(InfrastructureMapping infrastructureMapping) {
-    final String accountId = infrastructureMapping.getAccountId();
     final String appId = infrastructureMapping.getAppId();
     final String infraMappingId = infrastructureMapping.getUuid();
     Set<ContainerMetadata> containersMetadata = getContainerMetadataFromInstances(appId, infraMappingId);
 
-    return createPerpetualTasks(containersMetadata, accountId, appId, infraMappingId);
+    return createPerpetualTasks(containersMetadata, infrastructureMapping);
   }
 
   private Set<ContainerMetadata> getContainerMetadataFromInstances(String appId, String infrastructureMappingId) {
@@ -157,7 +151,7 @@ public class ContainerInstanceSyncPerpetualTaskCreator implements InstanceSyncPe
     SetView<ContainerMetadata> containersMetadataToExamine =
         Sets.difference(newDeploymentContainersMetadata, existingContainersMetadata);
 
-    return createPerpetualTasks(containersMetadataToExamine, accountId, appId, infraMappingId);
+    return createPerpetualTasks(containersMetadataToExamine, infrastructureMapping);
   }
 
   private ContainerMetadataType extractContainerMetadataType(String containerTypeRecord) {
@@ -165,22 +159,23 @@ public class ContainerInstanceSyncPerpetualTaskCreator implements InstanceSyncPe
   }
 
   private List<String> createPerpetualTasks(
-      Set<ContainerMetadata> containersMetadata, String accountId, String appId, String infraMappingId) {
+      Set<ContainerMetadata> containersMetadata, InfrastructureMapping infrastructureMapping) {
     return containersMetadata.stream()
         .map(containerMetadata
             -> ContainerInstanceSyncPerpetualTaskClientParams.builder()
-                   .appId(appId)
-                   .inframappingId(infraMappingId)
+                   .appId(infrastructureMapping.getAppId())
+                   .inframappingId(infrastructureMapping.getUuid())
                    .containerSvcName(containerMetadata.getContainerServiceName())
                    .namespace(containerMetadata.getNamespace())
                    .releaseName(containerMetadata.getReleaseName())
                    .containerType(nonNull(containerMetadata.getType()) ? containerMetadata.getType().name() : null)
                    .build())
-        .map(params -> create(accountId, params))
+        .map(params -> create(params, infrastructureMapping))
         .collect(Collectors.toList());
   }
 
-  private String create(String accountId, ContainerInstanceSyncPerpetualTaskClientParams clientParams) {
+  private String create(
+      ContainerInstanceSyncPerpetualTaskClientParams clientParams, InfrastructureMapping infraMapping) {
     Map<String, String> clientParamMap = new HashMap<>();
     clientParamMap.put(HARNESS_APPLICATION_ID, clientParams.getAppId());
     clientParamMap.put(INFRASTRUCTURE_MAPPING_ID, clientParams.getInframappingId());
@@ -197,8 +192,8 @@ public class ContainerInstanceSyncPerpetualTaskCreator implements InstanceSyncPe
                                          .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))
                                          .build();
 
-    return perpetualTaskService.createTask(
-        PerpetualTaskType.CONTAINER_INSTANCE_SYNC, accountId, clientContext, schedule, ALLOW_DUPLICATE, "");
+    return perpetualTaskService.createTask(PerpetualTaskType.CONTAINER_INSTANCE_SYNC, infraMapping.getAccountId(),
+        clientContext, schedule, ALLOW_DUPLICATE, getTaskDescription(infraMapping));
   }
 
   private Set<ContainerMetadata> extractContainerMetadata(DeploymentInfo deploymentInfo) {
