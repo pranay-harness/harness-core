@@ -34,13 +34,6 @@ import lombok.extern.slf4j.Slf4j;
 @UtilityClass
 @Slf4j
 public class WebhookTriggerFilterUtils {
-  public boolean evaluateFilterConditions(
-      WebhookPayloadData webhookPayloadData, WebhookTriggerSpec webhookTriggerConfigSpec) {
-    return checkIfEventTypeMatches(webhookPayloadData.getWebhookEvent().getType(), webhookTriggerConfigSpec.getEvent())
-        && checkIfActionMatches(webhookPayloadData, webhookTriggerConfigSpec)
-        && checkIfPayloadConditionsMatch(webhookPayloadData, webhookTriggerConfigSpec.getPayloadConditions());
-  }
-
   public boolean evaluateEventAndActionFilters(
       WebhookPayloadData webhookPayloadData, WebhookTriggerSpec webhookTriggerConfigSpec) {
     return checkIfEventTypeMatches(webhookPayloadData.getWebhookEvent().getType(), webhookTriggerConfigSpec.getEvent())

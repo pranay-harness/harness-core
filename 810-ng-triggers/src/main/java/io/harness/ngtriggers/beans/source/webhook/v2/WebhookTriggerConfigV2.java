@@ -1,12 +1,12 @@
-package io.harness.ngtriggers.beans.source.scheduled;
+package io.harness.ngtriggers.beans.source.webhook.v2;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ngtriggers.beans.source.NGTriggerSpec;
 import io.harness.ngtriggers.beans.source.NGTriggerSpecV2;
+import io.harness.ngtriggers.beans.source.WebhookTriggerType;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Builder;
@@ -16,14 +16,14 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @OwnedBy(PIPELINE)
-public class ScheduledTriggerConfig implements NGTriggerSpec, NGTriggerSpecV2 {
-  String type;
+public class WebhookTriggerConfigV2 implements NGTriggerSpecV2 {
+  WebhookTriggerType type;
 
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = EXTERNAL_PROPERTY, property = "type", visible = true)
-  ScheduledTriggerSpec spec;
+  WebhookTriggerSpecV2 spec;
 
   @Builder
-  public ScheduledTriggerConfig(String type, ScheduledTriggerSpec spec) {
+  public WebhookTriggerConfigV2(WebhookTriggerType type, WebhookTriggerSpecV2 spec) {
     this.type = type;
     this.spec = spec;
   }
