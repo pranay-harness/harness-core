@@ -65,7 +65,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   private final ApiClientFactoryImpl apiClientFactory;
   private final KryoSerializer kryoSerializer;
   private final ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
-  private final Cache<Class<? extends Throwable>, Boolean> recentlyLoggedExceptions;
+  private final Cache<String, Boolean> recentlyLoggedExceptions;
 
   @Inject
   public K8SWatchTaskExecutor(EventPublisher eventPublisher, K8sWatchServiceDelegate k8sWatchServiceDelegate,
@@ -113,19 +113,19 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
                           .clusterName(watchTaskParams.getClusterName())
                           .kubeSystemUid(K8sWatchServiceDelegate.getKubeSystemUid(k8sMetricsClient))
                           .build();
-                  return new K8sMetricCollector(eventPublisher, k8sMetricsClient, clusterDetails, heartbeatTime);
+                  return new K8sMetricCollector(eventPublisher, clusterDetails, heartbeatTime);
                 })
-            .collectAndPublishMetrics(now);
+            .collectAndPublishMetrics(k8sMetricsClient, now);
 
       } catch (JsonSyntaxException ex) {
-        logIfNotSeenRecently(ex, "Encountered json deserialization error");
+        logIfNotSeenRecently(ex, "Encountered json deserialization error while parsing Kubernetes Api response");
         publishError(CeExceptionMessage.newBuilder()
                          .setClusterId(watchTaskParams.getClusterId())
                          .setMessage(ex.toString())
                          .build(),
             taskId);
       } catch (ApiException ex) {
-        logIfNotSeenRecently(ex, "Encountered api exception");
+        logIfNotSeenRecently(ex, String.format("ApiException: %s", ex.getResponseBody()));
         publishError(CeExceptionMessage.newBuilder()
                          .setClusterId(watchTaskParams.getClusterId())
                          .setMessage(format(
@@ -139,13 +139,6 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
     }
   }
 
-  private void logIfNotSeenRecently(Exception ex, String msg) {
-    recentlyLoggedExceptions.get(ex.getClass(), k -> {
-      log.error(msg, ex);
-      return Boolean.TRUE;
-    });
-  }
-
   private void publishError(CeExceptionMessage ceExceptionMessage, PerpetualTaskId taskId) {
     try {
       eventPublisher.publishMessage(
@@ -153,6 +146,13 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
     } catch (Exception ex) {
       log.error("Failed to publish failure from {} to the Event Server.", taskId, ex);
     }
+  }
+
+  private void logIfNotSeenRecently(Exception ex, String msg) {
+    recentlyLoggedExceptions.get(msg, k -> {
+      log.error(msg, ex);
+      return Boolean.TRUE;
+    });
   }
 
   @VisibleForTesting
