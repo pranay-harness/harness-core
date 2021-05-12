@@ -41,8 +41,8 @@ java_library(
         ":module",
         "//:lombok",
         "//990-commons-test:module",
-        "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
+        "@maven_test//:junit_junit",
     ],
 )
 

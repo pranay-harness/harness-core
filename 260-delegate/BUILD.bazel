@@ -405,7 +405,6 @@ shared_dependencies = [
     "@maven//:javax_xml_bind_jaxb_api",
     "@maven//:jaxen_jaxen",
     "@maven//:joda_time_joda_time",
-    "@maven//:junit_junit",
     "@maven//:me_snowdrop_istio_client",
     "@maven//:me_snowdrop_istio_client_uberjar",
     "@maven//:me_snowdrop_istio_common",
@@ -690,8 +689,8 @@ test_dependencies = [
     "@maven//:com_icegreen_greenmail",
     "@maven//:com_openpojo_openpojo",
     "@maven//:io_github_benas_random_beans",
-    "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
-    "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
+    "@maven_test//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
+    "@maven_test//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
     "@maven//:pl_pragmatists_JUnitParams",
 ]
 

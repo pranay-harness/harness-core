@@ -66,11 +66,11 @@ java_library(
         "@maven//:commons_codec_commons_codec",
         "@maven//:commons_logging_commons_logging",
         "@maven//:de_bwaldvogel_mongo_java_server",
-        "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_powermock_powermock_api_mockito",
         "@maven//:org_powermock_powermock_module_junit4",
+        "@maven_test//:junit_junit",
     ],
 )
 

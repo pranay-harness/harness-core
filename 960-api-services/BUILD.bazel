@@ -78,7 +78,6 @@ java_library(
         "@maven//:io_kubernetes_client_java_api",
         "@maven//:io_kubernetes_client_java_extended",
         "@maven//:joda_time_joda_time",
-        "@maven//:junit_junit",
         "@maven//:me_snowdrop_istio_client",
         "@maven//:me_snowdrop_istio_client_uberjar",
         "@maven//:me_snowdrop_istio_common",

@@ -42,11 +42,11 @@ java_library(
         "//990-commons-test:module",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:com_squareup_retrofit2_retrofit",
-        "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_mongodb_mongo_java_driver",
         "@maven//:org_slf4j_slf4j_api",
+        "@maven_test//:junit_junit",
     ],
 )
 

@@ -60,11 +60,11 @@ java_library(
         "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:com_fasterxml_jackson_dataformat_jackson_dataformat_yaml",
-        "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_jooq_joor",
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_slf4j_slf4j_api",
+        "@maven_test//:junit_junit",
     ],
 )
 
