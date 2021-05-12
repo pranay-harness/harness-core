@@ -115,7 +115,7 @@ public class PMSPipelineDtoMapper {
     for (int i = 0; i < 7; i++) {
       cal.add(Calendar.DAY_OF_YEAR, 1);
       numberOfDeployments.add(
-          pipeline.getExecutionSummaryInfo().getNumOfErrors().getOrDefault(sdf.format(cal.getTime()), 0));
+          pipeline.getExecutionSummaryInfo().getDeployments().getOrDefault(sdf.format(cal.getTime()), 0));
     }
     return numberOfDeployments;
   }

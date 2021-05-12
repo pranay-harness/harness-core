@@ -8,6 +8,7 @@ java_library(
     exports = [
         "//890-pms-contracts:module",
         "//920-delegate-service-beans:module",
+        "//950-timeout-engine:module",
         "//950-walktree-visitor:module",
         "//955-delegate-beans:module",
         "//960-persistence:module",

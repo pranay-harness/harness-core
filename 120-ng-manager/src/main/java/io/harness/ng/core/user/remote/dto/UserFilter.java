@@ -23,7 +23,6 @@ import lombok.experimental.FieldDefaults;
 @ApiModel(value = "UserFilter")
 @OwnedBy(PL)
 public class UserFilter {
-  private String name;
-  private String mail;
+  private String searchTerm;
   private Set<String> identifiers;
 }

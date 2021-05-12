@@ -48,6 +48,7 @@ import io.harness.exception.ConnectorNotFoundException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.git.model.ChangeType;
+import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.activityhistory.NGActivityType;
 import io.harness.ng.core.dto.ErrorDetail;
@@ -82,6 +83,7 @@ public class ConnectorServiceImpl implements ConnectorService {
   private final ConnectorErrorMessagesHelper connectorErrorMessagesHelper;
   private final HarnessManagedConnectorHelper harnessManagedConnectorHelper;
   private final NGErrorHelper ngErrorHelper;
+  private final GitSyncSdkService gitSyncSdkService;
 
   @Inject
   public ConnectorServiceImpl(@Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService defaultConnectorService,
@@ -89,7 +91,8 @@ public class ConnectorServiceImpl implements ConnectorService {
       ConnectorActivityService connectorActivityService, ConnectorHeartbeatService connectorHeartbeatService,
       ConnectorRepository connectorRepository, @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer,
       ExecutorService executorService, ConnectorErrorMessagesHelper connectorErrorMessagesHelper,
-      HarnessManagedConnectorHelper harnessManagedConnectorHelper, NGErrorHelper ngErrorHelper) {
+      HarnessManagedConnectorHelper harnessManagedConnectorHelper, NGErrorHelper ngErrorHelper,
+      GitSyncSdkService gitSyncSdkService) {
     this.defaultConnectorService = defaultConnectorService;
     this.secretManagerConnectorService = secretManagerConnectorService;
     this.connectorActivityService = connectorActivityService;
@@ -100,6 +103,7 @@ public class ConnectorServiceImpl implements ConnectorService {
     this.connectorErrorMessagesHelper = connectorErrorMessagesHelper;
     this.harnessManagedConnectorHelper = harnessManagedConnectorHelper;
     this.ngErrorHelper = ngErrorHelper;
+    this.gitSyncSdkService = gitSyncSdkService;
   }
 
   private ConnectorService getConnectorService(ConnectorType connectorType) {
@@ -125,11 +129,13 @@ public class ConnectorServiceImpl implements ConnectorService {
       ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
       boolean isHarnessManagedSecretManager =
           harnessManagedConnectorHelper.isHarnessManagedSecretManager(connectorInfo);
-      if (!isHarnessManagedSecretManager) {
+      boolean isDefaultBranchConnector = gitSyncSdkService.isDefaultBranch(accountIdentifier,
+          connector.getConnectorInfo().getOrgIdentifier(), connector.getConnectorInfo().getProjectIdentifier());
+      if (!isHarnessManagedSecretManager && isDefaultBranchConnector) {
         connectorHeartbeatTaskId = connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier,
             connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
       }
-      if (connectorHeartbeatTaskId != null || isHarnessManagedSecretManager) {
+      if (connectorHeartbeatTaskId != null || isHarnessManagedSecretManager || !isDefaultBranchConnector) {
         ConnectorResponseDTO connectorResponse =
             getConnectorService(connectorInfo.getConnectorType()).create(connector, accountIdentifier);
         if (connectorResponse != null) {
@@ -183,14 +189,18 @@ public class ConnectorServiceImpl implements ConnectorService {
              connector.getConnectorInfo().getOrgIdentifier(), accountIdentifier, OVERRIDE_ERROR);
          AutoLogContext ignore2 =
              new ConnectorLogContext(connector.getConnectorInfo().getIdentifier(), OVERRIDE_ERROR)) {
+      boolean isDefaultBranchConnector = gitSyncSdkService.isDefaultBranch(accountIdentifier,
+          connector.getConnectorInfo().getOrgIdentifier(), connector.getConnectorInfo().getProjectIdentifier());
       ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
       ConnectorResponseDTO connectorResponse =
           getConnectorService(connectorInfo.getConnectorType()).update(connector, accountIdentifier);
-      ConnectorInfoDTO savedConnector = connectorResponse.getConnector();
-      createConnectorUpdateActivity(accountIdentifier, savedConnector);
-      publishEvent(accountIdentifier, savedConnector.getOrgIdentifier(), savedConnector.getProjectIdentifier(),
-          savedConnector.getIdentifier(), savedConnector.getConnectorType(),
-          EventsFrameworkMetadataConstants.UPDATE_ACTION);
+      if (isDefaultBranchConnector) {
+        ConnectorInfoDTO savedConnector = connectorResponse.getConnector();
+        createConnectorUpdateActivity(accountIdentifier, savedConnector);
+        publishEvent(accountIdentifier, savedConnector.getOrgIdentifier(), savedConnector.getProjectIdentifier(),
+            savedConnector.getIdentifier(), savedConnector.getConnectorType(),
+            EventsFrameworkMetadataConstants.UPDATE_ACTION);
+      }
       return connectorResponse;
     }
   }
@@ -237,6 +247,9 @@ public class ConnectorServiceImpl implements ConnectorService {
          AutoLogContext ignore2 = new ConnectorLogContext(connectorIdentifier, OVERRIDE_ERROR)) {
       String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
           accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+      boolean isDefaultBranchConnector =
+          gitSyncSdkService.isDefaultBranch(accountIdentifier, orgIdentifier, projectIdentifier);
+
       Optional<Connector> connectorOptional = connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
           fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
       if (connectorOptional.isPresent()) {
@@ -247,6 +260,9 @@ public class ConnectorServiceImpl implements ConnectorService {
           boolean isConnectorDeleted =
               getConnectorService(connector.getType())
                   .delete(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+          if (!isDefaultBranchConnector) {
+            return true;
+          }
           if (isConnectorDeleted) {
             publishEvent(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier, connector.getType(),
                 EventsFrameworkMetadataConstants.DELETE_ACTION);

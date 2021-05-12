@@ -79,7 +79,7 @@ public class BarrierStep implements AsyncExecutable<StepElementParameters> {
     return stepResponseBuilder
         .stepOutcome(StepResponse.StepOutcome.builder()
                          .name(BARRIER)
-                         .outcome(BarrierOutcome.builder().identifier(barrierExecutionInstance.getIdentifier()).build())
+                         .outcome(BarrierOutcome.builder().barrierRef(barrierExecutionInstance.getIdentifier()).build())
                          .build())
         .build();
   }

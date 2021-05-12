@@ -33,7 +33,6 @@ import io.harness.supplier.ThrowingSupplier;
 
 import software.wings.beans.TaskType;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -96,7 +95,8 @@ public class HttpStep extends TaskExecutableWithRollback<HttpStepResponse> {
     HttpStepResponse httpStepResponse = responseSupplier.get();
 
     HttpStepParameters httpStepParameters = (HttpStepParameters) stepParameters.getSpec();
-    Map<String, Object> outputVariables = httpStepParameters.getOutputVariables();
+    Map<String, Object> outputVariables =
+        httpStepParameters.getOutputVariables() == null ? null : httpStepParameters.getOutputVariables().getValue();
     Map<String, String> outputVariablesEvaluated = evaluateOutputVariables(outputVariables, httpStepResponse);
 
     boolean assertionSuccessful = validateAssertions(httpStepResponse, httpStepParameters);
@@ -130,17 +130,14 @@ public class HttpStep extends TaskExecutableWithRollback<HttpStepResponse> {
       return true;
     }
 
-    HttpExpressionEvaluator evaluator = new HttpExpressionEvaluator(httpStepResponse.getHttpResponseCode());
+    HttpExpressionEvaluator evaluator = new HttpExpressionEvaluator(httpStepResponse);
     String assertion = (String) stepParameters.getAssertion().fetchFinalValue();
     if (assertion == null || EmptyPredicate.isEmpty(assertion.trim())) {
       return true;
     }
 
     try {
-      Map<String, Object> context = ImmutableMap.<String, Object>builder()
-                                        .put("httpResponseBody", httpStepResponse.getHttpResponseBody())
-                                        .build();
-      Object value = evaluator.evaluateExpression(assertion, context);
+      Object value = evaluator.evaluateExpression(assertion);
       if (!(value instanceof Boolean)) {
         throw new InvalidRequestException(String.format(
             "Expected boolean assertion, got %s value", value == null ? "null" : value.getClass().getSimpleName()));
@@ -155,16 +152,13 @@ public class HttpStep extends TaskExecutableWithRollback<HttpStepResponse> {
       Map<String, Object> outputVariables, HttpStepResponse httpStepResponse) {
     Map<String, String> outputVariablesEvaluated = new LinkedHashMap<>();
     if (outputVariables != null) {
-      Map<String, Object> context = ImmutableMap.<String, Object>builder()
-                                        .put("httpResponseBody", httpStepResponse.getHttpResponseBody())
-                                        .build();
-      EngineExpressionEvaluator expressionEvaluator = new EngineExpressionEvaluator(null);
+      EngineExpressionEvaluator expressionEvaluator = new HttpExpressionEvaluator(httpStepResponse);
       outputVariables.keySet().forEach(name -> {
         Object expression = outputVariables.get(name);
         if (expression instanceof ParameterField) {
           ParameterField<?> expr = (ParameterField<?>) expression;
           if (expr.isExpression()) {
-            Object evaluatedValue = expressionEvaluator.evaluateExpression(expr.getExpressionValue(), context);
+            Object evaluatedValue = expressionEvaluator.evaluateExpression(expr.getExpressionValue());
             if (evaluatedValue != null) {
               outputVariablesEvaluated.put(name, evaluatedValue.toString());
             }

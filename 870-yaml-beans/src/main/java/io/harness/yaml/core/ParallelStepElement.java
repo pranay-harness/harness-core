@@ -1,7 +1,6 @@
 package io.harness.yaml.core;
 
 import io.harness.visitor.helpers.executionelement.ParallelStepElementVisitorHelper;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -43,10 +42,5 @@ public class ParallelStepElement implements ExecutionWrapper, Visitable {
       visitableChildren.add("sections", section);
     }
     return visitableChildren;
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.PARALLEL_STEP_ELEMENT).isPartOfFQN(false).build();
   }
 }

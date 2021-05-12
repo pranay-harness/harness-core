@@ -3,12 +3,17 @@ load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:macros.bzl", "run_analysis")
 load("//:tools/bazel/JavaPackageRules.bzl", "java_package")
 
+HarnessTeam = "GTM"
+
 shared_dependencies = [
     "//:lombok",
     "//930-ng-core-clients:module",
+    "//940-notification-client:module",
     "//950-ng-authentication-service:module",
     "//955-account-mgmt:module",
     "//960-ng-core-beans:module",
+    "//960-notification-beans:module",
+    "//960-notification-beans/src/main/proto:960_notification_beans_java_proto",
     "//970-telemetry-beans:module",
     "@maven//:org_mindrot_jbcrypt",
 ]

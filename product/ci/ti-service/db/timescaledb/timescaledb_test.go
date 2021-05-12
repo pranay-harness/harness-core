@@ -29,6 +29,8 @@ func Test_SingleWrite(t *testing.T) {
 	stage := "stage"
 	step := "step"
 	report := "junit"
+	repo := "repo"
+	sha := "sha"
 
 	tn := time.Now()
 
@@ -41,20 +43,20 @@ func Test_SingleWrite(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	valueStrings := constructPsqlInsertStmt(1, 19)
+	valueStrings := constructPsqlInsertStmt(1, 21)
 	stmt := fmt.Sprintf(
 		`
 				INSERT INTO %s
-				(created_at, account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id, report, name, suite_name,
-				class_name, duration_ms, result, message, type, description, stdout, stderr)
+				(created_at, account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id, report, repo, commit_id,
+				name, suite_name, class_name, duration_ms, result, message, type, description, stdout, stderr)
 				VALUES %s`, table, valueStrings)
 	stmt = regexp.QuoteMeta(stmt)
 	mock.ExpectExec(stmt).
 		WithArgs(tn, account, org, project,
-			pipeline, build, stage, step, report, "blah", "", "", 0, "", "", "", "", "", "").WillReturnResult(sqlmock.NewResult(0, 1))
-	tdb := &TimeScaleDb{Conn: db, Log: log}
+			pipeline, build, stage, step, report, repo, sha, "blah", "", "", 0, "", "", "", "", "", "").WillReturnResult(sqlmock.NewResult(0, 1))
+	tdb := &TimeScaleDb{Conn: db, Log: log, EvalTable: table}
 	test1 := &types.TestCase{Name: "blah"}
-	err = tdb.Write(ctx, table, account, org, project, pipeline, build, stage, step, report, test1)
+	err = tdb.Write(ctx, account, org, project, pipeline, build, stage, step, report, repo, sha, test1)
 	assert.Nil(t, err, nil)
 }
 
@@ -93,8 +95,8 @@ func Test_Summary(t *testing.T) {
 	query = regexp.QuoteMeta(query)
 	mock.ExpectQuery(query).
 		WithArgs(account, org, project, pipeline, build, report).WillReturnRows(rows)
-	tdb := &TimeScaleDb{Conn: db, Log: log}
-	got, err := tdb.Summary(ctx, table, account, org, project, pipeline, build, report)
+	tdb := &TimeScaleDb{Conn: db, Log: log, EvalTable: table}
+	got, err := tdb.Summary(ctx, account, org, project, pipeline, build, report)
 	assert.Nil(t, err, nil)
 	assert.Equal(t, got.TotalTests, exp.TotalTests)
 	assert.Equal(t, got.TimeMs, exp.TimeMs)
@@ -164,8 +166,8 @@ func Test_GetTestCases(t *testing.T) {
 	query = regexp.QuoteMeta(query)
 	mock.ExpectQuery(query).
 		WithArgs(account, org, project, pipeline, build, report, suite, defaultLimit, defaultOffset).WillReturnRows(rows)
-	tdb := &TimeScaleDb{Conn: db, Log: log}
-	got, err := tdb.GetTestCases(ctx, table, account, org, project, pipeline, build, report, suite, "duration_ms", "failed", desc, "", "")
+	tdb := &TimeScaleDb{Conn: db, Log: log, EvalTable: table}
+	got, err := tdb.GetTestCases(ctx, account, org, project, pipeline, build, report, suite, "duration_ms", "failed", desc, "", "")
 	li, _ := strconv.Atoi(defaultLimit)
 	assert.Nil(t, err, nil)
 	assert.Equal(t, got.Metadata.TotalPages, 1)
@@ -231,8 +233,8 @@ func Test_GetTestSuites(t *testing.T) {
 	query = regexp.QuoteMeta(query)
 	mock.ExpectQuery(query).
 		WithArgs(account, org, project, pipeline, build, report, defaultLimit, defaultOffset).WillReturnRows(rows)
-	tdb := &TimeScaleDb{Conn: db, Log: log}
-	got, err := tdb.GetTestSuites(ctx, table, account, org, project, pipeline, build, report, "", "", "", "", "")
+	tdb := &TimeScaleDb{Conn: db, Log: log, EvalTable: table}
+	got, err := tdb.GetTestSuites(ctx, account, org, project, pipeline, build, report, "", "", "", "", "")
 	li, _ := strconv.Atoi(defaultLimit)
 	assert.Nil(t, err, nil)
 	assert.Equal(t, got.Metadata.TotalPages, 1)
@@ -240,4 +242,105 @@ func Test_GetTestSuites(t *testing.T) {
 	assert.Equal(t, got.Metadata.PageItemCount, 2)
 	assert.Equal(t, got.Metadata.PageSize, li)
 	assert.ElementsMatch(t, got.Suites, suites)
+}
+
+func Test_WriteSelectedTests(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	table := "tests"
+	account := "account"
+	org := "org"
+	project := "project"
+	pipeline := "pipeline"
+	build := "build"
+	stage := "stage"
+	step := "step"
+
+	total := 20
+	selected := 10
+	new := 5
+	updated := 3
+	src := 2
+
+	arg := types.SelectTestsResp{
+		TotalTests:    total,
+		SelectedTests: selected,
+		NewTests:      new,
+		UpdatedTests:  updated,
+		SrcCodeTests:  src,
+		SelectAll:     false,
+		Tests:         nil,
+	}
+
+	log := zap.NewExample().Sugar()
+	db, mock, err := db.NewMockDB(log)
+	if err != nil {
+		t.Fatal(err)
+	}
+	valueStrings := constructPsqlInsertStmt(1, 12)
+	stmt := fmt.Sprintf(
+		`
+				INSERT INTO %s
+				(account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id,
+				test_count, test_selected, source_code_test, new_test, updated_test)
+				VALUES %s`, table, valueStrings)
+	stmt = regexp.QuoteMeta(stmt)
+	mock.ExpectExec(stmt).
+		WithArgs(account, org, project, pipeline, build, stage, step,
+			total, selected, src, new, updated).WillReturnResult(sqlmock.NewResult(0, 1))
+	tdb := &TimeScaleDb{Conn: db, Log: log, SelectionTable: table}
+	err = tdb.WriteSelectedTests(ctx, account, org, project, pipeline, build, stage, step, arg, false)
+	assert.Nil(t, err, nil)
+}
+
+func Test_WriteSelectedTests_WithUpsert(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	table := "tests"
+	account := "account"
+	org := "org"
+	project := "project"
+	pipeline := "pipeline"
+	build := "build"
+	stage := "stage"
+	step := "step"
+
+	total := 20
+	selected := 10
+	new := 5
+	updated := 3
+	src := 2
+
+	arg := types.SelectTestsResp{
+		TotalTests:    total,
+		SelectedTests: selected,
+		NewTests:      new,
+		UpdatedTests:  updated,
+		SrcCodeTests:  src,
+		SelectAll:     false,
+		Tests:         nil,
+	}
+
+	log := zap.NewExample().Sugar()
+	db, mock, err := db.NewMockDB(log)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	stmt := fmt.Sprintf(
+		`
+				UPDATE %s
+				SET test_count = test_count + $1, test_selected = test_selected + $2,
+				source_code_test = source_code_test + $3, new_test = new_test + $4, updated_test = updated_test + $5
+				WHERE account_id = $6 AND org_id = $7 AND project_id = $8 AND pipeline_id = $9 AND build_id = $10
+				`, table)
+	stmt = regexp.QuoteMeta(stmt)
+	mock.ExpectExec(stmt).
+		WithArgs(total, selected, src, new, updated,
+			account, org, project, pipeline, build).WillReturnResult(sqlmock.NewResult(0, 1))
+	tdb := &TimeScaleDb{Conn: db, Log: log, SelectionTable: table}
+	err = tdb.WriteSelectedTests(ctx, account, org, project, pipeline, build, stage, step, arg, true)
+	assert.Nil(t, err, nil)
 }

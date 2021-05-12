@@ -17,6 +17,7 @@ import io.harness.utils.RetryUtils;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
@@ -36,7 +37,7 @@ public class HarnessResourceGroupServiceImpl implements HarnessResourceGroupServ
           Lists.newArrayList(InvalidRequestException.class), Duration.ofSeconds(5), 3, log);
 
   @Inject
-  public HarnessResourceGroupServiceImpl(ResourceGroupClient resourceGroupClient,
+  public HarnessResourceGroupServiceImpl(@Named("PRIVILEGED") ResourceGroupClient resourceGroupClient,
       ResourceGroupFactory resourceGroupFactory, ResourceGroupService resourceGroupService,
       ScopeParamsFactory scopeParamsFactory) {
     this.resourceGroupClient = resourceGroupClient;

@@ -1,11 +1,14 @@
 package io.harness.delegate.configuration;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.HarnessStringUtils.join;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.network.Http.getBaseUrl;
 
 import static java.lang.String.format;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
@@ -28,6 +31,7 @@ import org.zeroturnaround.exec.ProcessResult;
 
 @UtilityClass
 @Slf4j
+@OwnedBy(DEL)
 public class InstallUtils {
   private static final String defaultKubectlVersion = "v1.13.2";
   private static final String kubectlBaseDir = "./client-tools/kubectl/";
@@ -76,6 +80,10 @@ public class InstallUtils {
   private static final String terraformConfigInspectVersion = "v1.0"; // This is not the
   // version provided by Hashicorp because currently they do not maintain releases as such
 
+  private static final String scmBaseDir = "./client-tools/scm/";
+  private static final String scmBinary = "scm";
+  private static final String defaultScmVersion = "444bed53";
+
   private static final String KUBECTL_CDN_PATH = "public/shared/tools/kubectl/release/%s/bin/%s/amd64/kubectl";
   private static final String CHART_MUSEUM_CDN_PATH =
       "public/shared/tools/chartmuseum/release/%s/bin/%s/amd64/chartmuseum";
@@ -88,10 +96,16 @@ public class InstallUtils {
   private static final String TERRAFORM_CONFIG_CDN_PATH =
       "public/shared/tools/terraform-config-inspect/%s/%s/amd64/terraform-config-inspect";
   private static final String KUSTOMIZE_CDN_PATH = "public/shared/tools/kustomize/release/%s/bin/%s/amd64/kustomize";
+  private static final String SCM_CDN_PATH = "public/shared/tools/scm/release/%s/bin/%s/amd64/scm";
 
   public static String getTerraformConfigInspectPath() {
     return join("/", terraformConfigInspectBaseDir, terraformConfigInspectVersion, getOsPath(), "amd64",
         terraformConfigInspectBinary);
+  }
+
+  public static String getScmPath() {
+    String version = getScmVersion();
+    return join("/", scmBaseDir, version, getOsPath(), "amd64", scmBinary);
   }
 
   public static String getKubectlPath() {
@@ -746,6 +760,102 @@ public class InstallUtils {
       return true;
     }
     return false;
+  }
+
+  public static boolean installScm(DelegateConfiguration configuration) {
+    try {
+      if (SystemUtils.IS_OS_WINDOWS) {
+        log.info("Skipping scm install on Windows");
+        return true;
+      }
+
+      final String scmVersionedDirectory = Paths.get(getScmPath()).getParent().toString();
+      if (validateScmExists(scmVersionedDirectory)) {
+        log.info("scm already installed at {}", scmVersionedDirectory);
+        return true;
+      }
+
+      log.info("Installing scm");
+      createDirectoryIfDoesNotExist(scmVersionedDirectory);
+
+      String downloadUrl = getScmDownloadUrl(configuration);
+      log.info("Download Url is {}", downloadUrl);
+
+      String script = "curl $MANAGER_PROXY_CURL -LO " + downloadUrl + "\n"
+          + "chmod +x ./scm";
+
+      ProcessExecutor processExecutor = new ProcessExecutor()
+                                            .timeout(10, TimeUnit.MINUTES)
+                                            .directory(new File(scmVersionedDirectory))
+                                            .command("/bin/bash", "-c", script)
+                                            .readOutput(true);
+      ProcessResult result = processExecutor.execute();
+      if (result.getExitValue() == 0) {
+        String scmPath = Paths.get(getScmPath()).toAbsolutePath().toString();
+        log.info(result.outputUTF8());
+        if (validateScmExists(scmVersionedDirectory)) {
+          log.info("scm path: {}", scmPath);
+          return true;
+        } else {
+          log.error("scm not validated after download: {}", scmPath);
+          return false;
+        }
+      } else {
+        log.error("scm install failed");
+        log.error(result.outputUTF8());
+        return false;
+      }
+    } catch (Exception e) {
+      log.error("Error installing scm", e);
+      return false;
+    }
+  }
+
+  public static String getScmVersion() {
+    String version = System.getenv().get("SCM_VERSION");
+    if (StringUtils.isEmpty(version)) {
+      version = defaultScmVersion;
+      log.info("No version configured. Using default scm version {}", version);
+    }
+    return version;
+  }
+
+  private static boolean validateScmExists(String scmDirectory) {
+    try {
+      Path path = Paths.get(scmDirectory, scmBinary);
+      if (!path.toFile().exists()) {
+        return false;
+      }
+
+      String script = "./scm --version\n";
+      ProcessExecutor processExecutor = new ProcessExecutor()
+                                            .timeout(1, TimeUnit.MINUTES)
+                                            .directory(new File(scmDirectory))
+                                            .command("/bin/bash", "-c", script)
+                                            .readOutput(true);
+      ProcessResult result = processExecutor.execute();
+
+      if (result.getExitValue() == 0) {
+        log.info(result.outputString());
+        return true;
+      } else {
+        log.error(result.outputString());
+        return false;
+      }
+    } catch (Exception e) {
+      log.error("Error checking scm", e);
+      return false;
+    }
+  }
+
+  @VisibleForTesting
+  protected static String getScmDownloadUrl(DelegateConfiguration delegateConfiguration) {
+    String scmVersion = getScmVersion();
+    if (delegateConfiguration.isUseCdn()) {
+      return join("/", delegateConfiguration.getCdnUrl(), String.format(SCM_CDN_PATH, scmVersion, getOsPath()));
+    }
+    return getManagerBaseUrl(delegateConfiguration.getManagerUrl()) + "storage/harness-download/harness-scm/release/"
+        + scmVersion + "/bin/" + getOsPath() + "/amd64/" + scmBinary;
   }
 
   public static boolean installOc(DelegateConfiguration configuration) {

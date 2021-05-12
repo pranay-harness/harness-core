@@ -4,7 +4,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.visitor.helpers.executionelement.StepGroupElementVisitorHelper;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -48,10 +47,5 @@ public class StepGroupElement implements ExecutionWrapper, WithIdentifier, Visit
       rollbackSteps.forEach(rollbackStep -> children.add("rollbackSteps", rollbackStep));
     }
     return children;
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.STEP_GROUP).isPartOfFQN(false).build();
   }
 }

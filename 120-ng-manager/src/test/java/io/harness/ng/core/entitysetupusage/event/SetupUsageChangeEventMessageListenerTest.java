@@ -23,6 +23,7 @@ import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.DeleteSetupUsageDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateV2DTO;
 import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
+import io.harness.ng.core.entitysetupusage.helper.SetupUsageGitInfoPopulator;
 import io.harness.ng.core.entitysetupusage.mapper.EntitySetupUsageEventDTOMapper;
 import io.harness.ng.core.entitysetupusage.mapper.SetupUsageDetailProtoToRestMapper;
 import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
@@ -44,12 +45,14 @@ public class SetupUsageChangeEventMessageListenerTest extends CategoryTest {
   private EntitySetupUsageEventDTOMapper entitySetupUsageEventDTOMapper;
   private SetupUsageChangeEventMessageListener setupUsageChangeEventMessageListener;
   private IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
+  private SetupUsageGitInfoPopulator setupUsageGitInfoPopulator;
 
   @Before
   public void setUp() {
     entitySetupUsageService = mock(EntitySetupUsageService.class);
-    entitySetupUsageEventDTOMapper = new EntitySetupUsageEventDTOMapper(
-        new EntityDetailProtoToRestMapper(), new SetupUsageDetailProtoToRestMapper());
+    setupUsageGitInfoPopulator = mock(SetupUsageGitInfoPopulator.class);
+    entitySetupUsageEventDTOMapper = new EntitySetupUsageEventDTOMapper(new EntityDetailProtoToRestMapper(),
+        new SetupUsageDetailProtoToRestMapper(), new SetupUsageGitInfoPopulator(null, null));
     setupUsageChangeEventMessageListener =
         new SetupUsageChangeEventMessageListener(entitySetupUsageService, entitySetupUsageEventDTOMapper);
     identifierRefProtoDTOHelper = new IdentifierRefProtoDTOHelper();

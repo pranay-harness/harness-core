@@ -64,33 +64,16 @@ public class PMSPipelineServiceHelperTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testGetPipelineEqualityCriteria() {
-    PipelineEntity entity = PipelineEntity.builder()
-                                .accountId(accountIdentifier)
-                                .orgIdentifier(orgIdentifier)
-                                .projectIdentifier(projectIdentifier)
-                                .identifier(pipelineIdentifier)
-                                .build();
-
-    Criteria criteria1 = PMSPipelineServiceHelper.getPipelineEqualityCriteria(entity, false);
-    assertThat(criteria1).isNotNull();
-    Document criteria1Object = criteria1.getCriteriaObject();
-    assertThat(criteria1Object.get(PipelineEntityKeys.accountId)).isEqualTo(accountIdentifier);
-    assertThat(criteria1Object.get(PipelineEntityKeys.orgIdentifier)).isEqualTo(orgIdentifier);
-    assertThat(criteria1Object.get(PipelineEntityKeys.projectIdentifier)).isEqualTo(projectIdentifier);
-    assertThat(criteria1Object.get(PipelineEntityKeys.identifier)).isEqualTo(pipelineIdentifier);
-    assertThat(criteria1Object.get(PipelineEntityKeys.deleted)).isEqualTo(false);
-    assertThat(criteria1Object.get(PipelineEntityKeys.version)).isNull();
-
-    Criteria criteria2 = PMSPipelineServiceHelper.getPipelineEqualityCriteria(
+    Criteria criteria = PMSPipelineServiceHelper.getPipelineEqualityCriteria(
         accountIdentifier, orgIdentifier, projectIdentifier, pipelineIdentifier, false, null);
-    assertThat(criteria2).isNotNull();
-    Document criteria2Object = criteria1.getCriteriaObject();
-    assertThat(criteria2Object.get(PipelineEntityKeys.accountId)).isEqualTo(accountIdentifier);
-    assertThat(criteria2Object.get(PipelineEntityKeys.orgIdentifier)).isEqualTo(orgIdentifier);
-    assertThat(criteria2Object.get(PipelineEntityKeys.projectIdentifier)).isEqualTo(projectIdentifier);
-    assertThat(criteria2Object.get(PipelineEntityKeys.identifier)).isEqualTo(pipelineIdentifier);
-    assertThat(criteria2Object.get(PipelineEntityKeys.deleted)).isEqualTo(false);
-    assertThat(criteria2Object.get(PipelineEntityKeys.version)).isNull();
+    assertThat(criteria).isNotNull();
+    Document criteriaObject = criteria.getCriteriaObject();
+    assertThat(criteriaObject.get(PipelineEntityKeys.accountId)).isEqualTo(accountIdentifier);
+    assertThat(criteriaObject.get(PipelineEntityKeys.orgIdentifier)).isEqualTo(orgIdentifier);
+    assertThat(criteriaObject.get(PipelineEntityKeys.projectIdentifier)).isEqualTo(projectIdentifier);
+    assertThat(criteriaObject.get(PipelineEntityKeys.identifier)).isEqualTo(pipelineIdentifier);
+    assertThat(criteriaObject.get(PipelineEntityKeys.deleted)).isEqualTo(false);
+    assertThat(criteriaObject.get(PipelineEntityKeys.version)).isNull();
   }
 
   @Test
@@ -105,13 +88,13 @@ public class PMSPipelineServiceHelperTest extends CategoryTest {
             .build();
     doReturn(response).when(filterCreatorMergeService).getPipelineInfo(any());
     PipelineEntity entity = PipelineEntity.builder().build();
-    pmsPipelineServiceHelper.updatePipelineInfo(entity);
-    assertThat(entity.getStageCount()).isEqualTo(1);
-    assertThat(entity.getStageNames().size()).isEqualTo(1);
-    assertThat(entity.getStageNames().contains("stage-1")).isTrue();
-    assertThat(entity.getFilters().size()).isEqualTo(1);
-    assertThat(entity.getFilters().containsKey("whatKey?")).isTrue();
-    assertThat(entity.getFilters().containsValue(Document.parse("{\"some\" : \"value\"}"))).isTrue();
+    PipelineEntity updatedEntity = pmsPipelineServiceHelper.updatePipelineInfo(entity);
+    assertThat(updatedEntity.getStageCount()).isEqualTo(1);
+    assertThat(updatedEntity.getStageNames().size()).isEqualTo(1);
+    assertThat(updatedEntity.getStageNames().contains("stage-1")).isTrue();
+    assertThat(updatedEntity.getFilters().size()).isEqualTo(1);
+    assertThat(updatedEntity.getFilters().containsKey("whatKey?")).isTrue();
+    assertThat(updatedEntity.getFilters().containsValue(Document.parse("{\"some\" : \"value\"}"))).isTrue();
   }
 
   @Test

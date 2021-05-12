@@ -217,6 +217,14 @@ if [[ "" != "$ENABLE_DASHBOARD_TIMESCALE" ]]; then
   yq write -i $CONFIG_FILE enableDashboardTimescale $ENABLE_DASHBOARD_TIMESCALE
 fi
 
+if [[ "" != "$FILE_STORAGE_MODE" ]]; then
+  yq write -i $CONFIG_FILE fileServiceConfiguration.fileStorageMode "$FILE_STORAGE_MODE"
+fi
+
+if [[ "" != "$FILE_STORAGE_CLUSTER_NAME" ]]; then
+  yq write -i $CONFIG_FILE fileServiceConfiguration.clusterName "$FILE_STORAGE_CLUSTER_NAME"
+fi
+
 replace_key_value eventsFramework.redis.sentinel $EVENTS_FRAMEWORK_USE_SENTINEL
 replace_key_value eventsFramework.redis.envNamespace $EVENTS_FRAMEWORK_ENV_NAMESPACE
 replace_key_value eventsFramework.redis.redisUrl $EVENTS_FRAMEWORK_REDIS_URL
@@ -264,3 +272,7 @@ replace_key_value resourceGroupClientConfig.serviceConfig.baseUrl "$RESOURCE_GRO
 replace_key_value baseUrls.currentGenUiUrl "$CURRENT_GEN_UI_URL"
 
 replace_key_value enableDefaultResourceGroupCreation "${ENABLE_DEFAULT_RESOURCE_GROUP_CREATION:-false}"
+
+replace_key_value yamlSchemaClientConfig.yamlSchemaHttpClientMap.cvng.secret "$CVNG_SERVICE_SECRET"
+
+replace_key_value yamlSchemaClientConfig.yamlSchemaHttpClientMap.cvng.serviceHttpClientConfig.baseUrl $CVNG_BASE_URL

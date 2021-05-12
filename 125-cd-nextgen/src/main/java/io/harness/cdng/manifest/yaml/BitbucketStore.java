@@ -12,7 +12,6 @@ import io.harness.ngpipeline.common.ParameterFieldHelper;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.validation.OneOfField;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -102,11 +101,6 @@ public class BitbucketStore implements GitStoreConfig, Visitable, WithConnectorR
   @Override
   public VisitableChildren getChildrenToWalk() {
     return VisitableChildren.builder().build();
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName("spec").isPartOfFQN(false).build();
   }
 
   @Override

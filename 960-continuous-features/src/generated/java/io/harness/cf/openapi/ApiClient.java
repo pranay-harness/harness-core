@@ -71,7 +71,7 @@ import okio.BufferedSink;
 import okio.Okio;
 
 public class ApiClient {
-  private String basePath = "http://localhost:3000/api/1.0";
+  private String basePath = "http://localhost/api/1.0";
   private boolean debugging = false;
   private Map<String, String> defaultHeaderMap = new HashMap<String, String>();
   private Map<String, String> defaultCookieMap = new HashMap<String, String>();

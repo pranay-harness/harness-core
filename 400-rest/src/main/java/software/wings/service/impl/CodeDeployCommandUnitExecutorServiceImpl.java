@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.LogLevel.ERROR;
@@ -9,6 +11,8 @@ import static software.wings.beans.Log.Builder.aLog;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.CommandExecutionStatus;
 
 import software.wings.beans.command.CommandExecutionContext;
@@ -16,7 +20,6 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.CommandUnitExecutorService;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
@@ -29,13 +32,13 @@ import lombok.extern.slf4j.Slf4j;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@OwnedBy(CDP)
+@TargetModule(_930_DELEGATE_TASKS)
 public class CodeDeployCommandUnitExecutorServiceImpl implements CommandUnitExecutorService {
   /**
    * The Log service.
    */
   @Inject private DelegateLogService logService;
-
-  @Inject private TimeLimiter timeLimiter;
 
   @Inject private Injector injector;
 

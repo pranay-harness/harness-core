@@ -122,6 +122,10 @@ gitSyncServerConfig:
 
 shouldDeployWithGitSync: true
 
+fileServiceConfiguration:
+  fileStorageMode: MONGO
+  clusterName: ""
+
 eventsFramework:
   redis:
     sentinel: false
@@ -283,6 +287,7 @@ cfMigrationConfig:
   connectionTimeout: 10000
   readTimeout: 30000
 
+
 enableDashboardTimescale: false
 
 timescaledb:
@@ -293,3 +298,25 @@ timescaledb:
   socketTimeout: 30
   logUnclosedConnections: false
   loggerLevel: OFF
+
+yamlSchemaClientConfig:
+  yamlSchemaHttpClientMap:
+    cvng:
+      serviceHttpClientConfig:
+        baseUrl: http://localhost:6457/cv/api/
+        connectTimeOutSeconds: 15
+        readTimeOutSeconds: 15
+      secret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM"
+
+signupNotificationConfiguration:
+  projectId: "projectId_place_holder"
+  bucketName: "bucketName_place_holder"
+  templates:
+    verify:
+      gcsFileName: "email_verify.txt"
+      templateId: "email_verify"
+    confirm:
+      gcsFileName: "signup_confirmation.txt"
+      templateId: "signup_confirmation"
+  expireDurationInMinutes: 60
+

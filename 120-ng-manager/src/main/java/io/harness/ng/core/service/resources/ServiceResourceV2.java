@@ -72,8 +72,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @NextGenManagerAuth
 @Api("/servicesV2")
 @Path("/servicesV2")
-@Produces({"application/json", "text/yaml", "text/html"})
-@Consumes({"application/json", "text/yaml", "text/html"})
+@Produces({"application/json", "application/yaml"})
+@Consumes({"application/json", "application/yaml"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @ApiResponses(value =
     {

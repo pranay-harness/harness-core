@@ -115,6 +115,8 @@ func (h *tiProxyHandler) WriteTests(stream pb.TiProxy_WriteTestsServer) error {
 	}
 	var tests []*types.TestCase
 	stepId := ""
+	repo := ""
+	sha := ""
 	for {
 		msg, err := stream.Recv()
 		if err == io.EOF {
@@ -125,6 +127,8 @@ func (h *tiProxyHandler) WriteTests(stream pb.TiProxy_WriteTestsServer) error {
 			continue
 		}
 		stepId = msg.GetStepId()
+		repo = msg.GetRepo()
+		sha = msg.GetSha()
 		ret := msg.GetTests()
 		for _, bt := range ret {
 			t := &types.TestCase{}
@@ -137,6 +141,12 @@ func (h *tiProxyHandler) WriteTests(stream pb.TiProxy_WriteTestsServer) error {
 	}
 	if stepId == "" {
 		return errors.New("step ID not present in response")
+	}
+	if sha == "" {
+		return errors.New("sha not present in response")
+	}
+	if repo == "" {
+		return errors.New("repo not present in response")
 	}
 	org, err := getOrgId()
 	if err != nil {
@@ -159,7 +169,7 @@ func (h *tiProxyHandler) WriteTests(stream pb.TiProxy_WriteTestsServer) error {
 		return err
 	}
 	report := "junit" // get from proto if we need other reports in the future
-	err = tc.Write(stream.Context(), org, project, pipeline, build, stage, stepId, report, tests)
+	err = tc.Write(stream.Context(), org, project, pipeline, build, stage, stepId, report, repo, sha, tests)
 	if err != nil {
 		h.log.Errorw("could not write test cases: ", zap.Error(err))
 		return err
@@ -189,9 +199,13 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 	if repo == "" {
 		return res, fmt.Errorf("repo not present in request")
 	}
-	branch := req.GetBranch()
-	if branch == "" {
-		return res, fmt.Errorf("branch not present in request")
+	source := req.GetSource()
+	if source == "" {
+		return res, fmt.Errorf("source branch not present in request")
+	}
+	target := req.GetTarget()
+	if target == "" {
+		return res, fmt.Errorf("target branch not present in request")
 	}
 	cgDir := req.GetCgDir()
 	if cgDir == "" {
@@ -241,7 +255,7 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 	if err != nil {
 		return res, errors.Wrap(err, "stage id not found")
 	}
-	err = client.UploadCg(org, project, pipeline, build, stage, step, repo, sha, branch, encBytes)
+	err = client.UploadCg(org, project, pipeline, build, stage, step, repo, sha, source, target, encBytes)
 	if err != nil {
 		return res, errors.Wrap(err, "failed to upload cg to ti server")
 	}

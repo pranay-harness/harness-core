@@ -45,6 +45,7 @@ public class ManagerRegistrars {
           .addAll(NGCoreRegistrars.kryoRegistrars)
           .addAll(RbacCoreRegistrars.kryoRegistrars)
           .addAll(SMCoreRegistrars.kryoRegistrars)
+          .addAll(FileServiceCommonsRegistrars.kryoRegistrars)
           .addAll(NotificationSenderRegistrars.kryoRegistrars)
           .add(CvNextGenCommonsBeansKryoRegistrar.class)
           // temporary:
@@ -63,6 +64,7 @@ public class ManagerRegistrars {
           .addAll(CgOrchestrationRegistrars.morphiaRegistrars)
           .addAll(RbacCoreRegistrars.morphiaRegistrars)
           .addAll(SMCoreRegistrars.morphiaRegistrars)
+          .addAll(FileServiceCommonsRegistrars.morphiaRegistrars)
           .add(CECommonsMorphiaRegistrar.class)
           .add(CommonEntitiesMorphiaRegister.class)
           .add(DelegateServiceBeansMorphiaRegistrar.class)

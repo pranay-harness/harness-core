@@ -1,5 +1,7 @@
 package software.wings.beans.command;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
@@ -42,6 +44,9 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.container.ContainerInfo;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
@@ -125,6 +130,7 @@ import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSetSpec;
 import java.io.IOException;
 import java.time.Clock;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -132,7 +138,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
@@ -159,6 +164,8 @@ import org.mongodb.morphia.annotations.Transient;
  */
 @Slf4j
 @JsonTypeName("KUBERNETES_SETUP")
+@OwnedBy(CDP)
+@TargetModule(_930_DELEGATE_TASKS)
 public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   public static final String HARNESS_KUBERNETES_MANAGED_LABEL_KEY = "harness.io/managed";
   public static final String HARNESS_KUBERNETES_APP_LABEL_KEY = "harness.io/application";
@@ -1414,7 +1421,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             || (isNotBlank(loadBalancerIP) && !loadBalancerIP.equals(loadBalancer.getIngress().get(0).getIp())))) {
       executionLogCallback.saveExecutionLog("Waiting for service " + serviceName + " load balancer to be ready");
       try {
-        return timeLimiter.callWithTimeout(() -> {
+        return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeoutInMinutes), () -> {
           while (true) {
             LoadBalancerStatus loadBalancerStatus =
                 kubernetesContainerService.getServiceFabric8(kubernetesConfig, serviceName)
@@ -1426,7 +1433,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             }
             sleep(ofSeconds(1));
           }
-        }, timeoutInMinutes, TimeUnit.MINUTES, true);
+        });
       } catch (UncheckedTimeoutException e) {
         executionLogCallback.saveExecutionLog(
             format("Timed out waiting for service [%s] load balancer to be ready", serviceName), LogLevel.ERROR);
