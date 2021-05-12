@@ -73,8 +73,10 @@ public class ScmManagerFacilitatorServiceImplTest extends GitSyncTestBase {
     doReturn(Optional.of(ConnectorResponseDTO.builder().connector(connectorInfo).build()))
         .when(connectorService)
         .get(anyString(), anyString(), anyString(), anyString());
-    when(abstractScmClientFacilitatorService.getYamlGitConfigIdentifierRef(
+    when(abstractScmClientFacilitatorService.getYamlGitConfigDTO(
              accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigIdentifier))
+        .thenReturn(YamlGitConfigDTO.builder().build());
+    when(abstractScmClientFacilitatorService.getConnectorIdentifierRef(any(), anyString(), anyString(), anyString()))
         .thenReturn(IdentifierRef.builder().build());
     when(yamlGitConfigService.get(anyString(), anyString(), anyString(), anyString()))
         .thenReturn(YamlGitConfigDTO.builder()
