@@ -39,6 +39,7 @@ import io.harness.ng.core.dto.secrets.SecretFileSpecDTO;
 import io.harness.ng.core.dto.secrets.SecretTextSpecDTO;
 import io.harness.ng.core.entities.NGEncryptedData;
 import io.harness.ng.core.entities.NGEncryptedData.NGEncryptedDataBuilder;
+import io.harness.secretmanagerclient.dto.LocalConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigDTO;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
@@ -50,7 +51,6 @@ import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.security.encryption.SecretManagerType;
 
-import software.wings.beans.LocalEncryptionConfig;
 import software.wings.service.impl.security.GlobalEncryptDecryptClient;
 import software.wings.settings.SettingVariableTypes;
 
@@ -474,7 +474,7 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
                 encryptedRecordData = globalEncryptDecryptClient.convertEncryptedRecordToLocallyEncrypted(
                     encryptedData, accountIdentifier, encryptionConfig);
                 if (LOCAL.equals(encryptedRecordData.getEncryptionType())) {
-                  encryptionConfig = getLocalEncryptionConfig(accountIdentifier);
+                  encryptionConfig = SecretManagerConfigMapper.fromDTO(getLocalEncryptionConfig(accountIdentifier));
                 }
               } else {
                 encryptedRecordData = buildEncryptedRecordData(encryptedData);
@@ -494,8 +494,8 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     return encryptedDataDetails;
   }
 
-  private EncryptionConfig getLocalEncryptionConfig(String accountIdentifier) {
-    return LocalEncryptionConfig.builder().uuid(UUIDGenerator.generateUuid()).accountId(accountIdentifier).build();
+  private LocalConfigDTO getLocalEncryptionConfig(String accountIdentifier) {
+    return LocalConfigDTO.builder().accountIdentifier(accountIdentifier).identifier(null).build();
   }
 
   private EncryptedRecordData buildEncryptedRecordData(NGEncryptedData encryptedData) {
@@ -542,6 +542,9 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
 
   private SecretManagerConfigDTO getSecretManager(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String identifier, boolean maskSecrets) {
+    if (identifier == null) {
+      return getLocalEncryptionConfig(accountIdentifier);
+    }
     return getResponse(secretManagerClient.getSecretManager(
         identifier, accountIdentifier, orgIdentifier, projectIdentifier, maskSecrets));
   }
