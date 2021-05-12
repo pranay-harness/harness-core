@@ -1131,8 +1131,10 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
     PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     if (phaseElement != null && isNotEmpty(phaseElement.getVariableOverrides())) {
-      variables.putAll(phaseElement.getVariableOverrides().stream().collect(
-          Collectors.toMap(NameValuePair::getName, NameValuePair::getValue)));
+      variables.putAll(phaseElement.getVariableOverrides()
+                           .stream()
+                           .filter(variableOverride -> variableOverride.getValue() != null)
+                           .collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValue)));
     }
 
     if (contextMap != null) {
