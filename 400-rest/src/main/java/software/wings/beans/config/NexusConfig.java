@@ -30,6 +30,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
 /**
@@ -98,6 +99,16 @@ public class NexusConfig extends SettingValue implements EncryptableSetting, Art
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Arrays.asList(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(nexusUrl, maskingEvaluator));
+  }
+
+  @Override
+  public boolean shouldDeleteArtifact(SettingValue prev) {
+    if (!(prev instanceof NexusConfig)) {
+      return true;
+    }
+    NexusConfig prevConfig = (NexusConfig) prev;
+    return !StringUtils.equals(prevConfig.getVersion(), version)
+        || !StringUtils.equals(prevConfig.getNexusUrl(), nexusUrl);
   }
 
   @Data
