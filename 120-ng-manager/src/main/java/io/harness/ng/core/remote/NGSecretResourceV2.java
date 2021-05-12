@@ -2,7 +2,6 @@ package io.harness.ng.core.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.secretmanagerclient.SecretManagementClientModule.SECRET_MANAGER_CLIENT_SERVICE;
 import static io.harness.secrets.SecretPermissions.SECRET_ACCESS_PERMISSION;
 import static io.harness.secrets.SecretPermissions.SECRET_DELETE_PERMISSION;
 import static io.harness.secrets.SecretPermissions.SECRET_EDIT_PERMISSION;
@@ -22,6 +21,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
+import io.harness.ng.core.api.NGEncryptedDataService;
 import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -29,14 +29,12 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.dto.secrets.SecretRequestWrapper;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
 import io.harness.secretmanagerclient.SecretType;
-import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -86,7 +84,7 @@ public class NGSecretResourceV2 {
   private static final String INCLUDE_SECRETS_FROM_EVERY_SUB_SCOPE = "includeSecretsFromEverySubScope";
   private final SecretCrudService ngSecretService;
   private final Validator validator;
-  @Inject @Named(SECRET_MANAGER_CLIENT_SERVICE) private final SecretManagerClientService secretManagerClientService;
+  private final NGEncryptedDataService encryptedDataService;
   private final AccessControlClient accessControlClient;
 
   @GET
@@ -310,7 +308,7 @@ public class NGSecretResourceV2 {
         log.error("Error while checking access permission for secret: {}", field, illegalAccessException);
       }
     }
-    return ResponseDTO.newResponse(secretManagerClientService.getEncryptionDetails(
+    return ResponseDTO.newResponse(encryptedDataService.getEncryptionDetails(
         ngAccessWithEncryptionConsumer.getNgAccess(), ngAccessWithEncryptionConsumer.getDecryptableEntity()));
   }
 }

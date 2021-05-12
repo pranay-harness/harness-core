@@ -2,7 +2,6 @@ package io.harness.ng.core;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.VIKAS;
-import static io.harness.secretmanagerclient.SecretManagementClientModule.SECRET_MANAGER_CLIENT_SERVICE;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -25,7 +24,6 @@ import io.harness.repositories.NGEncryptedDataRepository;
 import io.harness.repositories.ng.core.spring.SecretRepository;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
-import io.harness.secretmanagerclient.services.SecretManagerClientServiceImpl;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NextGenRegistrars;
@@ -35,12 +33,10 @@ import software.wings.service.intfc.FileService;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.google.inject.name.Names;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -154,10 +150,5 @@ public class SecretManagementModuleTest extends CategoryTest {
     NGSecretManagerService ngSecretManagerService = injector.getInstance(NGSecretManagerService.class);
     assertThat(ngSecretManagerService).isNotNull();
     assertThat(ngSecretManagerService).isInstanceOf(NGSecretManagerServiceImpl.class);
-
-    SecretManagerClientService secretManagerClientService =
-        injector.getInstance(Key.get(SecretManagerClientService.class, Names.named(SECRET_MANAGER_CLIENT_SERVICE)));
-    assertThat(secretManagerClientService).isNotNull();
-    assertThat(secretManagerClientService).isInstanceOf(SecretManagerClientServiceImpl.class);
   }
 }

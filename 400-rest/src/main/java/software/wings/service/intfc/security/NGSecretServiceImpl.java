@@ -47,6 +47,7 @@ import io.harness.security.encryption.EncryptionType;
 
 import software.wings.dl.WingsPersistence;
 import software.wings.resources.secretsmanagement.EncryptedDataMapper;
+import software.wings.service.impl.security.GlobalEncryptDecryptClient;
 import software.wings.service.intfc.FileService;
 import software.wings.settings.SettingVariableTypes;
 
@@ -87,6 +88,8 @@ public class NGSecretServiceImpl implements NGSecretService {
   private final WingsPersistence wingsPersistence;
   private final FileService fileService;
   private final SecretManagerConfigService secretManagerConfigService;
+  private final GlobalEncryptDecryptClient globalEncryptDecryptClient;
+  private final LocalSecretManagerService localSecretManagerService;
 
   private EncryptedData encrypt(
       @NotNull EncryptedData encryptedData, String secretValue, SecretManagerConfig secretManagerConfig) {
@@ -407,7 +410,21 @@ public class NGSecretServiceImpl implements NGSecretService {
 
               // decrypt secret fields of secret manager
               secretManagerConfigService.decryptEncryptionConfigSecrets(accountIdentifier, encryptionConfig, false);
-              EncryptedRecordData encryptedRecordData = SecretManager.buildRecordData(encryptedData);
+              EncryptedRecordData encryptedRecordData;
+              if (encryptionConfig.isGlobalKms()) {
+                encryptedRecordData = globalEncryptDecryptClient.convertEncryptedRecordToLocallyEncrypted(
+                    encryptedData, accountIdentifier, encryptionConfig);
+                if (LOCAL.equals(encryptedRecordData.getEncryptionType())) {
+                  encryptionConfig = localSecretManagerService.getEncryptionConfig(accountIdentifier);
+                }
+              } else {
+                encryptedRecordData = SecretManager.buildRecordData(encryptedData);
+              }
+              encryptedDataDetails.add(EncryptedDataDetail.builder()
+                                           .encryptedData(encryptedRecordData)
+                                           .encryptionConfig(encryptionConfig)
+                                           .fieldName(field.getName())
+                                           .build());
               encryptedDataDetails.add(EncryptedDataDetail.builder()
                                            .encryptedData(encryptedRecordData)
                                            .encryptionConfig(encryptionConfig)

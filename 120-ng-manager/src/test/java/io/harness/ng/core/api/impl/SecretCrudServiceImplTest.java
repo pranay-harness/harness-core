@@ -25,23 +25,22 @@ import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.api.NGEncryptedDataService;
 import io.harness.ng.core.api.NGSecretServiceV2;
-import io.harness.ng.core.api.SecretModifyService;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretFileSpecDTO;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
 import io.harness.ng.core.dto.secrets.SecretTextSpecDTO;
+import io.harness.ng.core.entities.NGEncryptedData;
 import io.harness.ng.core.models.Secret;
 import io.harness.ng.core.remote.SSHKeyValidationMetadata;
 import io.harness.ng.core.remote.SecretValidationResultDTO;
-import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.ValueType;
-import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
-import io.harness.secretmanagerclient.remote.SecretManagerClient;
 
 import software.wings.app.FileUploadLimit;
+import software.wings.settings.SettingVariableTypes;
 
 import com.amazonaws.util.StringInputStream;
 import com.google.common.collect.Lists;
@@ -51,30 +50,25 @@ import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.Answers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import retrofit2.Response;
 
 public class SecretCrudServiceImplTest extends CategoryTest {
-  @Mock(answer = Answers.RETURNS_DEEP_STUBS) private SecretManagerClient secretManagerClient;
-  @Mock private SecretModifyService secretTextService;
-  @Mock private SecretModifyService secretFileService;
-  @Mock private SecretModifyService sshService;
   @Mock private NGSecretServiceV2 ngSecretServiceV2;
   private final FileUploadLimit fileUploadLimit = new FileUploadLimit();
   @Mock private SecretEntityReferenceHelper secretEntityReferenceHelper;
   @Mock private SecretCrudServiceImpl secretCrudServiceSpy;
   @Mock private SecretCrudServiceImpl secretCrudService;
   @Mock private Producer eventProducer;
+  @Mock private NGEncryptedDataService encryptedDataService;
 
   @Before
   public void setup() {
     initMocks(this);
-    secretCrudServiceSpy = new SecretCrudServiceImpl(secretManagerClient, secretTextService, secretFileService,
-        sshService, secretEntityReferenceHelper, fileUploadLimit, ngSecretServiceV2, eventProducer);
+    secretCrudServiceSpy = new SecretCrudServiceImpl(
+        secretEntityReferenceHelper, fileUploadLimit, ngSecretServiceV2, eventProducer, encryptedDataService);
     secretCrudService = spy(secretCrudServiceSpy);
   }
 
@@ -82,16 +76,16 @@ public class SecretCrudServiceImplTest extends CategoryTest {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testCreateSecret() {
-    EncryptedDataDTO encryptedDataDTO = EncryptedDataDTO.builder().type(SecretType.SecretText).build();
+    NGEncryptedData encryptedDataDTO = NGEncryptedData.builder().type(SettingVariableTypes.SECRET_TEXT).build();
     Secret secret = Secret.builder().build();
-    when(secretTextService.create(any(), any())).thenReturn(encryptedDataDTO);
+    when(encryptedDataService.createSecretText(any(), any())).thenReturn(encryptedDataDTO);
     when(ngSecretServiceV2.create(any(), any(), eq(false))).thenReturn(secret);
 
     SecretDTOV2 secretDTOV2 = SecretDTOV2.builder().type(SecretType.SecretText).build();
     SecretResponseWrapper responseWrapper = secretCrudService.create("account", secretDTOV2);
     assertThat(responseWrapper).isNotNull();
 
-    verify(secretTextService).create(any(), any());
+    verify(encryptedDataService).createSecretText(any(), any());
     verify(ngSecretServiceV2).create(any(), any(), eq(false));
   }
 
@@ -99,9 +93,9 @@ public class SecretCrudServiceImplTest extends CategoryTest {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testCreateViaYaml() {
-    EncryptedDataDTO encryptedDataDTO = EncryptedDataDTO.builder().type(SecretType.SecretText).build();
+    NGEncryptedData encryptedDataDTO = NGEncryptedData.builder().type(SettingVariableTypes.SECRET_TEXT).build();
     Secret secret = Secret.builder().build();
-    when(secretTextService.create(any(), any())).thenReturn(encryptedDataDTO);
+    when(encryptedDataService.createSecretText(any(), any())).thenReturn(encryptedDataDTO);
     when(ngSecretServiceV2.create(any(), any(), eq(true))).thenReturn(secret);
 
     SecretDTOV2 secretDTOV2 = SecretDTOV2.builder()
@@ -111,7 +105,7 @@ public class SecretCrudServiceImplTest extends CategoryTest {
     SecretResponseWrapper responseWrapper = secretCrudService.createViaYaml("account", secretDTOV2);
     assertThat(responseWrapper).isNotNull();
 
-    verify(secretTextService).create(any(), any());
+    verify(encryptedDataService).createSecretText(any(), any());
     verify(ngSecretServiceV2).create(any(), any(), eq(true));
   }
 
@@ -135,8 +129,9 @@ public class SecretCrudServiceImplTest extends CategoryTest {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testUpdate() {
+    NGEncryptedData encryptedDataDTO = NGEncryptedData.builder().type(SettingVariableTypes.CONFIG_FILE).build();
     SecretDTOV2 secretDTOV2 = SecretDTOV2.builder().type(SecretType.SecretText).build();
-    when(secretTextService.update(any(), any(), any())).thenReturn(true);
+    when(encryptedDataService.updateSecretText(any(), any())).thenReturn(encryptedDataDTO);
     when(ngSecretServiceV2.update(any(), any(), eq(false)))
         .thenReturn(
             Secret.builder().identifier("secret").accountIdentifier("account").identifier("identifier").build());
@@ -162,9 +157,8 @@ public class SecretCrudServiceImplTest extends CategoryTest {
   public void testCreateFile() throws IOException {
     SecretDTOV2 secretDTOV2 = SecretDTOV2.builder().spec(SecretFileSpecDTO.builder().build()).build();
     Secret secret = Secret.builder().build();
-    EncryptedDataDTO encryptedDataDTO = EncryptedDataDTO.builder().build();
-    when(secretManagerClient.createSecretFile(any(), any()).execute())
-        .thenReturn(Response.success(new RestResponse<>(encryptedDataDTO)));
+    NGEncryptedData encryptedDataDTO = NGEncryptedData.builder().type(SettingVariableTypes.CONFIG_FILE).build();
+    when(encryptedDataService.createSecretFile(any(), any(), any())).thenReturn(encryptedDataDTO);
     when(ngSecretServiceV2.create(any(), any(), eq(false))).thenReturn(secret);
     doNothing()
         .when(secretEntityReferenceHelper)
@@ -174,7 +168,7 @@ public class SecretCrudServiceImplTest extends CategoryTest {
         secretCrudService.createFile("account", secretDTOV2, new StringInputStream("string"));
     assertThat(created).isNotNull();
 
-    verify(secretManagerClient, atLeastOnce()).createSecretFile(any(), any());
+    verify(encryptedDataService, atLeastOnce()).createSecretFile(any(), any(), any());
     verify(ngSecretServiceV2).create(any(), any(), eq(false));
     verify(secretEntityReferenceHelper).createSetupUsageForSecretManager(any(), any(), any(), any(), any(), any());
   }
@@ -183,10 +177,11 @@ public class SecretCrudServiceImplTest extends CategoryTest {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testUpdateFile_failDueToSecretManagerChangeNotAllowed() throws IOException {
-    EncryptedDataDTO encryptedDataDTO =
-        EncryptedDataDTO.builder().type(SecretType.SecretFile).secretManager("secretManager2").build();
-    when(secretManagerClient.getSecret(any(), any(), any(), any()).execute())
-        .thenReturn(Response.success(new RestResponse<>(encryptedDataDTO)));
+    NGEncryptedData encryptedDataDTO = NGEncryptedData.builder()
+                                           .type(SettingVariableTypes.CONFIG_FILE)
+                                           .secretManagerIdentifier("secretManager2")
+                                           .build();
+    when(encryptedDataService.get(any(), any(), any(), any())).thenReturn(encryptedDataDTO);
     SecretDTOV2 secretDTOV2 = SecretDTOV2.builder()
                                   .spec(SecretFileSpecDTO.builder().secretManagerIdentifier("secretManager1").build())
                                   .build();
@@ -206,15 +201,15 @@ public class SecretCrudServiceImplTest extends CategoryTest {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testUpdateFile() throws IOException {
-    EncryptedDataDTO encryptedDataDTO =
-        EncryptedDataDTO.builder().type(SecretType.SecretFile).secretManager("secretManager1").build();
-    when(secretManagerClient.getSecret(any(), any(), any(), any()).execute())
-        .thenReturn(Response.success(new RestResponse<>(encryptedDataDTO)));
+    NGEncryptedData encryptedDataDTO = NGEncryptedData.builder()
+                                           .type(SettingVariableTypes.CONFIG_FILE)
+                                           .secretManagerIdentifier("secretManager1")
+                                           .build();
+    when(encryptedDataService.get(any(), any(), any(), any())).thenReturn(encryptedDataDTO);
     SecretDTOV2 secretDTOV2 = SecretDTOV2.builder()
                                   .spec(SecretFileSpecDTO.builder().secretManagerIdentifier("secretManager1").build())
                                   .build();
-    when(secretManagerClient.updateSecretFile(any(), any(), any(), any(), any(), any()).execute())
-        .thenReturn(Response.success(new RestResponse<>(true)));
+    when(encryptedDataService.updateSecretFile(any(), any(), any())).thenReturn(encryptedDataDTO);
     when(ngSecretServiceV2.update(any(), any(), eq(false)))
         .thenReturn(Secret.builder().identifier("secret").accountIdentifier("account").build());
     doReturn(Optional.ofNullable(SecretResponseWrapper.builder().secret(secretDTOV2).build()))
@@ -232,8 +227,8 @@ public class SecretCrudServiceImplTest extends CategoryTest {
     }
 
     assertThat(updatedFile).isNotNull();
-    verify(secretManagerClient, atLeastOnce()).getSecret(any(), any(), any(), any());
-    verify(secretManagerClient, atLeastOnce()).updateSecretFile(any(), any(), any(), any(), any(), any());
+    verify(encryptedDataService, atLeastOnce()).get(any(), any(), any(), any());
+    verify(encryptedDataService, atLeastOnce()).updateSecretFile(any(), any(), any());
     verify(ngSecretServiceV2).update(any(), any(), eq(false));
   }
 
@@ -275,11 +270,9 @@ public class SecretCrudServiceImplTest extends CategoryTest {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testDelete() throws IOException {
-    EncryptedDataDTO encryptedDataDTO = random(EncryptedDataDTO.class);
-    when(secretManagerClient.getSecret(any(), any(), any(), any()).execute())
-        .thenReturn(Response.success(new RestResponse<>(encryptedDataDTO)));
-    when(secretManagerClient.deleteSecret(any(), any(), any(), any()).execute())
-        .thenReturn(Response.success(new RestResponse<>(true)));
+    NGEncryptedData encryptedDataDTO = random(NGEncryptedData.class);
+    when(encryptedDataService.get(any(), any(), any(), any())).thenReturn(encryptedDataDTO);
+    when(encryptedDataService.delete(any(), any(), any(), any())).thenReturn(true);
     when(ngSecretServiceV2.delete(any(), any(), any(), any())).thenReturn(true);
     doNothing()
         .when(secretEntityReferenceHelper)
@@ -288,8 +281,8 @@ public class SecretCrudServiceImplTest extends CategoryTest {
     boolean success = secretCrudService.delete("account", null, null, "identifier");
 
     assertThat(success).isTrue();
-    verify(secretManagerClient, atLeastOnce()).getSecret(any(), any(), any(), any());
-    verify(secretManagerClient, atLeastOnce()).deleteSecret(any(), any(), any(), any());
+    verify(encryptedDataService, atLeastOnce()).get(any(), any(), any(), any());
+    verify(encryptedDataService, atLeastOnce()).delete(any(), any(), any(), any());
     verify(ngSecretServiceV2, atLeastOnce()).delete(any(), any(), any(), any());
     verify(secretEntityReferenceHelper, atLeastOnce())
         .deleteSecretEntityReferenceWhenSecretGetsDeleted(any(), any(), any(), any(), any());

@@ -1,14 +1,14 @@
 package io.harness.ng.core.api.impl;
 
+import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.secretmanagerclient.SecretManagementClientModule.SECRET_MANAGER_CLIENT_SERVICE;
+import static io.harness.remote.client.RestClientUtils.getResponse;
 import static io.harness.secretmanagerclient.SecretType.SecretFile;
 import static io.harness.secretmanagerclient.SecretType.SecretText;
 import static io.harness.secretmanagerclient.ValueType.Inline;
@@ -22,6 +22,7 @@ import static io.harness.security.encryption.SecretManagerType.VAULT;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.SecretManagerConfig;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryptors.KmsEncryptorsRegistry;
@@ -39,20 +40,22 @@ import io.harness.ng.core.entities.NGEncryptedData;
 import io.harness.ng.core.entities.NGEncryptedData.NGEncryptedDataBuilder;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigDTO;
-import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
+import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import io.harness.secrets.SecretsFileService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptedRecordData;
+import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.security.encryption.SecretManagerType;
 
+import software.wings.beans.LocalEncryptionConfig;
+import software.wings.service.impl.security.GlobalEncryptDecryptClient;
 import software.wings.settings.SettingVariableTypes;
 
 import com.google.common.io.ByteStreams;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -79,17 +82,19 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
   private final KmsEncryptorsRegistry kmsEncryptorsRegistry;
   private final VaultEncryptorsRegistry vaultEncryptorsRegistry;
   private final SecretsFileService secretsFileService;
-  private final SecretManagerClientService secretManagerClientService;
+  private final SecretManagerClient secretManagerClient;
+  private final GlobalEncryptDecryptClient globalEncryptDecryptClient;
 
   @Inject
   public NGEncryptedDataServiceImpl(NGEncryptedDataDao encryptedDataDao, KmsEncryptorsRegistry kmsEncryptorsRegistry,
       VaultEncryptorsRegistry vaultEncryptorsRegistry, SecretsFileService secretsFileService,
-      @Named(SECRET_MANAGER_CLIENT_SERVICE) SecretManagerClientService secretManagerClientService) {
+      SecretManagerClient secretManagerClient, GlobalEncryptDecryptClient globalEncryptDecryptClient) {
     this.encryptedDataDao = encryptedDataDao;
     this.kmsEncryptorsRegistry = kmsEncryptorsRegistry;
     this.vaultEncryptorsRegistry = vaultEncryptorsRegistry;
     this.secretsFileService = secretsFileService;
-    this.secretManagerClientService = secretManagerClientService;
+    this.secretManagerClient = secretManagerClient;
+    this.globalEncryptDecryptClient = globalEncryptDecryptClient;
   }
 
   @Override
@@ -129,7 +134,10 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     if (isReadOnlySecretManager(secretManager)) {
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, READ_ONLY_SECRET_MANAGER_ERROR, USER);
     }
-    encryptSecretFile(inputStream, encryptedData, secretManager);
+    String fileContent = getFileContent(inputStream);
+    if (Optional.ofNullable(fileContent).isPresent()) {
+      encryptSecretFile(fileContent, encryptedData, secretManager);
+    }
     return encryptedDataDao.save(encryptedData);
   }
 
@@ -209,10 +217,11 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
       }
       EncryptedRecord encryptedRecord =
           getEncryptedRecord(encryptedData, secret.getValue(), SecretManagerConfigMapper.fromDTO(secretManager));
-
-      validateEncryptedRecord(encryptedRecord);
-      existingEncryptedData.setEncryptionKey(encryptedRecord.getEncryptionKey());
-      existingEncryptedData.setEncryptedValue(encryptedRecord.getEncryptedValue());
+      if (Optional.ofNullable(secret.getValue()).isPresent()) {
+        validateEncryptedRecord(encryptedRecord);
+        existingEncryptedData.setEncryptionKey(encryptedRecord.getEncryptionKey());
+        existingEncryptedData.setEncryptedValue(encryptedRecord.getEncryptedValue());
+      }
       existingEncryptedData.setPath(null);
     } else {
       validatePath(encryptedData.getPath(), encryptedData.getEncryptionType());
@@ -253,17 +262,18 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
         && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(existingEncryptedData.getEncryptionType())) {
       secretsFileService.deleteFile(existingEncryptedData.getEncryptedValue());
     }
-    encryptSecretFile(inputStream, encryptedData, secretManager);
-    existingEncryptedData.setName(encryptedData.getName());
-    existingEncryptedData.setEncryptionKey(encryptedData.getEncryptionKey());
-    existingEncryptedData.setEncryptedValue(encryptedData.getEncryptedValue());
-    existingEncryptedData.setBase64Encoded(encryptedData.isBase64Encoded());
+    String fileContent = getFileContent(inputStream);
+
+    if (!Optional.ofNullable(fileContent).isPresent()) {
+      existingEncryptedData.setName(encryptedData.getName());
+    } else {
+      encryptSecretFile(fileContent, encryptedData, secretManager);
+    }
     return encryptedDataDao.save(existingEncryptedData);
   }
 
   private void encryptSecretFile(
-      InputStream inputStream, NGEncryptedData encryptedData, SecretManagerConfigDTO secretManager) {
-    String fileContent = getFileContent(inputStream);
+      String fileContent, NGEncryptedData encryptedData, SecretManagerConfigDTO secretManager) {
     EncryptedRecord encryptedRecord =
         getEncryptedRecord(encryptedData, fileContent, SecretManagerConfigMapper.fromDTO(secretManager));
     validateEncryptedRecord(encryptedRecord);
@@ -363,7 +373,8 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
           if (encryptedData != null) {
             // if type is file and file is saved elsewhere, download and save contents in encryptedValue
             if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
-                && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())) {
+                && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())
+                && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
               char[] fileContent =
                   secretsFileService.getFileContents(String.valueOf(encryptedData.getEncryptedValue()));
               encryptedData.setEncryptedValue(fileContent);
@@ -373,10 +384,21 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
             SecretManagerConfigDTO secretManager = getSecretManager(
                 accountIdentifier, orgIdentifier, projectIdentifier, encryptedData.getSecretManagerIdentifier(), false);
             if (secretManager != null) {
-              EncryptedRecordData encryptedRecordData = buildEncryptedRecordData(encryptedData);
+              EncryptionConfig encryptionConfig = SecretManagerConfigMapper.fromDTO(secretManager);
+              EncryptedRecordData encryptedRecordData;
+              if (secretManager.isHarnessManaged()
+                  || HARNESS_SECRET_MANAGER_IDENTIFIER.equals(encryptedData.getSecretManagerIdentifier())) {
+                encryptedRecordData = globalEncryptDecryptClient.convertEncryptedRecordToLocallyEncrypted(
+                    encryptedData, accountIdentifier, encryptionConfig);
+                if (LOCAL.equals(encryptedRecordData.getEncryptionType())) {
+                  encryptionConfig = getLocalEncryptionConfig(accountIdentifier);
+                }
+              } else {
+                encryptedRecordData = buildEncryptedRecordData(encryptedData);
+              }
               encryptedDataDetails.add(EncryptedDataDetail.builder()
                                            .encryptedData(encryptedRecordData)
-                                           .encryptionConfig(SecretManagerConfigMapper.fromDTO(secretManager))
+                                           .encryptionConfig(encryptionConfig)
                                            .fieldName(field.getName())
                                            .build());
             }
@@ -387,6 +409,10 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
       }
     }
     return encryptedDataDetails;
+  }
+
+  private EncryptionConfig getLocalEncryptionConfig(String accountIdentifier) {
+    return LocalEncryptionConfig.builder().uuid(UUIDGenerator.generateUuid()).accountId(accountIdentifier).build();
   }
 
   private EncryptedRecordData buildEncryptedRecordData(NGEncryptedData encryptedData) {
@@ -404,8 +430,8 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
   }
 
   private void validateEncryptedRecord(EncryptedRecord encryptedRecord) {
-    if (encryptedRecord == null || isEmpty(encryptedRecord.getEncryptionKey())
-        || isEmpty(encryptedRecord.getEncryptedValue())) {
+    if (encryptedRecord == null || !Optional.ofNullable(encryptedRecord.getEncryptionKey()).isPresent()
+        || !Optional.ofNullable(encryptedRecord.getEncryptedValue()).isPresent()) {
       String message =
           "Encryption of secret failed unexpectedly. Please check your secret manager configuration and try again.";
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message, USER);
@@ -433,8 +459,8 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
 
   private SecretManagerConfigDTO getSecretManager(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String identifier, boolean maskSecrets) {
-    return secretManagerClientService.getSecretManager(
-        accountIdentifier, orgIdentifier, projectIdentifier, identifier, maskSecrets);
+    return getResponse(secretManagerClient.getSecretManager(
+        identifier, accountIdentifier, orgIdentifier, projectIdentifier, maskSecrets));
   }
 
   private boolean isReadOnlySecretManager(SecretManagerConfigDTO secretManager) {
