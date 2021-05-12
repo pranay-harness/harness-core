@@ -14,7 +14,10 @@ import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.index.migrator.Migrator;
-import io.harness.ng.core.services.OrganizationService;
+import io.harness.notification.MongoBackendConfiguration;
+import io.harness.notification.NotificationClientConfiguration;
+import io.harness.notification.module.NotificationClientModule;
+import io.harness.notification.module.NotificationClientPersistenceModule;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
@@ -70,8 +73,8 @@ public class SignupTestRule implements InjectorRuleMixin, MethodRule, MongoRuleM
 
     MongoClient mongoClient = new MongoClient(new MongoClientURI("mongodb://localhost:7457"));
 
-    modules.add(new SignupModule(
-        ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret", "Service"));
+    modules.add(new SignupModule(ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build(),
+        "test_secret", "Service", SignupNotificationConfiguration.builder().build()));
 
     modules.add(new ProviderModule() {
       @Provides
@@ -127,7 +130,6 @@ public class SignupTestRule implements InjectorRuleMixin, MethodRule, MongoRuleM
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
         MapBinder.newMapBinder(binder(), String.class, Migrator.class);
-        bind(OrganizationService.class).toInstance(mock(OrganizationService.class));
         bind(AccountService.class).toInstance(mock(AccountService.class));
         bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
       }
@@ -138,7 +140,12 @@ public class SignupTestRule implements InjectorRuleMixin, MethodRule, MongoRuleM
         return SegmentConfiguration.builder().build();
       }
     });
-
+    MongoBackendConfiguration mongoBackendConfiguration = MongoBackendConfiguration.builder().build();
+    mongoBackendConfiguration.setType("MONGO");
+    modules.add(new NotificationClientModule(NotificationClientConfiguration.builder()
+                                                 .notificationClientBackendConfiguration(mongoBackendConfiguration)
+                                                 .build()));
+    modules.add(new NotificationClientPersistenceModule());
     return modules;
   }
 

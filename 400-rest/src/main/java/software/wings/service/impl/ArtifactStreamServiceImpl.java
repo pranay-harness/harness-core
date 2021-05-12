@@ -735,24 +735,28 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     if (shouldDeleteArtifactsOnSourceChanged(existingArtifactStream, finalArtifactStream)
         || shouldDeleteArtifactsOnServerChanged(existingArtifactStream)) {
-      // Mark the collection status as unstable (for non-custom) because the artifact source has changed. We will again
-      // do a fresh artifact collection.
-      if (!CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
-        updateCollectionStatus(
-            accountId, finalArtifactStream.getUuid(), ArtifactStreamCollectionStatus.UNSTABLE.name());
-      }
-
-      // TODO: This logic has to be moved to Prune event or Queue to ensure guaranteed execution
-      executorService.submit(() -> {
-        artifactService.deleteWhenArtifactSourceNameChanged(existingArtifactStream);
-        // Perpetual task should only be reset after the artifacts are deleted. Otherwise, cache will become invalid.
-        resetPerpetualTask(finalArtifactStream);
-      });
+      deleteArtifacts(accountId, finalArtifactStream);
     } else {
       resetPerpetualTask(finalArtifactStream);
     }
 
     return finalArtifactStream;
+  }
+
+  @Override
+  public void deleteArtifacts(String accountId, ArtifactStream artifactStream) {
+    // Mark the collection status as unstable (for non-custom) because the artifact source has changed. We will again
+    // do a fresh artifact collection.
+    if (!CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
+      updateCollectionStatus(accountId, artifactStream.getUuid(), ArtifactStreamCollectionStatus.UNSTABLE.name());
+    }
+
+    // TODO: This logic has to be moved to Prune event or Queue to ensure guaranteed execution
+    executorService.submit(() -> {
+      artifactService.deleteByArtifactStreamId(artifactStream.getAppId(), artifactStream.getUuid());
+      // Perpetual task should only be reset after the artifacts are deleted. Otherwise, cache will become invalid.
+      resetPerpetualTask(artifactStream);
+    });
   }
 
   private void populateCustomArtifactStreamFields(

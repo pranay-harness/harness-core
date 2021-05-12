@@ -10,6 +10,7 @@ import io.harness.ccm.eventframework.CENGEventConsumerService;
 import io.harness.cf.AbstractCfModule;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
+import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.ff.FeatureFlagService;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
@@ -113,6 +114,7 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
     registerHealthCheck(environment, injector);
     registerExceptionMappers(environment.jersey());
     registerCorrelationFilter(environment, injector);
+    registerScheduledJobs(injector);
     MaintenanceController.forceMaintenance(false);
     createConsumerThreadsToListenToEvents(environment, injector);
   }
@@ -131,6 +133,10 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
     final HealthService healthService = injector.getInstance(HealthService.class);
     environment.healthChecks().register("application", healthService);
     healthService.registerMonitor(injector.getInstance(HPersistence.class));
+  }
+
+  private void registerScheduledJobs(Injector injector) {
+    injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
   }
 
   private void registerResources(Environment environment, Injector injector) {

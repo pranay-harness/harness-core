@@ -1,11 +1,9 @@
 package io.harness.gitsync.persistance;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.gitsync.interceptor.GitSyncConstants.DEFAULT;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.beans.YamlDTO;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
@@ -19,7 +17,6 @@ import io.harness.ng.core.utils.NGYamlUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.protobuf.StringValue;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +35,7 @@ import org.springframework.data.mongodb.core.query.Query;
 @Slf4j
 public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
   private MongoTemplate mongoTemplate;
-  private EntityKeySource entityKeySource;
+  private GitSyncSdkService gitSyncSdkService;
   private Map<String, GitSdkEntityHandlerInterface> gitPersistenceHelperServiceMap;
   private SCMGitSyncHelper scmGitSyncHelper;
   private GitSyncMsvcHelper gitSyncMsvcHelper;
@@ -147,23 +144,7 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
   }
 
   private boolean isGitSyncEnabled(String projectIdentifier, String orgIdentifier, String accountIdentifier) {
-    try {
-      return entityKeySource.fetchKey(buildEntityScopeInfo(projectIdentifier, orgIdentifier, accountIdentifier));
-    } catch (Exception ex) {
-      log.error("Exception while communicating to the git sync service", ex);
-      return false;
-    }
-  }
-
-  private EntityScopeInfo buildEntityScopeInfo(String projectIdentifier, String orgIdentifier, String accountId) {
-    final EntityScopeInfo.Builder entityScopeInfoBuilder = EntityScopeInfo.newBuilder().setAccountId(accountId);
-    if (!isEmpty(projectIdentifier)) {
-      entityScopeInfoBuilder.setProjectId(StringValue.of(projectIdentifier));
-    }
-    if (!isEmpty(orgIdentifier)) {
-      entityScopeInfoBuilder.setOrgId(StringValue.of(orgIdentifier));
-    }
-    return entityScopeInfoBuilder.build();
+    return gitSyncSdkService.isGitSyncEnabled(accountIdentifier, orgIdentifier, projectIdentifier);
   }
 
   private Criteria updateCriteriaIfGitSyncEnabled(

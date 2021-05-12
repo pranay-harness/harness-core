@@ -3,7 +3,6 @@ package io.harness.cdng.provision.terraform;
 import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
 import static io.harness.provision.TerraformConstants.TF_DESTROY_NAME_PREFIX;
 import static io.harness.provision.TerraformConstants.TF_NAME_PREFIX;
-import static io.harness.secrets.SecretNGManagerClientModule.SECRET_NG_MANAGER_CLIENT_SERVICE;
 import static io.harness.validation.Validator.notEmptyCheck;
 
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
@@ -64,7 +63,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -90,7 +88,7 @@ public class TerraformStepHelper {
   @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
   @Inject private GitConfigAuthenticationInfoHelper gitConfigAuthenticationInfoHelper;
   @Inject private FileServiceClientFactory fileService;
-  @Inject @Named(SECRET_NG_MANAGER_CLIENT_SERVICE) private SecretManagerClientService secretManagerClientService;
+  @Inject private SecretManagerClientService secretManagerClientService;
 
   public String generateFullIdentifier(String provisionerIdentifier, Ambiance ambiance) {
     return String.format("%s/%s/%s/%s", AmbianceHelper.getAccountId(ambiance),

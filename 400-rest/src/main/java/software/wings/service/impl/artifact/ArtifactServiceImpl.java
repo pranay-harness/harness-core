@@ -894,6 +894,14 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   @Override
+  public void deleteByArtifactStreamId(String appId, String artifactStreamId) {
+    deleteArtifactsByQuery(wingsPersistence.createQuery(Artifact.class, excludeAuthority)
+                               .project(ArtifactKeys.artifactFiles, true)
+                               .filter(ArtifactKeys.artifactStreamId, artifactStreamId)
+                               .filter(ArtifactKeys.appId, appId));
+  }
+
+  @Override
   public List<Artifact> listByIds(String accountId, Collection<String> artifactIds) {
     return wingsPersistence.createQuery(Artifact.class)
         .filter(ArtifactKeys.accountId, accountId)

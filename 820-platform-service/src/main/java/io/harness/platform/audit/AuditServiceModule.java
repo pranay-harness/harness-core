@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.AccessControlClientModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.audit.AuditFilterModule;
 import io.harness.audit.api.AuditService;
 import io.harness.audit.api.AuditSettingsService;
@@ -21,9 +22,9 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
 import io.harness.platform.PlatformConfiguration;
-import io.harness.queue.QueueController;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NGAuditServiceRegistrars;
+import io.harness.serializer.PrimaryVersionManagerRegistrars;
 import io.harness.springdata.HTransactionTemplate;
 import io.harness.threading.ExecutorModule;
 import io.harness.version.VersionModule;
@@ -70,6 +71,7 @@ public class AuditServiceModule extends AbstractModule {
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(NGAuditServiceRegistrars.morphiaRegistrars)
+            .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -85,22 +87,6 @@ public class AuditServiceModule extends AbstractModule {
         return appConfig.getAuditServiceConfig().getMongoConfig();
       }
     });
-    install(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(QueueController.class).toInstance(new QueueController() {
-          @Override
-          public boolean isPrimary() {
-            return true;
-          }
-
-          @Override
-          public boolean isNotPrimary() {
-            return false;
-          }
-        });
-      }
-    });
     install(ExecutorModule.getInstance());
     bind(PlatformConfiguration.class).toInstance(appConfig);
     install(new AbstractMongoModule() {
@@ -112,6 +98,7 @@ public class AuditServiceModule extends AbstractModule {
     bind(HPersistence.class).to(MongoPersistence.class);
 
     install(VersionModule.getInstance());
+    install(PrimaryVersionManagerModule.getInstance());
     install(new ValidationModule(getValidatorFactory()));
 
     install(new AuditPersistenceModule());

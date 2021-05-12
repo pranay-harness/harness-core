@@ -20,6 +20,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
@@ -32,7 +33,6 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
 
-import software.wings.WingsBaseTest;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
@@ -52,10 +52,11 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @TargetModule(_861_CG_ORCHESTRATION_STATES)
 @OwnedBy(CDP)
-public class K8sTrafficSplitStateTest extends WingsBaseTest {
+public class K8sTrafficSplitStateTest extends CategoryTest {
   private static final String RELEASE_NAME = "releaseName";
 
   @Mock private K8sStateHelper k8sStateHelper;
@@ -66,6 +67,7 @@ public class K8sTrafficSplitStateTest extends WingsBaseTest {
 
   @Before
   public void setup() {
+    MockitoAnnotations.initMocks(this);
     WorkflowStandardParams workflowStandardParams = new WorkflowStandardParams();
     when(context.getContextElement(any(ContextElementType.class))).thenReturn(workflowStandardParams);
     when(context.getStateExecutionData()).thenReturn(new K8sStateExecutionData());

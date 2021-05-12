@@ -23,6 +23,18 @@ resource "google_pubsub_topic" "ce-azuredata-topic" {
   project = "${var.projectId}"
 }
 
+# PubSub topic for AWS EC2 Inventory data pipeline. scheduler pushes into this
+resource "google_pubsub_topic" "ce-awsdata-ec2-inventory-topic" {
+  name = "ce-awsdata-ec2-inventory-scheduler"
+  project = "${var.projectId}"
+}
+
+# PubSub topic for AWS EC2 Inventory CPU data pipeline. scheduler pushes into this
+resource "google_pubsub_topic" "ce-awsdata-ec2-cpu-topic" {
+  name = "ce-awsdata-ec2-cpu-inventory-scheduler"
+  project = "${var.projectId}"
+}
+
 
 data "archive_file" "ce-clusterdata" {
   type        = "zip"
@@ -182,6 +194,72 @@ data "archive_file" "ce-azuredata-bq" {
   }
 }
 
+data "archive_file" "ce-awsdata-ec2" {
+  type        = "zip"
+  output_path = "${path.module}/files/ce-awsdata-ec2.zip"
+  source {
+    content  = "${file("${path.module}/src/python/aws_ec2_data_main.py")}"
+    filename = "main.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/clusterdata_schema.py")}"
+    filename = "clusterdata_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/aws_ec2_inventory_schema.py")}"
+    filename = "aws_ec2_inventory_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/unified_schema.py")}"
+    filename = "unified_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/preaggregated_schema.py")}"
+    filename = "preaggregated_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/util.py")}"
+    filename = "util.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/requirements.txt")}"
+    filename = "requirements.txt"
+  }
+}
+
+data "archive_file" "ce-awsdata-ec2-cpu" {
+  type        = "zip"
+  output_path = "${path.module}/files/ce-awsdata-ec2-cpu.zip"
+  source {
+    content  = "${file("${path.module}/src/python/aws_ec2_cpu_data_main.py")}"
+    filename = "main.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/clusterdata_schema.py")}"
+    filename = "clusterdata_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/aws_ec2_inventory_schema.py")}"
+    filename = "aws_ec2_inventory_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/unified_schema.py")}"
+    filename = "unified_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/preaggregated_schema.py")}"
+    filename = "preaggregated_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/util.py")}"
+    filename = "util.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/requirements.txt")}"
+    filename = "requirements.txt"
+  }
+}
+
 resource "google_storage_bucket_object" "ce-clusterdata-archive" {
   name   = "ce-clusterdata.${data.archive_file.ce-clusterdata.output_md5}.zip"
   bucket = "${google_storage_bucket.bucket1.name}"
@@ -222,6 +300,20 @@ resource "google_storage_bucket_object" "ce-azuredata-bq-archive" {
   bucket = "${google_storage_bucket.bucket1.name}"
   source = "${path.module}/files/ce-azuredata-bq.zip"
   depends_on = ["data.archive_file.ce-azuredata-bq"]
+}
+
+resource "google_storage_bucket_object" "ce-awsdata-ec2-archive" {
+  name = "ce-awsdata.${data.archive_file.ce-awsdata-ec2.output_md5}.zip"
+  bucket = "${google_storage_bucket.bucket1.name}"
+  source = "${path.module}/files/ce-awsdata-ec2.zip"
+  depends_on = ["data.archive_file.ce-awsdata-ec2"]
+}
+
+resource "google_storage_bucket_object" "ce-awsdata-ec2-cpu-archive" {
+  name = "ce-awsdata.${data.archive_file.ce-awsdata-ec2-cpu.output_md5}.zip"
+  bucket = "${google_storage_bucket.bucket1.name}"
+  source = "${path.module}/files/ce-awsdata-ec2-cpu.zip"
+  depends_on = ["data.archive_file.ce-awsdata-ec2-cpu"]
 }
 
 resource "google_cloudfunctions_function" "ce-clusterdata-function" {
@@ -372,6 +464,60 @@ resource "google_cloudfunctions_function" "ce-azuredata-gcs-function" {
   event_trigger {
     event_type = "google.storage.object.finalize"
     resource   = "azurecustomerbillingdata-${var.deployment}"
+    failure_policy {
+      retry = false
+    }
+  }
+}
+
+resource "google_cloudfunctions_function" "ce-awsdata-ec2-function" {
+  name                      = "ce-awsdata-ec2-terraform"
+  description               = "This cloudfunction gets triggered upon event in a pubsub topic"
+  entry_point               = "main"
+  available_memory_mb       = 256
+  timeout                   = 540
+  runtime                   = "python38"
+  project                   = "${var.projectId}"
+  region                    = "${var.region}"
+  source_archive_bucket     = "${google_storage_bucket.bucket1.name}"
+  source_archive_object     = "${google_storage_bucket_object.ce-awsdata-ec2-archive.name}"
+
+  environment_variables = {
+    disabled = "false"
+    enable_for_accounts = ""
+    GCP_PROJECT = "${var.projectId}"
+  }
+
+  event_trigger {
+    event_type = "google.pubsub.topic.publish"
+    resource   = "${google_pubsub_topic.ce-awsdata-ec2-inventory-topic.name}"
+    failure_policy {
+      retry = false
+    }
+  }
+}
+
+resource "google_cloudfunctions_function" "ce-awsdata-ec2-cpu-function" {
+  name                      = "ce-awsdata-ec2-cpu-terraform"
+  description               = "This cloudfunction gets triggered upon event in a pubsub topic"
+  entry_point               = "main"
+  available_memory_mb       = 256
+  timeout                   = 540
+  runtime                   = "python38"
+  project                   = "${var.projectId}"
+  region                    = "${var.region}"
+  source_archive_bucket     = "${google_storage_bucket.bucket1.name}"
+  source_archive_object     = "${google_storage_bucket_object.ce-awsdata-ec2-cpu-archive.name}"
+
+  environment_variables = {
+    disabled = "false"
+    enable_for_accounts = ""
+    GCP_PROJECT = "${var.projectId}"
+  }
+
+  event_trigger {
+    event_type = "google.pubsub.topic.publish"
+    resource   = "${google_pubsub_topic.ce-awsdata-ec2-cpu-topic.name}"
     failure_policy {
       retry = false
     }

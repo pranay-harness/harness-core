@@ -1,7 +1,8 @@
 package io.harness.pms.yaml.validation;
 
-import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.expression.EngineExpressionService;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.expression.EngineExpressionEvaluator;
 
 import java.util.Arrays;
 import java.util.List;
@@ -19,15 +20,17 @@ import java.util.stream.Collectors;
  * ${input}.allowedValues(jexl(${env} == 'dev'?(${team} == 'a' ?'dev_a, dev_b':'dev_qa, dev_qb'):'prod,stage'))
  * #evaluate
  */
+@OwnedBy(HarnessTeam.PIPELINE)
 public class AllowedValuesValidator implements RuntimeValidator {
-  private final EngineExpressionService engineExpressionService;
-  private final Ambiance ambiance;
+  private final EngineExpressionEvaluator engineExpressionEvaluator;
+  private final boolean skipUnresolvedExpressionsCheck;
 
   private static final Pattern JEXL_PATTERN = Pattern.compile("jexl\\(");
 
-  public AllowedValuesValidator(EngineExpressionService engineExpressionService, Ambiance ambiance) {
-    this.engineExpressionService = engineExpressionService;
-    this.ambiance = ambiance;
+  public AllowedValuesValidator(
+      EngineExpressionEvaluator engineExpressionEvaluator, boolean skipUnresolvedExpressionsCheck) {
+    this.engineExpressionEvaluator = engineExpressionEvaluator;
+    this.skipUnresolvedExpressionsCheck = skipUnresolvedExpressionsCheck;
   }
 
   @Override
@@ -46,9 +49,9 @@ public class AllowedValuesValidator implements RuntimeValidator {
     }
 
     if (isJexlExpression) {
-      parameters = (String) engineExpressionService.evaluateExpression(ambiance, parameters);
+      parameters = (String) engineExpressionEvaluator.evaluateExpression(parameters);
     } else {
-      parameters = engineExpressionService.renderExpression(ambiance, parameters);
+      parameters = engineExpressionEvaluator.renderExpression(parameters, skipUnresolvedExpressionsCheck);
     }
 
     String[] parametersList = parameters.split(",");

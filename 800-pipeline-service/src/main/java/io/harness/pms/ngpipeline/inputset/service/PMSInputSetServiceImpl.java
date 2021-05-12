@@ -8,6 +8,7 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.inputset.gitsync.InputSetYamlDTOMapper;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity.InputSetEntityKeys;
 import io.harness.pms.pipeline.PipelineEntity;
@@ -17,7 +18,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.client.result.UpdateResult;
 import java.util.Optional;
-import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
@@ -38,7 +38,7 @@ public class PMSInputSetServiceImpl implements PMSInputSetService {
   @Override
   public InputSetEntity create(InputSetEntity inputSetEntity) {
     try {
-      return inputSetRepository.save(inputSetEntity);
+      return inputSetRepository.save(inputSetEntity, InputSetYamlDTOMapper.toDTO(inputSetEntity));
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(
           format(DUP_KEY_EXP_FORMAT_STRING, inputSetEntity.getIdentifier(), inputSetEntity.getProjectIdentifier(),
@@ -57,12 +57,37 @@ public class PMSInputSetServiceImpl implements PMSInputSetService {
 
   @Override
   public InputSetEntity update(InputSetEntity inputSetEntity) {
-    Criteria criteria = getInputSetEqualityCriteria(inputSetEntity, inputSetEntity.getDeleted());
-    InputSetEntity updatedEntity = inputSetRepository.update(criteria, inputSetEntity);
-    if (updatedEntity == null) {
+    Optional<InputSetEntity> optionalOriginalEntity =
+        get(inputSetEntity.getAccountId(), inputSetEntity.getOrgIdentifier(), inputSetEntity.getProjectIdentifier(),
+            inputSetEntity.getPipelineIdentifier(), inputSetEntity.getIdentifier(), false);
+    if (!optionalOriginalEntity.isPresent()) {
+      throw new InvalidRequestException(
+          format("Input Set [%s], for pipeline [%s], under Project[%s], Organization [%s] doesn't exist.",
+              inputSetEntity.getIdentifier(), inputSetEntity.getPipelineIdentifier(),
+              inputSetEntity.getProjectIdentifier(), inputSetEntity.getOrgIdentifier()));
+    }
+
+    InputSetEntity originalEntity = optionalOriginalEntity.get();
+    if (inputSetEntity.getVersion() != null && !inputSetEntity.getVersion().equals(originalEntity.getVersion())) {
       throw new InvalidRequestException(format(
-          "Input Set [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
-          inputSetEntity.getIdentifier(), inputSetEntity.getProjectIdentifier(), inputSetEntity.getOrgIdentifier()));
+          "Input Set [%s], for pipeline [%s], under Project[%s], Organization [%s] is not on the correct version.",
+          inputSetEntity.getIdentifier(), inputSetEntity.getPipelineIdentifier(), inputSetEntity.getProjectIdentifier(),
+          inputSetEntity.getOrgIdentifier()));
+    }
+    InputSetEntity entityToUpdate = originalEntity.withYaml(inputSetEntity.getYaml())
+                                        .withName(inputSetEntity.getName())
+                                        .withDescription(inputSetEntity.getDescription())
+                                        .withTags(inputSetEntity.getTags())
+                                        .withInputSetReferences(inputSetEntity.getInputSetReferences());
+
+    InputSetEntity updatedEntity =
+        inputSetRepository.update(entityToUpdate, InputSetYamlDTOMapper.toDTO(entityToUpdate));
+
+    if (updatedEntity == null) {
+      throw new InvalidRequestException(
+          format("Input Set [%s], for pipeline [%s], under Project[%s], Organization [%s] could not be updated.",
+              inputSetEntity.getIdentifier(), inputSetEntity.getPipelineIdentifier(),
+              inputSetEntity.getProjectIdentifier(), inputSetEntity.getOrgIdentifier()));
     }
     return updatedEntity;
   }
@@ -70,48 +95,35 @@ public class PMSInputSetServiceImpl implements PMSInputSetService {
   @Override
   public boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier,
       String identifier, Long version) {
-    Criteria criteria = getInputSetEqualityCriteria(
-        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, identifier, false, version);
-    UpdateResult updateResult = inputSetRepository.delete(criteria);
-    if (!updateResult.wasAcknowledged() || updateResult.getModifiedCount() != 1) {
+    Optional<InputSetEntity> optionalOriginalEntity =
+        get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, identifier, false);
+    if (!optionalOriginalEntity.isPresent()) {
       throw new InvalidRequestException(
-          format("Input Set [%s] under Project[%s], Organization [%s] couldn't be deleted.", identifier,
-              projectIdentifier, orgIdentifier));
+          format("Input Set [%s], for pipeline [%s], under Project[%s], Organization [%s] doesn't exist.", identifier,
+              pipelineIdentifier, projectIdentifier, orgIdentifier));
     }
-    return true;
+    InputSetEntity existingEntity = optionalOriginalEntity.get();
+    if (version != null && !version.equals(existingEntity.getVersion())) {
+      throw new InvalidRequestException(format(
+          "Input Set [%s], for pipeline [%s], under Project[%s], Organization [%s] is not on the correct version.",
+          identifier, pipelineIdentifier, projectIdentifier, orgIdentifier));
+    }
+    InputSetEntity entityWithDelete = existingEntity.withDeleted(true);
+    InputSetEntity deletedEntity =
+        inputSetRepository.delete(entityWithDelete, InputSetYamlDTOMapper.toDTO(entityWithDelete));
+
+    if (deletedEntity.getDeleted()) {
+      return true;
+    } else {
+      throw new InvalidRequestException(
+          format("Input Set [%s], for pipeline [%s], under Project[%s], Organization [%s] couldn't be deleted.",
+              identifier, pipelineIdentifier, projectIdentifier, orgIdentifier));
+    }
   }
 
   @Override
   public Page<InputSetEntity> list(Criteria criteria, Pageable pageable) {
     return inputSetRepository.findAll(criteria, pageable);
-  }
-
-  private Criteria getInputSetEqualityCriteria(@Valid InputSetEntity reqInputSet, boolean deleted) {
-    return getInputSetEqualityCriteria(reqInputSet.getAccountId(), reqInputSet.getOrgIdentifier(),
-        reqInputSet.getProjectIdentifier(), reqInputSet.getPipelineIdentifier(), reqInputSet.getIdentifier(), deleted,
-        reqInputSet.getVersion());
-  }
-
-  private Criteria getInputSetEqualityCriteria(String accountId, String orgIdentifier, String projectIdentifier,
-      String pipelineIdentifier, String identifier, boolean deleted, Long version) {
-    Criteria criteria = Criteria.where(InputSetEntityKeys.accountId)
-                            .is(accountId)
-                            .and(InputSetEntityKeys.orgIdentifier)
-                            .is(orgIdentifier)
-                            .and(InputSetEntityKeys.projectIdentifier)
-                            .is(projectIdentifier)
-                            .and(InputSetEntityKeys.pipelineIdentifier)
-                            .is(pipelineIdentifier)
-                            .and(InputSetEntityKeys.identifier)
-                            .is(identifier)
-                            .and(InputSetEntityKeys.deleted)
-                            .is(deleted);
-
-    if (version != null) {
-      criteria.and(InputSetEntityKeys.version).is(version);
-    }
-
-    return criteria;
   }
 
   @Override

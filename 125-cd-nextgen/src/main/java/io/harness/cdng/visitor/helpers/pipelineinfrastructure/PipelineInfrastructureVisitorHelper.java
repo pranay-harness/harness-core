@@ -1,6 +1,6 @@
 package io.harness.cdng.visitor.helpers.pipelineinfrastructure;
 
-import static io.harness.yaml.core.LevelNodeQualifierName.PATH_CONNECTOR;
+import static io.harness.walktree.visitor.utilities.VisitorParentPathUtils.PATH_CONNECTOR;
 
 import io.harness.IdentifierRefProtoUtils;
 import io.harness.annotations.dev.HarnessTeam;

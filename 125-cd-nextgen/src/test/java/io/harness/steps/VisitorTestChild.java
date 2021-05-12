@@ -3,7 +3,6 @@ package io.harness.steps;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 
@@ -16,9 +15,4 @@ import lombok.Data;
 @SimpleVisitorHelper(helperClass = VisitorTestChildVisitorHelper.class)
 public class VisitorTestChild implements Visitable {
   String name;
-
-  @Override
-  public LevelNode getLevelNode() {
-    return null;
-  }
 }

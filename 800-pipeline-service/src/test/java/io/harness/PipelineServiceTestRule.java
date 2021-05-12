@@ -12,6 +12,7 @@ import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.factory.ClosingFactory;
 import io.harness.gitsync.persistance.GitAwarePersistence;
+import io.harness.gitsync.persistance.testing.GitSyncablePersistenceTestModule;
 import io.harness.gitsync.persistance.testing.NoOpGitAwarePersistenceImpl;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
@@ -29,7 +30,6 @@ import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.serializer.PrimaryVersionManagerRegistrars;
 import io.harness.service.intfc.DelegateAsyncService;
 import io.harness.service.intfc.DelegateSyncService;
-import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -127,8 +127,8 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
     modules.add(PrimaryVersionManagerModule.getInstance());
     modules.add(TimeModule.getInstance());
     modules.add(TestMongoModule.getInstance());
-    //    modules.add(new GitSyncablePersistenceTestModule());
-    modules.add(new SpringPersistenceTestModule());
+    modules.add(new GitSyncablePersistenceTestModule());
+    //    modules.add(new SpringPersistenceTestModule());
     modules.add(
         OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
                                             .serviceName("PIPELINE_TEST")

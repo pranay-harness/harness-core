@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.platform.PlatformConfiguration.getNotificationServiceResourceClasses;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.health.HealthService;
 import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.ng.core.CorrelationFilter;
@@ -90,6 +91,7 @@ public class NotificationServiceSetup {
 
   private void registerScheduleJobs(Injector injector) {
     log.info("Initializing scheduled jobs...");
+    injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
     injector.getInstance(Key.get(ManagedScheduledExecutorService.class, Names.named("delegate-response")))
         .scheduleWithFixedDelay(injector.getInstance(DelegateSyncServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
   }
