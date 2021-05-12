@@ -24,6 +24,8 @@ import io.harness.filesystem.FileIo;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.pcf.PivotalClientApiException;
+import io.harness.pcf.model.CfCliVersion;
+import io.harness.pcf.model.PcfConstants;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.PcfConfig;
@@ -84,9 +86,12 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
       if (EmptyPredicate.isNotEmpty(pluginCommandRequest.getFileDataList())) {
         saveFilesInWorkingDirectory(pluginCommandRequest.getFileDataList(), workingDirCanonicalPath);
       }
+
+      CfCliVersion cfCliVersion = pcfCommandRequest.getCfCliVersion();
+      String cfCliPath = pcfCommandTaskHelper.getCfCliPathOnDelegate(true, cfCliVersion);
       //  insert working directory in script path
       final String finalScriptString = prepareFinalScript(pluginCommandRequest.getRenderedScriptString(),
-          workingDirCanonicalPath, StringUtils.defaultIfEmpty(pluginCommandRequest.getRepoRoot(), "/"));
+          workingDirCanonicalPath, StringUtils.defaultIfEmpty(pluginCommandRequest.getRepoRoot(), "/"), cfCliPath);
 
       // log all the files being saved and files being resolved in the script
 
@@ -112,8 +117,8 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
               .endpointUrl(pcfConfig.getEndpointUrl())
               .timeOutIntervalInMins(pluginCommandRequest.getTimeoutIntervalInMin())
               .limitPcfThreads(pluginCommandRequest.isLimitPcfThreads())
-              .cfCliPath(pcfCommandTaskHelper.getCfCliPathOnDelegate(true, pcfCommandRequest.getCfCliVersion()))
-              .cfCliVersion(pcfCommandRequest.getCfCliVersion())
+              .cfCliPath(cfCliPath)
+              .cfCliVersion(cfCliVersion)
               .ignorePcfConnectionContextCache(pluginCommandRequest.isIgnorePcfConnectionContextCache())
               .build();
 
@@ -147,12 +152,14 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
     return canonicalPath;
   }
 
-  private String prepareFinalScript(String renderedScriptString, String workingDirCanonicalPathStr, String repoRoot) {
+  private String prepareFinalScript(
+      String renderedScriptString, String workingDirCanonicalPathStr, String repoRoot, String cfCliPath) {
     // replace the path identifier with actual working directory path
     String finalScript =
         renderedScriptString.replaceAll(PcfPluginState.FILE_START_REPO_ROOT_REGEX, workingDirCanonicalPathStr);
     final String dirPathWithRepoRoot = workingDirCanonicalPathStr + ("/".equals(repoRoot) ? "" : repoRoot);
     finalScript = finalScript.replaceAll(PcfPluginState.FILE_START_SERVICE_MANIFEST_REGEX, dirPathWithRepoRoot);
+    finalScript = finalScript.replaceAll(PcfConstants.SERVICE_CLI_REGEX, cfCliPath);
 
     return finalScript;
   }
