@@ -11,6 +11,7 @@ import static io.harness.delegate.configuration.InstallUtils.installHelm;
 import static io.harness.delegate.configuration.InstallUtils.installKubectl;
 import static io.harness.delegate.configuration.InstallUtils.installKustomize;
 import static io.harness.delegate.configuration.InstallUtils.installOc;
+import static io.harness.delegate.configuration.InstallUtils.installScm;
 import static io.harness.delegate.configuration.InstallUtils.installTerraformConfigInspect;
 import static io.harness.delegate.message.ManagerMessageConstants.JRE_VERSION;
 import static io.harness.delegate.message.ManagerMessageConstants.MIGRATE;
@@ -427,6 +428,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       boolean tfConfigInspectInstalled = installTerraformConfigInspect(delegateConfiguration);
       boolean ocInstalled = installOc(delegateConfiguration);
       boolean kustomizeInstalled = installKustomize(delegateConfiguration);
+      boolean scmInstalled = installScm(delegateConfiguration);
 
       long start = clock.millis();
       String descriptionFromConfigFile = isBlank(delegateDescription) ? "" : delegateDescription;
@@ -543,7 +545,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       startProfileCheck();
 
       if (!kubectlInstalled || !goTemplateInstalled || !helmInstalled || !chartMuseumInstalled
-          || !tfConfigInspectInstalled || !harnessPywinrmInstalled) {
+          || !tfConfigInspectInstalled || !harnessPywinrmInstalled || !scmInstalled) {
         systemExecutor.submit(() -> {
           boolean kubectl = kubectlInstalled;
           boolean goTemplate = goTemplateInstalled;
@@ -553,9 +555,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           boolean oc = ocInstalled;
           boolean kustomize = kustomizeInstalled;
           boolean harnessPywinrm = harnessPywinrmInstalled;
+          boolean scm = scmInstalled;
 
           int retries = CLIENT_TOOL_RETRIES;
-          while ((!kubectl || !goTemplate || !helm || !chartMuseum || !tfConfigInspect || !harnessPywinrm)
+          while ((!kubectl || !goTemplate || !helm || !chartMuseum || !tfConfigInspect || !harnessPywinrm || !scm)
               && retries > 0) {
             sleep(ofSeconds(15L));
             if (!kubectl) {
@@ -585,6 +588,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             if (!kustomize) {
               kustomize = installKustomize(delegateConfiguration);
             }
+            if (!scm) {
+              scm = installScm(delegateConfiguration);
+            }
 
             retries--;
           }
@@ -611,6 +617,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           }
           if (!kustomize) {
             log.error("Failed to install kustomize after {} retries", CLIENT_TOOL_RETRIES);
+          }
+          if (!scm) {
+            log.error("Failed to install scm after {} retries", CLIENT_TOOL_RETRIES);
           }
         });
       }

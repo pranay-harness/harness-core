@@ -25,13 +25,13 @@ import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.target.TargetSpec;
 import io.harness.ngtriggers.beans.target.pipeline.PipelineTargetSpec;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.TriggerType;
 import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.contracts.triggers.ParsedPayload;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.contracts.triggers.Type;
-import io.harness.pms.helpers.PrincipalInfoHelper;
 import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
@@ -105,7 +105,8 @@ public class TriggerExecutionHelper {
         }
       }
       executionMetaDataBuilder.setYaml(pipelineYaml);
-      executionMetaDataBuilder.setPrincipalInfo(PrincipalInfoHelper.getPrincipalInfoFromSecurityContext());
+      executionMetaDataBuilder.setPrincipalInfo(
+          ExecutionPrincipalInfo.newBuilder().setShouldValidateRbac(false).build());
 
       return pipelineExecuteHelper.startExecution(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
           ngTriggerEntity.getProjectIdentifier(), pipelineYaml, executionMetaDataBuilder.build());

@@ -18,6 +18,7 @@ import (
 	"github.com/wings-software/portal/product/ci/ti-service/eventsframework"
 	"github.com/wings-software/portal/product/ci/ti-service/handler"
 	"github.com/wings-software/portal/product/ci/ti-service/server"
+	"github.com/wings-software/portal/product/ci/ti-service/tidb"
 	"github.com/wings-software/portal/product/ci/ti-service/tidb/mongodb"
 
 	"github.com/joho/godotenv"
@@ -56,7 +57,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 		log.Infow("configuring TI service to use Timescale DB",
 			"endpoint", config.TimeScaleDb.Host,
 			"db_name", config.TimeScaleDb.DbName,
-			"test_table_name", config.TimeScaleDb.HyperTableName,
+			"evaluation_table", config.TimeScaleDb.EvalTable,
 			"selection_stats_table", config.TimeScaleDb.SelectionTable,
 			"coverage_table", config.TimeScaleDb.CoverageTable,
 			"ssl_enabled", config.TimeScaleDb.EnableSSL,
@@ -67,6 +68,9 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 			config.TimeScaleDb.Host,
 			config.TimeScaleDb.Port,
 			config.TimeScaleDb.DbName,
+			config.TimeScaleDb.EvalTable,
+			config.TimeScaleDb.CoverageTable,
+			config.TimeScaleDb.SelectionTable,
 			config.TimeScaleDb.EnableSSL,
 			config.TimeScaleDb.SSLCertPath,
 			log,

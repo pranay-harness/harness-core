@@ -21,7 +21,7 @@ import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.impl.CIPipelineExecutionService;
 import io.harness.impl.CIPipelineExecutionServiceImpl;
 import io.harness.plancreator.execution.ExecutionElementConfig;
-import io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventListener;
+import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;

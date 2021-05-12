@@ -193,6 +193,8 @@ def setAvailableColumns(client, jsonData):
         CE_COLUMN_MAPPING["cost"] = "CostInBillingCurrency"
     elif "PreTaxCost" in columns:
         CE_COLUMN_MAPPING["cost"] = "PreTaxCost"
+    elif "Cost" in columns:
+        CE_COLUMN_MAPPING["cost"] = "Cost"
     else:
         raise Exception("No mapping found for cost column")
 
@@ -352,7 +354,7 @@ def alterPreaggTable(client, jsonData):
         results = query_job.result()
     except Exception as e:
         # Error Running Alter Query
-        print_(e, "WARN")
+        print_(e)
     else:
         print_("Finished Altering preAggregated Table")
 
@@ -384,7 +386,7 @@ def alterUnifiedTable(client, jsonData):
         results = query_job.result()
     except Exception as e:
         # Error Running Alter Query
-        print_(e, "WARN")
+        print_(e)
     else:
         print_("Finished Altering unifiedTable Table")
 

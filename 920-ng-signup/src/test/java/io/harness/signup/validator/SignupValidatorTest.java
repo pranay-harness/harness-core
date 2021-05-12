@@ -10,6 +10,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.SignupException;
@@ -18,11 +19,9 @@ import io.harness.exception.WeakPasswordException;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import io.harness.signup.SignupTestBase;
 import io.harness.signup.dto.SignupDTO;
 import io.harness.user.remote.UserClient;
 
-import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.Optional;
 import org.junit.Before;
@@ -34,8 +33,8 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 @OwnedBy(GTM)
-public class SignupValidatorTest extends SignupTestBase {
-  @Inject @InjectMocks SignupValidator signupValidator;
+public class SignupValidatorTest extends CategoryTest {
+  @InjectMocks SignupValidator signupValidator;
   @Mock UserClient userClient;
 
   @Before

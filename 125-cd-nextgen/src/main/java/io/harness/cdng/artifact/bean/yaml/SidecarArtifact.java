@@ -4,12 +4,10 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 import io.harness.cdng.artifact.bean.ArtifactConfig;
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.artifact.SidecarArtifactVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -51,10 +49,5 @@ public class SidecarArtifact implements Visitable {
     VisitableChildren children = VisitableChildren.builder().build();
     children.add(YAMLFieldNameConstants.SPEC, artifactConfig);
     return children;
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.SIDECAR_ARTIFACT_CONFIG).build();
   }
 }

@@ -29,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class ArtifactStreamSettingAttributePTaskManager implements SettingAttributeObserver {
   @Inject private ArtifactStreamService artifactStreamService;
-  @Inject private ArtifactStreamPTaskHelper artifactStreamPTaskHelper;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private PerpetualTaskService perpetualTaskService;
 
@@ -40,18 +39,28 @@ public class ArtifactStreamSettingAttributePTaskManager implements SettingAttrib
 
   @Override
   public void onUpdated(SettingAttribute prevSettingAttribute, SettingAttribute currSettingAttribute) {
-    if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK, currSettingAttribute.getAccountId())) {
+    String accountId = currSettingAttribute.getAccountId();
+    boolean perpetualTaskEnabled = featureFlagService.isEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK, accountId);
+    boolean shouldDeleteArtifacts =
+        currSettingAttribute.getValue().shouldDeleteArtifact(prevSettingAttribute.getValue());
+    if (!shouldDeleteArtifacts && !perpetualTaskEnabled) {
       return;
     }
-
-    try (AutoLogContext ignore1 = new AccountLogContext(currSettingAttribute.getAccountId(), OVERRIDE_ERROR);
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new SettingAttributeLogContext(currSettingAttribute.getUuid(), OVERRIDE_ERROR)) {
       List<ArtifactStream> artifactStreams = artifactStreamService.listAllBySettingId(currSettingAttribute.getUuid());
       if (isEmpty(artifactStreams)) {
         return;
       }
 
-      artifactStreams.forEach(this::resetPerpetualTask);
+      artifactStreams.forEach(artifactStream -> {
+        if (shouldDeleteArtifacts) {
+          artifactStreamService.deleteArtifacts(accountId, artifactStream);
+        }
+        if (perpetualTaskEnabled) {
+          resetPerpetualTask(artifactStream);
+        }
+      });
     }
   }
 

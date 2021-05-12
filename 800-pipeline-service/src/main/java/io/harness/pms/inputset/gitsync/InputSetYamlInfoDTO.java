@@ -1,0 +1,28 @@
+package io.harness.pms.inputset.gitsync;
+
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.validator.EntityIdentifier;
+import io.harness.data.validator.EntityName;
+import io.harness.plancreator.pipeline.PipelineConfig;
+
+import java.util.Map;
+import lombok.Builder;
+import lombok.Value;
+
+@OwnedBy(PIPELINE)
+@Value
+@Builder
+public class InputSetYamlInfoDTO {
+  @EntityName String name;
+  @EntityIdentifier String identifier;
+
+  String description;
+  Map<String, String> tags;
+
+  String orgIdentifier;
+  String projectIdentifier;
+
+  PipelineConfig pipeline;
+}

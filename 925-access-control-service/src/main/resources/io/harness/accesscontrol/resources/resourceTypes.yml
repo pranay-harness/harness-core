@@ -24,3 +24,5 @@
   permissionKey: role
 - identifier: RESOURCEGROUP
   permissionKey: resourcegroup
+- identifier: LICENSE
+  permissionKey: license

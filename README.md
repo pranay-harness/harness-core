@@ -34,6 +34,11 @@ export JAVA_HOME=$(/usr/libexec/java_home -v1.8)
 
 Do not add the first line on MacOS Catalina
 
+If bash used, the better option migh be specifying full path to jdk, e.g:
+
+```
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home
+```
 6. Update /etc/hosts to reflect your hostname
 ```
 255.255.255.255	broadcasthost
@@ -204,6 +209,12 @@ cd to `portal` directory
 
    * `java -Xmx1024m -jar ~/.bazel-dirs/bin/160-model-gen-tool/module_deploy.jar server  160-model-gen-tool/config-datagen.yml`
 
+   or, preferably, with this command from bash console:
+
+   * `bazel run 160-model-gen-tool:module --jvmopt="-Xbootclasspath/p:${HOME}/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar” server <portal project location>/160-model-gen-tool/config-datagen.yml`
+
+   After command finishes, you might confirm in the mongodb account table that accountKey value is properly set.
+
 3. Start Delegate
 
    * `java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar 260-delegate/target/delegate-capsule.jar 81-delegate/config-delegate.yml &`
@@ -216,6 +227,28 @@ cd to `portal` directory
 
    * `java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar 210-command-library-server/target/command-library-app-capsule.jar 210-command-library-server/command-library-server-config.yml > command_library_service.log &`
 
+6. Start UI (Optional)
+
+  * Create a shell script which pulls harness ui docker image and starts ui app. Name it e.g. `startui.sh` and replace <DOCKERHUBUSER> and <DOCKERHUBPASS> with the harness docker user credentials, found in Vault.
+```
+run_ui ()
+{
+    echo '<DOCKERHUBPASS>' | sudo docker login -u <DOCKERHUBUSER> --password-stdin;
+    if [ ! -z "$1" ]; then
+        tag=":$1";
+    fi;
+    sudo docker pull harness/ui$tag;
+    sudo docker run -it -p 8000:8080 --rm -e API_URL=https://localhost:9090 harness/ui$tag
+}  
+
+alias runui='run_ui'
+```
+   * Add following line to ~/.bashrc: `source <path-to-startui-script>/startui.sh`
+   * Execute .bashrc: `source ~/.bashrc`
+   * Start ui by simply entering: `runui`
+   * UI url will be found in logs.
+
+   More info on this can be found [here](https://github.com/wings-software/wingsui/wiki/Docker-Harness-UI).
 ### Editing setup
 
 1. Install [clang-format](https://clang.llvm.org/docs/ClangFormat.html) (11.0.0)

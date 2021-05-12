@@ -1,0 +1,255 @@
+xxxxxxxx
+  applicationConnectors:
+    - type: h2
+      port: 9090
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
+      maxRequestHeaderSize: 100KiB
+    - type: http
+      port: 3457
+      maxRequestHeaderSize: 100KiB
+  adminConnectors:
+    - type: h2
+      port: 9091
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
+  requestLog:
+    appenders:
+      - type: console
+        target: STDOUT
+        threshold: ERROR
+  maxThreads: 1024
+
+backgroundScheduler:
+  enabled: true
+  schedulerName: automation_background_scheduler
+  instanceId: automation_background
+  tablePrefix: quartz
+  threadCount: 25
+  clustered: true #backgroundScheduler
+  #mongoUri: mongodb://localhost:27017/background_scheduler
+
+serviceScheduler:
+  #schedulerName: automation_service_scheduler
+  schedulerName: automation_background_scheduler
+  #instanceId: automation_service
+  instanceId: automation_background
+  tablePrefix: quartz
+  threadCount: 25
+  enabled: true
+  #mongoUri: mongodb://localhost:27017/service_scheduler
+
+enableIterators: true
+
+distributedLockImplementation: MONGO
+
+redisLockConfig:
+  sentinel: false
+  masterName: "test"
+  redisUrl: "redis://localhost:6379"
+  sentinelUrls:
+    - "redis://redis1:26379"
+    - "redis://redis2:26379"
+    - "redis://redis3:26379"
+  envNamespace: ""
+  readMode: MASTER
+  nettyThreads: 16
+  useScriptCache: true
+
+atmosphereBroadcaster: HAZELCAST
+
+redisAtmosphereConfig:
+  sentinel: false
+  masterName: "test"
+  redisUrl: "redis://localhost:6379"
+  sentinelUrls:
+    - "redis://redis1:26379"
+    - "redis://redis2:26379"
+    - "redis://redis3:26379"
+  envNamespace: ""
+  readMode: MASTER
+  nettyThreads: 16
+  useScriptCache: true
+
+logging:
+  level: INFO
+  loggers:
+    com.novemberain.quartz.mongodb: WARN
+    org.quartz.plugins: WARN
+    org.glassfish.jersey: WARN
+    allbegray.slack: WARN
+    # the following is to suppress "Error retrieving job for trigger XYZ, setting trigger state to ERROR."
+    # TODO: remove this suppression when the mentioned issue is resolved
+    com.novemberain.quartz.mongodb.TriggerRunner: "OFF"
+    org.glassfish.jersey.server.ServerRuntime.Responder: "OFF"
+  appenders:
+    - type: console
+      threshold: TRACE
+      target: STDOUT
+      logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
+    - type: gke-console
+      threshold: TRACE
+      target: STDOUT
+      stackdriverLogEnabled: false
+    - type: file
+      threshold: TRACE
+      currentLogFilename: portal.log
+      archive: true
+      archivedFileCount: 15
+      maxFileSize: 150MB
+      archivedLogFilenamePattern: portal.%d.%i.log
+      logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
+
+grpcServerConfig:
+  connectors:
+    - port: 9880
+      secure: true
+      keyFilePath: key.pem
+      certFilePath: cert.pem
+    - port: 9879
+
+#Currently this should be pointing to the managers (71 - rest) grpc server from the grpcServerConfig property until delegate service becomes standalone service
+grpcDelegateServiceClientConfig:
+  target: localhost:9880
+  authority: localhost
+
+grpcClientConfig:
+  target: localhost:9980
+  authority: localhost
+
+
+mongo:
+  uri: mongodb://localhost:27017/harness
+  #uri: mongodb://mongo1:30001,mongo2:30002,mongo3:30003/harness
+  #locksUri: mongodb://localhost:27017/impermanent
+  connectTimeout: 30000
+  serverSelectionTimeout: 90000
+  maxConnectionIdleTime: 600000
+  connectionsPerHost: 300
+  indexManagerMode: AUTO
+
+events-mongo:
+  uri: mongodb://localhost:27017/events
+  connectTimeout: 30000
+  serverSelectionTimeout: 90000
+  maxConnectionIdleTime: 600000
+  connectionsPerHost: 300
+  indexManagerMode: AUTO
+
+searchEnabled: false
+
+watcherMetadataUrl: file:///local-storage/wingswatchers/watcherlocal.txt
+
+delegateMetadataUrl: file:///local-storage/wingsdelegates/delegatelocal.txt
+
+apiUrl: "https://localhost:9090"
+deployMode: KUBERNETES
+envPath: ""
+
+kubectlVersion: v1.13.2
+
+portal:
+  url: https://localhost:8000
+  allowedOrigins: http://localhost:8000, https://localhost:8000, https://127.0.0.1:8000, https://localhost:8181, https://127.0.0.1:8181, http://127.0.0.1:8000
+  companyName: Harness Inc
+  authTokenExpiryInMillis: 86400000
+  jwtPasswordSecret: a8SGF1CQMHN6pnCJgz32kLn1tebrXnw6MtWto8xI
+  jwtExternalServiceSecret: nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ
+  jwtZendeskSecret: RdL7j9ZdCz6TVSHO7obJRS6ywYLJjH8tdfPP39i4MbevKjVo
+  jwtMultiAuthSecret: 5E1YekVGldTSS5Kt0GHlyWrJ6fJHmee9nXSBssefAWSOgdMwAvvbvJalnYENZ0H0EealN0CxHh34gUCN
+  jwtSsoRedirectSecret: qY4GXZAlPJQPEV8JCPTNhgmDmnHZSAgorzGxvOY03Xptr8N9xDfAYbwGohr2pCRLfFG69vBQaNpeTjcV
+  jwtAuthSecret: dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq
+  jwtMarketPlaceSecret: NqlqtztOXgJSQeVocN74TLnldqNjdyZM8DyNwaAioOt7M3piQsDILSqUQEh2qhdTadh21HKVxnXuuGfh
+  jwtIdentityServiceSecret: HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=
+  jwtDataHandlerSecret: RdL7j9ZdCz6TVSHO7obJRS6ywYLJjH8tdfPP39i4MbevKjVodvjdhakdhashsh4371dasjldas
+  jwtNextGenManagerSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+  delegateDockerImage: harness/delegate:latest
+  externalGraphQLRateLimitPerMinute: 500
+  customDashGraphQLRateLimitPerMinute: 1000
+  optionalDelegateTaskRejectAtLimit: 10000
+  importantDelegateTaskRejectAtLimit: 50000
+  criticalDelegateTaskRejectAtLimit: 100000
+
+cacheConfig:
+  cacheBackend: HAZELCAST
+  cacheNamespace: ""
+  disabledCaches: []
+
+workers:
+  active:
+    io.harness: true
+    software.wings: true
+
+publishers:
+  active:
+    io.harness: true
+    software.wings: true
+
+currentJre: openjdk8u242
+migrateToJre: openjdk8u242
+
+jreConfigs:
+  oracle8u191:
+    version: 1.8.0_191
+    jreDirectory: jre1.8.0_191
+    jreMacDirectory: jre1.8.0_191.jre
+    jreTarPath: jre/8u191/jre-8u191-${OS}-x64.tar.gz
+  openjdk8u242:
+    version: 1.8.0_242
+    jreDirectory: jdk8u242-b08-jre
+    jreMacDirectory: jdk8u242-b08-jre
+    jreTarPath: jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
+
+cdnConfig:
+  url: https://qa.harness.io
+  keyName: storage-qa-private
+  keySecret: cdnSignedUrlKey
+  delegateJarPath: private/shared/delegates/builds/oracle-8u191/%s/delegate.jar
+  watcherJarBasePath: public/shared/watchers/builds
+  watcherJarPath: oracle-8u191/%s/watcher.jar
+  watcherMetaDataFilePath: public/%s/%s/watchers/current.version
+  cdnJreTarPaths:
+    oracle8u191: public/shared/jre/oracle-8u191/jre-8u191-${OS}-x64.tar.gz
+    openjdk8u242: public/shared/jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
+
+ngManagerServiceHttpClientConfig:
+  baseUrl: http://localhost:7457/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+  enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
+
+cvngClientConfig:
+  baseUrl: https://localhost:6060/cv/
+  cvNgServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
+eventsFramework:
+  redis:
+    sentinel: false
+    masterName: "test"
+    redisUrl: "redis://localhost:6379"
+    sentinelUrls:
+      - "redis://redis1:26379"
+      - "redis://redis2:26379"
+      - "redis://redis3:26379"
+    envNamespace: ""
+    readMode: MASTER
+    nettyThreads: 16
+    useScriptCache: true
+    userName: ""
+    password: ""
+
+mockServerConfig:
+  baseUrl: http://localhost
+  port: 8989
+
+delegateGrpcServicePort: 8080
+
+logStreamingServiceConfig:
+  baseUrl: http://localhost:8079
+  serviceToken: token

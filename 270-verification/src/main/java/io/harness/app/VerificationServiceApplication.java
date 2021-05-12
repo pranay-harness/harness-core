@@ -68,8 +68,6 @@ import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.VerificationRegistrars;
-import io.harness.serializer.morphia.PrimaryVersionManagerMorphiaRegistrar;
-import io.harness.serializer.morphia.VerificationMorphiaRegistrar;
 
 import software.wings.app.CharsetResponseFilter;
 import software.wings.beans.Account;
@@ -208,18 +206,13 @@ public class VerificationServiceApplication extends Application<VerificationServ
       @Provides
       @Singleton
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
-        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-            .addAll(VerificationRegistrars.kryoRegistrars)
-            .build();
+        return VerificationRegistrars.kryoRegistrars;
       }
 
       @Provides
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
-        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-            .add(VerificationMorphiaRegistrar.class)
-            .add(PrimaryVersionManagerMorphiaRegistrar.class)
-            .build();
+        return VerificationRegistrars.morphiaRegistrars;
       }
 
       @Provides

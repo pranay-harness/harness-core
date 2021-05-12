@@ -1,7 +1,6 @@
 package io.harness.yaml.core;
 
 import io.harness.visitor.helpers.executionelement.ExecutionElementVisitorHelper;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -46,10 +45,5 @@ public class ExecutionElement implements Visitable {
     steps.forEach(step -> children.add("steps", step));
     rollbackSteps.forEach(step -> children.add("rollbackSteps", step));
     return children;
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.EXECUTION_ELEMENT).build();
   }
 }
