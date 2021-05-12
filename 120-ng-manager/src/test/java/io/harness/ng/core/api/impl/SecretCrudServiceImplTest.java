@@ -166,7 +166,9 @@ public class SecretCrudServiceImplTest extends CategoryTest {
     when(secretManagerClient.createSecretFile(any(), any()).execute())
         .thenReturn(Response.success(new RestResponse<>(encryptedDataDTO)));
     when(ngSecretServiceV2.create(any(), any(), eq(false))).thenReturn(secret);
-    doNothing().when(secretEntityReferenceHelper).createSetupUsageForSecretManager(any());
+    doNothing()
+        .when(secretEntityReferenceHelper)
+        .createSetupUsageForSecretManager(any(), any(), any(), any(), any(), any());
 
     SecretResponseWrapper created =
         secretCrudService.createFile("account", secretDTOV2, new StringInputStream("string"));
@@ -174,7 +176,7 @@ public class SecretCrudServiceImplTest extends CategoryTest {
 
     verify(secretManagerClient, atLeastOnce()).createSecretFile(any(), any());
     verify(ngSecretServiceV2).create(any(), any(), eq(false));
-    verify(secretEntityReferenceHelper).createSetupUsageForSecretManager(any());
+    verify(secretEntityReferenceHelper).createSetupUsageForSecretManager(any(), any(), any(), any(), any(), any());
   }
 
   @Test
@@ -279,7 +281,9 @@ public class SecretCrudServiceImplTest extends CategoryTest {
     when(secretManagerClient.deleteSecret(any(), any(), any(), any()).execute())
         .thenReturn(Response.success(new RestResponse<>(true)));
     when(ngSecretServiceV2.delete(any(), any(), any(), any())).thenReturn(true);
-    doNothing().when(secretEntityReferenceHelper).deleteSecretEntityReferenceWhenSecretGetsDeleted(any());
+    doNothing()
+        .when(secretEntityReferenceHelper)
+        .deleteSecretEntityReferenceWhenSecretGetsDeleted(any(), any(), any(), any(), any());
     when(ngSecretServiceV2.get(any(), any(), any(), any())).thenReturn(Optional.empty());
     boolean success = secretCrudService.delete("account", null, null, "identifier");
 
@@ -287,6 +291,7 @@ public class SecretCrudServiceImplTest extends CategoryTest {
     verify(secretManagerClient, atLeastOnce()).getSecret(any(), any(), any(), any());
     verify(secretManagerClient, atLeastOnce()).deleteSecret(any(), any(), any(), any());
     verify(ngSecretServiceV2, atLeastOnce()).delete(any(), any(), any(), any());
-    verify(secretEntityReferenceHelper, atLeastOnce()).deleteSecretEntityReferenceWhenSecretGetsDeleted(any());
+    verify(secretEntityReferenceHelper, atLeastOnce())
+        .deleteSecretEntityReferenceWhenSecretGetsDeleted(any(), any(), any(), any(), any());
   }
 }

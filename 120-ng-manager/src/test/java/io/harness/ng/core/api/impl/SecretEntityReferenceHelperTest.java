@@ -22,7 +22,6 @@ import io.harness.eventsframework.schemas.entitysetupusage.DeleteSetupUsageDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateDTO;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 
 import lombok.extern.slf4j.Slf4j;
@@ -63,17 +62,9 @@ public class SecretEntityReferenceHelperTest extends CategoryTest {
     String identifier = "identifier";
     String secretManager = "secretManager";
     String secretManagerName = "secretManagerName";
-    EncryptedDataDTO encryptedDataDTO = EncryptedDataDTO.builder()
-                                            .account(account)
-                                            .org(org)
-                                            .project(project)
-                                            .name(secretName)
-                                            .identifier(identifier)
-                                            .secretManager(secretManager)
-                                            .secretManagerName(secretManagerName)
-                                            .build();
     when(entityReferenceHelper.createEntityReference(anyString(), any(), any())).thenCallRealMethod();
-    secretEntityReferenceHelper.createSetupUsageForSecretManager(encryptedDataDTO);
+    secretEntityReferenceHelper.createSetupUsageForSecretManager(
+        account, org, project, identifier, secretName, secretManager);
     ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
     try {
       verify(eventProducer, times(1)).send(argumentCaptor.capture());
@@ -104,17 +95,9 @@ public class SecretEntityReferenceHelperTest extends CategoryTest {
     String identifier = "identifier";
     String secretManager = "secretManager";
     String secretManagerName = "secretManagerName";
-    EncryptedDataDTO encryptedDataDTO = EncryptedDataDTO.builder()
-                                            .account(account)
-                                            .org(org)
-                                            .project(project)
-                                            .name(secretName)
-                                            .identifier(identifier)
-                                            .secretManager(secretManager)
-                                            .secretManagerName(secretManagerName)
-                                            .build();
     ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
-    secretEntityReferenceHelper.deleteSecretEntityReferenceWhenSecretGetsDeleted(encryptedDataDTO);
+    secretEntityReferenceHelper.deleteSecretEntityReferenceWhenSecretGetsDeleted(
+        account, org, project, identifier, secretManager);
     try {
       verify(eventProducer, times(1)).send(argumentCaptor.capture());
     } catch (EventsFrameworkDownException e) {

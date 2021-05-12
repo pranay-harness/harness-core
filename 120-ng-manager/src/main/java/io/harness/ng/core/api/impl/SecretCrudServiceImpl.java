@@ -141,7 +141,8 @@ public class SecretCrudServiceImpl implements SecretCrudService {
   public SecretResponseWrapper create(String accountIdentifier, SecretDTOV2 dto) {
     EncryptedDataDTO encryptedData = getService(dto.getType()).create(accountIdentifier, dto);
     if (Optional.ofNullable(encryptedData).isPresent()) {
-      secretEntityReferenceHelper.createSetupUsageForSecretManager(encryptedData);
+      secretEntityReferenceHelper.createSetupUsageForSecretManager(accountIdentifier, dto.getOrgIdentifier(),
+          dto.getProjectIdentifier(), dto.getIdentifier(), dto.getName(), encryptedData.getSecretManager());
       Secret secret = ngSecretService.create(accountIdentifier, dto, false);
       return getResponseWrapper(secret);
     }
@@ -156,7 +157,8 @@ public class SecretCrudServiceImpl implements SecretCrudService {
 
     EncryptedDataDTO encryptedData = getService(dto.getType()).create(accountIdentifier, dto);
     if (Optional.ofNullable(encryptedData).isPresent()) {
-      secretEntityReferenceHelper.createSetupUsageForSecretManager(encryptedData);
+      secretEntityReferenceHelper.createSetupUsageForSecretManager(accountIdentifier, dto.getOrgIdentifier(),
+          dto.getProjectIdentifier(), dto.getIdentifier(), dto.getName(), encryptedData.getSecretManager());
       Secret secret = ngSecretService.create(accountIdentifier, dto, true);
       return getResponseWrapper(secret);
     }
@@ -225,17 +227,13 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     }
     if (remoteDeletionSuccess && localDeletionSuccess) {
       if (encryptedData != null) {
-        secretEntityReferenceHelper.deleteSecretEntityReferenceWhenSecretGetsDeleted(encryptedData);
+        secretEntityReferenceHelper.deleteSecretEntityReferenceWhenSecretGetsDeleted(
+            accountIdentifier, orgIdentifier, projectIdentifier, identifier, encryptedData.getSecretManager());
       } else {
         optionalSecret.ifPresent(secretResponseWrapper
-            -> secretEntityReferenceHelper.deleteSecretEntityReferenceWhenSecretGetsDeleted(
-                EncryptedDataDTO.builder()
-                    .account(accountIdentifier)
-                    .org(orgIdentifier)
-                    .project(projectIdentifier)
-                    .identifier(identifier)
-                    .secretManager(getSecretManagerIdentifier(secretResponseWrapper.getSecret()))
-                    .build()));
+            -> secretEntityReferenceHelper.deleteSecretEntityReferenceWhenSecretGetsDeleted(accountIdentifier,
+                orgIdentifier, projectIdentifier, identifier,
+                getSecretManagerIdentifier(secretResponseWrapper.getSecret())));
       }
       publishEvent(accountIdentifier, orgIdentifier, projectIdentifier, identifier,
           EventsFrameworkMetadataConstants.DELETE_ACTION);
@@ -374,7 +372,8 @@ public class SecretCrudServiceImpl implements SecretCrudService {
             getRequestBody(ByteStreams.toByteArray(
                 new BoundedInputStream(inputStream, fileUploadLimit.getEncryptedFileLimit())))));
     if (Optional.ofNullable(encryptedData).isPresent()) {
-      secretEntityReferenceHelper.createSetupUsageForSecretManager(encryptedData);
+      secretEntityReferenceHelper.createSetupUsageForSecretManager(accountIdentifier, dto.getOrgIdentifier(),
+          dto.getProjectIdentifier(), dto.getIdentifier(), dto.getName(), encryptedData.getSecretManager());
       Secret secret = ngSecretService.create(accountIdentifier, dto, false);
       return getResponseWrapper(secret);
     }
