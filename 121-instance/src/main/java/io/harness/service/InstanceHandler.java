@@ -15,7 +15,11 @@ import io.harness.models.InstanceHandlerKey;
 import io.harness.models.InstanceSyncFlowType;
 import io.harness.models.RollbackInfo;
 import io.harness.models.ServerInstance;
+import io.harness.models.constants.InstanceSyncConstants;
 import io.harness.ngpipeline.common.AmbianceHelper;
+import io.harness.perpetualtask.PerpetualTaskClientContext;
+import io.harness.perpetualtask.PerpetualTaskSchedule;
+import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
@@ -25,8 +29,11 @@ import io.harness.repositories.instance.InstanceRepository;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
+import com.google.protobuf.util.Durations;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,12 +42,13 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends InfrastructureMapping, V
                                           extends DeploymentInfo, X extends DelegateResponseData, Y
                                           extends InstanceInfo, Z extends ServerInstance>
-    implements IInstanceHandler, IInstanceSyncByPerpetualTaskhandler<X> {
+    implements IInstanceHandler, IInstanceSyncByPerpetualTaskhandler<X>, IInstanceSyncPerpetualTaskCreator<U> {
   public static final String AUTO_SCALE = "AUTO_SCALE";
 
   @Inject protected InfrastructureMappingRepository infrastructureMappingRepository;
   @Inject protected OutcomeService outcomeService;
   @Inject private InstanceRepository instanceRepository;
+  @Inject PerpetualTaskService perpetualTaskService;
 
   protected abstract V validateAndReturnDeploymentInfo(DeploymentSummary deploymentSummary);
 
@@ -71,6 +79,12 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
   protected abstract V getEmptyDeploymentInfoObject();
 
   protected abstract X executeDelegateSyncTaskToFetchServerInstances(U infrastructureMapping, T instanceHandlerKey);
+
+  // Add custom deployment details to the client param map for perpetual task
+  protected abstract void populateClientParamMapForPerpetualTask(
+      Map<String, String> clientParamMap, T instanceHandlerKey);
+
+  protected abstract String getPerpetualTaskType();
 
   // Override this method in case of specific custom instance build requirements
   protected void buildInstanceCustom(Instance.InstanceBuilder instanceBuilder, Z serverInstance) {
@@ -132,6 +146,25 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
 
     syncInstancesInternal(
         infrastructureMapping, null, RollbackInfo.builder().isRollback(false).build(), null, instanceSyncFlowType);
+  }
+
+  public final String createPerpetualTaskForNewDeployment(
+      DeploymentSummary deploymentSummary, T infrastructureMapping) {
+    T instanceHandlerKey = getInstanceHandlerKey(validateAndReturnDeploymentInfo(deploymentSummary));
+
+    Map<String, String> clientParamMap = prepareClientParamMapForPerpetualTask(deploymentSummary);
+    populateClientParamMapForPerpetualTask(clientParamMap, instanceHandlerKey);
+
+    PerpetualTaskClientContext clientContext =
+        PerpetualTaskClientContext.builder().clientParams(clientParamMap).build();
+
+    PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
+                                         .setInterval(Durations.fromMinutes(InstanceSyncConstants.INTERVAL_MINUTES))
+                                         .setTimeout(Durations.fromSeconds(InstanceSyncConstants.TIMEOUT_SECONDS))
+                                         .build();
+
+    return perpetualTaskService.createTask(
+        getPerpetualTaskType(), deploymentSummary.getAccountIdentifier(), clientContext, schedule, false, "");
   }
 
   protected final ServiceOutcome getServiceOutcomeFromAmbiance(Ambiance ambiance) {
@@ -272,5 +305,14 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
     return instanceRepository.getInstances(infrastructureMapping.getAccountIdentifier(),
         infrastructureMapping.getOrgIdentifier(), infrastructureMapping.getProjectIdentifier(),
         infrastructureMapping.getId());
+  }
+
+  private Map<String, String> prepareClientParamMapForPerpetualTask(DeploymentSummary deploymentSummary) {
+    Map<String, String> clientParamMap = new HashMap<>();
+    clientParamMap.put(InstanceSyncConstants.HARNESS_ACCOUNT_IDENTIFIER, deploymentSummary.getAccountIdentifier());
+    clientParamMap.put(InstanceSyncConstants.HARNESS_ORG_IDENTIFIER, deploymentSummary.getOrgIdentifier());
+    clientParamMap.put(InstanceSyncConstants.HARNESS_PROJECT_IDENTIFIER, deploymentSummary.getProjectIdentifier());
+    clientParamMap.put(InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID, deploymentSummary.getInfrastructureMappingId());
+    return clientParamMap;
   }
 }

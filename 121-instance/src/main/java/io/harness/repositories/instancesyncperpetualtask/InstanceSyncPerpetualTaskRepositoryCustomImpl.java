@@ -7,6 +7,7 @@ import io.harness.entities.InstanceSyncPerpetualTaskInfo;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,5 +33,12 @@ public class InstanceSyncPerpetualTaskRepositoryCustomImpl implements InstanceSy
       info.getPerpetualTaskIds().addAll(perpetualTaskIds);
       instanceSyncPerpetualTaskRepository.save(info);
     }
+  }
+
+  @Override
+  public void save(String accountId, String infrastructureMappingId, String perpetualTaskId) {
+    List<String> perpetualTaskIdList = new ArrayList<>();
+    perpetualTaskIdList.add(perpetualTaskId);
+    save(accountId, infrastructureMappingId, perpetualTaskIdList);
   }
 }

@@ -10,7 +10,6 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.repositories.instancesyncperpetualtask.InstanceSyncPerpetualTaskRepository;
-import io.harness.service.IInstanceSyncByPerpetualTaskhandler;
 import io.harness.service.InstanceHandler;
 import io.harness.service.instance.InstanceService;
 import io.harness.service.instancehandlerfactory.InstanceHandlerFactoryService;
@@ -30,25 +29,6 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
   @Inject private InstanceSyncPerpetualTaskRepository instanceSyncPerpetualTaskRepository;
 
   @Override
-  public void createPerpetualTasks(InfrastructureMapping infrastructureMapping) {
-    if (!shouldCreatePerpetualTasks(infrastructureMapping)) {
-      return;
-    }
-    IInstanceSyncByPerpetualTaskhandler handler = getInstanceHandler(infrastructureMapping);
-    if (handler == null) {
-      // TODO handle it gracefully with logs
-      return;
-    }
-
-    List<String> perpetualTaskIds =
-        handler.getInstanceSyncPerpetualTaskCreator().createPerpetualTasks(infrastructureMapping);
-    if (!perpetualTaskIds.isEmpty()) {
-      instanceSyncPerpetualTaskRepository.save(
-          infrastructureMapping.getAccountIdentifier(), infrastructureMapping.getId(), perpetualTaskIds);
-    }
-  }
-
-  @Override
   public void createPerpetualTasksForNewDeployment(
       InfrastructureMapping infrastructureMapping, DeploymentSummary deploymentSummary) {
     InstanceHandler handler = getInstanceHandler(infrastructureMapping);
@@ -59,13 +39,14 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
 
     List<PerpetualTaskRecord> existingTasks = getExistingPerpetualTasks(infrastructureMapping);
 
-    List<String> newPerpetualTaskIds =
-        handler.getInstanceSyncPerpetualTaskCreator().createPerpetualTasksForNewDeployment(
-            deploymentSummary, existingTasks, infrastructureMapping);
+    String newPerpetualTaskId = handler.getInstanceSyncPerpetualTaskCreator().createPerpetualTaskForNewDeployment(
+        deploymentSummary, infrastructureMapping);
 
-    if (EmptyPredicate.isNotEmpty(newPerpetualTaskIds)) {
+    if (existingTasks.stream().filter(task -> task.getUuid().equals(newPerpetualTaskId)).findAny().orElse(null)
+        == null) {
+      // new perpetual task has been created, so add it to instance sync perpetual task
       instanceSyncPerpetualTaskRepository.save(
-          infrastructureMapping.getAccountIdentifier(), infrastructureMapping.getId(), newPerpetualTaskIds);
+          infrastructureMapping.getAccountIdentifier(), infrastructureMapping.getId(), newPerpetualTaskId);
     }
   }
 

@@ -4,8 +4,6 @@ import io.harness.entities.DeploymentSummary;
 import io.harness.entities.infrastructureMapping.InfrastructureMapping;
 
 public interface InstanceSyncPerpetualTaskService {
-  void createPerpetualTasks(InfrastructureMapping infrastructureMapping);
-
   void createPerpetualTasksForNewDeployment(
       InfrastructureMapping infrastructureMapping, DeploymentSummary deploymentSummary);
 

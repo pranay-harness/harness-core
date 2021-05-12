@@ -8,4 +8,6 @@ import java.util.List;
 @OwnedBy(HarnessTeam.DX)
 public interface InstanceSyncPerpetualTaskRepositoryCustom {
   void save(String accountId, String infrastructureMappingId, List<String> perpetualTaskIds);
+
+  void save(String accountId, String infrastructureMappingId, String perpetualTaskId);
 }
