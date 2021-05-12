@@ -3,6 +3,7 @@ package io.harness.gitsync.common.impl;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DecryptableEntity;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.gitsync.GitFilePathDetails;
@@ -11,6 +12,7 @@ import io.harness.connector.impl.ConnectorErrorMessagesHelper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.scm.GitFileTaskResponseData;
 import io.harness.delegate.task.scm.GitFileTaskType;
@@ -23,6 +25,7 @@ import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.service.DelegateGrpcClientWrapper;
 
 import software.wings.beans.TaskType;
@@ -52,21 +55,20 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
   public List<String> listBranchesForRepoByConnector(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String connectorIdentifierRef, String repoURL, PageRequest pageRequest,
       String searchTerm) {
-    final ScmConnector scmConnector =
-        getScmConnector(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifierRef);
+    final IdentifierRef gitConnectorIdentifierRef =
+        getConnectorIdentifierRef(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifierRef);
+    final ScmConnector scmConnector = getScmConnector(gitConnectorIdentifierRef);
     scmConnector.setUrl(repoURL);
-    final ScmGitRefTaskParams scmGitRefTaskParams =
-        ScmGitRefTaskParams.builder()
-            .scmConnector(scmConnector)
-            .gitRefType(GitRefType.BRANCH)
-            .encryptedDataDetails(
-                secretManagerClientService.getEncryptionDetails(BaseNGAccess.builder()
-                                                                    .accountIdentifier(accountIdentifier)
-                                                                    .orgIdentifier(orgIdentifier)
-                                                                    .projectIdentifier(projectIdentifier)
-                                                                    .build(),
-                    GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(scmConnector)))
-            .build();
+    final BaseNGAccess baseNGAccess = getBaseNGAccess(accountIdentifier, orgIdentifier, projectIdentifier);
+    final DecryptableEntity apiAccessDecryptableEntity =
+        GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(scmConnector);
+    final List<EncryptedDataDetail> encryptionDetails =
+        secretManagerClientService.getEncryptionDetails(baseNGAccess, apiAccessDecryptableEntity);
+    final ScmGitRefTaskParams scmGitRefTaskParams = ScmGitRefTaskParams.builder()
+                                                        .scmConnector(scmConnector)
+                                                        .gitRefType(GitRefType.BRANCH)
+                                                        .encryptedDataDetails(encryptionDetails)
+                                                        .build();
     DelegateTaskRequest delegateTaskRequest =
         getDelegateTaskRequest(accountIdentifier, scmGitRefTaskParams, TaskType.SCM_GIT_REF_TASK);
     final DelegateResponseData delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
@@ -78,24 +80,24 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
   public GitFileContent getFileContent(String yamlGitConfigIdentifier, String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String filePath, String branch, String commitId) {
     validateFileContentParams(branch, commitId);
-    final IdentifierRef identifierRef =
-        getYamlGitConfigIdentifierRef(accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigIdentifier);
-    final ScmConnector scmConnector = getScmConnector(identifierRef.getAccountIdentifier(),
-        identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
+    YamlGitConfigDTO yamlGitConfigDTO =
+        getYamlGitConfigDTO(accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigIdentifier);
+    final IdentifierRef gitConnectorIdentifierRef =
+        getConnectorIdentifierRef(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
+            yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getGitConnectorRef());
+    final ScmConnector scmConnector = getScmConnector(gitConnectorIdentifierRef);
+    final BaseNGAccess baseNGAccess = getBaseNGAccess(accountIdentifier, orgIdentifier, projectIdentifier);
+    final DecryptableEntity apiAccessDecryptableEntity =
+        GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(scmConnector);
+    final List<EncryptedDataDetail> encryptionDetails =
+        secretManagerClientService.getEncryptionDetails(baseNGAccess, apiAccessDecryptableEntity);
     final GitFilePathDetails gitFilePathDetails = getGitFilePathDetails(filePath, branch, commitId);
-    final ScmGitFileTaskParams scmGitFileTaskParams =
-        ScmGitFileTaskParams.builder()
-            .gitFileTaskType(GitFileTaskType.GET_FILE_CONTENT)
-            .scmConnector(scmConnector)
-            .gitFilePathDetails(gitFilePathDetails)
-            .encryptedDataDetails(
-                secretManagerClientService.getEncryptionDetails(BaseNGAccess.builder()
-                                                                    .accountIdentifier(accountIdentifier)
-                                                                    .orgIdentifier(orgIdentifier)
-                                                                    .projectIdentifier(projectIdentifier)
-                                                                    .build(),
-                    GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(scmConnector)))
-            .build();
+    final ScmGitFileTaskParams scmGitFileTaskParams = ScmGitFileTaskParams.builder()
+                                                          .gitFileTaskType(GitFileTaskType.GET_FILE_CONTENT)
+                                                          .scmConnector(scmConnector)
+                                                          .gitFilePathDetails(gitFilePathDetails)
+                                                          .encryptedDataDetails(encryptionDetails)
+                                                          .build();
     DelegateTaskRequest delegateTaskRequest =
         getDelegateTaskRequest(accountIdentifier, scmGitFileTaskParams, TaskType.SCM_GIT_FILE_TASK);
     final DelegateResponseData delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
@@ -110,6 +112,14 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
         .taskParameters(taskParameters)
         .taskType(taskType.name())
         .executionTimeout(Duration.ofMinutes(2))
+        .build();
+  }
+
+  private BaseNGAccess getBaseNGAccess(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return BaseNGAccess.builder()
+        .accountIdentifier(accountIdentifier)
+        .orgIdentifier(orgIdentifier)
+        .projectIdentifier(projectIdentifier)
         .build();
   }
 }
