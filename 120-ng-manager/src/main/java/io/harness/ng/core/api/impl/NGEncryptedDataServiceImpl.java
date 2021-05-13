@@ -509,7 +509,7 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
   }
 
   private LocalConfigDTO getLocalEncryptionConfig(String accountIdentifier) {
-    return LocalConfigDTO.builder().accountIdentifier(accountIdentifier).identifier(null).build();
+    return LocalConfigDTO.builder().accountIdentifier(accountIdentifier).identifier(null).encryptionType(LOCAL).build();
   }
 
   private EncryptedRecordData buildEncryptedRecordData(NGEncryptedData encryptedData) {

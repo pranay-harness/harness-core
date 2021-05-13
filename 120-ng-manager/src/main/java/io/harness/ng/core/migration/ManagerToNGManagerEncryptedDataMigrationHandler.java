@@ -106,11 +106,18 @@ public class ManagerToNGManagerEncryptedDataMigrationHandler implements Handler<
       encryptedData = fromEncryptedDataMigrationDTO(
           getResponse(secretManagerClient.getEncryptedDataMigrationDTO(secret.getIdentifier(),
               secret.getAccountIdentifier(), secret.getOrgIdentifier(), secret.getProjectIdentifier())));
+      if (encryptedData == null) {
+        log.info(String.format(
+            "Secret with accountIdentifier: %s, orgIdentifier: %s, projectIdentifier: %s and identifier: %s could not be migrated from manager because Encrypted Data not found",
+            secret.getAccountIdentifier(), secret.getOrgIdentifier(), secret.getProjectIdentifier(),
+            secret.getIdentifier()));
+        return;
+      }
       if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
           && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())
           && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
         String encryptedFileId = secretsFileService.createFile(
-            encryptedData.getName(), encryptedData.getAccountIdentifier(), encryptedData.getEncryptedValue());
+            secret.getName(), secret.getAccountIdentifier(), encryptedData.getEncryptedValue());
         encryptedData.setEncryptedValue(encryptedFileId == null ? null : encryptedFileId.toCharArray());
       }
       encryptedData.setId(null);
@@ -127,12 +134,16 @@ public class ManagerToNGManagerEncryptedDataMigrationHandler implements Handler<
   }
 
   public static NGEncryptedData fromEncryptedDataMigrationDTO(EncryptedDataMigrationDTO encryptedDataMigrationDTO) {
+    if (encryptedDataMigrationDTO == null) {
+      return null;
+    }
     return NGEncryptedData.builder()
         .id(encryptedDataMigrationDTO.getUuid())
         .accountIdentifier(encryptedDataMigrationDTO.getAccountIdentifier())
         .orgIdentifier(encryptedDataMigrationDTO.getOrgIdentifier())
         .projectIdentifier(encryptedDataMigrationDTO.getProjectIdentifier())
         .identifier(encryptedDataMigrationDTO.getIdentifier())
+        .name(encryptedDataMigrationDTO.getName())
         .encryptionType(encryptedDataMigrationDTO.getEncryptionType())
         .secretManagerIdentifier(encryptedDataMigrationDTO.getKmsId())
         .encryptionKey(encryptedDataMigrationDTO.getEncryptionKey())
