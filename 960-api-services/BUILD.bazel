@@ -64,8 +64,6 @@ java_library(
         "@maven//:commons_codec_commons_codec",
         "@maven//:commons_collections_commons_collections",
         "@maven//:commons_io_commons_io",
-        "@maven//:io_cloudsoft_windows_winrm4j",
-        "@maven//:io_cloudsoft_windows_winrm4j_client",
         "@maven//:io_fabric8_fabric8_utils",
         "@maven//:io_fabric8_kubernetes_api",
         "@maven//:io_fabric8_kubernetes_client",
@@ -104,6 +102,8 @@ java_library(
         "@maven//:org_slf4j_slf4j_api",
         "@maven//:org_sonatype_nexus_plugins_nexus_restlet1x_model",
         "@maven//:org_zeroturnaround_zt_exec",
+        "@z_harness_maven//:io_cloudsoft_windows_winrm4j",
+        "@z_harness_maven//:io_cloudsoft_windows_winrm4j_client",
     ],
 )
 

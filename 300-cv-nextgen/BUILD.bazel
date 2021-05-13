@@ -88,7 +88,7 @@ shared_dependencies = [
     "@maven//:org_reflections_reflections",
     "@maven//:org_slf4j_slf4j_api",
     "@maven//:ru_vyarus_guice_validator",
-    "@maven_harness//:io_harness_cv_data_collection_dsl",
+    "@z_harness_maven//:io_harness_cv_data_collection_dsl",
 ]
 
 java_binary(
@@ -150,7 +150,7 @@ java_library(
         "@maven//:org_mongodb_mongo_java_driver",
         "@maven//:org_powermock_powermock_module_junit4",
         "@maven//:ru_vyarus_guice_validator",
-        "@maven_harness//:io_harness_cv_data_collection_dsl",
+        "@z_harness_maven//:io_harness_cv_data_collection_dsl",
     ],
 )
 
