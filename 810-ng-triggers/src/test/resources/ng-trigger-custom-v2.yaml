@@ -1,0 +1,28 @@
+trigger:
+  name: first trigger
+  identifier: first_trigger
+  enabled: true
+  orgIdentifier: org
+  projectIdentifier: proj
+  pipelineIdentifier: pipeline
+  source:
+    type: Webhook
+    spec:
+      type: Custom
+      spec:
+          payloadConditions:
+            - key: sourceBranch
+              operator: equals
+              value: dev
+            - key: targetBranch
+              operator: in
+              value: master, on-prem
+            - key: <+trigger.payload.pull_request.number>
+              operator: regex
+              value: ^pr-[0-9a-f]{7}$
+          headerConditions:
+            - key: header
+              operator: equals
+              value: val
+          jexlCondition: true
+  inputYaml: input
