@@ -28,6 +28,7 @@ fi
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]; then
   bazel test --test_output=all //product/ci/ti-service/tidb/mongodb:go_default_test
+  exit 0
 fi
 
 if [ "${RUN_CHECKS}" == "true" ]; then
