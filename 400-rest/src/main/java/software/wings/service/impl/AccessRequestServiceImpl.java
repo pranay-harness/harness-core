@@ -143,6 +143,15 @@ public class AccessRequestServiceImpl implements AccessRequestService {
   }
 
   @Override
+  public List<AccessRequest> getAllAccessRequestForAccount(String accountId) {
+    Account account = accountService.get(accountId);
+    notNullCheck("Invalid account with id: " + accountId, account);
+    Query<AccessRequest> query = wingsPersistence.createQuery(AccessRequest.class, excludeAuthority);
+    query.filter("accountId", accountId);
+    return query.asList();
+  }
+
+  @Override
   public List<AccessRequest> getActiveAccessRequestForAccountAndUser(String accountId, String userId) {
     Account account = accountService.get(accountId);
     notNullCheck("Invalid account with id: " + accountId, account);

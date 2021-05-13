@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessModule._970_RBAC_CORE;
 
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_RESTRICTED_ACCESS;
-import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRETS;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -106,5 +105,13 @@ public class AccessRequestResource {
       @PathParam("accountId") String accountId) {
     return new RestResponse<>(
         accessRequestService.toAccessRequestDTO(accessRequestService.getActiveAccessRequestForAccount(accountId)));
+  }
+
+  @GET
+  @Path("{accountId}/listAllAccessRequest/account")
+  @AuthRule(permissionType = MANAGE_RESTRICTED_ACCESS)
+  public RestResponse<List<AccessRequestDTO>> listAllAccessRequestForAccount(@PathParam("accountId") String accountId) {
+    return new RestResponse<>(
+        accessRequestService.toAccessRequestDTO(accessRequestService.getAllAccessRequestForAccount(accountId)));
   }
 }

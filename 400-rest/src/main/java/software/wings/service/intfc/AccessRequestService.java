@@ -22,6 +22,8 @@ public interface AccessRequestService {
 
   List<AccessRequest> getActiveAccessRequestForAccount(String accountId);
 
+  List<AccessRequest> getAllAccessRequestForAccount(String accountId);
+
   List<AccessRequest> getActiveAccessRequestForAccountAndUser(String accountId, String userId);
 
   AccessRequestDTO toAccessRequestDTO(AccessRequest accessRequest);
