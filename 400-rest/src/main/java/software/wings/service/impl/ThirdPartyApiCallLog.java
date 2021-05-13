@@ -12,6 +12,7 @@ import static io.harness.persistence.GoogleDataStoreAware.readString;
 import static java.lang.System.currentTimeMillis;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ThirdPartyApiCallLogDetails;
 import io.harness.exception.WingsException;
@@ -19,6 +20,7 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.GoogleDataStoreAware;
@@ -67,6 +69,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "ThirdPartyApiCallLogKeys")
 @Entity(value = "thirdPartyApiCallLog", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@StoreIn(DbAliases.CG_MANAGER)
 public class ThirdPartyApiCallLog implements GoogleDataStoreAware, CreatedAtAware, UuidAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

@@ -1,8 +1,10 @@
 package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.beans.ChecksumType;
+import io.harness.ng.DbAliases;
 
 import software.wings.utils.ContainerFamily;
 import software.wings.utils.FileType;
@@ -16,6 +18,7 @@ import org.mongodb.morphia.annotations.Entity;
  */
 @Entity(value = "systemCatalogs", noClassnameStored = true)
 @HarnessEntity(exportable = true)
+@StoreIn(DbAliases.CG_MANAGER)
 public class SystemCatalog extends BaseFile {
   private CatalogType catalogType;
   private String stackRootDirectory;

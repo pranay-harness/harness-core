@@ -3,8 +3,10 @@ package software.wings.beans.template;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 
 import software.wings.beans.Base;
@@ -31,6 +33,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "versionedTemplate", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "VersionedTemplateKeys")
+@StoreIn(DbAliases.CG_MANAGER)
 public class VersionedTemplate extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

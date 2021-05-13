@@ -3,7 +3,9 @@ package io.harness.limits.checker.rate;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 
 import java.util.List;
@@ -20,6 +22,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "usageBuckets", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "UsageBucketKeys")
+@StoreIn(DbAliases.CG_MANAGER)
 public class UsageBucket implements PersistentEntity {
   // key which uniquely identifies this bucket
   @Id private String key;

@@ -5,12 +5,14 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
+import io.harness.ng.DbAliases;
 
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -33,6 +35,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "serviceTemplates", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ServiceTemplateKeys")
+@StoreIn(DbAliases.CG_MANAGER)
 public class ServiceTemplate extends Base {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
