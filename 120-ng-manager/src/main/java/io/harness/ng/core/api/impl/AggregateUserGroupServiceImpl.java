@@ -25,7 +25,7 @@ import io.harness.ng.core.dto.RoleAssignmentMetadataDTO;
 import io.harness.ng.core.dto.UserGroupAggregateDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
 import io.harness.ng.core.entities.UserGroup;
-import io.harness.ng.core.invites.dto.UserMetadataDTO;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.user.remote.mapper.UserMetadataMapper;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.utils.UserGroupMapper;

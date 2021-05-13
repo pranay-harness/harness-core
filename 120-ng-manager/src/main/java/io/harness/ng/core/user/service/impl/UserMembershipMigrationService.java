@@ -15,8 +15,8 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
 import io.harness.ng.core.user.UserInfo;
-import io.harness.ng.core.user.entities.UserMembership;
-import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
+import io.harness.ng.core.user.remote.dto.UserMembership;
+import io.harness.ng.core.user.remote.dto.UserMembership.UserMembershipKeys;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.resourcegroup.model.ResourceGroup;
 

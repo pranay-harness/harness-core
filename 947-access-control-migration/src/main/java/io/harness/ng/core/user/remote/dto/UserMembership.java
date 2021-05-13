@@ -1,4 +1,4 @@
-package io.harness.ng.core.user.entities;
+package io.harness.ng.core.user.remote.dto;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;

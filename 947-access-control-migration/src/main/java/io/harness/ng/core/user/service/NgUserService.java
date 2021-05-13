@@ -8,11 +8,11 @@ import io.harness.beans.Scope;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ProjectDTO;
-import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserMembershipUpdateSource;
-import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.remote.dto.UserFilter;
+import io.harness.ng.core.user.remote.dto.UserMembership;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.user.remote.UserFilterNG;
 
 import java.util.List;

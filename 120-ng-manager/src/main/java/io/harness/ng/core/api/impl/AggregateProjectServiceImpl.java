@@ -20,13 +20,13 @@ import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.entities.Project;
-import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.remote.ProjectMapper;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.UserInfo;
-import io.harness.ng.core.user.entities.UserMembership;
-import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
+import io.harness.ng.core.user.remote.dto.UserMembership;
+import io.harness.ng.core.user.remote.dto.UserMembership.UserMembershipKeys;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.user.remote.UserFilterNG;
 

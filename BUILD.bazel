@@ -137,6 +137,7 @@ modules = [
     "//946-access-control-decision",
     "//947-access-control-core",
     "//947-access-control-decision-commons",
+    "//947-access-control-migration",
     "//948-access-control-admin-client",
     "//948-access-control-sdk",
     "//949-access-control-commons",

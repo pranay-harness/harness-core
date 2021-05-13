@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotation.HarnessRepo;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.entities.Project;
-import io.harness.ng.core.user.entities.UserMembership;
+import io.harness.ng.core.user.remote.dto.UserMembership;
 import io.harness.repositories.user.custom.UserMembershipRepositoryCustom;
 
 import java.util.List;

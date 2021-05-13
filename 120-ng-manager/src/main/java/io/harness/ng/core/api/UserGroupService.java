@@ -9,8 +9,8 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.UserGroupDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
 import io.harness.ng.core.entities.UserGroup;
-import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.user.remote.dto.UserFilter;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 
 import java.util.List;
 import java.util.Optional;

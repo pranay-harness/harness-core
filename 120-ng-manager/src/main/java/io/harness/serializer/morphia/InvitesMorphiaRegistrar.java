@@ -6,8 +6,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.ng.core.invites.entities.Invite;
-import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserProjectMap;
+import io.harness.ng.core.user.remote.dto.UserMembership;
 
 import java.util.Set;
 
