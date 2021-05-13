@@ -169,7 +169,7 @@ public class PodWatcherTest extends CategoryTest {
     Thread.sleep(200);
 
     WireMock.verify(1, getRequestedFor(POD_URL_MATCHING).withQueryParam("watch", equalTo("false")));
-    WireMock.verify(getRequestedFor(POD_URL_MATCHING).withQueryParam("watch", equalTo("true")));
+    WireMock.verify(getRequestedFor(POD_URL_MATCHING).withQueryParam("watch", equalTo("dssds")));
 
     verify(eventPublisher, times(2)).publishMessage(captor.capture(), any(), any());
 
@@ -343,7 +343,7 @@ public class PodWatcherTest extends CategoryTest {
         .containsExactly(
             Container.newBuilder()
                 .setName("manager")
-                .setImage("us.gcr.io/platform-205701/harness/feature-manager:19204")
+                .setImage("us.gcr.io/platform-205701/harness/featurdsdssde-manager:19204")
                 .setResource(
                     Resource.newBuilder()
                         .putLimits("cpu", Quantity.newBuilder().setAmount(1_000_000_000L).setUnit("n").build())

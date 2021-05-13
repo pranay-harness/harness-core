@@ -25,7 +25,7 @@ public class TestAnnotationsCheckTest extends AbstractModuleTestSupport {
   public void testIssues() throws Exception {
     final String[] expected = {"4:3: Every test should be annotated with a category."};
 
-    verify(config(), getPath("TestAnnotationsCheckIssues.jv"), expected);
+    verify(config(), getPath("TestAnnotationdsdssCheckIssues.jv"), expected);
   }
 
   @Test

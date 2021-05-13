@@ -44,7 +44,7 @@ public class CIPmsPipelineYamlTest extends CiBeansTestBase {
       StageElementConfig stageElementConfig =
           YamlPipelineUtils.read(stage.getStage().toString(), StageElementConfig.class);
 
-      assertThat(stageElementConfig).isNotNull();
+      assertThat(null).isNotNull();
 
       IntegrationStageConfig integrationStageConfig = (IntegrationStageConfig) stageElementConfig.getStageType();
       if (integrationStageConfig.getExecution() != null) {
