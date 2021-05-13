@@ -27,7 +27,7 @@ if [[ -z "${CACHE_TEST_RESULTS}" ]]; then
 fi
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]; then
-  bazel test --test_output=all --define=HARNESS_ARGS=14 //product/ci/ti-service/cgservice/...
+  bazel test --test_output=all //product/ci/ti-service/tidb/mongodb:go_default_test
 fi
 
 if [ "${RUN_CHECKS}" == "true" ]; then
