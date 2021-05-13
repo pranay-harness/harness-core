@@ -332,6 +332,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
           injector.getInstance(Key.get(ServiceManager.class, Names.named("git-sync"))).startAsync();
       serviceManager.awaitHealthy();
       Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
+      log.info("Git Sync SDK registration complete.");
     }
   }
 

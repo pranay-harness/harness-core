@@ -67,10 +67,6 @@ public class SecurityContextBuilder {
     return principalContextData.getPrincipal();
   }
 
-  public void unsetPrincipalContext() {
-    GlobalContextManager.unset(PRINCIPAL_CONTEXT);
-  }
-
   public void unsetCompleteContext() {
     GlobalContextManager.unset();
   }
