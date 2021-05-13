@@ -298,7 +298,6 @@ import io.harness.delegate.task.scm.GitFileTaskResponseData;
 import io.harness.delegate.task.scm.GitFileTaskType;
 import io.harness.delegate.task.scm.GitRefType;
 import io.harness.delegate.task.scm.PushTaskType;
-import io.harness.delegate.task.scm.ScmGitFileTask;
 import io.harness.delegate.task.scm.ScmGitFileTaskParams;
 import io.harness.delegate.task.scm.ScmGitRefTaskParams;
 import io.harness.delegate.task.scm.ScmGitRefTaskResponseData;
@@ -754,7 +753,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ScmGitRefTaskResponseData.class, 543314);
     kryo.register(GitRefType.class, 543315);
     kryo.register(LazyStringArrayList.class, 543316);
-    kryo.register(ScmGitFileTask.class, 543317);
     kryo.register(ScmGitFileTaskParams.class, 543318);
     kryo.register(GitFileTaskResponseData.class, 543319);
     kryo.register(GitFileTaskType.class, 543320);
