@@ -104,7 +104,7 @@ public class InstallUtils {
   }
 
   public static String getScmPath() {
-    return join("/",getScmFolderPath(), getScmBinaryName());
+    return join("/", getScmFolderPath(), getScmBinaryName());
   }
 
   public static String getScmFolderPath() {
