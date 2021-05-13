@@ -126,8 +126,6 @@ public class ManagerToNGManagerEncryptedDataMigrationHandler implements Handler<
         }
         encryptedData.setId(null);
         encryptedDataDao.save(encryptedData);
-        getResponse(secretManagerClient.deleteAfterMigration(secret.getIdentifier(), secret.getAccountIdentifier(),
-            secret.getOrgIdentifier(), secret.getProjectIdentifier()));
       }
     }
     secret.setMigratedFromManager(true);

@@ -92,27 +92,6 @@ public class NGSecretServiceImpl implements NGSecretService {
     return Optional.empty();
   }
 
-  @Override
-  public boolean deleteAfterMigration(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
-    Optional<EncryptedData> encryptedDataOptional =
-        get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    if (encryptedDataOptional.isPresent()) {
-      EncryptedData encryptedData = encryptedDataOptional.get();
-      if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
-          && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())
-          && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
-        try {
-          fileService.deleteFile(String.valueOf(encryptedData.getEncryptedValue()), CONFIGS);
-        } catch (Exception exception) {
-          return false;
-        }
-      }
-      return wingsPersistence.delete(encryptedData);
-    }
-    return true;
-  }
-
   private void setEncryptedValueToFileContent(EncryptedData encryptedData) {
     ByteArrayOutputStream os = new ByteArrayOutputStream();
     fileService.downloadToStream(String.valueOf(encryptedData.getEncryptedValue()), os, CONFIGS);

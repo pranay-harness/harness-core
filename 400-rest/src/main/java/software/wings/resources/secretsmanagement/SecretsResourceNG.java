@@ -14,7 +14,6 @@ import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import java.util.Optional;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -47,15 +46,5 @@ public class SecretsResourceNG {
     Optional<EncryptedDataMigrationDTO> encryptedDataOptional =
         ngSecretService.getEncryptedDataMigrationDTO(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return new RestResponse<>(encryptedDataOptional.orElse(null));
-  }
-
-  @DELETE
-  @Path("migration/{identifier}")
-  public RestResponse<Boolean> deleteAfterMigration(@PathParam("identifier") String identifier,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) final String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) final String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) final String projectIdentifier) {
-    return new RestResponse<>(
-        ngSecretService.deleteAfterMigration(accountIdentifier, orgIdentifier, projectIdentifier, identifier));
   }
 }
