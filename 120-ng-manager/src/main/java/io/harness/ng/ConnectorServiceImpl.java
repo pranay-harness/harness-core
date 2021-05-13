@@ -135,7 +135,7 @@ public class ConnectorServiceImpl implements ConnectorService {
         connectorHeartbeatTaskId = connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier,
             connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
       }
-      if (connectorHeartbeatTaskId != null || isHarnessManagedSecretManager || !isDefaultBranchConnector) {
+      if (connectorHeartbeatTaskId != null || isHarnessManagedSecretManager || isDefaultBranchConnector) {
         ConnectorResponseDTO connectorResponse =
             getConnectorService(connectorInfo.getConnectorType()).create(connector, accountIdentifier);
         if (connectorResponse != null) {
