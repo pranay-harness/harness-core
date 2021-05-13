@@ -26,21 +26,22 @@ if [[ -z "${CACHE_TEST_RESULTS}" ]]; then
 fi
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]; then
-  bazel ${bazelrc} build ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/...
-  bazel ${bazelrc} test --cache_test_results=${CACHE_TEST_RESULTS} --define=HARNESS_ARGS=${HARNESS_ARGS} --keep_going ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//200-functional-test/... -//190-deployment-functional-tests/...
+  bazel ${bazelrc} build ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... \
+  && bazel ${bazelrc} test --cache_test_results=${CACHE_TEST_RESULTS} --define=HARNESS_ARGS=${HARNESS_ARGS} --keep_going ${BAZEL_ARGUMENTS} -- \
+  //... -//product/... -//commons/... -//200-functional-test/... -//190-deployment-functional-tests/...
   exit $?
 fi
 
 if [ "${RUN_CHECKS}" == "true" ]; then
   TARGETS=$(bazel query 'attr(tags, "checkstyle", //...:*)')
   bazel ${bazelrc} build ${BAZEL_ARGUMENTS} -k ${TARGETS}
-  exit 0
+  exit $?
 fi
 
 if [ "${RUN_PMDS}" == "true" ]; then
   TARGETS=$(bazel query 'attr(tags, "pmd", //...:*)')
   bazel ${bazelrc} build ${BAZEL_ARGUMENTS} -k ${TARGETS}
-  exit 0
+  exit $?
 fi
 
 BAZEL_MODULES="\
