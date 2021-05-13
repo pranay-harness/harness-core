@@ -18,6 +18,7 @@ import io.harness.product.ci.scm.proto.PullRequestHook;
 import io.harness.rule.Owner;
 
 import java.util.Arrays;
+import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -153,6 +154,15 @@ public class JexlScenarioTest extends CategoryTest {
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.targetBranch>")).isEqualTo("target");
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.event>")).isEqualTo("PR");
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.type>")).isEqualTo("WEBHOOK");
+  }
+
+  @Test
+  @Owner(developers = MATT)
+  @Category(UnitTests.class)
+  public void testGettingArray() {
+    TriggerExpressionEvaluator triggerExpressionEvaluator =
+        new TriggerExpressionEvaluator(null, emptyList(), smallPayload);
+    assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.payload.arr>")).isInstanceOf(List.class);
   }
 
   // If there's a way to parse a string to json using jexl, we can read the message to parse nested json

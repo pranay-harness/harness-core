@@ -139,23 +139,6 @@ public class WebhookTriggerFilterUtils {
     return allConditionsMatched;
   }
 
-  public boolean checkIfFilepathConditionsMatch(
-      WebhookPayloadData webhookPayloadData, List<WebhookCondition> filepathConditions) {
-    if (isEmpty(filepathConditions)) {
-      return true;
-    }
-
-    List<String> files = new ArrayList<>();
-    for (String filepath : files) {
-      for (WebhookCondition condition : filepathConditions) {
-        if (ConditionEvaluator.evaluate(filepath, condition.getValue(), condition.getOperator())) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
   public boolean checkIfJexlConditionsMatch(
       ParseWebhookResponse parseWebhookResponse, List<HeaderConfig> headers, String payload, String jexlExpression) {
     if (isBlank(jexlExpression)) {
@@ -243,12 +226,12 @@ public class WebhookTriggerFilterUtils {
     return triggerExpressionEvaluator.renderExpression(key);
   }
 
-  TriggerExpressionEvaluator generatorPMSExpressionEvaluator(WebhookPayloadData webhookPayloadData) {
+  public TriggerExpressionEvaluator generatorPMSExpressionEvaluator(WebhookPayloadData webhookPayloadData) {
     return generatorPMSExpressionEvaluator(webhookPayloadData.getParseWebhookResponse(),
         webhookPayloadData.getOriginalEvent().getHeaders(), webhookPayloadData.getOriginalEvent().getPayload());
   }
 
-  TriggerExpressionEvaluator generatorPMSExpressionEvaluator(
+  public TriggerExpressionEvaluator generatorPMSExpressionEvaluator(
       ParseWebhookResponse parseWebhookResponse, List<HeaderConfig> headerConfigs, String payload) {
     return new TriggerExpressionEvaluator(parseWebhookResponse, headerConfigs, payload);
   }

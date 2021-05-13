@@ -5,25 +5,43 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_FILEPATH_CONDITIONS;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DelegateTaskRequest;
+import io.harness.connector.ConnectorResourceClient;
+import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.delegate.task.scm.ScmFilterQueryTaskParams;
+import io.harness.delegate.task.scm.ScmFilterQueryTaskResponseData;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse.WebhookEventMappingResponseBuilder;
 import io.harness.ngtriggers.beans.source.NGTriggerSpec;
+import io.harness.ngtriggers.beans.source.webhook.WebhookCondition;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
+import io.harness.ngtriggers.conditionchecker.ConditionEvaluator;
 import io.harness.ngtriggers.eventmapper.filters.TriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
+import io.harness.ngtriggers.expressions.TriggerExpressionEvaluator;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.utils.WebhookTriggerFilterUtils;
+import io.harness.product.ci.scm.proto.ParseWebhookResponse;
+import io.harness.remote.client.NGRestUtils;
+import io.harness.service.DelegateGrpcClientWrapper;
+
+import software.wings.beans.TaskType;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
@@ -31,6 +49,8 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PIPELINE)
 public class FilepathTriggerFilter implements TriggerFilter {
   private NGTriggerElementMapper ngTriggerElementMapper;
+  private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
+  private ConnectorResourceClient connectorService;
 
   @Override
   public WebhookEventMappingResponse applyFilter(FilterRequestData filterRequestData) {
@@ -66,14 +86,111 @@ public class FilepathTriggerFilter implements TriggerFilter {
   }
 
   boolean checkTriggerEligibility(FilterRequestData filterRequestData, TriggerDetails triggerDetails) {
-    NGTriggerSpec spec = triggerDetails.getNgTriggerConfig().getSource().getSpec();
-    if (!WebhookTriggerConfig.class.isAssignableFrom(spec.getClass())) {
-      log.error("Trigger spec is not a WebhookTriggerConfig");
+    Set<Pair<String, String>> conditions = new HashSet<>();
+    for (WebhookCondition webhookCondition :
+        ((WebhookTriggerConfig) (triggerDetails.getNgTriggerConfig().getSource().getSpec()))
+            .getSpec()
+            .getPathFilters()) {
+      conditions.add(Pair.of(webhookCondition.getOperator(), webhookCondition.getValue()));
+    }
+    ScmConnector connector;
+    try {
+      connector = (ScmConnector) NGRestUtils
+                      .getResponse(connectorService.get(
+                          ((WebhookTriggerSpec) (triggerDetails.getNgTriggerConfig().getSource().getSpec()))
+                              .getRepoSpec()
+                              .getIdentifier(),
+                          triggerDetails.getNgTriggerEntity().getAccountId(),
+                          triggerDetails.getNgTriggerEntity().getOrgIdentifier(),
+                          triggerDetails.getNgTriggerEntity().getProjectIdentifier()))
+                      .get();
+    } catch (Exception e) {
       return false;
     }
+    if (shouldEvaluateOnDelegate(filterRequestData)) {
+      ScmFilterQueryTaskParams.ScmFilterQueryTaskParamsBuilder paramsBuilder =
+          ScmFilterQueryTaskParams.builder().scmConnector(connector).conditions(conditions);
+      ParseWebhookResponse parseWebhookResponse = filterRequestData.getWebhookPayloadData().getParseWebhookResponse();
+      switch (parseWebhookResponse.getHookCase()) {
+        case PR:
+          paramsBuilder.prNumber((int) parseWebhookResponse.getPr().getPr().getNumber());
+          break;
+        default:
+          paramsBuilder.branch(parseWebhookResponse.getPush().getRepo().getBranch())
+              .latestCommit(parseWebhookResponse.getPush().getAfter())
+              .previousCommit(parseWebhookResponse.getPush().getBefore());
+      }
+      ScmFilterQueryTaskParams params = paramsBuilder.build();
+      DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
+                                                    .accountId(filterRequestData.getAccountId())
+                                                    .taskType(TaskType.SCM_FILTER_QUERY_TASK.toString())
+                                                    .taskParameters(params)
+                                                    .executionTimeout(Duration.ofMinutes(1L))
+                                                    .build();
+      ScmFilterQueryTaskResponseData delegateResponseData =
+          (ScmFilterQueryTaskResponseData) delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+      return delegateResponseData.isMatched();
+    } else {
+      Set<String> payloadFiles = getFilesFromPushPayload(filterRequestData);
 
-    WebhookTriggerSpec triggerSpec = ((WebhookTriggerConfig) spec).getSpec();
-    return WebhookTriggerFilterUtils.checkIfFilepathConditionsMatch(
-        filterRequestData.getWebhookPayloadData(), triggerSpec.getPayloadConditions());
+      for (String filepath : payloadFiles) {
+        for (Pair<String, String> condition : conditions) {
+          if (ConditionEvaluator.evaluate(filepath, condition.getLeft(), condition.getRight())) {
+            conditions.remove(condition);
+          }
+        }
+        if (conditions.isEmpty()) {
+          return true;
+        }
+      }
+      return false;
+    }
+  }
+
+  boolean shouldEvaluateOnDelegate(FilterRequestData filterRequestData) {
+    switch (filterRequestData.getWebhookPayloadData().getParseWebhookResponse().getHookCase()) {
+      case PR:
+        return true;
+    }
+    TriggerExpressionEvaluator triggerExpressionEvaluator =
+        WebhookTriggerFilterUtils.generatorPMSExpressionEvaluator(filterRequestData.getWebhookPayloadData());
+    switch (filterRequestData.getWebhookPayloadData().getOriginalEvent().getSourceRepoType()) {
+      case "Github":
+        // while we are only guaranteed 20 per the spec, experiments have shown that we can go over the limit
+        return false;
+      case "Gitlab":
+        int payloadSize =
+            (Integer) triggerExpressionEvaluator.evaluateExpression("<+trigger.payload.total_commits_count>");
+        return payloadSize > 20;
+      case "Bitbucket":
+      default:
+        return true;
+    }
+  }
+
+  Set<String> getFilesFromPushPayload(FilterRequestData filterRequestData) {
+    Set<String> pushPayloadFiles = new HashSet<>();
+    TriggerExpressionEvaluator triggerExpressionEvaluator =
+        WebhookTriggerFilterUtils.generatorPMSExpressionEvaluator(filterRequestData.getWebhookPayloadData());
+    switch (filterRequestData.getWebhookPayloadData().getOriginalEvent().getSourceRepoType()) {
+      case "Github":
+      case "Gitlab":
+        for (Object commitObject : (List) triggerExpressionEvaluator.evaluateExpression("<+trigger.payload.commits>")) {
+          Map<String, Object> commitJson = (Map) commitObject;
+          for (Object added : (List) commitJson.get("added")) {
+            pushPayloadFiles.add((String) added);
+          }
+          for (Object modified : (List) commitJson.get("modified")) {
+            pushPayloadFiles.add((String) modified);
+          }
+          for (Object removed : (List) commitJson.get("removed")) {
+            pushPayloadFiles.add((String) removed);
+          }
+        }
+        return pushPayloadFiles;
+      case "Bitbucket":
+      default:
+        return pushPayloadFiles;
+    }
   }
 }

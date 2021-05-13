@@ -9,6 +9,12 @@ import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.ngtriggers.conditionchecker.ConditionEvaluator;
+import io.harness.product.ci.scm.proto.FileChange;
+import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
+import io.harness.product.ci.scm.proto.FindFilesInPRResponse;
+import io.harness.product.ci.scm.proto.ListCommitsResponse;
+import io.harness.product.ci.scm.proto.PRFile;
+import io.harness.product.ci.scm.proto.SCMGrpc;
 import io.harness.service.ScmServiceClient;
 
 import com.google.inject.Inject;
@@ -66,7 +72,7 @@ public class ScmFilterQueryTask extends AbstractDelegateRunnableTask {
               params.getScmConnector(), params.getPrNumber(), SCMGrpc.newBlockingStub(c)));
       Set<String> filepaths = new HashSet<>();
       for (PRFile prfile : findFilesResponse.getFilesList()) {
-        filepaths.add(path);
+        filepaths.add(prfile.getPath());
       }
     } else {
       // push case
@@ -74,7 +80,7 @@ public class ScmFilterQueryTask extends AbstractDelegateRunnableTask {
           c -> scmServiceClient.listCommits(params.getScmConnector(), params.getBranch(), SCMGrpc.newBlockingStub(c)));
       Set<String> filepaths = new HashSet<>();
       boolean inRange = false;
-      for (String commitId : listCommitsResponse.getCommitIdList()) {
+      for (String commitId : listCommitsResponse.getCommitIdsList()) {
         if (commitId.equals(params.getPreviousCommit())) {
           return filepaths;
         } else if (!inRange && commitId.equals(params.getPreviousCommit())) {
