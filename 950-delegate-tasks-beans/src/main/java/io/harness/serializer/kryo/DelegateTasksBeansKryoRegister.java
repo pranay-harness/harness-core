@@ -3,7 +3,6 @@ package io.harness.serializer.kryo;
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.capability.AwsRegionParameters;
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilitySubjectPermission.PermissionResult;
@@ -756,6 +755,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ScmGitFileTaskParams.class, 543318);
     kryo.register(GitFileTaskResponseData.class, 543319);
     kryo.register(GitFileTaskType.class, 543320);
-    kryo.register(GitFilePathDetails.class, 543320);
+    kryo.register(ScmGitFileTaskParams.class, 543321);
   }
 }
