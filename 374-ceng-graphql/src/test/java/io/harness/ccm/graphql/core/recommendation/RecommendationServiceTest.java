@@ -25,12 +25,14 @@ import io.harness.timescaledb.tables.pojos.CeRecommendations;
 
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerCheckpoint;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
+import software.wings.graphql.datafetcher.ce.recommendation.entity.Cost;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -181,18 +183,21 @@ public class RecommendationServiceTest extends CategoryTest {
     assertThat(workloadRecommendationDTO).isNotNull();
     assertThat(workloadRecommendationDTO.getContainerRecommendations()).isNull();
     assertThat(workloadRecommendationDTO.getItems()).isNotNull().isEmpty();
+    assertThat(workloadRecommendationDTO.getLastDayCost()).isNull();
   }
 
   @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void getWorkloadRecommendationByIdItemFound() {
+    final Cost cost = Cost.builder().cpu(BigDecimal.valueOf(100)).memory(BigDecimal.valueOf(100)).build();
     final K8sWorkloadRecommendation workloadRecommendation = K8sWorkloadRecommendation.builder()
                                                                  .workloadName(NAME)
                                                                  .namespace(NAMESPACE)
                                                                  .clusterId(CLUSTER_ID)
                                                                  .accountId(ACCOUNT_ID)
                                                                  .uuid(ID)
+                                                                 .lastDayCost(cost)
                                                                  .containerRecommendations(containerRecommendationMap)
                                                                  .workloadType(WORKLOAD_TYPE)
                                                                  .build();
@@ -219,6 +224,7 @@ public class RecommendationServiceTest extends CategoryTest {
     assertThat(workloadRecommendationDTO.getContainerRecommendations()).hasSize(1);
     assertThat(workloadRecommendationDTO.getContainerRecommendations())
         .containsExactlyInAnyOrderEntriesOf(containerRecommendationMap);
+    assertThat(workloadRecommendationDTO.getLastDayCost()).isEqualTo(cost);
     assertThat(workloadRecommendationDTO.getItems()).hasSize(1);
     assertThat(workloadRecommendationDTO.getItems().get(0).getContainerName()).isEqualTo(CONTAINER_NAME);
 

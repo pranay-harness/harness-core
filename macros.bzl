@@ -12,15 +12,6 @@ def resources(name = "resources", runtime_deps = [], testonly = 0, visibility = 
         visibility = visibility,
     )
 
-def sources(visibility = None):
-    if visibility == None:
-        visibility = ["//" + native.package_name() + ":__pkg__", "//:__pkg__"]
-    native.filegroup(
-        name = "sources",
-        srcs = native.glob(["src/main/**/*.java"]),
-        visibility = visibility,
-    )
-
 def test_targets_list(exclude = []):
     test_files = native.glob(["src/test/java/**/*Test.java"], exclude = exclude)
     return [file.split("/")[-1][:-5] for file in test_files]

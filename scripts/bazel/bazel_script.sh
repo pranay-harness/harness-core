@@ -5,6 +5,7 @@ set -ex
 local_repo=${HOME}/.m2/repository
 BAZEL_ARGUMENTS=
 if [ "${PLATFORM}" == "jenkins" ]; then
+  GCP="--google_credentials=${GCP_KEY}"
   bazelrc=--bazelrc=bazelrc.remote
   local_repo=/root/.m2/repository
   if [ ! -z "${DISTRIBUTE_TESTING_WORKER}" ]; then
@@ -32,13 +33,13 @@ fi
 if [ "${RUN_CHECKS}" == "true" ]; then
   TARGETS=$(bazel query 'attr(tags, "checkstyle", //...:*)')
   bazel ${bazelrc} build ${BAZEL_ARGUMENTS} -k ${TARGETS}
-  exit 0
+  exit $?
 fi
 
 if [ "${RUN_PMDS}" == "true" ]; then
   TARGETS=$(bazel query 'attr(tags, "pmd", //...:*)')
   bazel ${bazelrc} build ${BAZEL_ARGUMENTS} -k ${TARGETS}
-  exit 0
+  exit $?
 fi
 
 BAZEL_MODULES="\

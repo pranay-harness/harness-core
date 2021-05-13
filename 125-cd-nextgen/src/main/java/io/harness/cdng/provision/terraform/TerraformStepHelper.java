@@ -346,64 +346,6 @@ public class TerraformStepHelper {
     return null;
   }
 
-  public List<String> getInlineVarFiles(Map<String, TerraformVarFile> varFiles) {
-    if (EmptyPredicate.isEmpty(varFiles)) {
-      return Collections.emptyList();
-    }
-    List<String> inlineVarFiles = new ArrayList<>();
-    for (Map.Entry<String, TerraformVarFile> entry : varFiles.entrySet()) {
-      TerraformVarFile varFile = entry.getValue();
-      if (varFile != null) {
-        TerraformVarFileSpec spec = varFile.getSpec();
-        if (spec instanceof InlineTerraformVarFileSpec) {
-          InlineTerraformVarFileSpec inlineTerraformVarFileSpec = (InlineTerraformVarFileSpec) spec;
-          String content = ParameterFieldHelper.getParameterFieldValue(inlineTerraformVarFileSpec.getContent());
-          if (EmptyPredicate.isNotEmpty(content)) {
-            inlineVarFiles.add(content);
-          }
-        }
-      }
-    }
-    return inlineVarFiles;
-  }
-
-  public List<StoreConfig> getRemoteTfVarFiles(Map<String, TerraformVarFile> varFiles) {
-    if (EmptyPredicate.isEmpty(varFiles)) {
-      return Collections.emptyList();
-    }
-    List<StoreConfig> remoteVarFiles = new ArrayList<>();
-    for (Map.Entry<String, TerraformVarFile> entry : varFiles.entrySet()) {
-      TerraformVarFile varFile = entry.getValue();
-      if (varFile != null) {
-        TerraformVarFileSpec spec = varFile.getSpec();
-        if (spec instanceof RemoteTerraformVarFileSpec) {
-          RemoteTerraformVarFileSpec remoteTerraformVarFileSpec = (RemoteTerraformVarFileSpec) spec;
-          StoreConfigWrapper storeConfigWrapper = remoteTerraformVarFileSpec.getStoreConfigWrapper();
-          if (storeConfigWrapper != null) {
-            remoteVarFiles.add(storeConfigWrapper.getStoreConfig());
-          }
-        }
-      }
-    }
-    return remoteVarFiles;
-  }
-
-  public List<GitFetchFilesConfig> getOrderedFetchFilesConfigForRemoteFiles(
-      Map<String, TerraformVarFile> varFiles, Ambiance ambiance) {
-    List<StoreConfig> remoteVarFiles = getRemoteTfVarFiles(varFiles);
-    if (EmptyPredicate.isEmpty(remoteVarFiles)) {
-      return Collections.emptyList();
-    }
-    List<GitFetchFilesConfig> varFilesConfig = new ArrayList<>();
-    int i = 1;
-    for (StoreConfig storeConfig : remoteVarFiles) {
-      varFilesConfig.add(
-          getGitFetchFilesConfig(storeConfig, ambiance, String.format(TerraformStepHelper.TF_VAR_FILES, i)));
-      i++;
-    }
-    return varFilesConfig;
-  }
-
   public TerraformConfig getLastSuccessfulApplyConfig(TerraformDestroyStepParameters parameters, Ambiance ambiance) {
     String entityId = generateFullIdentifier(
         ParameterFieldHelper.getParameterFieldValue(parameters.getProvisionerIdentifier()), ambiance);

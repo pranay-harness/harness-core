@@ -12,7 +12,6 @@ import io.harness.repositories.gitSyncSettings.GitSyncSettingsRepository;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Optional;
-import javax.ws.rs.NotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,16 +23,11 @@ public class GitSyncSettingsServiceImpl implements GitSyncSettingsService {
   private final GitSyncSettingsRepository gitSyncSettingsRepository;
 
   @Override
-  public GitSyncSettingsDTO get(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+  public Optional<GitSyncSettingsDTO> get(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     final Optional<GitSyncSettings> gitSyncSettings =
-        gitSyncSettingsRepository.findByAccountIdentifierAndProjectIdentifierAndOrgIdentifier(
+        gitSyncSettingsRepository.findByAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
             accountIdentifier, orgIdentifier, projectIdentifier);
-    return gitSyncSettings.map(GitSyncSettingsMapper::getDTOFromGitSyncSettings)
-        .orElseThrow(
-            ()
-                -> new NotFoundException(String.format(
-                    "No Git Sync Setting found for accountIdentifier %s, organizationIdentifier %s and projectIdentifier %s",
-                    accountIdentifier, orgIdentifier, projectIdentifier)));
+    return gitSyncSettings.map(GitSyncSettingsMapper::getDTOFromGitSyncSettings);
   }
 
   @Override

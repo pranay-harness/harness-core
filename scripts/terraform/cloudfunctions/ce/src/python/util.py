@@ -5,6 +5,7 @@ from clusterdata_schema import clusterDataTableFields
 from unified_schema import unifiedTableTableSchema
 from preaggregated_schema import preAggreagtedTableSchema
 from aws_ec2_inventory_schema import awsEc2InventorySchema, awsEc2InventoryCPUSchema
+from aws_ebs_inventory_schema import awsEbsInventorySchema, awsEbsInventoryMetricsSchema
 
 ACCOUNTID_LOG = ""
 
@@ -50,37 +51,44 @@ def createTable(client, tableName):
         fieldset = awsEc2InventorySchema
     elif tableName.endswith("awsEc2InventoryCPU"):
         fieldset = awsEc2InventoryCPUSchema
+    elif tableName.endswith("awsEbsInventory") or tableName.endswith("awsEbsInventoryTemp"):
+        fieldset = awsEbsInventorySchema
+    elif tableName.endswith("awsEbsInventoryMetrics"):
+        fieldset = awsEbsInventoryMetricsSchema
     else:
         fieldset = unifiedTableTableSchema
 
     for field in fieldset:
         if field.get("type") == "RECORD":
-             nested_field = [bigquery.SchemaField(nested_field["name"], nested_field["type"], mode=nested_field.get("mode", "")) for nested_field in field["fields"]]
-             schema.append(bigquery.SchemaField(field["name"], field["type"], mode=field["mode"], fields=nested_field))
+            nested_field = [bigquery.SchemaField(nested_field["name"], nested_field["type"], mode=nested_field.get("mode", "")) for nested_field in field["fields"]]
+            schema.append(bigquery.SchemaField(field["name"], field["type"], mode=field["mode"], fields=nested_field))
         else:
-             schema.append(bigquery.SchemaField(field["name"], field["type"], mode=field.get("mode", "")))
+            schema.append(bigquery.SchemaField(field["name"], field["type"], mode=field.get("mode", "")))
     table = bigquery.Table(tableName, schema=schema)
 
     if tableName.endswith("clusterData"):
         table.range_partitioning = bigquery.RangePartitioning(
-             field="starttime",
-             range_=bigquery.PartitionRange(start=1514745000000, end=1893436200000, interval=86400000)
+            field="starttime",
+            range_=bigquery.PartitionRange(start=1514745000000, end=1893436200000, interval=86400000)
         )
     elif tableName.endswith("unifiedTable") or tableName.endswith("preAggregated"):
         table.time_partitioning = bigquery.TimePartitioning(
             type_=bigquery.TimePartitioningType.DAY,
             field="startTime"  # name of column to use for partitioning
         )
-    elif tableName.endswith("awsEc2Inventory") or tableName.endswith("awsEc2InventoryTemp"):
+
+    elif tableName.endswith("awsEc2Inventory") or tableName.endswith("awsEc2InventoryTemp") or tableName.endswith("awsEbsInventory") or tableName.endswith("awsEbsInventoryTemp"):
         table.time_partitioning = bigquery.TimePartitioning(
             type_=bigquery.TimePartitioningType.DAY,
             field="lastUpdatedAt"
         )
-    elif tableName.endswith("awsEc2InventoryCPU"):
+    elif tableName.endswith("awsEc2InventoryCPU") or tableName.endswith("awsEbsInventoryMetrics"):
         table.time_partitioning = bigquery.TimePartitioning(
             type_=bigquery.TimePartitioningType.DAY,
             field="addedAt"
         )
+
+
     try:
         table = client.create_table(table)  # Make an API request.
         print_("Created table {}.{}.{}".format(table.project, table.dataset_id, table.table_id))

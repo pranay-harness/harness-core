@@ -66,6 +66,7 @@ import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.registrars.PipelineServiceFacilitatorRegistrar;
 import io.harness.registrars.PipelineServiceStepRegistrar;
+import io.harness.resource.VersionInfoResource;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.serializer.PipelineServiceUtilAdviserRegistrar;
 import io.harness.serializer.jackson.PipelineServiceJacksonModule;
@@ -421,6 +422,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
   }
 
   private void registerJerseyProviders(Environment environment, Injector injector) {

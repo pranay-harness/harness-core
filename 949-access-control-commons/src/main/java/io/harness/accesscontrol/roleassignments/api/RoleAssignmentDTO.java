@@ -1,5 +1,6 @@
 package io.harness.accesscontrol.roleassignments.api;
 
+import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO.MODEL_NAME;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.principals.PrincipalDTO;
@@ -24,9 +25,11 @@ import lombok.experimental.FieldNameConstants;
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode
-@ApiModel(value = "RoleAssignment")
+@ApiModel(value = MODEL_NAME)
 @OwnedBy(PL)
 public class RoleAssignmentDTO {
+  public static final String MODEL_NAME = "RoleAssignment";
+
   final String identifier;
   @ApiModelProperty(required = true) final String resourceGroupIdentifier;
   @ApiModelProperty(required = true) final String roleIdentifier;

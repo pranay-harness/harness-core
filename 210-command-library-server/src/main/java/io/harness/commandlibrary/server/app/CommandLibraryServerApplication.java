@@ -25,6 +25,7 @@ import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.UserProvider;
+import io.harness.resource.VersionInfoResource;
 import io.harness.serializer.CommandLibraryServer;
 import io.harness.serializer.CommonsRegistrars;
 import io.harness.serializer.JsonSubtypeResolver;
@@ -86,6 +87,10 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
   private HarnessMetricRegistry harnessMetricRegistry;
 
   public static void main(String[] args) throws Exception {
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      log.info("Shutdown hook, entering maintenance...");
+      MaintenanceController.forceMaintenance(true);
+    }));
     if (args.length == 1) {
       new CommandLibraryServerApplication().run("server", args[0]);
     } else {
@@ -266,6 +271,7 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
   }
   private void registerJerseyProviders(Environment environment) {
     environment.jersey().register(EarlyEofExceptionMapper.class);

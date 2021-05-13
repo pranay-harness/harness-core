@@ -22,6 +22,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
@@ -58,7 +59,7 @@ public class AdminLicenseResource {
   @Path("{identifier}")
   @InternalApi
   public ResponseDTO<ModuleLicenseDTO> create(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @Valid ModuleLicenseDTO moduleLicenseDTO) {
+      @PathParam("identifier") String identifier, @NotNull @Valid ModuleLicenseDTO moduleLicenseDTO) {
     // TODO change to Admin Auth when it's ready
     ModuleLicenseDTO created = licenseService.createModuleLicense(moduleLicenseDTO);
     return ResponseDTO.newResponse(created);
@@ -68,7 +69,7 @@ public class AdminLicenseResource {
   @Path("{identifier}")
   @InternalApi
   public ResponseDTO<ModuleLicenseDTO> update(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @Valid ModuleLicenseDTO moduleLicenseDTO) {
+      @PathParam("identifier") String identifier, @NotNull @Valid ModuleLicenseDTO moduleLicenseDTO) {
     // TODO change to Admin Auth when it's ready
     ModuleLicenseDTO updated = licenseService.updateModuleLicense(moduleLicenseDTO);
     return ResponseDTO.newResponse(updated);
