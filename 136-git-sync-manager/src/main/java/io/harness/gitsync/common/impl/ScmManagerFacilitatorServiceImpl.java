@@ -20,6 +20,7 @@ import com.google.inject.name.Named;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
+// Don't inject this directly go through ScmClientOrchestrator.
 @Slf4j
 @OwnedBy(DX)
 public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitatorServiceImpl {
@@ -53,16 +54,22 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
   public GitFileContent getFileContent(String yamlGitConfigIdentifier, String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String filePath, String branch, String commitId) {
     validateFileContentParams(branch, commitId);
-    final YamlGitConfigDTO yamlGitConfigDTO =
-        getYamlGitConfigDTO(accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigIdentifier);
-    final IdentifierRef gitConnectorIdentifierRef =
-        getConnectorIdentifierRef(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
-            yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getGitConnectorRef());
-    final ScmConnector scmConnector = getScmConnector(gitConnectorIdentifierRef);
+    final ScmConnector scmConnector =
+        getScmConnector(yamlGitConfigIdentifier, accountIdentifier, orgIdentifier, projectIdentifier);
     final GitFilePathDetails gitFilePathDetails = getGitFilePathDetails(filePath, branch, commitId);
     final FileContent fileContent = scmClient.getFileContent(decryptGitApiAccessHelper.decryptScmApiAccess(scmConnector,
                                                                  accountIdentifier, projectIdentifier, orgIdentifier),
         gitFilePathDetails);
     return validateAndGetGitFileContent(fileContent);
+  }
+
+  private ScmConnector getScmConnector(
+      String yamlGitConfigIdentifier, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    final YamlGitConfigDTO yamlGitConfigDTO =
+        getYamlGitConfigDTO(accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigIdentifier);
+    final IdentifierRef gitConnectorIdentifierRef =
+        getConnectorIdentifierRef(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
+            yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getGitConnectorRef());
+    return getScmConnector(gitConnectorIdentifierRef);
   }
 }

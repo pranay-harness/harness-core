@@ -11,6 +11,6 @@ import org.springframework.data.repository.CrudRepository;
 @HarnessRepo
 @OwnedBy(HarnessTeam.DX)
 public interface GitSyncSettingsRepository extends CrudRepository<GitSyncSettings, String> {
-  Optional<GitSyncSettings> findByAccountIdentifierAndProjectIdentifierAndOrgIdentifier(
+  Optional<GitSyncSettings> findByAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
       String accountIdentifier, String orgIdentifier, String projectIdentifier);
 }
