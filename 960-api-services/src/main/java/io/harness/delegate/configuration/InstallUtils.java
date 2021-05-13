@@ -104,8 +104,16 @@ public class InstallUtils {
   }
 
   public static String getScmPath() {
+    return join(getScmFolderPath(), getScmBinaryName());
+  }
+
+  public static String getScmFolderPath() {
     String version = getScmVersion();
-    return join("/", scmBaseDir, version, getOsPath(), "amd64", scmBinary);
+    return join("/", scmBaseDir, version, getOsPath(), "amd64");
+  }
+
+  public static String getScmBinaryName() {
+    return scmBinary;
   }
 
   public static String getKubectlPath() {

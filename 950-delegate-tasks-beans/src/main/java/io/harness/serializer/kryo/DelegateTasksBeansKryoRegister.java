@@ -3,6 +3,7 @@ package io.harness.serializer.kryo;
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.capability.AwsRegionParameters;
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilitySubjectPermission.PermissionResult;
@@ -293,7 +294,14 @@ import io.harness.delegate.task.manifests.request.CustomManifestFetchConfig;
 import io.harness.delegate.task.manifests.request.CustomManifestValuesFetchParams;
 import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
+import io.harness.delegate.task.scm.GitFileTaskResponseData;
+import io.harness.delegate.task.scm.GitFileTaskType;
+import io.harness.delegate.task.scm.GitRefType;
 import io.harness.delegate.task.scm.PushTaskType;
+import io.harness.delegate.task.scm.ScmGitFileTask;
+import io.harness.delegate.task.scm.ScmGitFileTaskParams;
+import io.harness.delegate.task.scm.ScmGitRefTaskParams;
+import io.harness.delegate.task.scm.ScmGitRefTaskResponseData;
 import io.harness.delegate.task.scm.ScmPushTaskParams;
 import io.harness.delegate.task.scm.ScmPushTaskResponseData;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
@@ -357,6 +365,7 @@ import io.harness.serializer.KryoRegistrar;
 import software.wings.beans.TaskType;
 
 import com.esotericsoftware.kryo.Kryo;
+import com.google.protobuf.LazyStringArrayList;
 import com.google.protobuf.UnknownFieldSet;
 import org.eclipse.jgit.api.GitCommand;
 import org.json.JSONArray;
@@ -740,5 +749,15 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(HelmValuesFetchRequest.class, 543310);
     kryo.register(HelmValuesFetchResponse.class, 543311);
     kryo.register(HelmChartInfo.class, 543312);
+
+    kryo.register(ScmGitRefTaskParams.class, 543313);
+    kryo.register(ScmGitRefTaskResponseData.class, 543314);
+    kryo.register(GitRefType.class, 543315);
+    kryo.register(LazyStringArrayList.class, 543316);
+    kryo.register(ScmGitFileTask.class, 543317);
+    kryo.register(ScmGitFileTaskParams.class, 543318);
+    kryo.register(GitFileTaskResponseData.class, 543319);
+    kryo.register(GitFileTaskType.class, 543320);
+    kryo.register(GitFilePathDetails.class, 543320);
   }
 }
