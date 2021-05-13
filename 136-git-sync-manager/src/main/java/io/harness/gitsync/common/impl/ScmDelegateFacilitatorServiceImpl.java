@@ -36,6 +36,7 @@ import java.time.Duration;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
+// Don't inject this directly go through ScmClientOrchestrator.
 @Slf4j
 @OwnedBy(DX)
 public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilitatorServiceImpl {

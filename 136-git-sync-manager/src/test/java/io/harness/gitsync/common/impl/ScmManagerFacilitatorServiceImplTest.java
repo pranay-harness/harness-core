@@ -116,7 +116,7 @@ public class ScmManagerFacilitatorServiceImplTest extends GitSyncTestBase {
         "www.github.com", "http://www.gitlab.com", "www.github.harness.com", "harness.github.com", "github.com"));
     List<Boolean> expected = new ArrayList<>(Arrays.asList(true, true, false, false, true));
     List<Boolean> actual = new ArrayList<>();
-    repoURLs.forEach(repoURL -> actual.add(scmManagerFacilitatorService.isSaasGit(repoURL).isSaasGit()));
+    repoURLs.forEach(repoURL -> actual.add(GitUtils.isSaasGit(repoURL).isSaasGit()));
     assertThat(actual).isEqualTo(expected);
   }
 }
