@@ -2,8 +2,10 @@ package io.harness.cache;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.FdIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 
 import java.util.Date;
@@ -24,6 +26,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @FieldNameConstants(innerTypeName = "SpringCacheEntityKeys")
 @Entity(value = "cacheEntities")
 @Document("cacheEntities")
+@StoreIn(DbAliases.ALL)
 public class SpringCacheEntity implements PersistentEntity {
   @Id @org.mongodb.morphia.annotations.Id String canonicalKey;
   long contextValue;

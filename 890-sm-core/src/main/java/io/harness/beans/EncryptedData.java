@@ -9,12 +9,14 @@ import static io.harness.security.encryption.EncryptionType.CUSTOM;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedDataParent.EncryptedDataParentKeys;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.NGAccess;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -73,6 +75,7 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "EncryptedDataKeys")
+@StoreIn(DbAliases.CG_MANAGER)
 public class EncryptedData
     implements EncryptedRecord, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                UpdatedByAware, NameAccess, PersistentRegularIterable, AccountAccess, ScopedEntity, NGAccess {

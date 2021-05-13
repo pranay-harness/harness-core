@@ -2,12 +2,14 @@ package io.harness.filter.entity;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterVisibility;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -46,6 +48,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("filters")
 @TypeAlias("io.harness.entity.Filter")
 @OwnedBy(DX)
+@StoreIn(DbAliases.ALL)
 public class Filter implements PersistentEntity {
   @JsonIgnore @Id @org.mongodb.morphia.annotations.Id String id;
   @JsonIgnore String accountIdentifier;
