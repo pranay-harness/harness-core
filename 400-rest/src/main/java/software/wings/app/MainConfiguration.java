@@ -178,6 +178,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
   @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
   @JsonProperty("cfMigrationConfig") private CfMigrationConfig cfMigrationConfig;
+  @JsonProperty("exportAccountDataBatchSize") private int exportAccountDataBatchSize;
 
   private int applicationPort;
   private boolean sslEnabled;

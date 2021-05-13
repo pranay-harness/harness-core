@@ -802,6 +802,10 @@ if [[ "" != "$COMMAND_LIBRARY_PUBLISHING_SECRET" ]]; then
   yq write -i $CONFIG_FILE commandLibraryServiceConfig.publishingSecret "$COMMAND_LIBRARY_PUBLISHING_SECRET"
 fi
 
+if [[ "" != "$EXPORT_DATA_BATCH_SIZE" ]]; then
+  yq write -i $CONFIG_FILE exportAccountDataBatchSize "$EXPORT_DATA_BATCH_SIZE"
+fi
+
 if [[ "" != "$LOG_STREAMING_SERVICE_BASEURL" ]]; then
   yq write -i $CONFIG_FILE logStreamingServiceConfig.baseUrl "$LOG_STREAMING_SERVICE_BASEURL"
 fi
