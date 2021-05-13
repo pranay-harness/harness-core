@@ -2,11 +2,11 @@ package io.harness.delegate.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.k8s.K8sConstants.MANIFEST_FILES_DIR;
-import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ACASIAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
@@ -15,6 +15,7 @@ import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -24,6 +25,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
+import io.harness.delegate.k8s.exception.KubernetesExceptionExplanation;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.delegate.task.k8s.K8sDeleteRequest;
@@ -125,9 +127,6 @@ public class K8sDeleteRequestHandlerTest extends CategoryTest {
 
     when(k8sDeleteBaseHandler.getResourceIdsToDelete(deleteRequest, kubernetesConfig, logCallback))
         .thenReturn(kubernetesResources);
-    when(k8sTaskHelperBase.executeDelete(
-             any(Kubectl.class), eq(delegateTaskParams), eq(kubernetesResources), eq(logCallback), eq(true)))
-        .thenReturn(true);
 
     K8sDeployResponse response = k8sDeleteRequestHandler.executeTaskInternal(
         deleteRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
@@ -190,14 +189,16 @@ public class K8sDeleteRequestHandlerTest extends CategoryTest {
                                                    .build();
 
     CommandUnitsProgress commandUnitsProgress = CommandUnitsProgress.builder().build();
+    RuntimeException thrownException = new RuntimeException("Resource kind is missing");
 
     when(k8sDeleteBaseHandler.getResourceIdsToDelete(deleteRequest, kubernetesConfig, logCallback))
-        .thenThrow(new RuntimeException("Resource kind is missing"));
+        .thenThrow(thrownException);
 
-    K8sDeployResponse response = k8sDeleteRequestHandler.executeTaskInternal(
-        deleteRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
-    assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThatThrownBy(()
+                           -> k8sDeleteRequestHandler.executeTaskInternal(
+                               deleteRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress))
+        .isSameAs(thrownException);
+
     verify(k8sDeleteBaseHandler, times(1))
         .getResourceIdsToDelete(eq(deleteRequest), eq(kubernetesConfig), eq(logCallback));
     verify(k8sTaskHelperBase, times(0))
@@ -225,17 +226,19 @@ public class K8sDeleteRequestHandlerTest extends CategoryTest {
 
     List<KubernetesResourceId> kubernetesResources =
         Arrays.asList(KubernetesResourceId.builder().kind("Deployment").name("test-deployment").build());
+    RuntimeException thrownException = new RuntimeException("Failed to delete resource");
 
     when(k8sDeleteBaseHandler.getResourceIdsToDelete(deleteRequest, kubernetesConfig, logCallback))
         .thenReturn(kubernetesResources);
-    when(k8sTaskHelperBase.executeDelete(
-             any(Kubectl.class), eq(delegateTaskParams), eq(kubernetesResources), eq(logCallback), eq(true)))
-        .thenReturn(false);
+    doThrow(thrownException)
+        .when(k8sTaskHelperBase)
+        .executeDelete(any(Kubectl.class), eq(delegateTaskParams), eq(kubernetesResources), eq(logCallback), eq(true));
 
-    K8sDeployResponse response = k8sDeleteRequestHandler.executeTaskInternal(
-        deleteRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
-    assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThatThrownBy(()
+                           -> k8sDeleteRequestHandler.executeTaskInternal(
+                               deleteRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress))
+        .isSameAs(thrownException);
+
     verify(k8sDeleteBaseHandler, times(1))
         .getResourceIdsToDelete(eq(deleteRequest), eq(kubernetesConfig), eq(logCallback));
     verify(k8sTaskHelperBase, times(1))
@@ -267,9 +270,6 @@ public class K8sDeleteRequestHandlerTest extends CategoryTest {
 
     when(k8sDeleteBaseHandler.getResourceIdsToDelete(deleteRequest, kubernetesConfig, logCallback))
         .thenReturn(kubernetesResources);
-    when(k8sTaskHelperBase.executeDelete(
-             any(Kubectl.class), eq(delegateTaskParams), eq(kubernetesResources), eq(logCallback), eq(true)))
-        .thenReturn(true);
 
     K8sDeployResponse response = k8sDeleteRequestHandler.executeTaskInternal(
         deleteRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
@@ -332,14 +332,16 @@ public class K8sDeleteRequestHandlerTest extends CategoryTest {
                                                    .build();
 
     CommandUnitsProgress commandUnitsProgress = CommandUnitsProgress.builder().build();
+    RuntimeException thrownException = new RuntimeException("Resource kind is missing");
 
     when(k8sDeleteBaseHandler.getResourceIdsToDelete(deleteRequest, kubernetesConfig, logCallback))
-        .thenThrow(new RuntimeException("Resource kind is missing"));
+        .thenThrow(thrownException);
 
-    K8sDeployResponse response = k8sDeleteRequestHandler.executeTaskInternal(
-        deleteRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
-    assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThatThrownBy(()
+                           -> k8sDeleteRequestHandler.executeTaskInternal(
+                               deleteRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress))
+        .isSameAs(thrownException);
+
     verify(k8sDeleteBaseHandler, times(1))
         .getResourceIdsToDelete(eq(deleteRequest), eq(kubernetesConfig), eq(logCallback));
     verify(k8sTaskHelperBase, times(0))
@@ -367,17 +369,19 @@ public class K8sDeleteRequestHandlerTest extends CategoryTest {
 
     List<KubernetesResourceId> kubernetesResources =
         Arrays.asList(KubernetesResourceId.builder().kind("Deployment").name("test-deployment").build());
+    RuntimeException thrownException = new RuntimeException("Failed to delete resource");
 
     when(k8sDeleteBaseHandler.getResourceIdsToDelete(deleteRequest, kubernetesConfig, logCallback))
         .thenReturn(kubernetesResources);
-    when(k8sTaskHelperBase.executeDelete(
-             any(Kubectl.class), eq(delegateTaskParams), eq(kubernetesResources), eq(logCallback), eq(true)))
-        .thenReturn(false);
+    doThrow(thrownException)
+        .when(k8sTaskHelperBase)
+        .executeDelete(any(Kubectl.class), eq(delegateTaskParams), eq(kubernetesResources), eq(logCallback), eq(true));
 
-    K8sDeployResponse response = k8sDeleteRequestHandler.executeTaskInternal(
-        deleteRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
-    assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThatThrownBy(()
+                           -> k8sDeleteRequestHandler.executeTaskInternal(
+                               deleteRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress))
+        .isSameAs(thrownException);
+
     verify(k8sDeleteBaseHandler, times(1))
         .getResourceIdsToDelete(eq(deleteRequest), eq(kubernetesConfig), eq(logCallback));
     verify(k8sTaskHelperBase, times(1))
@@ -424,7 +428,7 @@ public class K8sDeleteRequestHandlerTest extends CategoryTest {
              deleteFilePaths, valuesYaml, releaseName, namespace, logCallback, timeoutIntervalInMin))
         .thenReturn(kubernetesResources);
     when(k8sTaskHelperBase.deleteManifests(
-             any(Kubectl.class), eq(kubernetesResources), eq(delegateTaskParams), eq(logCallback)))
+             any(Kubectl.class), eq(kubernetesResources), eq(delegateTaskParams), eq(logCallback), eq(true)))
         .thenReturn(true);
 
     K8sDeployResponse response = k8sDeleteRequestHandler.executeTaskInternal(
@@ -435,7 +439,8 @@ public class K8sDeleteRequestHandlerTest extends CategoryTest {
         .getResourcesFromManifests(eq(delegateTaskParams), eq(manifestDelegateConfig), eq(manifestFileDirectory),
             eq(deleteFilePaths), anyList(), eq(releaseName), eq(namespace), eq(logCallback), eq(timeoutIntervalInMin));
     verify(k8sTaskHelperBase, times(1))
-        .deleteManifests(any(Kubectl.class), eq(kubernetesResources), eq(delegateTaskParams), eq(logCallback));
+        .deleteManifests(
+            any(Kubectl.class), eq(kubernetesResources), eq(delegateTaskParams), eq(logCallback), eq(true));
   }
 
   @Test
@@ -462,18 +467,20 @@ public class K8sDeleteRequestHandlerTest extends CategoryTest {
 
     CommandUnitsProgress commandUnitsProgress = CommandUnitsProgress.builder().build();
 
-    when(k8sTaskHelperBase.deleteManifests(any(Kubectl.class), eq(null), eq(delegateTaskParams), eq(logCallback)))
+    when(k8sTaskHelperBase.deleteManifests(
+             any(Kubectl.class), eq(null), eq(delegateTaskParams), eq(logCallback), eq(true)))
         .thenThrow(new NullPointerException("resources are not provided"));
 
-    K8sDeployResponse response = k8sDeleteRequestHandler.executeTaskInternal(
-        deleteRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
-    assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThatThrownBy(()
+                           -> k8sDeleteRequestHandler.executeTaskInternal(
+                               deleteRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress))
+        .hasMessage("resources are not provided");
+
     verify(k8sTaskHelperBase, times(0))
         .getResourcesFromManifests(any(K8sDelegateTaskParams.class), any(ManifestDelegateConfig.class), anyString(),
             anyList(), anyList(), anyString(), anyString(), any(), anyInt());
     verify(k8sTaskHelperBase, times(1))
-        .deleteManifests(any(Kubectl.class), eq(null), eq(delegateTaskParams), eq(logCallback));
+        .deleteManifests(any(Kubectl.class), eq(null), eq(delegateTaskParams), eq(logCallback), eq(true));
   }
 
   @Test
@@ -500,14 +507,15 @@ public class K8sDeleteRequestHandlerTest extends CategoryTest {
 
     CommandUnitsProgress commandUnitsProgress = CommandUnitsProgress.builder().build();
 
-    K8sDeployResponse response = k8sDeleteRequestHandler.executeTaskInternal(
-        deleteRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
-    assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThatThrownBy(()
+                           -> k8sDeleteRequestHandler.executeTaskInternal(
+                               deleteRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress))
+        .hasMessageContaining(KubernetesExceptionExplanation.FETCH_MANIFEST_FAILED);
+
     verify(k8sTaskHelperBase, times(0))
         .getResourcesFromManifests(
             any(), any(), anyString(), anyList(), anyList(), anyString(), anyString(), any(), anyInt());
-    verify(k8sTaskHelperBase, times(0)).deleteManifests(any(Kubectl.class), any(), any(), any());
+    verify(k8sTaskHelperBase, times(0)).deleteManifests(any(Kubectl.class), any(), any(), any(), eq(true));
   }
 
   @Test
@@ -549,18 +557,20 @@ public class K8sDeleteRequestHandlerTest extends CategoryTest {
              deleteFilePaths, valuesYaml, releaseName, namespace, logCallback, timeoutIntervalInMin))
         .thenReturn(kubernetesResources);
     when(k8sTaskHelperBase.deleteManifests(
-             any(Kubectl.class), eq(kubernetesResources), eq(delegateTaskParams), eq(logCallback)))
-        .thenReturn(false);
+             any(Kubectl.class), eq(kubernetesResources), eq(delegateTaskParams), eq(logCallback), eq(true)))
+        .thenThrow(new RuntimeException("Failed to delete resources"));
 
-    K8sDeployResponse response = k8sDeleteRequestHandler.executeTaskInternal(
-        deleteRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
-    assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThatThrownBy(()
+                           -> k8sDeleteRequestHandler.executeTaskInternal(
+                               deleteRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress))
+        .hasMessage("Failed to delete resources");
+
     verify(k8sTaskHelperBase, times(1))
         .getResourcesFromManifests(eq(delegateTaskParams), eq(manifestDelegateConfig), eq(manifestFileDirectory),
             eq(deleteFilePaths), anyList(), eq(releaseName), eq(namespace), eq(logCallback), eq(timeoutIntervalInMin));
     verify(k8sTaskHelperBase, times(1))
-        .deleteManifests(any(Kubectl.class), eq(kubernetesResources), eq(delegateTaskParams), eq(logCallback));
+        .deleteManifests(
+            any(Kubectl.class), eq(kubernetesResources), eq(delegateTaskParams), eq(logCallback), eq(true));
   }
 
   @Test
@@ -592,13 +602,14 @@ public class K8sDeleteRequestHandlerTest extends CategoryTest {
              deleteFilePaths, valuesYaml, releaseName, namespace, logCallback, timeoutIntervalInMin))
         .thenThrow(new RuntimeException("Something went wrong"));
 
-    K8sDeployResponse response = k8sDeleteRequestHandler.executeTaskInternal(
-        deleteRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
-    assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThatThrownBy(()
+                           -> k8sDeleteRequestHandler.executeTaskInternal(
+                               deleteRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress))
+        .hasMessage("Something went wrong");
+
     verify(k8sTaskHelperBase, times(1))
         .getResourcesFromManifests(eq(delegateTaskParams), eq(manifestDelegateConfig), eq(manifestFileDirectory),
             eq(deleteFilePaths), anyList(), eq(releaseName), eq(namespace), eq(logCallback), eq(timeoutIntervalInMin));
-    verify(k8sTaskHelperBase, times(0)).deleteManifests(any(), any(), any(), any());
+    verify(k8sTaskHelperBase, times(0)).deleteManifests(any(), any(), any(), any(), eq(true));
   }
 }

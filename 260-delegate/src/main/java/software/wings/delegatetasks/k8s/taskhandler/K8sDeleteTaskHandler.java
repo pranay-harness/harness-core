@@ -115,7 +115,7 @@ public class K8sDeleteTaskHandler extends K8sTaskHandler {
       return k8sTaskHelper.getK8sTaskExecutionResponse(
           K8sDeleteResponse.builder().build(), CommandExecutionStatus.FAILURE);
     }
-    k8sTaskHelperBase.deleteManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
+    k8sTaskHelperBase.deleteManifests(client, resources, k8sDelegateTaskParams, executionLogCallback, false);
     return k8sTaskHelper.getK8sTaskExecutionResponse(
         K8sDeleteResponse.builder().build(), CommandExecutionStatus.SUCCESS);
   }

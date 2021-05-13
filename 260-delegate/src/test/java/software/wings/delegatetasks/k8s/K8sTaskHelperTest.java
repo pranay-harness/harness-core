@@ -640,7 +640,7 @@ public class K8sTaskHelperTest extends CategoryTest {
                                                       .build();
     Kubectl client = Kubectl.client("kubectl", "config-path");
 
-    spyHelperBase.deleteManifests(client, emptyList(), k8sDelegateTaskParams, executionLogCallback);
+    spyHelperBase.deleteManifests(client, emptyList(), k8sDelegateTaskParams, executionLogCallback, false);
 
     ArgumentCaptor<DeleteCommand> captor = ArgumentCaptor.forClass(DeleteCommand.class);
     verify(spyHelperBase, times(1)).runK8sExecutable(any(), any(), captor.capture());
@@ -654,7 +654,7 @@ public class K8sTaskHelperTest extends CategoryTest {
                    .spec("")
                    .resourceId(KubernetesResourceId.builder().kind("Route").build())
                    .build()),
-        k8sDelegateTaskParams, executionLogCallback);
+        k8sDelegateTaskParams, executionLogCallback, false);
     verify(spyHelperBase, times(1)).runK8sExecutable(any(), any(), captor.capture());
     assertThat(captor.getValue().command()).isEqualTo("oc --kubeconfig=config-path delete --filename=manifests.yaml");
   }

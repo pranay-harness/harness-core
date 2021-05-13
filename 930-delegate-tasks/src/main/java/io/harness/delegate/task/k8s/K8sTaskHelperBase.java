@@ -68,6 +68,7 @@ import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.git.NGGitService;
+import io.harness.delegate.k8s.exception.KubernetesExceptionHints;
 import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
 import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
@@ -80,7 +81,9 @@ import io.harness.exception.GitOperationException;
 import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.KubernetesTaskException;
 import io.harness.exception.KubernetesValuesException;
+import io.harness.exception.NestedExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.helm.HelmCliCommandType;
@@ -768,7 +771,8 @@ public class K8sTaskHelperBase {
   }
 
   public boolean deleteManifests(Kubectl client, List<KubernetesResource> resources,
-      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback) throws Exception {
+      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean throwOnFailure)
+      throws Exception {
     FileIo.writeUtf8StringToFile(
         k8sDelegateTaskParams.getWorkingDirectory() + "/manifests.yaml", ManifestHelper.toYaml(resources));
 
@@ -777,6 +781,19 @@ public class K8sTaskHelperBase {
     final DeleteCommand deleteCommand = overriddenClient.delete().filename("manifests.yaml");
     ProcessResult result = runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, deleteCommand);
     if (result.getExitValue() != 0) {
+      if (throwOnFailure) {
+        String explanation = result.getOutput() != null && isNotEmpty(result.getOutput().getUTF8())
+            ? result.getOutput().getUTF8()
+            : "Kubectl delete command failed";
+        String allResources = resources.stream()
+                                  .map(KubernetesResource::getResourceId)
+                                  .map(KubernetesResourceId::kindNameRef)
+                                  .collect(Collectors.joining(", "));
+        throw NestedExceptionUtils.hintWithExplanationException(
+            KubernetesExceptionHints.DELETE_BY_MANIFEST_COMMAND_FAILED, explanation + ". Resources: " + allResources,
+            new KubernetesTaskException("Failed to delete all resources from manifest"));
+      }
+
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       return false;
     }
@@ -864,23 +881,25 @@ public class K8sTaskHelperBase {
     }
   }
 
-  public boolean executeDelete(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams,
+  public void executeDelete(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams,
       List<KubernetesResourceId> kubernetesResourceIds, LogCallback executionLogCallback, boolean denoteOverallSuccess)
       throws Exception {
     for (KubernetesResourceId resourceId : kubernetesResourceIds) {
       ProcessResult result = executeDeleteCommand(client, k8sDelegateTaskParams, executionLogCallback, resourceId);
       if (result.getExitValue() != 0) {
         log.warn("Failed to delete resource {}. Error {}", resourceId.kindNameRef(), result.getOutput());
-        executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
-        return false;
+        String explanation = result.getOutput() != null && isNotEmpty(result.getOutput().getUTF8())
+            ? result.getOutput().getUTF8()
+            : "Kubectl delete command failed";
+        throw NestedExceptionUtils.hintWithExplanationException(
+            format(KubernetesExceptionHints.DELETE_COMMAND_FAILED_NOT_FOUND, resourceId.kindNameRef()), explanation,
+            new KubernetesTaskException("Failed to delete workload: " + resourceId.namespaceKindNameRef()));
       }
     }
 
     if (denoteOverallSuccess) {
       executionLogCallback.saveExecutionLog("Done", INFO, CommandExecutionStatus.SUCCESS);
     }
-
-    return true;
   }
 
   private ProcessResult executeDeleteCommand(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams,
