@@ -3,6 +3,7 @@ package io.harness.ng.core.migration;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.remote.client.RestClientUtils.getResponse;
+import static io.harness.secretmanagerclient.SecretType.SSHKey;
 import static io.harness.security.encryption.EncryptionType.GCP_KMS;
 import static io.harness.security.encryption.EncryptionType.KMS;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
@@ -100,31 +101,33 @@ public class ManagerToNGManagerEncryptedDataMigrationHandler implements Handler<
 
   @Override
   public void handle(Secret secret) {
-    NGEncryptedData encryptedData = encryptedDataDao.get(secret.getAccountIdentifier(), secret.getOrgIdentifier(),
-        secret.getProjectIdentifier(), secret.getIdentifier());
-    if (encryptedData == null) {
-      encryptedData = fromEncryptedDataMigrationDTO(
-          getResponse(secretManagerClient.getEncryptedDataMigrationDTO(secret.getIdentifier(),
-              secret.getAccountIdentifier(), secret.getOrgIdentifier(), secret.getProjectIdentifier())));
+    if (!SSHKey.equals(secret.getType())) {
+      NGEncryptedData encryptedData = encryptedDataDao.get(secret.getAccountIdentifier(), secret.getOrgIdentifier(),
+          secret.getProjectIdentifier(), secret.getIdentifier());
       if (encryptedData == null) {
-        log.info(String.format(
-            "Secret with accountIdentifier: %s, orgIdentifier: %s, projectIdentifier: %s and identifier: %s could not be migrated from manager because Encrypted Data not found",
-            secret.getAccountIdentifier(), secret.getOrgIdentifier(), secret.getProjectIdentifier(),
-            secret.getIdentifier()));
-        return;
+        encryptedData = fromEncryptedDataMigrationDTO(
+            getResponse(secretManagerClient.getEncryptedDataMigrationDTO(secret.getIdentifier(),
+                secret.getAccountIdentifier(), secret.getOrgIdentifier(), secret.getProjectIdentifier())));
+        if (encryptedData == null) {
+          log.info(String.format(
+              "Secret with accountIdentifier: %s, orgIdentifier: %s, projectIdentifier: %s and identifier: %s could not be migrated because Encrypted Data entry not found in manager",
+              secret.getAccountIdentifier(), secret.getOrgIdentifier(), secret.getProjectIdentifier(),
+              secret.getIdentifier()));
+          return;
+        }
+        if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
+            && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())
+            && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
+          String encryptedFileId = secretsFileService.createFile(
+              secret.getName(), secret.getAccountIdentifier(), encryptedData.getEncryptedValue());
+          encryptedData.setEncryptedValue(encryptedFileId == null ? null : encryptedFileId.toCharArray());
+        }
+        encryptedData.setId(null);
+        encryptedDataDao.save(encryptedData);
+        getResponse(secretManagerClient.deleteAfterMigration(secret.getIdentifier(), secret.getAccountIdentifier(),
+            secret.getOrgIdentifier(), secret.getProjectIdentifier()));
       }
-      if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
-          && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())
-          && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
-        String encryptedFileId = secretsFileService.createFile(
-            secret.getName(), secret.getAccountIdentifier(), encryptedData.getEncryptedValue());
-        encryptedData.setEncryptedValue(encryptedFileId == null ? null : encryptedFileId.toCharArray());
-      }
-      encryptedData.setId(null);
-      encryptedDataDao.save(encryptedData);
     }
-    getResponse(secretManagerClient.deleteAfterMigration(secret.getIdentifier(), secret.getAccountIdentifier(),
-        secret.getOrgIdentifier(), secret.getProjectIdentifier()));
     secret.setMigratedFromManager(true);
     secretRepository.save(secret);
     log.info(String.format(
