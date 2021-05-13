@@ -142,6 +142,7 @@ import io.harness.migrations.all.RemoveResizeFromStatefulSetWorkflows;
 import io.harness.migrations.all.RemoveServiceVariablesFromActivity;
 import io.harness.migrations.all.RemoveUnusedLogDataRecordMigration;
 import io.harness.migrations.all.ResourceLookupMigration;
+import io.harness.migrations.all.RestrictedAccessPermissionMigration;
 import io.harness.migrations.all.ScheduleSegmentPublishJob;
 import io.harness.migrations.all.SecretManagerPermissionMigration;
 import io.harness.migrations.all.SecretTextNameKeyWordsMigration;
@@ -423,6 +424,7 @@ public class MigrationList {
         .add(Pair.of(356, CECloudAccountMigration.class))
         .add(Pair.of(357, SshAndWinRmAccountPermissionMigration.class))
         .add(Pair.of(358, ExecuteWorkflowRollbackActionMigration.class))
+        .add(Pair.of(359, RestrictedAccessPermissionMigration.class))
         .build();
   }
 }
