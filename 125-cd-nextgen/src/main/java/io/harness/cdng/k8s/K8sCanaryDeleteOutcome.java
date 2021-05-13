@@ -15,9 +15,4 @@ import org.springframework.data.annotation.TypeAlias;
 @OwnedBy(CDP)
 @TypeAlias("k8sCanaryDeleteOutcome")
 @JsonTypeName("k8sCanaryDeleteOutcome")
-public class K8sCanaryDeleteOutcome implements ExecutionSweepingOutput {
-  @Override
-  public String getType() {
-    return "k8sCanaryDeleteOutcome";
-  }
-}
+public class K8sCanaryDeleteOutcome implements ExecutionSweepingOutput {}

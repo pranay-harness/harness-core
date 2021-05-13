@@ -206,6 +206,20 @@ function setupDelegateJars(){
 
       done
 
+      for version in 444bed53; do
+
+        echo "Copying scm ${version} binaries for ${platform}"
+
+        sudo mkdir -p ${STORAGE_DIR}/harness-download/harness-scm/release/${version}/bin/${platform}/amd64/
+
+        curl  -s -L -o oc https://app.harness.io/storage/harness-download/harness-scm/release/${version}/bin/${platform}/amd64/scm
+
+        echo $(ls -sh oc  | cut -d ' ' -f1)
+
+        sudo cp oc ${STORAGE_DIR}/harness-download/harness-scm/release/${version}/bin/${platform}/amd64/
+
+      done
+
     done
 }
 

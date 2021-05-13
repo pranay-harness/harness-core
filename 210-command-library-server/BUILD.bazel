@@ -4,6 +4,7 @@ load("//:macros.bzl", "run_analysis")
 
 shared_dependencies = [
     "//400-rest:module",
+    "//940-primary-version-manager:module",
     "//960-persistence:module",
     "//960-continuous-features:module",
     "//970-rbac-core:module",

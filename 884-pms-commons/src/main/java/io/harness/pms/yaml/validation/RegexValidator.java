@@ -1,7 +1,8 @@
 package io.harness.pms.yaml.validation;
 
-import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.expression.EngineExpressionService;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.expression.EngineExpressionEvaluator;
 
 import java.util.regex.Pattern;
 
@@ -11,13 +12,14 @@ import java.util.regex.Pattern;
  * ${input}.regex(^prod*) #render and use matcher
  * ${input}.regex(^${env.name}_[a-z]+) #render and use matcher
  */
+@OwnedBy(HarnessTeam.PIPELINE)
 public class RegexValidator implements RuntimeValidator {
-  private final EngineExpressionService engineExpressionService;
-  private final Ambiance ambiance;
+  private final EngineExpressionEvaluator engineExpressionEvaluator;
+  private final boolean skipUnresolvedExpressionsCheck;
 
-  public RegexValidator(EngineExpressionService engineExpressionService, Ambiance ambiance) {
-    this.engineExpressionService = engineExpressionService;
-    this.ambiance = ambiance;
+  public RegexValidator(EngineExpressionEvaluator engineExpressionEvaluator, boolean skipUnresolvedExpressionsCheck) {
+    this.engineExpressionEvaluator = engineExpressionEvaluator;
+    this.skipUnresolvedExpressionsCheck = skipUnresolvedExpressionsCheck;
   }
 
   @Override
@@ -26,7 +28,7 @@ public class RegexValidator implements RuntimeValidator {
       return RuntimeValidatorResponse.builder().errorMessage("Current value is null").build();
     }
 
-    String regex = engineExpressionService.renderExpression(ambiance, parameters);
+    String regex = engineExpressionEvaluator.renderExpression(parameters, skipUnresolvedExpressionsCheck);
     if (currentValue instanceof String) {
       if (!ExpressionUtils.matchesPattern(Pattern.compile(regex), (String) currentValue)) {
         return RuntimeValidatorResponse.builder().errorMessage("Current value does not match with given regex").build();

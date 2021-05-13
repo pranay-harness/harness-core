@@ -13,7 +13,6 @@ import io.harness.ng.RsqlQueryable;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline.NgPipelineKeys;
 import io.harness.ngpipeline.visitor.helpers.ngpipeline.NgPipelineVisitorHelper;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -73,10 +72,5 @@ public class NgPipeline implements Pipeline, Visitable {
       stages.forEach(stage -> visitableChildren.add("stages", stage));
     }
     return visitableChildren;
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(identifier).build();
   }
 }

@@ -205,8 +205,8 @@ public class PMSInputSetServiceImplTest extends PipelineServiceTestBase {
     Page<InputSetEntity> list = pmsInputSetService.list(criteriaFromFilter, pageRequest);
     assertThat(list.getContent()).isNotNull();
     assertThat(list.getContent().size()).isEqualTo(2);
-    assertThat(list.getContent().get(0)).isEqualTo(inputSetEntity);
-    assertThat(list.getContent().get(1)).isEqualTo(overlayInputSetEntity);
+    assertThat(list.getContent().get(0).getIdentifier()).isEqualTo(inputSetEntity.getIdentifier());
+    assertThat(list.getContent().get(1).getIdentifier()).isEqualTo(overlayInputSetEntity.getIdentifier());
 
     InputSetEntity inputSetEntity2 = InputSetEntity.builder()
                                          .identifier(INPUT_SET_IDENTIFIER + "2")
@@ -223,9 +223,9 @@ public class PMSInputSetServiceImplTest extends PipelineServiceTestBase {
     Page<InputSetEntity> list2 = pmsInputSetService.list(criteriaFromFilter, pageRequest);
     assertThat(list2.getContent()).isNotNull();
     assertThat(list2.getContent().size()).isEqualTo(3);
-    assertThat(list2.getContent().get(0)).isEqualTo(inputSetEntity);
-    assertThat(list2.getContent().get(1)).isEqualTo(overlayInputSetEntity);
-    assertThat(list2.getContent().get(2)).isEqualTo(inputSetEntity2);
+    assertThat(list2.getContent().get(0).getIdentifier()).isEqualTo(inputSetEntity.getIdentifier());
+    assertThat(list2.getContent().get(1).getIdentifier()).isEqualTo(overlayInputSetEntity.getIdentifier());
+    assertThat(list2.getContent().get(2).getIdentifier()).isEqualTo(inputSetEntity2.getIdentifier());
   }
 
   @Test

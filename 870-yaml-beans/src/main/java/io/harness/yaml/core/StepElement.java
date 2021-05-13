@@ -11,7 +11,6 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.visitor.helpers.executionelement.StepElementVisitorHelper;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -71,10 +70,5 @@ public class StepElement implements ExecutionWrapper, WithIdentifier, Visitable 
     VisitableChildren children = VisitableChildren.builder().build();
     children.add("stepSpecType", stepSpecType);
     return children;
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.STEP_ELEMENT).isPartOfFQN(false).build();
   }
 }

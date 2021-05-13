@@ -26,7 +26,7 @@ import org.apache.commons.lang3.NotImplementedException;
 
 @OwnedBy(HarnessTeam.DX)
 public class ScmPushTask extends AbstractDelegateRunnableTask {
-  @Inject private SecretDecryptionService decryptionService;
+  @Inject private SecretDecryptionService secretDecryptionService;
   @Inject ScmDelegateClient scmDelegateClient;
   @Inject ScmServiceClient scmServiceClient;
 
@@ -45,6 +45,7 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
     ScmPushTaskParams scmPushTaskParams = (ScmPushTaskParams) parameters;
     final DecryptableEntity apiAccessDecryptableEntity =
         GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(scmPushTaskParams.getScmConnector());
+    secretDecryptionService.decrypt(apiAccessDecryptableEntity, scmPushTaskParams.getEncryptedDataDetails());
     switch (scmPushTaskParams.getChangeType()) {
       case ADD: {
         CreateFileResponse createFileResponse = scmDelegateClient.processScmRequest(c

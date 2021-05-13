@@ -14,4 +14,8 @@ public interface BitbucketRestClient {
   Call<StatusCreationResponse> createStatus(@Header("Authorization") String authorization,
       @Path("workspace") String workspace, @Path("repo_slug") String repo_slug, @Path("node") String node,
       @Body Map<String, Object> parameters);
+
+  @POST("rest/build-status/1.0/commits/{commitId}/")
+  Call<StatusCreationResponse> createOnPremStatus(@Header("Authorization") String authorization,
+      @Path("commitId") String sha, @Body Map<String, Object> parameters);
 }

@@ -1,6 +1,7 @@
 package io.harness.engine.interrupts.helpers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.logging.UnitStatus.EXPIRED;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -120,7 +121,7 @@ public class ExpiryHelperTest extends OrchestrationTestBase {
             .startTs(123L)
             .build();
 
-    List<UnitProgress> unitProgressList = expiryHelper.evaluateUnitProgresses(nodeExecution);
+    List<UnitProgress> unitProgressList = InterruptHelper.evaluateUnitProgresses(nodeExecution, EXPIRED);
 
     assertThat(unitProgressList).hasSize(2);
     assertThat(unitProgressList.stream().map(UnitProgress::getStatus))

@@ -6,10 +6,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
 import io.harness.encryption.SecretRefData;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.validator.NGVariableName;
 import io.harness.visitor.helpers.variables.SecretVariableVisitorHelper;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
-import io.harness.yaml.core.LevelNodeQualifierName;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -31,7 +30,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("io.harness.yaml.core.variables.SecretNGVariable")
 @OwnedBy(CDC)
 public class SecretNGVariable implements NGVariable {
-  String name;
+  @NGVariableName String name;
   @ApiModelProperty(allowableValues = NGVariableConstants.SECRET_TYPE) NGVariableType type = NGVariableType.SECRET;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<SecretRefData> value;
 
@@ -39,13 +38,6 @@ public class SecretNGVariable implements NGVariable {
   boolean required;
   @JsonProperty("default") String defaultValue;
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder()
-        .qualifierName(LevelNodeQualifierName.NG_VARIABLES + LevelNodeQualifierName.PATH_CONNECTOR + name)
-        .build();
-  }
 
   @Override
   public ParameterField<?> getCurrentValue() {

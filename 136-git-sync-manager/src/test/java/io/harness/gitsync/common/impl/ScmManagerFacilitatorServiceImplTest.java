@@ -29,6 +29,8 @@ import io.harness.service.ScmClient;
 import io.harness.tasks.DecryptGitApiAccessHelper;
 
 import com.google.inject.Inject;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import org.junit.Before;
@@ -71,8 +73,10 @@ public class ScmManagerFacilitatorServiceImplTest extends GitSyncTestBase {
     doReturn(Optional.of(ConnectorResponseDTO.builder().connector(connectorInfo).build()))
         .when(connectorService)
         .get(anyString(), anyString(), anyString(), anyString());
-    when(abstractScmClientFacilitatorService.getYamlGitConfigIdentifierRef(
+    when(abstractScmClientFacilitatorService.getYamlGitConfigDTO(
              accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigIdentifier))
+        .thenReturn(YamlGitConfigDTO.builder().build());
+    when(abstractScmClientFacilitatorService.getConnectorIdentifierRef(any(), anyString(), anyString(), anyString()))
         .thenReturn(IdentifierRef.builder().build());
     when(yamlGitConfigService.get(anyString(), anyString(), anyString(), anyString()))
         .thenReturn(YamlGitConfigDTO.builder()
@@ -102,5 +106,17 @@ public class ScmManagerFacilitatorServiceImplTest extends GitSyncTestBase {
     assertThat(gitFileContent)
         .isEqualTo(
             GitFileContent.builder().content(fileContent.getContent()).objectId(fileContent.getBlobId()).build());
+  }
+
+  @Test
+  @Owner(developers = HARI)
+  @Category(UnitTests.class)
+  public void isSaasGitTest() {
+    List<String> repoURLs = new ArrayList<>(Arrays.asList(
+        "www.github.com", "http://www.gitlab.com", "www.github.harness.com", "harness.github.com", "github.com"));
+    List<Boolean> expected = new ArrayList<>(Arrays.asList(true, true, false, false, true));
+    List<Boolean> actual = new ArrayList<>();
+    repoURLs.forEach(repoURL -> actual.add(GitUtils.isSaasGit(repoURL).isSaasGit()));
+    assertThat(actual).isEqualTo(expected);
   }
 }

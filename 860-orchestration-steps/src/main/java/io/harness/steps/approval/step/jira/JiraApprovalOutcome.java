@@ -15,9 +15,4 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @JsonTypeName("jiraApprovalOutcome")
 @TypeAlias("jiraApprovalOutcome")
-public class JiraApprovalOutcome implements Outcome {
-  @Override
-  public String getType() {
-    return "jiraApprovalOutcome";
-  }
-}
+public class JiraApprovalOutcome implements Outcome {}

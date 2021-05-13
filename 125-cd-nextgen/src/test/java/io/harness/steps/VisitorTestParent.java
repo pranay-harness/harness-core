@@ -3,7 +3,6 @@ package io.harness.steps;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -19,11 +18,6 @@ public class VisitorTestParent implements Visitable {
   String name;
   VisitorTestChild visitorTestChild;
   ConnectorRefChild connectorRefChild;
-
-  @Override
-  public LevelNode getLevelNode() {
-    return null;
-  }
 
   @Override
   public VisitableChildren getChildrenToWalk() {

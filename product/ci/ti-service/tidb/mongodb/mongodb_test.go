@@ -52,6 +52,7 @@ func TestMongoDb_UploadPartialCgForNodes(t *testing.T) {
 		"acct",
 		"org",
 		"proj",
+		"target",
 	)
 	var nodes []Node
 	curr, _ := db.Database.Collection("nodes").Find(ctx, bson.M{}, &options.FindOptions{})
@@ -79,6 +80,7 @@ func TestMongoDb_UploadPartialCgForRelations(t *testing.T) {
 		"acct",
 		"org",
 		"proj",
+		"target",
 	)
 	var relations []Relation
 	curr, _ := db.Database.Collection("relations").Find(ctx, bson.M{}, &options.FindOptions{})

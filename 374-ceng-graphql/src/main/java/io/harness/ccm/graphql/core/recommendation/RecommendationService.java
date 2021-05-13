@@ -87,6 +87,7 @@ public class RecommendationService {
     return WorkloadRecommendationDTO.builder()
         .containerRecommendations(workloadRecommendation.get().getContainerRecommendations())
         .items(containerHistogramList)
+        .lastDayCost(workloadRecommendation.get().getLastDayCost())
         .build();
   }
 

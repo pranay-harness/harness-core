@@ -22,4 +22,8 @@ import lombok.experimental.SuperBuilder;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_NULL)
-public class CEModuleLicenseDTO extends ModuleLicenseDTO {}
+public class CEModuleLicenseDTO extends ModuleLicenseDTO {
+  private int numberOfCluster;
+  private long spendLimit;
+  private int dataRetentionInDays;
+}

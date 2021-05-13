@@ -8,7 +8,7 @@ rules_pmd_dependencies()
 
 http_archive(
     name = "com_github_bazelbuild_buildtools",
-    sha256 = "f45a40e132fb46f142d2ddc70ce86ac5eff17072034b221140fff0f3ad7021f9",
+    sha256 = "58bbb9b06e14d71c620b7e2206a6d83668b602e1d51374b7bd264f9cc462d4de",
     strip_prefix = "buildtools-master",
     url = "https://github.com/bazelbuild/buildtools/archive/master.zip",
 )
@@ -1591,10 +1591,10 @@ maven_install(
         "io.grpc:grpc-testing:1.33.1",
         "io.gsonfire:gson-fire:1.8.3",
         "io.jsonwebtoken:jjwt:0.9.1",
-        "io.kubernetes:client-java-api:8.0.2",
-        "io.kubernetes:client-java-extended:8.0.2",
-        "io.kubernetes:client-java-proto:8.0.2",
-        "io.kubernetes:client-java:8.0.2",
+        "io.kubernetes:client-java-api:9.0.2",
+        "io.kubernetes:client-java-extended:9.0.2",
+        "io.kubernetes:client-java-proto:9.0.2",
+        "io.kubernetes:client-java:9.0.2",
         "io.netty:netty-buffer:4.1.52.Final",
         "io.netty:netty-codec-dns:4.1.52.Final",
         "io.netty:netty-codec-http2:4.1.52.Final",

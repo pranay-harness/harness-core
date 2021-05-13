@@ -4,7 +4,7 @@ import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.plancreator.beans.VariablesSweepingOutput;
+import io.harness.beans.common.VariablesSweepingOutput;
 import io.harness.plancreator.steps.common.StageElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;

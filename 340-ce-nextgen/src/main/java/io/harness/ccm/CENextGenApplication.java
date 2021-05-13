@@ -10,6 +10,7 @@ import io.harness.ccm.eventframework.CENGEventConsumerService;
 import io.harness.cf.AbstractCfModule;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
+import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.ff.FeatureFlagService;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
@@ -19,6 +20,7 @@ import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.persistence.HPersistence;
+import io.harness.resource.VersionInfoResource;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.threading.ExecutorModule;
@@ -113,6 +115,7 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
     registerHealthCheck(environment, injector);
     registerExceptionMappers(environment.jersey());
     registerCorrelationFilter(environment, injector);
+    registerScheduledJobs(injector);
     MaintenanceController.forceMaintenance(false);
     createConsumerThreadsToListenToEvents(environment, injector);
   }
@@ -133,12 +136,17 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
     healthService.registerMonitor(injector.getInstance(HPersistence.class));
   }
 
+  private void registerScheduledJobs(Injector injector) {
+    injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
+  }
+
   private void registerResources(Environment environment, Injector injector) {
     for (Class<?> resource : CENextGenConfiguration.getResourceClasses()) {
       if (Resource.isAcceptable(resource)) {
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
   }
 
   private void registerAuthFilters(CENextGenConfiguration configuration, Environment environment) {
