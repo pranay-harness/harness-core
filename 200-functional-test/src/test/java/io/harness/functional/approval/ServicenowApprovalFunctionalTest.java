@@ -69,7 +69,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Awaitility;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -428,7 +427,6 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = PRABU)
   @Category({FunctionalTests.class})
-  @Ignore("After migration to bazel this test seems to be slower and intermittenly timesout")
   public void ExecuteServiceNowRejectionForMultipleANDConditions() {
     Criteria rejectionCriteria = new Criteria();
     rejectionCriteria.setConditions(

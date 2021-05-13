@@ -1,6 +1,5 @@
 ### Dockerization of Manager ####### Doc
 set -x
-set -e
 
 mkdir -p dist ;
 cd dist
@@ -166,7 +165,8 @@ fi
 cd ../..
 
 mkdir -p dist/delegate
-cp ${HOME}/.bazel-dirs/bin/260-delegate/module_deploy.jar dist/delegate/delegate-capsule.jar
+cp 260-delegate/target/delegate-capsule.jar dist/delegate/delegate-capsule.jar
+#cp ${HOME}/.bazel-dirs/bin/260-delegate/module_deploy.jar dist/delegate/delegate-capsule.jar
 cp 260-delegate/config-delegate.yml dist/delegate/config-delegate.yml
 jarsigner -storetype pkcs12 -keystore ${KEY_STORE} -storepass ${KEY_STORE_PASSWORD} dist/delegate/delegate-capsule.jar ${KEY_STORE_ALIAS}
 cp dist/delegate/delegate-capsule.jar delegate-${VERSION}.jar
