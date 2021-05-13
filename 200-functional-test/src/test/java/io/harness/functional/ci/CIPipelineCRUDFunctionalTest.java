@@ -21,10 +21,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class CIPipelineCRUDFunctionalTest extends CategoryTest {
-  private static final String ALPN_JAR =
-      "org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar";
-  private static final String ALPN = "/home/jenkins/maven-repositories/0/";
-
   private static final String accountIdentifier = "accountIdentifier";
   private static final String orgIdentifier = "orgIdentifier";
   private static final String projectIdentifier = "projectIdentifier";
@@ -34,7 +30,7 @@ public class CIPipelineCRUDFunctionalTest extends CategoryTest {
   @BeforeClass
   public static void setup() throws IOException {
     RestAssured.useRelaxedHTTPSValidation();
-    CIManagerExecutor.ensureCIManager(CIPipelineCRUDFunctionalTest.class, ALPN, ALPN_JAR);
+    CIManagerExecutor.ensureCIManager(CIPipelineCRUDFunctionalTest.class);
   }
 
   @Test

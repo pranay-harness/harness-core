@@ -25,9 +25,9 @@ public class PlanCreatorHelper {
     if (rollbackNode.isShouldAlwaysRun()) {
       return true;
     }
-    String value = engineExpressionService.renderExpression(
-        ambiance, format("<+%s.status>", rollbackNode.getDependentNodeIdentifier()));
 
+    String value = engineExpressionService.renderExpression(
+        ambiance, format("<+%s.status>", rollbackNode.getDependentNodeIdentifier()), true);
     return !EngineExpressionEvaluator.hasVariables(value);
   }
 

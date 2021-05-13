@@ -40,4 +40,6 @@ public class GitSyncSettings {
   @LastModifiedBy private EmbeddedUser lastUpdatedBy;
   @LastModifiedDate private long lastUpdatedAt;
   @Version Long version;
+
+  public static final String IS_EXECUTE_ON_DELEGATE = "isExecuteOnDelegate";
 }

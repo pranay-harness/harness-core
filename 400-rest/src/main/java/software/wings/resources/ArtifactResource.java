@@ -37,6 +37,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * ArtifactResource.
@@ -80,8 +81,12 @@ public class ArtifactResource {
   @Timed
   @ExceptionMetered
   public RestResponse<PageResponse<Artifact>> list(@QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId, @QueryParam("routingId") String routingId,
       @QueryParam("serviceId") String serviceId, @BeanParam PageRequest<Artifact> pageRequest) {
     pageRequest.addFilter("appId", EQ, appId);
+    if (StringUtils.isNoneBlank(accountId, routingId)) {
+      pageRequest.addFilter("accountId", EQ, StringUtils.isNotBlank(accountId) ? accountId : routingId);
+    }
     return new RestResponse<>(artifactService.listArtifactsForService(appId, serviceId, pageRequest));
   }
 
@@ -91,6 +96,9 @@ public class ArtifactResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Artifact>> listArtifactsByServiceId(@QueryParam("serviceId") String serviceId,
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<Artifact> pageRequest) {
+    if (StringUtils.isNotBlank(accountId)) {
+      pageRequest.addFilter("accountId", EQ, accountId);
+    }
     return new RestResponse<>(artifactService.listArtifactsForService(serviceId, pageRequest));
   }
 

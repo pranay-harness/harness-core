@@ -20,11 +20,11 @@ public interface RoleAssignmentService {
   PageResponse<RoleAssignment> list(
       @NotNull PageRequest pageRequest, @Valid @NotNull RoleAssignmentFilter roleAssignmentFilter);
 
-  Optional<RoleAssignment> get(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
+  Optional<RoleAssignment> get(@NotEmpty String identifier, @NotEmpty String scopeIdentifier);
 
   RoleAssignmentUpdateResult update(@NotNull @Valid RoleAssignment roleAssignment);
 
-  Optional<RoleAssignment> delete(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
+  Optional<RoleAssignment> delete(@NotEmpty String identifier, @NotEmpty String scopeIdentifier);
 
   long deleteMulti(@Valid @NotNull RoleAssignmentFilter roleAssignmentFilter);
 

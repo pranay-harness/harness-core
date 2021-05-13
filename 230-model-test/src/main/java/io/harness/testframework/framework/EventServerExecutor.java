@@ -9,6 +9,7 @@ import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
 import io.harness.filesystem.FileIo;
+import io.harness.project.Alpn;
 import io.harness.resource.Project;
 import io.harness.threading.Poller;
 
@@ -23,7 +24,6 @@ import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -46,13 +46,13 @@ public class EventServerExecutor {
 
   @Getter(lazy = true) private final Channel channel = makeChannel();
 
-  public void ensureEventServer(Class<?> clazz, String alpnPath, String alpnJarPath) throws IOException {
+  public void ensureEventServer(Class<?> clazz) throws IOException {
     if (!isHealthy()) {
-      executeLocalEventServer(clazz, alpnPath, alpnJarPath);
+      executeLocalEventServer(clazz);
     }
   }
 
-  private void executeLocalEventServer(Class<?> clazz, String alpnPath, String alpnJarPath) throws IOException {
+  private void executeLocalEventServer(Class<?> clazz) throws IOException {
     if (failedAlready) {
       return;
     }
@@ -69,15 +69,7 @@ public class EventServerExecutor {
         final Path jar = Paths.get("/home/jenkins"
             + "/.bazel-dirs/bin/350-event-server/module_deploy.jar");
         final Path config = Paths.get(directory.getPath(), "350-event-server", "event-service-config.yml");
-        String alpn = System.getProperty("user.home") + "/.m2/repository/" + alpnJarPath;
-
-        if (!new File(alpn).exists()) {
-          // if maven repo is not in the home dir, this might be a jenkins job, check in the special location.
-          alpn = alpnPath + alpnJarPath;
-          if (!new File(alpn).exists()) {
-            throw new FileNotFoundException("Missing alpn file");
-          }
-        }
+        String alpn = Alpn.location();
 
         for (int i = 0; i < 10; i++) {
           log.info("***");

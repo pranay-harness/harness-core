@@ -8,6 +8,7 @@ import io.harness.ng.beans.PageRequest;
 
 import java.util.List;
 
+// Don't inject this directly go through ScmClientOrchestrator.
 @OwnedBy(DX)
 public interface ScmClientFacilitatorService {
   List<String> listBranchesForRepoByConnector(String accountIdentifier, String orgIdentifier, String projectIdentifier,

@@ -47,7 +47,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "anomalousLogRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @StoreIn(DbAliases.CG_MANAGER)
-public class AnomalousLogRecord implements GoogleDataStoreAware {
+public final class AnomalousLogRecord implements GoogleDataStoreAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

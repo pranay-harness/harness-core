@@ -6,10 +6,12 @@ import static io.harness.platform.PlatformConfiguration.getAuditServiceResourceC
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.retention.AuditAccountSyncService;
 import io.harness.audit.retention.AuditRetentionIteratorHandler;
+import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.health.HealthService;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.persistence.HPersistence;
 import io.harness.remote.CharsetResponseFilter;
+import io.harness.resource.VersionInfoResource;
 
 import com.google.inject.Injector;
 import io.dropwizard.setup.Environment;
@@ -34,6 +36,7 @@ public class AuditServiceSetup {
     registerHealthCheck(environment, injector);
     registerManagedBeans(environment, injector);
     registerIterators(injector);
+    registerScheduledJobs(injector);
   }
 
   private void registerHealthCheck(Environment environment, Injector injector) {
@@ -48,6 +51,7 @@ public class AuditServiceSetup {
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
   }
 
   private void registerCharsetResponseFilter(Environment environment, Injector injector) {
@@ -64,5 +68,9 @@ public class AuditServiceSetup {
 
   private void registerIterators(Injector injector) {
     injector.getInstance(AuditRetentionIteratorHandler.class).registerIterators();
+  }
+
+  private void registerScheduledJobs(Injector injector) {
+    injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
   }
 }

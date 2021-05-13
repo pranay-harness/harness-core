@@ -16,7 +16,6 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.redis.RedisConfig;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.VerificationRegistrars;
-import io.harness.serializer.morphia.VerificationMorphiaRegistrar;
 import io.harness.testlib.RealMongo;
 import io.harness.testlib.module.TestMongoModule;
 
@@ -100,7 +99,7 @@ public class VerificationTestRule extends WingsRule {
   protected Set<Class<? extends MorphiaRegistrar>> getMorphiaRegistrars() {
     return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
         .addAll(super.getMorphiaRegistrars())
-        .add(VerificationMorphiaRegistrar.class)
+        .addAll(VerificationRegistrars.morphiaRegistrars)
         .build();
   }
 

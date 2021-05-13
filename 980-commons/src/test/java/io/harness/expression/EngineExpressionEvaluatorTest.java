@@ -3,9 +3,12 @@ package io.harness.expression;
 import static io.harness.rule.OwnerRule.GARVIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.CriticalExpressionEvaluationException;
@@ -23,6 +26,7 @@ import lombok.Value;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class EngineExpressionEvaluatorTest extends CategoryTest {
   @Test
   @Owner(developers = GARVIT)
@@ -143,31 +147,39 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
   }
 
   private void validateExpression(
-      EngineExpressionEvaluator evaluator, String expression, Object expected, boolean skipEvaluate) {
-    validateExpression(evaluator, expression, expected, skipEvaluate, false);
+      EngineExpressionEvaluator evaluator, String expression, Object expected, boolean shouldThrow) {
+    validateExpression(evaluator, expression, expected, shouldThrow, false);
   }
 
   private void validateExpression(EngineExpressionEvaluator evaluator, String expression, Object expected,
-      boolean skipEvaluate, boolean evaluateThrows) {
-    validateSingleExpression(evaluator, expression, expected, skipEvaluate, evaluateThrows);
-    validateSingleExpression(evaluator, "obj." + expression, expected, skipEvaluate, evaluateThrows);
+      boolean skipEvaluate, boolean shouldThrow) {
+    validateSingleExpression(evaluator, expression, expected, skipEvaluate, shouldThrow);
+    validateSingleExpression(evaluator, "obj." + expression, expected, skipEvaluate, shouldThrow);
   }
 
   private void validateSingleExpression(EngineExpressionEvaluator evaluator, String expression, Object expected,
-      boolean skipEvaluate, boolean evaluateThrows) {
+      boolean skipEvaluate, boolean shouldThrow) {
     expression = "<+" + expression + ">";
-    assertThat(evaluator.renderExpression(expression)).isEqualTo(String.valueOf(expected));
+    if (shouldThrow) {
+      String finalExpression = expression;
+      assertThatThrownBy(() -> evaluator.renderExpression(finalExpression))
+          .isInstanceOfAny(UnresolvedExpressionsException.class, CriticalExpressionEvaluationException.class);
+      assertThatCode(() -> evaluator.renderExpression(finalExpression, true)).doesNotThrowAnyException();
+    } else {
+      assertThat(evaluator.renderExpression(expression)).isEqualTo(String.valueOf(expected));
+    }
+
     if (skipEvaluate) {
       return;
     }
 
-    if (evaluateThrows) {
+    if (shouldThrow) {
       String finalExpression = expression;
       assertThatThrownBy(() -> evaluator.evaluateExpression(finalExpression))
           .isInstanceOfAny(UnresolvedExpressionsException.class, CriticalExpressionEvaluationException.class);
-      return;
+    } else {
+      assertThat(evaluator.evaluateExpression(expression)).isEqualTo(expected);
     }
-    assertThat(evaluator.evaluateExpression(expression)).isEqualTo(expected);
   }
 
   @Test
@@ -303,7 +315,9 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
     assertThatThrownBy(() -> evaluator.evaluateExpression("<+a> + <+<+b> + <+e>>"))
         .isInstanceOf(UnresolvedExpressionsException.class);
     assertThat(evaluator.evaluateExpression("<+a> + <+<+a> + <+e>>")).isEqualTo(15);
-    assertThat(evaluator.renderExpression("<+<+a> + <+b>>")).endsWith("+ <+b>>");
+    assertThatThrownBy(() -> evaluator.renderExpression("<+<+a> + <+b>>"))
+        .isInstanceOf(UnresolvedExpressionsException.class);
+    assertThat(evaluator.renderExpression("<+<+a> + <+b>>", true)).endsWith("+ <+b>>");
 
     EngineExpressionEvaluator.PartialEvaluateResult result = evaluator.partialEvaluateExpression("<+a> + <+a>");
     assertThat(result).isNotNull();
@@ -380,6 +394,21 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
     assertThat((String) inner.get("b"))
         .startsWith("5 + <+<+b> + <+" + EngineExpressionEvaluator.HARNESS_INTERNAL_VARIABLE_PREFIX);
     assertThat((String) inner.get("b")).endsWith(">>");
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testUnresolvedExpressionsCheck() {
+    EngineExpressionEvaluator evaluator = prepareEngineExpressionEvaluator(
+        new ImmutableMap.Builder<String, Object>().put("a", 5).put("c", "abc").put("d", "<+a>").build());
+    assertThat(evaluator.evaluateExpression("<+a> + <+d>")).isEqualTo(10);
+    assertThatThrownBy(() -> evaluator.evaluateExpression("<+b>")).isInstanceOf(UnresolvedExpressionsException.class);
+
+    assertThat(evaluator.renderExpression("<+a> + <+d>")).isEqualTo("5 + 5");
+    assertThatThrownBy(() -> evaluator.renderExpression("<+a> + <+b> + <+c> + <+d>"))
+        .isInstanceOf(UnresolvedExpressionsException.class);
+    assertThat(evaluator.renderExpression("<+a> + <+b> + <+c> + <+d>", true)).isEqualTo("5 + <+b> + abc + 5");
   }
 
   @Value

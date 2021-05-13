@@ -94,6 +94,7 @@ public class PipelineRbacHelperTest extends CategoryTest {
                                              .setPrincipalInfo(ExecutionPrincipalInfo.newBuilder()
                                                                    .setPrincipal("princ")
                                                                    .setPrincipalType(PrincipalType.USER)
+                                                                   .setShouldValidateRbac(true)
                                                                    .build())
                                              .build())
                             .build();
@@ -123,6 +124,7 @@ public class PipelineRbacHelperTest extends CategoryTest {
                                              .setPrincipalInfo(ExecutionPrincipalInfo.newBuilder()
                                                                    .setPrincipal("princ")
                                                                    .setPrincipalType(PrincipalType.USER)
+                                                                   .setShouldValidateRbac(true)
                                                                    .build())
                                              .build())
                             .build();

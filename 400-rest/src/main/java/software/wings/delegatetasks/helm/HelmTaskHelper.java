@@ -478,18 +478,19 @@ public class HelmTaskHelper {
         chartMuseumClient.startChartMuseumServer(helmChartConfigParams.getHelmRepoConfig(),
             helmChartConfigParams.getConnectorConfig(), resourceDirectory, helmChartConfigParams.getBasePath());
 
-    helmTaskHelperBase.addChartMuseumRepo(helmChartConfigParams.getRepoName(),
-        helmChartConfigParams.getRepoDisplayName(), chartMuseumServer.getPort(), chartDirectory,
-        helmChartConfigParams.getHelmVersion(), timeoutInMillis);
+    try {
+      helmTaskHelperBase.addChartMuseumRepo(helmChartConfigParams.getRepoName(),
+          helmChartConfigParams.getRepoDisplayName(), chartMuseumServer.getPort(), chartDirectory,
+          helmChartConfigParams.getHelmVersion(), timeoutInMillis);
 
-    String commandOutput = executeCommandWithLogOutput(
-        fetchHelmChartVersionsCommand(helmChartConfigParams.getHelmVersion(), helmChartConfigParams.getChartName(),
-            helmChartConfigParams.getRepoName(), chartDirectory),
-        chartDirectory, "Helm chart fetch versions command failed ");
-
-    chartMuseumClient.stopChartMuseumServer(chartMuseumServer.getStartedProcess());
-
-    return parseHelmVersionFetchOutput(commandOutput, helmChartCollectionParams);
+      String commandOutput = executeCommandWithLogOutput(
+          fetchHelmChartVersionsCommand(helmChartConfigParams.getHelmVersion(), helmChartConfigParams.getChartName(),
+              helmChartConfigParams.getRepoName(), chartDirectory),
+          chartDirectory, "Helm chart fetch versions command failed ");
+      return parseHelmVersionFetchOutput(commandOutput, helmChartCollectionParams);
+    } finally {
+      chartMuseumClient.stopChartMuseumServer(chartMuseumServer.getStartedProcess());
+    }
   }
 
   private String fetchHelmChartVersionsCommand(

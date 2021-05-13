@@ -1093,7 +1093,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
     Artifact savedArtifact = artifactService.create(jenkinsArtifact, true);
     assertThat(savedArtifact).isNotNull();
 
-    artifactService.deleteWhenArtifactSourceNameChanged(jenkinsArtifactStream);
+    artifactService.deleteByArtifactStreamId(APP_ID, jenkinsArtifactStreamId);
 
     assertThat(artifactService.listByAppId(APP_ID)).hasSize(0);
   }

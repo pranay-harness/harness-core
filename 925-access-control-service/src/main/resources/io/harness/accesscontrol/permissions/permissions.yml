@@ -297,3 +297,10 @@ permissions:
       - account
       - organization
       - project
+  - identifier: core_license_view
+    name: View Licenses
+    status: ACTIVE
+    includeInAllRoles: true
+    allowedScopeLevels:
+      - account
+

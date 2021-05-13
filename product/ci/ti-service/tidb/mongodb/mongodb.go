@@ -284,7 +284,6 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq)
 	var pkgs []string
 	var cls []string
 	var selectAll bool
-	new := 0
 	updated := 0
 	for _, node := range nodes {
 		// A file which is not recognized. Need to add logic for handling these type of files
@@ -306,11 +305,6 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq)
 					// Figure out the type of the test. If it exists in cnt,
 					// then it is updated otherwise new
 					if _, ok2 := methodMap[t]; !ok2 {
-						// Doesn't exist in existing callgraph
-						totalTests += 1
-						// This is actually not correct since it may have multiple methods.
-						// TODO: This needs to be updated from partial call graph
-						new += 1
 						t.Selection = types.SelectNewTest
 						// Mark Methods field as * since it's a new test.
 						// We can get method information only from the PCG.
@@ -336,9 +330,8 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq)
 			SelectAll:     true,
 			TotalTests:    totalTests,
 			SelectedTests: totalTests,
-			NewTests:      new,
 			UpdatedTests:  updated,
-			SrcCodeTests:  totalTests - new - updated,
+			SrcCodeTests:  totalTests - updated,
 		}, nil
 	}
 
@@ -368,19 +361,41 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq)
 	return types.SelectTestsResp{
 		TotalTests:    totalTests,
 		SelectedTests: len(l),
-		NewTests:      new,
 		UpdatedTests:  updated,
-		SrcCodeTests:  len(l) - new - updated,
+		SrcCodeTests:  len(l) - updated,
 		Tests:         l,
 	}, nil
 }
 
 // UploadPartialCg uploads callgraph corresponding to a branch in PR run in mongo.
-func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info VCSInfo, acc, org, proj string) error {
+func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info VCSInfo, acc, org, proj, target string) (types.SelectTestsResp, error) {
 	nodes := make([]Node, len(cg.Nodes))
 	rels := make([]Relation, len(cg.Relations))
+
+	resp := types.SelectTestsResp{}
+
+	// Create method map to calculate how many tests have been added
+	all := []Node{}
+	err := mgm.Coll(&Node{}).SimpleFind(&all, bson.M{"type": "test", "vcs_info.branch": target, "vcs_info.repo": info.Repo})
+	if err != nil {
+		return resp, err
+	}
+	methodMap := make(map[types.RunnableTest]bool)
+	for _, t := range all {
+		u := types.RunnableTest{Pkg: t.Package, Class: t.Class, Method: t.Method}
+		methodMap[u] = true
+	}
+
 	for i, node := range cg.Nodes {
 		nodes[i] = *NewNode(node.ID, node.Package, node.Method, node.Params, node.Class, node.Type, info, acc, org, proj)
+		if node.Type != "test" {
+			continue
+		}
+		// If the node is a test node, check whether it exists in the existing callgraph or not
+		if _, ok := methodMap[types.RunnableTest{Pkg: node.Package, Class: node.Class, Method: node.Method}]; !ok {
+			resp.NewTests += 1
+			resp.TotalTests += 1
+		}
 	}
 	for i, rel := range cg.Relations {
 		rels[i] = *NewRelation(rel.Source, rel.Tests, info, acc, org, proj)
@@ -390,7 +405,7 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 	f := bson.M{"vcs_info.repo": info.Repo, "vcs_info.branch": info.Branch, "vcs_info.commit_id": bson.M{"$ne": info.CommitId}}
 	r1, err := mdb.Database.Collection(nodeColl).DeleteMany(ctx, f, &options.DeleteOptions{})
 	if err != nil {
-		return errors.Wrap(
+		return resp, errors.Wrap(
 			err,
 			fmt.Sprintf("failed to delete old records from nodes collection while uploading partial callgraph for"+
 				" repo: %s, branch: %s, acc: %s", info.Repo, info.Branch, acc))
@@ -399,7 +414,7 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 	f = bson.M{"vcs_info.repo": info.Repo, "vcs_info.branch": info.Branch, "vcs_info.commit_id": bson.M{"$ne": info.CommitId}}
 	r2, err := mdb.Database.Collection(relnsColl).DeleteMany(ctx, f, &options.DeleteOptions{})
 	if err != nil {
-		return errors.Wrap(
+		return resp, errors.Wrap(
 			err,
 			fmt.Sprintf("failed to delete records from relations collection while uploading partial callgraph "+
 				"for repo: %s, branch: %s acc: %s", info.Repo, info.Branch, acc))
@@ -410,13 +425,13 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 
 	err = mdb.upsertNodes(ctx, nodes, info)
 	if err != nil {
-		return err
+		return resp, err
 	}
 	err = mdb.upsertRelations(ctx, rels, info)
 	if err != nil {
-		return err
+		return resp, err
 	}
-	return nil
+	return resp, nil
 }
 
 // todo(Aman): Figure out a way to automatically update updatedBy and updatedAt fields. Manually updating it is not scalable.

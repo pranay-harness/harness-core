@@ -20,7 +20,6 @@ import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.cvng.beans.activity.cd10.CD10ActivitySourceDTO;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.services.api.CVEventService;
-import io.harness.cvng.core.services.api.FeatureFlagService;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
@@ -41,7 +40,6 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
   @Inject private HPersistence hPersistence;
   @Inject private VerificationManagerService verificationManagerService;
   @Inject private CVEventService cvEventService;
-  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public String saveActivitySource(
@@ -240,16 +238,14 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
   @Override
   public void createDefaultCDNGActivitySource(
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    if (featureFlagService.isFeatureFlagEnabled(accountIdentifier, "CVNG_CDNG_INTEGRATION")) {
-      ActivitySource activitySource =
-          CDNGActivitySource.getDefaultObject(accountIdentifier, orgIdentifier, projectIdentifier);
-      try {
-        activitySource.validate();
-        hPersistence.save(activitySource);
-      } catch (DuplicateKeyException ex) {
-        // This call is idempotent so ignoring the exception.
-        log.info("Tried to create already existing CDNG activity source ");
-      }
+    ActivitySource activitySource =
+        CDNGActivitySource.getDefaultObject(accountIdentifier, orgIdentifier, projectIdentifier);
+    try {
+      activitySource.validate();
+      hPersistence.save(activitySource);
+    } catch (DuplicateKeyException ex) {
+      // This call is idempotent so ignoring the exception.
+      log.info("Tried to create already existing CDNG activity source ");
     }
   }
 

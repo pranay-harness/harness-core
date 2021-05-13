@@ -13,6 +13,8 @@ public enum PredefinedTemplate {
   PD_VANILLA("templates/pd_vanilla.txt", "pd_vanilla"),
   MSTEAMS_TEST("templates/msteams_test.txt", "msteams_test"),
   EMAIL_INVITE("templates/email_invite.txt", "email_invite"),
+  EMAIL_VERIFY("templates/email_verify.txt", "default_email_verify"),
+  SIGNUP_CONFIRMATION("templates/signup_confirmation.txt", "default_signup_confirmation"),
   EMAIL_TEST_WITH_USER("templates/email_test2.txt", "email_test2"),
   SLACK_TEST_WITH_USER("templates/slack_test2.txt", "slack_test2"),
   PD_TEST_WITH_USER("templates/pd_test2.txt", "pd_test2"),

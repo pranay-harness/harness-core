@@ -17,6 +17,11 @@ public class ScopeUtils {
   private static final String PROJECT_ADDR = "%s/%s/%s";
   private static final String ORG_ADDR = "%s/%s";
   private static final String ACCOUNT_ADDR = "%s";
+
+  public static String toString(Scope scope) {
+    return ScopeUtils.toString(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier());
+  }
+
   public static String toString(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     if (!StringUtils.isBlank(projectIdentifier)) {
       return String.format(PROJECT_ADDR, accountIdentifier, orgIdentifier, projectIdentifier);

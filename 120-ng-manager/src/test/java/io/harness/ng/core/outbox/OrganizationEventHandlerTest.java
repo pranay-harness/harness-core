@@ -18,8 +18,6 @@ import static junit.framework.TestCase.assertNull;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.apache.commons.lang3.RandomStringUtils.randomNumeric;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -43,9 +41,7 @@ import io.harness.ng.core.events.OrganizationCreateEvent;
 import io.harness.ng.core.events.OrganizationDeleteEvent;
 import io.harness.ng.core.events.OrganizationRestoreEvent;
 import io.harness.ng.core.events.OrganizationUpdateEvent;
-import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.OutboxEvent;
-import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.rule.Owner;
 import io.harness.security.PrincipalContextData;
 import io.harness.security.SourcePrincipalContextData;
@@ -65,18 +61,14 @@ public class OrganizationEventHandlerTest extends CategoryTest {
   private ObjectMapper objectMapper;
   private Producer producer;
   private AuditClientService auditClientService;
-  private NgUserService ngUserService;
   private OrganizationEventHandler organizationEventHandler;
-  private ResourceGroupClient resourceGroupClient;
 
   @Before
   public void setup() {
     objectMapper = NG_DEFAULT_OBJECT_MAPPER;
     producer = mock(Producer.class);
     auditClientService = mock(AuditClientService.class);
-    ngUserService = mock(NgUserService.class);
-    organizationEventHandler =
-        spy(new OrganizationEventHandler(producer, auditClientService, ngUserService, resourceGroupClient));
+    organizationEventHandler = spy(new OrganizationEventHandler(producer, auditClientService));
   }
 
   private OrganizationDTO getOrganizationDTO(String identifier) {
@@ -115,7 +107,6 @@ public class OrganizationEventHandlerTest extends CategoryTest {
 
     final ArgumentCaptor<Message> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
     final ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor = ArgumentCaptor.forClass(AuditEntry.class);
-    doNothing().when(ngUserService).addUserToScope(any(), any(), anyString(), any());
     when(producer.send(any())).thenReturn("");
     when(auditClientService.publishAudit(any(), any(), any())).thenReturn(true);
 
