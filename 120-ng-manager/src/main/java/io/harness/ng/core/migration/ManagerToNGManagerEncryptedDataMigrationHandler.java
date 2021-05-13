@@ -113,6 +113,8 @@ public class ManagerToNGManagerEncryptedDataMigrationHandler implements Handler<
               "Secret with accountIdentifier: %s, orgIdentifier: %s, projectIdentifier: %s and identifier: %s could not be migrated because Encrypted Data entry not found in manager",
               secret.getAccountIdentifier(), secret.getOrgIdentifier(), secret.getProjectIdentifier(),
               secret.getIdentifier()));
+          secret.setMigratedFromManager(true);
+          secretRepository.save(secret);
           return;
         }
         if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
