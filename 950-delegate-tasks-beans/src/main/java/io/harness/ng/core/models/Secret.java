@@ -91,7 +91,6 @@ public class Secret implements PersistentRegularIterable {
   }
 
   Boolean migratedFromManager;
-
   @FdIndex Long nextIteration;
 
   @Override
