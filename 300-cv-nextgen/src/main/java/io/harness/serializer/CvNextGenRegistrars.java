@@ -40,6 +40,7 @@ public class CvNextGenRegistrars {
           .addAll(OrchestrationBeansRegistrars.morphiaRegistrars)
           .addAll(OrchestrationStepsModuleRegistrars.morphiaRegistrars)
           .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
+          .addAll(WaitEngineRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
