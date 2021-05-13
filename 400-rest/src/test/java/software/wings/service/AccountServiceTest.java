@@ -1006,16 +1006,16 @@ public class AccountServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = NANDAN)
   @Category(UnitTests.class)
-  public void test_isRestrictedAccessEnabled(){
+  public void test_isRestrictedAccessEnabled() {
     String accountId = UUIDGenerator.generateUuid();
     Account account = anAccount()
-            .withUuid(accountId)
-            .withCompanyName("CompanyName")
-            .withAccountName("Account Name 1")
-            .withAccountKey("ACCOUNT_KEY")
-            .withLicenseInfo(getLicenseInfo())
-            .withWhitelistedDomains(new HashSet<>())
-            .build();
+                          .withUuid(accountId)
+                          .withCompanyName("CompanyName")
+                          .withAccountName("Account Name 1")
+                          .withAccountKey("ACCOUNT_KEY")
+                          .withLicenseInfo(getLicenseInfo())
+                          .withWhitelistedDomains(new HashSet<>())
+                          .build();
     account.setHarnessSupportAccessAllowed(false);
     Account savedAccount = accountService.save(account, false);
 
