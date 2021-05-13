@@ -10,7 +10,6 @@ import (
 	"github.com/wings-software/portal/product/ci/addon/ti"
 	"github.com/wings-software/portal/product/ci/common/avro"
 	"github.com/wings-software/portal/product/ci/ti-service/db"
-	"github.com/wings-software/portal/product/ci/ti-service/tidb/mongodb"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.uber.org/zap"
 )
@@ -140,7 +139,7 @@ func HandleUploadCg(svc cgservice.CgService, db db.Db, log *zap.SugaredLogger) h
 		buildId := r.FormValue(buildIdParam)
 		stageId := r.FormValue(stageIdParam)
 		stepId := r.FormValue(stepIdParam)
-		info := mongodb.VCSInfo{
+		info := cgservice.VCSInfo{
 			Repo:     r.FormValue(repoParam),
 			Branch:   r.FormValue(sourceBranchParam),
 			CommitId: r.FormValue(shaParam),

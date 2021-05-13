@@ -1,5 +1,5 @@
-// package tidb defines a DB interface for test intelligence DB
-package tidb
+// Persistence interface container functions to interact with any persistent store
+package db
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type TiDB interface {
+type Persistence interface {
 	// DeleteMany is wrapper over deleteMany fn in mongo driver and logs time taken in the query
 	DeleteMany(coll string, ctx context.Context, f bson.M, d *options.DeleteOptions) (*mongo.DeleteResult, error)
 

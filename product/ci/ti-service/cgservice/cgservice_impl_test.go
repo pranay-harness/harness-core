@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"github.com/wings-software/portal/commons/go/lib/db"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	"github.com/wings-software/portal/product/ci/addon/ti"
-	db "github.com/wings-software/portal/product/ci/ti-service/tidb/mongodb"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 	if mongoUri == "" {
 		os.Exit(0)
 	}
-	mdb, err = db.New(
+	mdb, err = db.NewMongoDb(
 		"",
 		"",
 		"",
@@ -36,7 +36,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		fmt.Println(fmt.Sprintf("%v", err))
 	}
-	svc = CgService{
+	svc = &CgServiceImpl{
 		MongoDb: mdb,
 		Log:     log.Sugar(),
 	}
@@ -60,7 +60,7 @@ func TestMongoDb_UploadPartialCgForNodes(t *testing.T) {
 		"proj",
 		"target",
 	)
-	var nodes []db.Node
+	var nodes []Node
 	curr, _ := mdb.Database.Collection("nodes").Find(ctx, bson.M{}, &options.FindOptions{})
 	curr.All(ctx, &nodes)
 
@@ -88,7 +88,7 @@ func TestMongoDb_UploadPartialCgForRelations(t *testing.T) {
 		"proj",
 		"target",
 	)
-	var relations []db.Relation
+	var relations []Relation
 	curr, _ := mdb.Database.Collection("relations").Find(ctx, bson.M{}, &options.FindOptions{})
 	curr.All(ctx, &relations)
 
@@ -115,13 +115,13 @@ func TestMongoDb_UploadPartialCgForRelations(t *testing.T) {
 	assert.Equal(t, len(rel.Tests), 1)
 }
 
-func filterRelations(src int, relations []db.Relation) db.Relation {
+func filterRelations(src int, relations []Relation) Relation {
 	for _, rel := range relations {
 		if rel.Source == src {
 			return rel
 		}
 	}
-	return db.Relation{}
+	return Relation{}
 }
 
 func getRelation(src int, tests []int) ti.Relation {
@@ -138,26 +138,26 @@ func contains(s []int, searchTerm int) bool {
 
 func setupRelations(ctx context.Context) {
 	mdb.Database.Collection("relations").Drop(ctx)
-	r1 := db.NewRelation(1, []int{1, 2}, getVCSInfo(), "acc", "org", "proj")
-	r2 := db.NewRelation(2, []int{3, 4, 5, 6}, getVCSInfo(), "acc", "org", "proj")
+	r1 := NewRelation(1, []int{1, 2}, getVCSInfo(), "acc", "org", "proj")
+	r2 := NewRelation(2, []int{3, 4, 5, 6}, getVCSInfo(), "acc", "org", "proj")
 	nodes := []interface{}{r1, r2}
 	mdb.Database.Collection("relations").InsertMany(ctx, nodes)
 }
 
 func setupNodes(ctx context.Context) {
 	mdb.Database.Collection("nodes").Drop(ctx)
-	n1 := db.NewNode(1, "pkg", "m", "p", "c", "source",
+	n1 := NewNode(1, "pkg", "m", "p", "c", "source",
 		getVCSInfo(),
 		"acct", "org", "proj")
-	n2 := db.NewNode(2, "pkg", "m", "p", "c", "source",
+	n2 := NewNode(2, "pkg", "m", "p", "c", "source",
 		getVCSInfo(),
 		"acct", "org", "proj")
 	nodes := []interface{}{n1, n2}
 	mdb.Database.Collection("nodes").InsertMany(ctx, nodes)
 }
 
-func getVCSInfo() db.VCSInfo {
-	return db.VCSInfo{
+func getVCSInfo() VCSInfo {
+	return VCSInfo{
 		Repo:     "repo",
 		Branch:   "branch",
 		CommitId: "commit",

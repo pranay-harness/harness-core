@@ -5,23 +5,20 @@ import (
 	"errors"
 	"fmt"
 	"github.com/wings-software/portal/product/ci/ti-service/cgservice"
-	"github.com/wings-software/portal/product/ci/ti-service/tidb"
 	"os"
 	"os/signal"
 
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	"go.uber.org/zap"
 
+	"github.com/joho/godotenv"
+	mdb "github.com/wings-software/portal/commons/go/lib/db"
 	"github.com/wings-software/portal/product/ci/ti-service/config"
 	"github.com/wings-software/portal/product/ci/ti-service/db"
 	"github.com/wings-software/portal/product/ci/ti-service/db/timescaledb"
 	"github.com/wings-software/portal/product/ci/ti-service/eventsframework"
 	"github.com/wings-software/portal/product/ci/ti-service/handler"
 	"github.com/wings-software/portal/product/ci/ti-service/server"
-	"github.com/wings-software/portal/product/ci/ti-service/tidb"
-	"github.com/wings-software/portal/product/ci/ti-service/tidb/mongodb"
-
-	"github.com/joho/godotenv"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -85,14 +82,14 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 	}
 
 	// Test intelligence DB
-	var tidb tidb.TiDB
+	var tidb mdb.Persistence
 	var cgs cgservice.CgService
 	if config.MongoDb.DbName != "" && (config.MongoDb.Host != "" || config.MongoDb.ConnStr != "") {
 		// Create mongoDB connection
 		log.Infow("configuring TI service to use mongo DB",
 			"host", config.MongoDb.Host,
 			"db_name", config.MongoDb.DbName)
-		tidb, err = mongodb.New(
+		tidb, err = mdb.NewMongoDb(
 			config.MongoDb.Username,
 			config.MongoDb.Password,
 			config.MongoDb.Host,
@@ -106,7 +103,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 		}
 
 		// Callgraph service
-		cgs = cgservice.CgService{
+		cgs = &cgservice.CgServiceImpl{
 			MongoDb: tidb,
 			Log:     log,
 		}
@@ -131,7 +128,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 			}
 			topic := fmt.Sprintf("%sstreams:webhook_request_payload_data", prefix)
 			log.Infow("registering webhook payload consumer with events framework", "topic", topic)
-			rdb.RegisterMerge(ctx, topic, cgs.MergePartialCg, db, config)
+			rdb.RegisterMerge(ctx, topic, cgs.MergePartialCg, db)
 			rdb.Run()
 			log.Infow("done registering webhook consumer")
 		} else {

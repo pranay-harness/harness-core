@@ -1,12 +1,14 @@
-package mongodb
+// MongoDb implements persistence inteface for interacting with mongodb database
+package db
 
 import (
 	"context"
 	"fmt"
+	"github.com/kamva/mgm/v3"
+	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"time"
 
-	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -28,75 +30,7 @@ func getDefaultConfig() *mgm.Config {
 	}
 }
 
-type Relation struct {
-	// DefaultModel adds _id,created_at and updated_at fields to the Model
-	mgm.DefaultModel `bson:",inline"`
-
-	Source  int     `json:"source" bson:"source"`
-	Tests   []int   `json:"tests" bson:"tests"`
-	Acct    string  `json:"account" bson:"account"`
-	Proj    string  `json:"project" bson:"project"`
-	Org     string  `json:"organization" bson:"organization"`
-	VCSInfo VCSInfo `json:"vcs_info" bson:"vcs_info"`
-}
-
-type Node struct {
-	// DefaultModel adds _id,created_at and updated_at fields to the Model
-	mgm.DefaultModel `bson:",inline"`
-
-	Package string  `json:"package" bson:"package"`
-	Method  string  `json:"method" bson:"method"`
-	Id      int     `json:"id" bson:"id"`
-	Params  string  `json:"params" bson:"params"`
-	Class   string  `json:"class" bson:"class"`
-	Type    string  `json:"type" bson:"type"`
-	Acct    string  `json:"account" bson:"account"`
-	Proj    string  `json:"project" bson:"project"`
-	Org     string  `json:"organization" bson:"organization"`
-	VCSInfo VCSInfo `json:"vcs_info" bson:"vcs_info"`
-}
-
-const (
-	NodeColl  = "nodes"
-	RelnsColl = "relations"
-)
-
-// VCSInfo contains metadata corresponding to version control system details
-type VCSInfo struct {
-	Repo     string `json:"repo" bson:"repo"`
-	Branch   string `json:"branch" bson:"branch"`
-	CommitId string `json:"commit_id" bson:"commit_id"`
-}
-
-// NewNode creates Node object form given fields
-func NewNode(id int, pkg, method, params, class, typ string, vcs VCSInfo, acc, org, proj string) *Node {
-	return &Node{
-		Id:      id,
-		Package: pkg,
-		Method:  method,
-		Params:  params,
-		Class:   class,
-		Type:    typ,
-		Acct:    acc,
-		Org:     org,
-		Proj:    proj,
-		VCSInfo: vcs,
-	}
-}
-
-// NewRelation creates Relation object form given fields
-func NewRelation(source int, tests []int, vcs VCSInfo, acc, org, proj string) *Relation {
-	return &Relation{
-		Source:  source,
-		Tests:   tests,
-		Acct:    acc,
-		Org:     org,
-		Proj:    proj,
-		VCSInfo: vcs,
-	}
-}
-
-func New(username, password, host, port, dbName string, connStr string, log *zap.SugaredLogger) (*MongoDb, error) {
+func NewMongoDb(username, password, host, port, dbName string, connStr string, log *zap.SugaredLogger) (*MongoDb, error) {
 	// If any connStr is provided, use that
 	if connStr == "" {
 		connStr = fmt.Sprintf("mongodb://%s:%s/?connect=direct", host, port)
@@ -161,28 +95,20 @@ func (mdb *MongoDb) Find(coll string, ctx context.Context, f bson.M, results int
 	start := time.Now()
 	cur, err := mdb.Database.Collection(coll).Find(ctx, f)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to do find query in mongo")
 	}
-	switch coll {
-	// We can use reflection here but since we have only 2 classes currently, I did not wanted to
-	// add  extra complexity and overhead
-	case NodeColl:
-		res := (results).(*[]Node)
-		err = cur.All(ctx, res)
-	case RelnsColl:
-		res := (results).(*[]Relation)
-		err = cur.All(ctx, res)
-	default:
-		return fmt.Errorf("find operation called with unknown collection %s", coll)
+	err = cur.All(ctx, results)
+	if err != nil {
+		return errors.Wrap(err, "failed to do find query in mongo")
 	}
 	mdb.Log.Infow("find operation", "filter", f, "collection", coll, "query_time", time.Since(start))
-	return err
+	return nil
 }
 
 // BulkWrite is wrapper over BulkWrite fn in mongo driver and logs time taken in the query
 func (mdb *MongoDb) BulkWrite(coll string, ctx context.Context, operations []mongo.WriteModel, b *options.BulkWriteOptions) (*mongo.BulkWriteResult, error) {
 	start := time.Now()
-	res, err := mdb.Database.Collection(RelnsColl).BulkWrite(ctx, operations, &options.BulkWriteOptions{})
+	res, err := mdb.Database.Collection("relations").BulkWrite(ctx, operations, &options.BulkWriteOptions{})
 	if err != nil {
 		return nil, err
 	}
