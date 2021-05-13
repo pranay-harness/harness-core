@@ -381,7 +381,6 @@ java_library(
     runtime_deps = [
         "//820-platform-service/src/main/resources",
         "//830-notification-service/src/main/resources",
-        "//980-commons/src/test/resources",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
     deps = shared_dependencies + [

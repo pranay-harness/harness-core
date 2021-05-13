@@ -13,7 +13,7 @@ public class VersionInfoManager {
       + "gitCommit : 0000000\n"
       + "gitBranch : unknown\n"
       + "timestamp : 000000-0000";
-  private static final String VERSION_INFO_YAML = "main/resources-filtered/versionInfo.yaml";
+  private static final String VERSION_INFO_YAML = "versionInfo.yaml";
 
   private final VersionInfo versionInfo;
 

@@ -382,7 +382,6 @@ java_library(
     visibility = ["//visibility:public"],
     runtime_deps = [
         "//830-notification-service/src/main/resources",
-        "//980-commons/src/test/resources",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
     deps = shared_dependencies + test_deps + [

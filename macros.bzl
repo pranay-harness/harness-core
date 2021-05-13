@@ -2,10 +2,16 @@ load("//tools/bazel/sonarqube:defs.bzl", "sq_project")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
+def new_resources(name = "resources"):
+    native.filegroup(
+        name = name,
+        srcs = native.glob(["**"], exclude = ["BUILD.bazel"]),
+    )
+
 def resources(name = "resources", runtime_deps = [], testonly = 0, visibility = None):
     native.java_library(
         name = name,
-        resources = native.glob(["**"], exclude = ["BUILD"]),
+        resources = native.glob(["**"], exclude = ["BUILD.bazel"]),
         resource_strip_prefix = "%s/" % native.package_name(),
         runtime_deps = runtime_deps,
         testonly = testonly,

@@ -40,8 +40,7 @@ public class VersionInfoManagerTest extends CategoryTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void testGetVersionInfoDefault() throws Exception {
-    InputStream stream =
-        VersionInfoManager.class.getClassLoader().getResourceAsStream("main/resources-filtered/versionInfo.yaml");
+    InputStream stream = VersionInfoManager.class.getClassLoader().getResourceAsStream("versionInfo.yaml");
     String versionInfoString = IOUtils.toString(stream, StandardCharsets.UTF_8);
     VersionInfo versionInfo = new YamlUtils().read(versionInfoString, VersionInfo.class);
     VersionInfoManager versionInfoManager = new VersionInfoManager();

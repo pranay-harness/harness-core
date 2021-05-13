@@ -20,8 +20,7 @@ java_library(
         ":980_commons_java_proto",
     ],
     resources = [
-        "//980-commons/src/main/resources:resource",
-        "//980-commons/src/main/resources-filtered:resource",
+        "//980-commons/src/main/resources",
     ],
     visibility = ["//visibility:public"],
     deps = [
@@ -117,7 +116,7 @@ java_library(
     testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     resources = [
-        "//980-commons/src/test/resources:resource",
+        "//980-commons/src/test/resources",
     ],
     visibility = ["//visibility:public"],
     deps = [
