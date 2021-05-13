@@ -106,7 +106,7 @@ public class SecretsResourceNG {
   }
 
   @GET
-  @Path("{identifier}")
+  @Path("migration/{identifier}")
   public RestResponse<EncryptedDataMigrationDTO> getEncryptedDataMigrationDTO(
       @PathParam("identifier") String identifier,
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) final String accountIdentifier,
@@ -118,7 +118,7 @@ public class SecretsResourceNG {
   }
 
   @DELETE
-  @Path("{identifier}")
+  @Path("migration/{identifier}")
   public RestResponse<Boolean> deleteAfterMigration(@PathParam("identifier") String identifier,
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) final String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) final String orgIdentifier,
