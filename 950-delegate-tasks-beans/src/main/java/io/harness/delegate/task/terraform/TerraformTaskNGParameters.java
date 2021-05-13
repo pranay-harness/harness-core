@@ -1,6 +1,7 @@
 package io.harness.delegate.task.terraform;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 import static io.harness.expression.Expression.DISALLOW_SECRETS;
 
@@ -64,6 +65,19 @@ public class TerraformTaskNGParameters
                            .encryptedDataDetails(configFile.getGitStoreDelegateConfig().getEncryptedDataDetails())
                            .sshKeySpecDTO(configFile.getGitStoreDelegateConfig().getSshKeySpecDTO())
                            .build());
+    }
+    if (varFileInfos != null && isNotEmpty(varFileInfos)) {
+      for (TerraformVarFileInfo varFileInfo : varFileInfos) {
+        if (varFileInfo instanceof RemoteTerraformVarFileInfo) {
+          GitFetchFilesConfig gitFetchFilesConfig = ((RemoteTerraformVarFileInfo) varFileInfo).getGitFetchFilesConfig();
+          capabilities.add(
+              GitConnectionNGCapability.builder()
+                  .gitConfig((GitConfigDTO) gitFetchFilesConfig.getGitStoreDelegateConfig().getGitConfigDTO())
+                  .encryptedDataDetails(gitFetchFilesConfig.getGitStoreDelegateConfig().getEncryptedDataDetails())
+                  .sshKeySpecDTO(gitFetchFilesConfig.getGitStoreDelegateConfig().getSshKeySpecDTO())
+                  .build());
+        }
+      }
     }
     if (encryptionConfig != null) {
       capabilities.addAll(
