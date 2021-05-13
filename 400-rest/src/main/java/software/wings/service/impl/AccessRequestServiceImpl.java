@@ -105,6 +105,7 @@ public class AccessRequestServiceImpl implements AccessRequestService {
                                             .accountId(accessRequest.getAccountId())
                                             .accessStartAt(accessRequest.getAccessStartAt())
                                             .accessEndAt(accessRequest.getAccessEndAt())
+                                            .accessActive(accessRequest.isAccessActive())
                                             .build();
     if (AccessRequest.AccessType.MEMBER_ACCESS.equals(accessRequest.getAccessType())) {
       accessRequestDTO.setEmailIds(getEmailIds(accessRequest));

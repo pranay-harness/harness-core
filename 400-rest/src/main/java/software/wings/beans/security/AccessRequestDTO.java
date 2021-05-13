@@ -20,8 +20,9 @@ public class AccessRequestDTO {
   String harnessUserGroupId;
   String harnessUserGroupName;
   Set<String> emailIds;
-  private long accessStartAt;
-  private long accessEndAt;
-  private Integer hours;
+  long accessStartAt;
+  long accessEndAt;
+  Integer hours;
   AccessRequest.AccessType accessType;
+  boolean accessActive;
 }
