@@ -1,6 +1,9 @@
 package software.wings.resources.secretsmanagement;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.NGCommonEntityConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.mappers.SecretManagerConfigMapper;
@@ -28,6 +31,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+@OwnedBy(PL)
 @Api(value = "secret-managers", hidden = true)
 @Path("/ng/secret-managers")
 @Produces("application/json")
