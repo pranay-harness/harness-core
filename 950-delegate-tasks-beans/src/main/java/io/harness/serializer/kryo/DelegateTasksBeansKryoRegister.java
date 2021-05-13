@@ -355,6 +355,7 @@ import io.harness.ng.core.dto.secrets.SSHPasswordCredentialDTO;
 import io.harness.ng.core.dto.secrets.TGTGenerationMethod;
 import io.harness.ng.core.dto.secrets.TGTKeyTabFilePathSpecDTO;
 import io.harness.ng.core.dto.secrets.TGTPasswordSpecDTO;
+import io.harness.product.ci.scm.proto.PageResponse;
 import io.harness.secretmanagerclient.SSHAuthScheme;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.ValueType;
@@ -365,6 +366,7 @@ import software.wings.beans.TaskType;
 import com.esotericsoftware.kryo.Kryo;
 import com.google.protobuf.LazyStringArrayList;
 import com.google.protobuf.UnknownFieldSet;
+import com.google.protobuf.UnmodifiableLazyStringList;
 import org.eclipse.jgit.api.GitCommand;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -755,6 +757,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ScmGitFileTaskParams.class, 543318);
     kryo.register(GitFileTaskResponseData.class, 543319);
     kryo.register(GitFileTaskType.class, 543320);
-    kryo.register(ScmGitFileTaskParams.class, 543321);
+    kryo.register(UnmodifiableLazyStringList.class, 543321);
+    kryo.register(PageResponse.class, 543322);
   }
 }

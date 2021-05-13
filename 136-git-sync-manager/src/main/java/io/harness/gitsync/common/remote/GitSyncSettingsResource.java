@@ -34,12 +34,14 @@ public class GitSyncSettingsResource {
   private final GitSyncSettingsService gitSyncSettingsService;
 
   @POST
+  @Path("create")
   @ApiOperation(value = "Create a Git Sync Setting", nickname = "postGitSyncSetting")
-  public ResponseDTO<GitSyncSettingsDTO> create(@Body @NotNull GitSyncSettingsDTO request) {
-    return ResponseDTO.newResponse(gitSyncSettingsService.save(request));
+  public ResponseDTO<GitSyncSettingsDTO> create(@Body @NotNull GitSyncSettingsDTO gitSyncSettingsDTO) {
+    return ResponseDTO.newResponse(gitSyncSettingsService.save(gitSyncSettingsDTO));
   }
 
   @GET
+  @Path("get")
   @ApiOperation(value = "Get git sync settings", nickname = "getGitSyncSettings")
   public ResponseDTO<GitSyncSettingsDTO> get(@QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String organizationIdentifier,

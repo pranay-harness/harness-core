@@ -18,6 +18,6 @@ import lombok.experimental.FieldNameConstants;
 public class GitSyncSettingsDTO {
   @NotNull String accountIdentifier;
   @NotNull String projectIdentifier;
-  @NotNull String organizationIdentifier;
+  @NotNull String orgIdentifier;
   @NotNull boolean executeOnDelegate;
 }
