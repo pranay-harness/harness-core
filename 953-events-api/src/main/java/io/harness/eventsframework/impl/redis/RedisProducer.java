@@ -58,10 +58,14 @@ public class RedisProducer extends AbstractProducer {
   private String sendInternal(Message message) {
     Map<String, String> redisData = new HashMap<>(message.getMetadataMap());
     redisData.put(REDIS_STREAM_INTERNAL_KEY, Base64.getEncoder().encodeToString(message.getData().toByteArray()));
-    redisData.put(PRODUCER, this.getProducerName());
+    populateOtherProducerSpecificData(redisData);
     log.info("trying to add {}", message.getMetadataMap());
     StreamMessageId messageId = stream.addAll(redisData, maxTopicSize, false);
     return messageId.toString();
+  }
+
+  protected void populateOtherProducerSpecificData(Map<String, String> redisData) {
+    redisData.put(PRODUCER, this.getProducerName());
   }
 
   private String handleMessage(Message message) {
