@@ -22,22 +22,16 @@ import io.harness.ccm.graphql.dto.recommendation.RecommendationsDTO;
 import io.harness.ccm.graphql.dto.recommendation.ResourceType;
 import io.harness.ccm.graphql.dto.recommendation.WorkloadRecommendationDTO;
 import io.harness.ccm.graphql.utils.GraphQLUtils;
-import io.harness.histogram.HistogramCheckpoint;
 import io.harness.rule.Owner;
 
-import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerCheckpoint;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram;
+import software.wings.graphql.datafetcher.ce.recommendation.entity.Cost;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
+import java.math.BigDecimal;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import org.jooq.Condition;
 import org.junit.Before;
@@ -62,46 +56,13 @@ public class RecommendationsOverviewQueryTest extends CategoryTest {
   private static final String CONTAINER_NAME = "containerName";
   private static final String ID = "id0";
 
-  private static final Instant refDate = Instant.now().truncatedTo(ChronoUnit.DAYS);
-
-  private static final List<PartialRecommendationHistogram> histograms =
-      Arrays.asList(PartialRecommendationHistogram.builder()
-                        .namespace(NAMESPACE)
-                        .workloadName(NAME)
-                        .workloadType("Deployment")
-                        .date(refDate.plus(Duration.ofDays(2)))
-                        .containerCheckpoints(ImmutableMap.<String, ContainerCheckpoint>builder()
-                                                  .put(CONTAINER_NAME,
-                                                      ContainerCheckpoint.builder()
-                                                          .cpuHistogram(HistogramCheckpoint.builder()
-                                                                            .totalWeight(1)
-                                                                            .bucketWeights(ImmutableMap.of(0, 10000))
-                                                                            .build())
-                                                          .memoryPeak(1500000000L)
-                                                          .build())
-                                                  .build())
-                        .build(),
-          PartialRecommendationHistogram.builder()
-              .namespace(NAMESPACE)
-              .workloadName(NAME)
-              .workloadType("Deployment")
-              .date(refDate.plus(Duration.ofDays(3)))
-              .containerCheckpoints(ImmutableMap.<String, ContainerCheckpoint>builder()
-                                        .put(CONTAINER_NAME,
-                                            ContainerCheckpoint.builder()
-                                                .cpuHistogram(HistogramCheckpoint.builder()
-                                                                  .totalWeight(1)
-                                                                  .bucketWeights(ImmutableMap.of(2, 10000))
-                                                                  .build())
-                                                .memoryPeak(2000000000L)
-                                                .build())
-                                        .build())
-              .build());
-
   private static final Map<String, ContainerRecommendation> containerRecommendationMap = ImmutableMap.of(CONTAINER_NAME,
       ContainerRecommendation.builder()
           .current(ResourceRequirement.builder().request("cpu", "100m").limit("cpu", "2").build())
           .build());
+
+  private static final Cost cost =
+      Cost.builder().memory(BigDecimal.valueOf(0.116)).cpu(BigDecimal.valueOf(0.4678)).build();
 
   @Mock private GraphQLUtils graphQLUtils;
   @Mock private RecommendationService recommendationService;
@@ -237,6 +198,7 @@ public class RecommendationsOverviewQueryTest extends CategoryTest {
     return WorkloadRecommendationDTO.builder()
         .items(ImmutableList.of(createContainerHistogram()))
         .containerRecommendations(containerRecommendationMap)
+        .lastDayCost(cost)
         .build();
   }
 
@@ -274,6 +236,7 @@ public class RecommendationsOverviewQueryTest extends CategoryTest {
     assertThat(workloadRecommendationDTO.getContainerRecommendations())
         .hasSize(1)
         .containsExactlyInAnyOrderEntriesOf(containerRecommendationMap);
+    assertThat(workloadRecommendationDTO.getLastDayCost()).isEqualTo(cost);
     assertThat(workloadRecommendationDTO.getItems()).hasSize(1);
     assertThat(workloadRecommendationDTO.getItems().get(0).getContainerName()).isEqualTo(CONTAINER_NAME);
 

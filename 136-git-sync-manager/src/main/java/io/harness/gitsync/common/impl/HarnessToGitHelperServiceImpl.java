@@ -37,8 +37,10 @@ import io.harness.gitsync.common.beans.GitBranch;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.common.beans.InfoForGitPush.InfoForGitPushBuilder;
 import io.harness.gitsync.common.dtos.GitSyncEntityDTO;
+import io.harness.gitsync.common.dtos.GitSyncSettingsDTO;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.GitEntityService;
+import io.harness.gitsync.common.service.GitSyncSettingsService;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.common.service.gittoharness.GitToHarnessProcessorService;
@@ -75,6 +77,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   private final GitBranchService gitBranchService;
   private final EncryptionHelper encryptionHelper;
   private final SourceCodeManagerService sourceCodeManagerService;
+  private final GitSyncSettingsService gitSyncSettingsService;
 
   @Inject
   public HarnessToGitHelperServiceImpl(@Named("connectorDecoratorService") ConnectorService connectorService,
@@ -82,7 +85,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
       YamlGitConfigService yamlGitConfigService, EntityDetailProtoToRestMapper entityDetailRestToProtoMapper,
       GitToHarnessProcessorService gitToHarnessProcessorService, ExecutorService executorService,
       GitBranchService gitBranchService, EncryptionHelper encryptionHelper,
-      SourceCodeManagerService sourceCodeManagerService) {
+      SourceCodeManagerService sourceCodeManagerService, GitSyncSettingsService gitSyncSettingsService) {
     this.connectorService = connectorService;
     this.decryptScmApiAccess = decryptScmApiAccess;
     this.gitEntityService = gitEntityService;
@@ -93,6 +96,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     this.gitBranchService = gitBranchService;
     this.encryptionHelper = encryptionHelper;
     this.sourceCodeManagerService = sourceCodeManagerService;
+    this.gitSyncSettingsService = gitSyncSettingsService;
   }
 
   @Override
@@ -114,7 +118,12 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
         }
       }
     }
-    if (yamlGitConfig.isExecuteOnDelegate()) {
+    final Optional<GitSyncSettingsDTO> gitSyncSettingsDTO = gitSyncSettingsService.get(
+        accountId, entityReference.getOrgIdentifier(), entityReference.getProjectIdentifier());
+    final boolean executeOnDelegate = gitSyncSettingsDTO.isPresent() && gitSyncSettingsDTO.get().isExecuteOnDelegate();
+    // todo(abhinav): Throw exception if optional not present.
+
+    if (executeOnDelegate) {
       final Pair<ScmConnector, List<EncryptedDataDetail>> connectorWithEncryptionDetails =
           getConnectorWithEncryptionDetails(accountId, yamlGitConfig, userPrincipal);
       infoForGitPushBuilder.encryptedDataDetailList(connectorWithEncryptionDetails.getRight())
@@ -130,7 +139,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
         .orgIdentifier(entityReference.getOrgIdentifier())
         .projectIdentifier(entityReference.getProjectIdentifier())
         .defaultBranchName(yamlGitConfig.getBranch())
-        .executeOnDelegate(yamlGitConfig.isExecuteOnDelegate())
+        .executeOnDelegate(executeOnDelegate)
         .build();
   }
 

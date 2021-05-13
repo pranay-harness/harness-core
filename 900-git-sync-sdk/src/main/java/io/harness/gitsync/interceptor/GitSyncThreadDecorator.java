@@ -86,6 +86,6 @@ public class GitSyncThreadDecorator implements ContainerRequestFilter, Container
   @Override
   public void filter(ContainerRequestContext containerRequestContext, ContainerResponseContext containerResponseContext)
       throws IOException {
-    GlobalContextManager.unset(GitSyncBranchContext.NG_GIT_SYNC_CONTEXT);
+    GlobalContextManager.unset();
   }
 }

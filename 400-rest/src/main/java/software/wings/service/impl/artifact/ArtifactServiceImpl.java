@@ -53,7 +53,6 @@ import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HIterator;
 import io.harness.queue.QueuePublisher;
-import io.harness.scheduler.PersistentScheduler;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 
@@ -85,7 +84,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.mongodb.BasicDBObject;
 import java.io.File;
 import java.util.ArrayList;
@@ -135,13 +133,6 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
   @Inject private SettingsService settingsService;
   @Inject private FeatureFlagService featureFlagService;
-
-  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
-
-  @Override
-  public PageResponse<Artifact> listUnsorted(PageRequest<Artifact> pageRequest) {
-    return wingsPersistence.query(Artifact.class, pageRequest);
-  }
 
   @Override
   public PageResponse<Artifact> listArtifactsForService(PageRequest<Artifact> pageRequest) {

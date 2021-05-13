@@ -41,8 +41,6 @@ public class YamlGitConfigMapper {
   }
 
   public static final YamlGitConfigDTO toYamlGitConfigDTO(YamlGitConfig yamlGitConfig) {
-    final boolean executeOnDelegate =
-        yamlGitConfig != null && yamlGitConfig.getExecuteOnDelegate() != null && yamlGitConfig.getExecuteOnDelegate();
     return YamlGitConfigDTO.builder()
         .accountIdentifier(yamlGitConfig.getAccountId())
         .organizationIdentifier(nullIfEmpty(yamlGitConfig.getOrgIdentifier()))
@@ -56,7 +54,6 @@ public class YamlGitConfigMapper {
         .rootFolders(yamlGitConfig.getRootFolders())
         .defaultRootFolder(yamlGitConfig.getDefaultRootFolder())
         .gitConnectorType(yamlGitConfig.getGitConnectorType())
-        .executeOnDelegate(executeOnDelegate)
         .build();
   }
 

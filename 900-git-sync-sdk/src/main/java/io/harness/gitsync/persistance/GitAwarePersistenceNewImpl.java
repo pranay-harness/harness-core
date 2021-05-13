@@ -60,7 +60,9 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
       gitSyncMsvcHelper.postPushInformationToGitMsvc(entityDetail, scmPushResponse, gitBranchInfo);
       return savedObjectInMongo;
     }
-    objectToSave.setIsFromDefaultBranch(true);
+    if (changeType == ChangeType.ADD) {
+      objectToSave.setIsFromDefaultBranch(true);
+    }
     return mongoTemplate.save(objectToSave);
   }
 

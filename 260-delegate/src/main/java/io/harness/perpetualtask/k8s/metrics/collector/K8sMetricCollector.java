@@ -63,7 +63,6 @@ public class K8sMetricCollector {
   }
 
   private final EventPublisher eventPublisher;
-  private final K8sMetricsClient k8sMetricsClient;
   private final ClusterDetails clusterDetails;
   // to make sure that PVMetric is collected only once for a single node in a single window.
   private final Map<String, Boolean> isNodeProcessed = new HashMap<>();
@@ -76,18 +75,16 @@ public class K8sMetricCollector {
 
   private Instant lastMetricPublished;
 
-  public K8sMetricCollector(EventPublisher eventPublisher, K8sMetricsClient k8sMetricsClient,
-      ClusterDetails clusterDetails, Instant lastMetricPublished) {
+  public K8sMetricCollector(EventPublisher eventPublisher, ClusterDetails clusterDetails, Instant lastMetricPublished) {
     this.eventPublisher = eventPublisher;
-    this.k8sMetricsClient = k8sMetricsClient;
     this.clusterDetails = clusterDetails;
     this.lastMetricPublished = lastMetricPublished;
   }
 
-  public void collectAndPublishMetrics(Instant now) {
-    collectNodeMetrics();
-    collectPodMetricsAndContainerStates();
-    collectPVMetrics();
+  public void collectAndPublishMetrics(final K8sMetricsClient k8sMetricsClient, Instant now) {
+    collectNodeMetrics(k8sMetricsClient);
+    collectPodMetricsAndContainerStates(k8sMetricsClient);
+    collectPVMetrics(k8sMetricsClient);
     if (now.isAfter(this.lastMetricPublished.plus(AGGREGATION_WINDOW))) {
       publishPending(now);
       isNodeProcessed.clear();
@@ -102,7 +99,7 @@ public class K8sMetricCollector {
     this.lastMetricPublished = now;
   }
 
-  private void collectPVMetrics() {
+  private void collectPVMetrics(final K8sMetricsClient k8sMetricsClient) {
     // this function performs one api call (nodeStatsSummary) for each node, so we use map to only fetch a nodeStats if
     // it failed the last time.
     isNodeProcessed.entrySet().stream().filter(e -> !e.getValue()).map(Map.Entry::getKey).forEach(nodeName -> {
@@ -130,7 +127,7 @@ public class K8sMetricCollector {
     });
   }
 
-  private void collectNodeMetrics() {
+  private void collectNodeMetrics(final K8sMetricsClient k8sMetricsClient) {
     List<NodeMetrics> nodeMetricsList = k8sMetricsClient.nodeMetrics().list().getObject().getItems();
     for (NodeMetrics nodeMetrics : nodeMetricsList) {
       long nodeCpuNano = K8sResourceStandardizer.getCpuNano(nodeMetrics.getUsage().getCpu());
@@ -142,7 +139,7 @@ public class K8sMetricCollector {
     }
   }
 
-  private void collectPodMetricsAndContainerStates() {
+  private void collectPodMetricsAndContainerStates(final K8sMetricsClient k8sMetricsClient) {
     List<PodMetrics> podMetricsList = k8sMetricsClient.podMetrics().list().getObject().getItems();
     for (PodMetrics podMetrics : podMetricsList) {
       if (!isEmpty(podMetrics.getContainers())) {
