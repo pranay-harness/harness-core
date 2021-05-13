@@ -9,6 +9,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_RESTRICTED_ACCESS;
 import static software.wings.utils.Utils.urlDecode;
 
 import static org.apache.commons.lang3.StringUtils.substringAfter;
@@ -507,14 +508,23 @@ public class AccountResource {
 
   @PUT
   @Path("{accountId}/enableHarnessUserGroupAccess")
+  @AuthRule(permissionType = MANAGE_RESTRICTED_ACCESS)
   public RestResponse<Boolean> enableHarnessUserGroupAccess(@PathParam("accountId") String accountId) {
     return new RestResponse<>(accountService.enableHarnessUserGroupAccess(accountId));
   }
 
   @PUT
   @Path("{accountId}/disableHarnessUserGroupAccess")
+  @AuthRule(permissionType = MANAGE_RESTRICTED_ACCESS)
   public RestResponse<Boolean> disableHarnessUserGroupAccess(@PathParam("accountId") String accountId) {
     return new RestResponse<>(accountService.disableHarnessUserGroupAccess(accountId));
+  }
+
+  @GET
+  @Path("{accountId}/isRestrictedAccessEnabled")
+  @AuthRule(permissionType = MANAGE_RESTRICTED_ACCESS)
+  public RestResponse<Boolean> isRestrictedAccessEnabled(@PathParam("accountId") String accountId) {
+    return new RestResponse<>(accountService.isRestrictedAccessEnabled(accountId));
   }
 
   // TODO: EndPoint to be deleted once UI is created for AccessRequest

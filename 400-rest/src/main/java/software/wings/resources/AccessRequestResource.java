@@ -3,6 +3,8 @@ package software.wings.resources;
 import static io.harness.annotations.dev.HarnessModule._970_RBAC_CORE;
 
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_RESTRICTED_ACCESS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRETS;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -11,6 +13,7 @@ import io.harness.rest.RestResponse;
 
 import software.wings.beans.security.AccessRequestDTO;
 import software.wings.security.annotations.ApiKeyAuthorized;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AccessRequestService;
 
 import com.google.inject.Inject;
@@ -56,6 +59,7 @@ public class AccessRequestResource {
   @POST
   @Path("{accountId}/createAccessRequest")
   @Consumes(MediaType.APPLICATION_JSON)
+  @AuthRule(permissionType = MANAGE_RESTRICTED_ACCESS)
   public RestResponse<AccessRequestDTO> createAccessRequest(
       @PathParam("accountId") String accountId, @RequestBody @NotNull AccessRequestDTO accessRequestDTO) {
     return new RestResponse<>(
@@ -72,6 +76,7 @@ public class AccessRequestResource {
 
   @DELETE
   @Path("{accountId}/{accessRequestId}/deleteAccessRequest")
+  @AuthRule(permissionType = MANAGE_RESTRICTED_ACCESS)
   public RestResponse<Boolean> deleteAccessRequest(
       @PathParam("accountId") String accountId, @PathParam("accessRequestId") String accessRequestId) {
     return new RestResponse<>(accessRequestService.delete(accessRequestId));
@@ -79,6 +84,7 @@ public class AccessRequestResource {
 
   @GET
   @Path("{accountId}/listAccessRequest")
+  @AuthRule(permissionType = MANAGE_RESTRICTED_ACCESS)
   public RestResponse<AccessRequestDTO> listAccessRequest(
       @PathParam("accountId") String accountId, @QueryParam("accessRequestId") String accessRequestId) {
     return new RestResponse<>(accessRequestService.toAccessRequestDTO(accessRequestService.get(accessRequestId)));
@@ -86,6 +92,7 @@ public class AccessRequestResource {
 
   @GET
   @Path("{accountId}/listAccessRequest/harnessUserGroup")
+  @AuthRule(permissionType = MANAGE_RESTRICTED_ACCESS)
   public RestResponse<List<AccessRequestDTO>> listActiveAccessRequest(
       @PathParam("accountId") String accountId, @QueryParam("harnessUserGroupId") String harnessUserGroupId) {
     return new RestResponse<>(
@@ -94,6 +101,7 @@ public class AccessRequestResource {
 
   @GET
   @Path("{accountId}/listAccessRequest/account")
+  @AuthRule(permissionType = MANAGE_RESTRICTED_ACCESS)
   public RestResponse<List<AccessRequestDTO>> listActiveAccessRequestForAccount(
       @PathParam("accountId") String accountId) {
     return new RestResponse<>(
