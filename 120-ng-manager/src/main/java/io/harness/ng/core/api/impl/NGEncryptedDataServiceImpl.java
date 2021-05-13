@@ -345,10 +345,24 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     }
     String fileContent = getFileContent(inputStream);
 
+    existingEncryptedData.setName(encryptedData.getName());
     if (!Optional.ofNullable(fileContent).isPresent()) {
-      existingEncryptedData.setName(encryptedData.getName());
+      if (fromManager && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(existingEncryptedData.getEncryptionType())
+          && Optional.ofNullable(existingEncryptedData.getEncryptedValue()).isPresent()) {
+        String encryptedFileId = secretsFileService.createFile(existingEncryptedData.getName(),
+            encryptedData.getAccountIdentifier(), existingEncryptedData.getEncryptedValue());
+        encryptedData.setEncryptedValue(encryptedFileId.toCharArray());
+      }
+      if (fromManager) {
+        existingEncryptedData.setEncryptionKey(encryptedData.getEncryptionKey());
+        existingEncryptedData.setEncryptedValue(encryptedData.getEncryptedValue());
+        existingEncryptedData.setBase64Encoded(encryptedData.isBase64Encoded());
+      }
     } else {
       encryptSecretFile(fileContent, encryptedData, secretManager);
+      existingEncryptedData.setEncryptionKey(encryptedData.getEncryptionKey());
+      existingEncryptedData.setEncryptedValue(encryptedData.getEncryptedValue());
+      existingEncryptedData.setBase64Encoded(encryptedData.isBase64Encoded());
     }
     return encryptedDataDao.save(existingEncryptedData);
   }
