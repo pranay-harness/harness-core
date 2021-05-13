@@ -489,6 +489,10 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
                     encryptedData, accountIdentifier, encryptionConfig);
                 if (LOCAL.equals(encryptedRecordData.getEncryptionType())) {
                   encryptionConfig = SecretManagerConfigMapper.fromDTO(getLocalEncryptionConfig(accountIdentifier));
+                } else {
+                  log.error("Failed to decrypt secret {} with {} harness secret manager", encryptedData.getUuid(),
+                      encryptionConfig.getEncryptionType());
+                  continue;
                 }
               } else {
                 encryptedRecordData = buildEncryptedRecordData(encryptedData);

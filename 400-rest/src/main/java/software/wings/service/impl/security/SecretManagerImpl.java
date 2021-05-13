@@ -211,9 +211,14 @@ public class SecretManagerImpl implements SecretManager {
       // The encryption type will be set to LOCAL only if manager was able to decrypt.
       // If the decryption failed, we need to retain the kms encryption config, otherwise delegate task would
       // fail.
+      // ^^ don't do that
       if (encryptedRecordData.getEncryptionType() == LOCAL) {
         encryptionConfig = localSecretManagerService.getEncryptionConfig(accountId);
         log.info("Replaced it with LOCAL encryption for secret {}", encryptedData.getUuid());
+      } else {
+        log.error("Failed to decrypt secret {} with global {} secret manager", encryptedData.getUuid(),
+            encryptionConfig.getEncryptionType());
+        return Optional.empty();
       }
     } else {
       encryptedRecordData = SecretManager.buildRecordData(encryptedData);
