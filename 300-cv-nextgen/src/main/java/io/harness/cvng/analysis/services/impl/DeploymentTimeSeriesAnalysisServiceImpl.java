@@ -16,7 +16,6 @@ import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.VerificationTask;
-import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.utils.CVNGObjectUtils;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
@@ -45,7 +44,6 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
   public static final int DEFAULT_PAGE_SIZE = 10;
   @Inject private HPersistence hPersistence;
   @Inject private VerificationTaskService verificationTaskService;
-  @Inject private CVConfigService cvConfigService;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private NextGenService nextGenService;
 
