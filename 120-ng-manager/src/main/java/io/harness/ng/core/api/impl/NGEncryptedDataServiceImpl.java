@@ -412,7 +412,8 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     SecretManagerConfigDTO secretManager = getSecretManagerOrThrow(
         accountIdentifier, orgIdentifier, projectIdentifier, encryptedData.getSecretManagerIdentifier(), false);
 
-    if (isReadOnlySecretManager(secretManager) && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
+    if (isReadOnlySecretManager(secretManager) && !Optional.ofNullable(encryptedData.getPath()).isPresent()
+        && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
       throw new SecretManagementException(
           SECRET_MANAGEMENT_ERROR, "Cannot delete an Inline secret in read only secret manager", USER);
     }
