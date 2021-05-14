@@ -12,6 +12,8 @@ import java.util.Optional;
 @OwnedBy(PL)
 @TargetModule(HarnessModule._950_NG_CORE)
 public interface NGSecretService {
+  boolean deleteSecretText(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
+
   Optional<EncryptedDataMigrationDTO> getEncryptedDataMigrationDTO(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 }

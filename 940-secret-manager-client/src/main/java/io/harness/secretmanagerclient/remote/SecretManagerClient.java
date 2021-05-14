@@ -25,7 +25,6 @@ import retrofit2.http.Query;
 @OwnedBy(PL)
 public interface SecretManagerClient {
   String SECRETS_API = "ng/secrets";
-  String SECRET_FILES_API = "ng/secret-files";
   String SECRET_MANAGERS_API = "ng/secret-managers";
 
   /*
@@ -39,12 +38,9 @@ public interface SecretManagerClient {
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
 
-  /*
-  DELETE EncryptedData -> this is to be used for migration purpose
-  In case of secret files -> file entry will also be deleted from file service
-   */
-  @DELETE(SECRETS_API + "/migration/{identifier}")
-  Call<RestResponse<Boolean>> deleteAfterMigration(@Path(value = "identifier") String identifier,
+  // delete secret
+  @DELETE(SECRETS_API + "/{identifier}")
+  Call<RestResponse<Boolean>> deleteSecret(@Path(value = "identifier") String identifier,
       @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);

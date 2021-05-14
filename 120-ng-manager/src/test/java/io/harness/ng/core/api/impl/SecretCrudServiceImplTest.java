@@ -41,6 +41,7 @@ import io.harness.ng.core.remote.SecretValidationResultDTO;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.ValueType;
+import io.harness.secretmanagerclient.remote.SecretManagerClient;
 
 import software.wings.app.FileUploadLimit;
 import software.wings.settings.SettingVariableTypes;
@@ -53,6 +54,7 @@ import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Answers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.springframework.data.domain.PageImpl;
@@ -60,6 +62,7 @@ import org.springframework.data.domain.PageRequest;
 
 @OwnedBy(PL)
 public class SecretCrudServiceImplTest extends CategoryTest {
+  @Mock(answer = Answers.RETURNS_DEEP_STUBS) private SecretManagerClient secretManagerClient;
   @Mock private NGSecretServiceV2 ngSecretServiceV2;
   private final FileUploadLimit fileUploadLimit = new FileUploadLimit();
   @Mock private SecretEntityReferenceHelper secretEntityReferenceHelper;
@@ -71,8 +74,8 @@ public class SecretCrudServiceImplTest extends CategoryTest {
   @Before
   public void setup() {
     initMocks(this);
-    secretCrudServiceSpy = new SecretCrudServiceImpl(
-        secretEntityReferenceHelper, fileUploadLimit, ngSecretServiceV2, eventProducer, encryptedDataService);
+    secretCrudServiceSpy = new SecretCrudServiceImpl(secretManagerClient, secretEntityReferenceHelper, fileUploadLimit,
+        ngSecretServiceV2, eventProducer, encryptedDataService, true);
     secretCrudService = spy(secretCrudServiceSpy);
   }
 

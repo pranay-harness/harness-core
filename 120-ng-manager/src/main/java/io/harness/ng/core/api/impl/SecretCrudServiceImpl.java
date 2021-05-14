@@ -7,6 +7,8 @@ import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.ng.core.migration.ManagerToNGManagerEncryptedDataMigrationHandler.fromEncryptedDataMigrationDTO;
+import static io.harness.remote.client.RestClientUtils.getResponse;
 import static io.harness.secretmanagerclient.SecretType.SSHKey;
 import static io.harness.secretmanagerclient.SecretType.SecretFile;
 import static io.harness.secretmanagerclient.SecretType.SecretText;
@@ -37,6 +39,7 @@ import io.harness.ng.core.models.Secret.SecretKeys;
 import io.harness.ng.core.remote.SecretValidationMetaData;
 import io.harness.ng.core.remote.SecretValidationResultDTO;
 import io.harness.secretmanagerclient.SecretType;
+import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import io.harness.stream.BoundedInputStream;
 import io.harness.utils.PageUtils;
 
@@ -64,21 +67,27 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Singleton
 @Slf4j
 public class SecretCrudServiceImpl implements SecretCrudService {
+  private final SecretManagerClient secretManagerClient;
   private final NGSecretServiceV2 ngSecretService;
   private final FileUploadLimit fileUploadLimit;
   private final SecretEntityReferenceHelper secretEntityReferenceHelper;
   private final Producer eventProducer;
   private final NGEncryptedDataService encryptedDataService;
+  private final boolean ngSecretMigrationCompleted;
 
   @Inject
-  public SecretCrudServiceImpl(SecretEntityReferenceHelper secretEntityReferenceHelper, FileUploadLimit fileUploadLimit,
+  public SecretCrudServiceImpl(SecretManagerClient secretManagerClient,
+      SecretEntityReferenceHelper secretEntityReferenceHelper, FileUploadLimit fileUploadLimit,
       NGSecretServiceV2 ngSecretService, @Named(ENTITY_CRUD) Producer eventProducer,
-      NGEncryptedDataService encryptedDataService) {
+      NGEncryptedDataService encryptedDataService,
+      @Named("ngSecretMigrationCompleted") boolean ngSecretMigrationCompleted) {
+    this.secretManagerClient = secretManagerClient;
     this.fileUploadLimit = fileUploadLimit;
     this.secretEntityReferenceHelper = secretEntityReferenceHelper;
     this.ngSecretService = ngSecretService;
     this.eventProducer = eventProducer;
     this.encryptedDataService = encryptedDataService;
+    this.ngSecretMigrationCompleted = ngSecretMigrationCompleted;
   }
 
   private void checkEqualityOrThrow(Object str1, Object str2) {
@@ -201,11 +210,8 @@ public class SecretCrudServiceImpl implements SecretCrudService {
 
   @Override
   public boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
-    NGEncryptedData encryptedData =
-        encryptedDataService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     Optional<SecretResponseWrapper> optionalSecret =
         get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-
     if (optionalSecret.isPresent()) {
       secretEntityReferenceHelper.validateSecretIsNotUsedByOthers(
           accountIdentifier, orgIdentifier, projectIdentifier, identifier);
@@ -213,11 +219,25 @@ public class SecretCrudServiceImpl implements SecretCrudService {
       return false;
     }
 
+    NGEncryptedData encryptedData =
+        encryptedDataService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    boolean fromManager = false;
+    if (encryptedData == null && !ngSecretMigrationCompleted) {
+      fromManager = true;
+      encryptedData = fromEncryptedDataMigrationDTO(getResponse(secretManagerClient.getEncryptedDataMigrationDTO(
+          identifier, accountIdentifier, orgIdentifier, projectIdentifier)));
+    }
+
     boolean remoteDeletionSuccess = true;
     boolean localDeletionSuccess = false;
     if (encryptedData != null) {
-      remoteDeletionSuccess =
-          encryptedDataService.delete(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+      if (!fromManager) {
+        remoteDeletionSuccess =
+            encryptedDataService.delete(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+      } else {
+        remoteDeletionSuccess = getResponse(
+            secretManagerClient.deleteSecret(identifier, accountIdentifier, orgIdentifier, projectIdentifier));
+      }
     }
 
     if (remoteDeletionSuccess) {

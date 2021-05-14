@@ -468,9 +468,15 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
 
           // get encrypted data from DB
           NGEncryptedData encryptedData = get(accountIdentifier, orgIdentifier, projectIdentifier, secretIdentifier);
+          boolean fromManager = false;
+          if (encryptedData == null && !ngSecretMigrationCompleted) {
+            fromManager = true;
+            encryptedData = fromEncryptedDataMigrationDTO(getResponse(secretManagerClient.getEncryptedDataMigrationDTO(
+                secretIdentifier, accountIdentifier, orgIdentifier, projectIdentifier)));
+          }
           if (encryptedData != null) {
             // if type is file and file is saved elsewhere, download and save contents in encryptedValue
-            if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
+            if (!fromManager && encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
                 && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())
                 && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
               char[] fileContent =
