@@ -24,6 +24,7 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.client.JerseyClientBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -76,6 +77,7 @@ public class NGAppStartupTest extends CategoryTest {
   @Test
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
+  @Ignore("Not required anymore")
   public void testAppStartup() {
     final Client client = new JerseyClientBuilder().build();
     final Response response =
