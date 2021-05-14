@@ -184,19 +184,25 @@ public class SecretCrudServiceImplTest extends CategoryTest {
   public void testUpdateFile_failDueToSecretManagerChangeNotAllowed() throws IOException {
     NGEncryptedData encryptedDataDTO = NGEncryptedData.builder()
                                            .type(SettingVariableTypes.CONFIG_FILE)
-                                           .secretManagerIdentifier("secretManager2")
+                                           .secretManagerIdentifier("secretManager1")
                                            .build();
     when(encryptedDataService.get(any(), any(), any(), any())).thenReturn(encryptedDataDTO);
     SecretDTOV2 secretDTOV2 = SecretDTOV2.builder()
                                   .type(SecretType.SecretFile)
                                   .spec(SecretFileSpecDTO.builder().secretManagerIdentifier("secretManager1").build())
                                   .build();
+    SecretDTOV2 newSecretDTOV2 =
+        SecretDTOV2.builder()
+            .type(SecretType.SecretFile)
+            .spec(SecretFileSpecDTO.builder().secretManagerIdentifier("secretManager2").build())
+            .build();
     doReturn(Optional.ofNullable(SecretResponseWrapper.builder().secret(secretDTOV2).build()))
         .when(secretCrudService)
         .get(any(), any(), any(), any());
 
     try {
-      secretCrudService.updateFile("account", null, null, "identifier", secretDTOV2, new StringInputStream("string"));
+      secretCrudService.updateFile(
+          "account", null, null, "identifier", newSecretDTOV2, new StringInputStream("string"));
       fail("Execution should not reach here");
     } catch (InvalidRequestException invalidRequestException) {
       // not required
