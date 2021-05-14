@@ -46,6 +46,9 @@
     },
     "ExecutionElementConfig": {
       "type": "object",
+      "required": [
+        "steps"
+      ],
       "properties": {
         "rollbackSteps": {
           "type": "array",
@@ -57,7 +60,9 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/ExecutionWrapperConfig"
-          }
+          },
+          "maxItems": 2147483647,
+          "minItems": 1
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -451,7 +456,9 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/ExecutionWrapperConfig"
-          }
+          },
+          "maxItems": 2147483647,
+          "minItems": 1
         },
         "when": {
           "$ref": "#/definitions/StepWhenCondition"
