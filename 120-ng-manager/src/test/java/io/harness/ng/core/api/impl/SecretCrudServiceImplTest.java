@@ -35,6 +35,7 @@ import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
 import io.harness.ng.core.dto.secrets.SecretTextSpecDTO;
 import io.harness.ng.core.entities.NGEncryptedData;
 import io.harness.ng.core.models.Secret;
+import io.harness.ng.core.models.SecretTextSpec;
 import io.harness.ng.core.remote.SSHKeyValidationMetadata;
 import io.harness.ng.core.remote.SecretValidationResultDTO;
 import io.harness.rule.Owner;
@@ -84,7 +85,8 @@ public class SecretCrudServiceImplTest extends CategoryTest {
     when(encryptedDataService.createSecretText(any(), any())).thenReturn(encryptedDataDTO);
     when(ngSecretServiceV2.create(any(), any(), eq(false))).thenReturn(secret);
 
-    SecretDTOV2 secretDTOV2 = SecretDTOV2.builder().type(SecretType.SecretText).build();
+    SecretDTOV2 secretDTOV2 =
+        SecretDTOV2.builder().type(SecretType.SecretText).spec(SecretTextSpecDTO.builder().build()).build();
     SecretResponseWrapper responseWrapper = secretCrudService.create("account", secretDTOV2);
     assertThat(responseWrapper).isNotNull();
 
@@ -133,7 +135,8 @@ public class SecretCrudServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUpdate() {
     NGEncryptedData encryptedDataDTO = NGEncryptedData.builder().type(SettingVariableTypes.CONFIG_FILE).build();
-    SecretDTOV2 secretDTOV2 = SecretDTOV2.builder().type(SecretType.SecretText).build();
+    SecretDTOV2 secretDTOV2 =
+        SecretDTOV2.builder().type(SecretType.SecretText).spec(SecretTextSpecDTO.builder().build()).build();
     when(encryptedDataService.updateSecretText(any(), any())).thenReturn(encryptedDataDTO);
     when(ngSecretServiceV2.update(any(), any(), eq(false)))
         .thenReturn(
@@ -186,6 +189,7 @@ public class SecretCrudServiceImplTest extends CategoryTest {
                                            .build();
     when(encryptedDataService.get(any(), any(), any(), any())).thenReturn(encryptedDataDTO);
     SecretDTOV2 secretDTOV2 = SecretDTOV2.builder()
+                                  .type(SecretType.SecretFile)
                                   .spec(SecretFileSpecDTO.builder().secretManagerIdentifier("secretManager1").build())
                                   .build();
     doReturn(Optional.ofNullable(SecretResponseWrapper.builder().secret(secretDTOV2).build()))
@@ -210,6 +214,7 @@ public class SecretCrudServiceImplTest extends CategoryTest {
                                            .build();
     when(encryptedDataService.get(any(), any(), any(), any())).thenReturn(encryptedDataDTO);
     SecretDTOV2 secretDTOV2 = SecretDTOV2.builder()
+                                  .type(SecretType.SecretFile)
                                   .spec(SecretFileSpecDTO.builder().secretManagerIdentifier("secretManager1").build())
                                   .build();
     when(encryptedDataService.updateSecretFile(any(), any(), any())).thenReturn(encryptedDataDTO);
