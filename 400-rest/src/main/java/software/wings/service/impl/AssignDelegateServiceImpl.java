@@ -141,6 +141,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
             public List<Delegate> load(String accountId) {
               return persistence.createQuery(Delegate.class)
                   .filter(DelegateKeys.accountId, accountId)
+                  .field(DelegateKeys.status)
+                  .notEqual(DelegateInstanceStatus.DELETED)
                   .project(DelegateKeys.uuid, true)
                   .project(DelegateKeys.lastHeartBeat, true)
                   .project(DelegateKeys.status, true)

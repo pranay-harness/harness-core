@@ -26,6 +26,7 @@ import io.harness.delegate.beans.DelegateInsightsBarDetails;
 import io.harness.delegate.beans.DelegateInsightsDetails;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateProfile;
+import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -86,14 +87,24 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
         delegateInsightsService.retrieveDelegateInsightsDetails(eq(accountId), eq(delegateGroup1.getUuid()), anyLong()))
         .thenReturn(delegateInsightsDetails);
 
+    DelegateSizeDetails grp1SizeDetails = DelegateSizeDetails.builder()
+                                              .size(DelegateSize.LARGE)
+                                              .cpu(2.5d)
+                                              .label("size")
+                                              .ram(2048)
+                                              .taskLimit(25)
+                                              .replicas(2)
+                                              .build();
+
     // these three delegates should be returned for group 1
     Delegate delegate1 = createDelegateBuilder()
                              .accountId(accountId)
                              .ng(true)
                              .delegateType(KUBERNETES)
                              .delegateName("grp1")
+                             .description("description")
                              .hostName("kube-0")
-                             .sizeDetails(DelegateSizeDetails.builder().replicas(2).build())
+                             .sizeDetails(grp1SizeDetails)
                              .delegateGroupId(delegateGroup1.getUuid())
                              .delegateProfileId(delegateProfileId)
                              .build();
@@ -103,8 +114,9 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
                              .ng(true)
                              .delegateType(KUBERNETES)
                              .delegateName("grp1")
+                             .description("description")
                              .hostName("kube-1")
-                             .sizeDetails(DelegateSizeDetails.builder().replicas(2).build())
+                             .sizeDetails(grp1SizeDetails)
                              .delegateGroupId(delegateGroup1.getUuid())
                              .delegateProfileId(delegateProfileId)
                              .lastHeartBeat(System.currentTimeMillis() - 60000)
@@ -156,8 +168,11 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     for (DelegateGroupDetails group : delegateGroupListing.getDelegateGroupDetails()) {
       if (group.getGroupName().equals("grp1")) {
         assertThat(group.getDelegateInstanceDetails()).hasSize(2);
+        assertThat(group.getGroupId()).isEqualTo(delegateGroup1.getUuid());
         assertThat(group.getDelegateType()).isEqualTo(KUBERNETES);
         assertThat(group.getGroupHostName()).isEqualTo("kube-{n}");
+        assertThat(group.getDelegateDescription()).isEqualTo("description");
+        assertThat(group.getDelegateConfigurationId()).isEqualTo(delegateProfileId);
         assertThat(group.getGroupImplicitSelectors()).isNotNull();
         assertThat(group.getGroupImplicitSelectors().containsKey("grp1")).isTrue();
         assertThat(group.getGroupImplicitSelectors().containsKey("kube-0")).isFalse();
@@ -167,7 +182,7 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
         assertThat(group.getGroupImplicitSelectors().containsKey("s2")).isTrue();
         assertThat(group.getLastHeartBeat()).isEqualTo(delegate1.getLastHeartBeat());
         assertThat(group.isActivelyConnected()).isTrue();
-        assertThat(group.getDelegateReplicas()).isEqualTo(2);
+        assertThat(group.getSizeDetails()).isEqualTo(grp1SizeDetails);
         assertThat(group.getDelegateInstanceDetails())
             .extracting(DelegateGroupListing.DelegateInner::getUuid)
             .containsOnly(delegate1.getUuid(), delegate2.getUuid());
@@ -176,9 +191,114 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
       } else if (group.getGroupName().equals("grp2")) {
         assertThat(group.getDelegateInstanceDetails()).isEmpty();
         assertThat(group.isActivelyConnected()).isFalse();
-        assertThat(group.getDelegateReplicas()).isEqualTo(1);
+        assertThat(group.getSizeDetails().getReplicas()).isEqualTo(1);
       }
     }
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldGetDelegateGroupDetails() {
+    String accountId = generateUuid();
+    String delegateProfileId = generateUuid();
+
+    when(delegateCache.getDelegateProfile(accountId, delegateProfileId))
+        .thenReturn(DelegateProfile.builder().name("profile").selectors(ImmutableList.of("s1", "s2")).build());
+
+    DelegateGroup delegateGroup1 = DelegateGroup.builder().name("grp1").accountId(accountId).build();
+    persistence.save(delegateGroup1);
+
+    // Insights
+    DelegateInsightsDetails delegateInsightsDetails =
+        DelegateInsightsDetails.builder()
+            .insights(ImmutableList.of(
+                DelegateInsightsBarDetails.builder().build(), DelegateInsightsBarDetails.builder().build()))
+            .build();
+    when(
+        delegateInsightsService.retrieveDelegateInsightsDetails(eq(accountId), eq(delegateGroup1.getUuid()), anyLong()))
+        .thenReturn(delegateInsightsDetails);
+
+    DelegateSizeDetails grp1SizeDetails = DelegateSizeDetails.builder()
+                                              .size(DelegateSize.LARGE)
+                                              .cpu(2.5d)
+                                              .label("size")
+                                              .ram(2048)
+                                              .taskLimit(25)
+                                              .replicas(2)
+                                              .build();
+
+    Delegate delegate1 = createDelegateBuilder()
+                             .accountId(accountId)
+                             .ng(true)
+                             .delegateType(KUBERNETES)
+                             .delegateName("grp1")
+                             .description("description")
+                             .hostName("kube-0")
+                             .sizeDetails(grp1SizeDetails)
+                             .delegateGroupId(delegateGroup1.getUuid())
+                             .delegateProfileId(delegateProfileId)
+                             .build();
+
+    Delegate delegate2 = createDelegateBuilder()
+                             .accountId(accountId)
+                             .ng(true)
+                             .delegateType(KUBERNETES)
+                             .delegateName("grp1")
+                             .description("description")
+                             .hostName("kube-1")
+                             .sizeDetails(grp1SizeDetails)
+                             .delegateGroupId(delegateGroup1.getUuid())
+                             .delegateProfileId(delegateProfileId)
+                             .lastHeartBeat(System.currentTimeMillis() - 60000)
+                             .build();
+
+    persistence.save(Arrays.asList(delegate1, delegate2));
+
+    DelegateConnection delegateConnection1 = DelegateConnection.builder()
+                                                 .accountId(accountId)
+                                                 .delegateId(delegate1.getUuid())
+                                                 .lastHeartbeat(System.currentTimeMillis())
+                                                 .disconnected(false)
+                                                 .version(VERSION)
+                                                 .build();
+    DelegateConnection delegateConnection2 = DelegateConnection.builder()
+                                                 .accountId(accountId)
+                                                 .delegateId(delegate2.getUuid())
+                                                 .lastHeartbeat(System.currentTimeMillis())
+                                                 .disconnected(false)
+                                                 .version(VERSION)
+                                                 .build();
+    persistence.save(delegateConnection1);
+    persistence.save(delegateConnection2);
+
+    DelegateGroupDetails delegateGroupDetails =
+        delegateSetupService.getDelegateGroupDetails(accountId, delegateGroup1.getUuid());
+
+    assertThat(delegateGroupDetails).isNotNull();
+
+    assertThat(delegateGroupDetails.getGroupName()).isEqualTo("grp1");
+    assertThat(delegateGroupDetails.getDelegateInstanceDetails()).hasSize(2);
+    assertThat(delegateGroupDetails.getGroupId()).isEqualTo(delegateGroup1.getUuid());
+    assertThat(delegateGroupDetails.getDelegateType()).isEqualTo(KUBERNETES);
+    assertThat(delegateGroupDetails.getGroupHostName()).isEqualTo("kube-{n}");
+    assertThat(delegateGroupDetails.getDelegateDescription()).isEqualTo("description");
+    assertThat(delegateGroupDetails.getDelegateConfigurationId()).isEqualTo(delegateProfileId);
+    assertThat(delegateGroupDetails.getGroupImplicitSelectors()).isNotNull();
+    assertThat(delegateGroupDetails.getGroupImplicitSelectors().containsKey("grp1")).isTrue();
+    assertThat(delegateGroupDetails.getGroupImplicitSelectors().containsKey("kube-0")).isFalse();
+    assertThat(delegateGroupDetails.getGroupImplicitSelectors().containsKey("kube-1")).isFalse();
+    assertThat(delegateGroupDetails.getGroupImplicitSelectors().containsKey("profile")).isTrue();
+    assertThat(delegateGroupDetails.getGroupImplicitSelectors().containsKey("s1")).isTrue();
+    assertThat(delegateGroupDetails.getGroupImplicitSelectors().containsKey("s2")).isTrue();
+    assertThat(delegateGroupDetails.getLastHeartBeat()).isEqualTo(delegate1.getLastHeartBeat());
+    assertThat(delegateGroupDetails.isActivelyConnected()).isTrue();
+    assertThat(delegateGroupDetails.getSizeDetails()).isEqualTo(grp1SizeDetails);
+    assertThat(delegateGroupDetails.getDelegateInstanceDetails())
+        .extracting(DelegateGroupListing.DelegateInner::getUuid)
+        .containsOnly(delegate1.getUuid(), delegate2.getUuid());
+    assertThat(delegateGroupDetails.getDelegateInsightsDetails()).isNotNull();
+    assertThat(delegateGroupDetails.getDelegateInsightsDetails().getInsights()).hasSize(2);
   }
 
   private DelegateBuilder createDelegateBuilder() {

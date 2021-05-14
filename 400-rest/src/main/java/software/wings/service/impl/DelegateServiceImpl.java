@@ -6,6 +6,7 @@ import static io.harness.beans.DelegateTask.Status.ERROR;
 import static io.harness.beans.DelegateTask.Status.QUEUED;
 import static io.harness.beans.DelegateTask.Status.STARTED;
 import static io.harness.beans.DelegateTask.Status.runningStatuses;
+import static io.harness.beans.FeatureName.DO_DELEGATE_PHYSICAL_DELETE;
 import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
 import static io.harness.beans.FeatureName.NEXT_GEN_ENABLED;
 import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
@@ -109,6 +110,7 @@ import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateGroup;
 import io.harness.delegate.beans.DelegateGroup.DelegateGroupKeys;
+import io.harness.delegate.beans.DelegateGroupStatus;
 import io.harness.delegate.beans.DelegateInitializationDetails;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateParams;
@@ -491,8 +493,12 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public List<Integer> getCountOfDelegatesForAccounts(List<String> accountIds) {
-    List<Delegate> delegates =
-        persistence.createQuery(Delegate.class).field(DelegateKeys.accountId).in(accountIds).asList();
+    List<Delegate> delegates = persistence.createQuery(Delegate.class)
+                                   .field(DelegateKeys.accountId)
+                                   .in(accountIds)
+                                   .field(DelegateKeys.status)
+                                   .notEqual(DelegateInstanceStatus.DELETED)
+                                   .asList();
     Map<String, Integer> countOfDelegatesPerAccount =
         accountIds.stream().collect(Collectors.toMap(accountId -> accountId, accountId -> 0));
     delegates.forEach(delegate -> {
@@ -581,6 +587,8 @@ public class DelegateServiceImpl implements DelegateService {
   public Set<String> getAllDelegateSelectors(String accountId) {
     Query<Delegate> delegateQuery = persistence.createQuery(Delegate.class)
                                         .filter(DelegateKeys.accountId, accountId)
+                                        .field(DelegateKeys.status)
+                                        .notEqual(DelegateInstanceStatus.DELETED)
                                         .project(DelegateKeys.accountId, true)
                                         .project(DelegateKeys.tags, true)
                                         .project(DelegateKeys.delegateName, true)
@@ -976,6 +984,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     if (DelegateInstanceStatus.DELETED == newDelegateStatus) {
       broadcasterFactory.lookup(STREAM_DELEGATE + accountId, true).broadcast(SELF_DESTRUCT + delegateId);
+      log.warn("Sent self destruct command to rejected delegate {}.", delegateId);
     }
 
     return updatedDelegate;
@@ -2007,7 +2016,11 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private long getTotalNumberOfDelegates(String accountId) {
-    return persistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, accountId).count();
+    return persistence.createQuery(Delegate.class)
+        .filter(DelegateKeys.accountId, accountId)
+        .field(DelegateKeys.status)
+        .notEqual(DelegateInstanceStatus.DELETED)
+        .count();
   }
 
   private Delegate saveDelegate(Delegate delegate) {
@@ -2018,8 +2031,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public void delete(String accountId, String delegateId) {
-    log.info("Deleting delegate: {}", delegateId);
+  public void delete(String accountId, String delegateId, boolean forceDelete) {
     Delegate existingDelegate = persistence.createQuery(Delegate.class)
                                     .filter(DelegateKeys.accountId, accountId)
                                     .filter(DelegateKeys.uuid, delegateId)
@@ -2043,9 +2055,29 @@ public class DelegateServiceImpl implements DelegateService {
               .build());
     }
 
-    persistence.delete(persistence.createQuery(Delegate.class)
-                           .filter(DelegateKeys.accountId, accountId)
-                           .filter(DelegateKeys.uuid, delegateId));
+    if (featureFlagService.isEnabled(DO_DELEGATE_PHYSICAL_DELETE, accountId) || forceDelete) {
+      persistence.delete(persistence.createQuery(Delegate.class)
+                             .filter(DelegateKeys.accountId, accountId)
+                             .filter(DelegateKeys.uuid, delegateId));
+      log.info("Delegate: {} deleted.", delegateId);
+    } else {
+      Query<Delegate> updateQuery = persistence.createQuery(Delegate.class)
+                                        .filter(DelegateKeys.accountId, accountId)
+                                        .filter(DelegateKeys.uuid, delegateId);
+
+      UpdateOperations<Delegate> updateOperations =
+          persistence.createUpdateOperations(Delegate.class)
+              .set(DelegateKeys.status, DelegateInstanceStatus.DELETED)
+              .set(
+                  DelegateKeys.validUntil, Date.from(OffsetDateTime.now().plusDays(Delegate.TTL.toDays()).toInstant()));
+
+      persistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
+      log.info("Delegate: {} marked as deleted.", delegateId);
+
+      broadcasterFactory.lookup(STREAM_DELEGATE + accountId, true).broadcast(SELF_DESTRUCT + delegateId);
+      log.warn("Sent self destruct command to logically deleted delegate {}.", delegateId);
+    }
+
     auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, existingDelegate);
     log.info("Auditing deleting of Delegate for accountId={}", accountId);
   }
@@ -2063,10 +2095,60 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
+  public void deleteDelegateGroup(String accountId, String delegateGroupId, boolean forceDelete) {
+    log.info("Deleting delegate group: {} and all belonging delegates.", delegateGroupId);
+    Set<String> groupDelegateIds = persistence.createQuery(Delegate.class)
+                                       .filter(DelegateKeys.accountId, accountId)
+                                       .filter(DelegateKeys.delegateGroupId, delegateGroupId)
+                                       .asKeyList()
+                                       .stream()
+                                       .map(key -> (String) key.getId())
+                                       .collect(Collectors.toSet());
+
+    for (String delegateId : groupDelegateIds) {
+      delete(accountId, delegateId, forceDelete);
+    }
+
+    if (featureFlagService.isEnabled(DO_DELEGATE_PHYSICAL_DELETE, accountId) || forceDelete) {
+      persistence.delete(persistence.createQuery(DelegateGroup.class)
+                             .filter(DelegateGroupKeys.accountId, accountId)
+                             .filter(DelegateGroupKeys.uuid, delegateGroupId));
+      log.info("Delegate group: {} and all belonging delegates have been deleted.", delegateGroupId);
+    } else {
+      Query<DelegateGroup> updateQuery = persistence.createQuery(DelegateGroup.class)
+                                             .filter(DelegateGroupKeys.accountId, accountId)
+                                             .filter(DelegateGroupKeys.uuid, delegateGroupId);
+
+      UpdateOperations<DelegateGroup> updateOperations =
+          persistence.createUpdateOperations(DelegateGroup.class)
+              .set(DelegateGroupKeys.status, DelegateGroupStatus.DELETED)
+              .set(DelegateGroupKeys.validUntil,
+                  Date.from(OffsetDateTime.now()
+                                .plusDays(Delegate.TTL.toDays()) // Delegate.TTL is used to make sure TTL duration is
+                                                                 // aligned between group and delegate
+                                .toInstant()));
+
+      persistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
+      log.info("Delegate group: {} and all belonging delegates have been marked as deleted.", delegateGroupId);
+    }
+  }
+
+  @Override
   public DelegateRegisterResponse register(Delegate delegate) {
     if (licenseService.isAccountDeleted(delegate.getAccountId())) {
       broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(SELF_DESTRUCT);
+      log.warn("Sending self destruct command from register delegate because the account is deleted.");
       return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
+    }
+
+    if (isNotBlank(delegate.getDelegateGroupId())) {
+      DelegateGroup delegateGroup = persistence.get(DelegateGroup.class, delegate.getDelegateGroupId());
+
+      if (delegateGroup != null && DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
+        broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(SELF_DESTRUCT);
+        log.warn("Sending self destruct command from register delegate because the delegate group is deleted.");
+        return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
+      }
     }
 
     boolean useCdn = featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, delegate.getAccountId());
@@ -2103,7 +2185,8 @@ public class DelegateServiceImpl implements DelegateService {
     if (existingDelegate != null && existingDelegate.getStatus() == DelegateInstanceStatus.DELETED) {
       broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true)
           .broadcast(SELF_DESTRUCT + existingDelegate.getUuid());
-
+      log.warn(
+          "Sending self destruct command from register delegate because the existing delegate has status deleted.");
       return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
     }
 
@@ -2120,7 +2203,19 @@ public class DelegateServiceImpl implements DelegateService {
   public DelegateRegisterResponse register(DelegateParams delegateParams) {
     if (licenseService.isAccountDeleted(delegateParams.getAccountId())) {
       broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true).broadcast(SELF_DESTRUCT);
+      log.warn("Sending self destruct command from register delegate parameters because the account is deleted.");
       return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
+    }
+
+    if (isNotBlank(delegateParams.getDelegateGroupId())) {
+      DelegateGroup delegateGroup = persistence.get(DelegateGroup.class, delegateParams.getDelegateGroupId());
+
+      if (delegateGroup != null && DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
+        broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true).broadcast(SELF_DESTRUCT);
+        log.warn(
+            "Sending self destruct command from register delegate parameters because the delegate group is deleted.");
+        return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
+      }
     }
 
     boolean useCdn = featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, delegateParams.getAccountId());
@@ -2157,7 +2252,8 @@ public class DelegateServiceImpl implements DelegateService {
     if (existingDelegate != null && existingDelegate.getStatus() == DelegateInstanceStatus.DELETED) {
       broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true)
           .broadcast(SELF_DESTRUCT + existingDelegate.getUuid());
-
+      log.warn(
+          "Sending self destruct command from register delegate parameters because the existing delegate has status deleted.");
       return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
     }
 
@@ -4341,7 +4437,7 @@ public class DelegateServiceImpl implements DelegateService {
           // Before deleting existing one, copy {TAG/PROFILE/SCOPE} config into new delegate being registered
           // This needs to be done here as this may be the only delegate in db.
           initNewDelegateWithExistingDelegate(delegate, existingInactiveDelegate);
-          delete(existingInactiveDelegate.getAccountId(), existingInactiveDelegate.getUuid());
+          delete(existingInactiveDelegate.getAccountId(), existingInactiveDelegate.getUuid(), true);
         }
 
         Query<DelegateSequenceConfig> sequenceConfigQuery =
@@ -4498,10 +4594,12 @@ public class DelegateServiceImpl implements DelegateService {
       String accountId, String delegateId, String delegateConnectionId, ConnectionMode connectionMode) {
     switch (connectionMode) {
       case POLLING:
+        log.warn("Sent self destruct command to delegate {}, with connectionId {}.", delegateId, delegateConnectionId);
         throw new DuplicateDelegateException(delegateId, delegateConnectionId);
       case STREAMING:
         broadcasterFactory.lookup(STREAM_DELEGATE + accountId, true)
             .broadcast(SELF_DESTRUCT + delegateId + "-" + delegateConnectionId);
+        log.warn("Sent self destruct command to delegate {}, with connectionId {}.", delegateId, delegateConnectionId);
         break;
       default:
         throw new UnexpectedException("Non supported connection mode provided");
