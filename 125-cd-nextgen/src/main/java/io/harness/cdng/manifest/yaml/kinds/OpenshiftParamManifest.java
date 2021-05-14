@@ -1,5 +1,7 @@
 package io.harness.cdng.manifest.yaml.kinds;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.StoreConfig;
@@ -20,6 +22,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.Wither;
 import org.springframework.data.annotation.TypeAlias;
 
+@OwnedBy(HarnessTeam.CDP)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
@@ -29,7 +32,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("openshiftParamManifest")
 public class OpenshiftParamManifest implements ManifestAttributes, Visitable {
   String identifier;
-  @Wither @JsonProperty("store") StoreConfigWrapper storeConfigWrapper;
+  @Wither @JsonProperty("store") StoreConfigWrapper store;
 
   @Override
   public String getKind() {
@@ -39,7 +42,7 @@ public class OpenshiftParamManifest implements ManifestAttributes, Visitable {
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
-    children.add(YAMLFieldNameConstants.STORE, storeConfigWrapper);
+    children.add(YAMLFieldNameConstants.STORE, store);
     return children;
   }
 
@@ -47,15 +50,14 @@ public class OpenshiftParamManifest implements ManifestAttributes, Visitable {
   public ManifestAttributes applyOverrides(ManifestAttributes overrideConfig) {
     OpenshiftParamManifest openshiftParamManifest = (OpenshiftParamManifest) overrideConfig;
     OpenshiftParamManifest resultantManifest = this;
-    if (openshiftParamManifest.getStoreConfigWrapper() != null) {
-      resultantManifest = resultantManifest.withStoreConfigWrapper(
-          storeConfigWrapper.applyOverrides(openshiftParamManifest.getStoreConfigWrapper()));
+    if (openshiftParamManifest.getStore() != null) {
+      resultantManifest = resultantManifest.withStore(store.applyOverrides(openshiftParamManifest.getStore()));
     }
     return resultantManifest;
   }
 
   @Override
   public StoreConfig getStoreConfig() {
-    return storeConfigWrapper.getStoreConfig();
+    return store.getSpec();
   }
 }

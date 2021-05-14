@@ -17,13 +17,14 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
 import lombok.Value;
+import lombok.experimental.Wither;
 
 @OwnedBy(CDC)
 @Value
 @Builder(toBuilder = true)
 public class StepResponse {
   @NonNull Status status;
-  @Singular Collection<StepOutcome> stepOutcomes;
+  @Wither @Singular Collection<StepOutcome> stepOutcomes;
 
   FailureInfo failureInfo;
   List<UnitProgress> unitProgressList;

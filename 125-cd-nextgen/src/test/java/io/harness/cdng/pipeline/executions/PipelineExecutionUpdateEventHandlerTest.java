@@ -11,12 +11,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
 import io.harness.cdng.service.beans.ServiceOutcome;
-import io.harness.cdng.service.steps.ServiceStep;
+import io.harness.cdng.service.steps.ServiceSpecStep;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -37,6 +39,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PipelineExecutionUpdateEventHandlerTest extends CategoryTest {
   @Mock private NgPipelineExecutionService ngPipelineExecutionService;
   @Mock private NodeExecutionServiceImpl nodeExecutionService;
@@ -108,7 +111,7 @@ public class PipelineExecutionUpdateEventHandlerTest extends CategoryTest {
             .eventType(NODE_EXECUTION_STATUS_UPDATE)
             .build();
     NodeExecution nodeExecution = NodeExecution.builder()
-                                      .node(PlanNodeProto.newBuilder().setStepType(ServiceStep.STEP_TYPE).build())
+                                      .node(PlanNodeProto.newBuilder().setStepType(ServiceSpecStep.STEP_TYPE).build())
                                       .status(Status.SUCCEEDED)
                                       .build();
     when(nodeExecutionService.get("node1")).thenReturn(nodeExecution);

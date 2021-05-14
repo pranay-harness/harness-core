@@ -199,7 +199,7 @@
           "type": "string"
         },
         "primary": {
-          "$ref": "#/definitions/ArtifactSpecWrapper"
+          "$ref": "#/definitions/PrimaryArtifact"
         },
         "sidecars": {
           "type": "array",
@@ -230,73 +230,6 @@
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "ArtifactSpecWrapper": {
-      "type": "object",
-      "required": [
-        "type"
-      ],
-      "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "Dockerhub",
-            "Gcr",
-            "Ecr"
-          ]
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "allOf": [
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "Dockerhub"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/DockerHubArtifactConfig"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "Ecr"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/EcrArtifactConfig"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "Gcr"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/GcrArtifactConfig"
-              }
-            }
-          }
-        }
-      ]
     },
     "BarrierStepInfo": {
       "allOf": [
@@ -2825,6 +2758,73 @@
         }
       ]
     },
+    "PrimaryArtifact": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Dockerhub",
+            "Gcr",
+            "Ecr"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Dockerhub"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/DockerHubArtifactConfig"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Ecr"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/EcrArtifactConfig"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Gcr"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/GcrArtifactConfig"
+              }
+            }
+          }
+        }
+      ]
+    },
     "RemoteTerraformVarFileSpec": {
       "allOf": [
         {
@@ -3101,6 +3101,11 @@
       "allOf": [
         {
           "oneOf": [
+            {
+              "required": [
+                "useFromStage"
+              ]
+            },
             {
               "required": [
                 "service"

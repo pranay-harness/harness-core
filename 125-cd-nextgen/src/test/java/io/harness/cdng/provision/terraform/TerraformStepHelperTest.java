@@ -82,11 +82,11 @@ public class TerraformStepHelperTest extends CategoryTest {
     Ambiance ambiance = getAmbiance();
     TerraformConfigFilesWrapper configFilesWrapper = new TerraformConfigFilesWrapper();
     configFilesWrapper.setStore(StoreConfigWrapper.builder()
-                                    .storeConfig(GithubStore.builder()
-                                                     .branch(ParameterField.createValueField("master"))
-                                                     .gitFetchType(FetchType.BRANCH)
-                                                     .folderPath(ParameterField.createValueField("Config/"))
-                                                     .build())
+                                    .spec(GithubStore.builder()
+                                              .branch(ParameterField.createValueField("master"))
+                                              .gitFetchType(FetchType.BRANCH)
+                                              .folderPath(ParameterField.createValueField("Config/"))
+                                              .build())
                                     .type("Github")
                                     .build());
     InlineTerraformVarFileSpec inlineTerraformVarFileSpec = new InlineTerraformVarFileSpec();
@@ -147,21 +147,21 @@ public class TerraformStepHelperTest extends CategoryTest {
     Ambiance ambiance = getAmbiance();
     TerraformConfigFilesWrapper configFilesWrapper = new TerraformConfigFilesWrapper();
     configFilesWrapper.setStore(StoreConfigWrapper.builder()
-                                    .storeConfig(GithubStore.builder()
-                                                     .branch(ParameterField.createValueField("master"))
-                                                     .gitFetchType(FetchType.BRANCH)
-                                                     .folderPath(ParameterField.createValueField("Config/"))
-                                                     .build())
+                                    .spec(GithubStore.builder()
+                                              .branch(ParameterField.createValueField("master"))
+                                              .gitFetchType(FetchType.BRANCH)
+                                              .folderPath(ParameterField.createValueField("Config/"))
+                                              .build())
                                     .type("Github")
                                     .build());
     RemoteTerraformVarFileSpec remoteTerraformVarFileSpec = new RemoteTerraformVarFileSpec();
     remoteTerraformVarFileSpec.setStoreConfigWrapper(
         StoreConfigWrapper.builder()
-            .storeConfig(GitLabStore.builder()
-                             .branch(ParameterField.createValueField("master"))
-                             .gitFetchType(FetchType.BRANCH)
-                             .folderPath(ParameterField.createValueField("VarFiles/"))
-                             .build())
+            .spec(GitLabStore.builder()
+                      .branch(ParameterField.createValueField("master"))
+                      .gitFetchType(FetchType.BRANCH)
+                      .folderPath(ParameterField.createValueField("VarFiles/"))
+                      .build())
             .type("GitLab")
             .build());
     TerraformApplyStepParameters parameters = TerraformApplyStepParameters.infoBuilder()
@@ -217,12 +217,12 @@ public class TerraformStepHelperTest extends CategoryTest {
     RemoteTerraformVarFileSpec remoteTerraformVarFileSpec = new RemoteTerraformVarFileSpec();
     remoteTerraformVarFileSpec.setStoreConfigWrapper(
         StoreConfigWrapper.builder()
-            .storeConfig(GitLabStore.builder()
-                             .branch(ParameterField.createValueField("master"))
-                             .gitFetchType(FetchType.BRANCH)
-                             .paths(ParameterField.createValueField(Collections.singletonList("VarFiles/")))
-                             .connectorRef(ParameterField.createValueField("ConnectorRef"))
-                             .build())
+            .spec(GitLabStore.builder()
+                      .branch(ParameterField.createValueField("master"))
+                      .gitFetchType(FetchType.BRANCH)
+                      .paths(ParameterField.createValueField(Collections.singletonList("VarFiles/")))
+                      .connectorRef(ParameterField.createValueField("ConnectorRef"))
+                      .build())
             .type("GitLab")
             .build());
     InlineTerraformVarFileSpec inlineTerraformVarFileSpec = new InlineTerraformVarFileSpec();
