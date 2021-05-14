@@ -5,9 +5,10 @@ import static io.harness.rule.OwnerRule.NICOLAS;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.DelegateServiceTestBase;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateToken;
 import io.harness.delegate.beans.DelegateToken.DelegateTokenKeys;
@@ -17,6 +18,8 @@ import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.service.intfc.DelegateTokenService;
 
+import software.wings.WingsBaseTest;
+
 import com.google.inject.Inject;
 import com.mongodb.DuplicateKeyException;
 import java.util.List;
@@ -25,11 +28,14 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(HarnessTeam.DEL)
-public class DelegateTokenServiceTest extends DelegateServiceTestBase {
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+public class DelegateTokenServiceTest extends WingsBaseTest {
   private static final String TEST_ACCOUNT_ID = "testAccountId";
   private static final String TEST_ACCOUNT_ID_2 = "testAccountId2";
   private static final String TEST_TOKEN_NAME = "testTokenName";
   private static final String TEST_TOKEN_NAME2 = "testTokenName2";
+  private static final String TEST_TOKEN_VALUE = "tokenValue";
+  private static final String TEST_TOKEN_DEFAULT_NAME = "default";
 
   @Inject private HPersistence persistence;
   @Inject private DelegateTokenService delegateTokenService;
@@ -48,6 +54,32 @@ public class DelegateTokenServiceTest extends DelegateServiceTestBase {
 
     DelegateTokenDetails retrievedToken = retrieveTokenFromDB(TEST_TOKEN_NAME);
     assertCreatedToken(retrievedToken);
+  }
+
+  @Test
+  @Owner(developers = LUCAS)
+  @Category(UnitTests.class)
+  public void testUpsertDelegateTokenService() {
+    DelegateTokenDetails upsertToken = delegateTokenService.upsertDefaultToken(TEST_ACCOUNT_ID, TEST_TOKEN_VALUE);
+
+    assertThat(upsertToken).isNotNull();
+    assertThat(upsertToken.getUuid()).isNotEmpty();
+    assertThat(upsertToken.getAccountId()).isEqualTo(TEST_ACCOUNT_ID);
+    assertThat(upsertToken.getName()).isEqualTo(TEST_TOKEN_DEFAULT_NAME);
+    assertThat(upsertToken.getStatus()).isEqualTo(DelegateTokenStatus.ACTIVE);
+    assertThat(upsertToken.getValue()).isNullOrEmpty();
+
+    DelegateTokenDetails retrievedToken = retrieveTokenFromDB(TEST_TOKEN_DEFAULT_NAME);
+
+    String storedTokenValue = delegateTokenService.getTokenValue(TEST_ACCOUNT_ID, TEST_TOKEN_DEFAULT_NAME);
+
+    assertThat(retrievedToken).isNotNull();
+    assertThat(retrievedToken.getUuid()).isNotEmpty();
+    assertThat(retrievedToken.getAccountId()).isEqualTo(TEST_ACCOUNT_ID);
+    assertThat(retrievedToken.getName()).isEqualTo(TEST_TOKEN_DEFAULT_NAME);
+    assertThat(retrievedToken.getStatus()).isEqualTo(DelegateTokenStatus.ACTIVE);
+
+    assertThat(storedTokenValue).isEqualTo(TEST_TOKEN_VALUE);
   }
 
   @Test(expected = DuplicateKeyException.class)
@@ -129,7 +161,7 @@ public class DelegateTokenServiceTest extends DelegateServiceTestBase {
     delegateTokenService.revokeDelegateToken(TEST_ACCOUNT_ID, TEST_TOKEN_NAME2);
 
     List<DelegateTokenDetails> delegateTokens =
-        delegateTokenService.getDelegateTokens(TEST_ACCOUNT_ID, DelegateTokenStatus.REVOKED.name(), null);
+        delegateTokenService.getDelegateTokens(TEST_ACCOUNT_ID, DelegateTokenStatus.REVOKED, null);
 
     assertThat(delegateTokens).isNotNull();
     assertThat(delegateTokens.size()).isEqualTo(1);

@@ -166,6 +166,8 @@ import io.harness.seeddata.SampleDataProviderService;
 import io.harness.seeddata.SampleDataProviderServiceImpl;
 import io.harness.serializer.YamlUtils;
 import io.harness.service.DelegateServiceDriverModule;
+import io.harness.service.impl.DelegateTokenServiceImpl;
+import io.harness.service.intfc.DelegateTokenService;
 import io.harness.templatizedsm.RuntimeCredentialsInjector;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
@@ -1086,6 +1088,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(HealthStatusService.class).to(HealthStatusServiceImpl.class);
     bind(GcpBillingService.class).to(GcpBillingServiceImpl.class);
     bind(PreAggregateBillingService.class).to(PreAggregateBillingServiceImpl.class);
+    bind(DelegateTokenService.class).to(DelegateTokenServiceImpl.class);
 
     bind(WingsMongoExportImport.class);
 
