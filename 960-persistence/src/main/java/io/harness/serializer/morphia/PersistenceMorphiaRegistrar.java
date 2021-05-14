@@ -29,6 +29,7 @@ import io.harness.persistence.UuidAccess;
 import io.harness.persistence.UuidAware;
 import io.harness.persistence.ValidUntilAccess;
 import io.harness.queue.Queuable;
+import io.harness.queue.WithMonitoring;
 
 import java.util.Set;
 
@@ -53,6 +54,7 @@ public class PersistenceMorphiaRegistrar implements MorphiaRegistrar {
     set.add(PersistentIterable.class);
     set.add(PersistentRegularIterable.class);
     set.add(Queuable.class);
+    set.add(WithMonitoring.class);
     set.add(SpringCacheEntity.class);
     set.add(UpdatedAtAccess.class);
     set.add(UpdatedAtAware.class);

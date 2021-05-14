@@ -71,7 +71,6 @@ import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.metrics.jobs.RecordMetricsJob;
-import io.harness.metrics.modules.MetricsModule;
 import io.harness.metrics.service.api.MetricService;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
@@ -302,7 +301,6 @@ public class VerificationApplication extends Application<VerificationConfigurati
     modules.add(new NotificationClientModule(configuration.getNotificationClientConfiguration()));
     modules.add(new CvPersistenceModule());
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(configuration)));
-    modules.add(new MetricsModule());
     YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder()
                                                     .requireSchemaInit(true)
                                                     .requireSnippetInit(false)
