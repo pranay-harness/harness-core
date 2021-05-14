@@ -28,6 +28,7 @@ public class YAMLFieldNameConstants {
   public final String DESCRIPTION = "description";
   public final String TAGS = "tags";
   public final String VARIABLES = "variables";
+  public final String SERVICE_VARIABLES = "serviceVariables";
   public final String TYPE = "type";
   public final String KEY = "key";
   public final String VALUE = "value";

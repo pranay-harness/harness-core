@@ -90,7 +90,7 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
         .entityId(entityId)
         .workspace(ParameterFieldHelper.getParameterFieldValue(spec.getWorkspace()))
         .configFile(helper.getGitFetchFilesConfig(
-            spec.getConfigFiles().getStore().getStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
+            spec.getConfigFiles().getStore().getSpec(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
         .varFileInfos(helper.toTerraformVarFileInfo(spec.getVarFiles(), ambiance))
         .backendConfig(helper.getBackendConfig(spec.getBackendConfig()))
         .targets(ParameterFieldHelper.getParameterFieldValue(spec.getTargets()))

@@ -15,14 +15,18 @@ import io.harness.yaml.core.intfc.OverridesApplier;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Wither;
 
 @Data
 @Builder
-@OneOfField(fields = {"service", "serviceRef"})
+@NoArgsConstructor
+@AllArgsConstructor
+@OneOfField(fields = {"useFromStage", "service", "serviceRef"})
 @SimpleVisitorHelper(helperClass = ServiceConfigVisitorHelper.class)
 @OwnedBy(CDC)
 public class ServiceConfig implements OverridesApplier<ServiceConfig>, Visitable {
