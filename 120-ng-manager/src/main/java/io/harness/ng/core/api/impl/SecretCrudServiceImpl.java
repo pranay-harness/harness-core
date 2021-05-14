@@ -206,6 +206,13 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     Optional<SecretResponseWrapper> optionalSecret =
         get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
 
+    if (optionalSecret.isPresent()) {
+      secretEntityReferenceHelper.validateSecretIsNotUsedByOthers(
+          accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    } else {
+      return false;
+    }
+
     boolean remoteDeletionSuccess = true;
     boolean localDeletionSuccess = false;
     if (encryptedData != null) {
@@ -217,15 +224,8 @@ public class SecretCrudServiceImpl implements SecretCrudService {
       localDeletionSuccess = ngSecretService.delete(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     }
     if (remoteDeletionSuccess && localDeletionSuccess) {
-      if (encryptedData != null) {
-        secretEntityReferenceHelper.deleteSecretEntityReferenceWhenSecretGetsDeleted(accountIdentifier, orgIdentifier,
-            projectIdentifier, identifier, encryptedData.getSecretManagerIdentifier());
-      } else {
-        optionalSecret.ifPresent(secretResponseWrapper
-            -> secretEntityReferenceHelper.deleteSecretEntityReferenceWhenSecretGetsDeleted(accountIdentifier,
-                orgIdentifier, projectIdentifier, identifier,
-                getSecretManagerIdentifier(secretResponseWrapper.getSecret())));
-      }
+      secretEntityReferenceHelper.deleteSecretEntityReferenceWhenSecretGetsDeleted(accountIdentifier, orgIdentifier,
+          projectIdentifier, identifier, getSecretManagerIdentifier(optionalSecret.get().getSecret()));
       publishEvent(accountIdentifier, orgIdentifier, projectIdentifier, identifier,
           EventsFrameworkMetadataConstants.DELETE_ACTION);
       return true;

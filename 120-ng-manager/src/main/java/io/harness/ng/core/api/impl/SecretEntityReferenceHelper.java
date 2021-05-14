@@ -5,9 +5,10 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import static software.wings.utils.Utils.emptyIfNull;
 
+import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.IdentifierRef;
 import io.harness.entitysetupusageclient.EntitySetupUsageHelper;
-import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Producer;
@@ -18,6 +19,9 @@ import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
 import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.DeleteSetupUsageDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateV2DTO;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
+import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 
 import com.google.common.collect.ImmutableMap;
@@ -31,17 +35,17 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class SecretEntityReferenceHelper {
   EntitySetupUsageHelper entityReferenceHelper;
-  EntitySetupUsageClient entitySetupUsageClient;
+  EntitySetupUsageService entitySetupUsageService;
   Producer eventProducer;
   IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
 
   @Inject
   public SecretEntityReferenceHelper(EntitySetupUsageHelper entityReferenceHelper,
-      EntitySetupUsageClient entitySetupUsageClient,
+      EntitySetupUsageService entitySetupUsageService,
       @Named(EventsFrameworkConstants.SETUP_USAGE) Producer eventProducer,
       IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper) {
     this.entityReferenceHelper = entityReferenceHelper;
-    this.entitySetupUsageClient = entitySetupUsageClient;
+    this.entitySetupUsageService = entitySetupUsageService;
     this.eventProducer = eventProducer;
     this.identifierRefProtoDTOHelper = identifierRefProtoDTOHelper;
   }
@@ -95,7 +99,6 @@ public class SecretEntityReferenceHelper {
         accountIdentifier, orgIdentifier, projectIdentifier, secretManagerIdentifier);
     String secretFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, secretIdentifier);
-    boolean entityReferenceDeleted = false;
     try {
       DeleteSetupUsageDTO deleteSetupUsageDTO = DeleteSetupUsageDTO.newBuilder()
                                                     .setAccountIdentifier(accountIdentifier)
@@ -116,10 +119,29 @@ public class SecretEntityReferenceHelper {
               + "The entity reference was not deleted when the secret [{}] was deleted from the secret manager [{}] with the exception [{}]",
           secretFQN, secretMangerFQN, ex.getMessage());
     }
-    if (entityReferenceDeleted) {
-      log.info(ENTITY_REFERENCE_LOG_PREFIX
-              + "The entity reference was not deleted when the secret [{}] was deleted from the secret manager [{}]",
-          secretFQN, secretMangerFQN);
+  }
+
+  public void validateSecretIsNotUsedByOthers(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String secretIdentifier) {
+    boolean isEntityReferenced;
+    IdentifierRef identifierRef = IdentifierRef.builder()
+                                      .accountIdentifier(accountIdentifier)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .identifier(secretIdentifier)
+                                      .build();
+    String referredEntityFQN = identifierRef.getFullyQualifiedName();
+    try {
+      isEntityReferenced =
+          entitySetupUsageService.isEntityReferenced(accountIdentifier, referredEntityFQN, EntityType.SECRETS);
+    } catch (Exception ex) {
+      log.info("Encountered exception while requesting the Entity Reference records of [{}], with exception",
+          secretIdentifier, ex);
+      throw new UnexpectedException("Error while deleting the secret");
+    }
+    if (isEntityReferenced) {
+      throw new InvalidRequestException(
+          String.format("Could not delete the secret %s as it is referenced by other entities", secretIdentifier));
     }
   }
 }

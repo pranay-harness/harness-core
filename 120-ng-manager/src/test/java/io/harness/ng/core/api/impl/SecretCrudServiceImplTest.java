@@ -35,6 +35,7 @@ import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
 import io.harness.ng.core.dto.secrets.SecretTextSpecDTO;
 import io.harness.ng.core.entities.NGEncryptedData;
 import io.harness.ng.core.models.Secret;
+import io.harness.ng.core.models.SecretTextSpec;
 import io.harness.ng.core.remote.SSHKeyValidationMetadata;
 import io.harness.ng.core.remote.SecretValidationResultDTO;
 import io.harness.rule.Owner;
@@ -280,7 +281,7 @@ public class SecretCrudServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
-  public void testDelete() throws IOException {
+  public void testDelete() {
     NGEncryptedData encryptedDataDTO = random(NGEncryptedData.class);
     when(encryptedDataService.get(any(), any(), any(), any())).thenReturn(encryptedDataDTO);
     when(encryptedDataService.delete(any(), any(), any(), any())).thenReturn(true);
@@ -288,7 +289,10 @@ public class SecretCrudServiceImplTest extends CategoryTest {
     doNothing()
         .when(secretEntityReferenceHelper)
         .deleteSecretEntityReferenceWhenSecretGetsDeleted(any(), any(), any(), any(), any());
-    when(ngSecretServiceV2.get(any(), any(), any(), any())).thenReturn(Optional.empty());
+    doNothing().when(secretEntityReferenceHelper).validateSecretIsNotUsedByOthers(any(), any(), any(), any());
+    when(ngSecretServiceV2.get(any(), any(), any(), any()))
+        .thenReturn(Optional.of(
+            Secret.builder().type(SecretType.SecretText).secretSpec(SecretTextSpec.builder().build()).build()));
     boolean success = secretCrudService.delete("account", null, null, "identifier");
 
     assertThat(success).isTrue();

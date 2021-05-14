@@ -16,6 +16,7 @@ import io.harness.govern.ProviderModule;
 import io.harness.ng.core.activityhistory.service.NGActivityService;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.api.impl.NGSecretManagerServiceImpl;
+import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
 import io.harness.outbox.api.OutboxService;
 import io.harness.redis.RedisConfig;
@@ -65,14 +66,10 @@ public class SecretManagementModuleTest extends CategoryTest {
   public void testSecretManagementModule() {
     ServiceHttpClientConfig secretManagerClientConfig =
         ServiceHttpClientConfig.builder().baseUrl("http://localhost:7143").build();
-    ServiceHttpClientConfig ngManagerClientConfig =
-        ServiceHttpClientConfig.builder().baseUrl("http://localhost:3457").build();
     String serviceSecret = "test_secret";
     secretManagementModule = new SecretManagementModule();
     secretManagementClientModule =
         new SecretManagementClientModule(secretManagerClientConfig, serviceSecret, "NextGenManager");
-    entityReferenceClientModule =
-        new EntitySetupUsageClientModule(ngManagerClientConfig, serviceSecret, "NextGenManager");
 
     List<Module> modules = new ArrayList<>();
     modules.add(new ProviderModule() {
@@ -101,6 +98,13 @@ public class SecretManagementModuleTest extends CategoryTest {
       @Singleton
       NGEncryptedDataRepository ngEncryptedDataRepository() {
         return mock(NGEncryptedDataRepository.class);
+      }
+    });
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      EntitySetupUsageService entitySetupUsageService() {
+        return mock(EntitySetupUsageService.class);
       }
     });
     modules.add(new ProviderModule() {
