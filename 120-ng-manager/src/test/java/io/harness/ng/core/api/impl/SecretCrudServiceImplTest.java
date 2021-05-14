@@ -35,7 +35,6 @@ import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
 import io.harness.ng.core.dto.secrets.SecretTextSpecDTO;
 import io.harness.ng.core.entities.NGEncryptedData;
 import io.harness.ng.core.models.Secret;
-import io.harness.ng.core.models.SecretTextSpec;
 import io.harness.ng.core.remote.SSHKeyValidationMetadata;
 import io.harness.ng.core.remote.SecretValidationResultDTO;
 import io.harness.rule.Owner;
