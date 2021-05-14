@@ -217,7 +217,6 @@ public class SecretCrudServiceImplTest extends CategoryTest {
                                            .type(SettingVariableTypes.CONFIG_FILE)
                                            .secretManagerIdentifier("secretManager1")
                                            .build();
-    when(encryptedDataService.get(any(), any(), any(), any())).thenReturn(encryptedDataDTO);
     SecretDTOV2 secretDTOV2 = SecretDTOV2.builder()
                                   .type(SecretType.SecretFile)
                                   .spec(SecretFileSpecDTO.builder().secretManagerIdentifier("secretManager1").build())
@@ -240,7 +239,6 @@ public class SecretCrudServiceImplTest extends CategoryTest {
     }
 
     assertThat(updatedFile).isNotNull();
-    verify(encryptedDataService, atLeastOnce()).get(any(), any(), any(), any());
     verify(encryptedDataService, atLeastOnce()).updateSecretFile(any(), any(), any());
     verify(ngSecretServiceV2).update(any(), any(), eq(false));
   }
