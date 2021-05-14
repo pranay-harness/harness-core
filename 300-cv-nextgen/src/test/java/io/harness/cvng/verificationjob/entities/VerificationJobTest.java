@@ -2,6 +2,7 @@ package io.harness.cvng.verificationjob.entities;
 
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.DURATION_KEY;
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.ENV_IDENTIFIER_KEY;
+import static io.harness.cvng.verificationjob.CVVerificationJobConstants.SENSITIVITY_KEY;
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.SERVICE_IDENTIFIER_KEY;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
@@ -184,6 +185,21 @@ public class VerificationJobTest extends CategoryTest {
     assertThat(resolvedVerificationJob.getServiceIdentifier()).isEqualTo(verificationJob.getServiceIdentifier());
     assertThat(resolvedVerificationJob.getEnvIdentifier()).isEqualTo(verificationJob.getEnvIdentifier());
     assertThat(resolvedVerificationJob.getDuration().toMinutes()).isEqualTo(5);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void testResolveCommonJobRuntimeParams_sensitivity() {
+    TestVerificationJob verificationJob = (TestVerificationJob) createVerificationJob();
+    verificationJob.setSensitivity("<+input>", true);
+    verificationJob.setDuration("<+input>", true);
+    Map<String, String> runtimeParams = new HashMap<>();
+    runtimeParams.put(SENSITIVITY_KEY, "High");
+
+    TestVerificationJob resolvedVerificationJob =
+        (TestVerificationJob) verificationJob.resolveVerificationJob(runtimeParams);
+    assertThat(resolvedVerificationJob.getSensitivity()).isEqualTo(Sensitivity.HIGH);
   }
 
   @Test
