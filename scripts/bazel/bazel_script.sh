@@ -28,8 +28,7 @@ fi
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]; then
   bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... \
-  && bazel ${bazelrc} test --cache_test_results=${CACHE_TEST_RESULTS} --define=HARNESS_ARGS=${HARNESS_ARGS} --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- \
-  //380-cg-graphql:software.wings.graphql.datafetcher.instance.InstanceStatsDataFetcherTest -//product/... -//commons/... -//200-functional-test/... -//190-deployment-functional-tests/...
+  && bazel ${bazelrc} test --cache_test_results=${CACHE_TEST_RESULTS} --define=HARNESS_ARGS=${HARNESS_ARGS} --keep_going ${GCP} ${BAZEL_ARGUMENTS} --//380-cg-graphql:software.wings.graphql.datafetcher.instance.InstanceStatsDataFetcherTest -//product/... -//commons/... -//200-functional-test/... -//190-deployment-functional-tests/...
   exit $?
 fi
 
