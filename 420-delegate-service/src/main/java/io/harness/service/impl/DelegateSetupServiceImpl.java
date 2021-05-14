@@ -20,6 +20,7 @@ import io.harness.delegate.beans.DelegateGroupListing;
 import io.harness.delegate.beans.DelegateInsightsDetails;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateProfile;
+import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.utils.DelegateEntityOwnerMapper;
 import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateCache;
@@ -60,10 +61,19 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
     return DelegateGroupListing.builder().delegateGroupDetails(delegateGroupDetails).build();
   }
 
-  private List<DelegateGroupDetails> getDelegateGroupDetails(String accountId, String orgId, String projectId) {
-    Map<String, List<DelegateConnectionDetails>> activeDelegateConnections =
-        delegateConnectionDao.obtainActiveDelegateConnections(accountId);
+  @Override
+  public DelegateGroupDetails getDelegateGroupDetails(String accountId, String delegateGroupId) {
+    List<Delegate> groupDelegates = persistence.createQuery(Delegate.class)
+                                        .filter(DelegateKeys.accountId, accountId)
+                                        .filter(DelegateKeys.delegateGroupId, delegateGroupId)
+                                        .field(DelegateKeys.status)
+                                        .notEqual(DelegateInstanceStatus.DELETED)
+                                        .asList();
 
+    return buildDelegateGroupDetails(accountId, delegateGroupId, groupDelegates);
+  }
+
+  private List<DelegateGroupDetails> getDelegateGroupDetails(String accountId, String orgId, String projectId) {
     Query<Delegate> delegateQuery = persistence.createQuery(Delegate.class)
                                         .filter(DelegateKeys.accountId, accountId)
                                         .filter(DelegateKeys.ng, true)
@@ -85,42 +95,49 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
         .collect(groupingBy(Delegate::getDelegateGroupId))
         .entrySet()
         .stream()
-        .map(entry -> {
-          List<Delegate> groupDelegates = entry.getValue();
-
-          String delegateType = groupDelegates.get(0).getDelegateType();
-          String groupName = obtainDelegateGroupName(accountId, entry.getKey(), groupDelegates.get(0));
-
-          String groupHostName = "";
-          if (KUBERNETES.equals(delegateType)) {
-            groupHostName = getHostNameForGroupedDelegate(groupDelegates.get(0).getHostName());
-          }
-
-          Map<String, SelectorType> groupSelectors = new HashMap<>();
-          groupDelegates.forEach(delegate -> groupSelectors.putAll(retrieveDelegateImplicitSelectors(delegate)));
-
-          long lastHeartBeat = groupDelegates.stream().mapToLong(Delegate::getLastHeartBeat).max().orElse(0);
-
-          int replicas =
-              groupDelegates.get(0).getSizeDetails() != null ? groupDelegates.get(0).getSizeDetails().getReplicas() : 0;
-
-          List<DelegateGroupListing.DelegateInner> delegateInstanceDetails =
-              buildInnerDelegates(entry.getValue(), activeDelegateConnections, true);
-
-          return DelegateGroupDetails.builder()
-              .delegateType(delegateType)
-              .groupName(groupName)
-              .groupHostName(groupHostName)
-              .groupImplicitSelectors(groupSelectors)
-              .delegateInsightsDetails(retrieveDelegateInsightsDetails(accountId, entry.getKey()))
-              .lastHeartBeat(lastHeartBeat)
-              .activelyConnected(delegateInstanceDetails.stream().anyMatch(
-                  delegateDetails -> isNotEmpty(delegateDetails.getConnections())))
-              .delegateReplicas(replicas)
-              .delegateInstanceDetails(delegateInstanceDetails)
-              .build();
-        })
+        .map(entry -> buildDelegateGroupDetails(accountId, entry.getKey(), entry.getValue()))
         .collect(toList());
+  }
+
+  private DelegateGroupDetails buildDelegateGroupDetails(
+      String accountId, String delegateGroupId, List<Delegate> groupDelegates) {
+    Map<String, List<DelegateConnectionDetails>> activeDelegateConnections =
+        delegateConnectionDao.obtainActiveDelegateConnections(accountId);
+
+    String delegateType = groupDelegates.get(0).getDelegateType();
+    String groupName = obtainDelegateGroupName(accountId, delegateGroupId, groupDelegates.get(0));
+    String delegateDescription = groupDelegates.get(0).getDescription();
+    String delegateConfigurationId = groupDelegates.get(0).getDelegateProfileId();
+    DelegateSizeDetails sizeDetails = groupDelegates.get(0).getSizeDetails();
+
+    String groupHostName = "";
+    if (KUBERNETES.equals(delegateType)) {
+      groupHostName = getHostNameForGroupedDelegate(groupDelegates.get(0).getHostName());
+    }
+
+    Map<String, SelectorType> groupSelectors = new HashMap<>();
+    groupDelegates.forEach(delegate -> groupSelectors.putAll(retrieveDelegateImplicitSelectors(delegate)));
+
+    long lastHeartBeat = groupDelegates.stream().mapToLong(Delegate::getLastHeartBeat).max().orElse(0);
+
+    List<DelegateGroupListing.DelegateInner> delegateInstanceDetails =
+        buildInnerDelegates(groupDelegates, activeDelegateConnections, true);
+
+    return DelegateGroupDetails.builder()
+        .groupId(delegateGroupId)
+        .delegateType(delegateType)
+        .groupName(groupName)
+        .groupHostName(groupHostName)
+        .delegateDescription(delegateDescription)
+        .delegateConfigurationId(delegateConfigurationId)
+        .sizeDetails(sizeDetails)
+        .groupImplicitSelectors(groupSelectors)
+        .delegateInsightsDetails(retrieveDelegateInsightsDetails(accountId, delegateGroupId))
+        .lastHeartBeat(lastHeartBeat)
+        .activelyConnected(
+            delegateInstanceDetails.stream().anyMatch(delegateDetails -> isNotEmpty(delegateDetails.getConnections())))
+        .delegateInstanceDetails(delegateInstanceDetails)
+        .build();
   }
 
   private String obtainDelegateGroupName(String accountId, String delegateGroupId, Delegate delegate) {

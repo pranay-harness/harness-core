@@ -373,7 +373,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
         .getDelegateUsingSequenceNum(anyString(), anyString(), anyString());
 
     mockWingsPersistanceForUpdateCall();
-    doNothing().when(delegateService).delete(anyString(), anyString());
+    doNothing().when(delegateService).delete(anyString(), anyString(), eq(true));
 
     DelegateSequenceConfig config =
         delegateService.getInactiveDelegateSequenceConfigToReplace(delegate, existingDelegateSequenceConfigs);
@@ -388,7 +388,7 @@ public class EcsDelegateRegistrationTest extends WingsBaseTest {
 
     // existing delegate assocaited to stale sequenceConfig is deleted
     ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-    verify(delegateService).delete(anyString(), captor.capture());
+    verify(delegateService).delete(anyString(), captor.capture(), eq(true));
     assertThat(captor.getValue()).isEqualTo("12345");
   }
 
