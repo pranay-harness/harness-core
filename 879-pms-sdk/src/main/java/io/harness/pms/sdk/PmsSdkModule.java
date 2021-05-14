@@ -58,6 +58,7 @@ public class PmsSdkModule extends AbstractModule {
     } else {
       modules.add(PmsSdkDummyGrpcModule.getInstance());
     }
+    modules.add(SdkMonitoringModule.getInstance());
     return modules;
   }
 }

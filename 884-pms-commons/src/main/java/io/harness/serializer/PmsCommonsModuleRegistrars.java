@@ -6,6 +6,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.PmsCommonsKryoRegistrar;
 import io.harness.serializer.morphia.PmsCommonsMorphiaRegistrar;
+import io.harness.serializer.spring.converters.ambiance.AmbianceReadConverter;
+import io.harness.serializer.spring.converters.ambiance.AmbianceWriteConverter;
 import io.harness.serializer.spring.converters.steps.SdkResponseEventRequestReadConverter;
 import io.harness.serializer.spring.converters.steps.SdkResponseEventRequestWriteConverter;
 import io.harness.serializer.spring.converters.steptype.StepTypeReadConverter;
@@ -25,7 +27,7 @@ public class PmsCommonsModuleRegistrars {
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder().add(PmsCommonsMorphiaRegistrar.class).build();
 
-  public final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =
-      ImmutableList.of(StepTypeReadConverter.class, StepTypeWriteConverter.class,
-          SdkResponseEventRequestReadConverter.class, SdkResponseEventRequestWriteConverter.class);
+  public final ImmutableList<Class<? extends Converter<?, ?>>> springConverters = ImmutableList.of(
+      StepTypeReadConverter.class, StepTypeWriteConverter.class, SdkResponseEventRequestReadConverter.class,
+      SdkResponseEventRequestWriteConverter.class, AmbianceWriteConverter.class, AmbianceReadConverter.class);
 }

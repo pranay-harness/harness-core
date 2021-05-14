@@ -30,6 +30,7 @@ import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.monitoring.MonitoringQueueObserver;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.notification.module.NotificationClientModule;
@@ -280,6 +281,10 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         (NodeExecutionServiceImpl) injector.getInstance(Key.get(NodeExecutionService.class));
     nodeExecutionService.getStepStatusUpdateSubject().register(
         injector.getInstance(Key.get(PlanExecutionService.class)));
+
+    SdkResponseEventListener sdkResponseEventListener = injector.getInstance(SdkResponseEventListener.class);
+    sdkResponseEventListener.getQueueListenerObserverSubject().register(
+        injector.getInstance(Key.get(MonitoringQueueObserver.class)));
   }
 
   private void registerCorrelationFilter(Environment environment, Injector injector) {
