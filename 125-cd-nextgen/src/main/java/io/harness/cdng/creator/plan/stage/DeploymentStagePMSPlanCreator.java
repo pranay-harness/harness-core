@@ -73,15 +73,14 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
 
     // Adding service child
     YamlField serviceField = specField.getNode().getField(YamlTypes.SERVICE_CONFIG);
-
     if (serviceField == null) {
       throw new InvalidRequestException("ServiceConfig Section cannot be absent in a pipeline");
     }
 
-    PlanNode servicePlanNode = ServicePMSPlanCreator.createPlanForServiceNode(
+    PlanCreationResponse servicePlanCreationResponse = ServicePMSPlanCreator.createPlanForServiceNode(
         serviceField, ((DeploymentStageConfig) field.getStageType()).getServiceConfig(), kryoSerializer);
-    planCreationResponseMap.put(serviceField.getNode().getUuid(),
-        PlanCreationResponse.builder().node(serviceField.getNode().getUuid(), servicePlanNode).build());
+    planCreationResponseMap.put(servicePlanCreationResponse.getStartingNodeId(),
+        PlanCreationResponse.builder().nodes(servicePlanCreationResponse.getNodes()).build());
 
     // Adding Spec node
     PlanNode specPlanNode =

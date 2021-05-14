@@ -1,11 +1,15 @@
-package io.harness.cdng.artifact.bean;
+package io.harness.cdng.artifact.bean.yaml;
 
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.visitor.helpers.artifact.ArtifactSpecWrapperVisitorHelper;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
+import io.harness.pms.yaml.YamlNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -19,34 +23,56 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.TypeAlias;
 
+@OwnedBy(HarnessTeam.CDC)
 @Data
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SimpleVisitorHelper(helperClass = ArtifactSpecWrapperVisitorHelper.class)
-@TypeAlias("artifactSpecWrapper")
-public class ArtifactSpecWrapper implements Visitable {
+@TypeAlias("primaryArtifact")
+public class PrimaryArtifact implements Visitable {
+  @JsonProperty(YamlNode.UUID_FIELD_NAME)
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
+  @ApiModelProperty(hidden = true)
+  private String uuid;
+
   @NotNull @JsonProperty("type") ArtifactSourceType sourceType;
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
-  ArtifactConfig artifactConfig;
+  ArtifactConfig spec;
 
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   // Use Builder as Constructor then only external property(visible) will be filled.
   @Builder
-  public ArtifactSpecWrapper(ArtifactSourceType sourceType, ArtifactConfig artifactConfig) {
+  public PrimaryArtifact(String uuid, ArtifactSourceType sourceType, ArtifactConfig spec) {
+    this.uuid = uuid;
     this.sourceType = sourceType;
-    this.artifactConfig = artifactConfig;
+    this.spec = spec;
   }
 
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren visitableChildren = VisitableChildren.builder().build();
-    visitableChildren.add(YAMLFieldNameConstants.SPEC, artifactConfig);
+    visitableChildren.add(YAMLFieldNameConstants.SPEC, spec);
     return visitableChildren;
+  }
+
+  @Value
+  public static class PrimaryArtifactStepParameters {
+    String type;
+    ArtifactConfig spec;
+
+    public static PrimaryArtifactStepParameters fromPrimaryArtifact(PrimaryArtifact artifact) {
+      if (artifact == null) {
+        return null;
+      }
+      return new PrimaryArtifactStepParameters(
+          artifact.getSourceType() == null ? null : artifact.getSourceType().getDisplayName(), artifact.getSpec());
+    }
   }
 }

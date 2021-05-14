@@ -9,6 +9,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
@@ -21,6 +23,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
+@OwnedBy(HarnessTeam.CDP)
 public class HelmChartManifestTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
@@ -31,7 +34,7 @@ public class HelmChartManifestTest extends CategoryTest {
     HelmChartManifest original = HelmChartManifest.builder()
                                      .helmVersion(HelmVersion.V3)
                                      .skipResourceVersioning(ParameterField.createValueField(true))
-                                     .storeConfigWrapper(originalStoreConfig)
+                                     .store(originalStoreConfig)
                                      .commandFlags(Arrays.asList(HelmManifestCommandFlag.builder()
                                                                      .commandType(Version)
                                                                      .flag(ParameterField.createValueField("--version"))
@@ -46,7 +49,7 @@ public class HelmChartManifestTest extends CategoryTest {
         HelmChartManifest.builder()
             .helmVersion(HelmVersion.V2)
             .skipResourceVersioning(ParameterField.createValueField(false))
-            .storeConfigWrapper(overrideStoreConfig)
+            .store(overrideStoreConfig)
             .commandFlags(Arrays.asList(HelmManifestCommandFlag.builder()
                                             .commandType(Template)
                                             .flag(ParameterField.createValueField("--template"))
@@ -63,7 +66,7 @@ public class HelmChartManifestTest extends CategoryTest {
 
     assertThat(original.getHelmVersion()).isEqualTo(HelmVersion.V3);
     assertThat(original.getSkipResourceVersioning().getValue()).isTrue();
-    assertThat(original.getStoreConfigWrapper()).isEqualTo(originalStoreConfig);
+    assertThat(original.getStore()).isEqualTo(originalStoreConfig);
     assertThat(original.getCommandFlags().stream().map(HelmManifestCommandFlag::getCommandType))
         .containsExactlyInAnyOrder(Version, Fetch);
     assertThat(original.getCommandFlags().stream().map(HelmManifestCommandFlag::getFlag).map(ParameterField::getValue))
@@ -71,7 +74,7 @@ public class HelmChartManifestTest extends CategoryTest {
 
     assertThat(override.getHelmVersion()).isEqualTo(HelmVersion.V2);
     assertThat(override.getSkipResourceVersioning().getValue()).isFalse();
-    assertThat(override.getStoreConfigWrapper()).isEqualTo(overrideStoreConfig);
+    assertThat(override.getStore()).isEqualTo(overrideStoreConfig);
     assertThat(override.getCommandFlags().stream().map(HelmManifestCommandFlag::getCommandType))
         .containsExactlyInAnyOrder(Template, Fetch);
     assertThat(override.getCommandFlags().stream().map(HelmManifestCommandFlag::getFlag).map(ParameterField::getValue))
@@ -79,7 +82,7 @@ public class HelmChartManifestTest extends CategoryTest {
 
     assertThat(result.getHelmVersion()).isEqualTo(HelmVersion.V2);
     assertThat(result.getSkipResourceVersioning().getValue()).isFalse();
-    assertThat(result.getStoreConfigWrapper()).isEqualTo(overrideStoreConfig);
+    assertThat(result.getStore()).isEqualTo(overrideStoreConfig);
     assertThat(result.getCommandFlags().stream().map(HelmManifestCommandFlag::getCommandType))
         .containsExactlyInAnyOrder(Template, Fetch);
     assertThat(result.getCommandFlags().stream().map(HelmManifestCommandFlag::getFlag).map(ParameterField::getValue))
@@ -94,7 +97,7 @@ public class HelmChartManifestTest extends CategoryTest {
     HelmChartManifest original =
         HelmChartManifest.builder()
             .skipResourceVersioning(ParameterField.createValueField(true))
-            .storeConfigWrapper(storeConfig)
+            .store(storeConfig)
             .helmVersion(HelmVersion.V3)
             .commandFlags(Arrays.asList(HelmManifestCommandFlag.builder()
                                             .commandType(Template)

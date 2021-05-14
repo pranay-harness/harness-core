@@ -9,6 +9,7 @@ import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.Scope;
+import io.harness.exception.JsonSchemaValidationException;
 import io.harness.jackson.JsonNodeUtils;
 import io.harness.network.SafeHttpCall;
 import io.harness.plancreator.stages.parallel.ParallelStageElementConfig;
@@ -29,7 +30,9 @@ import io.harness.yaml.schema.beans.SchemaConstants;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
 import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
 import io.harness.yaml.schema.client.YamlSchemaClient;
+import io.harness.yaml.utils.JsonPipelineUtils;
 import io.harness.yaml.utils.YamlSchemaUtils;
+import io.harness.yaml.validator.YamlSchemaValidator;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -64,6 +67,7 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
   private final YamlSchemaProvider yamlSchemaProvider;
   private final YamlSchemaGenerator yamlSchemaGenerator;
   private final Map<String, YamlSchemaClient> yamlSchemaClientMapper;
+  private final YamlSchemaValidator yamlSchemaValidator;
 
   private final PmsSdkInstanceService pmsSdkInstanceService;
 
@@ -253,6 +257,21 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
 
   private YamlSchemaClient obtainYamlSchemaClient(String instanceName) {
     return yamlSchemaClientMapper.get(instanceName);
+  }
+
+  @Override
+  public void validateYamlSchema(String orgId, String projectId, String yaml) {
+    try {
+      JsonNode schema = getPipelineYamlSchema(projectId, orgId, Scope.PROJECT);
+      String schemaString = JsonPipelineUtils.writeJsonString(schema);
+      Set<String> errors = yamlSchemaValidator.validate(yaml, schemaString);
+      if (!errors.isEmpty()) {
+        throw new JsonSchemaValidationException(String.join("\n", errors));
+      }
+    } catch (Exception ex) {
+      log.error(ex.getMessage());
+      throw new JsonSchemaValidationException(ex.getMessage());
+    }
   }
 
   private void removeUnwantedNodes(JsonNode definitions) {

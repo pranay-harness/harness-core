@@ -5,6 +5,8 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.executionplan.CDPlanNodeType;
 import io.harness.cdng.executionplan.utils.PlanCreatorConfigUtils;
 import io.harness.cdng.pipeline.CDStage;
@@ -12,7 +14,7 @@ import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceUseFromStage;
 import io.harness.cdng.service.beans.ServiceYaml;
-import io.harness.cdng.service.steps.ServiceStep;
+import io.harness.cdng.service.steps.ServiceSpecStep;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
@@ -38,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.CDC)
 @Singleton
 @Slf4j
 public class ServiceStepPlanCreator
@@ -85,9 +88,8 @@ public class ServiceStepPlanCreator
             .uuid(serviceNodeUid)
             .name(PlanCreatorConstants.SERVICE_NODE_NAME)
             .identifier(serviceIdentifier)
-            .stepType(ServiceStep.STEP_TYPE)
-            .stepParameters(
-                ServiceStepParameters.builder().service(serviceConfig).serviceOverrides(serviceOverrides).build())
+            .stepType(ServiceSpecStep.STEP_TYPE)
+            .stepParameters(ServiceStepParameters.builder().build())
             .facilitatorObtainment(
                 FacilitatorObtainment.newBuilder()
                     .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK_CHAIN).build())
@@ -111,7 +113,7 @@ public class ServiceStepPlanCreator
       }
       //  Add validation for not chaining of stages
       CDStage previousStage = PlanCreatorConfigUtils.getGivenDeploymentStageFromPipeline(
-          context, serviceConfig.getUseFromStage().getStage().getValue());
+          context, serviceConfig.getUseFromStage().getStage());
       if (previousStage != null) {
         DeploymentStage deploymentStage = (DeploymentStage) previousStage;
         return serviceConfig.applyUseFromStage(deploymentStage.getServiceConfig());

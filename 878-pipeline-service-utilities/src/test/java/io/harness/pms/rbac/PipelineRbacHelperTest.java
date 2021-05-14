@@ -175,8 +175,8 @@ public class PipelineRbacHelperTest extends CategoryTest {
         .isInstanceOf(AccessDeniedException.class);
     assertThatThrownBy(() -> pipelineRbacHelper.throwAccessDeniedError(accessControlDTOS))
         .hasMessage(
-            "For Connectors with identifier null, these permissions are not there: [core_connector_access, core_connector_access, core_connector_access].\n"
-            + "For Service with identifier null, these permissions are not there: [core_service_access].\n");
+            "For Connectors, these permissions are not there: [core_connector_access, core_connector_access, core_connector_access].\n"
+            + "For Service, these permissions are not there: [core_service_access].\n");
   }
 
   @Test
