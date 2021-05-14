@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.PHOENIKX;
 import static io.harness.security.encryption.EncryptionType.VAULT;
 
@@ -15,6 +16,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretManagerConfig;
@@ -35,6 +37,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.security.LocalSecretManagerService;
 import software.wings.service.intfc.security.NGSecretManagerService;
 import software.wings.service.intfc.security.NGSecretServiceImpl;
 
@@ -45,6 +48,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
+@OwnedBy(PL)
 public class NGSecretServiceImplTest extends WingsBaseTest {
   @Mock private NGSecretManagerService ngSecretManagerService;
   @Mock private VaultEncryptorsRegistry vaultEncryptorsRegistry;
@@ -54,6 +58,8 @@ public class NGSecretServiceImplTest extends WingsBaseTest {
   @Mock private FileService fileService;
   @Mock private VaultEncryptor vaultEncryptor;
   @Mock private KmsEncryptor kmsEncryptor;
+  @Mock private GlobalEncryptDecryptClient globalEncryptDecryptClient;
+  @Mock private LocalSecretManagerService localSecretManagerService;
   private static final String ACCOUNT = "Account";
   private static final String IDENTIFIER = "Account";
   private NGSecretServiceImpl ngSecretService;
@@ -61,7 +67,8 @@ public class NGSecretServiceImplTest extends WingsBaseTest {
   @Before
   public void setup() {
     ngSecretService = spy(new NGSecretServiceImpl(vaultEncryptorsRegistry, kmsEncryptorsRegistry,
-        ngSecretManagerService, wingsPersistence, fileService, secretManagerConfigService));
+        ngSecretManagerService, wingsPersistence, fileService, secretManagerConfigService, globalEncryptDecryptClient,
+        localSecretManagerService));
     when(vaultEncryptorsRegistry.getVaultEncryptor(any())).thenReturn(vaultEncryptor);
     when(kmsEncryptorsRegistry.getKmsEncryptor(any())).thenReturn(kmsEncryptor);
   }
