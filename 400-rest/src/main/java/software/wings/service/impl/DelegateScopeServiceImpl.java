@@ -17,6 +17,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
+import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateScope;
 import io.harness.delegate.beans.DelegateScope.DelegateScopeKeys;
 import io.harness.eraro.ErrorCode;
@@ -160,8 +161,11 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
 
   private void ensureScopeSafeToDelete(String accountId, DelegateScope delegateScope) {
     String delegateScopeId = delegateScope.getUuid();
-    List<Delegate> delegates =
-        persistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, accountId).asList();
+    List<Delegate> delegates = persistence.createQuery(Delegate.class)
+                                   .filter(DelegateKeys.accountId, accountId)
+                                   .field(DelegateKeys.status)
+                                   .notEqual(DelegateInstanceStatus.DELETED)
+                                   .asList();
     List<String> delegateNames = delegates.stream()
                                      .filter(delegate
                                          -> (isNotEmpty(delegate.getIncludeScopes())

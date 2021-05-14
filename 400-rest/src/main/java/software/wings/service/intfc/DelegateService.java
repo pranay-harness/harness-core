@@ -109,9 +109,11 @@ public interface DelegateService extends OwnedByAccount {
       String hostname, String delegateGroupName, String delegateProfile) throws IOException;
   Delegate add(Delegate delegate);
 
-  void delete(String accountId, String delegateId);
+  void delete(String accountId, String delegateId, boolean forceDelete);
 
   void retainOnlySelectedDelegatesAndDeleteRest(String accountId, List<String> delegatesToRetain);
+
+  void deleteDelegateGroup(String accountId, String delegateGroupId, boolean forceDelete);
 
   DelegateRegisterResponse register(@Valid Delegate delegate);
 
