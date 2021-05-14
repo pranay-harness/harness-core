@@ -138,6 +138,7 @@ import io.harness.perpetualtask.PerpetualTaskServiceModule;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
+import io.harness.remote.client.ClientMode;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.secretmanagers.SecretManagerConfigService;
@@ -1305,7 +1306,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(new CVNextGenCommonsServiceModule());
     try {
       install(new ConnectorResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
-          configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+          configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId(), ClientMode.PRIVILEGED));
     } catch (Exception ex) {
       log.info("Could not create the connector resource client module", ex);
     }
