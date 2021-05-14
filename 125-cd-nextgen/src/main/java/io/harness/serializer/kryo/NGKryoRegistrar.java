@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.advisers.RollbackCustomStepParameters;
-import io.harness.cdng.artifact.bean.ArtifactSpecWrapper;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSource;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSetWrapper;
@@ -12,6 +11,7 @@ import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSets;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.EcrArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.GcrArtifactConfig;
+import io.harness.cdng.artifact.bean.yaml.PrimaryArtifact;
 import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
 import io.harness.cdng.environment.EnvironmentOutcome;
@@ -89,7 +89,6 @@ import io.harness.cdng.service.beans.ServiceOutcome.VariablesWrapperOutcome;
 import io.harness.cdng.service.beans.ServiceUseFromStage;
 import io.harness.cdng.service.beans.ServiceUseFromStage.Overrides;
 import io.harness.cdng.service.beans.StageOverridesConfig;
-import io.harness.cdng.service.steps.ServiceStep.ServiceStepPassThroughData;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchOutcome;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchParameters;
@@ -139,7 +138,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(ManifestFetchParameters.class, 8053);
     kryo.register(ShellScriptStepInfo.class, 8055);
     kryo.register(K8sStepPassThroughData.class, 8056);
-    kryo.register(ServiceStepPassThroughData.class, 8057);
 
     // Starting using 8100 series
     kryo.register(DeploymentStage.class, 8100);
@@ -148,7 +146,7 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(ServiceDefinition.class, 8103);
     kryo.register(ManifestConfig.class, 8104);
     kryo.register(K8sDirectInfrastructureOutcome.class, 8105);
-    kryo.register(ArtifactSpecWrapper.class, 8106);
+    kryo.register(PrimaryArtifact.class, 8106);
     kryo.register(EnvironmentOutcome.class, 8107);
     kryo.register(RollbackOptionalChildChainStepParameters.class, 8108);
     kryo.register(RollbackNode.class, 8109);

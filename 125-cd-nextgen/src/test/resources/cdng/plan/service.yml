@@ -1,0 +1,221 @@
+stageOverrides:
+  useManifestOverrideSets:
+    - mo1
+  manifests:
+    - manifest:
+        identifier: m1
+        spec:
+          store:
+            type: Github
+            spec:
+              connectorRef: githubwings
+              gitFetchType: Branch
+              repoName: https://github.com/wings-software/sample-k8s-manifests.git
+              paths:
+                - random2
+                - random4
+              branch: master
+          skipResourceVersioning: true
+        type: K8sManifest
+  useArtifactOverrideSets:
+    - ao1
+  artifacts:
+    primary:
+      spec:
+        connectorRef: docker_public1
+        imagePath: library/nginx
+        tag: latest
+      type: Dockerhub
+    sidecars:
+      - sidecar:
+          spec:
+            connectorRef: docker_public
+            imagePath: library/fedora
+            tag: "33"
+          identifier: sc1
+          type: Dockerhub
+  useVariableOverrideSets:
+    - vo1
+  variables:
+    - name: v4
+      type: String
+      value: val4
+serviceDefinition:
+  type: Kubernetes
+  spec:
+    manifestOverrideSets:
+      - overrideSet:
+          identifier: mo1
+          manifests:
+            - manifest:
+                identifier: m1
+                spec:
+                  store:
+                    type: Github
+                    spec:
+                      connectorRef: githubwings
+                      gitFetchType: Branch
+                      repoName: https://github.com/wings-software/sample-k8s-manifests.git
+                      paths:
+                        - random2
+                        - random3
+                      branch: master
+                  skipResourceVersioning: true
+                type: K8sManifest
+            - manifest:
+                identifier: m3
+                spec:
+                  store:
+                    type: Github
+                    spec:
+                      connectorRef: githubwings
+                      gitFetchType: Branch
+                      repoName: https://github.com/wings-software/sample-k8s-manifests.git
+                      paths:
+                        - random4
+                        - random3
+                      branch: master
+                  skipResourceVersioning: true
+                type: K8sManifest
+      - overrideSet:
+          identifier: mo2
+          manifests:
+            - manifest:
+                identifier: m2
+                spec:
+                  store:
+                    type: Github
+                    spec:
+                      connectorRef: githubwings
+                      gitFetchType: Branch
+                      repoName: https://github.com/wings-software/sample-k8s-manifests.git
+                      paths:
+                        - random2
+                        - random3
+                      branch: master
+                  skipResourceVersioning: true
+                type: K8sManifest
+            - manifest:
+                identifier: m3
+                spec:
+                  store:
+                    type: Github
+                    spec:
+                      connectorRef: githubwings
+                      gitFetchType: Branch
+                      repoName: https://github.com/wings-software/sample-k8s-manifests.git
+                      paths:
+                        - random4
+                        - random3
+                      branch: master
+                  skipResourceVersioning: true
+                type: K8sManifest
+    artifactOverrideSets:
+      - overrideSet:
+          identifier: ao1
+          artifacts:
+            primary:
+              spec:
+                connectorRef: docker_public1
+                imagePath: library/nginx
+                tag: stable
+              type: Dockerhub
+      - overrideSet:
+          identifier: ao2
+          artifacts:
+            sidecars:
+              - sidecar:
+                  spec:
+                    connectorRef: docker_public
+                    imagePath: library/fedora
+                    tag: "34"
+                  identifier: sc1
+                  type: Dockerhub
+              - sidecar:
+                  spec:
+                    connectorRef: docker_public
+                    imagePath: library/fedora
+                    tag: "35"
+                  identifier: sc3
+                  type: Dockerhub
+    variableOverrideSets:
+      - overrideSet:
+          identifier: vo1
+          variables:
+            - name: v1
+              type: String
+              value: val1changed
+            - name: v2
+              type: Secret
+              value: account.s1
+      - overrideSet:
+          identifier: vo2
+          variables:
+            - name: v3
+              type: String
+              value: val1changed
+            - name: v2
+              type: Secret
+              value: account.s1
+    manifests:
+      - manifest:
+          identifier: m1
+          spec:
+            store:
+              type: Github
+              spec:
+                connectorRef: githubwings
+                gitFetchType: Branch
+                repoName: https://github.com/wings-software/sample-k8s-manifests.git
+                paths:
+                  - random
+                  - random2
+                branch: master
+            skipResourceVersioning: true
+          type: K8sManifest
+      - manifest:
+          identifier: m2
+          spec:
+            store:
+              type: Github
+              spec:
+                connectorRef: githubwings
+                gitFetchType: Branch
+                repoName: https://github.com/wings-software/sample-k8s-manifests.git
+                paths:
+                  - random
+                branch: master
+          type: Values
+    artifacts:
+      sidecars:
+        - sidecar:
+            spec:
+              connectorRef: docker_public
+              imagePath: library/fedora
+              tag: "35"
+            identifier: sc1
+            type: Dockerhub
+        - sidecar:
+            spec:
+              connectorRef: docker_public1
+              imagePath: library/nginx
+              tag: mainline
+            identifier: sc2
+            type: Dockerhub
+      primary:
+        spec:
+          connectorRef: docker_public1
+          imagePath: library/nginx
+          tag: stable-perl
+        type: Dockerhub
+    variables:
+      - name: v1
+        type: String
+        value: val1
+      - name: v2
+        type: Secret
+        value: account.s2
+      - name: v3
+        type: Number
+        value: 12345
+serviceRef: nginx

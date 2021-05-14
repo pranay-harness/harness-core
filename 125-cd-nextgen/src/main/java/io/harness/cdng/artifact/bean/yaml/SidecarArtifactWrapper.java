@@ -1,6 +1,7 @@
-package io.harness.cdng.artifact.bean;
+package io.harness.cdng.artifact.bean.yaml;
 
-import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.visitor.helpers.artifact.SidecarWrapperArtifactVisitorHelper;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -12,6 +13,7 @@ import lombok.Getter;
 import lombok.Value;
 import org.springframework.data.annotation.TypeAlias;
 
+@OwnedBy(HarnessTeam.CDC)
 @Value
 @Builder
 @SimpleVisitorHelper(helperClass = SidecarWrapperArtifactVisitorHelper.class)

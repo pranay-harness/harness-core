@@ -169,7 +169,7 @@ public class TerraformStepHelper {
     Map<String, String> commitIdMap = terraformTaskNGResponse.getCommitIdForConfigFilesMap();
     builder
         .configFiles(getStoreConfigAtCommitId(
-            configuration.getConfigFiles().getStore().getStoreConfig(), commitIdMap.get(TF_CONFIG_FILES)))
+            configuration.getConfigFiles().getStore().getSpec(), commitIdMap.get(TF_CONFIG_FILES)))
         .varFileConfigs(toTerraformVarFileConfig(configuration.getVarFiles(), terraformTaskNGResponse, ambiance))
         .backendConfig(getBackendConfig(configuration.getBackendConfig()))
         .environmentVariables(getEnvironmentVariablesMap(configuration.getEnvironmentVariables()))
@@ -324,9 +324,9 @@ public class TerraformStepHelper {
 
     Map<String, String> commitIdMap = response.getCommitIdForConfigFilesMap();
     builder
-        .configFiles(getStoreConfigAtCommitId(
-            spec.getConfigFiles().getStore().getStoreConfig(), commitIdMap.get(TF_CONFIG_FILES))
-                         .toGitStoreConfigDTO())
+        .configFiles(
+            getStoreConfigAtCommitId(spec.getConfigFiles().getStore().getSpec(), commitIdMap.get(TF_CONFIG_FILES))
+                .toGitStoreConfigDTO())
         .varFileConfigs(toTerraformVarFileConfig(spec.getVarFiles(), response, ambiance))
         .backendConfig(getBackendConfig(spec.getBackendConfig()))
         .environmentVariables(getEnvironmentVariablesMap(spec.getEnvironmentVariables()))
@@ -442,7 +442,7 @@ public class TerraformStepHelper {
             StoreConfigWrapper storeConfigWrapper = ((RemoteTerraformVarFileSpec) spec).getStoreConfigWrapper();
             if (storeConfigWrapper != null) {
               i++;
-              StoreConfig storeConfig = storeConfigWrapper.getStoreConfig();
+              StoreConfig storeConfig = storeConfigWrapper.getSpec();
               GitFetchFilesConfig gitFetchFilesConfig =
                   getGitFetchFilesConfig(storeConfig, ambiance, String.format(TerraformStepHelper.TF_VAR_FILES, i));
               varFileInfo.add(RemoteTerraformVarFileInfo.builder().gitFetchFilesConfig(gitFetchFilesConfig).build());
@@ -473,7 +473,7 @@ public class TerraformStepHelper {
             StoreConfigWrapper storeConfigWrapper = ((RemoteTerraformVarFileSpec) spec).getStoreConfigWrapper();
             if (storeConfigWrapper != null) {
               i++;
-              StoreConfig storeConfig = storeConfigWrapper.getStoreConfig();
+              StoreConfig storeConfig = storeConfigWrapper.getSpec();
               GitStoreConfigDTO gitStoreConfigDTO = getStoreConfigAtCommitId(
                   storeConfig, response.getCommitIdForConfigFilesMap().get(String.format(TF_VAR_FILES, i)))
                                                         .toGitStoreConfigDTO();
