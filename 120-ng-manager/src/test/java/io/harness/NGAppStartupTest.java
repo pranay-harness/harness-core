@@ -22,8 +22,7 @@ import java.net.InetSocketAddress;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Response;
 import org.glassfish.jersey.client.JerseyClientBuilder;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -57,7 +56,7 @@ public class NGAppStartupTest extends CategoryTest {
     return String.format("mongodb://%s:%s/ng-harness", addr.getHost(), addr.getPort());
   }
 
-  @BeforeClass
+  //  @BeforeClass
   public static void beforeClass() {
     MONGO_SERVER = startMongoServer();
     //        initializeDefaultInstance(any());
@@ -67,7 +66,7 @@ public class NGAppStartupTest extends CategoryTest {
     SUPPORT.before();
   }
 
-  @AfterClass
+  //  @AfterClass
   public static void afterClass() {
     SUPPORT.after();
     stopMongoServer();
@@ -76,6 +75,7 @@ public class NGAppStartupTest extends CategoryTest {
   @Test
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
+  @Ignore("Get covered by contract testing")
   public void testAppStartup() {
     final Client client = new JerseyClientBuilder().build();
     final Response response =
