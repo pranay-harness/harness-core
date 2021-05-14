@@ -17,6 +17,7 @@ import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.plan.creation.PlanCreatorMergeService;
 import io.harness.pms.rbac.validator.PipelineRbacService;
 
@@ -42,6 +43,7 @@ public class PipelineExecuteHelper {
   private final ValidateAndMergeHelper validateAndMergeHelper;
   private final PipelineRbacService pipelineRbacServiceImpl;
   private final PrincipalInfoHelper principalInfoHelper;
+  private final PMSYamlSchemaService pmsYamlSchemaService;
 
   public PlanExecution runPipelineWithInputSetPipelineYaml(@NotNull String accountId, @NotNull String orgIdentifier,
       @NotNull String projectIdentifier, @NotNull String pipelineIdentifier, String inputSetPipelineYaml,
@@ -64,6 +66,9 @@ public class PipelineExecuteHelper {
       pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), inputSetPipelineYaml, true);
       executionMetadataBuilder.setInputSetYaml(inputSetPipelineYaml);
     }
+
+    pmsYamlSchemaService.validateYamlSchema(orgIdentifier, projectIdentifier, pipelineYaml);
+
     pipelineRbacServiceImpl.extractAndValidateStaticallyReferredEntities(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml);
     executionMetadataBuilder.setPipelineIdentifier(pipelineIdentifier);
@@ -90,6 +95,9 @@ public class PipelineExecuteHelper {
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences);
     String pipelineYaml =
         MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), mergedRuntimeInputYaml, true);
+
+    pmsYamlSchemaService.validateYamlSchema(orgIdentifier, projectIdentifier, pipelineYaml);
+
     pipelineRbacServiceImpl.extractAndValidateStaticallyReferredEntities(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml);
 

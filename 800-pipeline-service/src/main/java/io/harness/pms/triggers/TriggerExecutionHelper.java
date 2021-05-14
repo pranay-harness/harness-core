@@ -37,6 +37,7 @@ import io.harness.pms.contracts.triggers.Type;
 import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.plan.execution.PipelineExecuteHelper;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.product.ci.scm.proto.PullRequest;
@@ -58,6 +59,7 @@ public class TriggerExecutionHelper {
   private final PipelineExecuteHelper pipelineExecuteHelper;
   private final PlanExecutionService planExecutionService;
   private final PMSExecutionService pmsExecutionService;
+  private final PMSYamlSchemaService pmsYamlSchemaService;
 
   public PlanExecution resolveRuntimeInputAndSubmitExecutionRequest(
       TriggerDetails triggerDetails, TriggerPayload triggerPayload) {
@@ -106,6 +108,10 @@ public class TriggerExecutionHelper {
               MergeHelper.mergeInputSetIntoPipeline(pipelineYamlBeforeMerge, sanitizedRuntimeInputYaml, true);
         }
       }
+
+      pmsYamlSchemaService.validateYamlSchema(
+          ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(), pipelineYaml);
+
       executionMetaDataBuilder.setYaml(pipelineYaml);
       executionMetaDataBuilder.setPrincipalInfo(
           ExecutionPrincipalInfo.newBuilder().setShouldValidateRbac(false).build());
