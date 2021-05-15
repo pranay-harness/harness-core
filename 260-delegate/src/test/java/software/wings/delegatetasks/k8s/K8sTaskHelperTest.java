@@ -1180,9 +1180,22 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     assertThat(manifestFiles.get(0).getFileName()).isEqualTo("file-1");
 
     assertThat(K8sTaskHelper.manifestFilesFromGitFetchFilesResult(GitFetchFilesResult.builder().build(), "")).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void manifestFilesFromGitFetchFilesResult_EmptyFiles() {
     assertThat(K8sTaskHelper.manifestFilesFromGitFetchFilesResult(
                    GitFetchFilesResult.builder().files(emptyList()).build(), ""))
         .isEmpty();
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void manifestFilesFromGitFetchFilesResult_NullFiles() {
+    assertThat(K8sTaskHelper.manifestFilesFromGitFetchFilesResult(GitFetchFilesResult.builder().build(), "")).isEmpty();
   }
 
   @Test
