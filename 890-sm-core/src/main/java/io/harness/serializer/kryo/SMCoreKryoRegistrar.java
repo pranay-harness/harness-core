@@ -1,4 +1,5 @@
 package io.harness.serializer.kryo;
+
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.SecretChangeLog;
@@ -20,6 +21,7 @@ import io.harness.exception.SecretManagementException;
 import io.harness.helpers.ext.vault.SSHVaultAuthResult;
 import io.harness.helpers.ext.vault.SecretEngineSummary;
 import io.harness.helpers.ext.vault.VaultAppRoleLoginResult;
+import io.harness.ng.core.entities.NGEncryptedData;
 import io.harness.serializer.KryoRegistrar;
 
 import software.wings.beans.AwsSecretsManagerConfig;
@@ -71,5 +73,6 @@ public class SMCoreKryoRegistrar implements KryoRegistrar {
     kryo.register(BaseVaultConfig.class, 15014);
     kryo.register(ValidateSecretManagerConfigurationTaskParameters.class, 15015);
     kryo.register(ValidateSecretManagerConfigurationTaskResponse.class, 15016);
+    kryo.register(NGEncryptedData.class, 15017);
   }
 }

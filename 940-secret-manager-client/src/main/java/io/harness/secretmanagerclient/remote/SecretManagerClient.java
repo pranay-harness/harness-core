@@ -3,6 +3,7 @@ package io.harness.secretmanagerclient.remote;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.rest.RestResponse;
@@ -13,6 +14,7 @@ import io.harness.secretmanagerclient.dto.SecretManagerMetadataDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerMetadataRequestDTO;
 import io.harness.serializer.kryo.KryoRequest;
 
+import java.util.List;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
@@ -28,15 +30,21 @@ public interface SecretManagerClient {
   String SECRET_MANAGERS_API = "ng/secret-managers";
 
   /*
-  GET EncryptedData -> this is to be used for migration purpose
-  In case of secret files -> value field will be populated after downloading from file service
-   */
+ GET EncryptedData -> this is to be used for migration purpose
+ In case of secret files -> value field will be populated after downloading from file service
+  */
   @GET(SECRETS_API + "/migration/{identifier}")
   Call<RestResponse<EncryptedDataMigrationDTO>> getEncryptedDataMigrationDTO(
       @Path(value = "identifier") String identifier,
       @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
+
+  // save secret
+  @POST(SECRETS_API) Call<RestResponse<Boolean>> saveSecret(@Body EncryptedDataMigrationDTO encryptedData);
+
+  // update secret
+  @PUT(SECRETS_API) Call<RestResponse<Boolean>> updateSecret(@Body EncryptedDataMigrationDTO encryptedData);
 
   // delete secret
   @DELETE(SECRETS_API + "/{identifier}")
@@ -65,6 +73,21 @@ public interface SecretManagerClient {
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Body SecretManagerConfigUpdateDTO secretManagerConfigUpdateDTO);
+
+  // list secret managers
+  @GET(SECRET_MANAGERS_API)
+  Call<RestResponse<List<SecretManagerConfigDTO>>> listSecretManagers(
+      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(value = NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Query(value = NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
+
+  // list secret managers
+  @GET(SECRET_MANAGERS_API)
+  Call<RestResponse<List<SecretManagerConfigDTO>>> listSecretManagers(
+      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(value = NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Query(value = NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Query(value = NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers);
 
   // get secret manager
   @GET(SECRET_MANAGERS_API + "/{identifier}")

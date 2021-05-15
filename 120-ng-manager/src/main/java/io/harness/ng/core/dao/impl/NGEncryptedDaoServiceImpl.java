@@ -37,7 +37,8 @@ public class NGEncryptedDaoServiceImpl implements NGEncryptedDataDao {
   @Override
   public boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
     return encryptedDataRepository
-        .deleteNGEncryptedDataByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(
-            accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+               .deleteNGEncryptedDataByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(
+                   accountIdentifier, orgIdentifier, projectIdentifier, identifier)
+        > 0;
   }
 }

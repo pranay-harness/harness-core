@@ -9,6 +9,7 @@ import io.harness.ng.core.entities.SampleEncryptableSettingImplementation;
 import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
+import io.harness.secretmanagerclient.dto.EncryptedDataMigrationDTO;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigUpdateDTO;
 import io.harness.secretmanagerclient.dto.LocalConfigDTO;
@@ -56,5 +57,7 @@ public class SecretManagerClientKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsKmsIamCredentialConfig.class, 543296);
     kryo.register(AwsKmsManualCredentialConfig.class, 543297);
     kryo.register(AwsKmsStsCredentialConfig.class, 543298);
+
+    kryo.register(EncryptedDataMigrationDTO.class, 549966);
   }
 }

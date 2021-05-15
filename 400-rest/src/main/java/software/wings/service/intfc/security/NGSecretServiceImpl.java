@@ -2,15 +2,10 @@ package software.wings.service.intfc.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.delegate.beans.FileBucket.CONFIGS;
-import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
-import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
-import static io.harness.exception.WingsException.USER;
 import static io.harness.security.SimpleEncryption.CHARSET;
 import static io.harness.security.encryption.EncryptionType.GCP_KMS;
 import static io.harness.security.encryption.EncryptionType.KMS;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
-
-import static software.wings.service.intfc.security.NGSecretManagerService.isReadOnlySecretManager;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -18,13 +13,13 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.SecretManagerConfig;
-import io.harness.encryptors.VaultEncryptorsRegistry;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.SecretManagementException;
+import io.harness.exception.WingsException;
 import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
 import io.harness.secretmanagerclient.NGMetadata.NGMetadataKeys;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata.NGSecretManagerMetadataKeys;
 import io.harness.secretmanagerclient.dto.EncryptedDataMigrationDTO;
+import io.harness.secrets.SecretsFileService;
 import io.harness.security.encryption.EncryptionType;
 
 import software.wings.dl.WingsPersistence;
@@ -41,6 +36,9 @@ import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/*
+  This file will be deleted after migration
+ */
 @OwnedBy(PL)
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -56,7 +54,7 @@ public class NGSecretServiceImpl implements NGSecretService {
   private static final String PROJECT_IDENTIFIER_KEY =
       EncryptedDataKeys.ngMetadata + "." + NGSecretManagerMetadataKeys.projectIdentifier;
 
-  private final VaultEncryptorsRegistry vaultRegistry;
+  private final SecretsFileService secretFileService;
   private final NGSecretManagerService ngSecretManagerService;
   private final WingsPersistence wingsPersistence;
   private final FileService fileService;
@@ -76,61 +74,79 @@ public class NGSecretServiceImpl implements NGSecretService {
   }
 
   @Override
-  public boolean deleteSecretText(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
-    // Get secret text to delete from DB
-    Optional<EncryptedData> encryptedDataOptional =
-        get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-
-    if (encryptedDataOptional.isPresent()) {
-      EncryptedData encryptedData = encryptedDataOptional.get();
-      NGEncryptedDataMetadata metadata = encryptedData.getNgMetadata();
-
-      // Get secret manager with which it was encrypted
-      Optional<SecretManagerConfig> secretManagerConfigOptional = ngSecretManagerService.get(
-          accountIdentifier, orgIdentifier, projectIdentifier, metadata.getSecretManagerIdentifier(), true);
-      if (secretManagerConfigOptional.isPresent()) {
-        if (isReadOnlySecretManager(secretManagerConfigOptional.get())
-            && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
-          throw new SecretManagementException(
-              SECRET_MANAGEMENT_ERROR, "Cannot delete an Inline secret in read only secret manager", USER);
-        }
-        // if  secret text was created inline (not referenced), delete the secret in secret manager also
-        if (!Optional.ofNullable(encryptedData.getPath()).isPresent()) {
-          deleteSecretInSecretManager(accountIdentifier, encryptedData, secretManagerConfigOptional.get());
-        }
-        if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE) {
-          switch (secretManagerConfigOptional.get().getEncryptionType()) {
-            case LOCAL:
-            case GCP_KMS:
-            case KMS:
-              fileService.deleteFile(String.valueOf(encryptedData.getEncryptedValue()), CONFIGS);
-              break;
-            default:
-          }
-        }
-        // delete secret text finally in db
-        return wingsPersistence.delete(EncryptedData.class, encryptedData.getUuid());
+  public boolean save(EncryptedDataMigrationDTO encryptedData) {
+    Optional<EncryptedData> encryptedDataOptional = get(encryptedData.getAccountIdentifier(),
+        encryptedData.getOrgIdentifier(), encryptedData.getProjectIdentifier(), encryptedData.getIdentifier());
+    if (!encryptedDataOptional.isPresent()) {
+      EncryptedData existing = EncryptedData.builder().build();
+      existing.setAccountId(encryptedData.getAccountIdentifier());
+      Optional<SecretManagerConfig> secretManagerConfig =
+          ngSecretManagerService.get(encryptedData.getAccountIdentifier(), encryptedData.getOrgIdentifier(),
+              encryptedData.getProjectIdentifier(), encryptedData.getKmsId(), true);
+      if (!secretManagerConfig.isPresent()) {
+        return false;
       }
+      existing.setKmsId(secretManagerConfig.get().getUuid());
+      existing.setEncryptionType(encryptedData.getEncryptionType());
+      existing.setNgMetadata(NGEncryptedDataMetadata.builder()
+                                 .accountIdentifier(encryptedData.getAccountIdentifier())
+                                 .orgIdentifier(encryptedData.getOrgIdentifier())
+                                 .projectIdentifier(encryptedData.getProjectIdentifier())
+                                 .identifier(encryptedData.getIdentifier())
+                                 .secretManagerIdentifier(encryptedData.getKmsId())
+                                 .build());
+      existing.setName(encryptedData.getName());
+      existing.setBase64Encoded(encryptedData.isBase64Encoded());
+      existing.setEncryptionKey(encryptedData.getEncryptionKey());
+      existing.setType(encryptedData.getType());
+      existing.setPath(encryptedData.getPath());
+      if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
+          && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())
+          && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
+        String fileId = secretFileService.createFile(
+            encryptedData.getName(), encryptedData.getAccountIdentifier(), encryptedData.getEncryptedValue());
+        existing.setEncryptedValue(fileId.toCharArray());
+      } else {
+        existing.setEncryptedValue(encryptedData.getEncryptedValue());
+      }
+      wingsPersistence.save(existing);
+      return true;
     }
-    throw new InvalidRequestException("No such secret found", INVALID_REQUEST, USER);
+    throw new InvalidRequestException(
+        String.format("Secret with identifier %s already exists in this scope", encryptedData.getIdentifier()));
   }
 
-  public void deleteSecretInSecretManager(
-      String accountIdentifier, EncryptedData encryptedData, SecretManagerConfig secretManagerConfig) {
-    switch (secretManagerConfig.getEncryptionType()) {
-      case VAULT:
-        vaultRegistry.getVaultEncryptor(secretManagerConfig.getEncryptionType())
-            .deleteSecret(accountIdentifier, encryptedData, secretManagerConfig);
-        return;
-      case LOCAL:
-      case GCP_KMS:
-      case KMS:
-        return;
-      default:
-        throw new UnsupportedOperationException(
-            "Encryption type " + secretManagerConfig.getEncryptionType() + " is not supported in next gen");
+  @Override
+  public boolean update(EncryptedDataMigrationDTO encryptedData) {
+    Optional<EncryptedData> encryptedDataOptional = get(encryptedData.getAccountIdentifier(),
+        encryptedData.getOrgIdentifier(), encryptedData.getProjectIdentifier(), encryptedData.getIdentifier());
+    if (encryptedDataOptional.isPresent()) {
+      EncryptedData existing = encryptedDataOptional.get();
+      existing.setBase64Encoded(encryptedData.isBase64Encoded());
+      existing.setEncryptionKey(encryptedData.getEncryptionKey());
+      existing.setPath(encryptedData.getPath());
+      existing.setName(encryptedData.getName());
+      if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
+          && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())
+          && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
+        String fileId = secretFileService.createFile(
+            encryptedData.getName(), encryptedData.getAccountIdentifier(), encryptedData.getEncryptedValue());
+        if (Optional.ofNullable(existing.getEncryptedValue()).isPresent()) {
+          try {
+            secretFileService.deleteFile(existing.getEncryptedValue());
+          } catch (Exception exception) {
+            // ignore
+          }
+        }
+        existing.setEncryptedValue(fileId.toCharArray());
+      } else {
+        existing.setEncryptedValue(encryptedData.getEncryptedValue());
+      }
+      wingsPersistence.save(existing);
+      return true;
     }
+    throw new InvalidRequestException(
+        String.format("Secret with identifier %s not found in this scope", encryptedData.getIdentifier()));
   }
 
   @Override
@@ -143,7 +159,11 @@ public class NGSecretServiceImpl implements NGSecretService {
       if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
           && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())
           && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
-        setEncryptedValueToFileContent(encryptedData);
+        try {
+          setEncryptedValueToFileContent(encryptedData);
+        } catch (WingsException exception) {
+          // ignore can't do anything if file is not present
+        }
       }
       return Optional.of(EncryptedDataMigrationDTO.builder()
                              .uuid(encryptedData.getUuid())
@@ -164,7 +184,28 @@ public class NGSecretServiceImpl implements NGSecretService {
     return Optional.empty();
   }
 
-  private void setEncryptedValueToFileContent(EncryptedData encryptedData) {
+  @Override
+  public boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    Optional<EncryptedData> encryptedDataOptional =
+        get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+
+    if (encryptedDataOptional.isPresent()) {
+      EncryptedData encryptedData = encryptedDataOptional.get();
+      if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
+          && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()
+          && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())) {
+        try {
+          secretFileService.deleteFile(encryptedData.getEncryptedValue());
+        } catch (Exception exception) {
+          // ignore
+        }
+        return wingsPersistence.delete(EncryptedData.class, encryptedData.getUuid());
+      }
+    }
+    return false;
+  }
+
+  public void setEncryptedValueToFileContent(EncryptedData encryptedData) {
     ByteArrayOutputStream os = new ByteArrayOutputStream();
     fileService.downloadToStream(String.valueOf(encryptedData.getEncryptedValue()), os, CONFIGS);
     encryptedData.setEncryptedValue(CHARSET.decode(ByteBuffer.wrap(os.toByteArray())).array());

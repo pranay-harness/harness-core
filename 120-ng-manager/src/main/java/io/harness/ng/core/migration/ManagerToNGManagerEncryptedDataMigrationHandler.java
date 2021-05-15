@@ -156,4 +156,25 @@ public class ManagerToNGManagerEncryptedDataMigrationHandler implements Handler<
         .type(encryptedDataMigrationDTO.getType())
         .build();
   }
+
+  public static EncryptedDataMigrationDTO toEncryptedDataMigrationDTO(NGEncryptedData encryptedData) {
+    if (encryptedData == null) {
+      return null;
+    }
+    return EncryptedDataMigrationDTO.builder()
+        .uuid(encryptedData.getUuid())
+        .accountIdentifier(encryptedData.getAccountIdentifier())
+        .orgIdentifier(encryptedData.getOrgIdentifier())
+        .projectIdentifier(encryptedData.getProjectIdentifier())
+        .identifier(encryptedData.getIdentifier())
+        .name(encryptedData.getName())
+        .encryptionType(encryptedData.getEncryptionType())
+        .kmsId(encryptedData.getSecretManagerIdentifier())
+        .encryptionKey(encryptedData.getEncryptionKey())
+        .encryptedValue(encryptedData.getEncryptedValue())
+        .path(encryptedData.getPath())
+        .base64Encoded(encryptedData.isBase64Encoded())
+        .type(encryptedData.getType())
+        .build();
+  }
 }

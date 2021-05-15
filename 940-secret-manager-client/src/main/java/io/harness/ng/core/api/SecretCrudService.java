@@ -13,22 +13,9 @@ import io.harness.secretmanagerclient.SecretType;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
-import okhttp3.MediaType;
-import okhttp3.RequestBody;
 
 @OwnedBy(PL)
 public interface SecretCrudService {
-  default RequestBody getRequestBody(String value) {
-    if (!Optional.ofNullable(value).isPresent()) {
-      return null;
-    }
-    return RequestBody.create(MediaType.parse("text/plain"), value);
-  }
-
-  default RequestBody getRequestBody(byte[] bytes) {
-    return RequestBody.create(MediaType.parse("text/plain"), bytes);
-  }
-
   Boolean validateTheIdentifierIsUnique(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 
