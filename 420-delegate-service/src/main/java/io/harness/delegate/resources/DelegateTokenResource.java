@@ -85,7 +85,6 @@ public class DelegateTokenResource {
   @GET
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = MANAGE_DELEGATES)
   public RestResponse<List<DelegateTokenDetails>> getDelegateTokens(@QueryParam("accountId") @NotNull String accountId,
       @QueryParam("status") DelegateTokenStatus status, @QueryParam("tokenName") String tokenName) {
     return new RestResponse<>(delegateTokenService.getDelegateTokens(accountId, status, tokenName));

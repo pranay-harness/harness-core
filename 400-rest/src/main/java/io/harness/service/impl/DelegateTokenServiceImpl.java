@@ -20,7 +20,9 @@ import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.account.AccountCrudObserver;
 
 import com.google.inject.Inject;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.FindAndModifyOptions;
@@ -79,10 +81,13 @@ public class DelegateTokenServiceImpl implements DelegateTokenService, AccountCr
                                            .equal(accountId)
                                            .field(DelegateTokenKeys.name)
                                            .equal(tokenName);
-    DelegateToken originalDelegateToken = filterQuery.get();
-    UpdateOperations<DelegateToken> updateOperations = persistence.createUpdateOperations(DelegateToken.class)
-                                                           .set(DelegateTokenKeys.status, DelegateTokenStatus.REVOKED);
 
+    DelegateToken originalDelegateToken = filterQuery.get();
+    UpdateOperations<DelegateToken> updateOperations =
+        persistence.createUpdateOperations(DelegateToken.class)
+            .set(DelegateTokenKeys.status, DelegateTokenStatus.REVOKED)
+            .set(DelegateTokenKeys.validUntil,
+                Date.from(OffsetDateTime.now().plusDays(DelegateToken.TTL.toDays()).toInstant()));
     DelegateToken updatedDelegateToken =
         persistence.findAndModify(filterQuery, updateOperations, new FindAndModifyOptions());
     auditServiceHelper.reportForAuditingUsingAccountId(
@@ -129,7 +134,7 @@ public class DelegateTokenServiceImpl implements DelegateTokenService, AccountCr
     }
 
     if (!StringUtils.isEmpty(tokenName)) {
-      query = query.field(DelegateTokenKeys.name).equal(tokenName);
+      query = query.field(DelegateTokenKeys.name).startsWith(tokenName);
     }
 
     queryResults = query.asList();

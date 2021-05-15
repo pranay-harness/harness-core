@@ -12,6 +12,8 @@ import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.manage.GlobalContextManager.initGlobalContextGuard;
+import static io.harness.manage.GlobalContextManager.upsertGlobalContextRecord;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.app.ManagerCacheRegistrar.AUTH_TOKEN_CACHE;
@@ -36,7 +38,11 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.FeatureName;
 import io.harness.cache.HarnessCacheManager;
+import io.harness.context.GlobalContext;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
+import io.harness.delegate.beans.DelegateToken;
+import io.harness.delegate.beans.DelegateToken.DelegateTokenKeys;
+import io.harness.delegate.beans.DelegateTokenStatus;
 import io.harness.entity.ServiceSecretKey.ServiceType;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.segment.SegmentHandler;
@@ -44,10 +50,14 @@ import io.harness.exception.AccessDeniedException;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.InvalidTokenException;
+import io.harness.exception.RevokedTokenException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.globalcontex.DelegateTokenGlobalContextData;
 import io.harness.logging.AutoLogContext;
+import io.harness.manage.GlobalContextManager;
+import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.security.dto.UserPrincipal;
 import io.harness.version.VersionInfoManager;
@@ -139,6 +149,7 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.Key;
+import org.mongodb.morphia.query.Query;
 
 @Singleton
 @Slf4j
@@ -388,9 +399,84 @@ public class AuthServiceImpl implements AuthService {
       throw new InvalidTokenException("Invalid delegate token format", USER_ADMIN);
     }
 
+    if (featureFlagService.isEnabled(FeatureName.USE_CUSTOM_DELEGATE_TOKENS, accountId)) {
+      boolean decryptedWithActiveToken = decryptJWTDelegateToken(accountId, DelegateTokenStatus.ACTIVE, encryptedJWT);
+
+      if (!decryptedWithActiveToken) {
+        boolean decryptedWithRevokedToken =
+            decryptJWTDelegateToken(accountId, DelegateTokenStatus.REVOKED, encryptedJWT);
+        if (decryptedWithRevokedToken) {
+          String delegateHostName = "";
+          try {
+            delegateHostName = encryptedJWT.getJWTClaimsSet().getIssuer();
+          } catch (ParseException e) {
+            // NOOP
+          }
+          log.warn("Delegate {} is using REVOKED delegate token", delegateHostName);
+        }
+
+        if (decryptedWithRevokedToken) {
+          throw new RevokedTokenException("Invalid delegate token. Delegate is using revoked token", USER_ADMIN);
+        }
+        throw new InvalidTokenException("Invalid delegate token.", USER_ADMIN);
+      }
+    } else {
+      decryptDelegateToken(encryptedJWT, account.getAccountKey());
+    }
+
+    try {
+      Date expirationDate = encryptedJWT.getJWTClaimsSet().getExpirationTime();
+      if (System.currentTimeMillis() > expirationDate.getTime()) {
+        throw new InvalidRequestException("Unauthorized", EXPIRED_TOKEN, null);
+      }
+    } catch (ParseException ex) {
+      throw new InvalidRequestException("Unauthorized", ex, EXPIRED_TOKEN, null);
+    }
+  }
+
+  private boolean decryptJWTDelegateToken(String accountId, DelegateTokenStatus status, EncryptedJWT encryptedJWT) {
+    long time_start = System.currentTimeMillis();
+
+    Query<DelegateToken> query = persistence.createQuery(DelegateToken.class)
+                                     .field(DelegateTokenKeys.accountId)
+                                     .equal(accountId)
+                                     .field(DelegateTokenKeys.status)
+                                     .equal(status);
+
+    try (HIterator<DelegateToken> records = new HIterator<>(query.fetch())) {
+      for (DelegateToken delegateToken : records) {
+        try {
+          decryptDelegateToken(encryptedJWT, delegateToken.getValue());
+
+          if (DelegateTokenStatus.ACTIVE == status) {
+            if (!GlobalContextManager.isAvailable()) {
+              initGlobalContextGuard(new GlobalContext());
+            }
+            upsertGlobalContextRecord(
+                DelegateTokenGlobalContextData.builder().tokenName(delegateToken.getName()).build());
+          }
+
+          long time_end = System.currentTimeMillis() - time_start;
+          log.info("Delegate Token verification for accountId {} and status {} has taken {} milliseconds.", accountId,
+              status.name(), time_end);
+          return true;
+        } catch (Exception e) {
+          log.debug("Fail to decrypt Delegate JWT using delete token {} for the account {}", delegateToken.getName(),
+              accountId);
+        }
+      }
+      long time_end = System.currentTimeMillis() - time_start;
+      log.info("Delegate Token verification for accountId {} and status {} has taken {} milliseconds.", accountId,
+          status.name(), time_end);
+
+      return false;
+    }
+  }
+
+  private void decryptDelegateToken(EncryptedJWT encryptedJWT, String delegateToken) {
     byte[] encodedKey;
     try {
-      encodedKey = Hex.decodeHex(account.getAccountKey().toCharArray());
+      encodedKey = Hex.decodeHex(delegateToken.toCharArray());
     } catch (DecoderException e) {
       throw new WingsException(DEFAULT_ERROR_CODE, USER_ADMIN, e);
     }
@@ -406,15 +492,6 @@ public class AuthServiceImpl implements AuthService {
       encryptedJWT.decrypt(decrypter);
     } catch (JOSEException e) {
       throw new InvalidTokenException("Invalid delegate token", USER_ADMIN);
-    }
-
-    try {
-      Date expirationDate = encryptedJWT.getJWTClaimsSet().getExpirationTime();
-      if (System.currentTimeMillis() > expirationDate.getTime()) {
-        throw new InvalidRequestException("Unauthorized", EXPIRED_TOKEN, null);
-      }
-    } catch (ParseException ex) {
-      throw new InvalidRequestException("Unauthorized", ex, EXPIRED_TOKEN, null);
     }
   }
 

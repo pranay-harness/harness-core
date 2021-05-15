@@ -50,6 +50,7 @@ import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
 import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
+import static io.harness.eraro.ErrorCode.REVOKED_TOKEN;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.filesystem.FileIo.acquireLock;
 import static io.harness.filesystem.FileIo.isLocked;
@@ -384,7 +385,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @SuppressWarnings("unchecked")
   public void run(boolean watched) {
     try {
-      DelegateAgentManagerClientFactory.setDelegateAgentService(this);
       accountId = delegateConfiguration.getAccountId();
       if (perpetualTaskWorker != null) {
         perpetualTaskWorker.setAccountId(accountId);
@@ -832,9 +832,13 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     } else if (StringUtils.startsWith(message, JRE_VERSION)) {
       updateJreVersion(StringUtils.substringAfter(message, JRE_VERSION));
     } else if (StringUtils.contains(message, INVALID_TOKEN.name())) {
+      log.warn("Delegate used invalid token. Self destruct procedure will be initiated.");
       initiateSelfDestruct();
     } else if (StringUtils.contains(message, EXPIRED_TOKEN.name())) {
       log.warn("Delegate used expired token. It will be frozen and drained.");
+      freeze();
+    } else if (StringUtils.contains(message, REVOKED_TOKEN.name())) {
+      log.warn("Delegate used revoked token. It will be frozen and drained.");
       freeze();
     } else if (!StringUtils.equals(message, "X")) {
       log.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
@@ -933,12 +937,17 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       if (response != null && !response.isSuccessful()) {
         String errorResponse = response.errorBody().string();
         if (errorResponse.contains(INVALID_TOKEN.name())) {
+          log.warn("Delegate used invalid token. Self destruct procedure will be initiated.");
           initiateSelfDestruct();
         } else if (errorResponse.contains(
                        String.format(DUPLICATE_DELEGATE_ERROR_MESSAGE, delegateId, delegateConnectionId))) {
           initiateSelfDestruct();
-        } else if (response.code() == EXPIRED_TOKEN.getStatus().getCode()) {
-          log.warn("Delegate was not authorized to invoke manager. New token should be generated.");
+        } else if (errorResponse.contains(EXPIRED_TOKEN.name())) {
+          log.warn("Delegate used expired token. It will be frozen and drained.");
+          freeze();
+        } else if (errorResponse.contains(REVOKED_TOKEN.name()) || errorResponse.contains("Revoked Delegate Token")) {
+          log.warn("Delegate used revoked token. It will be frozen and drained.");
+          freeze();
         }
         response.errorBody().close();
       }
@@ -1011,7 +1020,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void checkForProfile() {
-    if (shouldContactManager() && !executingProfile.get() && !isLocked(new File("profile"))) {
+    if (shouldContactManager() && !executingProfile.get() && !isLocked(new File("profile")) && !frozen.get()) {
       try {
         log.info("Checking for profile ...");
         DelegateProfileParams profileParams = getProfile();
@@ -1568,7 +1577,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       lastHeartbeatSentAt.set(clock.millis());
 
       RestResponse<DelegateHeartbeatResponse> delegateParamsResponse =
-          execute(delegateAgentManagerClient.delegateHeartbeat(accountId, delegateParams));
+          delegateExecute(delegateAgentManagerClient.delegateHeartbeat(accountId, delegateParams));
       long now = clock.millis();
       log.info("Delegate {} received heartbeat response {} after sending. {} since last response.", delegateId,
           getDurationString(lastHeartbeatSentAt.get(), now), getDurationString(lastHeartbeatReceivedAt.get(), now));
@@ -1711,7 +1720,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
 
     if (frozen.get()) {
-      log.info("Delegate process with detected time out of sync is running. Won't acquire tasks.");
+      log.info(
+          "Delegate process with detected time out of sync or with revoked token is running. Won't acquire tasks.");
       return;
     }
 
