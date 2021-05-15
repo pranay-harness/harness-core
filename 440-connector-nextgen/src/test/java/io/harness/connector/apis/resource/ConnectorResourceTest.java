@@ -133,14 +133,14 @@ public class ConnectorResourceTest extends CategoryTest {
     ConnectorFilterPropertiesDTO connectorListFilter = ConnectorFilterPropertiesDTO.builder().build();
     final Page<ConnectorResponseDTO> page =
         PageTestUtils.getPage(Arrays.asList(ConnectorResponseDTO.builder().build()), 1);
-    when(connectorService.list(
-             0, 100, accountIdentifier, null, orgIdentifier, projectIdentifier, filterIdentifier, searchTerm, false))
+    when(connectorService.list(0, 100, accountIdentifier, null, orgIdentifier, projectIdentifier, filterIdentifier,
+             searchTerm, false, false))
         .thenReturn(page);
-    ResponseDTO<PageResponse<ConnectorResponseDTO>> connectorSummaryListResponse = connectorResource.list(
-        0, 100, accountIdentifier, searchTerm, orgIdentifier, projectIdentifier, filterIdentifier, false, null, null);
+    ResponseDTO<PageResponse<ConnectorResponseDTO>> connectorSummaryListResponse = connectorResource.list(0, 100,
+        accountIdentifier, searchTerm, orgIdentifier, projectIdentifier, filterIdentifier, false, null, null, false);
     Mockito.verify(connectorService, times(1))
         .list(eq(0), eq(100), eq(accountIdentifier), eq(null), eq(orgIdentifier), eq(projectIdentifier),
-            eq(filterIdentifier), eq(searchTerm), eq(false));
+            eq(filterIdentifier), eq(searchTerm), eq(false), eq(false));
     assertThat(connectorSummaryListResponse.getData()).isNotNull();
   }
 

@@ -21,7 +21,7 @@ import org.springframework.data.mongodb.core.query.Update;
 @OwnedBy(DX)
 public interface ConnectorCustomRepository {
   // todo(abhinav): This method is not yet migrated because of find By fqn
-  Page<Connector> findAll(Criteria criteria, Pageable pageable);
+  Page<Connector> findAll(Criteria criteria, Pageable pageable, boolean getDistinctIdentifiers);
 
   Page<Connector> findAll(
       Criteria criteria, Pageable pageable, String projectIdentifier, String orgIdentifier, String accountIdentifier);

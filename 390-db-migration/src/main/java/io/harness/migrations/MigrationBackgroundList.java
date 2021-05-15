@@ -1,6 +1,5 @@
 package io.harness.migrations;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.migrations.all.AddAccountIdToActivityCollection;
@@ -58,6 +57,7 @@ import io.harness.migrations.all.CleanupSyncStatusForDeletedEntities;
 import io.harness.migrations.all.ConvertHttpHeadersStringTypeToList;
 import io.harness.migrations.all.CreateNgPrimaryProfileForExistingAccounts;
 import io.harness.migrations.all.CreatePrimiryProfileForAllAccounts;
+import io.harness.migrations.all.DelegateTokenMigration;
 import io.harness.migrations.all.DelegatesWithoutGroupMigration;
 import io.harness.migrations.all.DelegatesWithoutProfileMigration;
 import io.harness.migrations.all.DeleteInvalidServiceGuardConfigs;
@@ -324,6 +324,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(192, DelegatesWithoutGroupMigration.class))
         .add(Pair.of(193, CreateNgPrimaryProfileForExistingAccounts.class))
         .add(Pair.of(194, AddEnableIteratorsToGovernanceConfig.class))
+        .add(Pair.of(195, DelegateTokenMigration.class))
         .build();
   }
 }
