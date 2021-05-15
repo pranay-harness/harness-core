@@ -114,7 +114,7 @@ public class GitInfoPopulatorForConnector {
       do {
         connectorPage = connectorService.list(page, size, accountId,
             ConnectorFilterPropertiesDTO.builder().connectorIdentifiers(connectorIdentifiers).build(), orgId, projectId,
-            null, null, null);
+            null, null, null, false);
         if (connectorPage != null && isNotEmpty(connectorPage.getContent())) {
           connectorResponseDTOS.addAll(connectorPage.getContent());
         }

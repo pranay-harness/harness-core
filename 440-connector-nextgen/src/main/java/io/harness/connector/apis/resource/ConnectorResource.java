@@ -169,12 +169,13 @@ public class ConnectorResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @QueryParam(NGResourceFilterConstants.FILTER_KEY) String filterIdentifier,
       @QueryParam(INCLUDE_ALL_CONNECTORS_ACCESSIBLE) Boolean includeAllConnectorsAccessibleAtScope,
-      @Body ConnectorFilterPropertiesDTO connectorListFilter, @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
+      @Body ConnectorFilterPropertiesDTO connectorListFilter, @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
+      Boolean getDistinctFromBranches) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(ResourceTypes.CONNECTOR, null), VIEW_CONNECTOR_PERMISSION);
-    return ResponseDTO.newResponse(
-        getNGPageResponse(connectorService.list(page, size, accountIdentifier, connectorListFilter, orgIdentifier,
-            projectIdentifier, filterIdentifier, searchTerm, includeAllConnectorsAccessibleAtScope)));
+    return ResponseDTO.newResponse(getNGPageResponse(
+        connectorService.list(page, size, accountIdentifier, connectorListFilter, orgIdentifier, projectIdentifier,
+            filterIdentifier, searchTerm, includeAllConnectorsAccessibleAtScope, getDistinctFromBranches)));
   }
 
   @POST

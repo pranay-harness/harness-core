@@ -5,7 +5,6 @@ import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageF
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.SENSITIVITY_KEY;
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.TRAFFIC_SPLIT_PERCENTAGE_KEY;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import io.harness.cvng.beans.job.Sensitivity;
@@ -24,7 +23,7 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
 
 @Data
-@FieldNameConstants(innerTypeName = "DeploymentVerificationJobKeys")
+@FieldNameConstants(innerTypeName = "CanaryBlueGreenVerificationJobKeys")
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
@@ -81,16 +80,17 @@ public abstract class CanaryBlueGreenVerificationJob extends VerificationJob {
 
   @Override
   protected void validateParams() {
-    checkNotNull(sensitivity, generateErrorMessageFromParam(DeploymentVerificationJobKeys.sensitivity));
+    Preconditions.checkNotNull(
+        sensitivity, generateErrorMessageFromParam(CanaryBlueGreenVerificationJobKeys.sensitivity));
     if (trafficSplitPercentageV2 == null) {
       Optional.ofNullable(trafficSplitPercentage)
           .ifPresent(percentage
               -> checkState(percentage >= 0 && percentage <= 50,
-                  DeploymentVerificationJobKeys.trafficSplitPercentage + " is not in appropriate range"));
+                  CanaryBlueGreenVerificationJobKeys.trafficSplitPercentage + " is not in appropriate range"));
     } else if (!trafficSplitPercentageV2.isRuntimeParam()) {
       Preconditions.checkState(Integer.valueOf(trafficSplitPercentageV2.getValue()) > 0
               && Integer.valueOf(trafficSplitPercentageV2.getValue()) <= 50,
-          DeploymentVerificationJobKeys.trafficSplitPercentage + " is not in appropriate range");
+          CanaryBlueGreenVerificationJobKeys.trafficSplitPercentage + " is not in appropriate range");
     }
   }
 

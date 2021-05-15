@@ -6,6 +6,7 @@ import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateTokenDetails;
+import io.harness.delegate.beans.DelegateTokenStatus;
 import io.harness.rest.RestResponse;
 import io.harness.service.intfc.DelegateTokenService;
 
@@ -86,7 +87,7 @@ public class DelegateTokenResource {
   @ExceptionMetered
   @AuthRule(permissionType = MANAGE_DELEGATES)
   public RestResponse<List<DelegateTokenDetails>> getDelegateTokens(@QueryParam("accountId") @NotNull String accountId,
-      @QueryParam("status") String status, @QueryParam("tokenName") String tokenName) {
+      @QueryParam("status") DelegateTokenStatus status, @QueryParam("tokenName") String tokenName) {
     return new RestResponse<>(delegateTokenService.getDelegateTokens(accountId, status, tokenName));
   }
 }
