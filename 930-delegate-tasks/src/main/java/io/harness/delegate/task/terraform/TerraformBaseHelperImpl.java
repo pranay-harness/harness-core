@@ -68,6 +68,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -389,12 +390,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
     secretDecryptionService.decrypt(configFileGitConfigDTO.getGitAuth(), confileFileGitStore.getEncryptedDataDetails());
 
     if (configFileGitConfigDTO.getGitAuthType() == SSH) {
-      if (confileFileGitStore.getSshKeySpecDTO() == null) {
-        throw new InvalidRequestException(
-            format("SSHKeySpecDTO is null for connector %s", confileFileGitStore.getConnectorName()));
-      }
-      sshSessionConfig = sshSessionConfigMapper.getSSHSessionConfig(
-          confileFileGitStore.getSshKeySpecDTO(), confileFileGitStore.getEncryptedDataDetails());
+      sshSessionConfig = getSshSessionConfig(confileFileGitStore);
     }
 
     return GitBaseRequest.builder()
@@ -524,13 +520,14 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
       String scriptDir, LogCallback logCallback, String accountId, String tfVarDirectory) throws IOException {
     if (EmptyPredicate.isNotEmpty(varFileInfo)) {
       List<String> varFilePaths = new ArrayList<>();
+      Path tfVarDirAbsPath = Paths.get(tfVarDirectory).toAbsolutePath();
       for (TerraformVarFileInfo varFile : varFileInfo) {
         if (varFile instanceof InlineTerraformVarFileInfo) {
           varFilePaths.add(TerraformHelperUtils.createFileFromStringContent(
               ((InlineTerraformVarFileInfo) varFile).getVarFileContent(), scriptDir));
         } else if (varFile instanceof RemoteTerraformVarFileInfo) {
           GitStoreDelegateConfig gitStoreDelegateConfig =
-              ((RemoteTerraformVarFileInfo) varFileInfo).getGitFetchFilesConfig().getGitStoreDelegateConfig();
+              ((RemoteTerraformVarFileInfo) varFile).getGitFetchFilesConfig().getGitStoreDelegateConfig();
           GitConfigDTO gitConfigDTO = (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO();
           if (EmptyPredicate.isNotEmpty(gitStoreDelegateConfig.getPaths())) {
             logCallback.saveExecutionLog(
@@ -540,6 +537,11 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
             secretDecryptionService.decrypt(
                 gitConfigDTO.getGitAuth(), gitStoreDelegateConfig.getEncryptedDataDetails());
 
+            SshSessionConfig sshSessionConfig = null;
+            if (gitConfigDTO.getGitAuthType() == SSH) {
+              sshSessionConfig = getSshSessionConfig(gitStoreDelegateConfig);
+            }
+
             gitClient.downloadFiles(DownloadFilesRequest.builder()
                                         .branch(gitStoreDelegateConfig.getBranch())
                                         .commitId(gitStoreDelegateConfig.getCommitId())
@@ -548,21 +550,32 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
                                         .repoUrl(gitConfigDTO.getUrl())
                                         .accountId(accountId)
                                         .recursive(true)
+                                        .authRequest(ngGitService.getAuthRequest(gitConfigDTO, sshSessionConfig))
+                                        .repoType(GitRepositoryType.TERRAFORM)
                                         .destinationDirectory(tfVarDirectory)
                                         .build());
 
             // One remote file can have multiple different var file paths provided
             // Combine them here and add to list.
             for (String paths : gitStoreDelegateConfig.getPaths()) {
-              varFilePaths.add(Paths.get(tfVarDirectory + paths).toString());
+              varFilePaths.add(tfVarDirAbsPath + "/" + paths);
             }
           }
         }
       }
       logCallback.saveExecutionLog(
-          format("TfVar Git directory: [%s]", tfVarDirectory), INFO, CommandExecutionStatus.RUNNING);
+          format("TfVar Git directory: [%s]", tfVarDirAbsPath, INFO, CommandExecutionStatus.RUNNING));
       return varFilePaths;
     }
     return Collections.emptyList();
+  }
+
+  private SshSessionConfig getSshSessionConfig(GitStoreDelegateConfig gitStoreDelegateConfig) {
+    if (gitStoreDelegateConfig.getSshKeySpecDTO() == null) {
+      throw new InvalidRequestException(
+          format("SSHKeySpecDTO is null for connector %s", gitStoreDelegateConfig.getConnectorName()));
+    }
+    return sshSessionConfigMapper.getSSHSessionConfig(
+        gitStoreDelegateConfig.getSshKeySpecDTO(), gitStoreDelegateConfig.getEncryptedDataDetails());
   }
 }

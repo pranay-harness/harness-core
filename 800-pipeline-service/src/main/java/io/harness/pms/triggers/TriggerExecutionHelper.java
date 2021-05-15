@@ -6,6 +6,8 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.ngtriggers.Constants.PR;
 import static io.harness.ngtriggers.Constants.PUSH;
 import static io.harness.ngtriggers.Constants.TRIGGER_EXECUTION_TAG_TAG_VALUE_DELIMITER;
+import static io.harness.ngtriggers.Constants.TRIGGER_REF;
+import static io.harness.ngtriggers.Constants.TRIGGER_REF_DELIMITER;
 import static io.harness.pms.contracts.plan.TriggerType.WEBHOOK;
 import static io.harness.pms.contracts.plan.TriggerType.WEBHOOK_CUSTOM;
 import static io.harness.pms.contracts.triggers.Type.CUSTOM;
@@ -35,6 +37,7 @@ import io.harness.pms.contracts.triggers.Type;
 import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.plan.execution.PipelineExecuteHelper;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.product.ci.scm.proto.PullRequest;
@@ -56,11 +59,12 @@ public class TriggerExecutionHelper {
   private final PipelineExecuteHelper pipelineExecuteHelper;
   private final PlanExecutionService planExecutionService;
   private final PMSExecutionService pmsExecutionService;
+  private final PMSYamlSchemaService pmsYamlSchemaService;
 
   public PlanExecution resolveRuntimeInputAndSubmitExecutionRequest(
       TriggerDetails triggerDetails, TriggerPayload triggerPayload) {
     String executionTagForGitEvent = generateExecutionTagForEvent(triggerDetails, triggerPayload);
-    TriggeredBy embeddedUser = generateTriggerdBy(executionTagForGitEvent);
+    TriggeredBy embeddedUser = generateTriggerdBy(executionTagForGitEvent, triggerDetails.getNgTriggerEntity());
 
     TriggerType triggerType = findTriggerType(triggerPayload);
     ExecutionTriggerInfo triggerInfo =
@@ -104,6 +108,10 @@ public class TriggerExecutionHelper {
               MergeHelper.mergeInputSetIntoPipeline(pipelineYamlBeforeMerge, sanitizedRuntimeInputYaml, true);
         }
       }
+
+      pmsYamlSchemaService.validateYamlSchema(
+          ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(), pipelineYaml);
+
       executionMetaDataBuilder.setYaml(pipelineYaml);
       executionMetaDataBuilder.setPrincipalInfo(
           ExecutionPrincipalInfo.newBuilder().setShouldValidateRbac(false).build());
@@ -116,12 +124,28 @@ public class TriggerExecutionHelper {
   }
 
   @VisibleForTesting
-  TriggeredBy generateTriggerdBy(String executionTagForGitEvent) {
+  TriggeredBy generateTriggerdBy(String executionTagForGitEvent, NGTriggerEntity ngTriggerEntity) {
     TriggeredBy.Builder builder = TriggeredBy.newBuilder().setIdentifier("trigger").setUuid("systemUser");
     if (isNotBlank(executionTagForGitEvent)) {
       builder.putExtraInfo(PlanExecution.EXEC_TAG_SET_BY_TRIGGER, executionTagForGitEvent);
+      builder.putExtraInfo(TRIGGER_REF, generateTriggerRef(ngTriggerEntity));
     }
     return builder.build();
+  }
+
+  @VisibleForTesting
+  String generateTriggerRef(NGTriggerEntity ngTriggerEntity) {
+    return new StringBuilder(256)
+        .append(ngTriggerEntity.getAccountId())
+        .append(TRIGGER_REF_DELIMITER)
+        .append(ngTriggerEntity.getOrgIdentifier())
+        .append(TRIGGER_REF_DELIMITER)
+        .append(ngTriggerEntity.getProjectIdentifier())
+        .append(TRIGGER_REF_DELIMITER)
+        .append(ngTriggerEntity.getTargetIdentifier())
+        .append(TRIGGER_REF_DELIMITER)
+        .append(ngTriggerEntity.getIdentifier())
+        .toString();
   }
 
   private String readRuntimeInputFromConfig(NGTriggerConfig ngTriggerConfig) {
@@ -143,8 +167,8 @@ public class TriggerExecutionHelper {
 
   /**
    * Generate execution tag to identify pipeline executions caused by similar trigger git events.
-   * PR: {accId:orgId:projectId:pipelineIdentifier:triggerId:PR:RepoUrl:PrNum:SourceBranch:TargetBranch}
-   * PUSH: {accId:orgId:projectId:pipelineIdentifier:triggerId:PUSH:RepoUrl:Ref}
+   * PR: {accId:orgId:projectId:pipelineIdentifier:PR:RepoUrl:PrNum:SourceBranch:TargetBranch}
+   * PUSH: {accId:orgId:projectId:pipelineIdentifier:PUSH:RepoUrl:Ref}
    *
    * @param triggerDetails
    * @param triggerPayload
@@ -159,8 +183,6 @@ public class TriggerExecutionHelper {
                             .append(triggerDetails.getNgTriggerEntity().getProjectIdentifier())
                             .append(TRIGGER_EXECUTION_TAG_TAG_VALUE_DELIMITER)
                             .append(triggerDetails.getNgTriggerEntity().getTargetIdentifier())
-                            .append(TRIGGER_EXECUTION_TAG_TAG_VALUE_DELIMITER)
-                            .append(triggerDetails.getNgTriggerEntity().getIdentifier())
                             .toString();
 
     try {

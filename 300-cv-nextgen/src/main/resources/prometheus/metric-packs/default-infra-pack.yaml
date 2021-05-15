@@ -1,0 +1,6 @@
+identifier: Infrastructure
+category: Infrastructure
+metrics:
+  - name: Infrastructure
+    type: INFRA
+    included: false

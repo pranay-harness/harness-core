@@ -6,6 +6,7 @@ import static io.harness.constants.Constants.X_BIT_BUCKET_EVENT;
 import static io.harness.constants.Constants.X_GIT_HUB_EVENT;
 import static io.harness.constants.Constants.X_GIT_LAB_EVENT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.eventsframework.EventsFrameworkConstants.GIT_PR_EVENT_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_PUSH_EVENT_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM;
 import static io.harness.eventsframework.webhookpayloads.webhookdata.SourceRepoType.AWS_CODECOMMIT;
@@ -49,6 +50,7 @@ import javax.ws.rs.core.HttpHeaders;
 public class WebhookHelper {
   @Inject @Named(WEBHOOK_EVENTS_STREAM) private Producer webhookEventProducer;
   @Inject @Named(GIT_PUSH_EVENT_STREAM) private Producer gitPushEventProducer;
+  @Inject @Named(GIT_PR_EVENT_STREAM) private Producer gitPrEventProducer;
 
   public WebhookEvent toNGTriggerWebhookEvent(String accountIdentifier, String payload, HttpHeaders httpHeaders) {
     List<HeaderConfig> headerConfigs = new ArrayList<>();
@@ -139,6 +141,8 @@ public class WebhookHelper {
     if (webhookDTO.hasParsedResponse() && webhookDTO.hasGitDetails()) {
       if (WebhookEventType.PUSH == webhookDTO.getGitDetails().getEvent()) {
         producers.add(gitPushEventProducer);
+      } else if (PR == webhookDTO.getGitDetails().getEvent()) {
+        producers.add(gitPrEventProducer);
       }
 
       // Here we can add more logic if need to add more event topics.

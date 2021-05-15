@@ -1,6 +1,5 @@
 package io.harness.ngtriggers.mapper;
 
-import static io.harness.ngtriggers.beans.source.NGTriggerType.NEW_ARTIFACT;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.SCHEDULED;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.WEBHOOK;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.CLOSED;
@@ -373,10 +372,6 @@ public class NGTriggerElementMapperTest extends CategoryTest {
     assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl()).isNull();
 
     ngTriggerEntity.setType(SCHEDULED);
-    ngTriggerDetailsResponseDTO = ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, false);
-    assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl()).isNull();
-
-    ngTriggerEntity.setType(NEW_ARTIFACT);
     ngTriggerDetailsResponseDTO = ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, false);
     assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl()).isNull();
   }

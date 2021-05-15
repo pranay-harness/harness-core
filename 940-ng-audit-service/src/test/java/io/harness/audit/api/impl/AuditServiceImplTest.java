@@ -1,6 +1,5 @@
 package io.harness.audit.api.impl;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.KARAN;
 import static io.harness.utils.PageTestUtils.getPage;
 
@@ -19,7 +18,10 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.ModuleType;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.audit.Action;
 import io.harness.audit.api.AuditService;
 import io.harness.audit.api.AuditYamlService;
@@ -49,7 +51,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.transaction.support.TransactionTemplate;
 
-@OwnedBy(PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
+@OwnedBy(HarnessTeam.PL)
 public class AuditServiceImplTest extends CategoryTest {
   private AuditRepository auditRepository;
   private AuditYamlService auditYamlService;

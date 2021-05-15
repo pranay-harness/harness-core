@@ -13,8 +13,6 @@ import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.common.dtos.GitFileContent;
-import io.harness.gitsync.common.dtos.RepoProviders;
-import io.harness.gitsync.common.dtos.SaasGitDTO;
 import io.harness.gitsync.common.service.ScmClientFacilitatorService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.impl.ScmResponseStatusUtils;
@@ -22,12 +20,10 @@ import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
-import java.net.URL;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PROTECTED)
@@ -56,32 +52,6 @@ public abstract class AbstractScmClientFacilitatorServiceImpl implements ScmClie
     return listBranchesForRepoByConnector(identifierRef.getAccountIdentifier(), identifierRef.getOrgIdentifier(),
         identifierRef.getProjectIdentifier(), identifierRef.getIdentifier(), yamlGitConfig.getRepo(), pageRequest,
         searchTerm);
-  }
-
-  @Override
-  public SaasGitDTO isSaasGit(String repoURL) {
-    try {
-      URL url = new URL(getURLWithHttp(repoURL));
-      String host = getHostNameWithWWW(url.getHost());
-      for (RepoProviders repoProvider : RepoProviders.values()) {
-        if (StringUtils.containsIgnoreCase(host, repoProvider.name())) {
-          return SaasGitDTO.builder()
-              .isSaasGit(host.contains("www." + repoProvider.name().toLowerCase() + ".com"))
-              .build();
-        }
-      }
-    } catch (Exception e) {
-      log.error("Failed to generate Git Provider Repository Url {}", repoURL, e);
-    }
-    return SaasGitDTO.builder().isSaasGit(false).build();
-  }
-
-  String getURLWithHttp(String url) {
-    return url.startsWith("http") ? url : ("http://" + url);
-  }
-
-  String getHostNameWithWWW(String host) {
-    return (host.startsWith("www.")) ? host : ("www." + host);
   }
 
   ScmConnector getScmConnector(IdentifierRef connectorIdentifierRef) {

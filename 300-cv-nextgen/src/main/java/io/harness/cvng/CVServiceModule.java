@@ -80,6 +80,7 @@ import io.harness.cvng.core.services.api.MonitoringSourceImportStatusCreator;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.NewRelicService;
 import io.harness.cvng.core.services.api.OnboardingService;
+import io.harness.cvng.core.services.api.PrometheusService;
 import io.harness.cvng.core.services.api.SplunkService;
 import io.harness.cvng.core.services.api.StackdriverService;
 import io.harness.cvng.core.services.api.TimeSeriesRecordService;
@@ -106,6 +107,8 @@ import io.harness.cvng.core.services.impl.NewRelicCVConfigTransformer;
 import io.harness.cvng.core.services.impl.NewRelicDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.NewRelicServiceImpl;
 import io.harness.cvng.core.services.impl.OnboardingServiceImpl;
+import io.harness.cvng.core.services.impl.PrometheusCVConfigTransformer;
+import io.harness.cvng.core.services.impl.PrometheusServiceImpl;
 import io.harness.cvng.core.services.impl.SplunkCVConfigTransformer;
 import io.harness.cvng.core.services.impl.SplunkDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.SplunkServiceImpl;
@@ -255,6 +258,9 @@ public class CVServiceModule extends AbstractModule {
         .annotatedWith(Names.named(DataSourceType.NEW_RELIC.name()))
         .to(NewRelicCVConfigTransformer.class);
     bind(CVConfigTransformer.class)
+        .annotatedWith(Names.named(DataSourceType.PROMETHEUS.name()))
+        .to(PrometheusCVConfigTransformer.class);
+    bind(CVConfigTransformer.class)
         .annotatedWith(Names.named(DataSourceType.SPLUNK.name()))
         .to(SplunkCVConfigTransformer.class);
     bind(CVConfigTransformer.class)
@@ -348,6 +354,7 @@ public class CVServiceModule extends AbstractModule {
     // We are dependent on source of truth (Manager) for this.
     bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
     bind(CVNGStepTaskService.class).to(CVNGStepTaskServiceImpl.class);
+    bind(PrometheusService.class).to(PrometheusServiceImpl.class);
     bind(CVNGYamlSchemaService.class).to(CVNGYamlSchemaServiceImpl.class);
   }
 
