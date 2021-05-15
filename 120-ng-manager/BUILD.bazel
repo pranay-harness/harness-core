@@ -332,8 +332,6 @@ shared_dependencies = [
     "@maven//:guru_nidi_graphviz_java",
     "@maven//:guru_nidi_graphviz_rough",
     "@maven//:info_jerrinot_subzero_core",
-    "@maven//:io_cloudsoft_windows_winrm4j",
-    "@maven//:io_cloudsoft_windows_winrm4j_client",
     "@maven//:io_dropwizard_bundles_dropwizard_configurable_assets_bundle",
     "@maven//:io_dropwizard_dropwizard_assets",
     "@maven//:io_dropwizard_dropwizard_auth",
@@ -682,8 +680,10 @@ shared_dependencies = [
     "@maven//:xml_apis_xml_apis",
     "@maven//:xml_resolver_xml_resolver",
     "@maven//:xpp3_xpp3",
-    "@maven_harness//:io_harness_ff_java_server_sdk",
-    "@maven_harness//:io_harness_cv_data_collection_dsl",
+    "@z_harness_maven//:io_cloudsoft_windows_winrm4j",
+    "@z_harness_maven//:io_cloudsoft_windows_winrm4j_client",
+    "@z_harness_maven//:io_harness_cv_data_collection_dsl",
+    "@z_harness_maven//:io_harness_ff_java_server_sdk",
 ]
 
 java_binary(

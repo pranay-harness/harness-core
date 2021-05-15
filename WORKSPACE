@@ -1523,8 +1523,6 @@ maven_install(
         "guru.nidi:graphviz-java:0.16.3",
         "guru.nidi:graphviz-rough:0.16.3",
         "info.jerrinot:subzero-core:0.7",
-        "io.cloudsoft.windows:winrm4j-client:0.9.0-SNAPSHOT",
-        "io.cloudsoft.windows:winrm4j:0.9.0-SNAPSHOT",
         "io.debezium:debezium-api:1.4.1.Final",
         "io.debezium:debezium-connector-mongodb:1.4.1.Final",
         "io.debezium:debezium-core:1.4.1.Final",
@@ -2066,16 +2064,24 @@ http_jar(
 load("//:bazel-credentials.bzl", "JFROG_PASSWORD", "JFROG_USERNAME")
 
 maven_install(
-    name = "maven_harness",
+    name = "z_harness_maven",
     artifacts = [
+        "io.cloudsoft.windows:winrm4j-client:0.9.0-SNAPSHOT",
+        "io.cloudsoft.windows:winrm4j:0.9.0-SNAPSHOT",
         "io.harness:ff-java-server-sdk:0.0.7",
         "io.harness.cv:data-collection-dsl:0.21-RELEASE",
     ],
+    maven_install_json = "//project:harness_maven_install.json",
     repositories = [
-        "https://repo1.maven.org/maven2",
+        "https://harness.jfrog.io/artifactory/thirdparty-annonymous",
         "https://%s:%s@harness.jfrog.io/artifactory/harness-internal" % (JFROG_USERNAME, JFROG_PASSWORD),
+        "https://repo1.maven.org/maven2",
     ],
 )
+
+load("@z_harness_maven//:defs.bzl", "pinned_maven_install")
+
+pinned_maven_install()
 
 maven_install(
     name = "delegate",
