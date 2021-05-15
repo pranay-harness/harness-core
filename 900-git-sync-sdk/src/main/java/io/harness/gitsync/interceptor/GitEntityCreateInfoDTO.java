@@ -27,4 +27,5 @@ public class GitEntityCreateInfoDTO {
   @QueryParam(GitSyncApiConstants.CREATE_PR_KEY) boolean createPr;
   @QueryParam(GitSyncApiConstants.NEW_BRANCH) boolean isNewBranch;
   @QueryParam(GitSyncApiConstants.TARGET_BRANCH_FOR_PR) String targetBranchForPr;
+  @QueryParam(GitSyncApiConstants.BASE_BRANCH) String baseBranch;
 }

@@ -52,14 +52,14 @@ public class GitBranchServiceImpl implements GitBranchService {
   @Override
   public GitBranchListDTO listBranchesWithStatus(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String yamlGitConfigIdentifier, io.harness.ng.beans.PageRequest pageRequest,
-      String searchTerm) {
+      String searchTerm, BranchSyncStatus branchSyncStatus) {
     YamlGitConfigDTO yamlGitConfig =
         yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, yamlGitConfigIdentifier);
-    Page<GitBranch> syncedBranchPage =
-        gitBranchesRepository.findAll(getCriteria(accountIdentifier, yamlGitConfig.getRepo(), searchTerm),
-            PageRequest.of(pageRequest.getPageIndex(), pageRequest.getPageSize(),
-                Sort.by(Sort.Order.asc(SyncedBranchDTOKeys.branchSyncStatus),
-                    Sort.Order.asc(SyncedBranchDTOKeys.branchName))));
+    Page<GitBranch> syncedBranchPage = gitBranchesRepository.findAll(
+        getCriteria(accountIdentifier, yamlGitConfig.getRepo(), searchTerm, branchSyncStatus),
+        PageRequest.of(pageRequest.getPageIndex(), pageRequest.getPageSize(),
+            Sort.by(
+                Sort.Order.asc(SyncedBranchDTOKeys.branchSyncStatus), Sort.Order.asc(SyncedBranchDTOKeys.branchName))));
     final List<GitBranchDTO> gitBranchDTOList = buildEntityDtoFromPage(syncedBranchPage);
     PageResponse<GitBranchDTO> ngPageResponse = PageUtils.getNGPageResponse(syncedBranchPage, gitBranchDTOList);
     GitBranchDTO defaultBranch =
@@ -143,11 +143,15 @@ public class GitBranchServiceImpl implements GitBranchService {
         .build();
   }
 
-  private Criteria getCriteria(String accountIdentifier, String repoURL, String searchTerm) {
+  private Criteria getCriteria(
+      String accountIdentifier, String repoURL, String searchTerm, BranchSyncStatus branchSyncStatus) {
     Criteria criteria =
         Criteria.where(GitBranchKeys.accountIdentifier).is(accountIdentifier).and(GitBranchKeys.repoURL).is(repoURL);
     if (isNotBlank(searchTerm)) {
       criteria.and(GitBranchKeys.branchName).regex(searchTerm, "i");
+    }
+    if (branchSyncStatus != null) {
+      criteria.and(GitBranchKeys.branchSyncStatus).is(branchSyncStatus);
     }
     return criteria;
   }

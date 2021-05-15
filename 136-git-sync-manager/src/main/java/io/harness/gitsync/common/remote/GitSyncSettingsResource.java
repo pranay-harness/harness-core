@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.common.dtos.GitSyncSettingsDTO;
 import io.harness.gitsync.common.service.GitSyncSettingsService;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -15,14 +16,12 @@ import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
-import retrofit2.http.Body;
 
 @Api("/git-sync-settings")
 @Path("/git-sync-settings")
@@ -35,8 +34,8 @@ public class GitSyncSettingsResource {
 
   @POST
   @ApiOperation(value = "Create a Git Sync Setting", nickname = "postGitSyncSetting")
-  public ResponseDTO<GitSyncSettingsDTO> create(@Body @NotNull GitSyncSettingsDTO request) {
-    return ResponseDTO.newResponse(gitSyncSettingsService.save(request));
+  public ResponseDTO<GitSyncSettingsDTO> create(@NotNull GitSyncSettingsDTO gitSyncSettings) {
+    return ResponseDTO.newResponse(gitSyncSettingsService.save(gitSyncSettings));
   }
 
   @GET
@@ -49,7 +48,7 @@ public class GitSyncSettingsResource {
     return gitSyncSettingsDTO.map(ResponseDTO::newResponse)
         .orElseThrow(
             ()
-                -> new NotFoundException(String.format(
+                -> new InvalidRequestException(String.format(
                     "No Git Sync Setting found for accountIdentifier %s, organizationIdentifier %s and projectIdentifier %s",
                     accountIdentifier, organizationIdentifier, projectIdentifier)));
   }
