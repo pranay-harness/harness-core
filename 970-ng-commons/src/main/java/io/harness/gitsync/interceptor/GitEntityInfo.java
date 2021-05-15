@@ -26,4 +26,5 @@ public class GitEntityInfo {
   boolean isNewBranch;
   boolean isSyncFromGit;
   boolean findDefaultFromOtherBranches;
+  String baseBranch;
 }
