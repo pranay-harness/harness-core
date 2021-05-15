@@ -1,22 +1,16 @@
 package software.wings.graphql.datafetcher.service;
 
-import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 
 import io.harness.category.element.UnitTests;
-import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.Service;
 import software.wings.beans.User;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
-import software.wings.graphql.schema.query.QLServiceQueryParameters;
-import software.wings.graphql.schema.type.QLService;
-import software.wings.graphql.schema.type.aggregation.QLAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLAggregatedData;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.graphql.schema.type.aggregation.QLEnumOperator;
@@ -71,7 +65,8 @@ public class ServiceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
     QLServiceAggregation qlServiceAggregation =
         QLServiceAggregation.builder().entityAggregation(QLServiceEntityAggregation.DeploymentType).build();
     List<QLServiceAggregation> serviceAggregations = Arrays.asList(qlServiceAggregation);
-    final QLData qlData = serviceStatsDataFetcher.fetch(ACCOUNT1_ID, null, serviceFilters, serviceAggregations, null);
+    final QLData qlData =
+        serviceStatsDataFetcher.fetch(ACCOUNT1_ID, null, serviceFilters, serviceAggregations, null, null);
     assertThat(qlData).isInstanceOf(QLAggregatedData.class);
     QLAggregatedData aggregatedData = (QLAggregatedData) qlData;
     assertThat(aggregatedData.getDataPoints().size()).isEqualTo(1);
