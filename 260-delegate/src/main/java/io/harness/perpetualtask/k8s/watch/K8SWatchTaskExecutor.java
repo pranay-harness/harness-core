@@ -76,7 +76,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
     this.apiClientFactory = apiClientFactory;
     this.kryoSerializer = kryoSerializer;
     this.containerDeploymentDelegateHelper = containerDeploymentDelegateHelper;
-    recentlyLoggedExceptions = Caffeine.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES).build();
+    recentlyLoggedExceptions = Caffeine.newBuilder().expireAfterWrite(11, TimeUnit.MINUTES).build();
   }
 
   @Override
