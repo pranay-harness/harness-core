@@ -47,9 +47,9 @@ import lombok.extern.slf4j.Slf4j;
  * Instance Key - unique identifier of a server instance stored as part of instance entity for reference
  * Instance Info - details about server instance stored as part of instance entity
  */
-public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends InfrastructureMapping, V
-                                          extends DeploymentInfo, X extends DelegateResponseData, Y
-                                          extends InstanceInfo, Z extends ServerInstance, W extends InstanceKey>
+public abstract class AbstractInstanceHandler<T extends InstanceHandlerKey, U extends InfrastructureMapping, V
+                                                  extends DeploymentInfo, X extends DelegateResponseData, Y
+                                                  extends InstanceInfo, Z extends ServerInstance, W extends InstanceKey>
     implements IInstanceHandler, IInstanceSyncByPerpetualTaskhandler<X>, IInstanceSyncPerpetualTaskCreator<U> {
   public static final String AUTO_SCALE = "AUTO_SCALE";
 

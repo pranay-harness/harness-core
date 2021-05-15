@@ -6,7 +6,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.entities.infrastructureMapping.InfrastructureMapping;
 import io.harness.exception.UnexpectedException;
-import io.harness.service.InstanceHandler;
+import io.harness.service.AbstractInstanceHandler;
 
 import com.google.inject.Singleton;
 
@@ -14,12 +14,12 @@ import com.google.inject.Singleton;
 @OwnedBy(HarnessTeam.DX)
 public class InstanceHandlerFactoryServiceImpl implements InstanceHandlerFactoryService {
   @Override
-  public InstanceHandler getInstanceHandler(InfrastructureMapping infrastructureMapping) {
+  public AbstractInstanceHandler getInstanceHandler(InfrastructureMapping infrastructureMapping) {
     return getInstanceHandlerByType(infrastructureMapping.getInfrastructureMappingType());
   }
 
   @Override
-  public InstanceHandler getInstanceHandlerByType(String infrastructureMappingType) {
+  public AbstractInstanceHandler getInstanceHandlerByType(String infrastructureMappingType) {
     switch (infrastructureMappingType) {
       case KUBERNETES_DIRECT:
         //        return containerInstanceHandler;

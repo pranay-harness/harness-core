@@ -55,8 +55,8 @@ public class DeploymentEventListener implements AsyncOrchestrationEventHandler {
     // If not present, then create new infrastructure mapping in DB and return
 
     Ambiance ambiance = event.getAmbiance();
-    InstanceHandler instanceHandler = getInstanceHandler(ambiance);
-    InfrastructureMapping infrastructureMapping = instanceHandler.getInfrastructureMapping(ambiance);
+    AbstractInstanceHandler abstractInstanceHandler = getInstanceHandler(ambiance);
+    InfrastructureMapping infrastructureMapping = abstractInstanceHandler.getInfrastructureMapping(ambiance);
 
     // Check if infrastructure mapping already exists in DB or not, if not, then create a new record
     Optional<InfrastructureMapping> infrastructureMappingInDBOptional =
@@ -84,7 +84,7 @@ public class DeploymentEventListener implements AsyncOrchestrationEventHandler {
      *   // save both primary and sidecard artifacts
      */
 
-    InstanceHandler instanceHandler = getInstanceHandler(ambiance);
+    AbstractInstanceHandler abstractInstanceHandler = getInstanceHandler(ambiance);
 
     DeploymentSummary deploymentSummary = DeploymentSummary.builder()
                                               .accountIdentifier(AmbianceHelper.getAccountId(ambiance))
@@ -93,7 +93,7 @@ public class DeploymentEventListener implements AsyncOrchestrationEventHandler {
                                               .infrastructureMapping(infrastructureMapping)
                                               .infrastructureMappingId(infrastructureMapping.getId())
                                               .pipelineExecutionId(ambiance.getPlanExecutionId())
-                                              .deploymentInfo(instanceHandler.getDeploymentInfo(ambiance))
+                                              .deploymentInfo(abstractInstanceHandler.getDeploymentInfo(ambiance))
                                               .deployedAt(event.getNodeExecutionProto().getEndTs().getSeconds())
                                               .build();
 
@@ -102,7 +102,7 @@ public class DeploymentEventListener implements AsyncOrchestrationEventHandler {
     return new DeploymentEvent(deploymentSummary, null);
   }
 
-  private InstanceHandler getInstanceHandler(Ambiance ambiance) {
+  private AbstractInstanceHandler getInstanceHandler(Ambiance ambiance) {
     InfrastructureOutcome infrastructureOutcome = (InfrastructureOutcome) outcomeService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
 

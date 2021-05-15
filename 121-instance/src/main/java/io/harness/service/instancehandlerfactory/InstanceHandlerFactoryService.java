@@ -3,11 +3,11 @@ package io.harness.service.instancehandlerfactory;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.entities.infrastructureMapping.InfrastructureMapping;
-import io.harness.service.InstanceHandler;
+import io.harness.service.AbstractInstanceHandler;
 
 @OwnedBy(HarnessTeam.DX)
 public interface InstanceHandlerFactoryService {
-  InstanceHandler getInstanceHandler(InfrastructureMapping infraMapping);
+  AbstractInstanceHandler getInstanceHandler(InfrastructureMapping infraMapping);
 
-  InstanceHandler getInstanceHandlerByType(String infrastructureMappingType);
+  AbstractInstanceHandler getInstanceHandlerByType(String infrastructureMappingType);
 }

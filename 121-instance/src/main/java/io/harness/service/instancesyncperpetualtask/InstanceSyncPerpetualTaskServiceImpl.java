@@ -2,7 +2,6 @@ package io.harness.service.instancesyncperpetualtask;
 
 import static java.util.Collections.emptyList;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.entities.DeploymentSummary;
 import io.harness.entities.InstanceSyncPerpetualTaskInfo;
 import io.harness.entities.infrastructureMapping.InfrastructureMapping;
@@ -10,7 +9,7 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.repositories.instancesyncperpetualtask.InstanceSyncPerpetualTaskRepository;
-import io.harness.service.InstanceHandler;
+import io.harness.service.AbstractInstanceHandler;
 import io.harness.service.instance.InstanceService;
 import io.harness.service.instancehandlerfactory.InstanceHandlerFactoryService;
 
@@ -31,7 +30,7 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
   @Override
   public void createPerpetualTasksForNewDeployment(
       InfrastructureMapping infrastructureMapping, DeploymentSummary deploymentSummary) {
-    InstanceHandler handler = getInstanceHandler(infrastructureMapping);
+    AbstractInstanceHandler handler = getInstanceHandler(infrastructureMapping);
     if (handler == null) {
       // TODO handle it gracefully with logs
       return;
@@ -97,13 +96,13 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
 
   @Override
   public boolean isInstanceSyncByPerpetualTaskEnabled(InfrastructureMapping infrastructureMapping) {
-    InstanceHandler instanceHandler = getInstanceHandler(infrastructureMapping);
-    if (instanceHandler == null) {
+    AbstractInstanceHandler abstractInstanceHandler = getInstanceHandler(infrastructureMapping);
+    if (abstractInstanceHandler == null) {
       return false;
     }
 
-    if (instanceHandler instanceof InstanceSyncByPerpetualTaskHandler) {
-      InstanceSyncByPerpetualTaskHandler handler = (InstanceSyncByPerpetualTaskHandler) instanceHandler;
+    if (abstractInstanceHandler instanceof InstanceSyncByPerpetualTaskHandler) {
+      InstanceSyncByPerpetualTaskHandler handler = (InstanceSyncByPerpetualTaskHandler) abstractInstanceHandler;
       return featureFlagService.isEnabled(
           handler.getFeatureFlagToEnablePerpetualTaskForInstanceSync(), infrastructureMapping.getAccountIdentifier());
     }
@@ -113,7 +112,7 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
 
   // ---------------------- PRIVATE METHODS -----------------------
 
-  private InstanceHandler getInstanceHandler(InfrastructureMapping infrastructureMapping) {
+  private AbstractInstanceHandler getInstanceHandler(InfrastructureMapping infrastructureMapping) {
     try {
       return instanceHandlerFactory.getInstanceHandler(infrastructureMapping);
     } catch (Exception ex) {

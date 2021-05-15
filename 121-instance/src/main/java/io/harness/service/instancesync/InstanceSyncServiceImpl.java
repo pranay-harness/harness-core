@@ -10,7 +10,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.entities.DeploymentSummary;
 import io.harness.entities.infrastructureMapping.InfrastructureMapping;
-import io.harness.exception.GeneralException;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -19,7 +18,7 @@ import io.harness.models.RollbackInfo;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.repositories.infrastructuremapping.InfrastructureMappingRepository;
-import io.harness.service.InstanceHandler;
+import io.harness.service.AbstractInstanceHandler;
 import io.harness.service.instance.InstanceService;
 import io.harness.service.instancehandlerfactory.InstanceHandlerFactoryService;
 import io.harness.service.instancesyncperpetualtask.InstanceSyncPerpetualTaskService;
@@ -33,7 +32,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.time.Duration;
 import java.util.Map;
-import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -173,8 +171,9 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
           InfrastructureMappingType.class, infrastructureMapping.getInfrastructureMappingType());
       Preconditions.checkNotNull(infrastructureMappingType, "InfrastructureMappingType should not be null");
       if (isSupported(infrastructureMappingType)) {
-        InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infrastructureMapping);
-        instanceHandler.handleNewDeployment(deploymentSummary, rollbackInfo);
+        AbstractInstanceHandler abstractInstanceHandler =
+            instanceHandlerFactory.getInstanceHandler(infrastructureMapping);
+        abstractInstanceHandler.handleNewDeployment(deploymentSummary, rollbackInfo);
         createPerpetualTaskForNewDeploymentIfEnabled(infrastructureMapping, deploymentSummary);
         log.info("Handled deployment event for infraMappingId [{}] successfully", infrastructureMappingId);
       } else {
@@ -207,14 +206,14 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
 
   private void handleInstanceSyncResponseFromPerpetualTask(InfrastructureMapping infrastructureMapping,
       PerpetualTaskRecord perpetualTaskRecord, DelegateResponseData response) {
-    InstanceHandler instanceHandler = getInstanceHandler(infrastructureMapping);
-    if (instanceHandler == null
+    AbstractInstanceHandler abstractInstanceHandler = getInstanceHandler(infrastructureMapping);
+    if (abstractInstanceHandler == null
         || !instanceSyncPerpetualTaskService.isInstanceSyncByPerpetualTaskEnabled(infrastructureMapping)) {
       return;
     }
 
     try {
-      instanceHandler.processInstanceSyncResponseFromPerpetualTask(infrastructureMapping, response);
+      abstractInstanceHandler.processInstanceSyncResponseFromPerpetualTask(infrastructureMapping, response);
     } catch (Exception ex) {
       log.error("Error handling Instance sync response. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
           infrastructureMapping.getId(), perpetualTaskRecord.getUuid());
@@ -234,7 +233,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
 
       throw ex;
     } finally {
-      Status status = instanceHandler.getStatus(infrastructureMapping, response);
+      Status status = abstractInstanceHandler.getStatus(infrastructureMapping, response);
       if (status.isSuccess()) {
         //        instanceService.updateSyncSuccess(infrastructureMapping.getAppId(),
         //        infrastructureMapping.getServiceId(),
@@ -256,7 +255,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
     }
   }
 
-  private InstanceHandler getInstanceHandler(InfrastructureMapping infrastructureMapping) {
+  private AbstractInstanceHandler getInstanceHandler(InfrastructureMapping infrastructureMapping) {
     try {
       return instanceHandlerFactory.getInstanceHandler(infrastructureMapping);
     } catch (Exception ex) {
