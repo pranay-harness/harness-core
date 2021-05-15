@@ -507,14 +507,14 @@ public class AccountResource {
   }
 
   @PUT
-  @Path("{accountId}/enableHarnessUserGroupAccess")
+  @Path("{accountId}/disableRestrictedAccess")
   @AuthRule(permissionType = MANAGE_RESTRICTED_ACCESS)
   public RestResponse<Boolean> enableHarnessUserGroupAccess(@PathParam("accountId") String accountId) {
     return new RestResponse<>(accountService.enableHarnessUserGroupAccess(accountId));
   }
 
   @PUT
-  @Path("{accountId}/disableHarnessUserGroupAccess")
+  @Path("{accountId}/enableRestrictedAccess")
   @AuthRule(permissionType = MANAGE_RESTRICTED_ACCESS)
   public RestResponse<Boolean> disableHarnessUserGroupAccess(@PathParam("accountId") String accountId) {
     return new RestResponse<>(accountService.disableHarnessUserGroupAccess(accountId));
