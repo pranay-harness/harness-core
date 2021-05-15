@@ -170,7 +170,7 @@ public class ConnectorResource {
       @QueryParam(NGResourceFilterConstants.FILTER_KEY) String filterIdentifier,
       @QueryParam(INCLUDE_ALL_CONNECTORS_ACCESSIBLE) Boolean includeAllConnectorsAccessibleAtScope,
       @Body ConnectorFilterPropertiesDTO connectorListFilter, @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
-      Boolean getDistinctFromBranches) {
+      @QueryParam("getDistinctFromBranches") Boolean getDistinctFromBranches) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(ResourceTypes.CONNECTOR, null), VIEW_CONNECTOR_PERMISSION);
     return ResponseDTO.newResponse(getNGPageResponse(
