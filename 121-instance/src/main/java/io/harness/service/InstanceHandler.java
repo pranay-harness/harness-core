@@ -10,7 +10,9 @@ import io.harness.entities.DeploymentSummary;
 import io.harness.entities.deploymentinfo.DeploymentInfo;
 import io.harness.entities.infrastructureMapping.InfrastructureMapping;
 import io.harness.entities.instance.Instance;
+import io.harness.entities.instance.InstanceKey;
 import io.harness.entities.instanceinfo.InstanceInfo;
+import io.harness.exception.GeneralException;
 import io.harness.models.InstanceHandlerKey;
 import io.harness.models.InstanceSyncFlowType;
 import io.harness.models.RollbackInfo;
@@ -39,9 +41,15 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(HarnessTeam.DX)
+/**
+ * Instance Handler Key - key used for logical orchestration of the instance handlers
+ * Server Instance - represents the logical instance entity in the server
+ * Instance Key - unique identifier of a server instance stored as part of instance entity for reference
+ * Instance Info - details about server instance stored as part of instance entity
+ */
 public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends InfrastructureMapping, V
                                           extends DeploymentInfo, X extends DelegateResponseData, Y
-                                          extends InstanceInfo, Z extends ServerInstance>
+                                          extends InstanceInfo, Z extends ServerInstance, W extends InstanceKey>
     implements IInstanceHandler, IInstanceSyncByPerpetualTaskhandler<X>, IInstanceSyncPerpetualTaskCreator<U> {
   public static final String AUTO_SCALE = "AUTO_SCALE";
 
@@ -50,50 +58,156 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
   @Inject private InstanceRepository instanceRepository;
   @Inject PerpetualTaskService perpetualTaskService;
 
-  protected abstract V validateAndReturnDeploymentInfo(DeploymentSummary deploymentSummary);
+  /**
+   * The handler needs to validate if deployment info in the deployment summary is of appropriate type as per handler
+   * @param deploymentSummary
+   * @return
+   * @throws GeneralException
+   */
+  protected abstract V validateAndReturnDeploymentInfo(DeploymentSummary deploymentSummary) throws GeneralException;
 
-  protected abstract Y validateAndReturnInstanceInfo(InstanceInfo instanceInfo);
+  /**
+   * The handler needs to validate if instanceInfo is of appropriate type as per the handler
+   * Its helpful to find anomalies (if any) in the instances in DB if instanceInfo doesn't match
+   * @param instanceInfo
+   * @return subclass of instanceInfo as per deployment type of the handler
+   * @throws GeneralException
+   */
+  protected abstract Y validateAndReturnInstanceInfo(InstanceInfo instanceInfo) throws GeneralException;
 
-  protected abstract Multimap<T, Instance> createDeploymentInstanceMap(DeploymentSummary deploymentSummary);
+  /**
+   * The handler needs to validate if infrastructure mapping is of appropriate type as per the handler
+   * It takes in the parent class object and returns concrete infrastructure mapping object as per the deployment type
+   * @param infrastructureMapping
+   * @return subclass of infrastructureMapping as per deployment type of the handler
+   * @throws GeneralException if input infrastructure mapping is mismatch with required type
+   */
+  protected abstract U validateAndReturnInfrastructureMapping(InfrastructureMapping infrastructureMapping)
+      throws GeneralException;
 
-  protected abstract U validateAndReturnInfrastructureMapping(InfrastructureMapping infrastructureMapping);
+  /**
+   * The handler needs to validate if the perpetual task response is of appropriate type as per the handler
+   * It takes in the parent class object and returns concrete delegate response object as per the handler type
+   * @param delegateResponseData instance sync perpetual task response
+   * @return subclass of delegateResponseData as per deployment type of the handler
+   * @throws GeneralException if delegate response data doesn't match with required response for the handler
+   */
+  protected abstract X validateAndReturnPerpetualTaskDelegateResponse(DelegateResponseData delegateResponseData)
+      throws GeneralException;
 
-  protected abstract void validatePerpetualTaskDelegateResponse(X response);
-
+  // TODO need to finalize definition of this method
+  /**
+   * The handler needs to provide a comparator method to compare if 2 instances objects are same or not
+   * @param instance
+   * @return
+   */
   protected abstract String getInstanceUniqueIdentifier(Instance instance);
 
-  // This key acts as common key for logical handling of instances in the handler
-  // Fetch it using deployment info
+  /**
+   * It returns instance handler key, used for logical handling of instances
+   * Also required while creating perpetual task context map for new instance sync perpetual task
+   * @param deploymentInfo
+   * @return
+   */
   protected abstract T getInstanceHandlerKey(V deploymentInfo);
 
-  // Fetch instance handler key using instance info
+  /**
+   * Fetch instance handler key (orchestration key) using instance info from the instance entity
+   * Its required to map instances in the DB to the key
+   * @param instanceInfo
+   * @return subtype of InstanceHandlerKey as per the handler
+   */
   protected abstract T getInstanceHandlerKey(Y instanceInfo);
 
-  // Fetch instance handler key from delegate response
+  /**
+   * Fetch instanceHandlerKey (orchestration key) using the delegate task response
+   * Its required in case of instance sync perpetual task flow to find out the corresponding instances in DB
+   * for sync for the given response
+   * @param delegateResponseData
+   * @return
+   */
   protected abstract T getInstanceHandlerKey(X delegateResponseData);
 
+  /**
+   * It is required to fetch the instance info (details related to deployment) from the server instance
+   * to be stored into its corresponding instance entity in DB
+   * @param serverInstance
+   * @return
+   */
   protected abstract Y getInstanceInfo(Z serverInstance);
 
+  /**
+   * It is required to fetch instance key from the server instance to be stored in the corresponding
+   * instance entity in the DB
+   * @param serverInstance
+   * @return
+   */
+  protected abstract W getInstanceKey(Z serverInstance);
+
+  /**
+   * Fetch list of server instances (eg: k8sPodsInfo etc) from the delegate task response
+   * @param delegateResponseData
+   * @return
+   */
   protected abstract List<Z> getServerInstancesFromDelegateResponse(X delegateResponseData);
 
-  protected abstract V getEmptyDeploymentInfoObject();
-
+  /**
+   * Its triggers delegate sync task to fetch instances/pods details from the server
+   * It is required during Manual Sync to fetch server instances and then do sync with instances in DB
+   * The task fetches instances corresponding to a particular instance handler key information only
+   * eg: for a given applicationName in PCF, or given autoscalingGroup in AWS etc
+   * @param infrastructureMapping
+   * @param instanceHandlerKey
+   * @return handler specific delegate response data required for orhestration purpose
+   */
   protected abstract X executeDelegateSyncTaskToFetchServerInstances(U infrastructureMapping, T instanceHandlerKey);
 
-  // Add custom deployment details to the client param map for perpetual task
-  protected abstract void populateClientParamMapForPerpetualTask(
-      Map<String, String> clientParamMap, T instanceHandlerKey);
-
-  protected abstract String getPerpetualTaskType();
-
   // Override this method in case of specific custom instance build requirements
+
+  /**
+   * This method lets the handler to add details to the instance entity based on deployment type
+   * Base instance is already created by the abstract layer, handler can add any deployment specific information
+   * to the instance via this method
+   * @param instanceBuilder
+   * @param serverInstance
+   */
   protected void buildInstanceCustom(Instance.InstanceBuilder instanceBuilder, Z serverInstance) {
     return;
   }
 
-  // Get concrete infrastructure mapping object based on infrastructure mapping type
+  /**
+   * The handler needs to process the incoming pipeline deployment event and return corresponding
+   * infrastructure mapping for the same
+   * @param ambiance
+   * @param serviceOutcome
+   * @param infrastructureOutcome
+   * @return
+   */
   protected abstract InfrastructureMapping getInfrastructureMappingByType(
       Ambiance ambiance, ServiceOutcome serviceOutcome, InfrastructureOutcome infrastructureOutcome);
+
+  /**
+   * The handler needs to add specific deployment type information to the client context of the perpetual task
+   * @param clientParamMap
+   * @param instanceHandlerKey
+   */
+  protected abstract void populateClientParamMapForPerpetualTask(
+      Map<String, String> clientParamMap, T instanceHandlerKey);
+
+  /**
+   * Perpetual task type required for the deployment type while creating instance sync perpetual task
+   * @return
+   */
+  protected abstract String getPerpetualTaskType();
+
+  // TODO check if this method would be require or not
+  /**
+   * Its required during preparing deployment summary while handling perpetual task
+   * @return
+   */
+  protected abstract V getEmptyDeploymentInfoObject();
+
+  // --------------------------------- Public interface Methods ---------------------------------
 
   public final InfrastructureMapping getInfrastructureMapping(Ambiance ambiance) {
     ServiceOutcome serviceOutcome = getServiceOutcomeFromAmbiance(ambiance);
@@ -121,23 +235,29 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
       return;
     }
 
+    // TODO check if required
     validateAndReturnDeploymentInfo(deploymentSummary);
 
     // Infrastructure mapping is already present in deployment summary
+    // TODO check if required
     U infrastructureMapping = validateAndReturnInfrastructureMapping(deploymentSummary.getInfrastructureMapping());
 
     syncInstancesInternal(
         infrastructureMapping, deploymentSummary, rollbackInfo, null, InstanceSyncFlowType.NEW_DEPLOYMENT);
   }
 
+  // Handle the response from instance sync perpetual task
   public final void processInstanceSyncResponseFromPerpetualTask(
-      InfrastructureMapping infrastructureMapping, X response) {
+      InfrastructureMapping infrastructureMapping, DelegateResponseData delegateResponseData) {
+    // Validate that incoming infrastructure mapping is of correct type or not as per the handler
+    // Get infrastructure mapping subtype for orchestration purpose
     U infrastructureMappingDetails = validateAndReturnInfrastructureMapping(infrastructureMapping);
 
-    validatePerpetualTaskDelegateResponse(response);
+    // Get delegate response subtype for orchestration purpose
+    X delegateResponse = validateAndReturnPerpetualTaskDelegateResponse(delegateResponseData);
 
     syncInstancesInternal(infrastructureMappingDetails, null, RollbackInfo.builder().isRollback(false).build(),
-        response, InstanceSyncFlowType.PERPETUAL_TASK);
+        delegateResponse, InstanceSyncFlowType.PERPETUAL_TASK);
   }
 
   public final void syncInstances(String accountId, String orgId, String projectId, String infrastructureMappingId,
@@ -149,7 +269,7 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
   }
 
   public final String createPerpetualTaskForNewDeployment(
-      DeploymentSummary deploymentSummary, T infrastructureMapping) {
+      DeploymentSummary deploymentSummary, U infrastructureMapping) {
     T instanceHandlerKey = getInstanceHandlerKey(validateAndReturnDeploymentInfo(deploymentSummary));
 
     Map<String, String> clientParamMap = prepareClientParamMapForPerpetualTask(deploymentSummary);
@@ -235,10 +355,11 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
 
   private void processInstanceSync(U infrastructureMapping, Multimap<T, Instance> instanceHandlerKeyVsInstanceMap,
       X delegateResponseData, DeploymentSummary deploymentSummary) {
+    List<Z> serverInstances = getServerInstancesFromDelegateResponse(delegateResponseData);
     T instanceHandlerKeyFromDelegateResponse = getInstanceHandlerKey(delegateResponseData);
     List<Instance> instancesInDB =
         new ArrayList<>(instanceHandlerKeyVsInstanceMap.get(instanceHandlerKeyFromDelegateResponse));
-    List<Z> serverInstances = getServerInstancesFromDelegateResponse(delegateResponseData);
+
     if (deploymentSummary == null) {
       // In case of perpetual task, deployment summary would be null
       // required to be constructed from existing instances
@@ -253,9 +374,7 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
     // TODO build instance base
     Instance.InstanceBuilder instanceBuilder = Instance.builder();
     instanceBuilder.instanceInfo(getInstanceInfo(serverInstance));
-    // Why don't we have common field for instane info in mongo
-    // rather having separate field names for different deployment type
-    // TODO set instance info
+    instanceBuilder.instanceKey(getInstanceKey(serverInstance));
 
     buildInstanceCustom(instanceBuilder, serverInstance);
 

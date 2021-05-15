@@ -15,5 +15,6 @@ public interface IInstanceHandler {
 
   InfrastructureMapping getInfrastructureMapping(Ambiance ambiance);
 
+  // Every handler needs to return the deploymentInfo object acc to the inframapping type they handle
   DeploymentInfo getDeploymentInfo(Ambiance ambiance);
 }
