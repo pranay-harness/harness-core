@@ -1,5 +1,8 @@
 package io.harness.serializer.kryo;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.SecretChangeLog;
@@ -38,6 +41,7 @@ import software.wings.beans.VaultConfig;
 import com.amazonaws.services.secretsmanager.model.AWSSecretsManagerException;
 import com.esotericsoftware.kryo.Kryo;
 
+@OwnedBy(PL)
 public class SMCoreKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
