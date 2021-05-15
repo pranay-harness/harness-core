@@ -814,7 +814,7 @@ public class K8sStepHelper {
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.MANIFESTS));
 
     InfrastructureOutcome infrastructureOutcome = (InfrastructureOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
 
     if (isEmpty(manifestsOutcome)) {
       throw new InvalidRequestException("Manifests can't be empty");
@@ -1139,7 +1139,7 @@ public class K8sStepHelper {
 
   public InfrastructureOutcome getInfrastructureOutcome(Ambiance ambiance) {
     OptionalOutcome optionalOutcome = outcomeService.resolveOptional(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
     if (!optionalOutcome.isFound()) {
       throw new InvalidRequestException(MISSING_INFRASTRUCTURE_ERROR, USER);
     }
