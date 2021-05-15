@@ -632,12 +632,14 @@ public class K8sStepHelperTest extends CategoryTest {
     K8sDirectInfrastructureOutcome outcome = K8sDirectInfrastructureOutcome.builder().build();
     doReturn(OptionalOutcome.builder().outcome(outcome).found(true).build())
         .when(outcomeService)
-        .resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+        .resolveOptional(
+            ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
     assertThat(k8sStepHelper.getInfrastructureOutcome(ambiance)).isEqualTo(outcome);
 
     doReturn(OptionalOutcome.builder().found(false).build())
         .when(outcomeService)
-        .resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+        .resolveOptional(
+            ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
     assertThatThrownBy(() -> k8sStepHelper.getInfrastructureOutcome(ambiance))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining(MISSING_INFRASTRUCTURE_ERROR);
@@ -787,8 +789,8 @@ public class K8sStepHelperTest extends CategoryTest {
                               .build();
 
     RefObject infra = RefObject.newBuilder()
-                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE)
-                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE)
+                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME)
+                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME)
                           .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
                           .build();
 
@@ -853,8 +855,8 @@ public class K8sStepHelperTest extends CategoryTest {
                               .build();
 
     RefObject infra = RefObject.newBuilder()
-                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE)
-                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE)
+                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME)
+                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME)
                           .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
                           .build();
 
@@ -921,8 +923,8 @@ public class K8sStepHelperTest extends CategoryTest {
                               .build();
 
     RefObject infra = RefObject.newBuilder()
-                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE)
-                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE)
+                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME)
+                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME)
                           .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
                           .build();
 
@@ -993,8 +995,8 @@ public class K8sStepHelperTest extends CategoryTest {
                               .build();
 
     RefObject infra = RefObject.newBuilder()
-                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE)
-                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE)
+                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME)
+                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME)
                           .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
                           .build();
 
@@ -1061,8 +1063,8 @@ public class K8sStepHelperTest extends CategoryTest {
                               .build();
 
     RefObject infra = RefObject.newBuilder()
-                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE)
-                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE)
+                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME)
+                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME)
                           .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
                           .build();
 
