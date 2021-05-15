@@ -61,6 +61,7 @@ import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.spy;
 import static org.powermock.api.mockito.PowerMockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -68,6 +69,7 @@ import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
 import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
+import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
@@ -101,11 +103,11 @@ import io.harness.k8s.model.Release.Status;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
+import io.harness.logging.LoggingInitializer;
 import io.harness.manifest.CustomManifestService;
 import io.harness.manifest.CustomManifestSource;
 import io.harness.rule.Owner;
 
-import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -151,6 +153,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.powermock.api.mockito.PowerMockito;
 import org.zeroturnaround.exec.ProcessOutput;
 import org.zeroturnaround.exec.ProcessResult;
@@ -167,7 +170,7 @@ import wiremock.com.google.common.collect.Lists;
  */
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
-public class K8sTaskHelperTest extends WingsBaseTest {
+public class K8sTaskHelperTest extends CategoryTest {
   @Mock private ExecutionLogCallback logCallback;
   @Mock private KubernetesContainerService mockKubernetesContainerService;
   @Mock private GitService mockGitService;
@@ -179,6 +182,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Mock private K8sTaskHelperBase mockK8sTaskHelperBase;
   @Mock private HelmHelper helmHelper;
   @Mock private CustomManifestService customManifestService;
+  @Mock private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
 
   private String resourcePath = "k8s";
   private String deploymentYaml = "deployment.yaml";
@@ -196,6 +200,8 @@ public class K8sTaskHelperTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
+    LoggingInitializer.initializeLogging();
     spyHelper = Mockito.spy(helper);
     spyHelperBase = Mockito.spy(k8sTaskHelperBase);
   }
@@ -1435,6 +1441,8 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testReadManifestAndOverrideLocalSecrets() throws Exception {
+    when(delegateLocalConfigService.replacePlaceholdersWithLocalConfig(anyString()))
+        .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
     fetchManifestFilesAndWriteToDirectory();
     final String workingDirectory = ".";
     K8sDelegateTaskParams k8sDelegateTaskParams = K8sDelegateTaskParams.builder()
