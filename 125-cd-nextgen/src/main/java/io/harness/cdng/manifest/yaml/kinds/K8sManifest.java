@@ -38,7 +38,7 @@ import org.springframework.data.annotation.TypeAlias;
 @OwnedBy(CDC)
 public class K8sManifest implements ManifestAttributes, Visitable {
   @EntityIdentifier String identifier;
-  @Wither @JsonProperty("store") StoreConfigWrapper storeConfigWrapper;
+  @Wither @JsonProperty("store") StoreConfigWrapper store;
   @Wither @YamlSchemaTypes({string, bool}) ParameterField<Boolean> skipResourceVersioning;
   // For Visitor Framework Impl
   String metadata;
@@ -47,9 +47,8 @@ public class K8sManifest implements ManifestAttributes, Visitable {
   public ManifestAttributes applyOverrides(ManifestAttributes overrideConfig) {
     K8sManifest k8sManifest = (K8sManifest) overrideConfig;
     K8sManifest resultantManifest = this;
-    if (k8sManifest.getStoreConfigWrapper() != null) {
-      resultantManifest = resultantManifest.withStoreConfigWrapper(
-          storeConfigWrapper.applyOverrides(k8sManifest.getStoreConfigWrapper()));
+    if (k8sManifest.getStore() != null) {
+      resultantManifest = resultantManifest.withStore(store.applyOverrides(k8sManifest.getStore()));
     }
     if (k8sManifest.getSkipResourceVersioning() != null) {
       resultantManifest = resultantManifest.withSkipResourceVersioning(k8sManifest.getSkipResourceVersioning());
@@ -65,13 +64,13 @@ public class K8sManifest implements ManifestAttributes, Visitable {
 
   @Override
   public StoreConfig getStoreConfig() {
-    return storeConfigWrapper.getStoreConfig();
+    return store.getSpec();
   }
 
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
-    children.add(YAMLFieldNameConstants.STORE, storeConfigWrapper);
+    children.add(YAMLFieldNameConstants.STORE, store);
     return children;
   }
 }

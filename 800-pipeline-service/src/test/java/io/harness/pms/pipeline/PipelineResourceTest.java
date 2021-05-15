@@ -19,6 +19,7 @@ import io.harness.dto.OrchestrationAdjacencyListDTO;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.JsonSchemaValidationException;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.NodeExecutionToExecutioNodeMapper;
@@ -132,6 +133,18 @@ public class PipelineResourceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = SAMARTH)
+  @Category(UnitTests.class)
+  public void testCreatePipelineWithSchemaErrors() throws IOException {
+    doThrow(JsonSchemaValidationException.class)
+        .when(pmsYamlSchemaService)
+        .validateYamlSchema(ORG_IDENTIFIER, PROJ_IDENTIFIER, yaml);
+
+    assertThatThrownBy(() -> pipelineResource.createPipeline(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, yaml))
+        .isInstanceOf(JsonSchemaValidationException.class);
+  }
+
+  @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testGetPipeline() {
@@ -182,6 +195,20 @@ public class PipelineResourceTest extends CategoryTest {
     ResponseDTO<String> responseDTO = pipelineResource.updatePipeline(
         null, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null, yaml);
     assertThat(responseDTO.getData()).isEqualTo(PIPELINE_IDENTIFIER);
+  }
+
+  @Test
+  @Owner(developers = SAMARTH)
+  @Category(UnitTests.class)
+  public void testUpdatePipelineWithSchemaErrors() {
+    doThrow(JsonSchemaValidationException.class)
+        .when(pmsYamlSchemaService)
+        .validateYamlSchema(ORG_IDENTIFIER, PROJ_IDENTIFIER, yaml);
+
+    assertThatThrownBy(()
+                           -> pipelineResource.updatePipeline(
+                               null, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null, yaml))
+        .isInstanceOf(JsonSchemaValidationException.class);
   }
 
   @Test

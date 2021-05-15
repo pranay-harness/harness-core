@@ -468,11 +468,11 @@ public class DelegateSetupResource {
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   @AuthRule(permissionType = MANAGE_DELEGATES)
-  public RestResponse<Void> delete(
-      @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
+  public RestResponse<Void> delete(@PathParam("delegateId") @NotEmpty String delegateId,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("forceDelete") boolean forceDelete) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      delegateService.delete(accountId, delegateId);
+      delegateService.delete(accountId, delegateId, forceDelete);
       return new RestResponse<>();
     }
   }
@@ -486,6 +486,19 @@ public class DelegateSetupResource {
       @QueryParam("accountId") @NotEmpty String accountId, List<String> delegatesToRetain) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       delegateService.retainOnlySelectedDelegatesAndDeleteRest(accountId, delegatesToRetain);
+      return new RestResponse<>();
+    }
+  }
+
+  @DELETE
+  @Path("groups/{delegateGroupId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = MANAGE_DELEGATES)
+  public RestResponse<Void> deleteDelegateGroup(@PathParam("delegateGroupId") @NotEmpty String delegateGroupId,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("forceDelete") boolean forceDelete) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      delegateService.deleteDelegateGroup(accountId, delegateGroupId, forceDelete);
       return new RestResponse<>();
     }
   }

@@ -104,6 +104,8 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
     return TransactionMetricInfoSummaryPageDTO.builder()
         .pageResponse(formPageResponse(transactionMetricInfoList, pageNumber, DEFAULT_PAGE_SIZE))
         .deploymentTimeRange(deploymentTimeRange)
+        .deploymentStartTime(deploymentTimeRange.getStartTime().toEpochMilli())
+        .deploymentEndTime(deploymentTimeRange.getEndTime().toEpochMilli())
         .build();
   }
 
