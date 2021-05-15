@@ -127,8 +127,12 @@ configFiles {"name": "appId_1", "background": true} {"appId": 1}
 configFiles {"name": "app_template_entityId", "background": true} {"appId": 1, "templateId": 1, "entityId": 1}
 configFiles {"name": "createdAt_1", "background": true} {"createdAt": 1}
 configFiles {"name": "entityId_1_templateId_1_relativeFilePath_1_OType_1_instances_1_OExpression_1", "unique": true} {"entityId": 1, "templateId": 1, "relativeFilePath": 1, "configOverrideType": 1, "instances": 1, "configOverrideExpression": 1}
+connectors {"name": "accountId_orgId_projectId_identifier_repo_branch_unique_index", "unique": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1, "yamlGitConfigRef": 1, "branch": 1}
 connectors {"name": "accountId_orgId_projectId_name_Index", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "name": 1}
 connectors {"name": "accountId_orgId_projectId_type_status_deletedAt_decreasing_sort_Index", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "type": 1, "connectivityDetails.status": 1, "deleted": 1, "createdAt": -1}
+connectors {"name": "accountId_project_org_identifier_isDefault_Index", "background": true} {"accountIdentifier": 1, "projectIdentifier": 1, "orgIdentifier": 1, "identifier": 1, "isFromDefaultBranch": 1}
+connectors {"name": "accountId_project_org_isDefault_Index", "background": true} {"accountIdentifier": 1, "projectIdentifier": 1, "orgIdentifier": 1, "isFromDefaultBranch": 1, "createdAt": -1}
+connectors {"name": "accountId_project_org_repo_branch_Index", "background": true} {"accountIdentifier": 1, "projectIdentifier": 1, "orgIdentifier": 1, "yamlGitConfigRef": 1, "branch": 1, "createdAt": -1}
 connectors {"name": "fullyQualifiedIdentifier_deleted_Index", "background": true} {"fullyQualifiedIdentifier": 1, "deleted": 1}
 containerDeploymentInfo {"name": "appId_1", "background": true} {"appId": 1}
 containerDeploymentInfo {"name": "containerSvcNameNoRevision_1", "background": true} {"containerSvcNameNoRevision": 1}
