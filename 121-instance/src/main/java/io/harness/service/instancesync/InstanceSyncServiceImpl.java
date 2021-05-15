@@ -159,15 +159,16 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
     try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
              InfrastructureMapping.class, infrastructureMappingId, Duration.ofSeconds(200), Duration.ofSeconds(220))) {
       log.info("Handling deployment event for infraMappingId [{}]", infrastructureMappingId);
-      Optional<InfrastructureMapping> infrastructureMappingOptional =
-          infrastructureMappingRepository.findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndId(
-              deploymentSummary.getAccountIdentifier(), deploymentSummary.getOrgIdentifier(),
-              deploymentSummary.getProjectIdentifier(), infrastructureMappingId);
-      if (!infrastructureMappingOptional.isPresent()) {
-        throw new GeneralException("Infra mapping is null for the given id: " + infrastructureMappingId);
-      }
-      InfrastructureMapping infrastructureMapping = infrastructureMappingOptional.get();
+      //      Optional<InfrastructureMapping> infrastructureMappingOptional =
+      //          infrastructureMappingRepository.findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndId(
+      //              deploymentSummary.getAccountIdentifier(), deploymentSummary.getOrgIdentifier(),
+      //              deploymentSummary.getProjectIdentifier(), infrastructureMappingId);
+      //      if (!infrastructureMappingOptional.isPresent()) {
+      //        throw new GeneralException("Infra mapping is null for the given id: " + infrastructureMappingId);
+      //      }
+      //      InfrastructureMapping infrastructureMapping = infrastructureMappingOptional.get();
 
+      InfrastructureMapping infrastructureMapping = deploymentSummary.getInfrastructureMapping();
       InfrastructureMappingType infrastructureMappingType = Utils.getEnumFromString(
           InfrastructureMappingType.class, infrastructureMapping.getInfrastructureMappingType());
       Preconditions.checkNotNull(infrastructureMappingType, "InfrastructureMappingType should not be null");
