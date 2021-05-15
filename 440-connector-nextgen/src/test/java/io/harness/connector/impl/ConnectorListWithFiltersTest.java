@@ -5,6 +5,7 @@ import static io.harness.connector.ConnectorCategory.ARTIFACTORY;
 import static io.harness.connector.ConnectorCategory.CLOUD_PROVIDER;
 import static io.harness.connector.impl.ConnectorFilterServiceImpl.CREDENTIAL_TYPE_KEY;
 import static io.harness.connector.impl.ConnectorFilterServiceImpl.INHERIT_FROM_DELEGATE_STRING;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.connector.ConnectorType.AWS;
 import static io.harness.delegate.beans.connector.ConnectorType.DOCKER;
 import static io.harness.delegate.beans.connector.ConnectorType.GCP;
@@ -119,6 +120,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     for (String orgId : orgs) {
       connectorInfoDTO.setOrgIdentifier(orgId);
       connectorInfoDTO.setProjectIdentifier(null);
+      connectorInfoDTO.setIdentifier(generateUuid());
       connectorInfoDTO.setName(name + System.currentTimeMillis());
       connectorService.create(ConnectorDTO.builder().connectorInfo(connectorInfoDTO).build(), accountIdentifier);
     }
@@ -150,13 +152,14 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     ConnectorInfoDTO connectorInfoDTO = getConnector(name, identifier, description);
     for (String projId : projIds) {
       connectorInfoDTO.setProjectIdentifier(projId);
+      connectorInfoDTO.setIdentifier(generateUuid());
       connectorInfoDTO.setName(name + System.currentTimeMillis());
       connectorService.create(ConnectorDTO.builder().connectorInfo(connectorInfoDTO).build(), accountIdentifier);
     }
   }
 
   private void createAccountLevelConnectors() {
-    ConnectorInfoDTO connectorInfoDTO = getConnector(name + System.currentTimeMillis(), identifier, description);
+    ConnectorInfoDTO connectorInfoDTO = getConnector(name + System.currentTimeMillis(), generateUuid(), description);
     connectorInfoDTO.setOrgIdentifier(null);
     connectorInfoDTO.setProjectIdentifier(null);
     connectorService.create(ConnectorDTO.builder().connectorInfo(connectorInfoDTO).build(), accountIdentifier);
@@ -196,6 +199,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     ConnectorInfoDTO connectorInfoDTO = getConnector(name, identifier, description);
     for (String name : namesList) {
       connectorInfoDTO.setName(name);
+      connectorInfoDTO.setIdentifier(generateUuid());
       connectorService.create(ConnectorDTO.builder().connectorInfo(connectorInfoDTO).build(), accountIdentifier);
     }
   }
@@ -204,7 +208,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testListWithIdentifierFilter() {
-    createConnectorsWithIdentifiers(Arrays.asList("dockerId", "identifier", "qa connector", "dockerId"));
+    createConnectorsWithIdentifiers(Arrays.asList("dockerId", "identifier", "qa connector", "dockerId1"));
     ConnectorFilterPropertiesDTO connectorFilterPropertiesDTO =
         ConnectorFilterPropertiesDTO.builder()
             .connectorIdentifiers(Arrays.asList("identifier", "qa connector"))
@@ -250,6 +254,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     ConnectorInfoDTO connectorInfoDTO = getConnector(name, identifier, description);
     for (String description : descriptions) {
       connectorInfoDTO.setDescription(description);
+      connectorInfoDTO.setIdentifier(generateUuid());
       connectorInfoDTO.setName(name + System.currentTimeMillis());
       connectorService.create(ConnectorDTO.builder().connectorInfo(connectorInfoDTO).build(), accountIdentifier);
     }
@@ -375,6 +380,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     for (int i = 0; i < numberOfConnectors; i++) {
       KubernetesClusterConfig connector = getConnectorEntity();
       connector.setName(name + System.currentTimeMillis());
+      connector.setIdentifier(generateUuid());
       connector.setConnectivityDetails(ConnectorConnectivityDetails.builder().status(status).build());
       connectorRepository.save(connector, ChangeType.ADD);
     }
@@ -414,7 +420,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
                                         .build())
                             .build())
             .build();
-    ConnectorDTO connectorDTO = createConnectorDTO(identifier, GCP, gcpConnectorDTO);
+    ConnectorDTO connectorDTO = createConnectorDTO(generateUuid(), GCP, gcpConnectorDTO);
     connectorService.create(connectorDTO, accountIdentifier);
   }
 
@@ -443,7 +449,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
                                         .build())
                             .build())
             .build();
-    ConnectorDTO connectorDTO = createConnectorDTO(identifier, AWS, awsCredentialDTO);
+    ConnectorDTO connectorDTO = createConnectorDTO(generateUuid(), AWS, awsCredentialDTO);
     connectorService.create(connectorDTO, accountIdentifier);
   }
 
@@ -454,7 +460,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
             .credential(
                 KubernetesCredentialDTO.builder().kubernetesCredentialType(INHERIT_FROM_DELEGATE).config(null).build())
             .build();
-    ConnectorDTO connectorDTO = createConnectorDTO(identifier, KUBERNETES_CLUSTER, connectorDTOWithDelegateCreds);
+    ConnectorDTO connectorDTO = createConnectorDTO(generateUuid(), KUBERNETES_CLUSTER, connectorDTOWithDelegateCreds);
     connectorService.create(connectorDTO, accountIdentifier);
   }
 
