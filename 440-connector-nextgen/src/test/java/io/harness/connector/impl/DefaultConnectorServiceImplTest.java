@@ -382,5 +382,11 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
     assertThat(connectorIdentifierList).contains(connectorIdentifier1);
     assertThat(connectorIdentifierList).contains(connectorIdentifier2);
     assertThat(connectorIdentifierList).contains(connectorIdentifier3);
+    Page<ConnectorResponseDTO> connectorSummaryDTOSList_1 =
+        connectorService.list(0, 2, accountIdentifier, null, null, null, "", "", false, true);
+    assertThat(connectorSummaryDTOSList_1.get().count()).isEqualTo(2L);
+    Page<ConnectorResponseDTO> connectorSummaryDTOSList_2 =
+        connectorService.list(1, 2, accountIdentifier, null, null, null, "", "", false, true);
+    assertThat(connectorSummaryDTOSList_2.get().count()).isEqualTo(1L);
   }
 }
