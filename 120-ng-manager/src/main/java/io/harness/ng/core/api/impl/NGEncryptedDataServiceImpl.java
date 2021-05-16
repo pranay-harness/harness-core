@@ -562,6 +562,7 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
             if (secretManager != null) {
               EncryptionConfig encryptionConfig = SecretManagerConfigMapper.fromDTO(secretManager);
               EncryptedRecordData encryptedRecordData;
+
               if (secretManager.isHarnessManaged()
                   || HARNESS_SECRET_MANAGER_IDENTIFIER.equals(encryptedData.getSecretManagerIdentifier())) {
                 encryptedRecordData = globalEncryptDecryptClient.convertEncryptedRecordToLocallyEncrypted(
