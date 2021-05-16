@@ -165,6 +165,7 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     encrypt(encryptedData, fileContent, SecretManagerConfigMapper.fromDTO(secretManager));
     encryptedData.setBase64Encoded(true);
     if (!ngSecretMigrationCompleted) {
+      // remove after migration
       getResponse(secretManagerClient.saveSecret(toEncryptedDataMigrationDTO(encryptedData)));
     }
     if (ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())
@@ -313,6 +314,7 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     }
     existingEncryptedData.setName(encryptedData.getName());
     if (!ngSecretMigrationCompleted) {
+      // remove after migration
       getResponse(secretManagerClient.updateSecret(toEncryptedDataMigrationDTO(existingEncryptedData)));
     }
     return encryptedDataDao.save(existingEncryptedData);
@@ -433,6 +435,7 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     existingEncryptedData.setEncryptedValue(encryptedData.getEncryptedValue());
     existingEncryptedData.setBase64Encoded(encryptedData.isBase64Encoded());
     if (!ngSecretMigrationCompleted) {
+      // remove after migration
       char[] fileId = existingEncryptedData.getEncryptedValue();
       if (Optional.ofNullable(existingEncryptedData.getEncryptedValue()).isPresent()
           && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(existingEncryptedData.getEncryptionType())) {
@@ -466,6 +469,7 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     NGEncryptedData encryptedData = get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     boolean fromManager = false;
     if (encryptedData == null && !ngSecretMigrationCompleted) {
+      // remove after migration
       fromManager = true;
       encryptedData = getFromManagerWithFileContent(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     }
@@ -473,6 +477,7 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
       return false;
     }
     if (fromManager) {
+      // remove after migration
       getResponse(secretManagerClient.deleteSecret(identifier, accountIdentifier, orgIdentifier, projectIdentifier));
     }
     SecretManagerConfigDTO secretManager = getSecretManagerOrThrow(
