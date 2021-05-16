@@ -199,8 +199,8 @@ public class NGSecretServiceImpl implements NGSecretService {
         } catch (Exception exception) {
           // ignore
         }
-        return wingsPersistence.delete(EncryptedData.class, encryptedData.getUuid());
       }
+      return wingsPersistence.delete(EncryptedData.class, encryptedData.getUuid());
     }
     return false;
   }
