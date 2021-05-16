@@ -478,7 +478,11 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     }
     if (!ngSecretMigrationCompleted) {
       // remove after migration
-      getResponse(secretManagerClient.deleteSecret(identifier, accountIdentifier, orgIdentifier, projectIdentifier));
+      Boolean managerSuccess = getResponse(
+          secretManagerClient.deleteSecret(identifier, accountIdentifier, orgIdentifier, projectIdentifier));
+      if (Boolean.FALSE.equals(managerSuccess)) {
+        throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Secret deletion failed", USER);
+      }
     }
     SecretManagerConfigDTO secretManager = getSecretManagerOrThrow(
         accountIdentifier, orgIdentifier, projectIdentifier, encryptedData.getSecretManagerIdentifier(), false);

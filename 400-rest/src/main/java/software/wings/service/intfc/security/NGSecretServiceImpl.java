@@ -202,7 +202,7 @@ public class NGSecretServiceImpl implements NGSecretService {
       }
       return wingsPersistence.delete(EncryptedData.class, encryptedData.getUuid());
     }
-    return false;
+    return true;
   }
 
   public void setEncryptedValueToFileContent(EncryptedData encryptedData) {
