@@ -1,6 +1,7 @@
 package io.harness.plancreator.steps;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
+import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.yaml.core.failurestrategy.NGFailureType.AUTHENTICATION_ERROR;
 import static io.harness.yaml.core.failurestrategy.NGFailureType.AUTHORIZATION_ERROR;
 
@@ -18,6 +19,8 @@ import io.harness.yaml.core.failurestrategy.NGFailureType;
 import io.harness.yaml.core.failurestrategy.OnFailureConfig;
 import io.harness.yaml.core.failurestrategy.abort.AbortFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.ignore.IgnoreFailureActionConfig;
+import io.harness.yaml.core.failurestrategy.manualintervention.ManualFailureSpecConfig;
+import io.harness.yaml.core.failurestrategy.manualintervention.OnTimeoutConfig;
 import io.harness.yaml.core.failurestrategy.retry.RetryFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.retry.RetryFailureSpecConfig;
 import io.harness.yaml.core.timeout.Timeout;
@@ -178,5 +181,18 @@ public class FailureStrategiesUtilsTest extends OrchestrationStepsTestBase {
     Collection<FailureType> failureTypesIgnore =
         actionConfigCollectionMap.get(IgnoreFailureActionConfig.builder().build());
     assertThat(failureTypesIgnore).containsOnly(FailureType.AUTHENTICATION_FAILURE);
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
+  public void validateRetryManualRetryActionWorkflow() {
+    ManualFailureSpecConfig manualFailureSpecConfig =
+        ManualFailureSpecConfig.builder()
+            .onTimeout(OnTimeoutConfig.builder().action(RetryFailureActionConfig.builder().build()).build())
+            .build();
+    boolean ans = FailureStrategiesUtils.validateRetryActionUnderManualAction(manualFailureSpecConfig);
+
+    assertThat(ans).isEqualTo(true);
   }
 }
