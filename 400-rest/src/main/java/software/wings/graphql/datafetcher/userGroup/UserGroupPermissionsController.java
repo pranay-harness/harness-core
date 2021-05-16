@@ -516,6 +516,8 @@ public class UserGroupPermissionsController {
         return QLAccountPermissionType.MANAGE_CUSTOM_DASHBOARDS;
       case CREATE_CUSTOM_DASHBOARDS:
         return QLAccountPermissionType.CREATE_CUSTOM_DASHBOARDS;
+      case MANAGE_RESTRICTED_ACCESS:
+        return QLAccountPermissionType.MANAGE_RESTRICTED_ACCESS;
       default:
         log.error("Invalid Account Permission Type {} given by the user", permissionType.toString());
     }
