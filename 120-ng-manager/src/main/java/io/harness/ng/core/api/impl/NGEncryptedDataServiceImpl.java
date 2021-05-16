@@ -476,7 +476,7 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     if (encryptedData == null) {
       return false;
     }
-    if (fromManager) {
+    if (!ngSecretMigrationCompleted) {
       // remove after migration
       getResponse(secretManagerClient.deleteSecret(identifier, accountIdentifier, orgIdentifier, projectIdentifier));
     }
