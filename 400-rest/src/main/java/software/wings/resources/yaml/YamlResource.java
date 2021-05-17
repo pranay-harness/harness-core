@@ -1,5 +1,6 @@
 package software.wings.resources.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -22,6 +23,7 @@ import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
@@ -52,8 +54,8 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserThreadLocal;
+import software.wings.security.annotations.ApiKeyAuthorized;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -109,6 +111,7 @@ import org.jvnet.hk2.annotations.Optional;
 @Path("setup-as-code/yaml")
 @Produces(APPLICATION_JSON)
 @Scope(SETTING)
+@OwnedBy(DX)
 @Slf4j
 public class YamlResource {
   private YamlResourceService yamlResourceService;
@@ -652,7 +655,7 @@ public class YamlResource {
   @Path("/directory")
   @Timed
   @ExceptionMetered
-  @ExternalFacingApiAuth
+  @ApiKeyAuthorized(permissionType = LOGGED_IN)
   public RestResponse<DirectoryNode> getDirectory(
       @QueryParam("accountId") String accountId, @QueryParam("appId") String appId) {
     return new RestResponse<>(yamlDirectoryService.getDirectory(accountId, appId));
@@ -1202,7 +1205,7 @@ public class YamlResource {
   @Path("/yaml-content")
   @Timed
   @ExceptionMetered
-  @ExternalFacingApiAuth
+  @ApiKeyAuthorized(permissionType = LOGGED_IN)
   public RestResponse<YamlPayload> getYamlForFilePath(@QueryParam("accountId") String accountId,
       @QueryParam("yamlFilePath") String yamlFilePath, @QueryParam("yamlSubType") String yamlSubType,
       @QueryParam("applicationId") String applicationId) {
@@ -1223,7 +1226,7 @@ public class YamlResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
-  @ExternalFacingApiAuth
+  @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<YamlOperationResponse> upsertYAMLEntities(@QueryParam("accountId") @NotEmpty String accountId,
       @FormDataParam("file") InputStream uploadedInputStream) throws IOException {
     return new RestResponse<>(yamlService.upsertYAMLFilesAsZip(accountId,
@@ -1236,7 +1239,7 @@ public class YamlResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
-  @ExternalFacingApiAuth
+  @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<FileOperationStatus> upsertYAMLEntity(@QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("yamlFilePath") @NotEmpty String yamlFilePath, @FormDataParam("yamlContent") String yamlContent) {
     return new RestResponse<>(yamlService.upsertYAMLFile(accountId, yamlFilePath, yamlContent));
@@ -1247,7 +1250,7 @@ public class YamlResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
-  @ExternalFacingApiAuth
+  @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<YamlOperationResponse> deleteYAMLEntities(
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("filePaths") @NotEmpty List<String> filePaths) {
     return new RestResponse<>(yamlService.deleteYAMLByPaths(accountId, filePaths));
