@@ -257,7 +257,24 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
     query.filter("memberIds", memberId);
     query.filter("groupType", groupType);
     return query.asList();
-  };
+  }
+
+  public List<User> listAllHarnessSupportUsers() {
+    Set<User> userSet = new HashSet<>();
+    Query<HarnessUserGroup> query = wingsPersistence.createQuery(HarnessUserGroup.class, excludeAuthority);
+    List<HarnessUserGroup> harnessUserGroupList = query.asList();
+    harnessUserGroupList.forEach(harnessUserGroup -> {
+      harnessUserGroup.getMemberIds().forEach(memberId -> {
+        User user = userService.get(memberId);
+        if (user != null) {
+          userSet.add(user);
+        }
+      });
+    });
+    List<User> userList = new ArrayList<>(userSet);
+    Collections.sort(userList, Comparator.comparing(user -> user.getEmail()));
+    return userList;
+  }
 
   private Set<String> getMemberIds(HarnessUserGroupDTO harnessUserGroupDTO) {
     if (isEmpty(harnessUserGroupDTO.getEmailIds())) {

@@ -36,6 +36,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
@@ -140,6 +141,7 @@ public class AccessRequestServiceImpl implements AccessRequestService {
     Query<AccessRequest> query = wingsPersistence.createQuery(AccessRequest.class, excludeAuthority);
     query.filter("accountId", accountId);
     query.filter("accessActive", true);
+    query.order(Sort.descending(AccessRequest.AccessRequestKeys.accessEndAt));
     return query.asList();
   }
 
@@ -149,6 +151,7 @@ public class AccessRequestServiceImpl implements AccessRequestService {
     notNullCheck("Invalid account with id: " + accountId, account);
     Query<AccessRequest> query = wingsPersistence.createQuery(AccessRequest.class, excludeAuthority);
     query.filter("accountId", accountId);
+    query.order(Sort.descending(AccessRequest.AccessRequestKeys.accessEndAt));
     return query.asList();
   }
 
@@ -163,6 +166,7 @@ public class AccessRequestServiceImpl implements AccessRequestService {
     query.filter("memberIds", userId);
     query.filter("accessActive", true);
     query.filter("accessType", AccessRequest.AccessType.MEMBER_ACCESS);
+    query.order(Sort.descending(AccessRequest.AccessRequestKeys.accessEndAt));
     return query.asList();
   }
 
