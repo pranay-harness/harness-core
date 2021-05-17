@@ -5,12 +5,12 @@ import static io.harness.pms.sdk.core.SdkDeployMode.REMOTE;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.HarnessCacheManager;
-import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
 import io.harness.pms.sdk.core.pipeline.filters.FilterCreationResponseMerger;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
-import io.harness.pms.sdk.core.resolver.expressions.EngineGrpcExpressionService;
 import io.harness.version.VersionInfoManager;
+import io.harness.pms.expression.SdkExpressionService;
+import io.harness.pms.sdk.core.resolver.expressions.SdkExpressionServiceImpl;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -40,7 +40,7 @@ class PmsSdkProviderModule extends AbstractModule {
   @Override
   protected void configure() {
     if (config.getDeploymentMode() == REMOTE) {
-      bind(EngineExpressionService.class).to(EngineGrpcExpressionService.class).in(Singleton.class);
+      bind(SdkExpressionService.class).to(SdkExpressionServiceImpl.class).in(Singleton.class);
     }
     if (config.getExecutionSummaryModuleInfoProviderClass() != null) {
       bind(ExecutionSummaryModuleInfoProvider.class)

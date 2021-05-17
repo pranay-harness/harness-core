@@ -6,6 +6,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.ExecutionCheck;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -31,7 +32,14 @@ public class SkipPreFacilitationChecker extends ExpressionEvalPreFacilitationChe
     String skipCondition = nodeExecution.getNode().getSkipCondition();
     if (EmptyPredicate.isNotEmpty(skipCondition)) {
       try {
-        boolean skipConditionValue = (Boolean) engineExpressionService.evaluateExpression(ambiance, skipCondition);
+        Object skipConditionObjValue = engineExpressionService.evaluateExpression(ambiance, skipCondition);
+        if (!(skipConditionObjValue instanceof Boolean)) {
+          throw new InvalidRequestException(
+              String.format("Expected skip condition to be of boolean value, got %s value",
+                  skipConditionObjValue == null ? "null" : skipConditionObjValue.getClass().getSimpleName()));
+        }
+
+        boolean skipConditionValue = (boolean) skipConditionObjValue;
         nodeExecutionService.update(nodeExecution.getUuid(), ops -> {
           ops.set(NodeExecutionKeys.skipInfo,
               SkipInfo.newBuilder().setEvaluatedCondition(skipConditionValue).setSkipCondition(skipCondition).build());

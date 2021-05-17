@@ -20,7 +20,6 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanService;
 import io.harness.engine.executions.plan.PlanServiceImpl;
-import io.harness.engine.expressions.EngineExpressionServiceImpl;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.engine.facilitation.facilitator.publisher.FacilitateEventPublisher;
 import io.harness.engine.facilitation.facilitator.publisher.RedisFacilitateEventPublisher;
@@ -30,7 +29,7 @@ import io.harness.engine.interrupts.handlers.publisher.InterruptEventPublisher;
 import io.harness.engine.interrupts.handlers.publisher.RedisInterruptEventPublisher;
 import io.harness.engine.pms.advise.publisher.NodeAdviseEventPublisher;
 import io.harness.engine.pms.advise.publisher.RedisNodeAdviseEventPublisher;
-import io.harness.engine.pms.data.PmsEngineExpressionServiceImpl;
+import io.harness.engine.pms.data.EngineExpressionServiceImpl;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.pms.data.PmsOutcomeServiceImpl;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
@@ -47,7 +46,7 @@ import io.harness.pms.NoopFeatureFlagServiceImpl;
 import io.harness.pms.PmsFeatureFlagService;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.expression.EngineExpressionService;
-import io.harness.pms.expression.PmsEngineExpressionService;
+import io.harness.pms.expression.SdkExpressionService;
 import io.harness.pms.helpers.PmsFeatureFlagHelper;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.queue.TimerScheduledExecutorService;
@@ -128,10 +127,9 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     // PMS Services
     bind(PmsSweepingOutputService.class).to(PmsSweepingOutputServiceImpl.class).in(Singleton.class);
     bind(PmsOutcomeService.class).to(PmsOutcomeServiceImpl.class).in(Singleton.class);
-    bind(PmsEngineExpressionService.class).to(PmsEngineExpressionServiceImpl.class).in(Singleton.class);
-
+    bind(EngineExpressionService.class).to(EngineExpressionServiceImpl.class).in(Singleton.class);
     if (!config.isWithPMS()) {
-      bind(EngineExpressionService.class).to(EngineExpressionServiceImpl.class);
+      bind(SdkExpressionService.class).to(EngineExpressionServiceImpl.class);
     }
 
     MapBinder<String, TestExecution> testExecutionMapBinder =

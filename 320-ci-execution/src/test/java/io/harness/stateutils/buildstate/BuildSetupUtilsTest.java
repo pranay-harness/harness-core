@@ -12,6 +12,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.category.element.UnitTests;
 import io.harness.ci.beans.entities.LogServiceConfig;
@@ -24,7 +26,6 @@ import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
-import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.rule.Owner;
 import io.harness.tiserviceclient.TIServiceUtils;
@@ -38,13 +39,13 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CI)
 public class BuildSetupUtilsTest extends CIExecutionTestBase {
   @Inject private BuildSetupUtils buildSetupUtils;
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Inject private K8BuildSetupUtils k8BuildSetupUtils;
   @Mock private ConnectorUtils connectorUtils;
   @Mock private SecretUtils secretUtils;
-  @Mock private PmsEngineExpressionService pmsEngineExpressionService;
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Mock CILogServiceUtils logServiceUtils;
   @Mock TIServiceUtils tiServiceUtils;
@@ -93,7 +94,6 @@ public class BuildSetupUtilsTest extends CIExecutionTestBase {
     TIServiceConfig tiServiceConfig = TIServiceConfig.builder().baseUrl("endpoint").globalToken("token").build();
     when(tiServiceUtils.getTiServiceConfig()).thenReturn(tiServiceConfig);
     when(tiServiceUtils.getTIServiceToken(any())).thenReturn("token");
-    when(pmsEngineExpressionService.renderExpression(any(), any())).thenReturn(CLUSTER_NAME);
     when(executionSweepingOutputResolver.resolve(any(), any()))
         .thenReturn(K8PodDetails.builder().clusterName("cluster").namespace("namespace").stageID("stage").build());
 
@@ -139,7 +139,6 @@ public class BuildSetupUtilsTest extends CIExecutionTestBase {
     TIServiceConfig tiServiceConfig = TIServiceConfig.builder().baseUrl("endpoint").globalToken("token").build();
     when(tiServiceUtils.getTiServiceConfig()).thenReturn(tiServiceConfig);
     when(tiServiceUtils.getTIServiceToken(any())).thenReturn("token");
-    when(pmsEngineExpressionService.renderExpression(any(), any())).thenReturn(CLUSTER_NAME);
     when(executionSweepingOutputResolver.resolve(any(), any()))
         .thenReturn(K8PodDetails.builder().clusterName("cluster").namespace("namespace").stageID("stage").build());
 

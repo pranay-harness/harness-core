@@ -8,6 +8,7 @@ import io.harness.engine.ExecutionCheck;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.expressions.OrchestrationConstants;
+import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.expression.EngineExpressionEvaluator;
@@ -16,7 +17,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.run.ExpressionBlock;
 import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
-import io.harness.pms.expression.PmsEngineExpressionService;
+import io.harness.pms.expression.EngineExpressionService;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -31,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 public class RunPreFacilitationChecker extends ExpressionEvalPreFacilitationChecker {
   @Inject private OrchestrationEngine orchestrationEngine;
   @Inject private NodeExecutionService nodeExecutionService;
-  @Inject PmsEngineExpressionService pmsEngineExpressionService;
+  @Inject EngineExpressionService engineExpressionService;
 
   @Override
   protected ExecutionCheck performCheck(NodeExecution nodeExecution) {
@@ -41,9 +42,15 @@ public class RunPreFacilitationChecker extends ExpressionEvalPreFacilitationChec
     if (EmptyPredicate.isNotEmpty(whenCondition)) {
       try {
         EngineExpressionEvaluator engineExpressionEvaluator =
-            pmsEngineExpressionService.prepareExpressionEvaluator(ambiance);
+            engineExpressionService.prepareExpressionEvaluator(ambiance);
         Object evaluatedExpression = engineExpressionEvaluator.evaluateExpression(whenCondition);
-        boolean whenConditionValue = (Boolean) evaluatedExpression;
+        if (!(evaluatedExpression instanceof Boolean)) {
+          throw new InvalidRequestException(
+              String.format("Expected when condition to be of boolean value, got %s value",
+                  evaluatedExpression == null ? "null" : evaluatedExpression.getClass().getSimpleName()));
+        }
+
+        boolean whenConditionValue = (boolean) evaluatedExpression;
         nodeExecutionService.update(nodeExecution.getUuid(), ops -> {
           ops.set(NodeExecutionKeys.nodeRunInfo,
               NodeRunInfo.newBuilder()

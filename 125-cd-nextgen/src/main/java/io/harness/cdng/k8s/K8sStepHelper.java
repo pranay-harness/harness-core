@@ -129,7 +129,7 @@ import io.harness.pms.contracts.execution.failure.FailureData;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
-import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.expression.SdkExpressionService;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
@@ -182,7 +182,7 @@ public class K8sStepHelper {
   public static final Pattern releaseNamePattern = Pattern.compile(RELEASE_NAME_VALIDATION_REGEX);
   @Named(DEFAULT_CONNECTOR_SERVICE) @Inject private ConnectorService connectorService;
   @Named("PRIVILEGED") @Inject private SecretManagerClientService secretManagerClientService;
-  @Inject private EngineExpressionService engineExpressionService;
+  @Inject private SdkExpressionService sdkExpressionService;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private OutcomeService outcomeService;
   @Inject GitConfigAuthenticationInfoHelper gitConfigAuthenticationInfoHelper;
@@ -589,7 +589,7 @@ public class K8sStepHelper {
 
     List<String> renderedValuesFileContents =
         valuesFileContents.stream()
-            .map(valuesFileContent -> engineExpressionService.renderExpression(ambiance, valuesFileContent))
+            .map(valuesFileContent -> sdkExpressionService.renderExpression(ambiance, valuesFileContent))
             .collect(Collectors.toList());
 
     if (ManifestType.OpenshiftTemplate.equals(manifestOutcome.getType())) {

@@ -8,7 +8,7 @@ import io.harness.pms.contracts.service.ExpressionEvaluateBlobRequest;
 import io.harness.pms.contracts.service.ExpressionEvaluateBlobResponse;
 import io.harness.pms.contracts.service.ExpressionRenderBlobRequest;
 import io.harness.pms.contracts.service.ExpressionRenderBlobResponse;
-import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.expression.SdkExpressionService;
 import io.harness.pms.sdk.core.grpc.client.PmsSdkGrpcClientUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
@@ -17,12 +17,11 @@ import com.google.inject.Singleton;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
-public class EngineGrpcExpressionService implements EngineExpressionService {
+public class SdkExpressionServiceImpl implements SdkExpressionService {
   private final EngineExpressionProtoServiceBlockingStub engineExpressionProtoServiceBlockingStub;
 
   @Inject
-  public EngineGrpcExpressionService(
-      EngineExpressionProtoServiceBlockingStub engineExpressionProtoServiceBlockingStub) {
+  public SdkExpressionServiceImpl(EngineExpressionProtoServiceBlockingStub engineExpressionProtoServiceBlockingStub) {
     this.engineExpressionProtoServiceBlockingStub = engineExpressionProtoServiceBlockingStub;
   }
 

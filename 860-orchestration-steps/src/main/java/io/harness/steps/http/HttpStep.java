@@ -10,6 +10,7 @@ import io.harness.delegate.task.http.HttpStepResponse;
 import io.harness.delegate.task.http.HttpTaskParametersNg;
 import io.harness.delegate.task.http.HttpTaskParametersNg.HttpTaskParametersNgBuilder;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnresolvedExpressionsException;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.http.HttpHeaderConfig;
 import io.harness.logstreaming.LogStreamingStepClientFactory;
@@ -158,6 +159,8 @@ public class HttpStep extends TaskExecutableWithRollback<HttpStepResponse> {
             "Expected boolean assertion, got %s value", value == null ? "null" : value.getClass().getSimpleName()));
       }
       return (boolean) value;
+    } catch (UnresolvedExpressionsException ex) {
+      throw ex;
     } catch (Exception e) {
       throw new InvalidRequestException("Assertion provided is not a valid expression", e);
     }

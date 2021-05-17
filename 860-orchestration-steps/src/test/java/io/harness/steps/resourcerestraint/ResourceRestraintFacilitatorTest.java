@@ -23,7 +23,7 @@ import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.execution.facilitator.DefaultFacilitatorParams;
-import io.harness.pms.expression.PmsEngineExpressionService;
+import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.sdk.core.execution.events.node.facilitate.FacilitatorResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
@@ -50,7 +50,7 @@ public class ResourceRestraintFacilitatorTest extends OrchestrationStepsTestBase
   @Inject private KryoSerializer kryoSerializer;
   @Mock private ResourceRestraintService resourceRestraintService;
   @Mock private RestraintService restraintService;
-  @Mock private PmsEngineExpressionService pmsEngineExpressionService;
+  @Mock private EngineExpressionService engineExpressionService;
   @Inject @InjectMocks private ResourceRestraintRegistry resourceRestraintRegistry;
   @Inject @InjectMocks private ResourceRestraintFacilitator resourceRestraintFacilitator;
 
@@ -71,7 +71,7 @@ public class ResourceRestraintFacilitatorTest extends OrchestrationStepsTestBase
                  .build())
         .when(resourceRestraintService)
         .createAbstraction(any());
-    when(pmsEngineExpressionService.renderExpression(any(), any())).thenReturn(RESOURCE_UNIT);
+    when(engineExpressionService.renderExpression(any(), any())).thenReturn(RESOURCE_UNIT);
   }
 
   @Test

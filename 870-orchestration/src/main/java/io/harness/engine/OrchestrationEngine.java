@@ -48,7 +48,7 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.execution.utils.StatusUtils;
-import io.harness.pms.expression.PmsEngineExpressionService;
+import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.serializer.ProtoUtils;
@@ -88,7 +88,7 @@ public class OrchestrationEngine {
   @Inject private DelayEventHelper delayEventHelper;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
-  @Inject private PmsEngineExpressionService pmsEngineExpressionService;
+  @Inject private EngineExpressionService engineExpressionService;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
   @Inject private OrchestrationEventEmitter eventEmitter;
   @Inject private EndNodeExecutionHelper endNodeExecutionHelper;
@@ -152,14 +152,14 @@ public class OrchestrationEngine {
       log.info("Starting to Resolve step parameters");
       Object resolvedStepParameters = stepParameters == null
           ? null
-          : pmsEngineExpressionService.resolve(
+          : engineExpressionService.resolve(
               ambiance, NodeExecutionUtils.extractObject(stepParameters), skipUnresolvedExpressionsCheck);
       log.info("Step Parameter Resolution complete");
 
       log.info("Starting to Resolve step inputs");
       Object resolvedStepInputs = node.getStepInputs() == null
           ? null
-          : pmsEngineExpressionService.resolve(
+          : engineExpressionService.resolve(
               ambiance, NodeExecutionUtils.extractObject(node.getStepInputs()), skipUnresolvedExpressionsCheck);
       log.info("Step Inputs Resolution complete");
 

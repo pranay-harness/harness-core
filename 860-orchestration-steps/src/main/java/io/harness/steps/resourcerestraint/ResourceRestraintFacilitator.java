@@ -21,7 +21,7 @@ import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.execution.facilitator.FacilitatorUtils;
 import io.harness.pms.execution.utils.AmbianceUtils;
-import io.harness.pms.expression.PmsEngineExpressionService;
+import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.sdk.core.execution.events.node.facilitate.Facilitator;
 import io.harness.pms.sdk.core.execution.events.node.facilitate.FacilitatorResponse;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -49,7 +49,7 @@ public class ResourceRestraintFacilitator implements Facilitator {
   @Inject private ResourceRestraintService resourceRestraintService;
   @Inject private RestraintService restraintService;
   @Inject private ResourceRestraintRegistry resourceRestraintRegistry;
-  @Inject private PmsEngineExpressionService pmsEngineExpressionService;
+  @Inject private EngineExpressionService engineExpressionService;
   @Inject private FacilitatorUtils facilitatorUtils;
 
   @Override
@@ -71,7 +71,7 @@ public class ResourceRestraintFacilitator implements Facilitator {
     }
 
     ConstraintUnit renderedResourceUnit =
-        new ConstraintUnit(pmsEngineExpressionService.renderExpression(ambiance, specParameters.getResourceUnit()));
+        new ConstraintUnit(engineExpressionService.renderExpression(ambiance, specParameters.getResourceUnit()));
 
     if (permits <= 0) {
       return responseBuilder.executionMode(ExecutionMode.SYNC).build();

@@ -109,7 +109,7 @@ import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.contracts.refobjects.RefType;
 import io.harness.pms.data.OrchestrationRefType;
-import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.expression.SdkExpressionService;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
 import io.harness.pms.sdk.core.execution.invokers.StrategyHelper;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
@@ -146,7 +146,7 @@ public class K8sStepHelperTest extends CategoryTest {
 
   @Mock private ConnectorService connectorService;
   @Mock private GitConfigAuthenticationInfoHelper gitConfigAuthenticationInfoHelper;
-  @Mock private EngineExpressionService engineExpressionService;
+  @Mock private SdkExpressionService sdkExpressionService;
   @Mock private OutcomeService outcomeService;
   @Mock private K8sStepExecutor k8sStepExecutor;
   @Mock private KryoSerializer kryoSerializer;
@@ -630,8 +630,8 @@ public class K8sStepHelperTest extends CategoryTest {
     String valueFile2 = "file2";
     List<String> valuesFiles = asList(valueFile1, valueFile2);
 
-    doReturn(valueFile1).when(engineExpressionService).renderExpression(any(), eq(valueFile1));
-    doReturn(valueFile2).when(engineExpressionService).renderExpression(any(), eq(valueFile2));
+    doReturn(valueFile1).when(sdkExpressionService).renderExpression(any(), eq(valueFile1));
+    doReturn(valueFile2).when(sdkExpressionService).renderExpression(any(), eq(valueFile2));
 
     List<String> renderedValuesFiles = k8sStepHelper.renderValues(
         OpenshiftManifestOutcome.builder().build(), Ambiance.newBuilder().build(), valuesFiles);

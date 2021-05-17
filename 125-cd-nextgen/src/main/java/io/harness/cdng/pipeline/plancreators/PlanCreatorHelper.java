@@ -8,7 +8,7 @@ import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.expression.SdkExpressionService;
 import io.harness.yaml.core.StepGroupElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 
@@ -19,14 +19,14 @@ import javax.annotation.Nonnull;
 @Singleton
 @OwnedBy(HarnessTeam.CDC)
 public class PlanCreatorHelper {
-  @Inject private EngineExpressionService engineExpressionService;
+  @Inject private SdkExpressionService sdkExpressionService;
 
   public boolean shouldNodeRun(@Nonnull RollbackNode rollbackNode, @Nonnull Ambiance ambiance) {
     if (rollbackNode.isShouldAlwaysRun()) {
       return true;
     }
 
-    String value = engineExpressionService.renderExpression(
+    String value = sdkExpressionService.renderExpression(
         ambiance, format("<+%s.status>", rollbackNode.getDependentNodeIdentifier()), true);
     return !EngineExpressionEvaluator.hasExpressions(value);
   }

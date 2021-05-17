@@ -27,7 +27,7 @@ import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
-import io.harness.pms.expression.PmsEngineExpressionService;
+import io.harness.pms.expression.EngineExpressionService;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableMap;
@@ -43,7 +43,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 
 @OwnedBy(PIPELINE)
 public class RunPreFacilitationCheckerTest extends OrchestrationTestBase {
-  @Mock PmsEngineExpressionService pmsEngineExpressionService;
+  @Mock EngineExpressionService engineExpressionService;
   @Mock EngineExpressionEvaluator engineExpressionEvaluator;
   @Mock VariableResolverTracker variableResolverTracker;
   @Mock OrchestrationEngine engine;
@@ -71,7 +71,7 @@ public class RunPreFacilitationCheckerTest extends OrchestrationTestBase {
 
     when(engineExpressionEvaluator.getVariableResolverTracker()).thenReturn(variableResolverTracker);
     when(variableResolverTracker.getUsage()).thenReturn(new HashMap<>());
-    when(pmsEngineExpressionService.prepareExpressionEvaluator(nodeExecution.getAmbiance()))
+    when(engineExpressionService.prepareExpressionEvaluator(nodeExecution.getAmbiance()))
         .thenReturn(engineExpressionEvaluator);
     when(engineExpressionEvaluator.evaluateExpression(whenCondition)).thenReturn(true);
     ExecutionCheck check = checker.performCheck(nodeExecution);
@@ -101,7 +101,7 @@ public class RunPreFacilitationCheckerTest extends OrchestrationTestBase {
 
     when(engineExpressionEvaluator.getVariableResolverTracker()).thenReturn(variableResolverTracker);
     when(variableResolverTracker.getUsage()).thenReturn(new HashMap<>());
-    when(pmsEngineExpressionService.prepareExpressionEvaluator(nodeExecution.getAmbiance()))
+    when(engineExpressionService.prepareExpressionEvaluator(nodeExecution.getAmbiance()))
         .thenReturn(engineExpressionEvaluator);
     when(engineExpressionEvaluator.evaluateExpression(whenCondition)).thenReturn(false);
     ExecutionCheck check = checker.performCheck(nodeExecution);
@@ -137,7 +137,7 @@ public class RunPreFacilitationCheckerTest extends OrchestrationTestBase {
 
     when(engineExpressionEvaluator.getVariableResolverTracker()).thenReturn(variableResolverTracker);
     when(variableResolverTracker.getUsage()).thenReturn(new HashMap<>());
-    when(pmsEngineExpressionService.prepareExpressionEvaluator(nodeExecution.getAmbiance()))
+    when(engineExpressionService.prepareExpressionEvaluator(nodeExecution.getAmbiance()))
         .thenReturn(engineExpressionEvaluator);
     InvalidRequestException testException = new InvalidRequestException("TestException");
     when(engineExpressionEvaluator.evaluateExpression(whenCondition)).thenThrow(testException);

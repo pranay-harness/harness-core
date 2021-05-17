@@ -5,16 +5,21 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.expression.PmsEngineExpressionService;
-import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
+import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.expression.SdkExpressionService;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class PmsEngineExpressionServiceImpl implements PmsEngineExpressionService {
+public class EngineExpressionServiceImpl implements EngineExpressionService, SdkExpressionService {
   @Inject private ExpressionEvaluatorProvider expressionEvaluatorProvider;
   @Inject private Injector injector;
+
+  @Override
+  public String renderExpression(Ambiance ambiance, String expression) {
+    return renderExpression(ambiance, expression, false);
+  }
 
   @Override
   public String renderExpression(Ambiance ambiance, String expression, boolean skipUnresolvedExpressionsCheck) {
@@ -23,10 +28,9 @@ public class PmsEngineExpressionServiceImpl implements PmsEngineExpressionServic
   }
 
   @Override
-  public String evaluateExpression(Ambiance ambiance, String expression) {
+  public Object evaluateExpression(Ambiance ambiance, String expression) {
     EngineExpressionEvaluator evaluator = prepareExpressionEvaluator(ambiance);
-    Object value = evaluator.evaluateExpression(expression);
-    return RecastOrchestrationUtils.toDocumentJson(value);
+    return evaluator.evaluateExpression(expression);
   }
 
   @Override
