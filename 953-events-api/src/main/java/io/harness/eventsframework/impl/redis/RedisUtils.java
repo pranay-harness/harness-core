@@ -56,6 +56,9 @@ public class RedisUtils {
         serverConfig.setPassword(redisPassword);
       }
 
+      // Default retry interval is 1500 milliseconds
+      serverConfig.setRetryAttempts(10);
+
       RedisSSLConfig sslConfig = redisConfig.getSslConfig();
       if (sslConfig != null && sslConfig.isEnabled()) {
         try {

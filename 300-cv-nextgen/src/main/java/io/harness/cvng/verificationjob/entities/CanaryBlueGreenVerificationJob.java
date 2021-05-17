@@ -142,7 +142,7 @@ public abstract class CanaryBlueGreenVerificationJob extends VerificationJob {
       CanaryBlueGreenVerificationJob canaryBlueGreenVerificationJob, String accountId, String orgIdentifier,
       String projectIdentifier) {
     canaryBlueGreenVerificationJob.setSensitivity(RUNTIME_PARAM_STRING, true);
-    canaryBlueGreenVerificationJob.setTrafficSplitPercentage(Integer.valueOf(5));
+    canaryBlueGreenVerificationJob.setTrafficSplitPercentageV2(RUNTIME_PARAM_STRING, true);
     VerificationJob.setDefaultJobCommonParameters(
         canaryBlueGreenVerificationJob, accountId, orgIdentifier, projectIdentifier);
   }

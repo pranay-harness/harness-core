@@ -1,5 +1,8 @@
 package io.harness.cdng.service.dashboard;
 
+import static io.harness.ng.core.activityhistory.dto.TimeGroupType.DAY;
+import static io.harness.ng.core.activityhistory.dto.TimeGroupType.HOUR;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.Deployment.DashboardDeploymentActiveFailedRunningInfo;
@@ -21,6 +24,8 @@ import io.harness.cdng.Deployment.TotalDeploymentInfo;
 import io.harness.cdng.Deployment.WorkloadCountInfo;
 import io.harness.cdng.Deployment.WorkloadDateCountInfo;
 import io.harness.cdng.Deployment.WorkloadDeploymentInfo;
+import io.harness.exception.UnknownEnumTypeException;
+import io.harness.ng.core.activityhistory.dto.TimeGroupType;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.timescaledb.DBUtils;
@@ -56,8 +61,11 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
       ExecutionStatus.APPROVAL_WAITING.name(), ExecutionStatus.WAITING.name());
   private static final int MAX_RETRY_COUNT = 5;
 
+  private static final long HOUR_IN_MS = 60 * 60 * 1000;
+  private static final long DAY_IN_MS = 24 * HOUR_IN_MS;
+
   public String queryBuilderSelectStatusTime(
-      String accountId, String orgId, String projectId, String startInterval, String endInterval) {
+      String accountId, String orgId, String projectId, long startInterval, long endInterval) {
     String selectStatusQuery = "select status,startts from " + tableNameCD + " where ";
     StringBuilder totalBuildSqlBuilder = new StringBuilder();
     totalBuildSqlBuilder.append(selectStatusQuery);
@@ -74,15 +82,15 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
       totalBuildSqlBuilder.append(String.format("projectidentifier='%s' and ", projectId));
     }
 
-    if (startInterval != null && endInterval != null) {
-      totalBuildSqlBuilder.append(String.format("startts between '%s' and '%s';", startInterval, endInterval));
+    if (startInterval > 0 && endInterval > 0) {
+      totalBuildSqlBuilder.append(String.format("startts>=%s and startts<%s;", startInterval, endInterval));
     }
 
     return totalBuildSqlBuilder.toString();
   }
 
   public String queryBuilderEnvironmentType(
-      String accountId, String orgId, String projectId, String startInterval, String endInterval) {
+      String accountId, String orgId, String projectId, long startInterval, long endInterval) {
     String selectStatusQuery = "select env_type from " + tableNameCD + ", " + tableNameServiceAndInfra + " where ";
     StringBuilder totalBuildSqlBuilder = new StringBuilder();
     totalBuildSqlBuilder.append(selectStatusQuery);
@@ -99,10 +107,10 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
       totalBuildSqlBuilder.append(String.format("projectidentifier='%s' and ", projectId));
     }
 
-    if (startInterval != null && endInterval != null) {
+    if (startInterval > 0 && endInterval > 0) {
       totalBuildSqlBuilder.append(
           "pipeline_execution_summary_cd.id=pipeline_execution_summary_cd_id and env_type is not null and ");
-      totalBuildSqlBuilder.append(String.format("startts between '%s' and '%s';", startInterval, endInterval));
+      totalBuildSqlBuilder.append(String.format("startts>=%s and startts<%s;", startInterval, endInterval));
     }
 
     return totalBuildSqlBuilder.toString();
@@ -265,12 +273,9 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
   @Override
   public HealthDeploymentDashboard getHealthDeploymentDashboard(String accountId, String orgId, String projectId,
-      String startInterval, String endInterval, String previousStartInterval) {
-    LocalDate startDate = LocalDate.parse(startInterval);
-    LocalDate endDate = LocalDate.parse(endInterval);
-    LocalDate previousStartDate = LocalDate.parse(previousStartInterval);
-    String query = queryBuilderSelectStatusTime(
-        accountId, orgId, projectId, previousStartInterval, endDate.plusDays(1).toString());
+      long startInterval, long endInterval, long previousStartInterval) {
+    endInterval = endInterval + getTimeUnitToGroupBy(DAY);
+    String query = queryBuilderSelectStatusTime(accountId, orgId, projectId, previousStartInterval, endInterval);
 
     List<String> time = new ArrayList<>();
     List<String> status = new ArrayList<>();
@@ -286,32 +291,33 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     long previousSuccess = 0;
     long previousFailed = 0;
 
-    HashMap<String, Integer> totalCountMap = new HashMap<>();
-    HashMap<String, Integer> successCountMap = new HashMap<>();
-    HashMap<String, Integer> failedCountMap = new HashMap<>();
+    HashMap<Long, Integer> totalCountMap = new HashMap<>();
+    HashMap<Long, Integer> successCountMap = new HashMap<>();
+    HashMap<Long, Integer> failedCountMap = new HashMap<>();
 
-    LocalDate startDateCopy = startDate;
-    LocalDate endDateCopy = endDate;
+    long startDateCopy = startInterval;
+    long endDateCopy = endInterval;
 
-    while (!startDateCopy.isAfter(endDateCopy)) {
-      totalCountMap.put(startDateCopy.toString(), 0);
-      successCountMap.put(startDateCopy.toString(), 0);
-      failedCountMap.put(startDateCopy.toString(), 0);
-      startDateCopy = startDateCopy.plusDays(1);
+    long timeUnitPerDay = getTimeUnitToGroupBy(DAY);
+    while (startDateCopy < endDateCopy) {
+      totalCountMap.put(startDateCopy, 0);
+      successCountMap.put(startDateCopy, 0);
+      failedCountMap.put(startDateCopy, 0);
+      startDateCopy = startDateCopy + timeUnitPerDay;
     }
 
     for (int i = 0; i < time.size(); i++) {
-      // make time.get(i) in yyyy-mm-dd format
-      LocalDate variableDate = LocalDate.parse(time.get(i).substring(0, time.get(i).indexOf(' ')));
-      if (startDate.compareTo(variableDate) <= 0 && endDate.compareTo(variableDate) >= 0) {
+      long currentTimeEpoch = Long.parseLong(time.get(i));
+      if (currentTimeEpoch >= startInterval && currentTimeEpoch < endInterval) {
+        currentTimeEpoch = getStartingDateEpochValue(currentTimeEpoch, startInterval);
         total++;
-        totalCountMap.put(variableDate.toString(), totalCountMap.get(variableDate.toString()) + 1);
+        totalCountMap.put(currentTimeEpoch, totalCountMap.get(currentTimeEpoch) + 1);
         if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
           currentSuccess++;
-          successCountMap.put(variableDate.toString(), successCountMap.get(variableDate.toString()) + 1);
+          successCountMap.put(currentTimeEpoch, successCountMap.get(currentTimeEpoch) + 1);
         } else if (failedStatusList.contains(status.get(i))) {
           currentFailed++;
-          failedCountMap.put(variableDate.toString(), failedCountMap.get(variableDate.toString()) + 1);
+          failedCountMap.put(currentTimeEpoch, failedCountMap.get(currentTimeEpoch) + 1);
         }
       } else {
         if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
@@ -322,8 +328,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
       }
     }
 
-    String queryEnvironmentType =
-        queryBuilderEnvironmentType(accountId, orgId, projectId, startInterval, endDate.plusDays(1).toString());
+    String queryEnvironmentType = queryBuilderEnvironmentType(accountId, orgId, projectId, startInterval, endInterval);
     envType = queryCalculatorEnvType(queryEnvironmentType);
 
     long production = Collections.frequency(envType, EnvironmentType.Production.name());
@@ -332,26 +337,23 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     List<DeploymentDateAndCount> totalDateAndCount = new ArrayList<>();
     List<DeploymentDateAndCount> successDateAndCount = new ArrayList<>();
     List<DeploymentDateAndCount> failedDateAndCount = new ArrayList<>();
-    startDateCopy = startDate;
-    endDateCopy = endDate;
+    startDateCopy = startInterval;
+    endDateCopy = endInterval;
 
-    while (!startDateCopy.isAfter(endDateCopy)) {
-      totalDateAndCount.add(
-          DeploymentDateAndCount.builder()
-              .time(startDateCopy.toString())
-              .deployments(Deployment.builder().count(totalCountMap.get(startDateCopy.toString())).build())
-              .build());
-      successDateAndCount.add(
-          DeploymentDateAndCount.builder()
-              .time(startDateCopy.toString())
-              .deployments(Deployment.builder().count(successCountMap.get(startDateCopy.toString())).build())
-              .build());
-      failedDateAndCount.add(
-          DeploymentDateAndCount.builder()
-              .time(startDateCopy.toString())
-              .deployments(Deployment.builder().count(failedCountMap.get(startDateCopy.toString())).build())
-              .build());
-      startDateCopy = startDateCopy.plusDays(1);
+    while (startDateCopy < endDateCopy) {
+      totalDateAndCount.add(DeploymentDateAndCount.builder()
+                                .time(String.valueOf(startDateCopy))
+                                .deployments(Deployment.builder().count(totalCountMap.get(startDateCopy)).build())
+                                .build());
+      successDateAndCount.add(DeploymentDateAndCount.builder()
+                                  .time(String.valueOf(startDateCopy))
+                                  .deployments(Deployment.builder().count(successCountMap.get(startDateCopy)).build())
+                                  .build());
+      failedDateAndCount.add(DeploymentDateAndCount.builder()
+                                 .time(String.valueOf(startDateCopy))
+                                 .deployments(Deployment.builder().count(failedCountMap.get(startDateCopy)).build())
+                                 .build());
+      startDateCopy = startDateCopy + timeUnitPerDay;
     }
 
     return HealthDeploymentDashboard.builder()
@@ -417,24 +419,23 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
   @Override
   public ExecutionDeploymentInfo getExecutionDeploymentDashboard(
-      String accountId, String orgId, String projectId, String startInterval, String endInterval) {
-    LocalDate startDate = LocalDate.parse(startInterval);
-    LocalDate endDate = LocalDate.parse(endInterval);
-    String query =
-        queryBuilderSelectStatusTime(accountId, orgId, projectId, startInterval, endDate.plusDays(1).toString());
+      String accountId, String orgId, String projectId, long startInterval, long endInterval) {
+    endInterval = endInterval + DAY_IN_MS;
+    String query = queryBuilderSelectStatusTime(accountId, orgId, projectId, startInterval, endInterval);
 
-    HashMap<String, Integer> totalCountMap = new HashMap<>();
-    HashMap<String, Integer> successCountMap = new HashMap<>();
-    HashMap<String, Integer> failedCountMap = new HashMap<>();
+    HashMap<Long, Integer> totalCountMap = new HashMap<>();
+    HashMap<Long, Integer> successCountMap = new HashMap<>();
+    HashMap<Long, Integer> failedCountMap = new HashMap<>();
 
-    LocalDate startDateCopy = startDate;
-    LocalDate endDateCopy = endDate;
+    long startDateCopy = startInterval;
+    long endDateCopy = endInterval;
 
-    while (!startDateCopy.isAfter(endDateCopy)) {
-      totalCountMap.put(startDateCopy.toString(), 0);
-      successCountMap.put(startDateCopy.toString(), 0);
-      failedCountMap.put(startDateCopy.toString(), 0);
-      startDateCopy = startDateCopy.plusDays(1);
+    long timeUnitPerDay = getTimeUnitToGroupBy(DAY);
+    while (startDateCopy < endDateCopy) {
+      totalCountMap.put(startDateCopy, 0);
+      successCountMap.put(startDateCopy, 0);
+      failedCountMap.put(startDateCopy, 0);
+      startDateCopy = startDateCopy + timeUnitPerDay;
     }
 
     TimeAndStatusDeployment timeAndStatusDeployment = queryCalculatorTimeAndStatus(query);
@@ -444,45 +445,40 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     List<ExecutionDeployment> executionDeployments = new ArrayList<>();
 
     for (int i = 0; i < time.size(); i++) {
-      String variableDate = time.get(i).substring(0, time.get(i).indexOf(' '));
-      totalCountMap.put(variableDate, totalCountMap.get(variableDate) + 1);
+      long currentTimeEpoch = Long.parseLong(time.get(i));
+      currentTimeEpoch = getStartingDateEpochValue(currentTimeEpoch, startInterval);
+      totalCountMap.put(currentTimeEpoch, totalCountMap.get(currentTimeEpoch) + 1);
       if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
-        successCountMap.put(variableDate, successCountMap.get(variableDate) + 1);
+        successCountMap.put(currentTimeEpoch, successCountMap.get(currentTimeEpoch) + 1);
       } else if (failedStatusList.contains(status.get(i))) {
-        failedCountMap.put(variableDate, failedCountMap.get(variableDate) + 1);
+        failedCountMap.put(currentTimeEpoch, failedCountMap.get(currentTimeEpoch) + 1);
       }
     }
 
-    startDateCopy = startDate;
-    endDateCopy = endDate;
+    startDateCopy = startInterval;
+    endDateCopy = endInterval;
 
-    while (!startDateCopy.isAfter(endDateCopy)) {
-      executionDeployments.add(
-          getExecutionDeployment(startDateCopy.toString(), totalCountMap.get(startDateCopy.toString()),
-              successCountMap.get(startDateCopy.toString()), failedCountMap.get(startDateCopy.toString())));
-      startDateCopy = startDateCopy.plusDays(1);
+    while (startDateCopy < endDateCopy) {
+      executionDeployments.add(getExecutionDeployment(String.valueOf(startDateCopy), totalCountMap.get(startDateCopy),
+          successCountMap.get(startDateCopy), failedCountMap.get(startDateCopy)));
+      startDateCopy = startDateCopy + timeUnitPerDay;
     }
     return ExecutionDeploymentInfo.builder().executionDeploymentList(executionDeployments).build();
   }
 
   @Override
-  public ExecutionDeploymentDetailInfo getDeploymentsExecutionInfo(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String startInterval, String endInterval) {
-    LocalDate startDate = LocalDate.parse(startInterval);
-    LocalDate endDate = LocalDate.parse(endInterval);
-    LocalDate startDateCopy = startDate;
-    LocalDate endDateCopy = endDate;
-    long numberOfDays = endDateCopy.toEpochDay() - startDateCopy.toEpochDay() + 1;
-    startDateCopy = startDate;
-    LocalDate prevStartDate = startDateCopy.minusDays(numberOfDays);
-    LocalDate prevEndDate = startDateCopy.minusDays(1);
+  public ExecutionDeploymentDetailInfo getDeploymentsExecutionInfo(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, long startTime, long endTime) {
+    long numberOfDays = (long) Math.ceil((endTime - startTime) / DAY_IN_MS);
+    long prevStartTime = startTime - (endTime - startTime + DAY_IN_MS);
+    long prevEndTime = startTime - DAY_IN_MS;
 
-    ExecutionDeploymentInfo executionDeploymentInfo = getExecutionDeploymentDashboard(
-        accountIdentifier, orgIdentifier, projectIdentifier, startInterval, endInterval);
+    ExecutionDeploymentInfo executionDeploymentInfo =
+        getExecutionDeploymentDashboard(accountIdentifier, orgIdentifier, projectIdentifier, startTime, endTime);
     List<ExecutionDeployment> executionDeploymentList = executionDeploymentInfo.getExecutionDeploymentList();
 
     ExecutionDeploymentInfo prevExecutionDeploymentInfo = getExecutionDeploymentDashboard(
-        accountIdentifier, orgIdentifier, projectIdentifier, prevStartDate.toString(), prevEndDate.toString());
+        accountIdentifier, orgIdentifier, projectIdentifier, prevStartTime, prevEndTime);
     List<ExecutionDeployment> prevExecutionDeploymentList = prevExecutionDeploymentInfo.getExecutionDeploymentList();
 
     long totalDeployments = getTotalDeployments(executionDeploymentList);
@@ -499,8 +495,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     double frequencyChangeRate = calculateChangeRate(prevFrequency, frequency);
 
     return ExecutionDeploymentDetailInfo.builder()
-        .startTime(startDate.toString())
-        .endTime(endDate.toString())
+        .startTime(startTime)
+        .endTime(endTime)
         .totalDeployments(totalDeployments)
         .failureRate(failureRate)
         .frequency(frequency)
@@ -806,5 +802,19 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     }
     return getWorkloadDeploymentInfoCalculation(
         workloads, status, startTs, deploymentTypeList, planExecutionIdList, uniqueWorkloadName, startDate, endDate);
+  }
+
+  public long getTimeUnitToGroupBy(TimeGroupType timeGroupType) {
+    if (timeGroupType == DAY) {
+      return DAY_IN_MS;
+    } else if (timeGroupType == HOUR) {
+      return HOUR_IN_MS;
+    } else {
+      throw new UnknownEnumTypeException("Time Group Type", String.valueOf(timeGroupType));
+    }
+  }
+
+  public long getStartingDateEpochValue(long epochValue, long startInterval) {
+    return epochValue - epochValue % DAY_IN_MS;
   }
 }

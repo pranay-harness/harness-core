@@ -106,8 +106,8 @@ ciExecutionServiceConfig:
   defaultInternalImageConnector: ''
   pvcDefaultStorageSize: 25600
   delegateServiceEndpointVariableValue: "delegate-service:8080"
-  addonImage: harness/ci-addon:releaseBuild-64
-  liteEngineImage: harness/ci-lite-engine:releaseBuild-47
+  addonImage: harness/ci-addon:releaseBuild-71
+  liteEngineImage: harness/ci-lite-engine:releaseBuild-53
   isLocal: false
   stepConfig:
     gitCloneConfig:
@@ -115,15 +115,15 @@ ciExecutionServiceConfig:
       entrypoint:
         - /usr/local/bin/clone
     buildAndPushDockerRegistryConfig:
-      image: plugins/kaniko:1.1.2
+      image: plugins/kaniko:1.2.0
       entrypoint:
         - /kaniko/kaniko-docker
     buildAndPushECRConfig:
-      image: plugins/kaniko-ecr:1.1.2
+      image: plugins/kaniko-ecr:1.2.0
       entrypoint:
         - /kaniko/kaniko-ecr
     buildAndPushGCRConfig:
-      image: plugins/kaniko-gcr:1.1.2
+      image: plugins/kaniko-gcr:1.2.0
       entrypoint:
         - /kaniko/kaniko-gcr
     gcsUploadConfig:

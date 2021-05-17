@@ -15,8 +15,8 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @OwnedBy(DX)
 public class ExecutionDeploymentDetailInfo {
-  String startTime;
-  String endTime;
+  long startTime;
+  long endTime;
   long totalDeployments;
   double failureRate;
   double frequency;

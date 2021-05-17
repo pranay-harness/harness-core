@@ -129,7 +129,8 @@ public class TerraformRollbackStep extends TaskExecutableWithRollback<TerraformT
 
       builder.backendConfig(rollbackConfig.getBackendConfig())
           .targets(rollbackConfig.getTargets())
-          .environmentVariables(rollbackConfig.getEnvironmentVariables());
+          .environmentVariables(rollbackConfig.getEnvironmentVariables())
+          .timeoutInMillis(StepUtils.getTimeoutMillis(stepParameters.getTimeout(), TerraformConstants.DEFAULT_TIMEOUT));
 
       TaskData taskData =
           TaskData.builder()
@@ -139,7 +140,7 @@ public class TerraformRollbackStep extends TaskExecutableWithRollback<TerraformT
               .parameters(new Object[] {builder.build()})
               .build();
 
-      ParameterField<List<String>> delegateSelectors = stepParameters.getDelegateSelectors();
+      ParameterField<List<String>> delegateSelectors = stepParametersSpec.getDelegateSelectors();
 
       List<TaskSelector> taskSelectors = StepUtils.getTaskSelectors(delegateSelectors);
 

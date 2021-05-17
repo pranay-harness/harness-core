@@ -6,7 +6,6 @@ import io.harness.changestreamsframework.ChangeEvent;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -58,10 +57,9 @@ public class PlanExecutionSummaryCdChangeDataHandler extends AbstractChangeDataH
       return null;
     }
 
-    columnValueMapping.put(
-        "startTs", String.valueOf(new Timestamp(Long.parseLong(dbObject.get("startTs").toString()))));
+    columnValueMapping.put("startTs", String.valueOf(Long.parseLong(dbObject.get("startTs").toString())));
     if (dbObject.get("endTs") != null) {
-      columnValueMapping.put("endTs", String.valueOf(new Timestamp(Long.parseLong(dbObject.get("endTs").toString()))));
+      columnValueMapping.put("endTs", String.valueOf(dbObject.get("endTs").toString()));
     }
 
     return columnValueMapping;

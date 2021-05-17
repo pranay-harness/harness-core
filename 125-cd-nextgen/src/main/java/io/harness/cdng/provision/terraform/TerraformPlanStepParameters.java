@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.yaml.ParameterField;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,9 +21,9 @@ public class TerraformPlanStepParameters extends TerraformPlanBaseStepInfo imple
   TerraformPlanExecutionDataParameters configuration;
 
   @Builder(builderMethodName = "infoBuilder")
-  public TerraformPlanStepParameters(
-      ParameterField<String> provisionerIdentifier, TerraformPlanExecutionDataParameters configuration) {
-    super(provisionerIdentifier);
+  public TerraformPlanStepParameters(ParameterField<String> provisionerIdentifier,
+      ParameterField<List<String>> delegateSelectors, TerraformPlanExecutionDataParameters configuration) {
+    super(provisionerIdentifier, delegateSelectors);
     this.configuration = configuration;
   }
 }
