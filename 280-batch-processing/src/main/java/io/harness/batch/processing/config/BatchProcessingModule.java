@@ -1,5 +1,7 @@
 package io.harness.batch.processing.config;
 
+import static io.harness.AuthorizationServiceHeader.BATCH_PROCESSING;
+
 import io.harness.batch.processing.metrics.CeCloudMetricsService;
 import io.harness.batch.processing.metrics.CeCloudMetricsServiceImpl;
 import io.harness.batch.processing.metrics.ProductMetricsService;
@@ -16,6 +18,7 @@ import io.harness.ccm.views.service.ViewsBillingService;
 import io.harness.ccm.views.service.impl.CEViewServiceImpl;
 import io.harness.ccm.views.service.impl.ViewCustomFieldServiceImpl;
 import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
+import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.ff.FeatureFlagService;
 import io.harness.ff.FeatureFlagServiceImpl;
 import io.harness.lock.PersistentLocker;
@@ -44,6 +47,10 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BatchProcessingModule extends AbstractModule {
+  BatchMainConfig batchMainConfig;
+  BatchProcessingModule(BatchMainConfig batchMainConfig) {
+    this.batchMainConfig = batchMainConfig;
+  }
   @Override
   protected void configure() {
     bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
@@ -69,6 +76,8 @@ public class BatchProcessingModule extends AbstractModule {
     bind(PersistentLocker.class).to(PersistentNoopLocker.class).in(Scopes.SINGLETON);
     bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+    install(new ConnectorResourceClientModule(batchMainConfig.getNgManagerServiceHttpClientConfig(),
+        batchMainConfig.getNgManagerServiceSecret(), BATCH_PROCESSING.getServiceId()));
   }
 
   @Provides
