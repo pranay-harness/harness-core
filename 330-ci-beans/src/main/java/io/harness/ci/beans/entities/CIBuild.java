@@ -6,7 +6,6 @@ import io.harness.beans.build.CIPipelineDetails;
 import io.harness.beans.build.PublishedArtifact;
 import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.inputset.InputSet;
-import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -42,7 +41,6 @@ public class CIBuild implements PersistentEntity, UuidAware, CreatedAtAware {
   @NotEmpty @Builder.Default private long triggerTime = Instant.now().toEpochMilli();
 
   @NotEmpty private ExecutionSource executionSource;
-  @JsonIgnore private transient OrchestrationGraphDTO graph;
   private List<PublishedArtifact> publishedArtifacts;
   private InputSet inputSet;
   @NotEmpty String executionId;
