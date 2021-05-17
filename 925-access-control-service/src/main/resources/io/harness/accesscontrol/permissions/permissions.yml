@@ -303,4 +303,21 @@ permissions:
     includeInAllRoles: true
     allowedScopeLevels:
       - account
-
+  - identifier: core_authsetting_view
+    name: View Auth setting
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+  - identifier: core_authsetting_edit
+    name: Edit Auth setting
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+  - identifier: core_authsetting_delete
+    name: Edit Auth setting
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
