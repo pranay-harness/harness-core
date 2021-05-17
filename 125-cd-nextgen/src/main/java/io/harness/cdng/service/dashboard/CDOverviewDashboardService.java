@@ -20,7 +20,7 @@ public interface CDOverviewDashboardService {
       String accountId, String orgId, String projectId, long days);
 
   DashboardWorkloadDeployment getDashboardWorkloadDeployment(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String startInterval, String endInterval, String previousStartInterval);
+      String projectIdentifier, long startInterval, long endInterval, long previousStartInterval);
 
   ExecutionDeploymentDetailInfo getDeploymentsExecutionInfo(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, long startTime, long endTime);

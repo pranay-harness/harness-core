@@ -37,7 +37,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -85,6 +84,61 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     if (startInterval > 0 && endInterval > 0) {
       totalBuildSqlBuilder.append(String.format("startts>=%s and startts<%s;", startInterval, endInterval));
     }
+
+    return totalBuildSqlBuilder.toString();
+  }
+
+  public String queryBuilderSelectIdCdTable(
+      String accountId, String orgId, String projectId, long startInterval, long endInterval) {
+    String selectStatusQuery = "select id from " + tableNameCD + " where ";
+    StringBuilder totalBuildSqlBuilder = new StringBuilder();
+    totalBuildSqlBuilder.append(selectStatusQuery);
+
+    if (accountId != null) {
+      totalBuildSqlBuilder.append(String.format("accountid='%s' and ", accountId));
+    }
+
+    if (orgId != null) {
+      totalBuildSqlBuilder.append(String.format("orgidentifier='%s' and ", orgId));
+    }
+
+    if (projectId != null) {
+      totalBuildSqlBuilder.append(String.format("projectidentifier='%s' and ", projectId));
+    }
+
+    if (startInterval > 0 && endInterval > 0) {
+      totalBuildSqlBuilder.append(String.format("startts>=%s and startts<%s;", startInterval, endInterval));
+    }
+
+    return totalBuildSqlBuilder.toString();
+  }
+
+  public String queryBuilderSelectIdLimitTimeCdTable(
+      String accountId, String orgId, String projectId, long days, List<String> statusList) {
+    String selectStatusQuery = "select id from " + tableNameCD + " where ";
+    StringBuilder totalBuildSqlBuilder = new StringBuilder();
+    totalBuildSqlBuilder.append(selectStatusQuery);
+
+    if (accountId != null) {
+      totalBuildSqlBuilder.append(String.format("accountid='%s' and ", accountId));
+    }
+
+    if (orgId != null) {
+      totalBuildSqlBuilder.append(String.format("orgidentifier='%s' and ", orgId));
+    }
+
+    if (projectId != null) {
+      totalBuildSqlBuilder.append(String.format("projectidentifier='%s' and ", projectId));
+    }
+
+    totalBuildSqlBuilder.append("status in (");
+    for (String status : statusList) {
+      totalBuildSqlBuilder.append(String.format("'%s',", status));
+    }
+
+    totalBuildSqlBuilder.deleteCharAt(totalBuildSqlBuilder.length() - 1);
+
+    totalBuildSqlBuilder.append(String.format(") ORDER BY startts DESC LIMIT %s", days));
 
     return totalBuildSqlBuilder.toString();
   }
@@ -154,69 +208,31 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     return totalBuildSqlBuilder.toString();
   }
 
-  public String queryBuilderServiceTag(
-      String accountId, String orgId, String projectId, List<String> planExecutionIdList, List<String> statusList) {
-    String selectStatusQuery = "select service_name,tag,pipeline_execution_summary_cd_id from "
-        + tableNameServiceAndInfra + ", " + tableNameCD + " where ";
+  public String queryBuilderServiceTag(String queryIdCdTable) {
+    String selectStatusQuery =
+        "select service_name,tag,pipeline_execution_summary_cd_id from " + tableNameServiceAndInfra + " where ";
     StringBuilder totalBuildSqlBuilder = new StringBuilder(20480);
-    totalBuildSqlBuilder.append(selectStatusQuery);
 
-    if (accountId != null) {
-      totalBuildSqlBuilder.append(String.format("accountid='%s' and ", accountId));
-    }
-
-    if (orgId != null) {
-      totalBuildSqlBuilder.append(String.format("orgidentifier='%s' and ", orgId));
-    }
-
-    if (projectId != null) {
-      totalBuildSqlBuilder.append(String.format("projectidentifier='%s' and ", projectId));
-    }
-
-    totalBuildSqlBuilder.append("status in (");
-    for (String status : statusList) {
-      totalBuildSqlBuilder.append(String.format("'%s',", status));
-    }
-
-    totalBuildSqlBuilder.deleteCharAt(totalBuildSqlBuilder.length() - 1);
-
-    totalBuildSqlBuilder.append(") and pipeline_execution_summary_cd_id in (");
-    for (String cd_id : planExecutionIdList) {
-      totalBuildSqlBuilder.append(String.format("'%s',", cd_id));
-    }
-
-    totalBuildSqlBuilder.deleteCharAt(totalBuildSqlBuilder.length() - 1);
-
-    totalBuildSqlBuilder.append(
-        ") and pipeline_execution_summary_cd.id=pipeline_execution_summary_cd_id and service_name is not null;");
+    totalBuildSqlBuilder.append(String.format(
+        selectStatusQuery + "pipeline_execution_summary_cd_id in (%s) and service_name is not null;", queryIdCdTable));
 
     return totalBuildSqlBuilder.toString();
   }
 
   public String queryBuilderSelectWorkload(
-      String accountId, String orgId, String projectId, String previousStartInterval, String endInterval) {
+      String accountId, String orgId, String projectId, long previousStartInterval, long endInterval) {
     String selectStatusQuery =
-        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id,deployment_type from "
-        + tableNameServiceAndInfra + ", " + tableNameCD + " where ";
+        "select service_name,service_id,service_status as status,service_startts as startts,service_endts as endts,deployment_type from "
+        + tableNameServiceAndInfra + " where ";
     StringBuilder totalBuildSqlBuilder = new StringBuilder();
     totalBuildSqlBuilder.append(selectStatusQuery);
 
-    if (accountId != null) {
-      totalBuildSqlBuilder.append(String.format("accountid='%s' and ", accountId));
-    }
-
-    if (orgId != null) {
-      totalBuildSqlBuilder.append(String.format("orgidentifier='%s' and ", orgId));
-    }
-
-    if (projectId != null) {
-      totalBuildSqlBuilder.append(String.format("projectidentifier='%s' and ", projectId));
-    }
-
-    if (previousStartInterval != null && endInterval != null) {
-      totalBuildSqlBuilder.append(
-          "pipeline_execution_summary_cd.id=pipeline_execution_summary_cd_id and service_name is not null and ");
-      totalBuildSqlBuilder.append(String.format("startts between '%s' and '%s';", previousStartInterval, endInterval));
+    if (previousStartInterval > 0 && endInterval > 0) {
+      String idQuery = queryBuilderSelectIdCdTable(accountId, orgId, projectId, previousStartInterval, endInterval);
+      idQuery = idQuery.replace(';', ' ');
+      totalBuildSqlBuilder.append(String.format(
+          "pipeline_execution_summary_cd_id in (%s) and service_name is not null and service_id is not null;",
+          idQuery));
     }
 
     return totalBuildSqlBuilder.toString();
@@ -586,8 +602,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         .build();
   }
 
-  public List<DeploymentStatusInfo> getDeploymentStatusInfo(
-      String accountId, String orgId, String projectId, String queryStatus, List<String> statusList) {
+  public List<DeploymentStatusInfo> getDeploymentStatusInfo(String queryStatus, String queryServiceNameTagId) {
     List<String> planExecutionIdList = new ArrayList<>();
     List<String> namePipelineList = new ArrayList<>();
     List<String> startTs = new ArrayList<>();
@@ -603,7 +618,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     planExecutionIdList = deploymentStatusInfoList.getPlanExecutionIdList();
     startTs = deploymentStatusInfoList.getStartTs();
 
-    String queryServiceTag = queryBuilderServiceTag(accountId, orgId, projectId, planExecutionIdList, statusList);
+    String queryServiceTag = queryBuilderServiceTag(queryServiceNameTagId);
 
     serviceTagMap = queryCalculatorServiceTagMag(queryServiceTag);
 
@@ -622,18 +637,21 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
       String accountId, String orgId, String projectId, long days) {
     // failed
     String queryFailed = queryBuilderStatus(accountId, orgId, projectId, days, failedStatusList);
-    List<DeploymentStatusInfo> failure =
-        getDeploymentStatusInfo(accountId, orgId, projectId, queryFailed, failedStatusList);
+    String queryServiceNameTagIdFailed =
+        queryBuilderSelectIdLimitTimeCdTable(accountId, orgId, projectId, days, failedStatusList);
+    List<DeploymentStatusInfo> failure = getDeploymentStatusInfo(queryFailed, queryServiceNameTagIdFailed);
 
     // active
     String queryActive = queryBuilderStatus(accountId, orgId, projectId, days, activeStatusList);
-    List<DeploymentStatusInfo> active =
-        getDeploymentStatusInfo(accountId, orgId, projectId, queryActive, activeStatusList);
+    String queryServiceNameTagIdActive =
+        queryBuilderSelectIdLimitTimeCdTable(accountId, orgId, projectId, days, activeStatusList);
+    List<DeploymentStatusInfo> active = getDeploymentStatusInfo(queryActive, queryServiceNameTagIdActive);
 
     // pending
     String queryPending = queryBuilderStatus(accountId, orgId, projectId, days, pendingStatusList);
-    List<DeploymentStatusInfo> pending =
-        getDeploymentStatusInfo(accountId, orgId, projectId, queryPending, pendingStatusList);
+    String queryServiceNameTagIdPending =
+        queryBuilderSelectIdLimitTimeCdTable(accountId, orgId, projectId, days, pendingStatusList);
+    List<DeploymentStatusInfo> pending = getDeploymentStatusInfo(queryPending, queryServiceNameTagIdPending);
 
     return DashboardDeploymentActiveFailedRunningInfo.builder()
         .failure(failure)
@@ -664,8 +682,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     return ServiceDeploymentInfo.builder().build();
   }
 
-  private WorkloadDeploymentInfo getWorkloadDeploymentInfo(String workload, String lastExecuted, long totalDeployment,
-      String lastStatus, String deploymentType, long success, long previousSuccess,
+  private WorkloadDeploymentInfo getWorkloadDeploymentInfo(String workload, String workloadId, String lastExecuted,
+      long totalDeployment, String lastStatus, String deploymentType, long success, long previousSuccess,
       List<WorkloadDateCountInfo> dateCount) {
     double percentSuccess = 0.0;
     if (totalDeployment != 0) {
@@ -674,6 +692,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     }
     return WorkloadDeploymentInfo.builder()
         .serviceName(workload)
+        .serviceId(workloadId)
         .lastExecuted(lastExecuted)
         .totalDeployments(totalDeployment)
         .lastStatus(lastStatus)
@@ -684,45 +703,46 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         .build();
   }
 
-  public DashboardWorkloadDeployment getWorkloadDeploymentInfoCalculation(List<String> workloads, List<String> status,
-      List<String> startTs, List<String> deploymentTypeList, List<String> planExecutionIdList,
-      HashMap<String, Integer> uniqueWorkloadName, LocalDate startDate, LocalDate endDate) {
+  public DashboardWorkloadDeployment getWorkloadDeploymentInfoCalculation(List<String> workloadsId, List<String> status,
+      List<String> startTs, List<String> deploymentTypeList, HashMap<String, String> uniqueWorkloadNameAndId,
+      long startDate, long endDate) {
     List<WorkloadDeploymentInfo> workloadDeploymentInfoList = new ArrayList<>();
 
-    for (String workload : uniqueWorkloadName.keySet()) {
+    for (String workloadId : uniqueWorkloadNameAndId.keySet()) {
       long totalDeployment = 0;
       long success = 0;
       long previousSuccess = 0;
-      String lastExecuted = null;
+      long lastExecuted = 0L;
       String lastStatus = null;
       String deploymentType = null;
 
-      HashMap<String, Integer> deploymentCountMap = new HashMap<>();
+      HashMap<Long, Integer> deploymentCountMap = new HashMap<>();
 
-      LocalDate startDateCopy = startDate;
-      LocalDate endDateCopy = endDate;
+      long startDateCopy = startDate;
+      long endDateCopy = endDate;
 
-      while (!startDateCopy.isAfter(endDateCopy)) {
-        deploymentCountMap.put(startDateCopy.toString(), 0);
-        startDateCopy = startDateCopy.plusDays(1);
+      while (startDateCopy < endDateCopy) {
+        deploymentCountMap.put(startDateCopy, 0);
+        startDateCopy = startDateCopy + DAY_IN_MS;
       }
 
-      for (int i = 0; i < workloads.size(); i++) {
-        if (workloads.get(i).contentEquals(workload)) {
-          LocalDate variableDate = LocalDate.parse(startTs.get(i).substring(0, startTs.get(i).indexOf(' ')));
-          if (startDate.compareTo(variableDate) <= 0 && endDate.compareTo(variableDate) >= 0) {
+      for (int i = 0; i < workloadsId.size(); i++) {
+        if (workloadsId.get(i).contentEquals(workloadId)) {
+          long currentTimeEpoch = Long.parseLong(startTs.get(i));
+          if (currentTimeEpoch >= startDate && currentTimeEpoch < endDate) {
+            currentTimeEpoch = getStartingDateEpochValue(currentTimeEpoch, startDate);
             totalDeployment++;
-            deploymentCountMap.put(variableDate.toString(), deploymentCountMap.get(variableDate.toString()) + 1);
+            deploymentCountMap.put(currentTimeEpoch, deploymentCountMap.get(currentTimeEpoch) + 1);
             if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
               success++;
             }
-            if (lastExecuted == null) {
-              lastExecuted = startTs.get(i);
+            if (lastExecuted == 0) {
+              lastExecuted = Long.parseLong(startTs.get(i));
               lastStatus = status.get(i);
               deploymentType = deploymentTypeList.get(i);
             } else {
-              if (lastExecuted.compareTo(startTs.get(i)) <= 0) {
-                lastExecuted = startTs.get(i);
+              if (lastExecuted < Long.parseLong(startTs.get(i))) {
+                lastExecuted = Long.parseLong(startTs.get(i));
                 lastStatus = status.get(i);
                 deploymentType = deploymentTypeList.get(i);
               }
@@ -739,17 +759,16 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         List<WorkloadDateCountInfo> dateCount = new ArrayList<>();
         startDateCopy = startDate;
         endDateCopy = endDate;
-        while (!startDateCopy.isAfter(endDateCopy)) {
-          dateCount.add(
-              WorkloadDateCountInfo.builder()
-                  .date(startDateCopy.toString())
-                  .execution(
-                      WorkloadCountInfo.builder().count(deploymentCountMap.get(startDateCopy.toString())).build())
-                  .build());
-          startDateCopy = startDateCopy.plusDays(1);
+        while (startDateCopy < endDateCopy) {
+          dateCount.add(WorkloadDateCountInfo.builder()
+                            .date(String.valueOf(startDateCopy))
+                            .execution(WorkloadCountInfo.builder().count(deploymentCountMap.get(startDateCopy)).build())
+                            .build());
+          startDateCopy = startDateCopy + DAY_IN_MS;
         }
-        workloadDeploymentInfoList.add(getWorkloadDeploymentInfo(
-            workload, lastExecuted, totalDeployment, lastStatus, deploymentType, success, previousSuccess, dateCount));
+        workloadDeploymentInfoList.add(
+            getWorkloadDeploymentInfo(uniqueWorkloadNameAndId.get(workloadId), workloadId, String.valueOf(lastExecuted),
+                totalDeployment, lastStatus, deploymentType, success, previousSuccess, dateCount));
       }
     }
     return DashboardWorkloadDeployment.builder().workloadDeploymentInfoList(workloadDeploymentInfoList).build();
@@ -757,20 +776,18 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
   @Override
   public DashboardWorkloadDeployment getDashboardWorkloadDeployment(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String startInterval, String endInterval, String previousStartInterval) {
-    LocalDate startDate = LocalDate.parse(startInterval);
-    LocalDate endDate = LocalDate.parse(endInterval);
+      String projectIdentifier, long startInterval, long endInterval, long previousStartInterval) {
+    endInterval = endInterval + DAY_IN_MS;
     String query = queryBuilderSelectWorkload(
-        accountIdentifier, orgIdentifier, projectIdentifier, previousStartInterval, endDate.plusDays(1).toString());
+        accountIdentifier, orgIdentifier, projectIdentifier, previousStartInterval, endInterval);
 
-    List<String> workloads = new ArrayList<>();
+    List<String> workloadsId = new ArrayList<>();
     List<String> status = new ArrayList<>();
     List<String> startTs = new ArrayList<>();
     List<String> endTs = new ArrayList<>();
     List<String> deploymentTypeList = new ArrayList<>();
-    List<String> planExecutionIdList = new ArrayList<>();
 
-    HashMap<String, Integer> uniqueWorkloadName = new HashMap<>();
+    HashMap<String, String> uniqueWorkloadNameAndId = new HashMap<>();
 
     int totalTries = 0;
     boolean successfulOperation = false;
@@ -781,16 +798,16 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         resultSet = statement.executeQuery();
         while (resultSet != null && resultSet.next()) {
           String serviceName = resultSet.getString("service_name");
+          String service_id = resultSet.getString("service_id");
           String startTime = resultSet.getString("startTs");
-          workloads.add(serviceName);
+          workloadsId.add(service_id);
           status.add(resultSet.getString("status"));
           startTs.add(startTime);
           endTs.add(resultSet.getString("endTs"));
-          planExecutionIdList.add(resultSet.getString("pipeline_execution_summary_cd_id"));
           deploymentTypeList.add(resultSet.getString("deployment_type"));
 
-          if (!uniqueWorkloadName.containsKey(serviceName)) {
-            uniqueWorkloadName.put(serviceName, 1);
+          if (!uniqueWorkloadNameAndId.containsKey(service_id)) {
+            uniqueWorkloadNameAndId.put(service_id, serviceName);
           }
         }
         successfulOperation = true;
@@ -801,7 +818,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
       }
     }
     return getWorkloadDeploymentInfoCalculation(
-        workloads, status, startTs, deploymentTypeList, planExecutionIdList, uniqueWorkloadName, startDate, endDate);
+        workloadsId, status, startTs, deploymentTypeList, uniqueWorkloadNameAndId, startInterval, endInterval);
   }
 
   public long getTimeUnitToGroupBy(TimeGroupType timeGroupType) {
