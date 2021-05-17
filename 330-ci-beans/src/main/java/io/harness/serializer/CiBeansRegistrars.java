@@ -26,7 +26,6 @@ public class CiBeansRegistrars {
           .addAll(NGCoreBeansRegistrars.kryoRegistrars)
           .addAll(SecretManagerClientRegistrars.kryoRegistrars)
           .addAll(ConnectorBeansRegistrars.kryoRegistrars)
-          .addAll(OrchestrationVisualizationModuleRegistrars.kryoRegistrars)
           .add(CIBeansKryoRegistrar.class)
           .build();
 
@@ -37,7 +36,6 @@ public class CiBeansRegistrars {
           .addAll(ProjectAndOrgRegistrars.morphiaRegistrars)
           .addAll(NGCoreBeansRegistrars.morphiaRegistrars)
           .addAll(SecretManagerClientRegistrars.morphiaRegistrars)
-          .addAll(OrchestrationVisualizationModuleRegistrars.morphiaRegistrars)
           .add(CIBeansMorphiaRegistrar.class)
           .add(YamlMorphiaRegistrar.class)
           .build();

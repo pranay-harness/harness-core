@@ -43,7 +43,6 @@ public class CIExecutionServiceModule extends AbstractModule {
   protected void configure() {
     install(CIBeansModule.getInstance());
     install(OrchestrationStepsModule.getInstance(null));
-    install(OrchestrationVisualizationModule.getInstance());
     install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
                                                 .serviceName("CI")
                                                 .withPMS(Optional.ofNullable(withPMS).orElse(false))

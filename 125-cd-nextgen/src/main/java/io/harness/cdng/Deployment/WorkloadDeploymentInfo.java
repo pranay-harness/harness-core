@@ -12,6 +12,7 @@ import lombok.Value;
 @Builder
 public class WorkloadDeploymentInfo {
   private String serviceName;
+  private String serviceId;
   private String lastExecuted;
   private String lastStatus;
   private String deploymentType;

@@ -23,6 +23,7 @@ import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.utilities.ResourceConstraintUtility;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -119,7 +120,16 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
         infraNode.getUuid(), PlanCreationResponse.builder().node(infraNode.getUuid(), infraSectionPlanNode).build());
 
     // Add dependency for resource constraint
-    if (pipelineInfrastructure.isAllowSimultaneousDeployments()) {
+    if (!ParameterField.isNull(pipelineInfrastructure.getAllowSimultaneousDeployments())
+        && pipelineInfrastructure.getAllowSimultaneousDeployments().isExpression()) {
+      throw new InvalidRequestException(
+          "AllowedSimultaneous Deployment field is not a fixed value during execution of pipeline.");
+    }
+    boolean allowSimultaneousDeployments = false;
+    if (!ParameterField.isNull(pipelineInfrastructure.getAllowSimultaneousDeployments())) {
+      allowSimultaneousDeployments = pipelineInfrastructure.getAllowSimultaneousDeployments().getValue();
+    }
+    if (allowSimultaneousDeployments) {
       dependenciesNodeMap.put(rcYamlField.getNode().getUuid(), rcYamlField);
     }
 
