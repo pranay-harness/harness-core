@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CastedField;
 import io.harness.core.Recaster;
+import io.harness.exceptions.RecasterException;
 import io.harness.utils.RecastReflectionUtils;
 
 import java.util.LinkedHashMap;
@@ -27,8 +28,7 @@ public class ComplexFieldRecaster implements FieldRecaster {
           refObj = recaster.getTransformer().decode(docVal.getClass(), docVal, cf);
         } else {
           Document value = (Document) docVal;
-          if (!value.containsKey(Recaster.RECAST_CLASS_KEY)) {
-            // this is a map ex. Dummy<Map<String,Object>>
+          if (RecastReflectionUtils.isMap(value)) {
             refObj = recaster.getTransformer().decode(LinkedHashMap.class, value, null);
           } else if (recaster.getTransformer().hasCustomTransformer(RecastReflectionUtils.getClass(value))) {
             refObj = recaster.getTransformer().decode(RecastReflectionUtils.getClass(value), value, cf);
@@ -42,7 +42,7 @@ public class ComplexFieldRecaster implements FieldRecaster {
         }
       }
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      throw new RecasterException("Exception while processing complex field", e);
     }
   }
 
@@ -70,8 +70,9 @@ public class ComplexFieldRecaster implements FieldRecaster {
   }
 
   private Document obtainEncodedValue(Recaster recaster, CastedField cf, Object fieldValue) {
-    return new Document()
-        .append(Recaster.RECAST_CLASS_KEY, cf.getType().getName())
-        .append(Recaster.ENCODED_VALUE, recaster.getTransformer().encode(cf.getType(), fieldValue, cf));
+    Document document = new Document();
+    RecastReflectionUtils.setDocumentIdentifier(document, cf.getType());
+    document.append(Recaster.ENCODED_VALUE, recaster.getTransformer().encode(cf.getType(), fieldValue, cf));
+    return document;
   }
 }
