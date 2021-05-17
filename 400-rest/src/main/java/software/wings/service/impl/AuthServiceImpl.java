@@ -709,7 +709,7 @@ public class AuthServiceImpl implements AuthService {
       }
     } else {
       if (!harnessUserGroupService.isHarnessSupportUser(user.getUuid())
-          || !harnessUserGroupService.isHarnessSupportEnabledForAccount(accountId)) {
+          || !harnessUserGroupService.isHarnessSupportEnabled(accountId, user.getUuid())) {
         return Optional.empty();
       }
     }
