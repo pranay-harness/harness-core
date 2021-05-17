@@ -520,7 +520,8 @@ public enum ErrorCode {
   SCM_UNPROCESSABLE_ENTITY,
   SCM_UNAUTHORIZED,
   DATA,
-  CONTEXT;
+  CONTEXT,
+  PR_CREATION_ERROR;
 
   private Status status = BAD_REQUEST;
   private String description;
