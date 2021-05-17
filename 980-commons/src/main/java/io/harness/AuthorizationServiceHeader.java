@@ -9,6 +9,7 @@ public enum AuthorizationServiceHeader {
   BEARER("Bearer"),
   MANAGER("Manager"),
   NG_MANAGER("NextGenManager"),
+  BATCH_PROCESSING("BatchProcessing"),
   CI_MANAGER("CIManager"),
   CV_NEXT_GEN("CVNextGen"),
   CE_NEXT_GEN("CENextGen"),

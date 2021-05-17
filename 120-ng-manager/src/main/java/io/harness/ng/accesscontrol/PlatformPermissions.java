@@ -22,4 +22,7 @@ public class PlatformPermissions {
   public static final String VIEW_USER_PERMISSION = "core_user_view";
   public static final String MANAGE_USER_PERMISSION = "core_user_manage";
   public static final String INVITE_PERMISSION_IDENTIFIER = "core_user_invite";
+  public static final String VIEW_AUTHSETTING_PERMISSION = "core_authsetting_view";
+  public static final String EDIT_AUTHSETTING_PERMISSION = "core_authsetting_edit";
+  public static final String DELETE_AUTHSETTING_PERMISSION = "core_authsetting_delete";
 }

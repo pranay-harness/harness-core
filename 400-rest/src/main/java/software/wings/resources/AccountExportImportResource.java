@@ -1003,6 +1003,7 @@ public class AccountExportImportResource {
       // Replace clashed user id with the new user id in the current system.
       json = replaceClashedUserIds(json, clashedUserIdMapping);
       jsonArrayList.add((JsonArray) jsonParser.parse(json));
+      return jsonArrayList;
     }
     if (isNotEmpty(batchJson)) {
       int i = 0;

@@ -113,27 +113,41 @@ public class QueryBuilderTest {
     List<String> pendingStatusList =
         Arrays.asList(ExecutionStatus.INTERVENTION_WAITING.name(), ExecutionStatus.APPROVAL_WAITING.name());
 
-    List<String> planExecutionId = Arrays.asList("123", "345", "456");
-
-    // failedStatusList
     String expectedQueryResult =
-        "select service_name,tag,pipeline_execution_summary_cd_id from service_infra_info, pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and status in ('FAILED','ABORTED','EXPIRED') and pipeline_execution_summary_cd_id in ('123','345','456') and pipeline_execution_summary_cd.id=pipeline_execution_summary_cd_id and service_name is not null;";
-    String queryResult = new CDOverviewDashboardServiceImpl().queryBuilderServiceTag(
-        "accountId", "orgId", "projectId", planExecutionId, failedStatusList);
+        "select service_name,tag,pipeline_execution_summary_cd_id from service_infra_info where pipeline_execution_summary_cd_id in (abc) and service_name is not null;";
+    String queryResult = new CDOverviewDashboardServiceImpl().queryBuilderServiceTag("abc");
+    assertThat(queryResult).isEqualTo(expectedQueryResult);
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testQueryBuilderSelectIdLimitTimeCdTable() {
+    List<String> failedStatusList =
+        Arrays.asList(ExecutionStatus.FAILED.name(), ExecutionStatus.ABORTED.name(), ExecutionStatus.EXPIRED.name());
+    List<String> activeStatusList = Arrays.asList(ExecutionStatus.RUNNING.name());
+    List<String> pendingStatusList =
+        Arrays.asList(ExecutionStatus.INTERVENTION_WAITING.name(), ExecutionStatus.APPROVAL_WAITING.name());
+
+    // failed
+    String expectedQueryResult =
+        "select id from pipeline_execution_summary_cd where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status in ('FAILED','ABORTED','EXPIRED') ORDER BY startts DESC LIMIT 4";
+    String queryResult = new CDOverviewDashboardServiceImpl().queryBuilderSelectIdLimitTimeCdTable(
+        "acc", "org", "pro", 4, failedStatusList);
     assertThat(queryResult).isEqualTo(expectedQueryResult);
 
-    // activeStatusList
+    // active
     expectedQueryResult =
-        "select service_name,tag,pipeline_execution_summary_cd_id from service_infra_info, pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and status in ('RUNNING') and pipeline_execution_summary_cd_id in ('123','345','456') and pipeline_execution_summary_cd.id=pipeline_execution_summary_cd_id and service_name is not null;";
-    queryResult = new CDOverviewDashboardServiceImpl().queryBuilderServiceTag(
-        "accountId", "orgId", "projectId", planExecutionId, activeStatusList);
+        "select id from pipeline_execution_summary_cd where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status in ('RUNNING') ORDER BY startts DESC LIMIT 4";
+    queryResult = new CDOverviewDashboardServiceImpl().queryBuilderSelectIdLimitTimeCdTable(
+        "acc", "org", "pro", 4, activeStatusList);
     assertThat(queryResult).isEqualTo(expectedQueryResult);
 
     // pending
     expectedQueryResult =
-        "select service_name,tag,pipeline_execution_summary_cd_id from service_infra_info, pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and status in ('INTERVENTION_WAITING','APPROVAL_WAITING') and pipeline_execution_summary_cd_id in ('123','345','456') and pipeline_execution_summary_cd.id=pipeline_execution_summary_cd_id and service_name is not null;";
-    queryResult = new CDOverviewDashboardServiceImpl().queryBuilderServiceTag(
-        "accountId", "orgId", "projectId", planExecutionId, pendingStatusList);
+        "select id from pipeline_execution_summary_cd where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status in ('INTERVENTION_WAITING','APPROVAL_WAITING') ORDER BY startts DESC LIMIT 4";
+    queryResult = new CDOverviewDashboardServiceImpl().queryBuilderSelectIdLimitTimeCdTable(
+        "acc", "org", "pro", 4, pendingStatusList);
     assertThat(queryResult).isEqualTo(expectedQueryResult);
   }
 
@@ -142,63 +156,57 @@ public class QueryBuilderTest {
   @Category(UnitTests.class)
   public void testQueryBuilderSelectWorkload() {
     String queryExpected =
-        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id,deployment_type from service_infra_info, pipeline_execution_summary_cd where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and pipeline_execution_summary_cd.id=pipeline_execution_summary_cd_id and service_name is not null and startts between '2021-04-21' and '2021-04-28';";
+        "select service_name,service_id,service_status as status,service_startts as startts,service_endts as endts,deployment_type from service_infra_info where pipeline_execution_summary_cd_id in (select id from pipeline_execution_summary_cd where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and startts>=10 and startts<13 ) and service_name is not null and service_id is not null;";
 
     assertThat(queryExpected)
-        .isEqualTo(new CDOverviewDashboardServiceImpl().queryBuilderSelectWorkload(
-            "acc", "org", "pro", "2021-04-21", "2021-04-28"));
+        .isEqualTo(new CDOverviewDashboardServiceImpl().queryBuilderSelectWorkload("acc", "org", "pro", 10L, 13L));
 
     // all parameters as null
     queryExpected =
-        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id,deployment_type from service_infra_info, pipeline_execution_summary_cd where ";
+        "select service_name,service_id,service_status as status,service_startts as startts,service_endts as endts,deployment_type from service_infra_info where ";
     assertThat(queryExpected)
-        .isEqualTo(new CDOverviewDashboardServiceImpl().queryBuilderSelectWorkload(null, null, null, null, null));
+        .isEqualTo(new CDOverviewDashboardServiceImpl().queryBuilderSelectWorkload(null, null, null, 0L, 0L));
 
     // accountIdentifier as null
     queryExpected =
-        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id,deployment_type from service_infra_info, pipeline_execution_summary_cd where orgidentifier='org' and projectidentifier='pro' and pipeline_execution_summary_cd.id=pipeline_execution_summary_cd_id and service_name is not null and startts between '2021-04-21' and '2021-04-28';";
+        "select service_name,service_id,service_status as status,service_startts as startts,service_endts as endts,deployment_type from service_infra_info where pipeline_execution_summary_cd_id in (select id from pipeline_execution_summary_cd where orgidentifier='org' and projectidentifier='pro' and startts>=10 and startts<13 ) and service_name is not null and service_id is not null;";
     assertThat(queryExpected)
-        .isEqualTo(new CDOverviewDashboardServiceImpl().queryBuilderSelectWorkload(
-            null, "org", "pro", "2021-04-21", "2021-04-28"));
+        .isEqualTo(new CDOverviewDashboardServiceImpl().queryBuilderSelectWorkload(null, "org", "pro", 10L, 13L));
 
     // org as null
     queryExpected =
-        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id,deployment_type from service_infra_info, pipeline_execution_summary_cd where accountid='acc' and projectidentifier='pro' and pipeline_execution_summary_cd.id=pipeline_execution_summary_cd_id and service_name is not null and startts between '2021-04-21' and '2021-04-28';";
+        "select service_name,service_id,service_status as status,service_startts as startts,service_endts as endts,deployment_type from service_infra_info where pipeline_execution_summary_cd_id in (select id from pipeline_execution_summary_cd where accountid='acc' and projectidentifier='pro' and startts>=10 and startts<13 ) and service_name is not null and service_id is not null;";
 
     assertThat(queryExpected)
-        .isEqualTo(new CDOverviewDashboardServiceImpl().queryBuilderSelectWorkload(
-            "acc", null, "pro", "2021-04-21", "2021-04-28"));
+        .isEqualTo(new CDOverviewDashboardServiceImpl().queryBuilderSelectWorkload("acc", null, "pro", 10L, 13L));
 
     // proId as null
     queryExpected =
-        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id,deployment_type from service_infra_info, pipeline_execution_summary_cd where accountid='acc' and orgidentifier='org' and pipeline_execution_summary_cd.id=pipeline_execution_summary_cd_id and service_name is not null and startts between '2021-04-21' and '2021-04-28';";
+        "select service_name,service_id,service_status as status,service_startts as startts,service_endts as endts,deployment_type from service_infra_info where pipeline_execution_summary_cd_id in (select id from pipeline_execution_summary_cd where accountid='acc' and orgidentifier='org' and startts>=10 and startts<13 ) and service_name is not null and service_id is not null;";
 
     assertThat(queryExpected)
-        .isEqualTo(new CDOverviewDashboardServiceImpl().queryBuilderSelectWorkload(
-            "acc", "org", null, "2021-04-21", "2021-04-28"));
+        .isEqualTo(new CDOverviewDashboardServiceImpl().queryBuilderSelectWorkload("acc", "org", null, 10L, 13L));
 
     // startInterval as null
     queryExpected =
-        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id,deployment_type from service_infra_info, pipeline_execution_summary_cd where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and ";
+        "select service_name,service_id,service_status as status,service_startts as startts,service_endts as endts,deployment_type from service_infra_info where ";
 
     assertThat(queryExpected)
-        .isEqualTo(
-            new CDOverviewDashboardServiceImpl().queryBuilderSelectWorkload("acc", "org", "pro", null, "2021-04-28"));
+        .isEqualTo(new CDOverviewDashboardServiceImpl().queryBuilderSelectWorkload("acc", "org", "pro", 0L, 13L));
 
-    // startInterval as null
+    // endInterval as null
     queryExpected =
-        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id,deployment_type from service_infra_info, pipeline_execution_summary_cd where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and ";
+        "select service_name,service_id,service_status as status,service_startts as startts,service_endts as endts,deployment_type from service_infra_info where ";
 
     assertThat(queryExpected)
-        .isEqualTo(
-            new CDOverviewDashboardServiceImpl().queryBuilderSelectWorkload("acc", "org", "pro", "2021-04-28", null));
+        .isEqualTo(new CDOverviewDashboardServiceImpl().queryBuilderSelectWorkload("acc", "org", "pro", 10L, 0L));
 
     // both interval as null
     queryExpected =
-        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id,deployment_type from service_infra_info, pipeline_execution_summary_cd where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and ";
+        "select service_name,service_id,service_status as status,service_startts as startts,service_endts as endts,deployment_type from service_infra_info where ";
 
     assertThat(queryExpected)
-        .isEqualTo(new CDOverviewDashboardServiceImpl().queryBuilderSelectWorkload("acc", "org", "pro", null, null));
+        .isEqualTo(new CDOverviewDashboardServiceImpl().queryBuilderSelectWorkload("acc", "org", "pro", 0L, 0L));
   }
 
   @Test

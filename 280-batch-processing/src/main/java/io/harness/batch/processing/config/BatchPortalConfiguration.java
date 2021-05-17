@@ -29,8 +29,8 @@ import org.springframework.guice.annotation.EnableGuiceModules;
 @EnableGuiceModules
 public class BatchPortalConfiguration {
   @Bean
-  public BatchProcessingModule batchProcessingWingsModule() {
-    return new BatchProcessingModule();
+  public BatchProcessingModule batchProcessingWingsModule(BatchMainConfig batchMainConfig) {
+    return new BatchProcessingModule(batchMainConfig);
   }
 
   @Bean

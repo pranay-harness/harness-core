@@ -10,7 +10,6 @@ import io.harness.cdng.Deployment.ExecutionDeploymentDetailInfo;
 import io.harness.cdng.Deployment.ExecutionDeploymentInfo;
 import io.harness.cdng.Deployment.HealthDeploymentDashboard;
 import io.harness.cdng.service.dashboard.CDOverviewDashboardService;
-import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.OrgIdentifier;
 import io.harness.ng.core.ProjectIdentifier;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -23,10 +22,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -54,24 +50,21 @@ public class CDDashboardOverviewResource {
   private final long HR_IN_MS = 60 * 60 * 1000;
   private final long DAY_IN_MS = 24 * HR_IN_MS;
 
-  private void epochShouldBeOfStartOfDay(long epoch) throws Exception {
-    if (epoch % DAY_IN_MS > 0) {
-      log.info("Start and End interval should be of Start of day UTC");
-      throw new InvalidRequestException("Value of epoch should be given as Start of day of that date UTC 00:00:00");
-    }
+  private long epochShouldBeOfStartOfDay(long epoch) {
+    return epoch - epoch % DAY_IN_MS;
   }
   @GET
   @Path("/deploymentHealth")
   @ApiOperation(value = "Get deployment health", nickname = "getDeploymentHealth")
   public ResponseDTO<HealthDeploymentDashboard> getDeploymentHealth(
-      @NotNull @QueryParam("accountId") String accountIdentifier,
-      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @QueryParam("startInterval") long startInterval, @NotNull @QueryParam("endInterval") long endInterval)
-      throws Exception {
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGResourceFilterConstants.START) long startInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.END) long endInterval) {
     log.info("Getting deployment health");
-    epochShouldBeOfStartOfDay(startInterval);
-    epochShouldBeOfStartOfDay(endInterval);
+    startInterval = epochShouldBeOfStartOfDay(startInterval);
+    endInterval = epochShouldBeOfStartOfDay(endInterval);
 
     long previousStartInterval = startInterval - (endInterval - startInterval + DAY_IN_MS);
     return ResponseDTO.newResponse(cdOverviewDashboardService.getHealthDeploymentDashboard(
@@ -86,9 +79,9 @@ public class CDDashboardOverviewResource {
       @NotNull @OrgIdentifier @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @ProjectIdentifier @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGResourceFilterConstants.START) long startTime,
-      @NotNull @QueryParam(NGResourceFilterConstants.END) long endTime) throws Exception {
-    epochShouldBeOfStartOfDay(startTime);
-    epochShouldBeOfStartOfDay(endTime);
+      @NotNull @QueryParam(NGResourceFilterConstants.END) long endTime) {
+    startTime = epochShouldBeOfStartOfDay(startTime);
+    endTime = epochShouldBeOfStartOfDay(endTime);
     return ResponseDTO.newResponse(cdOverviewDashboardService.getDeploymentsExecutionInfo(
         accountIdentifier, orgIdentifier, projectIdentifier, startTime, endTime));
   }
@@ -97,14 +90,14 @@ public class CDDashboardOverviewResource {
   @Path("/deploymentExecution")
   @ApiOperation(value = "Get deployment execution", nickname = "getDeploymentExecution")
   public ResponseDTO<ExecutionDeploymentInfo> getDeploymentExecution(
-      @NotNull @QueryParam("accountId") String accountIdentifier,
-      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @QueryParam("startInterval") long startInterval, @NotNull @QueryParam("endInterval") long endInterval)
-      throws Exception {
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGResourceFilterConstants.START) long startInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.END) long endInterval) {
     log.info("Getting deployment execution");
-    epochShouldBeOfStartOfDay(startInterval);
-    epochShouldBeOfStartOfDay(endInterval);
+    startInterval = epochShouldBeOfStartOfDay(startInterval);
+    endInterval = epochShouldBeOfStartOfDay(endInterval);
 
     return ResponseDTO.newResponse(cdOverviewDashboardService.getExecutionDeploymentDashboard(
         accountIdentifier, orgIdentifier, projectIdentifier, startInterval, endInterval));
@@ -114,10 +107,11 @@ public class CDDashboardOverviewResource {
   @Path("/getDeployments")
   @ApiOperation(value = "Get deployments", nickname = "getDeployments")
   public ResponseDTO<DashboardDeploymentActiveFailedRunningInfo> getDeployments(
-      @NotNull @QueryParam("accountId") String accountIdentifier,
-      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam("top") @DefaultValue("20") long days) {
+    log.info("Getting deployments for active failed and running status");
     return ResponseDTO.newResponse(cdOverviewDashboardService.getDeploymentActiveFailedRunningInfo(
         accountIdentifier, orgIdentifier, projectIdentifier, days));
   }
@@ -126,24 +120,18 @@ public class CDDashboardOverviewResource {
   @Path("/getWorkloads")
   @ApiOperation(value = "Get workloads", nickname = "getWorkloads")
   public ResponseDTO<DashboardWorkloadDeployment> getWorkloads(
-      @NotNull @QueryParam("accountId") String accountIdentifier,
-      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
-          "startInterval") String startInterval,
-      @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
-          "endInterval") String endInterval) {
-    LocalDate startDate = LocalDate.parse(startInterval);
-    LocalDate endDate = LocalDate.parse(endInterval);
-    long interval = ChronoUnit.DAYS.between(startDate, endDate);
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGResourceFilterConstants.START) long startInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.END) long endInterval) {
+    log.info("Getting workloads");
+    startInterval = epochShouldBeOfStartOfDay(startInterval);
+    endInterval = epochShouldBeOfStartOfDay(endInterval);
 
-    if (interval < 0) {
-      interval = interval * (-1);
-    }
-
-    LocalDate previousStartDate = startDate.minusDays(interval);
+    long previousStartInterval = startInterval - (endInterval - startInterval + DAY_IN_MS);
 
     return ResponseDTO.newResponse(cdOverviewDashboardService.getDashboardWorkloadDeployment(
-        accountIdentifier, orgIdentifier, projectIdentifier, startInterval, endInterval, previousStartDate.toString()));
+        accountIdentifier, orgIdentifier, projectIdentifier, startInterval, endInterval, previousStartInterval));
   }
 }
