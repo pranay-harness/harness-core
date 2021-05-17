@@ -137,6 +137,7 @@ import io.harness.delegate.task.nexus.NexusValidationHandler;
 import io.harness.delegate.task.scm.ScmDelegateClient;
 import io.harness.delegate.task.scm.ScmDelegateClientImpl;
 import io.harness.delegate.task.scm.ScmGitFileTask;
+import io.harness.delegate.task.scm.ScmGitPRTask;
 import io.harness.delegate.task.scm.ScmGitRefTask;
 import io.harness.delegate.task.scm.ScmPushTask;
 import io.harness.delegate.task.shell.ShellScriptTaskNG;
@@ -1379,6 +1380,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.SCM_PUSH_TASK).toInstance(ScmPushTask.class);
     mapBinder.addBinding(TaskType.SCM_GIT_REF_TASK).toInstance(ScmGitRefTask.class);
     mapBinder.addBinding(TaskType.SCM_GIT_FILE_TASK).toInstance(ScmGitFileTask.class);
+    mapBinder.addBinding(TaskType.SCM_PULL_REQUEST_TASK).toInstance(ScmGitPRTask.class);
   }
 
   private void registerSecretManagementBindings() {

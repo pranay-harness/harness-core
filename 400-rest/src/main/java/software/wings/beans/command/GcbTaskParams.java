@@ -1,6 +1,7 @@
 package software.wings.beans.command;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -11,13 +12,13 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
-import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.sm.states.gcbconfigs.GcbOptions;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -53,12 +54,18 @@ public class GcbTaskParams implements ExecutionCapabilityDemander {
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities =
         new ArrayList<>(gcpConfig.fetchRequiredExecutionCapabilities(maskingEvaluator));
+    Set<String> selectors = new HashSet<>();
     if (gcpConfig.isUseDelegateSelectors()) {
-      executionCapabilities.add(SelectorCapability.builder()
-                                    .selectors(new HashSet<>(gcpConfig.getDelegateSelectors()))
-                                    .selectorOrigin(DelegateServiceImpl.TASK_SELECTORS)
-                                    .build());
+      selectors.addAll(gcpConfig.getDelegateSelectors());
     }
+    if (gitConfig != null && isNotEmpty(gitConfig.getDelegateSelectors())) {
+      selectors.addAll(gitConfig.getDelegateSelectors());
+    }
+
+    if (!selectors.isEmpty()) {
+      executionCapabilities.add(SelectorCapability.builder().selectors(selectors).build());
+    }
+
     return executionCapabilities;
   }
 }

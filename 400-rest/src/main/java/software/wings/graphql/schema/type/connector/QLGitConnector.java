@@ -10,6 +10,7 @@ import software.wings.graphql.schema.type.secrets.QLUsageScope;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
 
@@ -33,6 +34,7 @@ public class QLGitConnector implements QLConnector {
   private Boolean generateWebhookUrl;
   private QLCustomCommitDetails customCommitDetails;
   private QLUsageScope usageScope;
+  private List<String> delegateSelectors;
 
   public static class QLGitConnectorBuilder implements QLConnectorBuilder {}
 }

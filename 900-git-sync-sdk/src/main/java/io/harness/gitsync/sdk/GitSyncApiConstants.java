@@ -20,4 +20,5 @@ public class GitSyncApiConstants {
   public static final String TARGET_BRANCH_FOR_PR = "targetBranchForPr";
   public static final String DEFAULT_FROM_OTHER_REPO = "getDefaultFromOtherRepo";
   public static final String BASE_BRANCH = "baseBranch";
+  public static final String PR_TITLE = "prTitle";
 }

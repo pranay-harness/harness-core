@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.connector.types;
 
+import static io.harness.rule.OwnerRule.PARDHA;
 import static io.harness.rule.OwnerRule.TMACARI;
 
 import static software.wings.graphql.datafetcher.connector.utils.ConnectorConstants.ACCOUNT_ID;
@@ -35,6 +36,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.sql.SQLException;
+import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -75,6 +77,7 @@ public class GitConnectorTest {
                                                              .authorEmailId(RequestField.ofNullable(EMAIL))
                                                              .commitMessage(RequestField.ofNullable(MESSAGE))
                                                              .build()))
+            .delegateSelectors(RequestField.ofNull())
             .sshSettingId(RequestField.ofNullable(SSH))
             .usageScope(RequestField.ofNullable(QLUsageScope.builder().build()))
             .passwordSecretId(RequestField.ofNull())
@@ -107,6 +110,7 @@ public class GitConnectorTest {
                                                              .authorEmailId(RequestField.ofNullable(EMAIL))
                                                              .commitMessage(RequestField.ofNullable(MESSAGE))
                                                              .build()))
+            .delegateSelectors(RequestField.ofNull())
             .sshSettingId(RequestField.ofNull())
             .passwordSecretId(RequestField.ofNullable(PASSWORD))
             .build();
@@ -115,5 +119,38 @@ public class GitConnectorTest {
         QLConnectorInput.builder().gitConnector(qlGitConnectorInput).build(), ACCOUNT_ID);
 
     assertThat(((GitConfig) settingAttribute.getValue()).getEncryptedPassword()).isEqualTo(PASSWORD);
+  }
+
+  @Test
+  @Owner(developers = PARDHA)
+  @Category(UnitTests.class)
+  public void testGetSettingAttributeHasCorrectDelegateSelectors() {
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute().build();
+    doReturn(setting).when(settingsService).getByAccount(any(), any());
+    doReturn(new EncryptedData()).when(secretManager).getSecretById(ACCOUNT_ID, PASSWORD);
+    doReturn(QLGitConnector.builder()).when(connectorsController).getConnectorBuilder(any());
+    doReturn(QLGitConnector.builder()).when(connectorsController).populateConnector(any(), any());
+
+    QLGitConnectorInput qlGitConnectorInput =
+        getQlGitConnectorInputBuilder()
+            .branch(RequestField.ofNullable(BRANCH))
+            .generateWebhookUrl(RequestField.ofNullable(true))
+            .urlType(RequestField.ofNullable(GitConfig.UrlType.REPO))
+            .customCommitDetails(RequestField.ofNullable(QLCustomCommitDetailsInput.builder()
+                                                             .authorName(RequestField.ofNullable(AUTHOR))
+                                                             .authorEmailId(RequestField.ofNullable(EMAIL))
+                                                             .commitMessage(RequestField.ofNullable(MESSAGE))
+                                                             .build()))
+            .delegateSelectors(RequestField.ofNullable(Collections.singletonList("primary")))
+            .sshSettingId(RequestField.ofNull())
+            .passwordSecretId(RequestField.ofNullable(PASSWORD))
+            .build();
+
+    SettingAttribute settingAttribute = gitConnector.getSettingAttribute(
+        QLConnectorInput.builder().gitConnector(qlGitConnectorInput).build(), ACCOUNT_ID);
+
+    assertThat(((GitConfig) settingAttribute.getValue()).getEncryptedPassword()).isEqualTo(PASSWORD);
+    assertThat(((GitConfig) settingAttribute.getValue()).getDelegateSelectors())
+        .isEqualTo(Collections.singletonList("primary"));
   }
 }
