@@ -13,7 +13,7 @@ import io.harness.cvng.beans.AppdynamicsValidationResponse.AppdynamicsValidation
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
-import io.harness.cvng.beans.appd.AppDynamicsTier;
+import io.harness.cvng.beans.appd.Tier;
 import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.delegate.task.DataCollectionExecutorService;
@@ -129,12 +129,12 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
 
   @Override
-  public Set<AppDynamicsTier> getTiers(AppDynamicsConnectorDTO appDynamicsConnector,
+  public Set<Tier> getTiers(AppDynamicsConnectorDTO appDynamicsConnector,
       List<EncryptedDataDetail> encryptedDataDetails, long appDynamicsAppId) {
-    final Call<Set<AppDynamicsTier>> request =
+    final Call<Set<Tier>> request =
         getAppdynamicsRestClient(appDynamicsConnector)
             .listTiersNg(getHeaderWithCredentials(appDynamicsConnector, encryptedDataDetails), appDynamicsAppId);
-    final Set<AppDynamicsTier> response = requestExecutor.executeRequest(request);
+    final Set<Tier> response = requestExecutor.executeRequest(request);
     return new HashSet<>(response);
   }
 

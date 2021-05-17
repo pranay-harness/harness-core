@@ -13,8 +13,8 @@ import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
-import io.harness.cvng.beans.appd.AppDynamicsTier;
 import io.harness.cvng.beans.appd.AppdynamicsMetricPackDataValidationRequest;
+import io.harness.cvng.beans.appd.Tier;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.rest.RestResponse;
@@ -79,7 +79,7 @@ public interface VerificationManagerClient {
       @Body AppDynamicsConnectorDTO appDynamicsConnectorDTO);
 
   @POST("appdynamics/tiers-ng")
-  Call<RestResponse<Set<AppDynamicsTier>>> getTiers(@Query("accountId") String accountId,
+  Call<RestResponse<Set<Tier>>> getTiers(@Query("accountId") String accountId,
       @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
       @Query("appDynamicsAppId") long appDynamicsAppId, @Body AppDynamicsConnectorDTO appDynamicsConnectorDTO);
 

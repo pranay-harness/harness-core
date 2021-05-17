@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.appdynamics;
 
-import io.harness.cvng.beans.appd.AppDynamicsTier;
+import io.harness.cvng.beans.appd.Tier;
 
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
@@ -41,7 +41,7 @@ public interface AppdynamicsRestClient {
       @Header("Authorization") String authorization, @Path("appdynamicsAppId") long appdynamicsAppId);
 
   @GET("rest/applications/{appdynamicsAppId}/tiers?output=json")
-  Call<Set<AppDynamicsTier>> listTiersNg(
+  Call<Set<Tier>> listTiersNg(
       @Header("Authorization") String authorization, @Path("appdynamicsAppId") long appdynamicsAppId);
   /**
    * Lists all the nodes of a tier and application in appdynamics

@@ -15,8 +15,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
-import io.harness.cvng.beans.appd.AppDynamicsTier;
 import io.harness.cvng.beans.appd.AppdynamicsMetricPackDataValidationRequest;
+import io.harness.cvng.beans.appd.Tier;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -131,7 +131,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   }
 
   @Override
-  public Set<AppDynamicsTier> getTiers(AppDynamicsConnectorDTO appDynamicsConnector, String orgIdentifier,
+  public Set<Tier> getTiers(AppDynamicsConnectorDTO appDynamicsConnector, String orgIdentifier,
       String projectIdentifier, long appDynamicsAppId) {
     NGAccess basicNGAccessObject = BaseNGAccess.builder()
                                        .accountIdentifier(appDynamicsConnector.getAccountId())

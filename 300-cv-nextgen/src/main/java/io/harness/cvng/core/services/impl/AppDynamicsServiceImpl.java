@@ -16,7 +16,7 @@ import io.harness.cvng.beans.appd.AppDynamicsApplication;
 import io.harness.cvng.beans.appd.AppDynamicsFetchAppRequest;
 import io.harness.cvng.beans.appd.AppDynamicsFetchTiersRequest;
 import io.harness.cvng.beans.appd.AppDynamicsMetricDataValidationRequest;
-import io.harness.cvng.beans.appd.AppDynamicsTier;
+import io.harness.cvng.beans.appd.Tier;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.RequestExecutor;
 import io.harness.cvng.client.VerificationManagerClient;
@@ -159,7 +159,7 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
   }
 
   @Override
-  public PageResponse<AppDynamicsTier> getTiers(String accountId, String connectorIdentifier, String orgIdentifier,
+  public PageResponse<Tier> getTiers(String accountId, String connectorIdentifier, String orgIdentifier,
       String projectIdentifier, String appName, int offset, int pageSize, String filter) {
     DataCollectionRequest request = AppDynamicsFetchTiersRequest.builder()
                                         .appName(appName)
@@ -177,9 +177,9 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
     OnboardingResponseDTO response = onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
 
     final Gson gson = new Gson();
-    Type type = new TypeToken<List<AppDynamicsTier>>() {}.getType();
-    List<AppDynamicsTier> tiers = gson.fromJson(JsonUtils.asJson(response.getResult()), type);
-    List<AppDynamicsTier> appDynamicsTiers = new ArrayList<>();
+    Type type = new TypeToken<List<Tier>>() {}.getType();
+    List<Tier> tiers = gson.fromJson(JsonUtils.asJson(response.getResult()), type);
+    List<Tier> appDynamicsTiers = new ArrayList<>();
     tiers.forEach(appDynamicsTier -> {
       if (isEmpty(filter) || appDynamicsTier.getName().toLowerCase().contains(filter.trim().toLowerCase())) {
         appDynamicsTiers.add(appDynamicsTier);

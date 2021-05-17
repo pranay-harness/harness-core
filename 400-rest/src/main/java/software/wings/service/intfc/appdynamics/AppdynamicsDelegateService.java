@@ -3,7 +3,7 @@ package software.wings.service.intfc.appdynamics;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
-import io.harness.cvng.beans.appd.AppDynamicsTier;
+import io.harness.cvng.beans.appd.Tier;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -38,8 +38,8 @@ public interface AppdynamicsDelegateService {
   Set<AppdynamicsTier> getTiers(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
       List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog);
   @DelegateTaskType(TaskType.APPDYNAMICS_GET_TIER_TASK_NG)
-  Set<AppDynamicsTier> getTiers(AppDynamicsConnectorDTO appDynamicsConnector,
-      List<EncryptedDataDetail> encryptedDataDetails, long appDynamicsAppId);
+  Set<Tier> getTiers(AppDynamicsConnectorDTO appDynamicsConnector, List<EncryptedDataDetail> encryptedDataDetails,
+      long appDynamicsAppId);
   Set<AppdynamicsNode> getNodes(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
       List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog, List<String> hosts);
 

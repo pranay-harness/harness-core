@@ -11,8 +11,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
-import io.harness.cvng.beans.appd.AppDynamicsTier;
 import io.harness.cvng.beans.appd.AppdynamicsMetricPackDataValidationRequest;
+import io.harness.cvng.beans.appd.Tier;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
@@ -128,7 +128,7 @@ public class AppdynamicsResource {
   @ExceptionMetered
   @LearningEngineAuth
   @ExposeInternalException(withStackTrace = true)
-  public RestResponse<Set<AppDynamicsTier>> getAllTiers(@QueryParam("accountId") String accountId,
+  public RestResponse<Set<Tier>> getAllTiers(@QueryParam("accountId") String accountId,
       @QueryParam("appDynamicsAppId") Long appDynamicsAppId, @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
       AppDynamicsConnectorDTO appDynamicsConnectorDTO) {

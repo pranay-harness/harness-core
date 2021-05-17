@@ -7,8 +7,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
-import io.harness.cvng.beans.appd.AppDynamicsTier;
 import io.harness.cvng.beans.appd.AppdynamicsMetricPackDataValidationRequest;
+import io.harness.cvng.beans.appd.Tier;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 
 import software.wings.service.impl.ThirdPartyApiCallLog;
@@ -36,7 +36,7 @@ public interface AppdynamicsService {
   Set<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId, ThirdPartyApiCallLog apiCallLog);
   Set<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId, String appId, String workflowExecutionId,
       ThirdPartyApiCallLog apiCallLog);
-  Set<AppDynamicsTier> getTiers(@NotNull AppDynamicsConnectorDTO appDynamicsConnectorDTO, @NotNull String orgIdentifier,
+  Set<Tier> getTiers(@NotNull AppDynamicsConnectorDTO appDynamicsConnectorDTO, @NotNull String orgIdentifier,
       @NotNull String projectIdentifier, long appDynamicsAppId);
   /**
    * Api to fetch metric data for given node.

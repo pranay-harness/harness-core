@@ -7,7 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
-import io.harness.cvng.beans.appd.AppDynamicsTier;
+import io.harness.cvng.beans.appd.Tier;
 import io.harness.cvng.core.services.api.AppDynamicsService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -81,7 +81,7 @@ public class AppDynamicsResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get all appdynamics tiers for an application", nickname = "getAppdynamicsTiers")
-  public ResponseDTO<PageResponse<AppDynamicsTier>> getAllTiers(@NotNull @QueryParam("accountId") String accountId,
+  public ResponseDTO<PageResponse<Tier>> getAllTiers(@NotNull @QueryParam("accountId") String accountId,
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,

@@ -21,7 +21,7 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
-import io.harness.cvng.beans.appd.AppDynamicsTier;
+import io.harness.cvng.beans.appd.Tier;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.RequestExecutor;
 import io.harness.cvng.client.VerificationManagerClient;
@@ -145,22 +145,20 @@ public class AppDynamicsServiceTest extends CvNextGenTestBase {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetTiers() {
-    Set<AppDynamicsTier> appDynamicsTiers = new HashSet<>();
+    Set<Tier> tiers = new HashSet<>();
     int numOfApplications = 100;
     for (int i = 0; i < numOfApplications; i++) {
-      appDynamicsTiers.add(AppDynamicsTier.builder().name("tier-" + i).id(i).build());
+      tiers.add(Tier.builder().name("tier-" + i).id(i).build());
     }
     when(verificationManagerService.getDataCollectionResponse(
              anyString(), anyString(), anyString(), any(DataCollectionRequest.class)))
-        .thenReturn(JsonUtils.asJson(appDynamicsTiers));
-    PageResponse<AppDynamicsTier> applications = appDynamicsService.getTiers(
+        .thenReturn(JsonUtils.asJson(tiers));
+    PageResponse<Tier> applications = appDynamicsService.getTiers(
         accountId, connectorIdentifier, generateUuid(), generateUuid(), generateUuid(), 0, 5, "IeR-2");
     assertThat(applications.getContent())
-        .isEqualTo(Lists.newArrayList(AppDynamicsTier.builder().name("tier-2").id(2).build(),
-            AppDynamicsTier.builder().name("tier-20").id(20).build(),
-            AppDynamicsTier.builder().name("tier-21").id(21).build(),
-            AppDynamicsTier.builder().name("tier-22").id(22).build(),
-            AppDynamicsTier.builder().name("tier-23").id(23).build()));
+        .isEqualTo(Lists.newArrayList(Tier.builder().name("tier-2").id(2).build(),
+            Tier.builder().name("tier-20").id(20).build(), Tier.builder().name("tier-21").id(21).build(),
+            Tier.builder().name("tier-22").id(22).build(), Tier.builder().name("tier-23").id(23).build()));
   }
 
   @Test
