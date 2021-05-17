@@ -1,5 +1,6 @@
 package io.harness.cvng;
 
+import static io.harness.cvng.cdng.services.impl.CVNGNotifyEventListener.CVNG_ORCHESTRATION;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -144,7 +145,6 @@ import io.harness.cvng.verificationjob.services.impl.VerificationJobServiceImpl;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
-import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.redis.RedisConfig;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
@@ -376,7 +376,7 @@ public class CVServiceModule extends AbstractModule {
   @Provides
   @Singleton
   public AsyncWaitEngine asyncWaitEngine(WaitNotifyEngine waitNotifyEngine) {
-    return new AsyncWaitEngineImpl(waitNotifyEngine, NgOrchestrationNotifyEventListener.NG_ORCHESTRATION);
+    return new AsyncWaitEngineImpl(waitNotifyEngine, CVNG_ORCHESTRATION);
   }
 
   @Provides
