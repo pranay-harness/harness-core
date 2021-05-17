@@ -487,7 +487,8 @@ public class TerraformStepHelper {
     return Collections.emptyList();
   }
 
-  public List<TerraformVarFileInfo> toDelegateTask(List<TerraformVarFileConfig> varFileConfigs, Ambiance ambiance) {
+  public List<TerraformVarFileInfo> prepareTerraformVarFileInfo(
+      List<TerraformVarFileConfig> varFileConfigs, Ambiance ambiance) {
     if (EmptyPredicate.isNotEmpty(varFileConfigs)) {
       int i = 0;
       List<TerraformVarFileInfo> varFileInfo = new ArrayList<>();
