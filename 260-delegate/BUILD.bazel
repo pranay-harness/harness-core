@@ -2,6 +2,7 @@ load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:macros.bzl", "run_analysis")
 load("//:macros.bzl", "test_targets_list")
+load("@rules_spring//springboot:springboot.bzl", "springboot")
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
@@ -444,17 +445,6 @@ shared_dependencies = [
     "@maven//:org_apache_commons_commons_lang3",
     "@maven//:org_apache_commons_commons_math3",
     "@maven//:org_apache_commons_commons_text",
-    "@maven//:org_apache_cxf_cxf_core",
-    "@maven//:org_apache_cxf_cxf_rt_bindings_soap",
-    "@maven//:org_apache_cxf_cxf_rt_bindings_xml",
-    "@maven//:org_apache_cxf_cxf_rt_databinding_jaxb",
-    "@maven//:org_apache_cxf_cxf_rt_frontend_jaxws",
-    "@maven//:org_apache_cxf_cxf_rt_frontend_simple",
-    "@maven//:org_apache_cxf_cxf_rt_transports_http",
-    "@maven//:org_apache_cxf_cxf_rt_transports_http_hc",
-    "@maven//:org_apache_cxf_cxf_rt_ws_addr",
-    "@maven//:org_apache_cxf_cxf_rt_ws_policy",
-    "@maven//:org_apache_cxf_cxf_rt_wsdl",
     "@maven//:org_apache_httpcomponents_fluent_hc",
     "@maven//:org_apache_httpcomponents_httpasyncclient",
     "@maven//:org_apache_httpcomponents_httpclient",
@@ -666,15 +656,21 @@ shared_dependencies = [
     "//:lombok",
 ]
 
-java_binary(
+java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
-    main_class = "io.harness.delegate.app.DelegateApplication",
+    #main_class = "io.harness.delegate.app.DelegateApplication",
     resources = [
         "//260-delegate/src/main/resources:resource",
     ],
     visibility = ["//visibility:public"],
-    deps = shared_dependencies,
+    deps = ["@maven//:org_springframework_boot_spring_boot_loader"] + shared_dependencies,
+)
+
+springboot(
+    name = "delegate-capsule",
+    boot_app_class = "io.harness.delegate.app.DelegateApplication",
+    java_library = ":module",
 )
 
 test_dependencies = [
