@@ -311,7 +311,9 @@ public class VerificationApplication extends Application<VerificationConfigurati
     YamlSdkInitHelper.initialize(injector, yamlSdkConfiguration);
     initializeServiceSecretKeys();
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
-    initMetrics(injector);
+    if (!configuration.getShouldConfigureWithPMS()) {
+      initMetrics(injector);
+    }
     autoCreateCollectionsAndIndexes(injector);
     registerCorrelationFilter(environment, injector);
     registerAuthFilters(environment, injector, configuration);
@@ -374,7 +376,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
       } catch (Exception e) {
         log.error("Failed To register pipeline sdk", e);
         // Don't fail for now. We have to find out retry strategy
-        // System.exit(1);
+        System.exit(1);
       }
     }
   }
@@ -399,6 +401,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
         .executionSummaryModuleInfoProviderClass(CVNGModuleInfoProvider.class)
         .build();
   }
+
   private void initMetrics(Injector injector) {
     injector.getInstance(MetricService.class).initializeMetrics();
     injector.getInstance(RecordMetricsJob.class).scheduleMetricsTasks();
