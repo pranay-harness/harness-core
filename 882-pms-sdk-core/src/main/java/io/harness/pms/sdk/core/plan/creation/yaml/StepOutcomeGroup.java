@@ -1,4 +1,4 @@
-package io.harness.steps;
+package io.harness.pms.sdk.core.plan.creation.yaml;
 
 public enum StepOutcomeGroup {
   STAGE,

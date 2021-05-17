@@ -48,7 +48,6 @@ directories:
   830-notification-service
   830-resource-group
   835-notification-senders
-  850-execution-plan
   850-ng-pipeline-commons
   860-orchestration-steps
   860-orchestration-visualization

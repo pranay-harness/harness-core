@@ -16,8 +16,8 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.service.DelegateGrpcClientWrapper;
-import io.harness.steps.StepOutcomeGroup;
 
 import com.google.inject.Inject;
 import java.time.Duration;
