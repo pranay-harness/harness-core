@@ -170,7 +170,7 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
       }
     });
     modules.add(TimeModule.getInstance());
-    modules.add(NGModule.getInstance(getOrchestrationConfig()));
+    modules.add(NGModule.getInstance());
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
     modules.add(OrchestrationModule.getInstance(getOrchestrationConfig()));
