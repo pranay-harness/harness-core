@@ -54,6 +54,7 @@ shared_deps = [
     "@maven//:io_github_resilience4j_resilience4j_retrofit",
     "@maven//:io_github_resilience4j_resilience4j_retry",
     "@maven//:io_grpc_grpc_api",
+    "@maven//:io_opencensus_opencensus_contrib_grpc_metrics",
     "@maven//:io_opencensus_opencensus_api",
     "@maven//:io_opencensus_opencensus_exporter_stats_stackdriver",
     "@maven//:io_opencensus_opencensus_impl",

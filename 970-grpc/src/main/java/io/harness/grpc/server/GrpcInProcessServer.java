@@ -9,6 +9,7 @@ import io.grpc.BindableService;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptor;
+import io.grpc.census.InternalCensusStatsAccessor;
 import io.grpc.health.v1.HealthCheckResponse.ServingStatus;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.services.HealthStatusManager;
@@ -32,6 +33,20 @@ public class GrpcInProcessServer extends AbstractIdleService {
     builder.maxInboundMessageSize(GRPC_MAXIMUM_MESSAGE_SIZE);
     sortedInterceptors(interceptors).forEach(builder::intercept);
     services.forEach(builder::addService);
+    server = builder.build();
+    this.healthStatusManager = healthStatusManager;
+    addListener(new LoggingListener(this), MoreExecutors.directExecutor());
+  }
+
+  public GrpcInProcessServer(String name, Set<BindableService> services, Set<ServerInterceptor> interceptors,
+      HealthStatusManager healthStatusManager, boolean shouldPublishGrpcMetrics) {
+    ServerBuilder<?> builder = InProcessServerBuilder.forName(name);
+    builder.maxInboundMessageSize(GRPC_MAXIMUM_MESSAGE_SIZE);
+    sortedInterceptors(interceptors).forEach(builder::intercept);
+    services.forEach(builder::addService);
+    if (shouldPublishGrpcMetrics) {
+      builder.addStreamTracerFactory(InternalCensusStatsAccessor.getServerStreamTracerFactory(true, true, true));
+    }
     server = builder.build();
     this.healthStatusManager = healthStatusManager;
     addListener(new LoggingListener(this), MoreExecutors.directExecutor());

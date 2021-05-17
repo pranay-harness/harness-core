@@ -98,13 +98,13 @@ public class PipelineServiceGrpcModule extends AbstractModule {
                     .build();
     } else {
       SslContext sslContext = GrpcSslContexts.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
-      channel = NettyChannelBuilder.forTarget(clientConfig.getTarget())
-                    .overrideAuthority(authorityToUse)
-                    .sslContext(sslContext)
-                    .maxInboundMessageSize(GrpcInProcessServer.GRPC_MAXIMUM_MESSAGE_SIZE)
-                    .build();
+      NettyChannelBuilder nettyChannelBuilder =
+          NettyChannelBuilder.forTarget(clientConfig.getTarget())
+              .overrideAuthority(authorityToUse)
+              .sslContext(sslContext)
+              .maxInboundMessageSize(GrpcInProcessServer.GRPC_MAXIMUM_MESSAGE_SIZE);
+      channel = nettyChannelBuilder.build();
     }
-
     return channel;
   }
 
@@ -114,7 +114,7 @@ public class PipelineServiceGrpcModule extends AbstractModule {
   public Service pmsGrpcService(PipelineServiceConfiguration configuration, HealthStatusManager healthStatusManager,
       Set<BindableService> services) {
     return new GrpcServer(configuration.getGrpcServerConfig().getConnectors().get(0), services, Collections.emptySet(),
-        healthStatusManager);
+        healthStatusManager, true);
   }
 
   @Provides

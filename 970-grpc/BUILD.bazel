@@ -30,6 +30,8 @@ java_library(
         "@maven//:io_grpc_grpc_protobuf",
         "@maven//:io_grpc_grpc_services",
         "@maven//:io_grpc_grpc_stub",
+        "@maven//:io_grpc_grpc_census",
+        "@maven//:io_opencensus_opencensus_impl",
         "@maven//:joda_time_joda_time",
         "@maven//:net_openhft_chronicle_queue",
         "@maven//:net_openhft_chronicle_wire",

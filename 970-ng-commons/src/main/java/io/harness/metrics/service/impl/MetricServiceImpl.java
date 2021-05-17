@@ -17,6 +17,7 @@ import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import io.opencensus.common.Duration;
 import io.opencensus.common.Scope;
+import io.opencensus.contrib.grpc.metrics.RpcViews;
 import io.opencensus.exporter.stats.stackdriver.StackdriverStatsConfiguration;
 import io.opencensus.exporter.stats.stackdriver.StackdriverStatsExporter;
 import io.opencensus.stats.Measure.MeasureDouble;
@@ -169,6 +170,12 @@ public class MetricServiceImpl implements MetricService {
     } catch (Exception ex) {
       log.error("Exception while trying to register stackdriver metrics exporter", ex);
     }
+  }
+
+  @Override
+  public void addGrpcViews() {
+    RpcViews.registerServerGrpcViews();
+    Stats.getViewManager().getAllExportedViews();
   }
 
   @Override

@@ -3,6 +3,7 @@ package io.harness.pms.sdk;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcInProcessServer;
 import io.harness.grpc.server.GrpcServer;
+import io.harness.metrics.service.api.MetricService;
 import io.harness.pms.contracts.plan.PmsServiceGrpc;
 import io.harness.pms.contracts.plan.PmsServiceGrpc.PmsServiceBlockingStub;
 import io.harness.pms.contracts.service.EngineExpressionProtoServiceGrpc;
@@ -34,6 +35,7 @@ import io.grpc.Channel;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.internal.GrpcUtil;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.shaded.io.grpc.netty.InternalNettyChannelBuilder;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
@@ -70,15 +72,17 @@ public class PmsSdkGrpcModule extends AbstractModule {
   @Provides
   @Singleton
   @Named("pms-sdk-grpc-service")
-  public Service pmsSdkGrpcService(HealthStatusManager healthStatusManager, PlanCreatorService planCreatorService) {
+  public Service pmsSdkGrpcService(
+      HealthStatusManager healthStatusManager, PlanCreatorService planCreatorService, MetricService metricService) {
+    metricService.addGrpcViews();
     Set<BindableService> cdServices = new HashSet<>();
     cdServices.add(healthStatusManager.getHealthService());
     cdServices.add(planCreatorService);
     if (config.getDeploymentMode() == DeployMode.REMOTE_IN_PROCESS) {
-      return new GrpcInProcessServer("pmsSdkInternal", cdServices, Collections.emptySet(), healthStatusManager);
+      return new GrpcInProcessServer("pmsSdkInternal", cdServices, Collections.emptySet(), healthStatusManager, true);
     }
-    return new GrpcServer(
-        config.getGrpcServerConfig().getConnectors().get(0), cdServices, Collections.emptySet(), healthStatusManager);
+    return new GrpcServer(config.getGrpcServerConfig().getConnectors().get(0), cdServices, Collections.emptySet(),
+        healthStatusManager, true);
   }
 
   private String computeAuthority(String authority, VersionInfo versionInfo) {
@@ -121,24 +125,21 @@ public class PmsSdkGrpcModule extends AbstractModule {
 
     GrpcClientConfig clientConfig = config.getPmsGrpcClientConfig();
     String authorityToUse = clientConfig.getAuthority();
-    Channel channel;
-
+    NettyChannelBuilder nettyChannelBuilder;
     if ("ONPREM".equals(deployMode) || "KUBERNETES_ONPREM".equals(deployMode)) {
-      channel = NettyChannelBuilder.forTarget(clientConfig.getTarget())
-                    .overrideAuthority(authorityToUse)
-                    .usePlaintext()
-                    .maxInboundMessageSize(GrpcInProcessServer.GRPC_MAXIMUM_MESSAGE_SIZE)
-                    .build();
+      nettyChannelBuilder = NettyChannelBuilder.forTarget(clientConfig.getTarget())
+                                .overrideAuthority(authorityToUse)
+                                .usePlaintext()
+                                .maxInboundMessageSize(GrpcInProcessServer.GRPC_MAXIMUM_MESSAGE_SIZE);
     } else {
       SslContext sslContext = GrpcSslContexts.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
-      channel = NettyChannelBuilder.forTarget(clientConfig.getTarget())
-                    .overrideAuthority(authorityToUse)
-                    .sslContext(sslContext)
-                    .maxInboundMessageSize(GrpcInProcessServer.GRPC_MAXIMUM_MESSAGE_SIZE)
-                    .build();
+      nettyChannelBuilder = NettyChannelBuilder.forTarget(clientConfig.getTarget())
+                                .overrideAuthority(authorityToUse)
+                                .sslContext(sslContext)
+                                .maxInboundMessageSize(GrpcInProcessServer.GRPC_MAXIMUM_MESSAGE_SIZE);
     }
-
-    return channel;
+    InternalNettyChannelBuilder.setStatsRecordRealTimeMetrics(nettyChannelBuilder, true);
+    return nettyChannelBuilder.build();
   }
 
   @Provides
