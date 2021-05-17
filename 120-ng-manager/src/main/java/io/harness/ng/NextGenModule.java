@@ -355,7 +355,7 @@ public class NextGenModule extends AbstractModule {
     install(new GitSyncModule());
     install(new DefaultOrganizationModule());
     install(new NGAggregateModule());
-    install(NGModule.getInstance(getOrchestrationConfig()));
+    install(NGModule.getInstance());
     install(new EventsFrameworkModule(this.appConfig.getEventsFrameworkConfiguration()));
     install(new SecretManagementModule());
     install(new AccountClientModule(appConfig.getManagerClientConfig(),

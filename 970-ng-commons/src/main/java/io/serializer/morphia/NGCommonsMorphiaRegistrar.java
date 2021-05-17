@@ -1,5 +1,6 @@
 package io.serializer.morphia;
 
+import io.harness.beans.WithIdentifier;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.ng.core.NGAccess;
@@ -16,6 +17,7 @@ public class NGCommonsMorphiaRegistrar implements MorphiaRegistrar {
     set.add(NGAccess.class);
     set.add(NGProjectAccess.class);
     set.add(NGOrgAccess.class);
+    set.add(WithIdentifier.class);
   }
 
   @Override

@@ -107,6 +107,6 @@ public class ScmFacilitatorResource {
   @Path("isSaasGit")
   @ApiOperation(value = "Checks if Saas is possible", nickname = "isSaasGit")
   public ResponseDTO<SaasGitDTO> isSaasGit(@QueryParam(NGCommonEntityConstants.REPO_URL) String repoURL) {
-    return ResponseDTO.newResponse(GitUtils.isSaasGit(repoURL));
+    return ResponseDTO.newResponse(GitUtils.isSaasGit(URLDecoderUtility.getDecodedString(repoURL)));
   }
 }

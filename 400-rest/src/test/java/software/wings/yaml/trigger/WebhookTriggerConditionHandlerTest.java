@@ -72,7 +72,7 @@ public class WebhookTriggerConditionHandlerTest extends WingsBaseTest {
         webhookTriggerConditionHandler.toYaml(webHookTriggerCondition, "APP_ID");
 
     assertThat(webhookEventTriggerConditionYaml.getRepositoryType()).isEqualTo(GITHUB.name());
-    assertThat(webhookEventTriggerConditionYaml.getWebHookSecret()).isEqualTo("safeharness:secret");
+    assertThat(webhookEventTriggerConditionYaml.getWebhookSecret()).isEqualTo("safeharness:secret");
   }
 
   @Test
@@ -117,7 +117,7 @@ public class WebhookTriggerConditionHandlerTest extends WingsBaseTest {
                                                                             .action(asList("repo:push"))
                                                                             .branchRegex("abc")
                                                                             .repositoryType("BITBUCKET")
-                                                                            .webHookSecret(SECRET)
+                                                                            .webhookSecret(SECRET)
                                                                             .build();
     when(featureFlagService.isEnabled(FeatureName.GITHUB_WEBHOOK_AUTHENTICATION, ACCOUNTID)).thenReturn(true);
 
@@ -134,7 +134,7 @@ public class WebhookTriggerConditionHandlerTest extends WingsBaseTest {
                                                                             .action(asList("closed"))
                                                                             .branchRegex("abc")
                                                                             .repositoryType("GITHUB")
-                                                                            .webHookSecret("safeharness:secret")
+                                                                            .webhookSecret("safeharness:secret")
                                                                             .build();
     when(featureFlagService.isEnabled(FeatureName.GITHUB_WEBHOOK_AUTHENTICATION, ACCOUNTID)).thenReturn(true);
     when(secretManager.getEncryptedDataFromYamlRef(SECRET, ACCOUNTID))
@@ -155,7 +155,7 @@ public class WebhookTriggerConditionHandlerTest extends WingsBaseTest {
                                                                             .action(asList("closed"))
                                                                             .branchRegex("abc")
                                                                             .repositoryType("GITHUB")
-                                                                            .webHookSecret(SECRET)
+                                                                            .webhookSecret(SECRET)
                                                                             .build();
     when(featureFlagService.isEnabled(FeatureName.GITHUB_WEBHOOK_AUTHENTICATION, ACCOUNTID)).thenReturn(true);
     when(secretManager.getEncryptedDataFromYamlRef(SECRET, ACCOUNTID))

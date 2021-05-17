@@ -215,8 +215,14 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   public ConnectorResponseDTO create(ConnectorDTO connectorRequestDTO, String accountIdentifier) {
     assurePredefined(connectorRequestDTO, accountIdentifier);
     ConnectorInfoDTO connectorInfo = connectorRequestDTO.getConnectorInfo();
-    validateTheIdentifierIsUnique(accountIdentifier, connectorInfo.getOrgIdentifier(),
-        connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
+    final boolean isIdentifierUnique = validateTheIdentifierIsUnique(accountIdentifier,
+        connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
+    if (!isIdentifierUnique) {
+      throw new InvalidRequestException(
+          String.format("The connector with identifier %s already exists in the account %s, org %s, project %s",
+              connectorInfo.getIdentifier(), accountIdentifier, connectorInfo.getOrgIdentifier(),
+              connectorInfo.getProjectIdentifier()));
+    }
     validateThatAConnectorWithThisNameDoesNotExists(connectorRequestDTO.getConnectorInfo(), accountIdentifier);
     Connector connectorEntity = connectorMapper.toConnector(connectorRequestDTO, accountIdentifier);
     connectorEntity.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());

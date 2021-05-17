@@ -2434,7 +2434,16 @@
         "errors": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "AnyOther",
+              "Authentication",
+              "Connectivity",
+              "Timeout",
+              "Authorization",
+              "Verification",
+              "DelegateProvisioning"
+            ]
           }
         }
       },

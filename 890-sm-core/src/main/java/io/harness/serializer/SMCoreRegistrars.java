@@ -1,5 +1,6 @@
 package io.harness.serializer;
 
+import io.harness.delegate.serializer.DelegateTasksRegistrars;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.SMCoreKryoRegistrar;
 import io.harness.serializer.morphia.SMCoreMorphiaRegistrar;
@@ -20,6 +21,7 @@ public class SMCoreRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(SecretManagerClientRegistrars.morphiaRegistrars)
           .addAll(RbacCoreRegistrars.morphiaRegistrars)
+          .addAll(DelegateTasksRegistrars.morphiaRegistrars)
           .add(SMCoreMorphiaRegistrar.class)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .build();

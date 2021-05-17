@@ -20,6 +20,7 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.DESCRIPTION;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.LUCAS;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.NIKOLA;
@@ -33,6 +34,7 @@ import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.service.impl.DelegateServiceImpl.DELEGATE_DIR;
 import static software.wings.service.impl.DelegateServiceImpl.DOCKER_DELEGATE;
+import static software.wings.service.impl.DelegateServiceImpl.ECS_DELEGATE;
 import static software.wings.service.impl.DelegateServiceImpl.KUBERNETES_DELEGATE;
 import static software.wings.service.impl.DelegateServiceImpl.TASK_CATEGORY_MAP;
 import static software.wings.service.impl.DelegateServiceImpl.TASK_SELECTORS;
@@ -154,6 +156,7 @@ import io.harness.service.intfc.DelegateProfileObserver;
 import io.harness.service.intfc.DelegateSyncService;
 import io.harness.service.intfc.DelegateTaskRetryObserver;
 import io.harness.service.intfc.DelegateTaskService;
+import io.harness.service.intfc.DelegateTokenService;
 import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
@@ -217,6 +220,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -264,6 +268,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   private static final String DELEGATE_PROFILE_ID = "QFWin33JRlKWKBzpzE5A9A";
   private static final String DELEGATE_TYPE = "dockerType";
   private static final String PRIMARY_PROFILE_NAME = "primary";
+  private static final String TOKEN_NAME = "TOKEN_NAME";
+  private static final String TOKEN_VALUE = "TOKEN_VALUE";
 
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private AccountService accountService;
@@ -288,6 +294,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private DelegateSyncService delegateSyncService;
   @Mock private DelegateSelectionLogsService delegateSelectionLogsService;
   @Mock private DelegateInsightsService delegateInsightsService;
+  @Mock private DelegateTokenService delegateTokenService;
 
   @Inject private FeatureTestHelper featureTestHelper;
   @Inject private DelegateConnectionDao delegateConnectionDao;
@@ -1825,11 +1832,93 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldDownloadScripts() throws IOException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
+    when(delegateTokenService.getTokenValue(ACCOUNT_ID, TOKEN_NAME)).thenReturn("ACCOUNT_KEY");
     when(delegateProfileService.get(ACCOUNT_ID, DELEGATE_PROFILE_ID))
         .thenReturn(createDelegateProfileBuilder().build());
     File gzipFile = delegateService.downloadScripts(
-        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, DELEGATE_PROFILE_ID);
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, DELEGATE_PROFILE_ID, TOKEN_NAME);
     verifyDownloadScriptsResult(gzipFile, "/expectedStartOpenJdk.sh", "/expectedDelegateOpenJdk.sh");
+  }
+
+  @Test
+  @Owner(developers = LUCAS)
+  @Category(UnitTests.class)
+  public void shouldDownloadCeKubernetesYaml() throws IOException {
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
+    when(delegateTokenService.getTokenValue(ACCOUNT_ID, TOKEN_NAME)).thenReturn("ACCOUNT_KEY");
+    when(delegateProfileService.get(ACCOUNT_ID, DELEGATE_PROFILE_ID))
+        .thenReturn(createDelegateProfileBuilder().build());
+
+    File downloadedFile = delegateService.downloadCeKubernetesYaml(
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, DELEGATE_PROFILE_ID, TOKEN_NAME);
+
+    assertThat(IOUtils.readLines(new FileInputStream(downloadedFile), Charset.defaultCharset()).get(0)).isNotNull();
+    assertThat(downloadedFile.getName().startsWith("harness-delegate")).isTrue();
+    assertThat(downloadedFile.getName().endsWith("yaml")).isTrue();
+  }
+
+  @Test
+  @Owner(developers = LUCAS)
+  @Category(UnitTests.class)
+  public void shouldDownloadDelegateValuesYamlFile() throws IOException {
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
+    when(delegateTokenService.getTokenValue(ACCOUNT_ID, TOKEN_NAME)).thenReturn("ACCOUNT_KEY");
+    when(delegateProfileService.get(ACCOUNT_ID, DELEGATE_PROFILE_ID))
+        .thenReturn(createDelegateProfileBuilder().build());
+
+    File downloadedFile = delegateService.downloadDelegateValuesYamlFile(
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, DELEGATE_PROFILE_ID, TOKEN_NAME);
+
+    assertThat(IOUtils.readLines(new FileInputStream(downloadedFile), Charset.defaultCharset()).get(0)).isNotNull();
+    assertThat(downloadedFile.getName().startsWith("harness-delegate")).isTrue();
+    assertThat(downloadedFile.getName().endsWith("yaml")).isTrue();
+  }
+
+  @Test
+  @Owner(developers = LUCAS)
+  @Category(UnitTests.class)
+  public void shouldDownloadECSDelegate() throws IOException {
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
+    when(delegateTokenService.getTokenValue(ACCOUNT_ID, TOKEN_NAME)).thenReturn("ACCOUNT_KEY");
+    when(delegateProfileService.get(ACCOUNT_ID, DELEGATE_PROFILE_ID))
+        .thenReturn(createDelegateProfileBuilder().build());
+
+    File downloadedFile = delegateService.downloadECSDelegate("https://localhost:9090", "https://localhost:7070",
+        ACCOUNT_ID, false, HOST_NAME, DELEGATE_GROUP_NAME, DELEGATE_PROFILE_ID, TOKEN_NAME);
+
+    assertThat(IOUtils.readLines(new FileInputStream(downloadedFile), Charset.defaultCharset()).get(0)).isNotNull();
+    assertThat(downloadedFile.getName().startsWith("harness-delegate")).isTrue();
+    assertThat(downloadedFile.getName().endsWith("tar.gz")).isTrue();
+
+    verifyDownloadECSDelegateResult(downloadedFile);
+  }
+
+  private void verifyDownloadECSDelegateResult(File gzipFile) throws IOException {
+    File tarFile = File.createTempFile(ECS_DELEGATE, ".tar");
+    uncompressGzipFile(gzipFile, tarFile);
+    try (TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(new FileInputStream(tarFile))) {
+      assertThat(tarArchiveInputStream.getNextEntry().getName()).isEqualTo(ECS_DELEGATE + "/");
+
+      TarArchiveEntry file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(ECS_DELEGATE + "/ecs-task-spec.json");
+
+      byte[] buffer = new byte[(int) file.getSize()];
+      IOUtils.read(tarArchiveInputStream, buffer);
+
+      file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file)
+          .extracting(TarArchiveEntry::getName)
+          .isEqualTo(ECS_DELEGATE + "/service-spec-for-awsvpc-mode.json");
+
+      buffer = new byte[(int) file.getSize()];
+      IOUtils.read(tarArchiveInputStream, buffer);
+
+      file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(ECS_DELEGATE + "/README.txt");
+    }
   }
 
   @Test
@@ -1841,14 +1930,14 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(delegateProfileService.fetchCgPrimaryProfile(ACCOUNT_ID))
         .thenReturn(createDelegateProfileBuilder().uuid(DELEGATE_PROFILE_ID).build());
     File gzipFile = delegateService.downloadScripts(
-        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, null);
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, null, null);
     verifyDownloadScriptsResult(gzipFile, "/expectedStartOpenJdk.sh", "/expectedDelegateOpenJdk.sh");
 
     when(delegateProfileService.get(ACCOUNT_ID, "invalidProfile")).thenReturn(null);
     when(delegateProfileService.fetchCgPrimaryProfile(ACCOUNT_ID))
         .thenReturn(createDelegateProfileBuilder().uuid(DELEGATE_PROFILE_ID).build());
     gzipFile = delegateService.downloadScripts(
-        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, "invalidProfile");
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, "invalidProfile", null);
     verifyDownloadScriptsResult(gzipFile, "/expectedStartOpenJdk.sh", "/expectedDelegateOpenJdk.sh");
   }
 
@@ -1861,7 +1950,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(delegateProfileService.get(ACCOUNT_ID, DELEGATE_PROFILE_ID))
         .thenReturn(createDelegateProfileBuilder().build());
     File gzipFile = delegateService.downloadScripts(
-        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, "", DELEGATE_PROFILE_ID);
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, "", DELEGATE_PROFILE_ID, null);
     verifyDownloadScriptsResult(
         gzipFile, "/expectedStartWithoutDelegateName.sh", "/expectedDelegateWithoutDelegateName.sh");
   }
@@ -1927,7 +2016,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(delegateProfileService.fetchCgPrimaryProfile(ACCOUNT_ID))
         .thenReturn(createDelegateProfileBuilder().uuid(DELEGATE_PROFILE_ID).build());
     File gzipFile = delegateService.downloadScripts(
-        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, DELEGATE_PROFILE_ID);
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, DELEGATE_PROFILE_ID, null);
     File tarFile = File.createTempFile(DELEGATE_DIR, ".tar");
     uncompressGzipFile(gzipFile, tarFile);
     try (TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(new FileInputStream(tarFile))) {
@@ -1984,11 +2073,12 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldDownloadDocker() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
-        .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
+        .thenReturn(anAccount().withAccountKey(TOKEN_VALUE).withUuid(ACCOUNT_ID).build());
+    when(delegateTokenService.getTokenValue(ACCOUNT_ID, TOKEN_NAME)).thenReturn(TOKEN_VALUE);
     when(delegateProfileService.get(ACCOUNT_ID, DELEGATE_PROFILE_ID))
         .thenReturn(createDelegateProfileBuilder().build());
     File gzipFile = delegateService.downloadDocker(
-        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, DELEGATE_PROFILE_ID);
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, DELEGATE_PROFILE_ID, TOKEN_NAME);
     verifyDownloadDockerResult(gzipFile, "/expectedLaunchHarnessDelegate.sh");
   }
 
@@ -2001,11 +2091,11 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(delegateProfileService.get(ACCOUNT_ID, DELEGATE_PROFILE_ID))
         .thenReturn(createDelegateProfileBuilder().build());
     File gzipFile = delegateService.downloadDocker(
-        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, null, DELEGATE_PROFILE_ID);
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, null, DELEGATE_PROFILE_ID, null);
     verifyDownloadDockerResult(gzipFile, "/expectedLaunchHarnessDelegateWithoutName.sh");
 
     gzipFile = delegateService.downloadDocker(
-        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, "", DELEGATE_PROFILE_ID);
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, "", DELEGATE_PROFILE_ID, null);
     verifyDownloadDockerResult(gzipFile, "/expectedLaunchHarnessDelegateWithoutName.sh");
   }
 
@@ -2014,18 +2104,19 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldDownloadDockerWithPrimaryProfile() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
-        .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
+        .thenReturn(anAccount().withAccountKey(TOKEN_VALUE).withUuid(ACCOUNT_ID).build());
+    when(delegateTokenService.getTokenValue(ACCOUNT_ID, TOKEN_NAME)).thenReturn(TOKEN_VALUE);
     when(delegateProfileService.fetchCgPrimaryProfile(ACCOUNT_ID))
         .thenReturn(createDelegateProfileBuilder().uuid(DELEGATE_PROFILE_ID).build());
     File gzipFile = delegateService.downloadDocker(
-        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, null);
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, null, TOKEN_NAME);
     verifyDownloadDockerResult(gzipFile, "/expectedLaunchHarnessDelegate.sh");
 
     when(delegateProfileService.get(ACCOUNT_ID, "invalidProfile")).thenReturn(null);
     when(delegateProfileService.fetchCgPrimaryProfile(ACCOUNT_ID))
         .thenReturn(createDelegateProfileBuilder().uuid(DELEGATE_PROFILE_ID).build());
     gzipFile = delegateService.downloadDocker(
-        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, "invalidProfile");
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, "invalidProfile", null);
     verifyDownloadDockerResult(gzipFile, "/expectedLaunchHarnessDelegate.sh");
   }
 
@@ -2069,8 +2160,9 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldDownloadKubernetes() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
+    when(delegateTokenService.getTokenValue(ACCOUNT_ID, TOKEN_NAME)).thenReturn("ACCOUNT_KEY");
     File gzipFile = delegateService.downloadKubernetes(
-        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, "harness-delegate", "");
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, "harness-delegate", "", TOKEN_NAME);
     File tarFile = File.createTempFile(DELEGATE_DIR, ".tar");
     uncompressGzipFile(gzipFile, tarFile);
     try (TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(new FileInputStream(tarFile))) {
@@ -2099,7 +2191,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
     featureTestHelper.enableFeatureFlag(FeatureName.NEXT_GEN_ENABLED);
     File gzipFile = delegateService.downloadKubernetes(
-        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, "harness-delegate", "");
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, "harness-delegate", "", null);
     File tarFile = File.createTempFile(DELEGATE_DIR, ".tar");
     uncompressGzipFile(gzipFile, tarFile);
     try (TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(new FileInputStream(tarFile))) {

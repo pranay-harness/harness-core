@@ -1,8 +1,8 @@
 package io.harness.executionplan.core;
 
+import io.harness.beans.WithIdentifier;
 import io.harness.executionplan.plancreator.beans.PlanLevelNode;
 import io.harness.executionplan.utils.ParentPathInfoUtils;
-import io.harness.yaml.core.intfc.WithIdentifier;
 
 import java.util.List;
 import java.util.Map;

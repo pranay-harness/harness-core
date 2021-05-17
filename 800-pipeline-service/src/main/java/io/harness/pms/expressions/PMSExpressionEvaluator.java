@@ -7,8 +7,8 @@ import io.harness.engine.expressions.AmbianceExpressionEvaluator;
 import io.harness.engine.expressions.OrchestrationConstants;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.expression.VariableResolverTracker;
-import io.harness.ngpipeline.expressions.functors.EventPayloadFunctor;
-import io.harness.ngpipeline.expressions.functors.TriggerFunctor;
+import io.harness.ngtriggers.expressions.functors.EventPayloadFunctor;
+import io.harness.ngtriggers.expressions.functors.TriggerFunctor;
 import io.harness.organization.remote.OrganizationClient;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.expressions.functors.AccountFunctor;
@@ -60,6 +60,7 @@ public class PMSExpressionEvaluator extends AmbianceExpressionEvaluator {
     addStaticAlias("serviceConfig", "stage.spec.serviceConfig");
     addStaticAlias("serviceDefinition", "stage.spec.serviceConfig.serviceDefinition");
     addStaticAlias("artifact", "stage.spec.serviceConfig.serviceDefinition.spec.artifacts.primary.output");
+    addStaticAlias("infra", "stage.spec.infrastructure.output");
 
     // Status aliases
     addStaticAlias(OrchestrationConstants.STAGE_SUCCESS, "<+stage.currentStatus> == \"SUCCEEDED\"");

@@ -1,6 +1,6 @@
 package io.harness.cdng.infra.steps;
 
-import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static java.lang.String.format;
 
@@ -48,7 +48,6 @@ import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rbac.CDNGRbacPermissions;
 import io.harness.steps.EntityReferenceExtractorUtils;
-import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.executable.SyncExecutableWithRbac;
 import io.harness.walktree.visitor.SimpleVisitorFactory;
 
@@ -58,7 +57,7 @@ import com.google.inject.name.Named;
 import java.util.Collections;
 import java.util.Set;
 
-@OwnedBy(PIPELINE)
+@OwnedBy(CDC)
 public class InfrastructureStep implements SyncExecutableWithRbac<InfraStepParameters> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.INFRASTRUCTURE.getName()).build();
@@ -111,8 +110,8 @@ public class InfrastructureStep implements SyncExecutableWithRbac<InfraStepParam
         .status(Status.SUCCEEDED)
         .stepOutcome(StepOutcome.builder()
                          .outcome(infrastructureOutcome)
-                         .name(OutcomeExpressionConstants.INFRASTRUCTURE)
-                         .group(StepOutcomeGroup.STAGE.name())
+                         .name(OutcomeExpressionConstants.OUTPUT)
+                         .group(OutcomeExpressionConstants.INFRASTRUCTURE_GROUP)
                          .build())
         .unitProgressList(Collections.singletonList(UnitProgress.newBuilder()
                                                         .setUnitName(INFRASTRUCTURE_COMMAND_UNIT)

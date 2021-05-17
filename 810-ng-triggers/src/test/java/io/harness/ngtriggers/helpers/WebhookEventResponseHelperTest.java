@@ -21,7 +21,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ngpipeline.pipeline.beans.resources.NGPipelineExecutionResponseDTO;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.response.TargetExecutionSummary;
@@ -30,6 +29,7 @@ import io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus;
 import io.harness.ngtriggers.beans.scm.ParsePayloadResponse;
 import io.harness.ngtriggers.beans.scm.ParsePayloadResponse.ParsePayloadResponseBuilder;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
+import io.harness.ngtriggers.dtos.NGPipelineExecutionResponseDTO;
 import io.harness.rule.Owner;
 
 import io.grpc.StatusRuntimeException;

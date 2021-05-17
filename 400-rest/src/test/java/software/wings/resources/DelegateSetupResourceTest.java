@@ -30,8 +30,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -82,6 +84,7 @@ import org.junit.runners.Parameterized.Parameters;
 import org.mockito.ArgumentCaptor;
 
 @OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class DelegateSetupResourceTest {
   private static String accountId = "ACCOUNT_ID";
   private static DelegateService delegateService = mock(DelegateService.class);
@@ -551,7 +554,7 @@ public class DelegateSetupResourceTest {
     try (OutputStreamWriter outputStreamWriter = new FileWriter(file)) {
       IOUtils.write("Test", outputStreamWriter);
     }
-    when(delegateService.downloadScripts(anyString(), anyString(), anyString(), anyString(), anyString()))
+    when(delegateService.downloadScripts(anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(file);
     Response restResponse = RESOURCES.client()
                                 .target("/setup/delegates/download?accountId=" + ACCOUNT_ID
@@ -560,7 +563,7 @@ public class DelegateSetupResourceTest {
                                 .get(new GenericType<Response>() {});
 
     verify(delegateService, atLeastOnce())
-        .downloadScripts(anyString(), anyString(), anyString(), anyString(), anyString());
+        .downloadScripts(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
     verify(downloadTokenService, atLeastOnce()).validateDownloadToken("delegate." + ACCOUNT_ID, "token");
 
     assertThat(restResponse.getHeaderString("Content-Disposition"))
@@ -577,7 +580,7 @@ public class DelegateSetupResourceTest {
     try (OutputStreamWriter outputStreamWriter = new FileWriter(file)) {
       IOUtils.write("Test", outputStreamWriter);
     }
-    when(delegateService.downloadScripts(anyString(), anyString(), anyString(), anyString(), anyString()))
+    when(delegateService.downloadScripts(anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(file);
     Response restResponse = RESOURCES.client()
                                 .target("/setup/delegates/download?accountId=" + ACCOUNT_ID + "&token=token")
@@ -585,7 +588,7 @@ public class DelegateSetupResourceTest {
                                 .get(new GenericType<Response>() {});
 
     verify(delegateService, atLeastOnce())
-        .downloadScripts(anyString(), anyString(), anyString(), anyString(), anyString());
+        .downloadScripts(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
     verify(downloadTokenService, atLeastOnce()).validateDownloadToken("delegate." + ACCOUNT_ID, "token");
 
     assertThat(restResponse.getHeaderString("Content-Disposition"))
@@ -602,7 +605,7 @@ public class DelegateSetupResourceTest {
     try (OutputStreamWriter outputStreamWriter = new FileWriter(file)) {
       IOUtils.write("Test", outputStreamWriter);
     }
-    when(delegateService.downloadDocker(anyString(), anyString(), anyString(), anyString(), anyString()))
+    when(delegateService.downloadDocker(anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(file);
     Response restResponse = RESOURCES.client()
                                 .target("/setup/delegates/docker?accountId=" + ACCOUNT_ID
@@ -611,7 +614,7 @@ public class DelegateSetupResourceTest {
                                 .get(new GenericType<Response>() {});
 
     verify(delegateService, atLeastOnce())
-        .downloadDocker(anyString(), anyString(), anyString(), anyString(), anyString());
+        .downloadDocker(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
     verify(downloadTokenService, atLeastOnce()).validateDownloadToken("delegate." + ACCOUNT_ID, "token");
 
     assertThat(restResponse.getHeaderString("Content-Disposition"))
@@ -628,7 +631,7 @@ public class DelegateSetupResourceTest {
     try (OutputStreamWriter outputStreamWriter = new FileWriter(file)) {
       IOUtils.write("Test", outputStreamWriter);
     }
-    when(delegateService.downloadDocker(anyString(), anyString(), anyString(), anyString(), anyString()))
+    when(delegateService.downloadDocker(anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(file);
     Response restResponse = RESOURCES.client()
                                 .target("/setup/delegates/docker?accountId=" + ACCOUNT_ID + "&token=token")
@@ -636,7 +639,7 @@ public class DelegateSetupResourceTest {
                                 .get(new GenericType<Response>() {});
 
     verify(delegateService, atLeastOnce())
-        .downloadDocker(anyString(), anyString(), anyString(), anyString(), anyString());
+        .downloadDocker(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
     verify(downloadTokenService, atLeastOnce()).validateDownloadToken("delegate." + ACCOUNT_ID, "token");
 
     assertThat(restResponse.getHeaderString("Content-Disposition"))
@@ -653,7 +656,8 @@ public class DelegateSetupResourceTest {
     try (OutputStreamWriter outputStreamWriter = new FileWriter(file)) {
       IOUtils.write("Test", outputStreamWriter);
     }
-    when(delegateService.downloadKubernetes(anyString(), anyString(), anyString(), anyString(), anyString()))
+    when(delegateService.downloadKubernetes(
+             anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(file);
     Response restResponse = RESOURCES.client()
                                 .target("/setup/delegates/kubernetes?accountId=" + ACCOUNT_ID + "&delegateName="
@@ -664,7 +668,7 @@ public class DelegateSetupResourceTest {
 
     verify(downloadTokenService, atLeastOnce()).validateDownloadToken("delegate." + ACCOUNT_ID, "token");
     verify(delegateService, atLeastOnce())
-        .downloadKubernetes(anyString(), anyString(), anyString(), anyString(), anyString());
+        .downloadKubernetes(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
 
     assertThat(restResponse.getHeaderString("Content-Disposition"))
         .isEqualTo("attachment; filename=" + DelegateServiceImpl.KUBERNETES_DELEGATE + ".tar.gz");
@@ -680,7 +684,8 @@ public class DelegateSetupResourceTest {
     try (OutputStreamWriter outputStreamWriter = new FileWriter(file)) {
       IOUtils.write("Test", outputStreamWriter);
     }
-    when(delegateService.downloadCeKubernetesYaml(anyString(), anyString(), anyString(), anyString(), anyString()))
+    when(delegateService.downloadCeKubernetesYaml(
+             anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(file);
     Response restResponse = RESOURCES.client()
                                 .target("/setup/delegates/kubernetes?accountId=" + ACCOUNT_ID + "&delegateName="
@@ -691,7 +696,7 @@ public class DelegateSetupResourceTest {
 
     verify(downloadTokenService, atLeastOnce()).validateDownloadToken("delegate." + ACCOUNT_ID, "token");
     verify(delegateService, atLeastOnce())
-        .downloadCeKubernetesYaml(anyString(), anyString(), anyString(), anyString(), anyString());
+        .downloadCeKubernetesYaml(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
 
     assertThat(restResponse.getHeaderString("Content-Disposition"))
         .isEqualTo("attachment; filename=" + DelegateServiceImpl.KUBERNETES_DELEGATE + YAML);
@@ -708,7 +713,7 @@ public class DelegateSetupResourceTest {
       IOUtils.write("Test", outputStreamWriter);
     }
     when(delegateService.downloadECSDelegate(
-             anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyString(), anyString()))
+             anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(file);
 
     Response restResponse =
@@ -721,7 +726,7 @@ public class DelegateSetupResourceTest {
 
     verify(delegateService, atLeastOnce())
         .downloadECSDelegate(
-            anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyString(), anyString());
+            anyString(), anyString(), anyString(), anyBoolean(), anyString(), anyString(), anyString(), anyString());
     verify(downloadTokenService, atLeastOnce()).validateDownloadToken("delegate." + ACCOUNT_ID, "token");
 
     assertThat(restResponse.getHeaderString("Content-Disposition"))
@@ -738,8 +743,8 @@ public class DelegateSetupResourceTest {
     try (OutputStreamWriter outputStreamWriter = new FileWriter(file)) {
       IOUtils.write("Test", outputStreamWriter);
     }
-    when(
-        delegateService.downloadDelegateValuesYamlFile(anyString(), anyString(), anyString(), anyString(), anyString()))
+    when(delegateService.downloadDelegateValuesYamlFile(
+             anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(file);
 
     Response restResponse =
@@ -750,7 +755,7 @@ public class DelegateSetupResourceTest {
             .get(new GenericType<Response>() {});
 
     verify(delegateService, atLeastOnce())
-        .downloadDelegateValuesYamlFile(anyString(), anyString(), anyString(), anyString(), anyString());
+        .downloadDelegateValuesYamlFile(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
     verify(downloadTokenService, atLeastOnce()).validateDownloadToken("delegate." + ACCOUNT_ID, "token");
 
     assertThat(restResponse.getHeaderString("Content-Disposition"))
