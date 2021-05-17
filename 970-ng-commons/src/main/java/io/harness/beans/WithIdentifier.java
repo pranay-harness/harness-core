@@ -1,4 +1,4 @@
-package io.harness.yaml.core.intfc;
+package io.harness.beans;
 
 import javax.validation.constraints.NotNull;
 

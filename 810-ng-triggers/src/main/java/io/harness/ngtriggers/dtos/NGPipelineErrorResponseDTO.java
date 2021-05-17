@@ -1,6 +1,4 @@
-package io.harness.ngpipeline.pipeline.beans.resources;
-
-import io.harness.annotations.dev.ToBeDeleted;
+package io.harness.ngtriggers.dtos;
 
 import io.swagger.annotations.ApiModel;
 import java.util.ArrayList;
@@ -11,8 +9,6 @@ import lombok.Value;
 @Value
 @Builder
 @ApiModel("NGPipelineErrorResponse")
-@ToBeDeleted
-@Deprecated
 public class NGPipelineErrorResponseDTO {
   @Builder.Default List<NGPipelineErrorDTO> errors = new ArrayList<>();
 }

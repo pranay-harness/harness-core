@@ -17,7 +17,6 @@ import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalSta
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TRIGGER_CONFIRMATION_SUCCESSFUL;
 
 import io.harness.execution.PlanExecution;
-import io.harness.ngpipeline.pipeline.beans.resources.NGPipelineExecutionResponseDTO;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
@@ -26,6 +25,7 @@ import io.harness.ngtriggers.beans.response.TargetExecutionSummary;
 import io.harness.ngtriggers.beans.response.WebhookEventResponse;
 import io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus;
 import io.harness.ngtriggers.beans.scm.ParsePayloadResponse;
+import io.harness.ngtriggers.dtos.NGPipelineExecutionResponseDTO;
 
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
