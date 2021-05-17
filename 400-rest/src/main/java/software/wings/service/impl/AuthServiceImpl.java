@@ -34,7 +34,6 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
-import io.harness.beans.FeatureName;
 import io.harness.cache.HarnessCacheManager;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.entity.ServiceSecretKey.ServiceType;
@@ -703,15 +702,9 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private Optional<UserGroup> getHarnessUserGroupsByAccountId(String accountId, User user) {
-    if (featureFlagService.isEnabled(FeatureName.LIMITED_ACCESS_FOR_HARNESS_USER_GROUP, accountId)) {
-      if (!harnessUserGroupService.isHarnessSupportEnabled(accountId, user.getUuid())) {
-        return Optional.empty();
-      }
-    } else {
-      if (!harnessUserGroupService.isHarnessSupportUser(user.getUuid())
-          || !harnessUserGroupService.isHarnessSupportEnabledForAccount(accountId)) {
-        return Optional.empty();
-      }
+    if (!harnessUserGroupService.isHarnessSupportUser(user.getUuid())
+        || !harnessUserGroupService.isHarnessSupportEnabled(accountId, user.getUuid())) {
+      return Optional.empty();
     }
 
     AppPermission appPermission =

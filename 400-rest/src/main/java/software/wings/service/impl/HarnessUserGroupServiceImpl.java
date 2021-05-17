@@ -13,7 +13,6 @@ import static com.google.common.collect.Sets.symmetricDifference;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.configuration.DeployMode;
@@ -197,16 +196,14 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
 
   @Override
   public boolean delete(String accountId, String uuid) {
-    if (featureFlagService.isEnabled(FeatureName.LIMITED_ACCESS_FOR_HARNESS_USER_GROUP, accountId)) {
-      List<AccessRequest> accessRequestList = accessRequestService.getActiveAccessRequest(uuid);
-      if (isNotEmpty(accessRequestList)) {
-        throw new AccessRequestPresentException(
-            String.format("Cannot delete harnessUserGroupId: %s , as %d Active Access Request present associated to it",
-                uuid, accessRequestList.size()));
-      }
-      HarnessUserGroup harnessUserGroup = wingsPersistence.get(HarnessUserGroup.class, uuid);
-      auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, harnessUserGroup);
+    List<AccessRequest> accessRequestList = accessRequestService.getActiveAccessRequest(uuid);
+    if (isNotEmpty(accessRequestList)) {
+      throw new AccessRequestPresentException(
+          String.format("Cannot delete harnessUserGroupId: %s , as %d Active Access Request present associated to it",
+              uuid, accessRequestList.size()));
     }
+    HarnessUserGroup harnessUserGroup = wingsPersistence.get(HarnessUserGroup.class, uuid);
+    auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, harnessUserGroup);
 
     return wingsPersistence.delete(HarnessUserGroup.class, uuid);
   }
