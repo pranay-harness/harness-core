@@ -88,6 +88,7 @@ public class Activity implements PersistentEntity, AccountDataRetentionEntity, U
   private String hostName;
   private String publicDns;
   private String serviceInstanceId;
+  private String infrastructureDefinitionId;
   @NotEmpty private String workflowExecutionId;
   @NotEmpty private String workflowId;
   @NotEmpty private String workflowExecutionName;
