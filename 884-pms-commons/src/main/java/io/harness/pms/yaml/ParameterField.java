@@ -2,6 +2,7 @@ package io.harness.pms.yaml;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.NotExpression;
@@ -17,6 +18,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @OwnedBy(PIPELINE)
+@RecasterAlias("parameterField")
 public class ParameterField<T> implements VisitorFieldWrapper {
   public static final VisitorFieldType VISITOR_FIELD_TYPE = VisitorFieldType.builder().type("PARAMETER_FIELD").build();
 

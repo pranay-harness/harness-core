@@ -1,5 +1,7 @@
 package io.harness.serializer.recaster;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CastedField;
 import io.harness.core.Recaster;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
@@ -14,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 public class ParameterFieldRecastTransformer extends RecastTransformer implements CustomValueTransformer {
   private final ObjectMapper objectMapper = new ObjectMapper();
