@@ -32,6 +32,7 @@ import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome.K8sDirectInfrastructureOutcomeBuilder;
 import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;
 import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
+import io.harness.cdng.manifest.steps.ManifestsOutcome;
 import io.harness.cdng.manifest.yaml.GcsStoreConfig;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.GitStoreConfig;
@@ -47,7 +48,6 @@ import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftParamManifestOutcome;
 import io.harness.cdng.manifest.yaml.S3StoreConfig;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
-import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
@@ -632,12 +632,14 @@ public class K8sStepHelperTest extends CategoryTest {
     K8sDirectInfrastructureOutcome outcome = K8sDirectInfrastructureOutcome.builder().build();
     doReturn(OptionalOutcome.builder().outcome(outcome).found(true).build())
         .when(outcomeService)
-        .resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+        .resolveOptional(
+            ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
     assertThat(k8sStepHelper.getInfrastructureOutcome(ambiance)).isEqualTo(outcome);
 
     doReturn(OptionalOutcome.builder().found(false).build())
         .when(outcomeService)
-        .resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+        .resolveOptional(
+            ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
     assertThatThrownBy(() -> k8sStepHelper.getInfrastructureOutcome(ambiance))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining(MISSING_INFRASTRUCTURE_ERROR);
@@ -780,22 +782,21 @@ public class K8sStepHelperTest extends CategoryTest {
                             .build();
     K8sManifestOutcome k8sManifestOutcome = K8sManifestOutcome.builder().identifier("k8s").store(gitStore).build();
     Map<String, ManifestOutcome> manifestOutcomeMap = ImmutableMap.of("k8s", k8sManifestOutcome);
-    ServiceOutcome serviceOutcome = ServiceOutcome.builder().manifestResults(manifestOutcomeMap).build();
-    RefObject service = RefObject.newBuilder()
-                            .setName(OutcomeExpressionConstants.SERVICE)
-                            .setKey(OutcomeExpressionConstants.SERVICE)
-                            .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
-                            .build();
+    RefObject manifests = RefObject.newBuilder()
+                              .setName(OutcomeExpressionConstants.MANIFESTS)
+                              .setKey(OutcomeExpressionConstants.MANIFESTS)
+                              .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
+                              .build();
 
     RefObject infra = RefObject.newBuilder()
-                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE)
-                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE)
+                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME)
+                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME)
                           .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
                           .build();
 
     StepElementParameters rollingStepElementParams =
         StepElementParameters.builder().spec(K8sRollingStepParameters.infoBuilder().build()).build();
-    doReturn(serviceOutcome).when(outcomeService).resolve(eq(ambiance), eq(service));
+    doReturn(new ManifestsOutcome(manifestOutcomeMap)).when(outcomeService).resolve(eq(ambiance), eq(manifests));
     doReturn(k8sDirectInfrastructureOutcome).when(outcomeService).resolve(eq(ambiance), eq(infra));
 
     doReturn(
@@ -847,22 +848,21 @@ public class K8sStepHelperTest extends CategoryTest {
     HelmChartManifestOutcome helmChartManifestOutcome =
         HelmChartManifestOutcome.builder().identifier("helm").store(gitStore).build();
     Map<String, ManifestOutcome> manifestOutcomeMap = ImmutableMap.of("k8s", helmChartManifestOutcome);
-    ServiceOutcome serviceOutcome = ServiceOutcome.builder().manifestResults(manifestOutcomeMap).build();
-    RefObject service = RefObject.newBuilder()
-                            .setName(OutcomeExpressionConstants.SERVICE)
-                            .setKey(OutcomeExpressionConstants.SERVICE)
-                            .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
-                            .build();
+    RefObject manifests = RefObject.newBuilder()
+                              .setName(OutcomeExpressionConstants.MANIFESTS)
+                              .setKey(OutcomeExpressionConstants.MANIFESTS)
+                              .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
+                              .build();
 
     RefObject infra = RefObject.newBuilder()
-                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE)
-                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE)
+                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME)
+                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME)
                           .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
                           .build();
 
     StepElementParameters rollingStepElementParams =
         StepElementParameters.builder().spec(K8sRollingStepParameters.infoBuilder().build()).build();
-    doReturn(serviceOutcome).when(outcomeService).resolve(eq(ambiance), eq(service));
+    doReturn(new ManifestsOutcome(manifestOutcomeMap)).when(outcomeService).resolve(eq(ambiance), eq(manifests));
     doReturn(k8sDirectInfrastructureOutcome).when(outcomeService).resolve(eq(ambiance), eq(infra));
 
     doReturn(
@@ -916,22 +916,21 @@ public class K8sStepHelperTest extends CategoryTest {
     HelmChartManifestOutcome helmChartManifestOutcome =
         HelmChartManifestOutcome.builder().identifier("helm").store(s3Store).build();
     Map<String, ManifestOutcome> manifestOutcomeMap = ImmutableMap.of("k8s", helmChartManifestOutcome);
-    ServiceOutcome serviceOutcome = ServiceOutcome.builder().manifestResults(manifestOutcomeMap).build();
-    RefObject service = RefObject.newBuilder()
-                            .setName(OutcomeExpressionConstants.SERVICE)
-                            .setKey(OutcomeExpressionConstants.SERVICE)
-                            .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
-                            .build();
+    RefObject manifests = RefObject.newBuilder()
+                              .setName(OutcomeExpressionConstants.MANIFESTS)
+                              .setKey(OutcomeExpressionConstants.MANIFESTS)
+                              .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
+                              .build();
 
     RefObject infra = RefObject.newBuilder()
-                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE)
-                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE)
+                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME)
+                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME)
                           .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
                           .build();
 
     StepElementParameters rollingStepElementParams =
         StepElementParameters.builder().spec(K8sRollingStepParameters.infoBuilder().build()).build();
-    doReturn(serviceOutcome).when(outcomeService).resolve(eq(ambiance), eq(service));
+    doReturn(new ManifestsOutcome(manifestOutcomeMap)).when(outcomeService).resolve(eq(ambiance), eq(manifests));
     doReturn(k8sDirectInfrastructureOutcome).when(outcomeService).resolve(eq(ambiance), eq(infra));
 
     doReturn(Optional.of(
@@ -989,22 +988,21 @@ public class K8sStepHelperTest extends CategoryTest {
     HelmChartManifestOutcome helmChartManifestOutcome =
         HelmChartManifestOutcome.builder().identifier("helm").store(gcsStore).build();
     Map<String, ManifestOutcome> manifestOutcomeMap = ImmutableMap.of("k8s", helmChartManifestOutcome);
-    ServiceOutcome serviceOutcome = ServiceOutcome.builder().manifestResults(manifestOutcomeMap).build();
-    RefObject service = RefObject.newBuilder()
-                            .setName(OutcomeExpressionConstants.SERVICE)
-                            .setKey(OutcomeExpressionConstants.SERVICE)
-                            .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
-                            .build();
+    RefObject manifests = RefObject.newBuilder()
+                              .setName(OutcomeExpressionConstants.MANIFESTS)
+                              .setKey(OutcomeExpressionConstants.MANIFESTS)
+                              .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
+                              .build();
 
     RefObject infra = RefObject.newBuilder()
-                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE)
-                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE)
+                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME)
+                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME)
                           .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
                           .build();
 
     StepElementParameters rollingStepElementParams =
         StepElementParameters.builder().spec(K8sRollingStepParameters.infoBuilder().build()).build();
-    doReturn(serviceOutcome).when(outcomeService).resolve(eq(ambiance), eq(service));
+    doReturn(new ManifestsOutcome(manifestOutcomeMap)).when(outcomeService).resolve(eq(ambiance), eq(manifests));
     doReturn(k8sDirectInfrastructureOutcome).when(outcomeService).resolve(eq(ambiance), eq(infra));
 
     doReturn(Optional.of(
@@ -1058,22 +1056,21 @@ public class K8sStepHelperTest extends CategoryTest {
     HelmChartManifestOutcome helmChartManifestOutcome =
         HelmChartManifestOutcome.builder().identifier("helm").store(httpStore).build();
     Map<String, ManifestOutcome> manifestOutcomeMap = ImmutableMap.of("k8s", helmChartManifestOutcome);
-    ServiceOutcome serviceOutcome = ServiceOutcome.builder().manifestResults(manifestOutcomeMap).build();
-    RefObject service = RefObject.newBuilder()
-                            .setName(OutcomeExpressionConstants.SERVICE)
-                            .setKey(OutcomeExpressionConstants.SERVICE)
-                            .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
-                            .build();
+    RefObject manifests = RefObject.newBuilder()
+                              .setName(OutcomeExpressionConstants.MANIFESTS)
+                              .setKey(OutcomeExpressionConstants.MANIFESTS)
+                              .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
+                              .build();
 
     RefObject infra = RefObject.newBuilder()
-                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE)
-                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE)
+                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME)
+                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME)
                           .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
                           .build();
 
     StepElementParameters rollingStepElementParams =
         StepElementParameters.builder().spec(K8sRollingStepParameters.infoBuilder().build()).build();
-    doReturn(serviceOutcome).when(outcomeService).resolve(eq(ambiance), eq(service));
+    doReturn(new ManifestsOutcome(manifestOutcomeMap)).when(outcomeService).resolve(eq(ambiance), eq(manifests));
     doReturn(k8sDirectInfrastructureOutcome).when(outcomeService).resolve(eq(ambiance), eq(infra));
 
     doReturn(

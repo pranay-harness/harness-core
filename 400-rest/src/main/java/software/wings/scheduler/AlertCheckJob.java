@@ -14,13 +14,14 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.Delegate.DelegateKeys;
+import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.alert.DelegatesScalingGroupDownAlert;
 import io.harness.ff.FeatureFlagService;
 import io.harness.scheduler.PersistentScheduler;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
-import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 import software.wings.beans.ManagerConfiguration;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegatesDownAlert;
@@ -139,7 +140,11 @@ public class AlertCheckJob implements Job {
   }
 
   private List<Delegate> getDelegatesForAccount(String accountId) {
-    return wingsPersistence.createQuery(Delegate.class).filter(DelegateConnectionKeys.accountId, accountId).asList();
+    return wingsPersistence.createQuery(Delegate.class)
+        .filter(DelegateKeys.accountId, accountId)
+        .field(DelegateKeys.status)
+        .notEqual(DelegateInstanceStatus.DELETED)
+        .asList();
   }
 
   @VisibleForTesting

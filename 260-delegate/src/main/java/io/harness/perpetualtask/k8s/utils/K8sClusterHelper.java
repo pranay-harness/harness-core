@@ -52,6 +52,9 @@ public class K8sClusterHelper {
     String fileContent = "";
     if (FileIo.checkIfFileExist(SEEN_CLUSTER_FILE_NAME)) {
       fileContent = readFileContent();
+    } else {
+      log.info("{} file was not present, creating one", SEEN_CLUSTER_FILE_NAME);
+      FileIo.writeWithExclusiveLockAcrossProcesses("", SEEN_CLUSTER_FILE_NAME, StandardOpenOption.CREATE);
     }
 
     return Sets.newHashSet(fileContent.split(DELIMITER));

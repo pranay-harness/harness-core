@@ -10,6 +10,7 @@ import io.harness.connector.ConnectorDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.git.model.ChangeType;
+import io.harness.gitsync.common.helper.EntityDistinctElementHelper;
 import io.harness.gitsync.persistance.GitAwarePersistence;
 import io.harness.gitsync.persistance.GitSyncableHarnessRepo;
 
@@ -38,11 +39,16 @@ public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository 
 
   // todo(abhinav): This method is not yet migrated because of find By fqn
   @Override
-  public Page<Connector> findAll(Criteria criteria, Pageable pageable) {
+  public Page<Connector> findAll(Criteria criteria, Pageable pageable, boolean getDistinctIdentifiers) {
     Query query = new Query(criteria).with(pageable);
-    List<Connector> connectors = mongoTemplate.find(query, Connector.class);
-    return PageableExecutionUtils.getPage(
-        connectors, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), Connector.class));
+    if (!getDistinctIdentifiers) {
+      List<Connector> connectors = mongoTemplate.find(query, Connector.class);
+      return PageableExecutionUtils.getPage(
+          connectors, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), Connector.class));
+    } else {
+      return EntityDistinctElementHelper.getDistinctElementPage(
+          mongoTemplate, criteria, pageable, ConnectorKeys.fullyQualifiedIdentifier, Connector.class);
+    }
   }
 
   @Override

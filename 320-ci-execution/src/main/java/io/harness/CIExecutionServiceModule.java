@@ -44,16 +44,15 @@ public class CIExecutionServiceModule extends AbstractModule {
     install(CIBeansModule.getInstance());
     install(OrchestrationStepsModule.getInstance(null));
     install(OrchestrationVisualizationModule.getInstance());
-    install(ExecutionPlanModule.getInstance());
-
-    install(
-        NGPipelineCommonsModule.getInstance(OrchestrationModuleConfig.builder()
+    install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
                                                 .serviceName("CI")
                                                 .withPMS(Optional.ofNullable(withPMS).orElse(false))
                                                 .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
                                                 .publisherName(NgOrchestrationNotifyEventListener.NG_ORCHESTRATION)
-                                                .maxPoolSize(10)
                                                 .build()));
+    install(ExecutionPlanModule.getInstance());
+
+    install(NGPipelineCommonsModule.getInstance());
     bind(CIBuildService.class).to(CIBuildServiceImpl.class);
     this.bind(CIExecutionServiceConfig.class).toInstance(this.ciExecutionServiceConfig);
     bind(CIPipelineExecutionService.class).to(CIPipelineExecutionServiceImpl.class);

@@ -144,8 +144,13 @@ public class PipelineRbacHelper {
     StringBuilder errors = new StringBuilder();
     for (String resourceType : allErrors.keySet()) {
       for (String resourceIdentifier : allErrors.get(resourceType).keySet()) {
-        errors.append(String.format("For %s with identifier %s, these permissions are not there: %s.\n", resourceType,
-            resourceIdentifier, allErrors.get(resourceType).get(resourceIdentifier).toString()));
+        if (EmptyPredicate.isEmpty(resourceIdentifier)) {
+          errors.append(String.format("For %s, these permissions are not there: %s.\n", resourceType,
+              allErrors.get(resourceType).get(resourceIdentifier).toString()));
+        } else {
+          errors.append(String.format("For %s with identifier %s, these permissions are not there: %s.\n", resourceType,
+              resourceIdentifier, allErrors.get(resourceType).get(resourceIdentifier).toString()));
+        }
       }
     }
 

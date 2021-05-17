@@ -1,9 +1,11 @@
 package io.harness.pms.ngpipeline.inputset.helpers;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.merger.helpers.MergeHelper.createTemplateFromPipeline;
 import static io.harness.pms.merger.helpers.MergeHelper.getPipelineComponent;
 import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSets;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.inputset.helpers.MergeHelper;
@@ -25,6 +27,7 @@ import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PIPELINE)
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
@@ -121,7 +124,8 @@ public class ValidateAndMergeHelper {
 
   private void confirmPipelineIdentifier(String inputSetYaml, String pipelineIdentifier) {
     if (PMSInputSetElementMapper.isPipelineAbsent(inputSetYaml)) {
-      throw new InvalidRequestException("Input Set provides no values for any runtime input");
+      throw new InvalidRequestException(
+          "Input Set provides no values for any runtime input, or the pipeline has no runtime input");
     }
     String pipelineComponent = getPipelineComponent(inputSetYaml);
     String identifierInYaml = PMSInputSetElementMapper.getStringField(pipelineComponent, "identifier", "pipeline");

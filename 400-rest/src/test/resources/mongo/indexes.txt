@@ -171,6 +171,7 @@ delegateConnections {"name": "index2", "background": true} {"accountId": 1, "del
 delegateConnections {"name": "lastHeartbeatIndex", "background": true} {"disconnected": 1, "lastHeartbeat": 1}
 delegateConnections {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 delegateGroups {"name": "byAccount", "unique": true} {"accountId": 1, "name": 1}
+delegateGroups {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 delegateInsightsSummary {"name": "byAcctGrpTimeType", "background": true} {"accountId": 1, "delegateGroupId": 1, "periodStartTime": 1, "insightsType": 1}
 delegatePerpetualTaskUsageInsights {"name": "timestamp_1", "background": true} {"timestamp": 1}
 delegateProfiles {"name": "byAcctNgOwner", "background": true} {"accountId": 1, "ng": 1, "owner": 1}
@@ -193,6 +194,8 @@ delegateTasks {"name": "pulling", "background": true} {"accountId": 1, "status":
 delegateTasks {"name": "rebroadcast", "background": true} {"version": 1, "status": 1, "delegateId": 1, "nextBroadcast": 1}
 delegateTasks {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 delegateTokens {"name": "byAccountAndName", "unique": true} {"accountId": 1, "name": 1}
+delegateTokens {"name": "byAccountAndStatus", "background": true} {"accountId": 1, "status": 1}
+delegateTokens {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 delegates {"name": "accountId_1", "background": true} {"accountId": 1}
 delegates {"name": "byAcctNgGroupIdOwner", "background": true} {"accountId": 1, "ng": 1, "delegateGroupId": 1, "owner": 1}
 delegates {"name": "capabilitiesCheckNextIteration_1", "background": true} {"capabilitiesCheckNextIteration": 1}

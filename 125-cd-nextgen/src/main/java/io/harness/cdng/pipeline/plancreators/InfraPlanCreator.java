@@ -1,8 +1,10 @@
 package io.harness.cdng.pipeline.plancreators;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.cdng.executionplan.CDPlanCreatorType.INFRA_PLAN_CREATOR;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.executionplan.utils.PlanCreatorConfigUtils;
 import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.infra.steps.InfrastructureStep;
@@ -32,6 +34,7 @@ import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
 
+@OwnedBy(CDC)
 public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<PipelineInfrastructure> {
   @Inject private StepDependencyService stepDependencyService;
 
@@ -67,11 +70,12 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
                     .build());
 
     // Add step dependency provider.
-    OutcomeRefStepDependencyInstructor instructor = OutcomeRefStepDependencyInstructor.builder()
-                                                        .key(CDStepDependencyUtils.getInfraKey(context))
-                                                        .providerPlanNodeId(infraNodeId)
-                                                        .outcomeExpression(OutcomeExpressionConstants.INFRASTRUCTURE)
-                                                        .build();
+    OutcomeRefStepDependencyInstructor instructor =
+        OutcomeRefStepDependencyInstructor.builder()
+            .key(CDStepDependencyUtils.getInfraKey(context))
+            .providerPlanNodeId(infraNodeId)
+            .outcomeExpression(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME)
+            .build();
     stepDependencyService.registerStepDependencyInstructor(instructor, context);
     return planNodeBuilder.build();
   }

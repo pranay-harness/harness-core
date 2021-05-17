@@ -135,8 +135,13 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
   public void renewToken(BaseVaultConfig baseVaultConfig) {
     String accountId = baseVaultConfig.getAccountId();
     BaseVaultConfig decryptedVaultConfig = getBaseVaultConfig(accountId, baseVaultConfig.getUuid());
-    SyncTaskContext syncTaskContext =
-        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                          .accountId(accountId)
+                                          .appId(GLOBAL_APP_ID)
+                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .orgIdentifier(baseVaultConfig.getOrgIdentifier())
+                                          .projectIdentifier(baseVaultConfig.getProjectIdentifier())
+                                          .build();
     boolean isCertValidationRequired = accountService.isCertValidationRequired(accountId);
     baseVaultConfig.setCertValidationRequired(isCertValidationRequired);
     delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
@@ -299,6 +304,8 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
                                               .timeout(Duration.ofSeconds(10).toMillis())
                                               .appId(GLOBAL_APP_ID)
                                               .correlationId(vaultConfig.getUuid())
+                                              .orgIdentifier(vaultConfig.getOrgIdentifier())
+                                              .projectIdentifier(vaultConfig.getProjectIdentifier())
                                               .build();
         return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
             .listSecretEngines(vaultConfig);

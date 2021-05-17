@@ -42,22 +42,19 @@ public class ArtifactUtils {
       return artifacts;
     }
     if (artifactListConfig.getPrimary() != null) {
-      artifacts.add(artifactListConfig.getPrimary().getArtifactConfig());
+      artifacts.add(artifactListConfig.getPrimary().getSpec());
       saveLogs(ngManagerLogCallback,
           "Primary artifact details: \n"
-              + getLogInfo(artifactListConfig.getPrimary().getArtifactConfig(),
-                  artifactListConfig.getPrimary().getSourceType()));
+              + getLogInfo(artifactListConfig.getPrimary().getSpec(), artifactListConfig.getPrimary().getSourceType()));
     }
     if (EmptyPredicate.isNotEmpty(artifactListConfig.getSidecars())) {
-      artifacts.addAll(artifactListConfig.getSidecars()
-                           .stream()
-                           .map(s -> s.getSidecar().getArtifactConfig())
-                           .collect(Collectors.toList()));
+      artifacts.addAll(
+          artifactListConfig.getSidecars().stream().map(s -> s.getSidecar().getSpec()).collect(Collectors.toList()));
       saveLogs(ngManagerLogCallback,
           "Sidecars details: \n"
               + artifactListConfig.getSidecars()
                     .stream()
-                    .map(s -> getLogInfo(s.getSidecar().getArtifactConfig(), s.getSidecar().getSourceType()))
+                    .map(s -> getLogInfo(s.getSidecar().getSpec(), s.getSidecar().getSourceType()))
                     .collect(Collectors.joining()));
     }
     return artifacts;
@@ -79,16 +76,19 @@ public class ArtifactUtils {
     valuesList.forEach(s -> appendIfNecessary(keyBuilder, s));
     return Hashing.sha256().hashString(keyBuilder.toString(), StandardCharsets.UTF_8).toString();
   }
+
   private void saveLogs(LogCallback executionLogCallback, String message) {
     if (executionLogCallback != null) {
       executionLogCallback.saveExecutionLog(message);
     }
   }
-  private String getLogInfo(ArtifactConfig artifactConfig, ArtifactSourceType sourceType) {
+
+  public String getLogInfo(ArtifactConfig artifactConfig, ArtifactSourceType sourceType) {
     if (sourceType == null) {
       return "";
     }
-    String placeholder = "  type: %s, image: %s, tag/tagRegex: %s, connectorRef: %s \n";
+
+    String placeholder = " type: %s, image: %s, tag/tagRegex: %s, connectorRef: %s\n";
     switch (sourceType) {
       case DOCKER_HUB:
         DockerHubArtifactConfig dockerHubArtifactConfig = (DockerHubArtifactConfig) artifactConfig;

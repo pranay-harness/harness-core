@@ -41,7 +41,7 @@ public class K8sScaleStep extends TaskExecutableWithRollback<K8sDeployResponse> 
   public TaskRequest obtainTask(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     InfrastructureOutcome infrastructure = (InfrastructureOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
 
     K8sScaleStepParameter scaleStepParameter = (K8sScaleStepParameter) stepElementParameters.getSpec();
     ParameterField<Integer> instances = K8sInstanceUnitType.Count == scaleStepParameter.getInstanceSelection().getType()

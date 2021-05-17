@@ -30,6 +30,8 @@ import io.harness.persistence.UserProvider;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.service.DelegateServiceModule;
+import io.harness.service.impl.DelegateTokenServiceImpl;
+import io.harness.service.intfc.DelegateTokenService;
 import io.harness.springdata.SpringPersistenceModule;
 import io.harness.stream.AtmosphereBroadcaster;
 import io.harness.stream.StreamModule;
@@ -272,5 +274,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     AccountServiceImpl accountService = (AccountServiceImpl) injector.getInstance(Key.get(AccountService.class));
     accountService.getAccountCrudSubject().register(
         (DelegateProfileServiceImpl) injector.getInstance(Key.get(DelegateProfileService.class)));
+    accountService.getAccountCrudSubject().register(
+        (DelegateTokenServiceImpl) injector.getInstance(Key.get(DelegateTokenService.class)));
   }
 }

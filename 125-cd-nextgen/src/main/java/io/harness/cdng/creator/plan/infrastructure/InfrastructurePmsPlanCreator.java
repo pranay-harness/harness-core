@@ -9,6 +9,7 @@ import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.infra.steps.InfrastructureSectionStep;
 import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
+import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
@@ -75,6 +76,7 @@ public class InfrastructurePmsPlanCreator {
             .uuid(infraSectionNode.getUuid())
             .name(PlanCreatorConstants.INFRA_SECTION_NODE_NAME)
             .identifier(PlanCreatorConstants.INFRA_SECTION_NODE_IDENTIFIER)
+            .group(OutcomeExpressionConstants.INFRASTRUCTURE_GROUP)
             .stepType(InfrastructureSectionStep.STEP_TYPE)
             .stepParameters(InfraSectionStepParameters.getStepParameters(actualInfraConfig, infraStepNodeUuid))
             .facilitatorObtainment(

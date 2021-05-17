@@ -1,5 +1,7 @@
 package io.harness.engine;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.queue.QueuePublisher;
@@ -11,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.PIPELINE)
 public class NodeExecutionEventQueuePublisher {
   @Inject private QueuePublisher<NodeExecutionEvent> nodeExecutionEventQueuePublisher;
   @Inject(optional = true) private StepTypeLookupService stepTypeLookupService;
