@@ -8,12 +8,12 @@ import lombok.Value;
 @Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AppDynamicsTier implements Comparable<AppDynamicsTier> {
+public class Tier implements Comparable<Tier> {
   long id;
   String name;
 
   @Override
-  public int compareTo(@NotNull AppDynamicsTier o) {
+  public int compareTo(@NotNull Tier o) {
     return name.compareTo(o.name);
   }
 }

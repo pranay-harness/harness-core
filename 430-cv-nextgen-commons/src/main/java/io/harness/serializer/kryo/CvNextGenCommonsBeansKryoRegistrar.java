@@ -36,7 +36,7 @@ import io.harness.cvng.beans.appd.AppDynamicsDataCollectionRequest;
 import io.harness.cvng.beans.appd.AppDynamicsFetchAppRequest;
 import io.harness.cvng.beans.appd.AppDynamicsFetchTiersRequest;
 import io.harness.cvng.beans.appd.AppDynamicsMetricDataValidationRequest;
-import io.harness.cvng.beans.appd.AppDynamicsTier;
+import io.harness.cvng.beans.appd.Tier;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO.ApiCallLogDTOField;
 import io.harness.cvng.beans.newrelic.NewRelicApplicationFetchRequest;
@@ -74,7 +74,7 @@ public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(SplunkValidationResponse.SampleLog.class, 9018);
     kryo.register(DataCollectionConnectorBundle.class, 9019);
     kryo.register(AppDynamicsApplication.class, 9020);
-    kryo.register(AppDynamicsTier.class, 9021);
+    kryo.register(Tier.class, 9021);
     kryo.register(TimeSeriesThresholdDTO.class, 9022);
     kryo.register(TimeSeriesThresholdActionType.class, 9023);
     kryo.register(TimeSeriesThresholdCriteria.class, 9024);
