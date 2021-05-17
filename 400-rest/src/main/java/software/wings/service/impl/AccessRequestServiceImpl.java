@@ -18,6 +18,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Event.Type;
 import software.wings.beans.User;
 import software.wings.beans.security.AccessRequest;
+import software.wings.beans.security.AccessRequest.AccessRequestKeys;
 import software.wings.beans.security.AccessRequestDTO;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.dl.WingsPersistence;
@@ -141,7 +142,7 @@ public class AccessRequestServiceImpl implements AccessRequestService {
     Query<AccessRequest> query = wingsPersistence.createQuery(AccessRequest.class, excludeAuthority);
     query.filter("accountId", accountId);
     query.filter("accessActive", true);
-    query.order(Sort.descending(AccessRequest.AccessRequestKeys.accessEndAt));
+    query.order(Sort.descending(AccessRequestKeys.accessEndAt));
     return query.asList();
   }
 
@@ -151,7 +152,7 @@ public class AccessRequestServiceImpl implements AccessRequestService {
     notNullCheck("Invalid account with id: " + accountId, account);
     Query<AccessRequest> query = wingsPersistence.createQuery(AccessRequest.class, excludeAuthority);
     query.filter("accountId", accountId);
-    query.order(Sort.descending(AccessRequest.AccessRequestKeys.accessEndAt));
+    query.order(Sort.descending(AccessRequestKeys.accessEndAt));
     return query.asList();
   }
 
@@ -166,7 +167,7 @@ public class AccessRequestServiceImpl implements AccessRequestService {
     query.filter("memberIds", userId);
     query.filter("accessActive", true);
     query.filter("accessType", AccessRequest.AccessType.MEMBER_ACCESS);
-    query.order(Sort.descending(AccessRequest.AccessRequestKeys.accessEndAt));
+    query.order(Sort.descending(AccessRequestKeys.accessEndAt));
     return query.asList();
   }
 
