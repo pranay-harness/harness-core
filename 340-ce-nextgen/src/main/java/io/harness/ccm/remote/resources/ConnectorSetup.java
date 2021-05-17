@@ -19,7 +19,7 @@ import javax.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-@Api("/connector")
+@Api("connector")
 @Path("/connector")
 @Produces({MediaType.APPLICATION_JSON})
 @NextGenManagerAuth

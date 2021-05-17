@@ -3,6 +3,7 @@
  */
 package io.harness.timescaledb;
 
+import io.harness.timescaledb.tables.BillingData;
 import io.harness.timescaledb.tables.CeRecommendations;
 import io.harness.timescaledb.tables.KubernetesUtilizationData;
 import io.harness.timescaledb.tables.NodeInfo;
@@ -26,6 +27,11 @@ public class Public extends SchemaImpl {
    * The reference instance of <code>public</code>
    */
   public static final Public PUBLIC = new Public();
+
+  /**
+   * The table <code>public.billing_data</code>.
+   */
+  public final BillingData BILLING_DATA = BillingData.BILLING_DATA;
 
   /**
    * The table <code>public.ce_recommendations</code>.
@@ -67,7 +73,7 @@ public class Public extends SchemaImpl {
 
   @Override
   public final List<Table<?>> getTables() {
-    return Arrays.<Table<?>>asList(CeRecommendations.CE_RECOMMENDATIONS,
+    return Arrays.<Table<?>>asList(BillingData.BILLING_DATA, CeRecommendations.CE_RECOMMENDATIONS,
         KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA, NodeInfo.NODE_INFO, PodInfo.POD_INFO,
         WorkloadInfo.WORKLOAD_INFO);
   }

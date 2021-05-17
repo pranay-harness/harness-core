@@ -2,6 +2,8 @@ package io.harness.ccm;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
+import static java.util.stream.Collectors.toSet;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
@@ -22,8 +24,11 @@ import io.dropwizard.logging.FileAppenderFactory;
 import io.dropwizard.request.logging.LogbackAccessRequestLogFactory;
 import io.dropwizard.request.logging.RequestLogFactory;
 import io.dropwizard.server.DefaultServerFactory;
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import javax.ws.rs.Path;
 import lombok.Getter;
 import org.reflections.Reflections;
@@ -36,6 +41,7 @@ public class CENextGenConfiguration extends Configuration {
   public static final String BASE_PACKAGE = "io.harness.ccm";
   public static final String RESOURCE_PACKAGE = "io.harness.ccm.remote.resources";
 
+  @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("events-mongo") private MongoConfig eventsMongoConfig;
   @JsonProperty("allowedOrigins") private List<String> allowedOrigins = Lists.newArrayList();
   @JsonProperty("managerClientConfig") private ServiceHttpClientConfig managerClientConfig;
@@ -53,6 +59,22 @@ public class CENextGenConfiguration extends Configuration {
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
 
   @JsonProperty(value = "awsConnectorTemplate", defaultValue = "") private String awsConnectorTemplate;
+
+  public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {
+    SwaggerBundleConfiguration defaultSwaggerConf = new SwaggerBundleConfiguration();
+
+    String resourcePackage = String.join(",", getUniquePackages(getResourceClasses()));
+    defaultSwaggerConf.setResourcePackage(resourcePackage);
+    defaultSwaggerConf.setSchemes(new String[] {"https", "http"});
+    defaultSwaggerConf.setTitle("CE NextGen API Reference");
+    defaultSwaggerConf.setVersion("1.0");
+
+    return Optional.ofNullable(swaggerBundleConfiguration).orElse(defaultSwaggerConf);
+  }
+
+  private static Set<String> getUniquePackages(Collection<Class<?>> classes) {
+    return classes.stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
+  }
 
   public static Collection<Class<?>> getResourceClasses() {
     Reflections reflections = new Reflections(RESOURCE_PACKAGE);
