@@ -206,7 +206,7 @@ pipeline:
         spec:
           serviceConfig:
             useFromStage:
-              stage: <+input>.regex(^prod*)
+              stage: prod
             stageOverrides:
               manifests:
                 - manifest:

@@ -30,6 +30,7 @@ import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.cdng.jobs.CVNGStepTaskHandler;
 import io.harness.cvng.cdng.services.impl.CVNGFilterCreationResponseMerger;
 import io.harness.cvng.cdng.services.impl.CVNGModuleInfoProvider;
+import io.harness.cvng.cdng.services.impl.CVNGNotifyEventListener;
 import io.harness.cvng.cdng.services.impl.CVNGPipelineServiceInfoProvider;
 import io.harness.cvng.client.NextGenClientModule;
 import io.harness.cvng.client.VerificationManagerClientModule;
@@ -71,7 +72,6 @@ import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.metrics.jobs.RecordMetricsJob;
-import io.harness.metrics.modules.MetricsModule;
 import io.harness.metrics.service.api.MetricService;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
@@ -88,13 +88,13 @@ import io.harness.notification.module.NotificationClientModule;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
-import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.resource.VersionInfoResource;
 import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -301,7 +301,6 @@ public class VerificationApplication extends Application<VerificationConfigurati
     modules.add(new NotificationClientModule(configuration.getNotificationClientConfiguration()));
     modules.add(new CvPersistenceModule());
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(configuration)));
-    modules.add(new MetricsModule());
     YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder()
                                                     .requireSchemaInit(true)
                                                     .requireSnippetInit(false)
@@ -343,7 +342,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
   private void registerQueueListeners(Injector injector) {
     log.info("Initializing queue listeners...");
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(CVNGNotifyEventListener.class), 1);
   }
 
   private void registerWaitEnginePublishers(Injector injector) {
@@ -689,6 +688,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
         environment.jersey().register(injector.getInstance(resource));
       }
     });
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
     log.info("Registered all the resources. Time taken(ms): {}", System.currentTimeMillis() - startTimeMs);
   }
 

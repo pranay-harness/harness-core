@@ -3,6 +3,7 @@ package io.harness.delegate.serializer;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.ApiServicesRegistrars;
 import io.harness.serializer.DelegateTasksBeansRegistrars;
+import io.harness.serializer.FeatureFlagRegistrars;
 import io.harness.serializer.KryoRegistrar;
 
 import com.google.common.collect.ImmutableSet;
@@ -20,5 +21,6 @@ public class DelegateTasksRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(ApiServicesRegistrars.morphiaRegistrars)
           .addAll(DelegateTasksBeansRegistrars.morphiaRegistrars)
+          .addAll(FeatureFlagRegistrars.morphiaRegistrars)
           .build();
 }

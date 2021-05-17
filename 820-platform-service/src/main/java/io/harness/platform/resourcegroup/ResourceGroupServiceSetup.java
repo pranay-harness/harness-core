@@ -10,6 +10,7 @@ import io.harness.ng.core.CorrelationFilter;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
 import io.harness.remote.CharsetResponseFilter;
+import io.harness.resource.VersionInfoResource;
 import io.harness.resourcegroup.ResourceGroupServiceConfig;
 import io.harness.resourcegroup.reconciliation.ResourceGroupAsyncReconciliationHandler;
 import io.harness.resourcegroup.reconciliation.ResourceGroupSyncConciliationService;
@@ -65,6 +66,7 @@ public class ResourceGroupServiceSetup {
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
   }
 
   private void registerCharsetResponseFilter(Environment environment, Injector injector) {

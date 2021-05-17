@@ -11,10 +11,10 @@ import io.harness.cdng.Deployment.HealthDeploymentDashboard;
 @OwnedBy(HarnessTeam.CDC)
 public interface CDOverviewDashboardService {
   HealthDeploymentDashboard getHealthDeploymentDashboard(String accountId, String orgId, String projectId,
-      String startInterval, String endInterval, String previousStartInterval);
+      long startInterval, long endInterval, long previousStartInterval);
 
   ExecutionDeploymentInfo getExecutionDeploymentDashboard(
-      String accountId, String orgId, String projectId, String startInterval, String endInterval);
+      String accountId, String orgId, String projectId, long startInterval, long endInterval);
 
   DashboardDeploymentActiveFailedRunningInfo getDeploymentActiveFailedRunningInfo(
       String accountId, String orgId, String projectId, long days);
@@ -22,6 +22,6 @@ public interface CDOverviewDashboardService {
   DashboardWorkloadDeployment getDashboardWorkloadDeployment(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String startInterval, String endInterval, String previousStartInterval);
 
-  ExecutionDeploymentDetailInfo getDeploymentsExecutionInfo(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String startInterval, String endInterval);
+  ExecutionDeploymentDetailInfo getDeploymentsExecutionInfo(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, long startTime, long endTime);
 }

@@ -19,13 +19,14 @@ public class GitSyncSettingsMapper {
         .accountIdentifier(savedGitSyncSettings.getAccountIdentifier())
         .organizationIdentifier(savedGitSyncSettings.getOrgIdentifier())
         .projectIdentifier(savedGitSyncSettings.getProjectIdentifier())
-        .executeOnDelegate(savedGitSyncSettings.getSettings().get(IS_EXECUTE_ON_DELEGATE).equals("true"))
+        .executeOnDelegate(savedGitSyncSettings.getSettings().get(IS_EXECUTE_ON_DELEGATE).equals(String.valueOf(true)))
         .build();
   }
 
   public GitSyncSettings getGitSyncSettingsFromDTO(GitSyncSettingsDTO gitSyncSettingsDTO) {
     Map<String, String> settings = new HashMap<>();
-    settings.put(IS_EXECUTE_ON_DELEGATE, (gitSyncSettingsDTO.isExecuteOnDelegate()) ? "true" : "false");
+    settings.put(IS_EXECUTE_ON_DELEGATE,
+        (gitSyncSettingsDTO.isExecuteOnDelegate()) ? String.valueOf(true) : String.valueOf(false));
     return GitSyncSettings.builder()
         .accountIdentifier(gitSyncSettingsDTO.getAccountIdentifier())
         .orgIdentifier(gitSyncSettingsDTO.getOrganizationIdentifier())

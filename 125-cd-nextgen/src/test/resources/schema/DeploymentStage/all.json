@@ -199,7 +199,7 @@
           "type": "string"
         },
         "primary": {
-          "$ref": "#/definitions/ArtifactSpecWrapper"
+          "$ref": "#/definitions/PrimaryArtifact"
         },
         "sidecars": {
           "type": "array",
@@ -230,73 +230,6 @@
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "ArtifactSpecWrapper": {
-      "type": "object",
-      "required": [
-        "type"
-      ],
-      "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "Dockerhub",
-            "Gcr",
-            "Ecr"
-          ]
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "allOf": [
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "Dockerhub"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/DockerHubArtifactConfig"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "Ecr"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/EcrArtifactConfig"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "Gcr"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/GcrArtifactConfig"
-              }
-            }
-          }
-        }
-      ]
     },
     "BarrierStepInfo": {
       "allOf": [
@@ -749,6 +682,9 @@
     },
     "ExecutionElementConfig": {
       "type": "object",
+      "required": [
+        "steps"
+      ],
       "properties": {
         "rollbackSteps": {
           "type": "array",
@@ -760,7 +696,9 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/ExecutionWrapperConfig"
-          }
+          },
+          "maxItems": 2147483647,
+          "minItems": 1
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -2496,7 +2434,16 @@
         "errors": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "AnyOther",
+              "Authentication",
+              "Connectivity",
+              "Timeout",
+              "Authorization",
+              "Verification",
+              "DelegateProvisioning"
+            ]
           }
         }
       },
@@ -2789,7 +2736,14 @@
       "type": "object",
       "properties": {
         "allowSimultaneousDeployments": {
-          "type": "boolean"
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "environment": {
           "$ref": "#/definitions/EnvironmentYaml"
@@ -2822,6 +2776,73 @@
               ]
             }
           ]
+        }
+      ]
+    },
+    "PrimaryArtifact": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Dockerhub",
+            "Gcr",
+            "Ecr"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Dockerhub"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/DockerHubArtifactConfig"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Ecr"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/EcrArtifactConfig"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Gcr"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/GcrArtifactConfig"
+              }
+            }
+          }
         }
       ]
     },
@@ -3101,6 +3122,11 @@
       "allOf": [
         {
           "oneOf": [
+            {
+              "required": [
+                "useFromStage"
+              ]
+            },
             {
               "required": [
                 "service"
@@ -3974,7 +4000,9 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/ExecutionWrapperConfig"
-          }
+          },
+          "maxItems": 2147483647,
+          "minItems": 1
         },
         "when": {
           "$ref": "#/definitions/StepWhenCondition"
@@ -4208,6 +4236,12 @@
             "configuration": {
               "$ref": "#/definitions/TerrformStepConfiguration"
             },
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
             "metadata": {
               "type": "string"
             },
@@ -4270,6 +4304,12 @@
           "properties": {
             "configuration": {
               "$ref": "#/definitions/TerrformStepConfiguration"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "metadata": {
               "type": "string"
@@ -4389,6 +4429,12 @@
             "configuration": {
               "$ref": "#/definitions/TerraformPlanExecutionData"
             },
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
             "provisionerIdentifier": {
               "type": "string"
             }
@@ -4408,6 +4454,12 @@
             "provisionerIdentifier"
           ],
           "properties": {
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
             "provisionerIdentifier": {
               "type": "string"
             }

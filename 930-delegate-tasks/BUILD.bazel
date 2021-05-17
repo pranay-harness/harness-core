@@ -6,6 +6,7 @@ shared_dependencies = [
     "@maven//:com_google_guava_guava",
 ] + [
     "//:lombok",
+    "//940-feature-flag:module",
     "//955-delegate-beans:module",
     "//950-delegate-tasks-beans:module",
     "//960-api-services:module",

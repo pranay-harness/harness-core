@@ -18,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -52,6 +53,6 @@ public class StepGroupElementConfig {
   StepWhenCondition when;
 
   List<FailureStrategyConfig> failureStrategies;
-  @NotNull List<ExecutionWrapperConfig> steps;
+  @NotNull @Size(min = 1) List<ExecutionWrapperConfig> steps;
   List<ExecutionWrapperConfig> rollbackSteps;
 }

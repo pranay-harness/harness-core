@@ -151,7 +151,7 @@ public class PMSInputSetElementMapper {
       JsonNode node = (new PipelineYamlConfig(yaml)).getYamlMap();
       JsonNode innerMap = node.get("inputSet");
       JsonNode field = innerMap.get("pipeline");
-      return field == null;
+      return field == null || field.toString().equals("{}");
     } catch (IOException e) {
       throw new InvalidRequestException("Could not convert yaml to JsonNode");
     }

@@ -13,6 +13,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.beans.WorkflowType;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
+import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.delegate.task.DelegateLogContext;
@@ -132,6 +133,8 @@ public class DelegateProfileEventHandler implements DelegateProfileObserver {
     return persistence.createQuery(Delegate.class)
         .filter(DelegateKeys.accountId, accountId)
         .filter(DelegateKeys.delegateProfileId, profileId)
+        .field(DelegateKeys.status)
+        .notEqual(DelegateInstanceStatus.DELETED)
         .asKeyList()
         .stream()
         .map(key -> (String) key.getId())

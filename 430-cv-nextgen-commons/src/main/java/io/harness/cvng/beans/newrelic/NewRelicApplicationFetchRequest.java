@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CV;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.DataCollectionRequest;
-import io.harness.cvng.beans.stackdriver.StackdriverDashboardRequest;
 import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -21,7 +20,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @OwnedBy(CV)
 public class NewRelicApplicationFetchRequest extends DataCollectionRequest<NewRelicConnectorDTO> {
-  public static final String DSL = StackdriverDashboardRequest.readDSL(
+  public static final String DSL = NewRelicApplicationFetchRequest.readDSL(
       "newrelic-applications.datacollection", NewRelicApplicationFetchRequest.class);
 
   @Builder.Default private String filter = "";

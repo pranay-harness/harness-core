@@ -3,7 +3,9 @@ package software.wings.beans.artifact;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
@@ -39,6 +41,7 @@ import org.mongodb.morphia.annotations.Transient;
 @FieldNameConstants(innerTypeName = "ArtifactKeys")
 @Entity(value = "artifacts", noClassnameStored = true)
 @HarnessEntity(exportable = true)
+@TargetModule(HarnessModule._970_API_SERVICES_BEANS)
 public class Artifact extends Base {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -67,6 +70,12 @@ public class Artifact extends Base {
                  .field(ArtifactKeys.appId)
                  .field(ArtifactKeys.artifactStreamId)
                  .field(ArtifactKeys.status)
+                 .descSortField(ArtifactKeys.createdAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_artifactStreamId_createdAt")
+                 .field(ArtifactKeys.accountId)
+                 .field(ArtifactKeys.artifactStreamId)
                  .descSortField(ArtifactKeys.createdAt)
                  .build())
         .build();

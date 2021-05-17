@@ -1,10 +1,12 @@
 package io.harness.functional.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rule.Owner;
@@ -26,6 +28,7 @@ import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(DX)
 @Slf4j
 public class YAMLResourceTest extends AbstractFunctionalTest {
   private YamlOperationResponse performYamlOperation(final Response response) {
@@ -94,7 +97,7 @@ public class YAMLResourceTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = VARDAN_BANSAL)
+  @Owner(developers = VARDAN_BANSAL, intermittent = true)
   @Category(FunctionalTests.class)
   public void test_deleteEntities_fewFilesDeleted() {
     setupTestData("SampleApp");
@@ -132,7 +135,7 @@ public class YAMLResourceTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = VARDAN_BANSAL)
+  @Owner(developers = VARDAN_BANSAL, intermittent = true)
   @Category(FunctionalTests.class)
   public void test_upsertDeleteEntities_emptyApp() {
     setupTestData("EmptyApp");
@@ -152,7 +155,7 @@ public class YAMLResourceTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = VARDAN_BANSAL)
+  @Owner(developers = VARDAN_BANSAL, intermittent = true)
   @Category(FunctionalTests.class)
   public void test_upsertEntity() {
     final String yamlFilePath = "Setup/Applications/test app/Index.yaml";

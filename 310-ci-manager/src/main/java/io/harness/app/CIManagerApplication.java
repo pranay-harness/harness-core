@@ -43,6 +43,7 @@ import io.harness.queue.QueuePublisher;
 import io.harness.registrars.ExecutionAdvisers;
 import io.harness.registrars.ExecutionRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
+import io.harness.resource.VersionInfoResource;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.serializer.CiBeansRegistrars;
@@ -285,6 +286,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
   }
 
   private void registerPMSSDK(CIManagerConfiguration config, Injector injector) {

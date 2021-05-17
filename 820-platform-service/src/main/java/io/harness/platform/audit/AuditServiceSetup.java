@@ -11,6 +11,7 @@ import io.harness.health.HealthService;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.persistence.HPersistence;
 import io.harness.remote.CharsetResponseFilter;
+import io.harness.resource.VersionInfoResource;
 
 import com.google.inject.Injector;
 import io.dropwizard.setup.Environment;
@@ -50,6 +51,7 @@ public class AuditServiceSetup {
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
   }
 
   private void registerCharsetResponseFilter(Environment environment, Injector injector) {

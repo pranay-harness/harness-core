@@ -1,7 +1,12 @@
 package io.harness;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(PL)
 @UtilityClass
 public class NGConstants {
   public static final String SECRET_MANAGER_KEY = "secretManager";
@@ -20,4 +25,7 @@ public class NGConstants {
   public static final String REFERRED_ENTITY_TYPE = "referredEntityType";
   public static final String REFERRED_BY_ENTITY_FQN = "referredByEntityFQN";
   public static final String REFERRED_BY_ENTITY_TYPE = "referredByEntityType";
+
+  public static final String BRANCH = "branch";
+  public static final String REPO = "repoIdentifier";
 }

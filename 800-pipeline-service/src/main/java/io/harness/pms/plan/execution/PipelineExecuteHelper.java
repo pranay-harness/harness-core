@@ -8,6 +8,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.OrchestrationService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
+import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
@@ -17,6 +18,7 @@ import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.plan.creation.PlanCreatorMergeService;
 import io.harness.pms.rbac.validator.PipelineRbacService;
 
@@ -42,10 +44,11 @@ public class PipelineExecuteHelper {
   private final ValidateAndMergeHelper validateAndMergeHelper;
   private final PipelineRbacService pipelineRbacServiceImpl;
   private final PrincipalInfoHelper principalInfoHelper;
+  private final PMSYamlSchemaService pmsYamlSchemaService;
 
-  public PlanExecution runPipelineWithInputSetPipelineYaml(@NotNull String accountId, @NotNull String orgIdentifier,
-      @NotNull String projectIdentifier, @NotNull String pipelineIdentifier, String inputSetPipelineYaml,
-      ExecutionTriggerInfo triggerInfo) throws IOException {
+  public PlanExecutionResponseDto runPipelineWithInputSetPipelineYaml(@NotNull String accountId,
+      @NotNull String orgIdentifier, @NotNull String projectIdentifier, @NotNull String pipelineIdentifier,
+      String inputSetPipelineYaml, ExecutionTriggerInfo triggerInfo) throws IOException {
     Optional<PipelineEntity> pipelineEntity =
         pmsPipelineService.incrementRunSequence(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
     if (!pipelineEntity.isPresent()) {
@@ -64,16 +67,24 @@ public class PipelineExecuteHelper {
       pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), inputSetPipelineYaml, true);
       executionMetadataBuilder.setInputSetYaml(inputSetPipelineYaml);
     }
+
+    pmsYamlSchemaService.validateYamlSchema(orgIdentifier, projectIdentifier, pipelineYaml);
+
     pipelineRbacServiceImpl.extractAndValidateStaticallyReferredEntities(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml);
     executionMetadataBuilder.setPipelineIdentifier(pipelineIdentifier);
     executionMetadataBuilder.setYaml(pipelineYaml);
     executionMetadataBuilder.setPrincipalInfo(principalInfoHelper.getPrincipalInfoFromSecurityContext());
 
-    return startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, executionMetadataBuilder.build());
+    PlanExecution planExecution =
+        startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, executionMetadataBuilder.build());
+    return PlanExecutionResponseDto.builder()
+        .planExecution(planExecution)
+        .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(pipelineEntity.get()))
+        .build();
   }
 
-  public PlanExecution runPipelineWithInputSetReferencesList(String accountId, String orgIdentifier,
+  public PlanExecutionResponseDto runPipelineWithInputSetReferencesList(String accountId, String orgIdentifier,
       String projectIdentifier, String pipelineIdentifier, List<String> inputSetReferences,
       ExecutionTriggerInfo triggerInfo) throws IOException {
     Optional<PipelineEntity> pipelineEntity =
@@ -90,6 +101,9 @@ public class PipelineExecuteHelper {
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences);
     String pipelineYaml =
         MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), mergedRuntimeInputYaml, true);
+
+    pmsYamlSchemaService.validateYamlSchema(orgIdentifier, projectIdentifier, pipelineYaml);
+
     pipelineRbacServiceImpl.extractAndValidateStaticallyReferredEntities(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml);
 
@@ -97,7 +111,12 @@ public class PipelineExecuteHelper {
     executionMetadataBuilder.setInputSetYaml(mergedRuntimeInputYaml);
     executionMetadataBuilder.setYaml(pipelineYaml);
     executionMetadataBuilder.setPrincipalInfo(principalInfoHelper.getPrincipalInfoFromSecurityContext());
-    return startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, executionMetadataBuilder.build());
+    PlanExecution planExecution =
+        startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, executionMetadataBuilder.build());
+    return PlanExecutionResponseDto.builder()
+        .planExecution(planExecution)
+        .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(pipelineEntity.get()))
+        .build();
   }
 
   public PlanExecution startExecution(String accountId, String orgIdentifier, String projectIdentifier, String yaml,

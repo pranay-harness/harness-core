@@ -19,6 +19,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
+import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
@@ -224,8 +225,11 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     }
 
     String delegateProfileId = delegateProfile.getUuid();
-    List<Delegate> delegates =
-        persistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, accountId).asList();
+    List<Delegate> delegates = persistence.createQuery(Delegate.class)
+                                   .filter(DelegateKeys.accountId, accountId)
+                                   .field(DelegateKeys.status)
+                                   .notEqual(DelegateInstanceStatus.DELETED)
+                                   .asList();
     List<String> delegateNames = delegates.stream()
                                      .filter(delegate -> delegateProfileId.equals(delegate.getDelegateProfileId()))
                                      .map(Delegate::getHostName)
@@ -266,6 +270,8 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     return persistence.createQuery(Delegate.class)
         .filter(DelegateKeys.accountId, accountId)
         .filter(DelegateKeys.delegateProfileId, profileId)
+        .field(DelegateKeys.status)
+        .notEqual(DelegateInstanceStatus.DELETED)
         .asKeyList()
         .stream()
         .map(key -> key.getId().toString())

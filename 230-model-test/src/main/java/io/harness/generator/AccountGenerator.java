@@ -12,6 +12,8 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.delegate.beans.DelegateToken;
+import io.harness.delegate.beans.DelegateToken.DelegateTokenKeys;
 import io.harness.exception.WingsException;
 import io.harness.generator.LicenseGenerator.Licenses;
 import io.harness.generator.OwnerManager.Owners;
@@ -233,12 +235,23 @@ public class AccountGenerator {
   }
 
   private void updateAccountKey(String secretName, Account account) {
+    String accountKey = scmSecret.decryptToString(new SecretName(secretName));
+
     // Update account key to make it work with delegate
     UpdateOperations<Account> accountUpdateOperations = wingsPersistence.createUpdateOperations(Account.class);
-    accountUpdateOperations.set("accountKey", scmSecret.decryptToString(new SecretName(secretName)));
+    accountUpdateOperations.set("accountKey", accountKey);
     wingsPersistence.update(
         wingsPersistence.createQuery(Account.class).filter(AccountKeys.accountName, account.getAccountName()),
         accountUpdateOperations);
+
+    // Update account key value in delegate tokens to make it work with delegates
+    UpdateOperations<DelegateToken> tokenUpdateOperations =
+        wingsPersistence.createUpdateOperations(DelegateToken.class);
+    tokenUpdateOperations.set(DelegateTokenKeys.value, accountKey);
+    wingsPersistence.update(wingsPersistence.createQuery(DelegateToken.class)
+                                .filter(DelegateTokenKeys.accountId, account.getUuid())
+                                .filter(DelegateTokenKeys.name, "default"),
+        tokenUpdateOperations);
   }
 
   private void updateLimitConfiguration(String accountId) {

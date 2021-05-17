@@ -30,6 +30,7 @@ import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.monitoring.MonitoringQueueObserver;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.notification.module.NotificationClientModule;
@@ -66,6 +67,7 @@ import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.registrars.PipelineServiceFacilitatorRegistrar;
 import io.harness.registrars.PipelineServiceStepRegistrar;
+import io.harness.resource.VersionInfoResource;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.serializer.PipelineServiceUtilAdviserRegistrar;
 import io.harness.serializer.jackson.PipelineServiceJacksonModule;
@@ -279,6 +281,10 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         (NodeExecutionServiceImpl) injector.getInstance(Key.get(NodeExecutionService.class));
     nodeExecutionService.getStepStatusUpdateSubject().register(
         injector.getInstance(Key.get(PlanExecutionService.class)));
+
+    SdkResponseEventListener sdkResponseEventListener = injector.getInstance(SdkResponseEventListener.class);
+    sdkResponseEventListener.getQueueListenerObserverSubject().register(
+        injector.getInstance(Key.get(MonitoringQueueObserver.class)));
   }
 
   private void registerCorrelationFilter(Environment environment, Injector injector) {
@@ -421,6 +427,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
   }
 
   private void registerJerseyProviders(Environment environment, Injector injector) {

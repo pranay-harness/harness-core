@@ -1,6 +1,7 @@
 package io.harness.ngtriggers.eventmapper.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.eventsframework.webhookpayloads.webhookdata.WebhookEventType.PR;
 import static io.harness.eventsframework.webhookpayloads.webhookdata.WebhookEventType.PUSH;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -53,7 +54,7 @@ public class GitWebhookEventToTriggerMapper implements WebhookEventToTriggerMapp
           mappingRequestData.getWebhookDTO().getParsedResponse(), triggerWebhookEvent);
     }
 
-    publishPushEvent(webhookPayloadData);
+    publishPushAndPrEvent(webhookPayloadData);
 
     // Generate list of all filters to be applied
     FilterRequestData filterRequestData = FilterRequestData.builder()
@@ -88,7 +89,7 @@ public class GitWebhookEventToTriggerMapper implements WebhookEventToTriggerMapp
 
   /**
    * This is temporary, added specifically to support TI use-case.
-   * We only publish "PUSH" git event.
+   * We only publish "PUSH" and "PR" git event.
    * This will become part of common service, where different subscribers can subscribe for
    * eventType, triggerType to receive events.
    * <p>
@@ -97,10 +98,12 @@ public class GitWebhookEventToTriggerMapper implements WebhookEventToTriggerMapp
    * @param webhookPayloadData
    */
   @VisibleForTesting
-  void publishPushEvent(WebhookPayloadData webhookPayloadData) {
+  void publishPushAndPrEvent(WebhookPayloadData webhookPayloadData) {
     try {
       if (webhookPayloadData.getParseWebhookResponse().hasPush()) {
         webhookEventPublisher.publishGitWebhookEvent(webhookPayloadData, PUSH);
+      } else if (webhookPayloadData.getParseWebhookResponse().hasPr()) {
+        webhookEventPublisher.publishGitWebhookEvent(webhookPayloadData, PR);
       }
     } catch (Exception e) {
       log.error("Failed to send webhook event {} to events framework: {}",

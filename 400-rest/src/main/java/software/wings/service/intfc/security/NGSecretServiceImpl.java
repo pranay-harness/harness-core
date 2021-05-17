@@ -47,6 +47,7 @@ import io.harness.security.encryption.EncryptionType;
 
 import software.wings.dl.WingsPersistence;
 import software.wings.resources.secretsmanagement.EncryptedDataMapper;
+import software.wings.service.impl.security.GlobalEncryptDecryptClient;
 import software.wings.service.intfc.FileService;
 import software.wings.settings.SettingVariableTypes;
 
@@ -63,12 +64,14 @@ import java.util.Optional;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 
 @OwnedBy(PL)
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Slf4j
 @TargetModule(HarnessModule._950_NG_CORE)
 public class NGSecretServiceImpl implements NGSecretService {
   static final Set<EncryptionType> ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD = EnumSet.of(LOCAL, GCP_KMS, KMS);
@@ -87,6 +90,8 @@ public class NGSecretServiceImpl implements NGSecretService {
   private final WingsPersistence wingsPersistence;
   private final FileService fileService;
   private final SecretManagerConfigService secretManagerConfigService;
+  private final GlobalEncryptDecryptClient globalEncryptDecryptClient;
+  private final LocalSecretManagerService localSecretManagerService;
 
   private EncryptedData encrypt(
       @NotNull EncryptedData encryptedData, String secretValue, SecretManagerConfig secretManagerConfig) {
@@ -407,7 +412,20 @@ public class NGSecretServiceImpl implements NGSecretService {
 
               // decrypt secret fields of secret manager
               secretManagerConfigService.decryptEncryptionConfigSecrets(accountIdentifier, encryptionConfig, false);
-              EncryptedRecordData encryptedRecordData = SecretManager.buildRecordData(encryptedData);
+              EncryptedRecordData encryptedRecordData;
+              if (encryptionConfig.isGlobalKms()) {
+                encryptedRecordData = globalEncryptDecryptClient.convertEncryptedRecordToLocallyEncrypted(
+                    encryptedData, accountIdentifier, encryptionConfig);
+                if (LOCAL.equals(encryptedRecordData.getEncryptionType())) {
+                  encryptionConfig = localSecretManagerService.getEncryptionConfig(accountIdentifier);
+                } else {
+                  log.error("Failed to decrypt secret {} with global {} secret manager", encryptedData.getUuid(),
+                      encryptionConfig.getEncryptionType());
+                  continue;
+                }
+              } else {
+                encryptedRecordData = SecretManager.buildRecordData(encryptedData);
+              }
               encryptedDataDetails.add(EncryptedDataDetail.builder()
                                            .encryptedData(encryptedRecordData)
                                            .encryptionConfig(encryptionConfig)

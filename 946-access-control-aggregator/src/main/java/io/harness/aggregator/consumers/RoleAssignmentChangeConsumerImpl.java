@@ -13,6 +13,8 @@ import io.harness.accesscontrol.principals.usergroups.UserGroup;
 import io.harness.accesscontrol.principals.usergroups.UserGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroup;
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
+import io.harness.accesscontrol.roleassignments.RoleAssignment;
+import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
 import io.harness.accesscontrol.roles.Role;
 import io.harness.accesscontrol.roles.RoleService;
@@ -40,6 +42,7 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
   private final UserGroupService userGroupService;
   private final ResourceGroupService resourceGroupService;
   private final ScopeService scopeService;
+  private final RoleAssignmentService roleAssignmentService;
   private static final String DELIMITER = "/";
 
   @Override
@@ -89,6 +92,12 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
 
   @Override
   public long consumeCreateEvent(String id, RoleAssignmentDBO roleAssignmentDBO) {
+    Optional<RoleAssignment> roleAssignmentOptional =
+        roleAssignmentService.get(roleAssignmentDBO.getIdentifier(), roleAssignmentDBO.getScopeIdentifier());
+    if (!roleAssignmentOptional.isPresent()) {
+      log.info("Role assignment has been deleted, not processing role assignment create event for id: {}", id);
+      return 0;
+    }
     Role role =
         roleService
             .get(roleAssignmentDBO.getRoleIdentifier(), roleAssignmentDBO.getScopeIdentifier(), ManagedFilter.NO_FILTER)

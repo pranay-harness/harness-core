@@ -1,0 +1,11 @@
+name: NodeExecutionEvent Metrics Group
+identifier: node_execution_event_group
+labels:
+  - accountId
+  - orgIdentifier
+  - projectIdentifier
+  - planExecutionId
+  - runtimeId
+  - stepType
+  - module
+  - pipelineIdentifier

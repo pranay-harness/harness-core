@@ -375,6 +375,10 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
       } else {
         vaultConfig = VaultConfig.builder().build();
         vaultConfig.setAccountId(accountIdentifier);
+        vaultConfig.setNgMetadata(NGSecretManagerMetadata.builder()
+                                      .orgIdentifier(requestDTO.getOrgIdentifier())
+                                      .projectIdentifier(requestDTO.getProjectIdentifier())
+                                      .build());
       }
       urlFromRequest.ifPresent(vaultConfig::setVaultUrl);
       tokenFromRequest.ifPresent(x -> {

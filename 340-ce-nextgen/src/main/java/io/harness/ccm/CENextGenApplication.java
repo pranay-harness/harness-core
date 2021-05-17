@@ -20,6 +20,7 @@ import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.persistence.HPersistence;
+import io.harness.resource.VersionInfoResource;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.threading.ExecutorModule;
@@ -145,6 +146,7 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
   }
 
   private void registerAuthFilters(CENextGenConfiguration configuration, Environment environment) {

@@ -1,3 +1,6 @@
 package io.harness.connector;
 
-public enum ConnectivityStatus { SUCCESS, FAILURE, PARTIAL }
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(HarnessTeam.DX) public enum ConnectivityStatus { SUCCESS, FAILURE, PARTIAL, UNKNOWN }
