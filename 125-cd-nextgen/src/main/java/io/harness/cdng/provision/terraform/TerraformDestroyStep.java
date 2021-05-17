@@ -95,7 +95,9 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
         .backendConfig(helper.getBackendConfig(spec.getBackendConfig()))
         .targets(ParameterFieldHelper.getParameterFieldValue(spec.getTargets()))
         .saveTerraformStateJson(cdFeatureFlagHelper.isEnabled(accountId, FeatureName.EXPORT_TF_PLAN))
-        .environmentVariables(helper.getEnvironmentVariablesMap(spec.getEnvironmentVariables()));
+        .environmentVariables(helper.getEnvironmentVariablesMap(spec.getEnvironmentVariables()))
+        .timeoutInMillis(
+            StepUtils.getTimeoutMillis(stepElementParameters.getTimeout(), TerraformConstants.DEFAULT_TIMEOUT));
 
     TaskData taskData =
         TaskData.builder()
@@ -105,8 +107,9 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
             .parameters(new Object[] {builder.build()})
             .build();
 
-    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer,
-        Collections.singletonList(TerraformCommandUnit.Destroy.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName());
+    return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+        Collections.singletonList(TerraformCommandUnit.Destroy.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName(),
+        StepUtils.getTaskSelectors(parameters.getDelegateSelectors()));
   }
 
   private TaskRequest obtainInheritedTask(
@@ -129,7 +132,9 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
         .encryptionConfig(inheritOutput.getEncryptionConfig())
         .encryptedTfPlan(inheritOutput.getEncryptedTfPlan())
         .planName(inheritOutput.getPlanName())
-        .environmentVariables(inheritOutput.getEnvironmentVariables());
+        .environmentVariables(inheritOutput.getEnvironmentVariables())
+        .timeoutInMillis(
+            StepUtils.getTimeoutMillis(stepElementParameters.getTimeout(), TerraformConstants.DEFAULT_TIMEOUT));
 
     TaskData taskData =
         TaskData.builder()
@@ -139,8 +144,9 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
             .parameters(new Object[] {builder.build()})
             .build();
 
-    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer,
-        Collections.singletonList(TerraformCommandUnit.Destroy.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName());
+    return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+        Collections.singletonList(TerraformCommandUnit.Destroy.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName(),
+        StepUtils.getTaskSelectors(parameters.getDelegateSelectors()));
   }
 
   private TaskRequest obtainLastApplyTask(
@@ -160,7 +166,9 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
         .backendConfig(terraformConfig.getBackendConfig())
         .targets(terraformConfig.getTargets())
         .saveTerraformStateJson(cdFeatureFlagHelper.isEnabled(accountId, FeatureName.EXPORT_TF_PLAN))
-        .environmentVariables(terraformConfig.getEnvironmentVariables());
+        .environmentVariables(terraformConfig.getEnvironmentVariables())
+        .timeoutInMillis(
+            StepUtils.getTimeoutMillis(stepElementParameters.getTimeout(), TerraformConstants.DEFAULT_TIMEOUT));
 
     TaskData taskData =
         TaskData.builder()
@@ -170,8 +178,9 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
             .parameters(new Object[] {builder.build()})
             .build();
 
-    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer,
-        Collections.singletonList(TerraformCommandUnit.Destroy.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName());
+    return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+        Collections.singletonList(TerraformCommandUnit.Destroy.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName(),
+        StepUtils.getTaskSelectors(parameters.getDelegateSelectors()));
   }
 
   @Override
