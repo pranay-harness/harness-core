@@ -18,14 +18,17 @@ import org.junit.experimental.categories.Category;
 
 @OwnedBy(HarnessTeam.CDC)
 public class QueryBuilderTest {
+  private static final long HOUR_IN_MS = 60 * 60 * 1000;
+  private static final long DAY_IN_MS = 24 * HOUR_IN_MS;
+
   @Test
   @Owner(developers = PRASHANTSHARMA)
   @Category(UnitTests.class)
   public void testSelectStatusTime() {
     String expectedQueryResult =
-        "select status,startts from pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and startts between '2021-04-21' and '2021-04-26';";
-    String queryResult = new CDOverviewDashboardServiceImpl().queryBuilderSelectStatusTime(
-        "accountId", "orgId", "projectId", "2021-04-21", "2021-04-26");
+        "select status,startts from pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and startts>=10 and startts<13;";
+    String queryResult =
+        new CDOverviewDashboardServiceImpl().queryBuilderSelectStatusTime("accountId", "orgId", "projectId", 10L, 13L);
     assertThat(queryResult).isEqualTo(expectedQueryResult);
   }
 
@@ -34,9 +37,9 @@ public class QueryBuilderTest {
   @Category(UnitTests.class)
   public void testQueryBuilderEnvironmentType() {
     String expectedQueryResult =
-        "select env_type from pipeline_execution_summary_cd, service_infra_info where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and pipeline_execution_summary_cd.id=pipeline_execution_summary_cd_id and env_type is not null and startts between '2021-04-21' and '2021-04-26';";
-    String queryResult = new CDOverviewDashboardServiceImpl().queryBuilderEnvironmentType(
-        "accountId", "orgId", "projectId", "2021-04-21", "2021-04-26");
+        "select env_type from pipeline_execution_summary_cd, service_infra_info where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and pipeline_execution_summary_cd.id=pipeline_execution_summary_cd_id and env_type is not null and startts>=10 and startts<13;";
+    String queryResult =
+        new CDOverviewDashboardServiceImpl().queryBuilderEnvironmentType("accountId", "orgId", "projectId", 10L, 13L);
     assertThat(queryResult).isEqualTo(expectedQueryResult);
   }
 
@@ -196,5 +199,39 @@ public class QueryBuilderTest {
 
     assertThat(queryExpected)
         .isEqualTo(new CDOverviewDashboardServiceImpl().queryBuilderSelectWorkload("acc", "org", "pro", null, null));
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testGetStartingDateEpochValue() {
+    // time is in UTC
+    long startIntervalEpoch = 1620000000000L; // 3 MAY 2021
+    long currentIntervalEpoch = startIntervalEpoch + 1000L; // ADDING 1 sec
+
+    assertThat(startIntervalEpoch)
+        .isEqualTo(
+            new CDOverviewDashboardServiceImpl().getStartingDateEpochValue(currentIntervalEpoch, startIntervalEpoch));
+
+    currentIntervalEpoch =
+        startIntervalEpoch + 23 * HOUR_IN_MS + 59 * 60 * 1000L + 59 * 100L; // 23 hours 59 minutes 59 sec
+    assertThat(startIntervalEpoch)
+        .isEqualTo(
+            new CDOverviewDashboardServiceImpl().getStartingDateEpochValue(currentIntervalEpoch, startIntervalEpoch));
+
+    currentIntervalEpoch = 1620887190000L; // 13 may 2021 11 hr 56 minutes
+    assertThat(startIntervalEpoch + 10 * DAY_IN_MS)
+        .isEqualTo(
+            new CDOverviewDashboardServiceImpl().getStartingDateEpochValue(currentIntervalEpoch, startIntervalEpoch));
+
+    currentIntervalEpoch = 1621016999000L; // 14 MAY 2021 23 HOURS 59 MINUTES 59 SEC
+    assertThat(startIntervalEpoch + 11 * DAY_IN_MS)
+        .isEqualTo(
+            new CDOverviewDashboardServiceImpl().getStartingDateEpochValue(currentIntervalEpoch, startIntervalEpoch));
+
+    currentIntervalEpoch = 1620950401000L; // 14 MAY 2021 + 1 sec
+    assertThat(startIntervalEpoch + 11 * DAY_IN_MS)
+        .isEqualTo(
+            new CDOverviewDashboardServiceImpl().getStartingDateEpochValue(currentIntervalEpoch, startIntervalEpoch));
   }
 }
