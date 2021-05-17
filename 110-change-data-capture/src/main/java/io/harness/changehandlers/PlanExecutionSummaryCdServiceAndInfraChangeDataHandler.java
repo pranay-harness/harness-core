@@ -12,7 +12,6 @@ import com.mongodb.DBObject;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -126,8 +125,8 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
       }
       // service_startts
       if (((BasicDBObject) iteratorObject.getValue()).get("startTs") != null) {
-        String service_startts = String.valueOf(
-            new Timestamp(Long.parseLong(((BasicDBObject) iteratorObject.getValue()).get("startTs").toString())));
+        String service_startts =
+            String.valueOf(Long.parseLong(((BasicDBObject) iteratorObject.getValue()).get("startTs").toString()));
         if (service_startts != null) {
           if (columnValueMapping.containsKey("service_startts")) {
             columnValueMapping.get("service_startts").add(service_startts);
@@ -140,8 +139,8 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
       }
       // service_endts
       if (((BasicDBObject) iteratorObject.getValue()).get("endTs") != null) {
-        String service_endts = String.valueOf(
-            new Timestamp(Long.parseLong(((BasicDBObject) iteratorObject.getValue()).get("endTs").toString())));
+        String service_endts =
+            String.valueOf(Long.parseLong(((BasicDBObject) iteratorObject.getValue()).get("endTs").toString()));
         if (service_endts != null) {
           if (columnValueMapping.containsKey("service_endts")) {
             columnValueMapping.get("service_endts").add(service_endts);

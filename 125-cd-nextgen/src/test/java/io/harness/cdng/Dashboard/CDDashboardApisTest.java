@@ -68,9 +68,9 @@ public class CDDashboardApisTest {
   @Owner(developers = PRASHANTSHARMA)
   @Category(UnitTests.class)
   public void testGetHealthDeploymentDashboard() {
-    String startInterval = "2021-04-28";
-    String endInterval = "2021-05-02";
-    String previousInterval = "2021-04-23";
+    long startInterval = 1619568000000L;
+    long endInterval = 1619913600000L;
+    long previousInterval = 1619136000000L;
 
     List<String> status = Arrays.asList(ExecutionStatus.SUCCESS.name(), ExecutionStatus.EXPIRED.name(),
         ExecutionStatus.RUNNING.name(), ExecutionStatus.ABORTED.name(), ExecutionStatus.SUCCESS.name(),
@@ -80,12 +80,10 @@ public class CDDashboardApisTest {
         ExecutionStatus.SUCCESS.name(), ExecutionStatus.SUCCESS.name(), ExecutionStatus.FAILED.name(),
         ExecutionStatus.SUCCESS.name(), ExecutionStatus.SUCCESS.name(), ExecutionStatus.FAILED.name());
 
-    List<String> time = Arrays.asList("2021-04-28 21:50:02.64", "2021-05-01 21:49:11.222", "2021-05-01 21:48:45.39",
-        "2021-04-30 21:47:49.771", "2021-05-01 21:46:55.556", "2021-05-02 21:45:27.619", "2021-04-30 21:44:59.73",
-        "2021-05-01 21:43:52.675", "2021-04-30 21:43:49.537", "2021-04-28 21:43:40.053", "2021-04-24 21:50:02.64",
-        "2021-04-27 21:49:11.222", "2021-04-24 21:48:45.39", "2021-04-25 21:47:49.771", "2021-04-23 21:46:55.556",
-        "2021-04-26 21:45:27.619", "2021-04-26 21:44:59.73", "2021-04-24 21:43:52.675", "2021-04-24 21:43:49.537",
-        "2021-04-26 21:43:40.053");
+    List<String> time = Arrays.asList("1619626802000", "1619885951000", "1619885925000", "1619799469000",
+        "1619885815000", "1619972127000", "1619799299000", "1619885632000", "1619799229000", "1619626420000",
+        "1619281202000", "1619540351000", "1619281125000", "1619367469000", "1619194615000", "1619453727000",
+        "1619453699000", "1619280832000", "1619280829000", "1619453620000");
 
     List<String> env_type = Arrays.asList(EnvironmentType.Production.name(), EnvironmentType.Production.name(),
         EnvironmentType.PreProduction.name(), EnvironmentType.PreProduction.name(),
@@ -101,40 +99,70 @@ public class CDDashboardApisTest {
         "acc", "oro", "pro", startInterval, endInterval, previousInterval);
 
     List<DeploymentDateAndCount> totalCountList = new ArrayList<>();
-    totalCountList.add(
-        DeploymentDateAndCount.builder().time("2021-04-28").deployments(Deployment.builder().count(2).build()).build());
-    totalCountList.add(
-        DeploymentDateAndCount.builder().time("2021-04-29").deployments(Deployment.builder().count(0).build()).build());
-    totalCountList.add(
-        DeploymentDateAndCount.builder().time("2021-04-30").deployments(Deployment.builder().count(3).build()).build());
-    totalCountList.add(
-        DeploymentDateAndCount.builder().time("2021-05-01").deployments(Deployment.builder().count(4).build()).build());
-    totalCountList.add(
-        DeploymentDateAndCount.builder().time("2021-05-02").deployments(Deployment.builder().count(1).build()).build());
+    totalCountList.add(DeploymentDateAndCount.builder()
+                           .time("1619568000000")
+                           .deployments(Deployment.builder().count(2).build())
+                           .build());
+    totalCountList.add(DeploymentDateAndCount.builder()
+                           .time("1619654400000")
+                           .deployments(Deployment.builder().count(0).build())
+                           .build());
+    totalCountList.add(DeploymentDateAndCount.builder()
+                           .time("1619740800000")
+                           .deployments(Deployment.builder().count(3).build())
+                           .build());
+    totalCountList.add(DeploymentDateAndCount.builder()
+                           .time("1619827200000")
+                           .deployments(Deployment.builder().count(4).build())
+                           .build());
+    totalCountList.add(DeploymentDateAndCount.builder()
+                           .time("1619913600000")
+                           .deployments(Deployment.builder().count(1).build())
+                           .build());
 
     List<DeploymentDateAndCount> successCountList = new ArrayList<>();
-    successCountList.add(
-        DeploymentDateAndCount.builder().time("2021-04-28").deployments(Deployment.builder().count(1).build()).build());
-    successCountList.add(
-        DeploymentDateAndCount.builder().time("2021-04-29").deployments(Deployment.builder().count(0).build()).build());
-    successCountList.add(
-        DeploymentDateAndCount.builder().time("2021-04-30").deployments(Deployment.builder().count(1).build()).build());
-    successCountList.add(
-        DeploymentDateAndCount.builder().time("2021-05-01").deployments(Deployment.builder().count(2).build()).build());
-    successCountList.add(
-        DeploymentDateAndCount.builder().time("2021-05-02").deployments(Deployment.builder().count(0).build()).build());
+    successCountList.add(DeploymentDateAndCount.builder()
+                             .time("1619568000000")
+                             .deployments(Deployment.builder().count(1).build())
+                             .build());
+    successCountList.add(DeploymentDateAndCount.builder()
+                             .time("1619654400000")
+                             .deployments(Deployment.builder().count(0).build())
+                             .build());
+    successCountList.add(DeploymentDateAndCount.builder()
+                             .time("1619740800000")
+                             .deployments(Deployment.builder().count(1).build())
+                             .build());
+    successCountList.add(DeploymentDateAndCount.builder()
+                             .time("1619827200000")
+                             .deployments(Deployment.builder().count(2).build())
+                             .build());
+    successCountList.add(DeploymentDateAndCount.builder()
+                             .time("1619913600000")
+                             .deployments(Deployment.builder().count(0).build())
+                             .build());
 
     List<DeploymentDateAndCount> failureCountList = new ArrayList<>();
-    failureCountList.add(
-        DeploymentDateAndCount.builder().time("2021-04-28").deployments(Deployment.builder().count(0).build()).build());
-    failureCountList.add(
-        DeploymentDateAndCount.builder().time("2021-04-29").deployments(Deployment.builder().count(0).build()).build());
-    failureCountList.add(
-        DeploymentDateAndCount.builder().time("2021-04-30").deployments(Deployment.builder().count(2).build()).build());
-    failureCountList.add(
-        DeploymentDateAndCount.builder().time("2021-05-01").deployments(Deployment.builder().count(1).build()).build());
-    failureCountList.add(
-        DeploymentDateAndCount.builder().time("2021-05-02").deployments(Deployment.builder().count(1).build()).build());
+    failureCountList.add(DeploymentDateAndCount.builder()
+                             .time("1619568000000")
+                             .deployments(Deployment.builder().count(0).build())
+                             .build());
+    failureCountList.add(DeploymentDateAndCount.builder()
+                             .time("1619654400000")
+                             .deployments(Deployment.builder().count(0).build())
+                             .build());
+    failureCountList.add(DeploymentDateAndCount.builder()
+                             .time("1619740800000")
+                             .deployments(Deployment.builder().count(2).build())
+                             .build());
+    failureCountList.add(DeploymentDateAndCount.builder()
+                             .time("1619827200000")
+                             .deployments(Deployment.builder().count(1).build())
+                             .build());
+    failureCountList.add(DeploymentDateAndCount.builder()
+                             .time("1619913600000")
+                             .deployments(Deployment.builder().count(1).build())
+                             .build());
 
     HealthDeploymentDashboard expectedHealthDeploymentDashboard =
         HealthDeploymentDashboard.builder()
@@ -163,8 +191,8 @@ public class CDDashboardApisTest {
   @Owner(developers = PRASHANTSHARMA)
   @Category(UnitTests.class)
   public void testGetExecutionDeploymentDashboard() {
-    String startInterval = "2021-04-23";
-    String endInterval = "2021-05-02";
+    long startInterval = 1619136000000L;
+    long endInterval = 1619913600000L;
 
     List<String> status = Arrays.asList(ExecutionStatus.SUCCESS.name(), ExecutionStatus.EXPIRED.name(),
         ExecutionStatus.RUNNING.name(), ExecutionStatus.ABORTED.name(), ExecutionStatus.SUCCESS.name(),
@@ -174,12 +202,10 @@ public class CDDashboardApisTest {
         ExecutionStatus.SUCCESS.name(), ExecutionStatus.SUCCESS.name(), ExecutionStatus.FAILED.name(),
         ExecutionStatus.SUCCESS.name(), ExecutionStatus.SUCCESS.name(), ExecutionStatus.FAILED.name());
 
-    List<String> time = Arrays.asList("2021-04-28 21:50:02.64", "2021-05-01 21:49:11.222", "2021-05-01 21:48:45.39",
-        "2021-04-30 21:47:49.771", "2021-05-01 21:46:55.556", "2021-05-02 21:45:27.619", "2021-04-30 21:44:59.73",
-        "2021-05-01 21:43:52.675", "2021-04-30 21:43:49.537", "2021-04-28 21:43:40.053", "2021-04-24 21:50:02.64",
-        "2021-04-27 21:49:11.222", "2021-04-24 21:48:45.39", "2021-04-25 21:47:49.771", "2021-04-23 21:46:55.556",
-        "2021-04-26 21:45:27.619", "2021-04-26 21:44:59.73", "2021-04-24 21:43:52.675", "2021-04-24 21:43:49.537",
-        "2021-04-26 21:43:40.053");
+    List<String> time = Arrays.asList("1619626802000", "1619885951000", "1619885925000", "1619799469000",
+        "1619885815000", "1619972127000", "1619799299000", "1619885632000", "1619799229000", "1619626420000",
+        "1619281202000", "1619540351000", "1619281125000", "1619367469000", "1619194615000", "1619453727000",
+        "1619453699000", "1619280832000", "1619280829000", "1619453620000");
 
     TimeAndStatusDeployment statusAndTime = TimeAndStatusDeployment.builder().status(status).time(time).build();
 
@@ -190,43 +216,43 @@ public class CDDashboardApisTest {
 
     List<ExecutionDeployment> executionDeploymentList = new ArrayList<>();
     executionDeploymentList.add(ExecutionDeployment.builder()
-                                    .time("2021-04-23")
+                                    .time("1619136000000")
                                     .deployments(DeploymentCount.builder().total(1).success(1).failure(0).build())
                                     .build());
     executionDeploymentList.add(ExecutionDeployment.builder()
-                                    .time("2021-04-24")
+                                    .time("1619222400000")
                                     .deployments(DeploymentCount.builder().total(4).success(3).failure(0).build())
                                     .build());
     executionDeploymentList.add(ExecutionDeployment.builder()
-                                    .time("2021-04-25")
+                                    .time("1619308800000")
                                     .deployments(DeploymentCount.builder().total(1).success(0).failure(1).build())
                                     .build());
     executionDeploymentList.add(ExecutionDeployment.builder()
-                                    .time("2021-04-26")
+                                    .time("1619395200000")
                                     .deployments(DeploymentCount.builder().total(3).success(1).failure(2).build())
                                     .build());
     executionDeploymentList.add(ExecutionDeployment.builder()
-                                    .time("2021-04-27")
+                                    .time("1619481600000")
                                     .deployments(DeploymentCount.builder().total(1).success(0).failure(1).build())
                                     .build());
     executionDeploymentList.add(ExecutionDeployment.builder()
-                                    .time("2021-04-28")
+                                    .time("1619568000000")
                                     .deployments(DeploymentCount.builder().total(2).success(1).failure(0).build())
                                     .build());
     executionDeploymentList.add(ExecutionDeployment.builder()
-                                    .time("2021-04-29")
+                                    .time("1619654400000")
                                     .deployments(DeploymentCount.builder().total(0).success(0).failure(0).build())
                                     .build());
     executionDeploymentList.add(ExecutionDeployment.builder()
-                                    .time("2021-04-30")
+                                    .time("1619740800000")
                                     .deployments(DeploymentCount.builder().total(3).success(1).failure(2).build())
                                     .build());
     executionDeploymentList.add(ExecutionDeployment.builder()
-                                    .time("2021-05-01")
+                                    .time("1619827200000")
                                     .deployments(DeploymentCount.builder().total(4).success(2).failure(1).build())
                                     .build());
     executionDeploymentList.add(ExecutionDeployment.builder()
-                                    .time("2021-05-02")
+                                    .time("1619913600000")
                                     .deployments(DeploymentCount.builder().total(1).success(0).failure(1).build())
                                     .build());
 
@@ -385,52 +411,52 @@ public class CDDashboardApisTest {
   @Owner(developers = MEENAKSHI)
   @Category(UnitTests.class)
   public void testGetDeploymentsExecutionInfo() {
-    String prevStartInterval = "2021-04-23";
-    String prevEndInterval = "2021-04-27";
-    String startInterval = "2021-04-28";
-    String endInterval = "2021-05-02";
+    long prevStartInterval = 1619136000000L;
+    long prevEndInterval = 1619481600000L;
+    long startInterval = 1619568000000L;
+    long endInterval = 1619913600000L;
 
     List<ExecutionDeployment> executionDeploymentList = new ArrayList<>();
     List<ExecutionDeployment> prevExecutionDeploymentList = new ArrayList<>();
     prevExecutionDeploymentList.add(ExecutionDeployment.builder()
-                                        .time("2021-04-23")
+                                        .time("1619136000000")
                                         .deployments(DeploymentCount.builder().total(1).success(1).failure(0).build())
                                         .build());
     prevExecutionDeploymentList.add(ExecutionDeployment.builder()
-                                        .time("2021-04-24")
+                                        .time("1619222400000")
                                         .deployments(DeploymentCount.builder().total(4).success(3).failure(0).build())
                                         .build());
     prevExecutionDeploymentList.add(ExecutionDeployment.builder()
-                                        .time("2021-04-25")
+                                        .time("1619308800000")
                                         .deployments(DeploymentCount.builder().total(1).success(0).failure(1).build())
                                         .build());
     prevExecutionDeploymentList.add(ExecutionDeployment.builder()
-                                        .time("2021-04-26")
+                                        .time("1619395200000")
                                         .deployments(DeploymentCount.builder().total(3).success(1).failure(2).build())
                                         .build());
     prevExecutionDeploymentList.add(ExecutionDeployment.builder()
-                                        .time("2021-04-27")
+                                        .time("1619481600000")
                                         .deployments(DeploymentCount.builder().total(1).success(0).failure(1).build())
                                         .build());
 
     executionDeploymentList.add(ExecutionDeployment.builder()
-                                    .time("2021-04-28")
+                                    .time("1619568000000")
                                     .deployments(DeploymentCount.builder().total(2).success(1).failure(0).build())
                                     .build());
     executionDeploymentList.add(ExecutionDeployment.builder()
-                                    .time("2021-04-29")
+                                    .time("1619654400000")
                                     .deployments(DeploymentCount.builder().total(0).success(0).failure(0).build())
                                     .build());
     executionDeploymentList.add(ExecutionDeployment.builder()
-                                    .time("2021-04-30")
+                                    .time("1619740800000")
                                     .deployments(DeploymentCount.builder().total(3).success(1).failure(2).build())
                                     .build());
     executionDeploymentList.add(ExecutionDeployment.builder()
-                                    .time("2021-05-01")
+                                    .time("1619827200000")
                                     .deployments(DeploymentCount.builder().total(4).success(2).failure(1).build())
                                     .build());
     executionDeploymentList.add(ExecutionDeployment.builder()
-                                    .time("2021-05-02")
+                                    .time("1619913600000")
                                     .deployments(DeploymentCount.builder().total(1).success(0).failure(1).build())
                                     .build());
 
