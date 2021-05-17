@@ -17,6 +17,7 @@ import software.wings.service.impl.yaml.handler.templatelibrary.SettingValueConf
 import software.wings.settings.SettingValue;
 
 import com.google.inject.Inject;
+import java.util.Collections;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -44,6 +45,7 @@ public class GitConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
                               .password(SAMPLE_STRING)
                               .username(SAMPLE_STRING)
                               .url(SAMPLE_STRING)
+                              .delegateSelectors(Collections.emptyList())
                               .build();
 
     Change change = Change.Builder.aFileChange()
@@ -67,6 +69,7 @@ public class GitConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
     assertThat(gitConfig.getUsername()).isEqualTo(SAMPLE_STRING);
     assertThat(gitConfig.getBranch()).isEqualTo(SAMPLE_STRING);
     assertThat(gitConfig.getRepoUrl()).isEqualTo(SAMPLE_STRING);
+    assertThat(gitConfig.getDelegateSelectors()).isEqualTo(Collections.emptyList());
   }
 
   @Test
@@ -80,6 +83,7 @@ public class GitConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
                               .branch(SAMPLE_STRING)
                               .description(SAMPLE_STRING)
                               .sshSettingId(null)
+                              .delegateSelectors(Collections.emptyList())
                               .build();
 
     SettingValue settingValue = (SettingValue) gitConfig;
@@ -98,5 +102,6 @@ public class GitConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
     assertThat(yaml.getBranch()).isEqualTo(SAMPLE_STRING);
     assertThat(yaml.getDescription()).isEqualTo(SAMPLE_STRING);
     assertThat(yaml.getSshKeyName()).isEqualTo(null);
+    assertThat(yaml.getDelegateSelectors()).isEqualTo(Collections.emptyList());
   }
 }

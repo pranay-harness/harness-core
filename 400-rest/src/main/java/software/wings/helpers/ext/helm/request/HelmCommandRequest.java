@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.helm.request;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 import static io.harness.k8s.model.HelmVersion.V2;
 
@@ -10,6 +11,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.helm.HelmCommandFlag;
@@ -30,6 +32,7 @@ import software.wings.service.impl.ContainerServiceParams;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -92,6 +95,10 @@ public class HelmCommandRequest implements TaskParameters, ActivityAccess, Execu
                                       .settingAttribute(gitConfig.getSshSettingAttribute())
                                       .encryptedDataDetails(getEncryptedDataDetails())
                                       .build());
+      }
+      if (isNotEmpty(gitConfig.getDelegateSelectors())) {
+        executionCapabilities.add(
+            SelectorCapability.builder().selectors(new HashSet<>(gitConfig.getDelegateSelectors())).build());
       }
     }
     if (containerServiceParams != null) {
