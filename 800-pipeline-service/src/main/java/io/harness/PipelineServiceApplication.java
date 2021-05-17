@@ -43,17 +43,14 @@ import io.harness.pms.exception.WingsExceptionMapper;
 import io.harness.pms.inputset.gitsync.InputSetEntityGitSyncHelper;
 import io.harness.pms.inputset.gitsync.InputSetYamlDTO;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
-import io.harness.pms.ngpipeline.inputset.observers.InputSetsDeleteObserver;
 import io.harness.pms.pipeline.PipelineEntity;
-import io.harness.pms.pipeline.PipelineEntityCrudObserver;
-import io.harness.pms.pipeline.PipelineSetupUsageHelper;
 import io.harness.pms.pipeline.gitsync.PipelineEntityGitSyncHelper;
+import io.harness.pms.pipeline.observer.PipelineActionObserver;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
 import io.harness.pms.plan.creation.PipelineServiceFilterCreationResponseMerger;
 import io.harness.pms.plan.creation.PipelineServiceInternalInfoProvider;
 import io.harness.pms.plan.execution.PmsExecutionServiceInfoProvider;
-import io.harness.pms.plan.execution.observers.PipelineExecutionSummaryDeleteObserver;
 import io.harness.pms.plan.execution.registrar.PmsOrchestrationEventRegistrar;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
@@ -271,12 +268,10 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     // Register Pipeline Observers
     PMSPipelineServiceImpl pmsPipelineService =
         (PMSPipelineServiceImpl) injector.getInstance(Key.get(PMSPipelineService.class));
-    pmsPipelineService.getPipelineSubject().register(injector.getInstance(Key.get(PipelineSetupUsageHelper.class)));
-    pmsPipelineService.getPipelineSubject().register(injector.getInstance(Key.get(PipelineEntityCrudObserver.class)));
-    pmsPipelineService.getPipelineSubject().register(
-        injector.getInstance(Key.get(PipelineExecutionSummaryDeleteObserver.class)));
-    pmsPipelineService.getPipelineSubject().register(injector.getInstance(Key.get(InputSetsDeleteObserver.class)));
 
+    for (Class<? extends PipelineActionObserver> klass : PipelineActionObserverRegistry.getObservers()) {
+      pmsPipelineService.getPipelineSubject().register(injector.getInstance(klass));
+    }
     NodeExecutionServiceImpl nodeExecutionService =
         (NodeExecutionServiceImpl) injector.getInstance(Key.get(NodeExecutionService.class));
     nodeExecutionService.getStepStatusUpdateSubject().register(

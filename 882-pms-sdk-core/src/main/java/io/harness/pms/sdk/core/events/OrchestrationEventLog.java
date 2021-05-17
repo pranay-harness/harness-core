@@ -52,4 +52,5 @@ public class OrchestrationEventLog implements PersistentEntity {
   OrchestrationEvent event;
   @FdTtlIndex Date validUntil;
   long createdAt;
+  boolean isProcessed;
 }

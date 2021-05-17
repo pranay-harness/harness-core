@@ -24,4 +24,6 @@ public interface GraphGenerationService {
   OrchestrationGraph buildOrchestrationGraph(String planExecutionId);
 
   void updateGraph(PlanExecution planExecution);
+
+  void recordMetrics();
 }

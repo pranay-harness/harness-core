@@ -1,0 +1,8 @@
+name: Orchestration Event log Metrics
+identifier: orchestration_event_log
+metricGroup: orchestration_event_log_group
+metrics:
+  - metricName: orchestration_event_log_unprocessed_count
+    metricDefinition: Number of unprocessed log counts.
+    type: LastValue
+    unit: count

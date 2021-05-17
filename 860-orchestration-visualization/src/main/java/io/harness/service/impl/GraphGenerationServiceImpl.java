@@ -27,6 +27,7 @@ import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.generator.OrchestrationAdjacencyListGenerator;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.logging.AutoLogContext;
+import io.harness.metrics.service.api.MetricService;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
@@ -62,6 +63,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   @Inject private GraphStatusUpdateHelper graphStatusUpdateHelper;
   @Inject private PlanExecutionStatusUpdateEventHandler planExecutionStatusUpdateEventHandler;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
+  @Inject private MetricService metricService;
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
@@ -116,6 +118,12 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
       log.info("Processing of [{}] orchestration event logs completed in [{}ms]", unprocessedEventLogs.size(),
           System.currentTimeMillis() - startTs);
     }
+  }
+
+  @Override
+  public void recordMetrics() {
+    long count = orchestrationEventLogRepository.getUnprocessedCount();
+    metricService.recordMetric("orchestration_event_log_unprocessed_count", count);
   }
 
   @Override

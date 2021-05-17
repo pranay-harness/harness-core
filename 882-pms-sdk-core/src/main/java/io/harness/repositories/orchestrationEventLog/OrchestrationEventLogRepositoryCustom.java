@@ -16,4 +16,6 @@ public interface OrchestrationEventLogRepositoryCustom {
   void updateTtlForProcessedEvents(List<OrchestrationEventLog> eventLogs);
 
   void schemaMigrationForOldEvenLog();
+
+  long getUnprocessedCount();
 }

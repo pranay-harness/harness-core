@@ -52,4 +52,10 @@ public class OrchestrationEventLogRepositoryCustomImpl implements OrchestrationE
     Criteria criteria = Criteria.where(OrchestrationEventLogKeys.validUntil).exists(false);
     mongoTemplate.remove(new Query(criteria), OrchestrationEventLog.class);
   }
+
+  @Override
+  public long getUnprocessedCount() {
+    Criteria criteria = Criteria.where(OrchestrationEventLogKeys.isProcessed).is(false);
+    return mongoTemplate.count(new Query(criteria), OrchestrationEventLog.class);
+  }
 }
