@@ -10,6 +10,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.rest.RestResponse;
 
 import software.wings.beans.User;
+import software.wings.beans.security.HarnessSupportUserDTO;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.beans.security.HarnessUserGroupDTO;
 import software.wings.security.annotations.ApiKeyAuthorized;
@@ -100,7 +101,9 @@ public class HarnessUserGroupResource {
 
   @GET
   @Path("listAllHarnessSupportUsers")
-  public RestResponse<List<User>> listAllHarnessSupportUsers(@QueryParam("accountId") String accountId) {
-    return new RestResponse<>(harnessUserGroupService.listAllHarnessSupportUsers());
+  public RestResponse<List<HarnessSupportUserDTO>> listAllHarnessSupportUsers(
+      @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(
+        harnessUserGroupService.toHarnessSupportUser(harnessUserGroupService.listAllHarnessSupportUsers()));
   }
 }

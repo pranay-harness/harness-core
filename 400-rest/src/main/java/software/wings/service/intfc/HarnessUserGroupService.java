@@ -10,6 +10,7 @@ import io.harness.beans.PageResponse;
 
 import software.wings.beans.Account;
 import software.wings.beans.User;
+import software.wings.beans.security.HarnessSupportUserDTO;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.beans.security.HarnessUserGroupDTO;
 
@@ -82,4 +83,8 @@ public interface HarnessUserGroupService {
   List<HarnessUserGroup> listHarnessUserGroup(String accountId, String memberId, HarnessUserGroup.GroupType groupType);
 
   List<User> listAllHarnessSupportUsers();
+
+  HarnessSupportUserDTO toHarnessSupportUser(User user);
+
+  List<HarnessSupportUserDTO> toHarnessSupportUser(List<User> userList);
 }
