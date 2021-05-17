@@ -115,6 +115,7 @@ public class PipelineServiceConfiguration extends Configuration {
   }
 
   public static Collection<Class<?>> getResourceClasses() {
+    //test reflection in TI
     Reflections reflections = new Reflections(RESOURCE_PACKAGE, NG_TRIGGER_RESOURCE_PACKAGE, FILTER_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }

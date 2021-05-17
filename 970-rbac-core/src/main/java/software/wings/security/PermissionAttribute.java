@@ -26,6 +26,7 @@ public class PermissionAttribute {
   private Action action;
   private PermissionType permissionType;
 
+  //update to test reflection in TI
   // If the query / path parameter has a different name other than the default name for the permission type.
   private String parameterName;
   private String dbFieldName;
