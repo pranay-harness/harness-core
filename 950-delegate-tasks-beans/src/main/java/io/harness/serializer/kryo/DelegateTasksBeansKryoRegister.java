@@ -293,7 +293,10 @@ import io.harness.delegate.task.manifests.request.CustomManifestFetchConfig;
 import io.harness.delegate.task.manifests.request.CustomManifestValuesFetchParams;
 import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
+import io.harness.delegate.task.scm.GitPRTaskType;
 import io.harness.delegate.task.scm.PushTaskType;
+import io.harness.delegate.task.scm.ScmPRTaskParams;
+import io.harness.delegate.task.scm.ScmPRTaskResponseData;
 import io.harness.delegate.task.scm.ScmPushTaskParams;
 import io.harness.delegate.task.scm.ScmPushTaskResponseData;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
@@ -740,5 +743,9 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(HelmValuesFetchRequest.class, 543310);
     kryo.register(HelmValuesFetchResponse.class, 543311);
     kryo.register(HelmChartInfo.class, 543312);
+
+    kryo.register(GitPRTaskType.class, 543313);
+    kryo.register(ScmPRTaskParams.class, 543314);
+    kryo.register(ScmPRTaskResponseData.class, 543315);
   }
 }

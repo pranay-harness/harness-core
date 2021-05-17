@@ -2,6 +2,7 @@ package io.harness.pms.plan.execution.data.service.expressions;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.ExceptionUtils;
 import io.harness.pms.contracts.service.EngineExpressionProtoServiceGrpc.EngineExpressionProtoServiceImplBase;
 import io.harness.pms.contracts.service.ExpressionEvaluateBlobRequest;
 import io.harness.pms.contracts.service.ExpressionEvaluateBlobResponse;
@@ -11,8 +12,10 @@ import io.harness.pms.expression.PmsEngineExpressionService;
 
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PIPELINE)
+@Slf4j
 public class EngineExpressionGrpcServiceImpl extends EngineExpressionProtoServiceImplBase {
   private final PmsEngineExpressionService pmsEngineExpressionService;
 
@@ -24,17 +27,29 @@ public class EngineExpressionGrpcServiceImpl extends EngineExpressionProtoServic
   @Override
   public void renderExpression(
       ExpressionRenderBlobRequest request, StreamObserver<ExpressionRenderBlobResponse> responseObserver) {
-    String value = pmsEngineExpressionService.renderExpression(
-        request.getAmbiance(), request.getExpression(), request.getSkipUnresolvedExpressionsCheck());
-    responseObserver.onNext(ExpressionRenderBlobResponse.newBuilder().setValue(value).build());
-    responseObserver.onCompleted();
+    try {
+      String value = pmsEngineExpressionService.renderExpression(
+          request.getAmbiance(), request.getExpression(), request.getSkipUnresolvedExpressionsCheck());
+      responseObserver.onNext(ExpressionRenderBlobResponse.newBuilder().setValue(value).build());
+      responseObserver.onCompleted();
+    } catch (Exception ex) {
+      log.error("Error rendering expression for sdk", ex);
+      responseObserver.onError(
+          io.grpc.Status.INTERNAL.withDescription(ExceptionUtils.getMessage(ex)).asRuntimeException());
+    }
   }
 
   @Override
   public void evaluateExpression(
       ExpressionEvaluateBlobRequest request, StreamObserver<ExpressionEvaluateBlobResponse> responseObserver) {
-    String value = pmsEngineExpressionService.evaluateExpression(request.getAmbiance(), request.getExpression());
-    responseObserver.onNext(ExpressionEvaluateBlobResponse.newBuilder().setValue(value).build());
-    responseObserver.onCompleted();
+    try {
+      String value = pmsEngineExpressionService.evaluateExpression(request.getAmbiance(), request.getExpression());
+      responseObserver.onNext(ExpressionEvaluateBlobResponse.newBuilder().setValue(value).build());
+      responseObserver.onCompleted();
+    } catch (Exception ex) {
+      log.error("Error evaluating expression for sdk", ex);
+      responseObserver.onError(
+          io.grpc.Status.INTERNAL.withDescription(ExceptionUtils.getMessage(ex)).asRuntimeException());
+    }
   }
 }

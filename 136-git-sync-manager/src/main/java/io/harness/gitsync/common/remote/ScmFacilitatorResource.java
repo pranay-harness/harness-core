@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.gitsync.common.YamlConstants;
 import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.gitsync.common.dtos.SaasGitDTO;
@@ -24,6 +25,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.util.List;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -108,5 +110,19 @@ public class ScmFacilitatorResource {
   @ApiOperation(value = "Checks if Saas is possible", nickname = "isSaasGit")
   public ResponseDTO<SaasGitDTO> isSaasGit(@QueryParam(NGCommonEntityConstants.REPO_URL) String repoURL) {
     return ResponseDTO.newResponse(GitUtils.isSaasGit(URLDecoderUtility.getDecodedString(repoURL)));
+  }
+
+  @POST
+  @Path("createPR")
+  @ApiOperation(value = "creates a pull request", nickname = "createPR")
+  public ResponseDTO<Boolean> createPR(@NotNull @QueryParam(YamlConstants.YAML_GIT_CONFIG) String yamlGitConfigRef,
+      @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Valid GitPRCreateRequest gitCreatePRRequest) {
+    return ResponseDTO.newResponse(scmOrchestratorService.processScmRequest(scmClientFacilitatorService
+        -> scmClientFacilitatorService.createPullRequest(
+            accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigRef, gitCreatePRRequest),
+        projectIdentifier, orgIdentifier, accountIdentifier));
   }
 }

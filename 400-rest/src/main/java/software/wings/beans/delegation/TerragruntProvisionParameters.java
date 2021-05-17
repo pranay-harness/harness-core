@@ -1,8 +1,10 @@
 package software.wings.beans.delegation;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 import static io.harness.expression.Expression.DISALLOW_SECRETS;
+import static io.harness.provision.TfVarSource.TfVarSourceType.GIT;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -10,6 +12,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.capability.ProcessExecutionCapabilityHelper;
 import io.harness.delegate.task.ActivityAccess;
@@ -20,10 +23,12 @@ import io.harness.provision.TfVarSource;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 
+import software.wings.api.terraform.TfVarGitSource;
 import software.wings.beans.GitConfig;
 import software.wings.beans.NameValuePair;
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -106,6 +111,18 @@ public class TerragruntProvisionParameters implements TaskParameters, ActivityAc
                            .settingAttribute(sourceRepo.getSshSettingAttribute())
                            .encryptedDataDetails(sourceRepoEncryptionDetails)
                            .build());
+      if (isNotEmpty(sourceRepo.getDelegateSelectors())) {
+        capabilities.add(
+            SelectorCapability.builder().selectors(new HashSet<>(sourceRepo.getDelegateSelectors())).build());
+      }
+    }
+    if (tfVarSource != null && tfVarSource.getTfVarSourceType() == GIT) {
+      TfVarGitSource tfVarGitSource = (TfVarGitSource) tfVarSource;
+      if (tfVarGitSource.getGitConfig() != null && isNotEmpty(tfVarGitSource.getGitConfig().getDelegateSelectors())) {
+        capabilities.add(SelectorCapability.builder()
+                             .selectors(new HashSet<>(tfVarGitSource.getGitConfig().getDelegateSelectors()))
+                             .build());
+      }
     }
     if (secretManagerConfig != null) {
       capabilities.addAll(

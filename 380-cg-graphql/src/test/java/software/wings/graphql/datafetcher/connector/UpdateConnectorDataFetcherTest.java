@@ -150,6 +150,7 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
                                                                      .authorEmailId(RequestField.ofNullable(EMAIL))
                                                                      .commitMessage(RequestField.ofNullable(MESSAGE))
                                                                      .build()))
+                    .delegateSelectors(RequestField.ofNull())
                     .passwordSecretId(RequestField.ofNullable(PASSWORD))
                     .build())
             .build(),
@@ -204,6 +205,7 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
                                                                      .authorEmailId(RequestField.ofNullable(EMAIL))
                                                                      .commitMessage(RequestField.ofNullable(MESSAGE))
                                                                      .build()))
+                    .delegateSelectors(RequestField.ofNull())
                     .sshSettingId(RequestField.ofNullable(SSH))
                     .usageScope(RequestField.ofNullable(QLUsageScope.builder().build()))
                     .build())

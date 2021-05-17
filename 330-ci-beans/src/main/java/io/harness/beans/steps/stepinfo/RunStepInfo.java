@@ -110,4 +110,9 @@ public class RunStepInfo implements CIStepInfo, WithConnectorRef {
     connectorRefMap.put(YAMLFieldNameConstants.CONNECTOR_REF, connectorRef);
     return connectorRefMap;
   }
+
+  @Override
+  public boolean skipUnresolvedExpressionsCheck() {
+    return true;
+  }
 }

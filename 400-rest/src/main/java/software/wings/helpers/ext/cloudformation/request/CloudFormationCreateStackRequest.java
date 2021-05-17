@@ -1,16 +1,22 @@
 package software.wings.helpers.ext.cloudformation.request;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import lombok.Builder;
@@ -52,5 +58,15 @@ public class CloudFormationCreateStackRequest extends CloudFormationCommandReque
     this.gitConfig = gitConfig;
     this.sourceRepoEncryptionDetails = encryptedDataDetails;
     this.encryptedVariables = encryptedVariables;
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    List<ExecutionCapability> capabilities =
+        new ArrayList<>(super.fetchRequiredExecutionCapabilities(maskingEvaluator));
+    if (gitConfig != null && isNotEmpty(gitConfig.getDelegateSelectors())) {
+      capabilities.add(SelectorCapability.builder().selectors(new HashSet<>(gitConfig.getDelegateSelectors())).build());
+    }
+    return capabilities;
   }
 }
