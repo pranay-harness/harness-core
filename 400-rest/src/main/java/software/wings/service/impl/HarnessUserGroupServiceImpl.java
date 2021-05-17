@@ -282,10 +282,7 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
     notNullCheck("HarnessSupportUser: Invalid user", user);
     notNullCheck("HarnessSupportUser: userId " + user.getUuid() + "doesn't have emailId", user.getName());
 
-    HarnessSupportUserDTO harnessSupportUserDTO =
-        HarnessSupportUserDTO.builder().name(user.getName()).emailId(user.getEmail()).id(user.getUuid()).build();
-
-    return harnessSupportUserDTO;
+    return HarnessSupportUserDTO.builder().name(user.getName()).emailId(user.getEmail()).id(user.getUuid()).build();
   }
 
   @Override
