@@ -310,7 +310,6 @@ public class SecretCrudServiceImpl implements SecretCrudService {
   public SecretResponseWrapper update(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, SecretDTOV2 dto) {
     validateUpdateRequestAndGetSecret(accountIdentifier, orgIdentifier, projectIdentifier, identifier, dto);
-
     boolean remoteUpdateSuccess = true;
     if (SecretText.equals(dto.getType())) {
       NGEncryptedData encryptedData = encryptedDataService.updateSecretText(accountIdentifier, dto);
