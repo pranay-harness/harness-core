@@ -51,7 +51,9 @@
                             pod_info |
                             workload_info |
                             node_pool |
-                            ce_recommendations</includes>
+                            ce_recommendations |
+                            billing_data
+                            </includes>
                             <excludes />
                             <inputSchema>public</inputSchema>
                         </database>
