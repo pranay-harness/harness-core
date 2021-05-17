@@ -16,8 +16,8 @@ import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
-import io.harness.steps.StepOutcomeGroup;
 
 import com.google.inject.Inject;
 import java.util.Objects;

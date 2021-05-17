@@ -17,9 +17,9 @@ import io.harness.pms.expressions.functors.OrgFunctor;
 import io.harness.pms.expressions.functors.ProjectFunctor;
 import io.harness.pms.expressions.utils.ImagePullSecretUtils;
 import io.harness.pms.plan.execution.SetupAbstractionKeys;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.project.remote.ProjectClient;
-import io.harness.steps.StepOutcomeGroup;
 
 import com.google.inject.Inject;
 import java.util.Set;
