@@ -1,8 +1,8 @@
 package io.harness.cdng.manifest.yaml;
 
+import io.harness.beans.WithIdentifier;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.pms.sdk.core.data.Outcome;
-import io.harness.yaml.core.intfc.WithIdentifier;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;

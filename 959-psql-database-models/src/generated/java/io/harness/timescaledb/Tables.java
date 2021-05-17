@@ -3,6 +3,7 @@
  */
 package io.harness.timescaledb;
 
+import io.harness.timescaledb.tables.BillingData;
 import io.harness.timescaledb.tables.CeRecommendations;
 import io.harness.timescaledb.tables.KubernetesUtilizationData;
 import io.harness.timescaledb.tables.NodeInfo;
@@ -14,6 +15,11 @@ import io.harness.timescaledb.tables.WorkloadInfo;
  */
 @SuppressWarnings({"all", "unchecked", "rawtypes"})
 public class Tables {
+  /**
+   * The table <code>public.billing_data</code>.
+   */
+  public static final BillingData BILLING_DATA = BillingData.BILLING_DATA;
+
   /**
    * The table <code>public.ce_recommendations</code>.
    */

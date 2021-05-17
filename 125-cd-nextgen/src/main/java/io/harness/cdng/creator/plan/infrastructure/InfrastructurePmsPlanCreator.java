@@ -3,6 +3,7 @@ package io.harness.cdng.creator.plan.infrastructure;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.advisers.RollbackCustomAdviser;
+import io.harness.cdng.creator.plan.PlanCreatorConstants;
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.cdng.infra.steps.InfraSectionStepParameters;
 import io.harness.cdng.infra.steps.InfraStepParameters;
@@ -15,7 +16,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.utils.CommonPlanCreatorUtils;
@@ -32,6 +32,7 @@ import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.PlanNode.PlanNodeBuilder;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -71,6 +72,16 @@ public class InfrastructurePmsPlanCreator {
       YamlField resourceConstraintField) {
     PipelineInfrastructure actualInfraConfig = getActualInfraConfig(infrastructure, infraField);
 
+    if (!ParameterField.isNull(infrastructure.getAllowSimultaneousDeployments())
+        && infrastructure.getAllowSimultaneousDeployments().isExpression()) {
+      throw new InvalidRequestException(
+          "AllowedSimultaneous Deployment field is not a fixed value during execution of pipeline.");
+    }
+    boolean allowSimultaneousDeployments = false;
+    if (!ParameterField.isNull(infrastructure.getAllowSimultaneousDeployments())) {
+      allowSimultaneousDeployments = infrastructure.getAllowSimultaneousDeployments().getValue();
+    }
+
     PlanNodeBuilder planNodeBuilder =
         PlanNode.builder()
             .uuid(infraSectionNode.getUuid())
@@ -81,7 +92,7 @@ public class InfrastructurePmsPlanCreator {
             .stepParameters(InfraSectionStepParameters.getStepParameters(actualInfraConfig, infraStepNodeUuid))
             .facilitatorObtainment(
                 FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
-            .adviserObtainments(infrastructure.isAllowSimultaneousDeployments()
+            .adviserObtainments(allowSimultaneousDeployments
                     ? getAdviserObtainmentFromMetaDataToResourceConstraint(resourceConstraintField, kryoSerializer)
                     : getAdviserObtainmentFromMetaDataToExecution(infraSectionNode, kryoSerializer));
 
@@ -126,7 +137,9 @@ public class InfrastructurePmsPlanCreator {
     return adviserObtainments;
   }
 
-  /** Method returns actual InfraStructure object by resolving useFromStage if present. */
+  /**
+   * Method returns actual InfraStructure object by resolving useFromStage if present.
+   */
   public PipelineInfrastructure getActualInfraConfig(
       PipelineInfrastructure pipelineInfrastructure, YamlField infraField) {
     if (pipelineInfrastructure.getUseFromStage() != null) {

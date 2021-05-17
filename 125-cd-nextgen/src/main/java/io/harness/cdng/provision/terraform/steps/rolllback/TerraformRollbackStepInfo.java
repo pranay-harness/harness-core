@@ -4,12 +4,16 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.executions.steps.StepSpecTypeConstants.TERRAFORM_ROLLBACK;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.annotations.ApiModelProperty;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -23,6 +27,7 @@ import lombok.experimental.FieldDefaults;
 @JsonTypeName(TERRAFORM_ROLLBACK)
 public class TerraformRollbackStepInfo implements CDStepInfo {
   @NotNull String provisionerIdentifier;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH) ParameterField<List<String>> delegateSelectors;
 
   @Override
   public StepType getStepType() {
@@ -36,6 +41,9 @@ public class TerraformRollbackStepInfo implements CDStepInfo {
 
   @Override
   public SpecParameters getSpecParameters() {
-    return TerraformRollbackStepParameters.builder().provisionerIdentifier(this.provisionerIdentifier).build();
+    return TerraformRollbackStepParameters.builder()
+        .provisionerIdentifier(this.provisionerIdentifier)
+        .delegateSelectors(delegateSelectors)
+        .build();
   }
 }

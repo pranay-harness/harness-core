@@ -28,6 +28,7 @@ import io.harness.pms.contracts.execution.tasks.SkipTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -36,7 +37,6 @@ import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.provision.TerraformConstants;
 import io.harness.serializer.KryoSerializer;
-import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.StepUtils;
 import io.harness.supplier.ThrowingSupplier;
 
@@ -129,7 +129,8 @@ public class TerraformRollbackStep extends TaskExecutableWithRollback<TerraformT
 
       builder.backendConfig(rollbackConfig.getBackendConfig())
           .targets(rollbackConfig.getTargets())
-          .environmentVariables(rollbackConfig.getEnvironmentVariables());
+          .environmentVariables(rollbackConfig.getEnvironmentVariables())
+          .timeoutInMillis(StepUtils.getTimeoutMillis(stepParameters.getTimeout(), TerraformConstants.DEFAULT_TIMEOUT));
 
       TaskData taskData =
           TaskData.builder()
@@ -139,7 +140,7 @@ public class TerraformRollbackStep extends TaskExecutableWithRollback<TerraformT
               .parameters(new Object[] {builder.build()})
               .build();
 
-      ParameterField<List<String>> delegateSelectors = stepParameters.getDelegateSelectors();
+      ParameterField<List<String>> delegateSelectors = stepParametersSpec.getDelegateSelectors();
 
       List<TaskSelector> taskSelectors = StepUtils.getTaskSelectors(delegateSelectors);
 

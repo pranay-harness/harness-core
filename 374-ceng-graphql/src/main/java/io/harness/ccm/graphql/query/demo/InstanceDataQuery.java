@@ -33,6 +33,7 @@ import org.dataloader.DataLoader;
 public class InstanceDataQuery {
   @Inject private GraphQLUtils graphQLUtils;
   @Getter private final String dataLoaderName = "instancedata";
+
   // GraphQL Query Schema and Service Class
   @GraphQLQuery
   public CompletableFuture<InstanceDataDemo> instancedata(
@@ -48,12 +49,9 @@ public class InstanceDataQuery {
   public CompletableFuture<InstanceDataDemo> instancedata(
       @GraphQLNonNull String instanceid, @GraphQLEnvironment final ResolutionEnvironment env) {
     final String accountId = graphQLUtils.getAccountIdentifier(env);
-    // example on how to use dataLoader shared across multiple queries.
-    final DataLoader<CacheKey, InstanceDataDemo> dataLoader = env.dataFetchingEnvironment.getDataLoader(dataLoaderName);
 
     log.debug("INSIDE: getInstanceDataById Query");
-    // can use 'instanceDataLoader' directly instead of 'dataLoader' as well.
-    return dataLoader.load(CacheKey.of(accountId, instanceid));
+    return instanceDataLoader.load(CacheKey.of(accountId, instanceid));
   }
 
   @Value(staticConstructor = "of")

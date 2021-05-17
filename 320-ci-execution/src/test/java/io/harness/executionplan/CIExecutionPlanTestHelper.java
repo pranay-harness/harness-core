@@ -2,7 +2,6 @@ package io.harness.executionplan;
 
 import static io.harness.common.BuildEnvironmentConstants.DRONE_BUILD_NUMBER;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_BRANCH;
-import static io.harness.common.CIExecutionConstants.CI_PIPELINE_CONFIG;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_DEPTH_ATTRIBUTE;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_MANUAL_DEPTH;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_STEP_ID;
@@ -44,7 +43,6 @@ import io.harness.beans.execution.WebhookBaseAttributes;
 import io.harness.beans.execution.WebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.executionargs.CIExecutionArgs;
-import io.harness.beans.executionargs.ExecutionArgs;
 import io.harness.beans.script.ScriptInfo;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.stages.IntegrationStageConfig;
@@ -108,7 +106,6 @@ import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
-import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
@@ -1380,20 +1377,6 @@ public class CIExecutionPlanTestHelper {
     envVarMap.put("DRONE_BUILD_NUMBER", BUILD_NUMBER + "");
     envVarMap.put("DRONE_BUILD_EVENT", "push");
     return envVarMap;
-  }
-
-  public ExecutionPlanCreationContextImpl getExecutionPlanCreationContextWithExecutionArgs() {
-    ExecutionPlanCreationContextImpl context = ExecutionPlanCreationContextImpl.builder().build();
-    context.addAttribute(ExecutionArgs.EXEC_ARGS, getCIExecutionArgs());
-    context.addAttribute(CI_PIPELINE_CONFIG, getPipeline());
-    return context;
-  }
-
-  public ExecutionPlanCreationContextImpl getWebhookPlanContextWithExecArgs() {
-    ExecutionPlanCreationContextImpl context = ExecutionPlanCreationContextImpl.builder().build();
-    context.addAttribute(ExecutionArgs.EXEC_ARGS, getPRCIExecutionArgs());
-    context.addAttribute(CI_PIPELINE_CONFIG, getPipeline());
-    return context;
   }
 
   public StageElementConfig getIntegrationStageElementConfig() {

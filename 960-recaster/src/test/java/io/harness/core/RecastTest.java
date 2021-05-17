@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.RecasterTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exceptions.RecasterException;
 import io.harness.rule.Owner;
@@ -27,6 +29,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class RecastTest extends RecasterTestBase {
   private Recaster recaster;
 
@@ -51,7 +54,8 @@ public class RecastTest extends RecasterTestBase {
     Recast recast = new Recast(recaster, ImmutableSet.of());
     assertThatThrownBy(() -> recast.fromDocument(new Document(), DummyLong.class))
         .isInstanceOf(RecasterException.class)
-        .hasMessageContaining("The document does not contain a __recast key. Determining entity type is impossible.");
+        .hasMessageContaining(
+            "The document does not contain any identifiers __recast. Determining entity type is impossible. Consider adding RecasterAlias annotation to your class");
   }
 
   @Test

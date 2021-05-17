@@ -43,6 +43,7 @@ public class TerraformTaskNGParameters
   @Expression(DISALLOW_SECRETS) List<String> targets;
   @Expression(ALLOW_SECRETS) Map<String, String> environmentVariables;
   boolean saveTerraformStateJson;
+  long timeoutInMillis;
 
   // For plan
   TerraformCommand terraformCommand;

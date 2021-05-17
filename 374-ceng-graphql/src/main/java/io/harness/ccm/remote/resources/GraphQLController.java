@@ -20,6 +20,7 @@ import graphql.GraphQLContext;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.SchemaPrinter;
 import io.leangen.graphql.GraphQLSchemaGenerator;
+import io.leangen.graphql.metadata.strategy.value.gson.GsonValueMapperFactory;
 import io.swagger.annotations.Api;
 import java.io.IOException;
 import java.util.Collections;
@@ -40,7 +41,7 @@ import org.hibernate.validator.constraints.NotBlank;
 import org.reflections.Reflections;
 import org.springframework.stereotype.Service;
 
-@Api("/graphql")
+@Api("graphql")
 @Path("/graphql")
 @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
 @NextGenManagerAuth
@@ -57,7 +58,11 @@ public class GraphQLController {
 
   @Inject
   public GraphQLController(final Injector injector) {
-    final GraphQLSchemaGenerator schemaGenerator = new GraphQLSchemaGenerator().withBasePackages(BASE_PACKAGE);
+    final GraphQLSchemaGenerator schemaGenerator =
+        new GraphQLSchemaGenerator()
+            .withBasePackages(BASE_PACKAGE)
+            // using Gson as alternate because WORKSPACE version of Jackson is old and incompatible.
+            .withValueMapperFactory(new GsonValueMapperFactory());
 
     final Reflections reflections = new Reflections(BASE_PACKAGE + ".query");
     final Set<Class<?>> queryClasses = reflections.getTypesAnnotatedWith(GraphQLApi.class);
@@ -70,7 +75,8 @@ public class GraphQLController {
 
     schemaAsString = schemaPrinter.print(schema)
                          .replaceAll("@_mappedOperation\\(operation : \"__internal__\"\\)", "")
-                         .replaceAll("@_mappedType\\(type : \"__internal__\"\\)", "");
+                         .replaceAll("@_mappedType\\(type : \"__internal__\"\\)", "")
+                         .replaceAll("@_mappedInputField\\(inputField : \"__internal__\"\\)", "");
 
     log.info("ce-nextgen graphql schemas:\n{}", schemaAsString);
 

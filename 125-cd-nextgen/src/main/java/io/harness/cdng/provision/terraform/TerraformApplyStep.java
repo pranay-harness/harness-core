@@ -95,7 +95,9 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
         .backendConfig(helper.getBackendConfig(spec.getBackendConfig()))
         .targets(ParameterFieldHelper.getParameterFieldValue(spec.getTargets()))
         .saveTerraformStateJson(cdFeatureFlagHelper.isEnabled(accountId, FeatureName.EXPORT_TF_PLAN))
-        .environmentVariables(helper.getEnvironmentVariablesMap(spec.getEnvironmentVariables()));
+        .environmentVariables(helper.getEnvironmentVariablesMap(spec.getEnvironmentVariables()))
+        .timeoutInMillis(
+            StepUtils.getTimeoutMillis(stepElementParameters.getTimeout(), TerraformConstants.DEFAULT_TIMEOUT));
 
     TaskData taskData =
         TaskData.builder()
@@ -105,8 +107,9 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
             .parameters(new Object[] {builder.build()})
             .build();
 
-    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer,
-        Collections.singletonList(TerraformCommandUnit.Apply.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName());
+    return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+        Collections.singletonList(TerraformCommandUnit.Apply.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName(),
+        StepUtils.getTaskSelectors(stepParameters.getDelegateSelectors()));
   }
 
   private TaskRequest obtainInheritedTask(
@@ -131,7 +134,9 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
         .encryptionConfig(inheritOutput.getEncryptionConfig())
         .encryptedTfPlan(inheritOutput.getEncryptedTfPlan())
         .planName(inheritOutput.getPlanName())
-        .environmentVariables(inheritOutput.getEnvironmentVariables());
+        .environmentVariables(inheritOutput.getEnvironmentVariables())
+        .timeoutInMillis(
+            StepUtils.getTimeoutMillis(stepElementParameters.getTimeout(), TerraformConstants.DEFAULT_TIMEOUT));
 
     TaskData taskData =
         TaskData.builder()
@@ -141,8 +146,9 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
             .parameters(new Object[] {builder.build()})
             .build();
 
-    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer,
-        Collections.singletonList(TerraformCommandUnit.Apply.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName());
+    return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+        Collections.singletonList(TerraformCommandUnit.Apply.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName(),
+        StepUtils.getTaskSelectors(stepParameters.getDelegateSelectors()));
   }
 
   @Override
