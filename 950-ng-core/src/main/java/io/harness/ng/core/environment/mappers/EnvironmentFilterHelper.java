@@ -9,6 +9,7 @@ import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.beans.Environment.EnvironmentKeys;
+import io.harness.ng.core.utils.CoreCriteriaUtils;
 
 import lombok.experimental.UtilityClass;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -19,7 +20,8 @@ import org.springframework.data.mongodb.core.query.Update;
 public class EnvironmentFilterHelper {
   public Criteria createCriteriaForGetList(
       String accountId, String orgIdentifier, String projectIdentifier, boolean deleted, String searchTerm) {
-    Criteria criteria = createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, deleted);
+    Criteria criteria =
+        CoreCriteriaUtils.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, deleted);
     if (isNotEmpty(searchTerm)) {
       Criteria searchCriteria = new Criteria().orOperator(
           where(EnvironmentKeys.name).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
@@ -27,21 +29,6 @@ public class EnvironmentFilterHelper {
               .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
       criteria.andOperator(searchCriteria);
     }
-    return criteria;
-  }
-  public Criteria createCriteriaForGetList(
-      String accountId, String orgIdentifier, String projectIdentifier, boolean deleted) {
-    Criteria criteria = new Criteria();
-    if (isNotEmpty(accountId)) {
-      criteria.and(EnvironmentKeys.accountId).is(accountId);
-    }
-    if (isNotEmpty(orgIdentifier)) {
-      criteria.and(EnvironmentKeys.orgIdentifier).is(orgIdentifier);
-    }
-    if (isNotEmpty(projectIdentifier)) {
-      criteria.and(EnvironmentKeys.projectIdentifier).is(projectIdentifier);
-    }
-    criteria.and(EnvironmentKeys.deleted).is(deleted);
     return criteria;
   }
 

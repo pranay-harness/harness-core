@@ -73,6 +73,7 @@ public class PipelineServiceValidator {
       PipelineStageElement pipelineStageElement, List<Variable> workflowVariables) {
     Map<String, String> pseVariableValues = pipelineStageElement.getWorkflowVariables();
     List<String> runtimeVariables = pipelineStageElement.getRuntimeInputsConfig().getRuntimeInputVariables();
+    runtimeVariables.removeIf(variable -> !pseVariableValues.containsKey(variable));
     String missing =
         runtimeVariables.stream().filter(variable -> !pseVariableValues.containsKey(variable)).findAny().orElse(null);
     if (missing != null) {

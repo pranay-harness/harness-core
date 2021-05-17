@@ -3,7 +3,9 @@ package software.wings.beans.config;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
@@ -28,8 +30,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.annotations.Transient;
 
 /**
  * Created by srinivas on 3/30/17.
@@ -40,6 +42,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Builder
 @ToString(exclude = {"password"})
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class NexusConfig extends SettingValue implements EncryptableSetting, ArtifactSourceable {
   @Attributes(title = "Nexus URL", required = true) @NotEmpty private String nexusUrl;
 
@@ -54,8 +57,6 @@ public class NexusConfig extends SettingValue implements EncryptableSetting, Art
   @SchemaIgnore @NotEmpty private String accountId;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
-
-  @SchemaIgnore @Transient private boolean useCredentialsWithAuth;
   /**
    * Instantiates a new Nexus config.
    */
@@ -68,7 +69,7 @@ public class NexusConfig extends SettingValue implements EncryptableSetting, Art
   }
 
   public NexusConfig(String nexusUrl, String version, String username, char[] password, List<String> delegateSelectors,
-      String accountId, String encryptedPassword, boolean useCredentialsWithAuth) {
+      String accountId, String encryptedPassword) {
     this();
     this.nexusUrl = nexusUrl;
     this.username = username;
@@ -76,7 +77,6 @@ public class NexusConfig extends SettingValue implements EncryptableSetting, Art
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
     this.version = version;
-    this.useCredentialsWithAuth = useCredentialsWithAuth;
     this.delegateSelectors = delegateSelectors;
   }
 
@@ -99,6 +99,16 @@ public class NexusConfig extends SettingValue implements EncryptableSetting, Art
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Arrays.asList(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(nexusUrl, maskingEvaluator));
+  }
+
+  @Override
+  public boolean shouldDeleteArtifact(SettingValue prev) {
+    if (!(prev instanceof NexusConfig)) {
+      return true;
+    }
+    NexusConfig prevConfig = (NexusConfig) prev;
+    return !StringUtils.equals(prevConfig.getVersion(), version)
+        || !StringUtils.equals(prevConfig.getNexusUrl(), nexusUrl);
   }
 
   @Data

@@ -138,6 +138,10 @@ spec:
           value: "${delegateSessionIdentifier}"
         - name: DELEGATE_TASK_LIMIT
           value: "${delegateTaskLimit}"
+        - name: DELEGATE_ORG_IDENTIFIER
+          value: "${delegateOrgIdentifier}"
+        - name: DELEGATE_PROJECT_IDENTIFIER
+          value: "${delegateProjectIdentifier}"
         - name: PROXY_HOST
           value: ""
         - name: PROXY_PORT
@@ -188,6 +192,10 @@ spec:
           value: "${grpcServiceConnectorPort}"
         - name: MANAGER_SERVICE_SECRET
           value: "${managerServiceSecret}"
+        - name: DELEGATE_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
       restartPolicy: Always
 
 <#if ciEnabled == "true">

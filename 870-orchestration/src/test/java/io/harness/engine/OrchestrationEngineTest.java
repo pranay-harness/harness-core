@@ -1,16 +1,21 @@
 package io.harness.engine;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.pms.contracts.execution.Status.SUCCEEDED;
 import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.pms.contracts.advisers.AdviserResponse;
+import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.exception.InvalidRequestException;
+import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
@@ -19,14 +24,8 @@ import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.adviser.Adviser;
-import io.harness.pms.sdk.core.adviser.AdvisingEvent;
+import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
-import io.harness.pms.sdk.core.steps.io.EmptyStepParameters;
-import io.harness.pms.sdk.core.steps.io.PassThroughData;
-import io.harness.pms.sdk.core.steps.io.StepInputPackage;
-import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableMap;
@@ -39,10 +38,13 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 
 public class OrchestrationEngineTest extends OrchestrationTestBase {
   @Mock @Named("EngineExecutorService") ExecutorService executorService;
-  @Inject @InjectMocks private OrchestrationEngine orchestrationEngine;
+  @Mock private NodeExecutionService nodeExecutionService;
+  @Mock private EndNodeExecutionHelper endNodeExecutionHelper;
+  @Inject @InjectMocks @Spy private OrchestrationEngine orchestrationEngine;
 
   private static final StepType TEST_STEP_TYPE = StepType.newBuilder().setType("TEST_STEP_PLAN").build();
 
@@ -59,6 +61,21 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
 
   @Before
   public void setUp() {}
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void handleStepResponseWithError() {
+    StepResponseProto stepResponseProto = StepResponseProto.newBuilder().build();
+    NodeExecution nodeExecution = NodeExecution.builder().uuid(generateUuid()).build();
+    when(nodeExecutionService.get(nodeExecution.getUuid())).thenReturn(nodeExecution);
+    doThrow(new InvalidRequestException("test"))
+        .when(endNodeExecutionHelper)
+        .endNodeExecutionWithNoAdvisers(nodeExecution, stepResponseProto);
+    doNothing().when(orchestrationEngine).handleError(any(), any());
+    orchestrationEngine.handleStepResponse(nodeExecution.getUuid(), stepResponseProto);
+    verify(orchestrationEngine).handleError(any(), any());
+  }
 
   @Test
   @Owner(developers = PRASHANT)
@@ -86,30 +103,5 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
     return ImmutableMap.of("accountId", "kmpySmUISimoRrJL6NL73w", "appId", "XEsfW6D_RJm1IaGpDidD3g", "userId",
         triggeredBy.getUuid(), "userName", triggeredBy.getIdentifier(), "userEmail",
         triggeredBy.getExtraInfoOrThrow("email"));
-  }
-
-  private static class TestHttpResponseCodeSwitchAdviser implements Adviser {
-    @Override
-    public AdviserResponse onAdviseEvent(AdvisingEvent advisingEvent) {
-      return null;
-    }
-
-    @Override
-    public boolean canAdvise(AdvisingEvent advisingEvent) {
-      return false;
-    }
-  }
-
-  private static class TestSyncStep implements SyncExecutable<EmptyStepParameters> {
-    @Override
-    public Class<EmptyStepParameters> getStepParametersClass() {
-      return EmptyStepParameters.class;
-    }
-
-    @Override
-    public StepResponse executeSync(Ambiance ambiance, EmptyStepParameters stepParameters,
-        StepInputPackage inputPackage, PassThroughData passThroughData) {
-      return StepResponse.builder().status(SUCCEEDED).build();
-    }
   }
 }

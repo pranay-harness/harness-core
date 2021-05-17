@@ -126,6 +126,15 @@ public class RoleDaoImpl implements RoleDao {
   }
 
   @Override
+  public boolean addPermissionToRoles(String permissionIdentifier, RoleFilter roleFilter) {
+    Criteria criteria = createCriteriaFromFilter(roleFilter);
+    criteria.and(RoleDBOKeys.permissions).ne(permissionIdentifier);
+    Update update = new Update().push(RoleDBOKeys.permissions, permissionIdentifier);
+    UpdateResult updateResult = roleRepository.updateMulti(criteria, update);
+    return updateResult.getMatchedCount() == updateResult.getModifiedCount();
+  }
+
+  @Override
   public long deleteMulti(RoleFilter roleFilter) {
     Criteria criteria = createCriteriaFromFilter(roleFilter);
     return roleRepository.deleteMulti(criteria);
@@ -141,6 +150,10 @@ public class RoleDaoImpl implements RoleDao {
 
     if (!roleFilter.getIdentifierFilter().isEmpty()) {
       criteria.and(RoleDBOKeys.identifier).in(roleFilter.getIdentifierFilter());
+    }
+
+    if (!roleFilter.getAllowedScopeLevelsFilter().isEmpty()) {
+      criteria.and(RoleDBOKeys.allowedScopeLevels).in(roleFilter.getAllowedScopeLevelsFilter());
     }
 
     if (roleFilter.getManagedFilter().equals(ONLY_MANAGED)) {

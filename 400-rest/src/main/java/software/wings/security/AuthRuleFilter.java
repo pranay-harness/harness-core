@@ -120,6 +120,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   @Context private ResourceInfo resourceInfo;
   @Context private HttpServletRequest servletRequest;
   @Inject AuditServiceHelper auditServiceHelper;
+  @Inject FeatureFlagService featureFlagService;
 
   private AuthService authService;
   private AuthHandler authHandler;
@@ -130,7 +131,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private HarnessUserGroupService harnessUserGroupService;
   private GraphQLUtils graphQLUtils;
   private ApiKeyService apiKeyService;
-  private FeatureFlagService featureFlagService;
 
   /**
    * Instantiates a new Auth rule filter.
@@ -252,27 +252,33 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
 
     boolean isApiKeyAuthorized = apiKeyAuthorizationAPI();
+    boolean isApiKeyAuthorizedWithBearerToken = false;
     if (isApiKeyAuthorized) {
       checkForWhitelisting(accountId, FeatureName.WHITELIST_PUBLIC_API, requestContext, user);
+      if (user != null) {
+        isApiKeyAuthorizedWithBearerToken = true;
+      } else {
+        String apiKey = requestContext.getHeaderString(API_KEY_HEADER);
+        // This is only possible when allowEmptyApiKey is true.
+        if (isEmpty(apiKey)) {
+          return;
+        }
 
-      String apiKey = requestContext.getHeaderString(API_KEY_HEADER);
-      if (isEmpty(apiKey)) {
+        List<PermissionAttribute> requiredPermissionAttributes =
+            getApiKeyAuthorizedPermissionAttributes(requestContext);
+        boolean skipAuth = skipAuth(requiredPermissionAttributes);
+        user = setUserAndUserRequestContextUsingApiKey(
+            accountId, requestContext, emptyAppIdsInReq, appIdsFromRequest, requiredPermissionAttributes, skipAuth);
+
+        if (isEmpty(requiredPermissionAttributes) || allLoggedInScope(requiredPermissionAttributes)) {
+          return;
+        }
+
+        boolean accountLevelPermissions = isAccountLevelPermissions(requiredPermissionAttributes);
+        authorizeUser(user, requestContext, accountId, appIdsFromRequest, requiredPermissionAttributes, skipAuth,
+            accountLevelPermissions);
         return;
       }
-
-      List<PermissionAttribute> requiredPermissionAttributes = getApiKeyAuthorizedPermissionAttributes(requestContext);
-      boolean skipAuth = skipAuth(requiredPermissionAttributes);
-      user = setUserAndUserRequestContextUsingApiKey(
-          accountId, requestContext, emptyAppIdsInReq, appIdsFromRequest, requiredPermissionAttributes, skipAuth);
-
-      if (isEmpty(requiredPermissionAttributes) || allLoggedInScope(requiredPermissionAttributes)) {
-        return;
-      }
-
-      boolean accountLevelPermissions = isAccountLevelPermissions(requiredPermissionAttributes);
-      authorizeUser(user, requestContext, accountId, appIdsFromRequest, requiredPermissionAttributes, skipAuth,
-          accountLevelPermissions);
-      return;
     }
 
     String uriPath = requestContext.getUriInfo().getPath();
@@ -317,10 +323,17 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         }
       }
 
-      if (!harnessUserGroupService.isHarnessSupportUser(user.getUuid())
-          || !harnessUserGroupService.isHarnessSupportEnabledForAccount(accountId)) {
-        throw new AccessDeniedException(USER_NOT_AUTHORIZED, USER);
+      if (featureFlagService.isEnabled(FeatureName.LIMITED_ACCESS_FOR_HARNESS_USER_GROUP, accountId)) {
+        if (!harnessUserGroupService.isHarnessSupportEnabled(accountId, user.getUuid())) {
+          throw new AccessDeniedException(USER_NOT_AUTHORIZED, USER);
+        }
+      } else {
+        if (!harnessUserGroupService.isHarnessSupportUser(user.getUuid())
+            || !harnessUserGroupService.isHarnessSupportEnabledForAccount(accountId)) {
+          throw new AccessDeniedException(USER_NOT_AUTHORIZED, USER);
+        }
       }
+
       harnessSupportUser = true;
     }
 
@@ -328,8 +341,11 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     if (servletRequest != null && !graphQLRequest) {
       checkForWhitelisting(accountId, null, requestContext, user);
     }
-    requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
-
+    if (isApiKeyAuthorizedWithBearerToken) {
+      requiredPermissionAttributes = getApiKeyAuthorizedPermissionAttributes(requestContext);
+    } else {
+      requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
+    }
     if (isEmpty(requiredPermissionAttributes) || allLoggedInScope(requiredPermissionAttributes)) {
       UserRequestContext userRequestContext =
           buildUserRequestContext(accountId, user, emptyAppIdsInReq, harnessSupportUser);

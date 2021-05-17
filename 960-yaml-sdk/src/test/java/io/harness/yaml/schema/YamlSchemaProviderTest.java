@@ -13,6 +13,8 @@ import static org.powermock.api.mockito.PowerMockito.doReturn;
 
 import io.harness.CategoryTest;
 import io.harness.EntityType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.encryption.Scope;
 import io.harness.rule.Owner;
@@ -38,6 +40,7 @@ import org.mockito.Mockito;
 //
 //@RunWith(PowerMockRunner.class)
 //@PrepareForTest({YamlSchemaUtils.class, IOUtils.class})
+@OwnedBy(HarnessTeam.DX)
 public class YamlSchemaProviderTest extends CategoryTest {
   YamlSchemaProvider yamlSchemaProvider;
   String schema;
@@ -59,7 +62,7 @@ public class YamlSchemaProviderTest extends CategoryTest {
     yamlSchemaProvider = new YamlSchemaProvider(yamlSchemaHelper);
     schema = getResource("testSchema/sampleSchema.json");
     YamlSchemaGenerator yamlSchemaGenerator = new YamlSchemaGenerator(
-        new JacksonClassHelper(), new SwaggerGenerator(Jackson.newObjectMapper()), yamlSchemaRootClasses);
+        new JacksonClassHelper(objectMapper), new SwaggerGenerator(Jackson.newObjectMapper()), yamlSchemaRootClasses);
     Map<EntityType, JsonNode> entityTypeJsonNodeMap = yamlSchemaGenerator.generateYamlSchema();
     yamlSchemaHelper.initializeSchemaMaps(entityTypeJsonNodeMap);
     doReturn(YamlSchemaWithDetails.builder()

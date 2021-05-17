@@ -48,11 +48,6 @@ import io.harness.ccm.views.service.impl.CEReportTemplateBuilderServiceImpl;
 import io.harness.ccm.views.service.impl.CEViewServiceImpl;
 import io.harness.ccm.views.service.impl.ViewCustomFieldServiceImpl;
 import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
-import io.harness.cf.CFApi;
-import io.harness.cf.CfClientConfig;
-import io.harness.cf.CfMigrationConfig;
-import io.harness.cf.client.api.CfClient;
-import io.harness.cf.openapi.ApiClient;
 import io.harness.config.PipelineConfig;
 import io.harness.configuration.DeployMode;
 import io.harness.connector.ConnectorResourceClientModule;
@@ -101,6 +96,7 @@ import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.ff.FeatureFlagModule;
+import io.harness.file.FileServiceModule;
 import io.harness.git.GitClientV2;
 import io.harness.git.GitClientV2Impl;
 import io.harness.govern.ProviderMethodInterceptor;
@@ -142,11 +138,13 @@ import io.harness.perpetualtask.PerpetualTaskServiceModule;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
+import io.harness.remote.client.ClientMode;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.secretmanagers.SecretsManagerRBACService;
 import io.harness.secretmanagers.SecretsManagerRBACServiceImpl;
+import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.secrets.SecretsAuditService;
 import io.harness.secrets.SecretsAuditServiceImpl;
 import io.harness.secrets.SecretsDelegateCacheHelperService;
@@ -168,6 +166,8 @@ import io.harness.seeddata.SampleDataProviderService;
 import io.harness.seeddata.SampleDataProviderServiceImpl;
 import io.harness.serializer.YamlUtils;
 import io.harness.service.DelegateServiceDriverModule;
+import io.harness.service.impl.DelegateTokenServiceImpl;
+import io.harness.service.intfc.DelegateTokenService;
 import io.harness.templatizedsm.RuntimeCredentialsInjector;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
@@ -294,6 +294,7 @@ import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountC
 import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountCheckerImpl;
 import software.wings.security.saml.SamlUserGroupSync;
 import software.wings.service.EcrClassicBuildServiceImpl;
+import software.wings.service.impl.AccessRequestServiceImpl;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.AcrBuildServiceImpl;
 import software.wings.service.impl.ActivityServiceImpl;
@@ -332,7 +333,6 @@ import software.wings.service.impl.EmailNotificationServiceImpl;
 import software.wings.service.impl.EntityVersionServiceImpl;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.ExternalApiRateLimitingServiceImpl;
-import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.GcpInfrastructureProvider;
 import software.wings.service.impl.GcrBuildServiceImpl;
 import software.wings.service.impl.GcsBuildServiceImpl;
@@ -347,7 +347,6 @@ import software.wings.service.impl.InfrastructureProvisionerServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.LogServiceImpl;
 import software.wings.service.impl.MicrosoftTeamsNotificationServiceImpl;
-import software.wings.service.impl.MigrationServiceImpl;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.NotificationDispatcherServiceImpl;
 import software.wings.service.impl.NotificationServiceImpl;
@@ -418,6 +417,7 @@ import software.wings.service.impl.azure.manager.AzureVMSSHelperServiceManagerIm
 import software.wings.service.impl.ce.CeAccountExpirationCheckerImpl;
 import software.wings.service.impl.compliance.GovernanceConfigServiceImpl;
 import software.wings.service.impl.customdeployment.CustomDeploymentTypeServiceImpl;
+import software.wings.service.impl.cvng.CVNGStateServiceImpl;
 import software.wings.service.impl.datadog.DatadogServiceImpl;
 import software.wings.service.impl.deployment.checks.AccountExpirationChecker;
 import software.wings.service.impl.deployment.checks.DeploymentRateLimitChecker;
@@ -503,6 +503,7 @@ import software.wings.service.impl.yaml.YamlSuccessfulChangeServiceImpl;
 import software.wings.service.impl.yaml.service.YamlCloneServiceImpl;
 import software.wings.service.impl.yaml.sync.GitSyncErrorServiceImpl;
 import software.wings.service.impl.yaml.sync.YamlGitConfigServiceImpl;
+import software.wings.service.intfc.AccessRequestService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AcrBuildService;
 import software.wings.service.intfc.ActivityService;
@@ -550,7 +551,6 @@ import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ErrorReporter;
 import software.wings.service.intfc.ExternalApiRateLimitingService;
-import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.GcrBuildService;
 import software.wings.service.intfc.GcsBuildService;
 import software.wings.service.intfc.HarnessApiKeyService;
@@ -566,7 +566,6 @@ import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.MicrosoftTeamsNotificationService;
-import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.NexusBuildService;
 import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationService;
@@ -631,6 +630,7 @@ import software.wings.service.intfc.azure.manager.AzureVMSSHelperServiceManager;
 import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
+import software.wings.service.intfc.cvng.CVNGStateService;
 import software.wings.service.intfc.datadog.DatadogService;
 import software.wings.service.intfc.deployment.AccountExpiryCheck;
 import software.wings.service.intfc.deployment.PreDeploymentChecker;
@@ -867,9 +867,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
           bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
               .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
-          bind(Producer.class)
-              .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
-              .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
         } else {
           bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
@@ -883,10 +880,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
               .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_ACTIVITY, redisConfig,
                   EventsFrameworkConstants.ENTITY_ACTIVITY_MAX_TOPIC_SIZE, MANAGER.getServiceId()));
-          bind(Producer.class)
-              .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
-              .toInstance(RedisProducer.of(EventsFrameworkConstants.USERMEMBERSHIP, redisConfig,
-                  EventsFrameworkConstants.DEFAULT_TOPIC_SIZE, MANAGER.getServiceId()));
         }
       }
     });
@@ -1030,7 +1023,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(TriggerService.class).to(TriggerServiceImpl.class);
     bind(VerificationService.class).to(VerificationServiceImpl.class);
     bind(Clock.class).toInstance(Clock.systemUTC());
-    bind(MigrationService.class).to(MigrationServiceImpl.class).in(Singleton.class);
     bind(WorkflowExecutionBaselineService.class).to(WorkflowExecutionBaselineServiceImpl.class);
     bind(GitClient.class).to(GitClientUnsupported.class).in(Singleton.class);
     bind(WhitelistService.class).to(WhitelistServiceImpl.class);
@@ -1067,6 +1059,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(YamlGitConfigService.class).to(YamlGitConfigServiceImpl.class);
     bind(ErrorReporter.class).to(BugsnagErrorReporter.class);
     bind(CeAccountExpirationChecker.class).to(CeAccountExpirationCheckerImpl.class);
+    bind(AccessRequestService.class).to(AccessRequestServiceImpl.class);
 
     bind(GcbService.class).to(GcbServiceImpl.class);
 
@@ -1095,6 +1088,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(HealthStatusService.class).to(HealthStatusServiceImpl.class);
     bind(GcpBillingService.class).to(GcpBillingServiceImpl.class);
     bind(PreAggregateBillingService.class).to(PreAggregateBillingServiceImpl.class);
+    bind(DelegateTokenService.class).to(DelegateTokenServiceImpl.class);
 
     bind(WingsMongoExportImport.class);
 
@@ -1109,6 +1103,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(SecretDecryptionService.class).to(SecretDecryptionServiceImpl.class);
     bind(CVNGVerificationTaskService.class).to(CVNGVerificationTaskServiceImpl.class);
     bind(CVNGService.class).to(CVNGServiceImpl.class);
+    bind(CVNGStateService.class).to(CVNGStateServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
@@ -1210,7 +1205,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
       configuration.setFileStorageMode(DataStorageMode.MONGO);
     }
 
-    bind(FileService.class).to(FileServiceImpl.class);
+    install(new FileServiceModule(configuration.getFileStorageMode(), configuration.getClusterName()));
     bind(AlertNotificationRuleChecker.class).to(AlertNotificationRuleCheckerImpl.class);
 
     bind(new TypeLiteral<NotificationDispatcher<UserGroup>>() {})
@@ -1314,13 +1309,17 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(new CVNextGenCommonsServiceModule());
     try {
       install(new ConnectorResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
-          configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+          configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId(), ClientMode.PRIVILEGED));
     } catch (Exception ex) {
       log.info("Could not create the connector resource client module", ex);
     }
 
     // ng-invite Dependencies
     install(new NgInviteClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+
+    // ng-secret dependencies
+    install(new SecretNGManagerClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
 
     install(CgOrchestrationModule.getInstance());
@@ -1569,33 +1568,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
         MapBinder.newMapBinder(binder(), String.class, GcpProductHandler.class);
 
     binder.addBinding("harness-continuous-delivery").to(CDProductHandler.class).in(Singleton.class);
-  }
-
-  @Provides
-  CfClient provideCfClient() {
-    CfClientConfig cfClientConfig = configuration.getCfClientConfig();
-    if (cfClientConfig == null) {
-      return null;
-    }
-    log.info("Using CF API key {}", cfClientConfig.getApiKey());
-    String apiKey = cfClientConfig.getApiKey();
-
-    return new CfClient(apiKey);
-  }
-
-  @Provides
-  @Singleton
-  CFApi providesCfAPI() {
-    CfMigrationConfig migrationConfig = configuration.getCfMigrationConfig();
-    ApiClient apiClient = new ApiClient();
-    apiClient.setBasePath(migrationConfig.getAdminUrl());
-    return new CFApi(apiClient);
-  }
-
-  @Provides
-  @Singleton
-  CfMigrationConfig providesCfMigrationConfig() {
-    return configuration.getCfMigrationConfig();
   }
 
   @Provides

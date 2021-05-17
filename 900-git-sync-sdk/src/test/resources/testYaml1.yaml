@@ -1,0 +1,6 @@
+a: as
+sampleBean:
+  test1: test1
+  accountIdentifier: accountid
+  projectIdentifier: projid
+  orgIdentifier: orgid

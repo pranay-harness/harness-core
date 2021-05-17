@@ -4,10 +4,11 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.manifest.yaml.StoreConfig;
+import io.harness.cdng.manifest.yaml.GitStoreConfigDTO;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
+import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 
 import com.google.common.collect.ImmutableList;
@@ -30,7 +31,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @HarnessEntity(exportable = true)
 @StoreIn(DbAliases.NG_MANAGER)
 @OwnedBy(HarnessTeam.CDP)
-public class TerraformConfig implements PersistentEntity {
+public class TerraformConfig implements PersistentEntity, CreatedAtAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(SortCompoundMongoIndex.builder()
@@ -52,9 +53,8 @@ public class TerraformConfig implements PersistentEntity {
   String pipelineExecutionId;
   long createdAt;
 
-  StoreConfig configFiles;
-  List<StoreConfig> remoteVarFiles;
-  List<String> inlineVarFiles;
+  GitStoreConfigDTO configFiles;
+  List<TerraformVarFileConfig> varFileConfigs;
   String backendConfig;
   Map<String, String> environmentVariables;
   String workspace;

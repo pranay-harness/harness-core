@@ -1,5 +1,6 @@
 package software.wings.cloudprovider.aws;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INIT_TIMEOUT;
@@ -14,6 +15,8 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
@@ -50,11 +53,11 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -63,6 +66,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 @OwnedBy(CDP)
+@TargetModule(_930_DELEGATE_TASKS)
 public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
   @Inject private AwsHelperService awsHelperService;
   @Inject private TimeLimiter timeLimiter;
@@ -230,12 +234,12 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
       String region, String deploymentId, int timeout) {
     try {
       Set<String> finalDeploymentStatus = Sets.newHashSet(Succeeded.name(), Failed.name(), Stopped.name());
-      timeLimiter.callWithTimeout(() -> {
+      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeout), () -> {
         while (!deploymentCompleted(awsConfig, encryptedDataDetails, region, deploymentId, finalDeploymentStatus)) {
           sleep(ofSeconds(10));
         }
         return true;
-      }, timeout, TimeUnit.MINUTES, true);
+      });
     } catch (UncheckedTimeoutException e) {
       throw new WingsException(INIT_TIMEOUT).addParam("message", "Timed out waiting for deployment to complete");
     } catch (WingsException e) {

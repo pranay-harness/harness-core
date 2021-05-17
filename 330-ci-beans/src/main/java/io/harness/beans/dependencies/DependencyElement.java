@@ -1,13 +1,16 @@
 package io.harness.beans.dependencies;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
+
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
-import io.harness.common.SwaggerConstants;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.WithIdentifier;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.yaml.core.intfc.WithIdentifier;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -20,6 +23,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @JsonTypeName("dependency")
+@OwnedBy(CI)
 public class DependencyElement implements WithIdentifier {
   @EntityIdentifier String identifier;
   @EntityName String name;

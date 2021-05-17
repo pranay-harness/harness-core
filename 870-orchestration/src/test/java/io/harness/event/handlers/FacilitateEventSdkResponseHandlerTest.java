@@ -11,7 +11,7 @@ import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.events.FacilitatorResponseRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
-import io.harness.pms.execution.SdkResponseEventInternal;
+import io.harness.pms.execution.SdkResponseEvent;
 import io.harness.rule.Owner;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.waiter.WaitNotifyEngine;
@@ -48,8 +48,8 @@ public class FacilitateEventSdkResponseHandlerTest {
         FacilitatorResponseRequest.newBuilder()
             .setFacilitatorResponse(FacilitatorResponseProto.newBuilder().setExecutionMode(ExecutionMode.TASK).build())
             .build();
-    SdkResponseEventInternal sdkResponseEventInternal =
-        SdkResponseEventInternal.builder()
+    SdkResponseEvent sdkResponseEventInternal =
+        SdkResponseEvent.builder()
             .sdkResponseEventRequest(
                 SdkResponseEventRequest.newBuilder().setFacilitatorResponseRequest(request).build())
             .build();

@@ -70,5 +70,6 @@ extend type Query {
     filters: [DeploymentFilter]
     groupBy: [DeploymentAggregation]
     sortCriteria: [DeploymentSortCriteria]
+    includeIndirectExecutions: Boolean
   ): Data @dataFetcher(name: deploymentStats)
 }

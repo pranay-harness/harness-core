@@ -1,8 +1,12 @@
 package io.harness.accesscontrol.roleassignments.api;
 
 import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
+import static io.harness.accesscontrol.AccessControlPermissions.MANAGE_USERGROUP_PERMISSION;
+import static io.harness.accesscontrol.AccessControlPermissions.MANAGE_USER_PERMISSION;
 import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
+import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
+import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO.MODEL_NAME;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.fromDTO;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.toDTO;
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -12,6 +16,11 @@ import static java.util.stream.Collectors.toList;
 import static lombok.AccessLevel.PACKAGE;
 import static lombok.AccessLevel.PRIVATE;
 
+import io.harness.accesscontrol.AccessControlResourceTypes;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
+import io.harness.accesscontrol.common.validation.ValidationResult;
 import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupService;
 import io.harness.accesscontrol.resourcegroups.api.ResourceGroupDTO;
 import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupService;
@@ -24,6 +33,7 @@ import io.harness.accesscontrol.roleassignments.RoleAssignmentUpdateResult;
 import io.harness.accesscontrol.roleassignments.events.RoleAssignmentCreateEvent;
 import io.harness.accesscontrol.roleassignments.events.RoleAssignmentDeleteEvent;
 import io.harness.accesscontrol.roleassignments.events.RoleAssignmentUpdateEvent;
+import io.harness.accesscontrol.roleassignments.validation.RoleAssignmentActionValidator;
 import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.roles.api.RoleDTOMapper;
 import io.harness.accesscontrol.roles.api.RoleResponseDTO;
@@ -39,6 +49,7 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.outbox.api.OutboxService;
+import io.harness.security.annotations.InternalApi;
 import io.harness.utils.RetryUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -57,6 +68,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
@@ -64,6 +76,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -97,7 +110,9 @@ public class RoleAssignmentResource {
   RoleAssignmentDTOMapper roleAssignmentDTOMapper;
   RoleDTOMapper roleDTOMapper;
   @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate;
+  @Named(MODEL_NAME) RoleAssignmentActionValidator actionValidator;
   OutboxService outboxService;
+  AccessControlClient accessControlClient;
 
   RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
       "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
@@ -165,8 +180,10 @@ public class RoleAssignmentResource {
     if (roleAssignmentDTO.getPrincipal().getType().equals(USER_GROUP)) {
       harnessUserGroupService.sync(roleAssignmentDTO.getPrincipal().getIdentifier(), scope);
     }
-    RoleAssignment createdRoleAssignment = roleAssignmentService.create(fromDTO(scope.toString(), roleAssignmentDTO));
+    RoleAssignment roleAssignment = fromDTO(scope.toString(), roleAssignmentDTO);
+    checkPermission(harnessScopeParams, roleAssignment);
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      RoleAssignment createdRoleAssignment = roleAssignmentService.create(roleAssignment);
       RoleAssignmentResponseDTO response = roleAssignmentDTOMapper.toResponseDTO(createdRoleAssignment);
       outboxService.save(new RoleAssignmentCreateEvent(
           response.getScope().getAccountIdentifier(), response.getRoleAssignment(), response.getScope()));
@@ -183,9 +200,10 @@ public class RoleAssignmentResource {
     if (!identifier.equals(roleAssignmentDTO.getIdentifier())) {
       throw new InvalidRequestException("Role Assignment identifier in the request body and the url do not match.");
     }
-    RoleAssignmentUpdateResult roleAssignmentUpdateResult =
-        roleAssignmentService.update(fromDTO(scope.toString(), roleAssignmentDTO));
+    RoleAssignment roleAssignmentUpdate = fromDTO(scope.toString(), roleAssignmentDTO);
+    checkPermission(harnessScopeParams, roleAssignmentUpdate);
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      RoleAssignmentUpdateResult roleAssignmentUpdateResult = roleAssignmentService.update(roleAssignmentUpdate);
       RoleAssignmentResponseDTO response =
           roleAssignmentDTOMapper.toResponseDTO(roleAssignmentUpdateResult.getUpdatedRoleAssignment());
       outboxService.save(
@@ -197,20 +215,13 @@ public class RoleAssignmentResource {
     }));
   }
 
-  /**
-   * idempotent call, calling it multiple times won't create any side effect,
-   * returns all role assignments which were created ignoring duplicates or failures, if any.
-   */
-  @POST
-  @Path("/multi")
-  @ApiOperation(value = "Create Multiple Role Assignments", nickname = "createRoleAssignments")
-  public ResponseDTO<List<RoleAssignmentResponseDTO>> create(@BeanParam HarnessScopeParams harnessScopeParams,
-      @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO) {
+  private List<RoleAssignmentResponseDTO> createRoleAssignments(HarnessScopeParams harnessScopeParams,
+      RoleAssignmentCreateRequestDTO requestDTO, boolean managed, boolean applyAccessChecks) {
     Scope scope = scopeService.buildScopeFromParams(harnessScopeParams);
     List<RoleAssignment> roleAssignmentsPayload =
-        roleAssignmentCreateRequestDTO.getRoleAssignments()
+        requestDTO.getRoleAssignments()
             .stream()
-            .map(roleAssignmentDTO -> fromDTO(scope.toString(), roleAssignmentDTO))
+            .map(roleAssignmentDTO -> fromDTO(scope.toString(), roleAssignmentDTO, managed))
             .collect(Collectors.toList());
     List<RoleAssignmentResponseDTO> createdRoleAssignments = new ArrayList<>();
     for (RoleAssignment roleAssignment : roleAssignmentsPayload) {
@@ -218,6 +229,9 @@ public class RoleAssignmentResource {
         harnessResourceGroupService.sync(roleAssignment.getResourceGroupIdentifier(), scope);
         if (roleAssignment.getPrincipalType().equals(USER_GROUP)) {
           harnessUserGroupService.sync(roleAssignment.getPrincipalIdentifier(), scope);
+        }
+        if (applyAccessChecks) {
+          checkPermission(harnessScopeParams, roleAssignment);
         }
         RoleAssignmentResponseDTO roleAssignmentResponseDTO =
             Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
@@ -232,7 +246,30 @@ public class RoleAssignmentResource {
         log.error(String.format("Could not create role assignment %s", roleAssignment), e);
       }
     }
-    return ResponseDTO.newResponse(createdRoleAssignments);
+    return createdRoleAssignments;
+  }
+  /**
+   * idempotent call, calling it multiple times won't create any side effect,
+   * returns all role assignments which were created ignoring duplicates or failures, if any.
+   */
+  @POST
+  @Path("/multi")
+  @ApiOperation(value = "Create Multiple Role Assignments", nickname = "createRoleAssignments")
+  public ResponseDTO<List<RoleAssignmentResponseDTO>> create(@BeanParam HarnessScopeParams harnessScopeParams,
+      @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO) {
+    return ResponseDTO.newResponse(
+        createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, false, true));
+  }
+
+  @POST
+  @Path("/multi/internal")
+  @InternalApi
+  @ApiOperation(value = "Create Multiple Role Assignments", nickname = "createRoleAssignmentsInternal")
+  public ResponseDTO<List<RoleAssignmentResponseDTO>> create(@BeanParam HarnessScopeParams harnessScopeParams,
+      @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO,
+      @QueryParam("managed") @DefaultValue("false") Boolean managed) {
+    return ResponseDTO.newResponse(
+        createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, managed, false));
   }
 
   @POST
@@ -251,15 +288,40 @@ public class RoleAssignmentResource {
   public ResponseDTO<RoleAssignmentResponseDTO> delete(
       @BeanParam HarnessScopeParams harnessScopeParams, @NotEmpty @PathParam(IDENTIFIER_KEY) String identifier) {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
-    RoleAssignment deletedRoleAssignment =
-        roleAssignmentService.delete(identifier, scopeIdentifier).<NotFoundException>orElseThrow(() -> {
-          throw new NotFoundException("Role Assignment not found with the given scope and identifier");
+    RoleAssignment roleAssignment =
+        roleAssignmentService.get(identifier, scopeIdentifier).<InvalidRequestException>orElseThrow(() -> {
+          throw new InvalidRequestException("Invalid Role Assignment");
         });
+    checkPermission(harnessScopeParams, roleAssignment);
+    ValidationResult validationResult = actionValidator.canDelete(roleAssignment);
+    if (!validationResult.isValid()) {
+      throw new InvalidRequestException(validationResult.getErrorMessage());
+    }
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      RoleAssignment deletedRoleAssignment =
+          roleAssignmentService.delete(identifier, scopeIdentifier).<NotFoundException>orElseThrow(() -> {
+            throw new NotFoundException("Role Assignment is already deleted");
+          });
       RoleAssignmentResponseDTO response = roleAssignmentDTOMapper.toResponseDTO(deletedRoleAssignment);
       outboxService.save(new RoleAssignmentDeleteEvent(
           response.getScope().getAccountIdentifier(), response.getRoleAssignment(), response.getScope()));
       return ResponseDTO.newResponse(response);
     }));
+  }
+
+  private void checkPermission(HarnessScopeParams harnessScopeParams, RoleAssignment roleAssignment) {
+    if (USER_GROUP.equals(roleAssignment.getPrincipalType())) {
+      accessControlClient.checkForAccessOrThrow(
+          ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
+              harnessScopeParams.getProjectIdentifier()),
+          Resource.of(AccessControlResourceTypes.USER_GROUP, roleAssignment.getPrincipalIdentifier()),
+          MANAGE_USERGROUP_PERMISSION);
+    } else if (USER.equals(roleAssignment.getPrincipalType())) {
+      accessControlClient.checkForAccessOrThrow(
+          ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
+              harnessScopeParams.getProjectIdentifier()),
+          Resource.of(AccessControlResourceTypes.USER, roleAssignment.getPrincipalIdentifier()),
+          MANAGE_USER_PERMISSION);
+    }
   }
 }

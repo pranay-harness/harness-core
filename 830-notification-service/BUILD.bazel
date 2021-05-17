@@ -1,7 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
@@ -150,7 +149,6 @@ shared_dependencies = [
     "@maven//:io_dropwizard_dropwizard_metrics",
     "@maven//:io_dropwizard_dropwizard_request_logging",
     "@maven//:io_dropwizard_dropwizard_servlets",
-    "@maven//:io_dropwizard_dropwizard_testing",
     "@maven//:io_dropwizard_dropwizard_util",
     "@maven//:io_dropwizard_dropwizard_validation",
     "@maven//:io_dropwizard_dropwizard_views",
@@ -395,6 +393,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

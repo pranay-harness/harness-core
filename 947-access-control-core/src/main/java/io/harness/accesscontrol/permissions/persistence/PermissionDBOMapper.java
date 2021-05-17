@@ -14,6 +14,7 @@ class PermissionDBOMapper {
         .identifier(object.getIdentifier())
         .name(object.getName())
         .status(object.getStatus())
+        .includeInAllRoles(object.isIncludeInAllRoles())
         .allowedScopeLevels(object.getAllowedScopeLevels())
         .version(object.getVersion())
         .build();
@@ -24,6 +25,7 @@ class PermissionDBOMapper {
         .identifier(object.getIdentifier())
         .name(object.getName())
         .status(object.getStatus())
+        .includeInAllRoles(Boolean.TRUE.equals(object.getIncludeInAllRoles()))
         .allowedScopeLevels(object.getAllowedScopeLevels())
         .version(object.getVersion())
         .build();

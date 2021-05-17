@@ -10,6 +10,7 @@ import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -61,6 +62,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(DEL)
+@BreakDependencyOn("software.wings.app.MainConfiguration")
 public class DelegateFileResource {
   @Inject private FileService fileService;
   @Inject private MainConfiguration configuration;

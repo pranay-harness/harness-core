@@ -38,6 +38,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.account.ProvisionStep;
 import io.harness.account.ProvisionStep.ProvisionStepKeys;
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureFlag;
@@ -212,6 +213,8 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 @ValidateOnExecution
 @Slf4j
 @TargetModule(_955_ACCOUNT_MGMT)
+@BreakDependencyOn("io.harness.delegate.beans.Delegate")
+@BreakDependencyOn("software.wings.service.impl.DelegateConnectionDao")
 public class AccountServiceImpl implements AccountService {
   private static final SecureRandom random = new SecureRandom();
   private static final int SIZE_PER_SERVICES_REQUEST = 25;
@@ -458,6 +461,8 @@ public class AccountServiceImpl implements AccountService {
       featureFlagService.enableAccount(FeatureName.CFNG_ENABLED, account.getUuid());
       featureFlagService.enableAccount(FeatureName.CING_ENABLED, account.getUuid());
       featureFlagService.enableAccount(FeatureName.CVNG_ENABLED, account.getUuid());
+    } else if (account.isCreatedFromNG()) {
+      featureFlagService.enableAccount(FeatureName.NEXT_GEN_ENABLED, account.getUuid());
     }
   }
 
@@ -515,7 +520,7 @@ public class AccountServiceImpl implements AccountService {
     accountDetails.setAccountId(accountId);
     accountDetails.setAccountName(account.getAccountName());
     accountDetails.setCompanyName(account.getCompanyName());
-    accountDetails.setCluster(mainConfiguration.getClusterName());
+    accountDetails.setCluster(mainConfiguration.getDeploymentClusterName());
     accountDetails.setLicenseInfo(account.getLicenseInfo());
     accountDetails.setCeLicenseInfo(account.getCeLicenseInfo());
     return accountDetails;
@@ -605,14 +610,14 @@ public class AccountServiceImpl implements AccountService {
    */
   @Override
   public String suggestAccountName(@NotNull String accountName) {
-    if (!isDuplicateAccountName(accountName)) {
+    if (!exists(accountName)) {
       return accountName;
     }
     log.debug("Account name '{}' already in use, generating new unique account name", accountName);
     int count = 0;
     while (count < NUM_OF_RETRIES_TO_GENERATE_UNIQUE_ACCOUNT_NAME) {
       String newAccountName = accountName + "-" + (1000 + random.nextInt(9000));
-      if (!isDuplicateAccountName(newAccountName)) {
+      if (!exists(newAccountName)) {
         return newAccountName;
       }
       count++;
@@ -772,7 +777,7 @@ public class AccountServiceImpl implements AccountService {
   public boolean exists(String accountName) {
     return wingsPersistence.createQuery(Account.class, excludeAuthority)
                .field(AccountKeys.accountName)
-               .equal(accountName)
+               .equalIgnoreCase(accountName)
                .getKey()
         != null;
   }
@@ -839,6 +844,10 @@ public class AccountServiceImpl implements AccountService {
 
     if (account.getServiceGuardLimit() != null) {
       updateOperations.set(AccountKeys.serviceGuardLimit, account.getServiceGuardLimit());
+    }
+
+    if (account.getDefaultExperience() != null) {
+      updateOperations.set(AccountKeys.defaultExperience, account.getDefaultExperience());
     }
 
     wingsPersistence.update(account, updateOperations);
@@ -1779,5 +1788,23 @@ public class AccountServiceImpl implements AccountService {
           account.getDataRetentionDurationMs() == 0 ? ofDays(183).toMillis() : account.getDataRetentionDurationMs());
     });
     return accounts;
+  }
+
+  @Override
+  public boolean enableHarnessUserGroupAccess(String accountId) {
+    Account account = get(accountId);
+    notNullCheck("Invalid Account for the given Id: " + accountId, account);
+    account.setHarnessSupportAccessAllowed(true);
+    wingsPersistence.save(account);
+    return true;
+  }
+
+  @Override
+  public boolean disableHarnessUserGroupAccess(String accountId) {
+    Account account = get(accountId);
+    notNullCheck("Invalid Account for the given Id: " + accountId, account);
+    account.setHarnessSupportAccessAllowed(false);
+    wingsPersistence.save(account);
+    return true;
   }
 }

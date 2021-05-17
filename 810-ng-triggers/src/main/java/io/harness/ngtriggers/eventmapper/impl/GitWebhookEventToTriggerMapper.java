@@ -1,7 +1,10 @@
 package io.harness.ngtriggers.eventmapper.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.eventsframework.webhookpayloads.webhookdata.WebhookEventType.PR;
 import static io.harness.eventsframework.webhookpayloads.webhookdata.WebhookEventType.PUSH;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ngtriggers.beans.dto.TriggerMappingRequestData;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
@@ -26,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
+@OwnedBy(PIPELINE)
 public class GitWebhookEventToTriggerMapper implements WebhookEventToTriggerMapper {
   private final WebhookEventPayloadParser webhookEventPayloadParser;
   private final TriggerFilterStore triggerFilterHelper;
@@ -33,7 +37,6 @@ public class GitWebhookEventToTriggerMapper implements WebhookEventToTriggerMapp
 
   public WebhookEventMappingResponse mapWebhookEventToTriggers(TriggerMappingRequestData mappingRequestData) {
     TriggerWebhookEvent triggerWebhookEvent = mappingRequestData.getTriggerWebhookEvent();
-    String projectFqn = getProjectFqn(triggerWebhookEvent);
 
     // 1. Parse Payload
     WebhookPayloadData webhookPayloadData = null;
@@ -51,11 +54,13 @@ public class GitWebhookEventToTriggerMapper implements WebhookEventToTriggerMapp
           mappingRequestData.getWebhookDTO().getParsedResponse(), triggerWebhookEvent);
     }
 
-    publishPushEvent(webhookPayloadData);
+    publishPushAndPrEvent(webhookPayloadData);
 
     // Generate list of all filters to be applied
-    FilterRequestData filterRequestData =
-        FilterRequestData.builder().projectFqn(projectFqn).webhookPayloadData(webhookPayloadData).build();
+    FilterRequestData filterRequestData = FilterRequestData.builder()
+                                              .accountId(webhookPayloadData.getOriginalEvent().getAccountId())
+                                              .webhookPayloadData(webhookPayloadData)
+                                              .build();
     List<TriggerFilter> triggerFilters =
         triggerFilterHelper.getWebhookTriggerFilters(filterRequestData.getWebhookPayloadData());
 
@@ -75,6 +80,7 @@ public class GitWebhookEventToTriggerMapper implements WebhookEventToTriggerMapp
         }
       }
     } catch (Exception e) {
+      log.error("Exception while evaluating Triggers: ", e);
       return triggerFilterInAction.getWebhookResponseForException(filterRequestData, e);
     }
 
@@ -83,7 +89,7 @@ public class GitWebhookEventToTriggerMapper implements WebhookEventToTriggerMapp
 
   /**
    * This is temporary, added specifically to support TI use-case.
-   * We only publish "PUSH" git event.
+   * We only publish "PUSH" and "PR" git event.
    * This will become part of common service, where different subscribers can subscribe for
    * eventType, triggerType to receive events.
    * <p>
@@ -92,10 +98,12 @@ public class GitWebhookEventToTriggerMapper implements WebhookEventToTriggerMapp
    * @param webhookPayloadData
    */
   @VisibleForTesting
-  void publishPushEvent(WebhookPayloadData webhookPayloadData) {
+  void publishPushAndPrEvent(WebhookPayloadData webhookPayloadData) {
     try {
       if (webhookPayloadData.getParseWebhookResponse().hasPush()) {
         webhookEventPublisher.publishGitWebhookEvent(webhookPayloadData, PUSH);
+      } else if (webhookPayloadData.getParseWebhookResponse().hasPr()) {
+        webhookEventPublisher.publishGitWebhookEvent(webhookPayloadData, PR);
       }
     } catch (Exception e) {
       log.error("Failed to send webhook event {} to events framework: {}",

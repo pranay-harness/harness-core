@@ -7,8 +7,6 @@
     <packaging>pom</packaging>
     <modules>
         <module>980-java-agent</module>
-        <module>260-delegate</module>
-        <module>250-watcher</module>
     </modules>
     <scm>
         <connection>scm:git:git://github.com/wings-software/portal.git</connection>
@@ -1053,17 +1051,17 @@
             <dependency>
                 <groupId>io.kubernetes</groupId>
                 <artifactId>client-java</artifactId>
-                <version>8.0.2</version>
+                <version>9.0.2</version>
             </dependency>
             <dependency>
                 <groupId>io.kubernetes</groupId>
                 <artifactId>client-java-api</artifactId>
-                <version>8.0.2</version>
+                <version>9.0.2</version>
             </dependency>
             <dependency>
                 <groupId>io.kubernetes</groupId>
                 <artifactId>client-java-extended</artifactId>
-                <version>8.0.2</version>
+                <version>9.0.2</version>
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
@@ -1140,6 +1138,12 @@
                 <artifactId>netty-transport-native-epoll</artifactId>
                 <version>4.1.52.Final</version>
                 <classifier>linux-x86_64</classifier>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-transport-native-kqueue</artifactId>
+                <version>4.1.63.Final</version>
+                <classifier>osx-x86_64</classifier>
             </dependency>
             <dependency>
                 <groupId>io.projectreactor</groupId>

@@ -4,11 +4,13 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.platform.PlatformConfiguration.getResourceGroupServiceResourceClasses;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.health.HealthService;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
 import io.harness.remote.CharsetResponseFilter;
+import io.harness.resource.VersionInfoResource;
 import io.harness.resourcegroup.ResourceGroupServiceConfig;
 import io.harness.resourcegroup.reconciliation.ResourceGroupAsyncReconciliationHandler;
 import io.harness.resourcegroup.reconciliation.ResourceGroupSyncConciliationService;
@@ -34,6 +36,7 @@ public class ResourceGroupServiceSetup {
     registerCharsetResponseFilter(environment, injector);
     registerCorrelationFilter(environment, injector);
     registerIterators(injector);
+    registerScheduledJobs(injector);
     registerManagedBeans(environment, injector);
     registerHealthCheck(environment, injector);
   }
@@ -48,6 +51,10 @@ public class ResourceGroupServiceSetup {
     injector.getInstance(ResourceGroupAsyncReconciliationHandler.class).registerIterators();
   }
 
+  private void registerScheduledJobs(Injector injector) {
+    injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
+  }
+
   private void registerManagedBeans(Environment environment, Injector injector) {
     environment.lifecycle().manage(injector.getInstance(ResourceGroupSyncConciliationService.class));
     environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
@@ -59,6 +66,7 @@ public class ResourceGroupServiceSetup {
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
   }
 
   private void registerCharsetResponseFilter(Environment environment, Injector injector) {

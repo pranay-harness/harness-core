@@ -27,14 +27,13 @@ import java.util.Objects;
  * InlineObject
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen",
-    date = "2021-03-24T19:32:06.834-07:00[America/Los_Angeles]")
+    date = "2021-05-11T09:07:44.775-07:00[America/Los_Angeles]")
 public class InlineObject {
   public static final String SERIALIZED_NAME_PROJECT = "project";
   @SerializedName(SERIALIZED_NAME_PROJECT) private String project;
 
   public static final String SERIALIZED_NAME_PREREQUISITES = "prerequisites";
-  @SerializedName(SERIALIZED_NAME_PREREQUISITES)
-  private List<io.harness.cf.openapi.model.Prerequisite> prerequisites = null;
+  @SerializedName(SERIALIZED_NAME_PREREQUISITES) private List<Prerequisite> prerequisites = null;
 
   public static final String SERIALIZED_NAME_NAME = "name";
   @SerializedName(SERIALIZED_NAME_NAME) private String name;
@@ -106,11 +105,10 @@ public class InlineObject {
   @SerializedName(SERIALIZED_NAME_ARCHIVED) private Boolean archived;
 
   public static final String SERIALIZED_NAME_VARIATIONS = "variations";
-  @SerializedName(SERIALIZED_NAME_VARIATIONS)
-  private List<io.harness.cf.openapi.model.Variation> variations = new ArrayList<>();
+  @SerializedName(SERIALIZED_NAME_VARIATIONS) private List<Variation> variations = new ArrayList<>();
 
   public static final String SERIALIZED_NAME_TAGS = "tags";
-  @SerializedName(SERIALIZED_NAME_TAGS) private List<io.harness.cf.openapi.model.Tag> tags = null;
+  @SerializedName(SERIALIZED_NAME_TAGS) private List<Tag> tags = null;
 
   public static final String SERIALIZED_NAME_DEFAULT_ON_VARIATION = "defaultOnVariation";
   @SerializedName(SERIALIZED_NAME_DEFAULT_ON_VARIATION) private String defaultOnVariation;
@@ -140,12 +138,12 @@ public class InlineObject {
     this.project = project;
   }
 
-  public InlineObject prerequisites(List<io.harness.cf.openapi.model.Prerequisite> prerequisites) {
+  public InlineObject prerequisites(List<Prerequisite> prerequisites) {
     this.prerequisites = prerequisites;
     return this;
   }
 
-  public InlineObject addPrerequisitesItem(io.harness.cf.openapi.model.Prerequisite prerequisitesItem) {
+  public InlineObject addPrerequisitesItem(Prerequisite prerequisitesItem) {
     if (this.prerequisites == null) {
       this.prerequisites = new ArrayList<>();
     }
@@ -160,7 +158,7 @@ public class InlineObject {
   @javax.annotation.Nullable
   @ApiModelProperty(value = "")
 
-  public List<io.harness.cf.openapi.model.Prerequisite> getPrerequisites() {
+  public List<Prerequisite> getPrerequisites() {
     return prerequisites;
   }
 
@@ -284,12 +282,12 @@ public class InlineObject {
     this.archived = archived;
   }
 
-  public InlineObject variations(List<io.harness.cf.openapi.model.Variation> variations) {
+  public InlineObject variations(List<Variation> variations) {
     this.variations = variations;
     return this;
   }
 
-  public InlineObject addVariationsItem(io.harness.cf.openapi.model.Variation variationsItem) {
+  public InlineObject addVariationsItem(Variation variationsItem) {
     this.variations.add(variationsItem);
     return this;
   }
@@ -300,7 +298,7 @@ public class InlineObject {
    **/
   @ApiModelProperty(required = true, value = "")
 
-  public List<io.harness.cf.openapi.model.Variation> getVariations() {
+  public List<Variation> getVariations() {
     return variations;
   }
 
@@ -308,12 +306,12 @@ public class InlineObject {
     this.variations = variations;
   }
 
-  public InlineObject tags(List<io.harness.cf.openapi.model.Tag> tags) {
+  public InlineObject tags(List<Tag> tags) {
     this.tags = tags;
     return this;
   }
 
-  public InlineObject addTagsItem(io.harness.cf.openapi.model.Tag tagsItem) {
+  public InlineObject addTagsItem(Tag tagsItem) {
     if (this.tags == null) {
       this.tags = new ArrayList<>();
     }
@@ -328,7 +326,7 @@ public class InlineObject {
   @javax.annotation.Nullable
   @ApiModelProperty(value = "")
 
-  public List<io.harness.cf.openapi.model.Tag> getTags() {
+  public List<Tag> getTags() {
     return tags;
   }
 

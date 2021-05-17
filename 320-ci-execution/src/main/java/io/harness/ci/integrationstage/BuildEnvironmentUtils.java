@@ -32,6 +32,8 @@ import static io.harness.common.BuildEnvironmentConstants.DRONE_TARGET_BRANCH;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import static java.lang.String.format;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.BranchWebhookEvent;
@@ -76,6 +78,9 @@ public class BuildEnvironmentUtils {
         PRWebhookEvent prWebhookEvent = (PRWebhookEvent) webhookExecutionSource.getWebhookEvent();
         envVarMap.putAll(getBaseEnvVars(prWebhookEvent.getBaseAttributes()));
         envVarMap.putAll(getBuildRepoEnvvars(prWebhookEvent.getRepository()));
+
+        setBitbucketCloudCommitRef(prWebhookEvent, envVarMap);
+
         envVarMap.put(DRONE_BUILD_EVENT, "pull_request");
       }
     } else if (ciExecutionArgs.getExecutionSource().getType() == ExecutionSource.Type.MANUAL) {
@@ -136,6 +141,15 @@ public class BuildEnvironmentUtils {
       envVarMap.put(DRONE_BUILD_ACTION, baseAttributes.getAction());
     }
     return envVarMap;
+  }
+
+  private static void setBitbucketCloudCommitRef(PRWebhookEvent prWebhookEvent, Map<String, String> envVarMap) {
+    // Set this field only for bitbucket cloud.
+    String link = prWebhookEvent.getRepository().getLink();
+    if (isNotEmpty(link) && link.contains("bitbucket.org")) {
+      String commitRef = format("+refs/heads/%s", prWebhookEvent.getBaseAttributes().getSource());
+      setEnvironmentVariable(envVarMap, DRONE_COMMIT_REF, commitRef);
+    }
   }
 
   private static void setEnvironmentVariable(Map<String, String> envVarMap, String var, String value) {

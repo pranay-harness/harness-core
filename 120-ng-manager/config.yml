@@ -122,6 +122,10 @@ gitSyncServerConfig:
 
 shouldDeployWithGitSync: true
 
+fileServiceConfiguration:
+  fileStorageMode: MONGO
+  clusterName: ""
+
 eventsFramework:
   redis:
     sentinel: false
@@ -220,7 +224,7 @@ segmentConfiguration:
 accessControlClient:
   enableAccessControl: false
   accessControlServiceConfig:
-    baseUrl: http://localhost:9006/api
+    baseUrl: http://localhost:9006/api/
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
     enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
@@ -262,4 +266,57 @@ gitSdkConfiguration:
 baseUrls:
   currentGenUiUrl: http://localhost:8181/#/
 
-enableDefaultResourceGroupCreation: false
+enableDefaultResourceGroupCreation: true
+
+cfClientConfig:
+  apiKey: ""
+  configUrl: "https://config.feature-flags.uat.harness.io/api/1.0"
+  eventUrl: "https://event.feature-flags.uat.harness.io/api/1.0"
+  analyticsEnabled: true
+  connectionTimeout: 10000
+  readTimeout: 30000
+
+cfMigrationConfig:
+  enabled: false
+  adminUrl : "http://localhost:3000/api/1.0"
+  apiKey: ""
+  account: "default"
+  org: "default_org"
+  project: "project1"
+  environment: "environment1"
+  connectionTimeout: 10000
+  readTimeout: 30000
+
+
+enableDashboardTimescale: false
+
+timescaledb:
+  timescaledbUrl: "jdbc:postgresql://34.83.25.129:5432/harnessdev"
+  timescaledbUsername: "harnessappdev"
+  timescaledbPassword: "harnessappdev"
+  connectTimeout: 10
+  socketTimeout: 30
+  logUnclosedConnections: false
+  loggerLevel: OFF
+
+yamlSchemaClientConfig:
+  yamlSchemaHttpClientMap:
+    cvng:
+      serviceHttpClientConfig:
+        baseUrl: http://localhost:6457/cv/api/
+        connectTimeOutSeconds: 15
+        readTimeOutSeconds: 15
+      secret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM"
+
+signupNotificationConfiguration:
+  projectId: "projectId_place_holder"
+  bucketName: "bucketName_place_holder"
+  templates:
+    verify:
+      gcsFileName: "email_verify.txt"
+      templateId: "email_verify"
+    confirm:
+      gcsFileName: "signup_confirmation.txt"
+      templateId: "signup_confirmation"
+  expireDurationInMinutes: 60
+

@@ -121,6 +121,16 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
   }
 
   @Override
+  public Instant fetchLastDependentBatchJobCreatedTime(String accountId, BatchJobType batchJobType) {
+    BatchJobScheduledData batchJobScheduledData =
+        batchJobScheduledDataDao.fetchLastBatchJobScheduledData(accountId, batchJobType);
+    if (null != batchJobScheduledData) {
+      return Instant.ofEpochMilli(batchJobScheduledData.getCreatedAt());
+    }
+    return null;
+  }
+
+  @Override
   public void invalidateJobs(CEDataCleanupRequest ceDataCleanupRequest) {
     batchJobScheduledDataDao.invalidateJobs(ceDataCleanupRequest);
   }

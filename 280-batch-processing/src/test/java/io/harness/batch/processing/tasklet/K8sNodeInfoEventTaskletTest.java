@@ -10,6 +10,7 @@ import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -29,11 +30,13 @@ import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.InstanceResourceService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.grpc.PublishedMessage;
+import io.harness.ff.FeatureFlagService;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.NodeEvent;
 import io.harness.perpetualtask.k8s.watch.NodeEvent.EventType;
@@ -77,6 +80,7 @@ public class K8sNodeInfoEventTaskletTest extends CategoryTest {
   @Mock private InstanceDataBulkWriteService instanceDataBulkWriteService;
   @Mock private PublishedMessageDao publishedMessageDao;
   @Mock private BatchMainConfig config;
+  @Mock private FeatureFlagService featureFlagService;
 
   private static final String NODE_UID = "node_uid";
   private static final String NODE_POOL_NAME = "manager-pool";
@@ -102,6 +106,7 @@ public class K8sNodeInfoEventTaskletTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
     when(config.getBatchQueryConfig()).thenReturn(BatchQueryConfig.builder().queryBatchSize(50).build());
     when(instanceDataBulkWriteService.updateList(any())).thenReturn(true);
+    when(featureFlagService.isEnabled(eq(FeatureName.NODE_RECOMMENDATION_1), eq(ACCOUNT_ID))).thenReturn(false);
   }
 
   @Test

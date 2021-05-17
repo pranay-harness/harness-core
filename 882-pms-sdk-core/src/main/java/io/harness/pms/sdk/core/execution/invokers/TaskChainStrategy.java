@@ -1,6 +1,6 @@
 package io.harness.pms.sdk.core.execution.invokers;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.sdk.core.execution.invokers.StrategyHelper.buildResponseDataSupplier;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -9,14 +9,13 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
-import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
 import io.harness.pms.contracts.execution.events.QueueTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
-import io.harness.pms.sdk.core.execution.ExecuteStrategy;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
+import io.harness.pms.sdk.core.execution.ProgressableStrategy;
 import io.harness.pms.sdk.core.execution.ResumePackage;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.registries.StepRegistry;
@@ -36,8 +35,8 @@ import lombok.NonNull;
 import org.apache.commons.collections4.CollectionUtils;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
-@OwnedBy(CDC)
-public class TaskChainStrategy implements ExecuteStrategy {
+@OwnedBy(PIPELINE)
+public class TaskChainStrategy extends ProgressableStrategy {
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private StepRegistry stepRegistry;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
@@ -47,7 +46,8 @@ public class TaskChainStrategy implements ExecuteStrategy {
   @Override
   public void start(InvokerPackage invokerPackage) {
     NodeExecutionProto nodeExecution = invokerPackage.getNodeExecution();
-    TaskChainExecutable taskChainExecutable = extractTaskChainExecutable(nodeExecution);
+    TaskChainExecutable taskChainExecutable = extractStep(nodeExecution);
+
     Ambiance ambiance = nodeExecution.getAmbiance();
     TaskChainResponse taskChainResponse;
     taskChainResponse = taskChainExecutable.startChainLink(ambiance,
@@ -59,7 +59,7 @@ public class TaskChainStrategy implements ExecuteStrategy {
   public void resume(ResumePackage resumePackage) {
     NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
-    TaskChainExecutable taskChainExecutable = extractTaskChainExecutable(nodeExecution);
+    TaskChainExecutable taskChainExecutable = extractStep(nodeExecution);
     TaskChainExecutableResponse lastLinkResponse =
         Objects.requireNonNull(NodeExecutionUtils.obtainLatestExecutableResponse(nodeExecution)).getTaskChain();
     if (lastLinkResponse.getChainEnd()) {
@@ -91,15 +91,10 @@ public class TaskChainStrategy implements ExecuteStrategy {
     }
   }
 
-  private TaskChainExecutable extractTaskChainExecutable(NodeExecutionProto nodeExecution) {
-    PlanNodeProto node = nodeExecution.getNode();
-    return (TaskChainExecutable) stepRegistry.obtain(node.getStepType());
-  }
-
   private void handleResponse(
       @NonNull Ambiance ambiance, NodeExecutionProto nodeExecution, @NonNull TaskChainResponse taskChainResponse) {
     if (taskChainResponse.isChainEnd() && taskChainResponse.getTaskRequest() == null) {
-      TaskChainExecutable taskChainExecutable = extractTaskChainExecutable(nodeExecution);
+      TaskChainExecutable taskChainExecutable = extractStep(nodeExecution);
       sdkNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.NO_OP,
           ExecutableResponse.newBuilder()
               .setTaskChain(TaskChainExecutableResponse.newBuilder()
@@ -125,8 +120,7 @@ public class TaskChainStrategy implements ExecuteStrategy {
     }
     TaskRequest taskRequest = taskChainResponse.getTaskRequest();
 
-    AddExecutableResponseRequest addExecutableResponseRequest = strategyHelper.getAddExecutableResponseRequest(
-        nodeExecution.getUuid(), Status.TASK_WAITING,
+    ExecutableResponse executableResponse =
         ExecutableResponse.newBuilder()
             .setTaskChain(
                 TaskChainExecutableResponse.newBuilder()
@@ -138,13 +132,20 @@ public class TaskChainStrategy implements ExecuteStrategy {
                     .addAllUnits(CollectionUtils.emptyIfNull(taskRequest.getDelegateTaskRequest().getUnitsList()))
                     .setTaskName(taskRequest.getDelegateTaskRequest().getTaskName())
                     .build())
-            .build(),
-        Collections.emptyList());
+            .build();
     QueueTaskRequest queueTaskRequest = QueueTaskRequest.newBuilder()
                                             .setNodeExecutionId(nodeExecution.getUuid())
                                             .putAllSetupAbstractions(ambiance.getSetupAbstractionsMap())
-                                            .setTaskRequest(taskChainResponse.getTaskRequest())
+                                            .setTaskRequest(taskRequest)
+                                            .setExecutableResponse(executableResponse)
+                                            .setStatus(Status.TASK_WAITING)
                                             .build();
-    sdkNodeExecutionService.queueTaskAndAddExecutableResponse(queueTaskRequest, addExecutableResponseRequest);
+    sdkNodeExecutionService.queueTaskRequest(queueTaskRequest);
+  }
+
+  @Override
+  public TaskChainExecutable extractStep(NodeExecutionProto nodeExecution) {
+    PlanNodeProto node = nodeExecution.getNode();
+    return (TaskChainExecutable) stepRegistry.obtain(node.getStepType());
   }
 }

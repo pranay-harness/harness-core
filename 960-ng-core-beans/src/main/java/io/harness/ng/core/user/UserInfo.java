@@ -21,6 +21,9 @@ public class UserInfo {
   @EqualsAndHashCode.Include String uuid;
   String name;
   String email;
+  String token;
+  String defaultAccountId;
   boolean admin;
   boolean twoFactorAuthenticationEnabled;
+  boolean emailVerified;
 }

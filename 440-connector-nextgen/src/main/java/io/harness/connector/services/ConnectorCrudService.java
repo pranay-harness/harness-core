@@ -19,7 +19,8 @@ import org.springframework.data.domain.Page;
 public interface ConnectorCrudService {
   Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier,
       ConnectorFilterPropertiesDTO filterProperties, String orgIdentifier, String projectIdentifier,
-      String filterIdentifier, String searchTerm, Boolean includeAllConnectorsAccessibleAtScope);
+      String filterIdentifier, String searchTerm, Boolean includeAllConnectorsAccessibleAtScope,
+      Boolean getDistinctFromBranches);
 
   Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory category);

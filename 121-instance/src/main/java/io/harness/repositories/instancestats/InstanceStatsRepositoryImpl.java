@@ -22,7 +22,7 @@ public class InstanceStatsRepositoryImpl implements InstanceStatsRepository {
       return parseInstanceStatsRecord(resultSet);
     } catch (SQLException exception) {
       // TODO handle exception
-      exception.printStackTrace();
+      //      exception.printStackTrace();
       return null;
     }
   }

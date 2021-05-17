@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.Scope;
+import io.harness.beans.ScopeLevel;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -48,6 +48,6 @@ public class HarnessResourceTypeResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     return ResponseDTO.newResponse(
-        resourceTypeService.getResourceTypes(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier)));
+        resourceTypeService.getResourceTypes(ScopeLevel.of(accountIdentifier, orgIdentifier, projectIdentifier)));
   }
 }

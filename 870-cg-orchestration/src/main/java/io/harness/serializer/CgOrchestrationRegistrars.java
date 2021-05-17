@@ -1,6 +1,10 @@
 package io.harness.serializer;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.serializer.kryo.CgOrchestrationBeansKryoRegistrar;
 import io.harness.serializer.kryo.CgOrchestrationKryoRegister;
 import io.harness.serializer.morphia.CgNgSharedOrchestrationBeansMorphiaRegistrar;
 import io.harness.serializer.morphia.CgOrchestrationMorphiaRegistrar;
@@ -14,6 +18,7 @@ import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
 @UtilityClass
+@OwnedBy(CDC)
 public class CgOrchestrationRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
@@ -21,6 +26,7 @@ public class CgOrchestrationRegistrars {
           .addAll(DelegateTasksBeansRegistrars.kryoRegistrars)
           .addAll(OrchestrationDelayRegistrars.kryoRegistrars)
           .add(CgOrchestrationKryoRegister.class)
+          .add(CgOrchestrationBeansKryoRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =

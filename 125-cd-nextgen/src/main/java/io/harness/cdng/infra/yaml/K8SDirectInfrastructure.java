@@ -1,29 +1,35 @@
 package io.harness.cdng.infra.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
-import io.harness.cdng.visitor.YamlTypes;
-import io.harness.cdng.visitor.helpers.pipelineinfrastructure.K8SDirectInfrastructureVisitorHelper;
-import io.harness.common.SwaggerConstants;
+import io.harness.filters.ConnectorRefExtractorHelper;
+import io.harness.filters.WithConnectorRef;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.walktree.beans.LevelNode;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Value;
 import lombok.experimental.Wither;
 import org.springframework.data.annotation.TypeAlias;
 
+@OwnedBy(CDC)
 @Value
 @Builder
 @JsonTypeName(InfrastructureKind.KUBERNETES_DIRECT)
-@SimpleVisitorHelper(helperClass = K8SDirectInfrastructureVisitorHelper.class)
+@SimpleVisitorHelper(helperClass = ConnectorRefExtractorHelper.class)
 @TypeAlias("k8sDirectInfrastructure")
-public class K8SDirectInfrastructure implements Infrastructure, Visitable {
+public class K8SDirectInfrastructure implements Infrastructure, Visitable, WithConnectorRef {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> connectorRef;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> namespace;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> releaseName;
@@ -61,7 +67,9 @@ public class K8SDirectInfrastructure implements Infrastructure, Visitable {
   }
 
   @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.SPEC).isPartOfFQN(false).build();
+  public Map<String, ParameterField<String>> extractConnectorRefs() {
+    Map<String, ParameterField<String>> connectorRefMap = new HashMap<>();
+    connectorRefMap.put(YAMLFieldNameConstants.CONNECTOR_REF, connectorRef);
+    return connectorRefMap;
   }
 }

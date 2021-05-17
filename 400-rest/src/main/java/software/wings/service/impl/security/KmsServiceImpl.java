@@ -13,7 +13,9 @@ import static io.harness.persistence.HPersistence.upToOne;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.settings.SettingVariableTypes.KMS;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EncryptedDataParent;
@@ -22,6 +24,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryptors.KmsEncryptorsRegistry;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
+import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
 
@@ -36,12 +39,14 @@ import java.util.Objects;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 import org.mongodb.morphia.query.Query;
 
 /**
  * Created by rsingh on 9/29/17.
  */
 @OwnedBy(PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 @Singleton
 @Slf4j
 public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsService {
@@ -113,6 +118,8 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       return secretManagerConfigService.save(savedKmsConfig);
     }
 
+    NGEncryptedDataMetadata metadata = getNgEncryptedDataMetadata(kmsConfig);
+
     EncryptedData accessKeyData = null;
     if (StringUtils.isNotBlank(kmsConfig.getAccessKey())) {
       accessKeyData = encryptLocal(kmsConfig.getAccessKey().toCharArray());
@@ -127,6 +134,8 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       accessKeyData.setAccountId(accountId);
       accessKeyData.setType(KMS);
       accessKeyData.setName(kmsConfig.getName() + ACCESS_KEY_SUFFIX);
+      accessKeyData.setNgMetadata(metadata);
+
       String accessKeyId = wingsPersistence.save(accessKeyData);
       kmsConfig.setAccessKey(accessKeyId);
     } else {
@@ -150,6 +159,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       secretKeyData.setAccountId(accountId);
       secretKeyData.setType(KMS);
       secretKeyData.setName(kmsConfig.getName() + SECRET_KEY_SUFFIX);
+      secretKeyData.setNgMetadata(metadata);
       String secretKeyId = wingsPersistence.save(secretKeyData);
       kmsConfig.setSecretKey(secretKeyId);
     } else {
@@ -172,6 +182,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       arnKeyData.setAccountId(accountId);
       arnKeyData.setType(KMS);
       arnKeyData.setName(kmsConfig.getName() + ARN_SUFFIX);
+      arnKeyData.setNgMetadata(metadata);
       String arnKeyId = wingsPersistence.save(arnKeyData);
       kmsConfig.setKmsArn(arnKeyId);
     } else {
@@ -195,6 +206,20 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       wingsPersistence.save(arnKeyData);
     }
     return parentId;
+  }
+
+  @Nullable
+  private NGEncryptedDataMetadata getNgEncryptedDataMetadata(KmsConfig kmsConfig) {
+    NGEncryptedDataMetadata metadata = null;
+    if (null != kmsConfig.getNgMetadata()) {
+      metadata = NGEncryptedDataMetadata.builder()
+                     .identifier(kmsConfig.getNgMetadata().getIdentifier())
+                     .accountIdentifier(kmsConfig.getNgMetadata().getAccountIdentifier())
+                     .orgIdentifier(kmsConfig.getNgMetadata().getOrgIdentifier())
+                     .projectIdentifier(kmsConfig.getNgMetadata().getProjectIdentifier())
+                     .build();
+    }
+    return metadata;
   }
 
   private EncryptedData saveOrUpdateEncryptedRecord(String accountId, KmsConfig kmsConfig, String newKeyToUpdate,
@@ -321,6 +346,11 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     decryptKmsConfigSecrets(kmsConfig);
 
     return kmsConfig;
+  }
+
+  @Override
+  public void validateSecretsManagerConfig(String accountId, KmsConfig kmsConfig) {
+    validateKms(accountId, kmsConfig);
   }
 
   private void decryptKmsConfigSecrets(KmsConfig kmsConfig) {

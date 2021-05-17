@@ -1,6 +1,5 @@
 load("@rules_java//java:defs.bzl", "java_binary")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 shared_deps = [
     "//:lombok",
@@ -28,6 +27,4 @@ java_library(
     deps = shared_deps,
 )
 
-checkstyle()
-
-pmd()
+run_analysis()

@@ -10,6 +10,7 @@ import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
+import io.harness.delegate.capability.ProcessExecutionCapabilityHelper;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.terraform.TerraformCommand;
@@ -85,17 +86,23 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
    * terraform plan
    */
   private boolean skipRefreshBeforeApplyingPlan;
+  private boolean isGitHostConnectivityCheck;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    List<ExecutionCapability> capabilities =
-        CapabilityHelper.generateExecutionCapabilitiesForTerraform(sourceRepoEncryptionDetails, maskingEvaluator);
+    List<ExecutionCapability> capabilities = ProcessExecutionCapabilityHelper.generateExecutionCapabilitiesForTerraform(
+        sourceRepoEncryptionDetails, maskingEvaluator);
     if (sourceRepo != null) {
-      capabilities.add(GitConnectionCapability.builder()
-                           .gitConfig(sourceRepo)
-                           .settingAttribute(sourceRepo.getSshSettingAttribute())
-                           .encryptedDataDetails(sourceRepoEncryptionDetails)
-                           .build());
+      if (isGitHostConnectivityCheck) {
+        capabilities.addAll(CapabilityHelper.generateExecutionCapabilitiesForGit(sourceRepo));
+
+      } else {
+        capabilities.add(GitConnectionCapability.builder()
+                             .gitConfig(sourceRepo)
+                             .settingAttribute(sourceRepo.getSshSettingAttribute())
+                             .encryptedDataDetails(sourceRepoEncryptionDetails)
+                             .build());
+      }
     }
     if (secretManagerConfig != null) {
       capabilities.addAll(

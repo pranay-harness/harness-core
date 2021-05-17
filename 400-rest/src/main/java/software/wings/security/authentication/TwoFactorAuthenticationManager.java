@@ -7,11 +7,14 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 
 import software.wings.beans.Account;
 import software.wings.beans.Event;
@@ -36,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PL)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class TwoFactorAuthenticationManager {
   @Inject private TOTPAuthHandler totpHandler;
   @Inject private UserService userService;

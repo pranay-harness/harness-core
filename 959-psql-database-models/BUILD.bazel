@@ -1,12 +1,20 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 HarnessTeam = "CE"
+
+shared_dependencies = [
+    "//:lombok",
+    "//970-ng-commons:module",
+    "@maven//:com_google_inject_guice",
+    "@maven//:org_jooq_jooq",
+]
 
 java_library(
     name = "module",
     srcs = glob([
+        "src/generated/**/*.java",
         "src/main/**/*.java",
     ]),
     tags = [
@@ -14,9 +22,7 @@ java_library(
         "manual",
     ],
     visibility = ["//visibility:public"],
-    deps = [
-        "@maven//:org_jooq_jooq",
-    ],
+    deps = shared_dependencies,
 )
 
 java_library(
@@ -28,11 +34,15 @@ java_library(
         "manual",
     ],
     visibility = ["//visibility:public"],
-    deps = [
+    deps = shared_dependencies + [
         ":module",
+        "//990-commons-test:module",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
     ],
 )
 
 run_tests()
 
-pmd()
+run_analysis()

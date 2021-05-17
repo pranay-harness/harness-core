@@ -1,6 +1,10 @@
 package io.harness.cvng.verificationjob.entities;
 
+import static io.harness.cvng.CVConstants.DEFAULT_TEST_JOB_ID;
+import static io.harness.cvng.CVConstants.DEFAULT_TEST_JOB_NAME;
+import static io.harness.cvng.CVConstants.RUNTIME_PARAM_STRING;
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
+import static io.harness.cvng.verificationjob.CVVerificationJobConstants.SENSITIVITY_KEY;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -106,7 +110,20 @@ public class TestVerificationJob extends VerificationJob {
   }
 
   @Override
-  public void resolveJobParams(Map<String, String> runtimeParameters) {}
+  public void resolveJobParams(Map<String, String> runtimeParameters) {
+    runtimeParameters.keySet().forEach(key -> {
+      switch (key) {
+        case SENSITIVITY_KEY:
+          if (sensitivity.isRuntimeParam()) {
+            this.setSensitivity(runtimeParameters.get(key), false);
+          }
+          break;
+        default:
+          break;
+      }
+    });
+    this.validateParams();
+  }
 
   @Override
   public boolean collectHostData() {
@@ -134,5 +151,16 @@ public class TestVerificationJob extends VerificationJob {
       updateOperations.set(
           TestVerificationJobKeys.baselineVerificationJobInstanceId, dto.getBaselineVerificationJobInstanceId());
     }
+  }
+
+  public static TestVerificationJob createDefaultJob(String accountId, String orgIdentifier, String projectIdentifier) {
+    TestVerificationJob verificationJob =
+        TestVerificationJob.builder()
+            .jobName(DEFAULT_TEST_JOB_NAME)
+            .identifier(DEFAULT_TEST_JOB_ID)
+            .sensitivity(VerificationJob.getRunTimeParameter(RUNTIME_PARAM_STRING, true))
+            .build();
+    VerificationJob.setDefaultJobCommonParameters(verificationJob, accountId, orgIdentifier, projectIdentifier);
+    return verificationJob;
   }
 }

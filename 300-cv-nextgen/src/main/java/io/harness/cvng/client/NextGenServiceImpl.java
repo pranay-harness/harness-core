@@ -6,6 +6,7 @@ import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
+import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponse;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
@@ -63,6 +64,35 @@ public class NextGenServiceImpl implements NextGenService {
             }
           });
 
+  private LoadingCache<EntityKey, ProjectDTO> projectCache =
+      CacheBuilder.newBuilder()
+          .maximumSize(10000)
+          .expireAfterWrite(4, TimeUnit.HOURS)
+          .build(new CacheLoader<EntityKey, ProjectDTO>() {
+            @Override
+            public ProjectDTO load(EntityKey entityKey) {
+              return requestExecutor
+                  .execute(nextGenClient.getProject(
+                      entityKey.getProjectIdentifier(), entityKey.getAccountId(), entityKey.getOrgIdentifier()))
+                  .getData()
+                  .getProject();
+            }
+          });
+
+  private LoadingCache<EntityKey, OrganizationDTO> orgCache =
+      CacheBuilder.newBuilder()
+          .maximumSize(10000)
+          .expireAfterWrite(4, TimeUnit.HOURS)
+          .build(new CacheLoader<EntityKey, OrganizationDTO>() {
+            @Override
+            public OrganizationDTO load(EntityKey entityKey) {
+              return requestExecutor
+                  .execute(nextGenClient.getOrganization(entityKey.getOrgIdentifier(), entityKey.getAccountId()))
+                  .getData()
+                  .getOrganization();
+            }
+          });
+
   @Override
   public ConnectorResponseDTO create(ConnectorDTO connectorRequestDTO, String accountIdentifier) {
     return requestExecutor.execute(nextGenClient.create(connectorRequestDTO, accountIdentifier)).getData();
@@ -112,6 +142,44 @@ public class NextGenServiceImpl implements NextGenService {
   }
 
   @Override
+  public ProjectDTO getProject(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return getProject(accountIdentifier, orgIdentifier, projectIdentifier, false);
+  }
+
+  @Override
+  public ProjectDTO getCachedProject(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return getProject(accountIdentifier, orgIdentifier, projectIdentifier, true);
+  }
+
+  private ProjectDTO getProject(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, boolean isCached) {
+    if (isCached) {
+      try {
+        return projectCache.get(EntityKey.builder()
+                                    .accountId(accountIdentifier)
+                                    .orgIdentifier(orgIdentifier)
+                                    .projectIdentifier(projectIdentifier)
+                                    .build());
+      } catch (ExecutionException ex) {
+        throw new RuntimeException(ex);
+      }
+    }
+
+    return requestExecutor.execute(nextGenClient.getProject(projectIdentifier, accountIdentifier, orgIdentifier))
+        .getData()
+        .getProject();
+  }
+
+  @Override
+  public OrganizationDTO getOrganization(String accountIdentifier, String orgIdentifier) {
+    try {
+      return orgCache.get(EntityKey.builder().accountId(accountIdentifier).orgIdentifier(orgIdentifier).build());
+    } catch (ExecutionException ex) {
+      throw new RuntimeException(ex);
+    }
+  }
+
+  @Override
   public int getServicesCount(String accountId, String orgIdentifier, String projectIdentifier) {
     return (int) requestExecutor
         .execute(nextGenClient.listServicesForProject(0, 1000, accountId, orgIdentifier, projectIdentifier, null))
@@ -126,13 +194,6 @@ public class NextGenServiceImpl implements NextGenService {
             nextGenClient.listEnvironmentsForProject(0, 1000, accountId, orgIdentifier, projectIdentifier, null, null))
         .getData()
         .getTotalItems();
-  }
-
-  @Override
-  public ProjectDTO getProject(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    return requestExecutor.execute(nextGenClient.getProject(projectIdentifier, accountIdentifier, orgIdentifier))
-        .getData()
-        .getProject();
   }
 
   @Value

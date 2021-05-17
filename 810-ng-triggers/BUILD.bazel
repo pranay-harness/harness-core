@@ -1,7 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 java_library(
     name = "module",
@@ -9,9 +8,10 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
-        "//850-ng-pipeline-commons:module",
         "//870-yaml-beans:module",
+        "//876-orchestration-beans:module",
         "//884-pms-commons:module",
+        "//890-pms-contracts:module",
         "//890-sm-core:module",
         "//930-ng-core-clients:module",
         "//950-common-entities:module",
@@ -53,6 +53,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

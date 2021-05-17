@@ -24,6 +24,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.authenticationservice.recaptcha.ReCaptchaVerifier;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -36,6 +37,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.ng.core.common.beans.Generation;
 import io.harness.ng.core.invites.InviteOperationResponse;
+import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;
 import io.harness.security.annotations.PublicApi;
@@ -67,12 +69,10 @@ import software.wings.security.annotations.Scope;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.LoginTypeResponse;
 import software.wings.security.authentication.SsoRedirectRequest;
-import software.wings.security.authentication.TwoFactorAdminOverrideSettings;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 import software.wings.service.impl.MarketplaceTypeLogContext;
-import software.wings.service.impl.ReCaptchaVerifier;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -202,7 +202,7 @@ public class UserResource {
     Integer offset = Integer.valueOf(pageRequest.getOffset());
     Integer pageSize = pageRequest.getPageSize();
 
-    List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, true);
+    List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, true, true);
 
     PageResponse<PublicUser> pageResponse = aPageResponse()
                                                 .withOffset(offset.toString())

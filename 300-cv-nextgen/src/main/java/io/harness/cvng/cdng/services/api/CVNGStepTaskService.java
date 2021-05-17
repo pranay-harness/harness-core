@@ -4,5 +4,5 @@ import io.harness.cvng.cdng.entities.CVNGStepTask;
 
 public interface CVNGStepTaskService {
   void create(CVNGStepTask cvngStepTask);
-  void notifyCVNGStepIfDone(CVNGStepTask entity);
+  void notifyCVNGStep(CVNGStepTask entity);
 }

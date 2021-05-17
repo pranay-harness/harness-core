@@ -1,5 +1,8 @@
 package io.harness.batch.processing.config;
 
+import io.harness.cf.AbstractCfModule;
+import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
@@ -26,8 +29,8 @@ import org.springframework.guice.annotation.EnableGuiceModules;
 @EnableGuiceModules
 public class BatchPortalConfiguration {
   @Bean
-  public BatchProcessingModule batchProcessingWingsModule() {
-    return new BatchProcessingModule();
+  public BatchProcessingModule batchProcessingWingsModule(BatchMainConfig batchMainConfig) {
+    return new BatchProcessingModule(batchMainConfig);
   }
 
   @Bean
@@ -69,5 +72,21 @@ public class BatchPortalConfiguration {
   @Bean
   public BatchProcessingTimescaleModule batchProcessingTimescaleModule(BatchMainConfig batchMainConfig) {
     return new BatchProcessingTimescaleModule(batchMainConfig.getTimeScaleDBConfig());
+  }
+
+  @Bean
+  @Profile("!test")
+  AbstractCfModule cfModule(BatchMainConfig batchMainConfig) {
+    return new AbstractCfModule() {
+      @Override
+      public CfClientConfig cfClientConfig() {
+        return batchMainConfig.getCfClientConfig();
+      }
+
+      @Override
+      public CfMigrationConfig cfMigrationConfig() {
+        return batchMainConfig.getCfMigrationConfig();
+      }
+    };
   }
 }

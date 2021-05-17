@@ -1,5 +1,6 @@
 package io.harness.ngpipeline.pipeline.beans.resources;
 
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -15,6 +16,8 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @ApiModel("NGPipelineResponse")
+@ToBeDeleted
+@Deprecated
 public class NGPipelineResponseDTO {
   NgPipeline ngPipeline;
   List<String> executionsPlaceHolder;

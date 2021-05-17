@@ -1,7 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 java_binary(
     name = "module",
@@ -25,11 +24,14 @@ java_binary(
         "@maven//:io_netty_netty_all",
     ] + [
         "//810-ng-triggers:module",
+        "//850-ng-pipeline-commons:module",
+        "//860-orchestration-steps:module",
         "//860-orchestration-visualization:module",
         "//870-orchestration:module",
         "//879-pms-sdk:module",
         "//884-pms-commons:module",
         "//890-pms-contracts:module",
+        "//900-git-sync-sdk:module",
         "//930-ng-core-clients:module",
         "//940-notification-client:module",
         "//940-feature-flag:module",
@@ -96,11 +98,14 @@ java_library(
         ":module",
         "//:lombok",
         "//810-ng-triggers:module",
+        "//850-ng-pipeline-commons:module",
+        "//860-orchestration-steps:module",
         "//860-orchestration-visualization:module",
         "//870-orchestration:module",
         "//879-pms-sdk:module",
         "//884-pms-commons:module",
         "//890-pms-contracts:module",
+        "//900-git-sync-sdk:module",
         "//930-ng-core-clients:module",
         "//940-notification-client:module",
         "//940-primary-version-manager:module",
@@ -123,6 +128,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

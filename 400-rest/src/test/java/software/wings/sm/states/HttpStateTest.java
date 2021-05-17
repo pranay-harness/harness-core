@@ -45,6 +45,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -110,6 +111,7 @@ import org.mockito.Mock;
  */
 @OwnedBy(CDC)
 @TargetModule(HarnessModule._860_ORCHESTRATION_STEPS)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class HttpStateTest extends WingsBaseTest {
   private static final HttpState.Builder httpStateBuilder =
       aHttpState()

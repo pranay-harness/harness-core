@@ -27,5 +27,7 @@ public interface RoleDao {
 
   boolean removePermissionFromRoles(@NotEmpty String permissionIdentifier);
 
+  boolean addPermissionToRoles(@NotEmpty String permissionIdentifier, @Valid @NotNull RoleFilter roleFilter);
+
   long deleteMulti(@Valid @NotNull RoleFilter roleFilter);
 }

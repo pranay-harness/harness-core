@@ -5,17 +5,24 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.obfuscate.Obfuscator.obfuscate;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.ManagerConfiguration.MATCH_ALL_VERSION;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 
 import io.harness.alert.AlertData;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.Delegate.DelegateKeys;
+import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.alert.DelegatesScalingGroupDownAlert;
 import io.harness.ff.FeatureFlagService;
 import io.harness.scheduler.PersistentScheduler;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
-import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
+import software.wings.beans.ManagerConfiguration;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.beans.alert.InvalidSMTPConfigAlert;
@@ -50,6 +57,8 @@ import org.quartz.TriggerBuilder;
  * @author brett on 10/17/17
  */
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class AlertCheckJob implements Job {
   private static final SecureRandom random = new SecureRandom();
   public static final String GROUP = "ALERT_CHECK_CRON_GROUP";
@@ -131,7 +140,11 @@ public class AlertCheckJob implements Job {
   }
 
   private List<Delegate> getDelegatesForAccount(String accountId) {
-    return wingsPersistence.createQuery(Delegate.class).filter(DelegateConnectionKeys.accountId, accountId).asList();
+    return wingsPersistence.createQuery(Delegate.class)
+        .filter(DelegateKeys.accountId, accountId)
+        .field(DelegateKeys.status)
+        .notEqual(DelegateInstanceStatus.DELETED)
+        .asList();
   }
 
   @VisibleForTesting
@@ -146,7 +159,9 @@ public class AlertCheckJob implements Job {
   }
 
   private void checkIfAnyDelegatesAreDown(String accountId, List<Delegate> delegates) {
-    Set<String> primaryConnections = delegateConnectionDao.obtainConnectedDelegates(accountId);
+    String primaryVersion = wingsPersistence.createQuery(ManagerConfiguration.class).get().getPrimaryVersion();
+    Set<String> primaryConnections =
+        delegateConnectionDao.obtainConnectedDelegates(accountId, primaryVersion, MATCH_ALL_VERSION);
 
     for (Delegate delegate : delegates) {
       AlertData alertData = DelegatesDownAlert.builder()

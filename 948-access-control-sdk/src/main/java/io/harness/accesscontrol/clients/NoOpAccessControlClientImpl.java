@@ -7,36 +7,26 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.UserPrincipal;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @OwnedBy(HarnessTeam.PL)
 public class NoOpAccessControlClientImpl implements AccessControlClient {
   @Override
-  public AccessCheckResponseDTO checkForAccess(
-      String principal, PrincipalType principalType, List<PermissionCheckDTO> permissionCheckDTOList) {
+  public AccessCheckResponseDTO checkForAccess(Principal principal, List<PermissionCheckDTO> permissionCheckDTOList) {
     return AccessCheckResponseDTO.builder()
-        .principal(Principal.builder().principalIdentifier(principal).principalType(principalType).build())
+        .principal(principal)
         .accessControlList(permissionCheckDTOList.stream()
-                               .map(x
+                               .map(permissionCheckDTO
                                    -> AccessControlDTO.builder()
-                                          .resourceScope(x.getResourceScope())
-                                          .permission(x.getPermission())
-                                          .resourceIdentifier(x.getResourceIdentifier())
-                                          .resourceType(x.getResourceType())
                                           .permitted(true)
+                                          .permission(permissionCheckDTO.getPermission())
+                                          .resourceScope(permissionCheckDTO.getResourceScope())
+                                          .resourceIdentifier(permissionCheckDTO.getResourceIdentifier())
+                                          .resourceType(permissionCheckDTO.getResourceType())
                                           .build())
                                .collect(Collectors.toList()))
         .build();
-  }
-
-  @Override
-  public AccessControlDTO checkForAccess(
-      String principal, PrincipalType principalType, PermissionCheckDTO permissionCheckDTO) {
-    return checkForAccess(principal, principalType, Collections.singletonList(permissionCheckDTO))
-        .getAccessControlList()
-        .get(0);
   }
 
   @Override
@@ -46,29 +36,35 @@ public class NoOpAccessControlClientImpl implements AccessControlClient {
       return null;
     }
     if (principal instanceof UserPrincipal) {
-      UserPrincipal userPrincipal = (UserPrincipal) principal;
-      return checkForAccess(userPrincipal.getName(), PrincipalType.USER, permissionCheckDTOList);
+      return checkForAccess(Principal.of(PrincipalType.USER, principal.getName()), permissionCheckDTOList);
     }
     throw new UnsupportedOperationException("Only <User> principal type is supported");
   }
 
   @Override
-  public AccessControlDTO checkForAccess(PermissionCheckDTO permissionCheckDTO) {
-    return checkForAccess(Collections.singletonList(permissionCheckDTO)).getAccessControlList().get(0);
-  }
-
-  @Override
-  public boolean hasAccess(String principal, PrincipalType principalType, PermissionCheckDTO permissionCheckDTO) {
+  public boolean hasAccess(Principal principal, ResourceScope resourceScope, Resource resource, String permission) {
     return true;
   }
 
   @Override
-  public boolean hasAccess(PermissionCheckDTO permissionCheckDTO) {
+  public boolean hasAccess(ResourceScope resourceScope, Resource resource, String permission) {
     return true;
   }
 
   @Override
   public void checkForAccessOrThrow(ResourceScope resourceScope, Resource resource, String permission) {
+    // do nothing
+  }
+
+  @Override
+  public void checkForAccessOrThrow(
+      ResourceScope resourceScope, Resource resource, String permission, String exceptionMessage) {
+    // do nothing
+  }
+
+  @Override
+  public void checkForAccessOrThrow(
+      Principal principal, ResourceScope resourceScope, Resource resource, String permission, String exceptionMessage) {
     // do nothing
   }
 }

@@ -397,7 +397,6 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
-import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.governance.GovernanceConfig;
@@ -429,6 +428,7 @@ import software.wings.beans.marketplace.gcp.GCPBillingJobEntity;
 import software.wings.beans.marketplace.gcp.GCPMarketplaceCustomer;
 import software.wings.beans.marketplace.gcp.GCPUsageReport;
 import software.wings.beans.peronalization.Personalization;
+import software.wings.beans.security.AccessRequest;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.access.Whitelist;
@@ -602,7 +602,6 @@ import software.wings.service.impl.yaml.GitCommandCallback;
 import software.wings.service.impl.yaml.gitdiff.gitaudit.AuditYamlHelperForFailedChanges.ArtifactStreamWithOnlyAuditNeededData;
 import software.wings.service.impl.yaml.gitdiff.gitaudit.AuditYamlHelperForFailedChanges.InfraMappingWithOnlyAuditNeededData;
 import software.wings.service.impl.yaml.gitdiff.gitaudit.AuditYamlHelperForFailedChanges.ProvisionerWithOnlyAuditNeededData;
-import software.wings.service.intfc.customdeployment.CustomDeploymentTypeAware;
 import software.wings.sm.AwsLambdaVerification;
 import software.wings.sm.BarrierStatusData;
 import software.wings.sm.ElementNotifyResponseData;
@@ -844,7 +843,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(AppContainer.class);
     set.add(AppDynamicsCVServiceConfiguration.class);
     set.add(Application.class);
-    set.add(ApplicationAccess.class);
     set.add(ApplicationManifest.class);
     set.add(ApprovalNotification.class);
     set.add(ApprovalPollingJobEntity.class);
@@ -900,7 +898,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(CustomArtifactStream.class);
     set.add(CustomLogCVServiceConfiguration.class);
     set.add(CustomSecretsManagerConfig.class);
-    set.add(CustomDeploymentTypeAware.class);
     set.add(CVActivityLog.class);
     set.add(CVConfiguration.class);
     set.add(CVFeedbackRecord.class);
@@ -1095,6 +1092,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(DeletedEntity.class);
     set.add(CVNGVerificationTask.class);
     set.add(ARMInfrastructureProvisioner.class);
+    set.add(AccessRequest.class);
   }
 
   @Override

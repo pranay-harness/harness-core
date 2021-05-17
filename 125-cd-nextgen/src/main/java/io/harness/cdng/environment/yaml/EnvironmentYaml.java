@@ -1,12 +1,13 @@
 package io.harness.cdng.environment.yaml;
 
-import io.harness.cdng.visitor.YamlTypes;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.EnvironmentYamlVisitorHelper;
-import io.harness.common.SwaggerConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.intfc.OverridesApplier;
@@ -24,6 +25,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @SimpleVisitorHelper(helperClass = EnvironmentYamlVisitorHelper.class)
 @TypeAlias("environmentYaml")
+@OwnedBy(CDC)
 public class EnvironmentYaml implements OverridesApplier<EnvironmentYaml>, Visitable {
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither String name;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither String identifier;
@@ -53,10 +55,5 @@ public class EnvironmentYaml implements OverridesApplier<EnvironmentYaml>, Visit
       resultant = resultant.withTags(overrideConfig.getTags());
     }
     return resultant;
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.ENVIRONMENT_YAML).build();
   }
 }

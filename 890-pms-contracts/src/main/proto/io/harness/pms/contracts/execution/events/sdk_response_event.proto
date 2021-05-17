@@ -16,31 +16,18 @@ option java_multiple_files = true;
 message SdkResponseEventRequest {
   oneof request {
     QueueTaskRequest queueTaskRequest = 1;
-    QueueNodeExecutionRequest queueNodeExecutionRequest = 2;
     AddExecutableResponseRequest addExecutableResponseRequest = 4;
     HandleStepResponseRequest handleStepResponseRequest = 5;
     ResumeNodeExecutionRequest resumeNodeExecutionRequest = 6;
     FacilitatorResponseRequest facilitatorResponseRequest = 7;
     EventErrorRequest eventErrorRequest = 8;
     AdviserResponseRequest adviserResponseRequest = 9;
-    QueueTaskRequestAndExecutableResponseRequest queueTaskRequestAndExecutableResponseRequest = 10;
+    SuspendChainRequest suspendChainRequest = 11;
+    SpawnChildRequest spawnChildRequest = 12;
+    SpawnChildrenRequest spawnChildrenRequest = 13;
+    HandleProgressRequest progressRequest = 14;
   }
   string nodeExecutionId = 3;
-}
-
-message QueueTaskRequest {
-  string nodeExecutionId = 1;
-  map<string, string> setupAbstractions = 3;
-  io.harness.pms.contracts.execution.tasks.TaskRequest taskRequest = 4;
-}
-
-message QueueTaskRequestAndExecutableResponseRequest {
-  QueueTaskRequest queueTaskRequest = 1;
-  AddExecutableResponseRequest addExecutableResponseRequest = 2;
-}
-
-message QueueNodeExecutionRequest {
-  NodeExecutionProto nodeExecution = 1;
 }
 
 message FacilitatorResponseRequest {
@@ -79,14 +66,53 @@ message AdviserResponseRequest {
   io.harness.pms.contracts.advisers.AdviserResponse adviserResponse = 3;
 }
 
+message SuspendChainRequest {
+  string nodeExecutionId = 1;
+  io.harness.pms.contracts.execution.ExecutableResponse executableResponse = 2;
+  map<string, bytes> response = 3;
+  bool isError = 4;
+}
+
+message SpawnChildRequest {
+  string planExecutionId = 1;
+  string nodeExecutionId = 2;
+  oneof spawnableExecutableResponse {
+    io.harness.pms.contracts.execution.ChildExecutableResponse child = 3;
+    io.harness.pms.contracts.execution.ChildChainExecutableResponse childChain = 4;
+  }
+}
+
+message SpawnChildrenRequest {
+  string planExecutionId = 1;
+  string nodeExecutionId = 2;
+  io.harness.pms.contracts.execution.ChildrenExecutableResponse children = 3;
+}
+
+message QueueTaskRequest {
+  string nodeExecutionId = 1;
+  io.harness.pms.contracts.execution.ExecutableResponse executableResponse = 2;
+  io.harness.pms.contracts.execution.Status status = 3;
+  map<string, string> setupAbstractions = 4;
+  io.harness.pms.contracts.execution.tasks.TaskRequest taskRequest = 5;
+}
+
+message HandleProgressRequest {
+  string planExecutionId = 1;
+  string nodeExecutionId = 2;
+  string progressJson = 3;
+}
+
 enum SdkResponseEventType {
   UNKNOWN_EVENT_TYPE = 0;
-  QUEUE_NODE = 1;
   ADD_EXECUTABLE_RESPONSE = 2;
   HANDLE_STEP_RESPONSE = 3;
   RESUME_NODE_EXECUTION = 4;
   HANDLE_FACILITATE_RESPONSE = 5;
   HANDLE_EVENT_ERROR = 6;
   HANDLE_ADVISER_RESPONSE = 7;
-  QUEUE_TASK_AND_ADD_EXECUTABLE_RESPONSE = 8;
+  SUSPEND_CHAIN = 9;
+  SPAWN_CHILD = 10;
+  QUEUE_TASK = 11;
+  SPAWN_CHILDREN = 12;
+  HANDLE_PROGRESS = 13;
 }

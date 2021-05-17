@@ -8,6 +8,7 @@ rules_pmd_dependencies()
 
 http_archive(
     name = "com_github_bazelbuild_buildtools",
+    sha256 = "58bbb9b06e14d71c620b7e2206a6d83668b602e1d51374b7bd264f9cc462d4de",
     strip_prefix = "buildtools-master",
     url = "https://github.com/bazelbuild/buildtools/archive/master.zip",
 )
@@ -1271,6 +1272,13 @@ maven_install(
         "com.github.dikhan:pagerduty-client:3.0.3",
         "com.github.dirkraft.dropwizard-file-assets:dropwizard-file-assets:0.0.2",
         "com.github.fge:json-schema-core:1.0.1",
+        "io.netty:netty-transport-native-kqueue:4.1.63_Final",
+        maven.artifact(
+            group = "io.netty",
+            artifact = "netty-transport-native-kqueue",
+            version = "4.1.63.Final",
+            classifier = "osx-x86_64",
+        ),
         "com.github.mifmif:generex:1.0.1",
         maven.artifact(
             group = "com.github.reinert",
@@ -1583,10 +1591,10 @@ maven_install(
         "io.grpc:grpc-testing:1.33.1",
         "io.gsonfire:gson-fire:1.8.3",
         "io.jsonwebtoken:jjwt:0.9.1",
-        "io.kubernetes:client-java-api:8.0.2",
-        "io.kubernetes:client-java-extended:8.0.2",
-        "io.kubernetes:client-java-proto:8.0.2",
-        "io.kubernetes:client-java:8.0.2",
+        "io.kubernetes:client-java-api:9.0.2",
+        "io.kubernetes:client-java-extended:9.0.2",
+        "io.kubernetes:client-java-proto:9.0.2",
+        "io.kubernetes:client-java:9.0.2",
         "io.netty:netty-buffer:4.1.52.Final",
         "io.netty:netty-codec-dns:4.1.52.Final",
         "io.netty:netty-codec-http2:4.1.52.Final",
@@ -1836,8 +1844,18 @@ maven_install(
         "org.glassfish.jersey.ext:jersey-metainf-services:2.25.1",
         "org.glassfish.jersey.media:jersey-media-jaxb:2.25.1",
         "org.glassfish.jersey.media:jersey-media-multipart:2.25.1",
-        "org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-grizzly2:2.23.1",
-        "org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-inmemory:2.23.1",
+        maven.artifact(
+            "org.glassfish.jersey.test-framework.providers",
+            "jersey-test-framework-provider-grizzly2",
+            "2.23.1",
+            testonly = True,
+        ),
+        maven.artifact(
+            "org.glassfish.jersey.test-framework.providers",
+            "jersey-test-framework-provider-inmemory",
+            "2.23.1",
+            testonly = True,
+        ),
         "org.glassfish:javax.el:3.0.0",
         "org.hamcrest:hamcrest-core:1.3",
         "org.hamcrest:hamcrest-all:1.3",
@@ -1988,7 +2006,12 @@ maven_install(
         "xpp3:xpp3:1.1.3.3",
         "io.netty:netty-all:4.1.51.Final",
         "com.github.spullara.mustache.java:compiler:0.9.5",
-        "io.dropwizard:dropwizard-testing:1.3.24",
+        maven.artifact(
+            "io.dropwizard",
+            "dropwizard-testing",
+            "1.3.24",
+            testonly = True,
+        ),
         "com.spotify:docker-client:8.16.0",
         "io.rest-assured:rest-assured:3.2.0",
         "org.jboss.aerogear:aerogear-otp-java:1.0.0",
@@ -2010,7 +2033,7 @@ maven_install(
         "org.clojure:clojure",
         "io.netty:netty-all",
     ],
-    maven_install_json = "//:maven_install.json",
+    maven_install_json = "//project:main_maven_install.json",
     override_targets = {
         "org.apache.commons:commons-io": "@maven//:commons_io_commons_io",
     },
@@ -2036,6 +2059,7 @@ pinned_maven_install()
 
 http_jar(
     name = "jira_client",
+    sha256 = "4e733673d5ecfbd0f81f6adef1703a1c3d8975bb091ce6af8dc6ec1604a56112",
     url = "https://harness.jfrog.io/artifactory/thirdparty-annonymous/net/rcarz/jira-client/0.9-SNAPSHOT/jira-client-0.9-20210122.053103-1.jar",
 )
 
@@ -2044,7 +2068,7 @@ load("//:bazel-credentials.bzl", "JFROG_PASSWORD", "JFROG_USERNAME")
 maven_install(
     name = "maven_harness",
     artifacts = [
-        "io.harness:ff-java-server-sdk:0.0.2",
+        "io.harness:ff-java-server-sdk:0.0.7",
         "io.harness.cv:data-collection-dsl:0.21-RELEASE",
     ],
     repositories = [
@@ -2056,32 +2080,8 @@ maven_install(
 maven_install(
     name = "delegate",
     artifacts = [
-        "com.squareup.okhttp3:logging-interceptor:3.14.3",
-        "com.squareup.okhttp3:okhttp-urlconnection:3.12.2",
-        "com.squareup.okhttp3:okhttp:3.6.0",
         "org.apache.httpcomponents:httpmime:4.5.1",
         "com.github.tomakehurst:wiremock-jre8-standalone:2.27.2",
-    ],
-    repositories = [
-        "https://repo1.maven.org/maven2",
-        "https://harness.jfrog.io/harness/thirdparty-annonymous",
-        "https://dl.bintray.com/michaelklishin/maven",
-        "https://repo.spring.io/plugins-release",
-        "https://palantir.bintray.com/releases",
-        "https://oss.sonatype.org/content/repositories/releases",
-        "https://jitpack.io",
-        "https://jcenter.bintray.com",
-        "https://github.com/bkper/mvn-repo/raw/master/releases",
-        "https://harness.jfrog.io/harness/datacollection-dsl",
-        "http://packages.confluent.io/maven",
-    ],
-    version_conflict_policy = "pinned",
-)
-
-maven_install(
-    name = "batch",
-    artifacts = [
-        "com.squareup.okhttp3:okhttp:4.9.0",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",
@@ -5453,3 +5453,49 @@ go_repository(
     sum = "h1:beetH5mWDMzFznJ+Qzd5KVHp79YKhVUMcdO8LpRLeGw=",
     version = "v1.5.1",
 )
+
+go_repository(
+    name = "com_github_blendle_zapdriver",
+    importpath = "github.com/blendle/zapdriver",
+    sum = "h1:C3dydBOWYRiOk+B8X9IVZ5IOe+7cl+tGOexN4QqHfpE=",
+    version = "v1.3.1",
+)
+
+#========== Docker Rules Configuration Begin=========================
+
+http_archive(
+    name = "io_bazel_rules_docker",
+    sha256 = "59d5b42ac315e7eadffa944e86e90c2990110a1c8075f1cd145f487e999d22b3",
+    strip_prefix = "rules_docker-0.17.0",
+    urls = ["https://github.com/bazelbuild/rules_docker/releases/download/v0.17.0/rules_docker-v0.17.0.tar.gz"],
+)
+
+load(
+    "@io_bazel_rules_docker//repositories:repositories.bzl",
+    container_repositories = "repositories",
+)
+
+container_repositories()
+
+load(
+    "@io_bazel_rules_docker//container:container.bzl",
+    "container_pull",
+)
+
+#TO-DO: Build the safe image in bazel only and use it as base.
+container_pull(
+    name = "platform_alpine",
+    digest = "sha256:a568e8f557c055ce59215ccdb864e8a73ac7ff9deed260ae9ced82f0a86e42bb",
+    registry = "us.gcr.io",
+    repository = "platform-205701/alpine",
+    tag = "safe-alpine3.12-sec1096-apm",
+)
+
+load(
+    "@io_bazel_rules_docker//repositories:repositories.bzl",
+    container_repositories = "repositories",
+)
+
+container_repositories()
+
+#========== Docker Rules Configuration End=========================

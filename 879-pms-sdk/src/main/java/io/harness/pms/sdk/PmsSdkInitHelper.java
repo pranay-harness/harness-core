@@ -3,11 +3,13 @@ package io.harness.pms.sdk;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.metrics.jobs.RecordMetricsJob;
+import io.harness.metrics.service.api.MetricService;
+import io.harness.monitoring.MonitoringQueueObserver;
 import io.harness.pms.contracts.plan.InitializeSdkRequest;
 import io.harness.pms.contracts.plan.PmsServiceGrpc;
 import io.harness.pms.contracts.plan.Types;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventListener;
 import io.harness.pms.sdk.core.execution.listeners.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.interrupt.InterruptEventListener;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
@@ -67,6 +69,7 @@ public class PmsSdkInitHelper {
 
   public static void initializeSDKInstance(Injector injector, PmsSdkConfiguration pmsSdkConfiguration) {
     initialize(injector, pmsSdkConfiguration);
+    initializeMetrics(injector);
   }
 
   private static void initialize(Injector injector, PmsSdkConfiguration config) {
@@ -83,11 +86,26 @@ public class PmsSdkInitHelper {
       registerSdk(pipelineServiceInfoProvider, serviceName, injector);
     }
     registerQueueListeners(injector);
+    registerObserversForEvents(injector);
+  }
+
+  private static void initializeMetrics(Injector injector) {
+    injector.getInstance(MetricService.class).initializeMetrics();
+    injector.getInstance(RecordMetricsJob.class).scheduleMetricsTasks();
+  }
+
+  private static void registerObserversForEvents(Injector injector) {
+    NodeExecutionEventListener nodeExecutionEventListener = injector.getInstance(NodeExecutionEventListener.class);
+    nodeExecutionEventListener.getQueueListenerObserverSubject().register(
+        injector.getInstance(Key.get(MonitoringQueueObserver.class)));
+    SdkOrchestrationEventListener sdkOrchestrationEventListener =
+        injector.getInstance(SdkOrchestrationEventListener.class);
+    sdkOrchestrationEventListener.getQueueListenerObserverSubject().register(
+        injector.getInstance(Key.get(MonitoringQueueObserver.class)));
   }
 
   private static void registerQueueListeners(Injector injector) {
     QueueListenerController queueListenerController = injector.getInstance(Key.get(QueueListenerController.class));
-    queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 5);
     queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
     queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
     queueListenerController.register(injector.getInstance(InterruptEventListener.class), 1);

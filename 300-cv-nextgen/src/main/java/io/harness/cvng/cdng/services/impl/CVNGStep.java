@@ -11,6 +11,8 @@ import io.harness.cvng.cdng.beans.CVNGStepType;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.services.api.CVNGStepTaskService;
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
+import io.harness.eraro.ErrorCode;
+import io.harness.eraro.Level;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
@@ -24,6 +26,7 @@ import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.tasks.ProgressData;
 import io.harness.tasks.ResponseData;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -35,6 +38,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -55,10 +59,7 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
     String accountId = AmbianceUtils.getAccountId(ambiance);
     String projectIdentifier = AmbianceUtils.getProjectIdentifier(ambiance);
     String orgIdentifier = AmbianceUtils.getOrgIdentifier(ambiance);
-    Preconditions.checkNotNull(
-        stepParameters.getServiceIdentifier().getValue(), "serviceIdentifier is null. Please check your expression.");
-    Preconditions.checkNotNull(
-        stepParameters.getEnvIdentifier().getValue(), "envIdentifier is null. Please check your expression.");
+    validate(stepParameters);
     Instant startTime = clock.instant();
     String activityUuid = activityService.register(accountId,
         DeploymentActivityDTO.builder()
@@ -87,6 +88,16 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
     return AsyncExecutableResponse.newBuilder().addCallbackIds(activityUuid).build();
   }
 
+  private void validate(CVNGStepParameter stepParameters) {
+    Preconditions.checkNotNull(stepParameters.getVerificationJobIdentifier(), "verificationJobRef can not be null");
+    Preconditions.checkNotNull(stepParameters.getServiceIdentifier().getValue(),
+        "Could not resolve expression for serviceRef. Please check your expression.");
+    Preconditions.checkNotNull(stepParameters.getEnvIdentifier().getValue(),
+        "Could not resolve expression for envRef. Please check your expression.");
+    Preconditions.checkNotNull(stepParameters.getDeploymentTag().getValue(),
+        "Could not resolve expression for deployment tag. Please check your expression.");
+  }
+
   private String getActivityName(CVNGStepParameter stepParameters) {
     return "CD Nextgen - " + stepParameters.getServiceIdentifier().getValue() + " - "
         + stepParameters.getDeploymentTag().getValue();
@@ -102,7 +113,7 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
 
   @Value
   @Builder
-  public static class CVNGResponseData implements ResponseData {
+  public static class CVNGResponseData implements ResponseData, ProgressData {
     String activityId;
     ActivityStatusDTO activityStatusDTO;
   }
@@ -110,12 +121,10 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
   @Builder
   @JsonTypeName("verifyStepOutcome")
   @TypeAlias("verifyStepOutcome")
-  public static class VerifyStepOutcome implements Outcome {
-    ActivityStatusDTO activityStatus;
-    @Override
-    public String getType() {
-      return "verifyStepOutcome";
-    }
+  public static class VerifyStepOutcome implements ProgressData, Outcome {
+    int progressPercentage;
+    String estimatedRemainingTime;
+    String activityId;
   }
 
   @Override
@@ -136,6 +145,7 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
         status = Status.FAILED;
         break;
       case ERROR:
+      case IGNORED:
         status = Status.ERRORED;
         break;
       default:
@@ -145,11 +155,19 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
     StepResponseBuilder stepResponseBuilder = StepResponse.builder().status(status).stepOutcome(
         StepResponse.StepOutcome.builder()
             .name("output")
-            .outcome(VerifyStepOutcome.builder().activityStatus(cvngResponseData.getActivityStatusDTO()).build())
+            .outcome(VerifyStepOutcome.builder()
+                         .progressPercentage(cvngResponseData.getActivityStatusDTO().getProgressPercentage())
+                         .estimatedRemainingTime(TimeUnit.MILLISECONDS.toMinutes(
+                                                     cvngResponseData.getActivityStatusDTO().getRemainingTimeMs())
+                             + " minutes")
+                         .activityId(cvngResponseData.getActivityId())
+                         .build())
             .build());
     if (status == Status.FAILED) {
       stepResponseBuilder.failureInfo(FailureInfo.newBuilder()
                                           .addFailureData(FailureData.newBuilder()
+                                                              .setCode(ErrorCode.DEFAULT_ERROR_CODE.name())
+                                                              .setLevel(Level.INFO.name())
                                                               .addFailureTypes(FailureType.VERIFICATION_FAILURE)
                                                               .setMessage("Verification failed")
                                                               .build())
@@ -159,12 +177,25 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
       stepResponseBuilder.failureInfo(
           FailureInfo.newBuilder()
               .addFailureData(FailureData.newBuilder()
+                                  .setCode(ErrorCode.UNKNOWN_ERROR.name())
+                                  .setLevel(Level.ERROR.name())
                                   .addFailureTypes(FailureType.UNKNOWN_FAILURE)
                                   .setMessage("Verification could not complete due to an unknown error")
                                   .build())
               .build());
     }
     return stepResponseBuilder.build();
+  }
+
+  @Override
+  public ProgressData handleProgress(Ambiance ambiance, CVNGStepParameter stepParameters, ProgressData progressData) {
+    CVNGResponseData cvngResponseData = (CVNGResponseData) progressData;
+    return VerifyStepOutcome.builder()
+        .progressPercentage(cvngResponseData.getActivityStatusDTO().getProgressPercentage())
+        .estimatedRemainingTime(
+            TimeUnit.MILLISECONDS.toMinutes(cvngResponseData.getActivityStatusDTO().getRemainingTimeMs()) + " minutes")
+        .activityId(cvngResponseData.getActivityId())
+        .build();
   }
 
   @Override

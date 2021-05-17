@@ -12,7 +12,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -48,9 +47,9 @@ import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.CVConfigService;
-import io.harness.cvng.core.services.api.FeatureFlagService;
 import io.harness.cvng.core.services.impl.CVEventServiceImpl;
 import io.harness.cvng.models.VerificationType;
+import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.encryption.Scope;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
@@ -85,6 +84,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Inject private KubernetesActivitySourceService kubernetesActivitySourceService;
   @Inject private ActivitySourceService activitySourceService;
   @Inject private CVConfigService cvConfigService;
+  @Inject private VerificationJobService verificationJobService;
   @Mock private VerificationManagerService verificationManagerService;
   @Mock private CVEventServiceImpl cvEventService;
 
@@ -112,6 +112,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
     FieldUtils.writeField(
         kubernetesActivitySourceService, "verificationManagerService", verificationManagerService, true);
     FieldUtils.writeField(activitySourceService, "cvEventService", cvEventService, true);
+    verificationJobService.createDefaultVerificationJobs(accountId, orgIdentifier, projectIdentifier);
   }
 
   @Test
@@ -908,10 +909,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = KAMAL)
   @Category({UnitTests.class})
-  public void testCreateDefaultCDNGActivitySource() throws IllegalAccessException {
-    FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
-    FieldUtils.writeField(activitySourceService, "featureFlagService", featureFlagService, true);
-    when(featureFlagService.isFeatureFlagEnabled(any(), any())).thenReturn(true);
+  public void testCreateDefaultCDNGActivitySource() {
     activitySourceService.createDefaultCDNGActivitySource(accountId, orgIdentifier, projectIdentifier);
     ActivitySourceDTO activitySource = activitySourceService.getActivitySource(
         accountId, orgIdentifier, projectIdentifier, CDNGActivitySource.CDNG_ACTIVITY_SOURCE_IDENTIFIER);
@@ -923,10 +921,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = KAMAL)
   @Category({UnitTests.class})
-  public void testCreateDefaultCONGActivitySource_idempotent() throws IllegalAccessException {
-    FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
-    FieldUtils.writeField(activitySourceService, "featureFlagService", featureFlagService, true);
-    when(featureFlagService.isFeatureFlagEnabled(any(), any())).thenReturn(true);
+  public void testCreateDefaultCDNGActivitySource_idempotent() {
     activitySourceService.createDefaultCDNGActivitySource(accountId, orgIdentifier, projectIdentifier);
     activitySourceService.createDefaultCDNGActivitySource(accountId, orgIdentifier, projectIdentifier);
     ActivitySourceDTO activitySource = activitySourceService.getActivitySource(

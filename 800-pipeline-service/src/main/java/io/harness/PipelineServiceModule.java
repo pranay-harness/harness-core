@@ -60,11 +60,15 @@ import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.pipeline.service.PMSYamlSchemaServiceImpl;
+import io.harness.pms.pipeline.service.PipelineDashboardService;
+import io.harness.pms.pipeline.service.PipelineDashboardServiceImpl;
 import io.harness.pms.plan.creation.NodeTypeLookupService;
 import io.harness.pms.plan.creation.NodeTypeLookupServiceImpl;
 import io.harness.pms.plan.execution.mapper.PipelineExecutionFilterPropertiesMapper;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.plan.execution.service.PMSExecutionServiceImpl;
+import io.harness.pms.preflight.service.PreflightService;
+import io.harness.pms.preflight.service.PreflightServiceImpl;
 import io.harness.pms.rbac.validator.PipelineRbacService;
 import io.harness.pms.rbac.validator.PipelineRbacServiceImpl;
 import io.harness.pms.resourceconstraints.service.PMSResourceConstraintService;
@@ -76,7 +80,7 @@ import io.harness.pms.triggers.webhook.service.impl.TriggerWebhookExecutionServi
 import io.harness.pms.triggers.webhook.service.impl.TriggerWebhookExecutionServiceImplV2;
 import io.harness.project.ProjectClientModule;
 import io.harness.redis.RedisConfig;
-import io.harness.secretmanagerclient.SecretManagementClientModule;
+import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NGTriggerRegistrars;
 import io.harness.serializer.OrchestrationStepsModuleRegistrars;
@@ -87,6 +91,9 @@ import io.harness.steps.approval.step.jira.JiraApprovalHelperService;
 import io.harness.steps.jira.JiraStepHelperService;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
+import io.harness.timescaledb.TimeScaleDBConfig;
+import io.harness.timescaledb.TimeScaleDBService;
+import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.user.UserClientModule;
 import io.harness.usergroups.UserGroupClientModule;
 import io.harness.yaml.YamlSdkModule;
@@ -160,9 +167,9 @@ public class PipelineServiceModule extends AbstractModule {
         configuration.getManagerTarget(), configuration.getManagerAuthority()));
     install(new ConnectorResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), MANAGER.getServiceId()));
-    install(new SecretManagementClientModule(
-        configuration.getManagerClientConfig(), configuration.getManagerServiceSecret(), MANAGER.getServiceId()));
-    install(NGTriggersModule.getInstance());
+    install(new SecretNGManagerClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
+    install(NGTriggersModule.getInstance(configuration.getPmsApiBaseUrl()));
     install(PersistentLockModule.getInstance());
     install(TimeModule.getInstance());
     install(FiltersModule.getInstance());
@@ -191,6 +198,7 @@ public class PipelineServiceModule extends AbstractModule {
 
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
+    bind(PreflightService.class).to(PreflightServiceImpl.class);
     bind(PipelineRbacService.class).to(PipelineRbacServiceImpl.class);
     bind(PMSInputSetService.class).to(PMSInputSetServiceImpl.class);
     bind(PMSExecutionService.class).to(PMSExecutionServiceImpl.class);
@@ -224,6 +232,25 @@ public class PipelineServiceModule extends AbstractModule {
         .toProvider(NGLogStreamingClientFactory.builder()
                         .logStreamingServiceBaseUrl(configuration.getLogStreamingServiceConfig().getBaseUrl())
                         .build());
+
+    bind(PipelineDashboardService.class).to(PipelineDashboardServiceImpl.class);
+    try {
+      bind(TimeScaleDBService.class)
+          .toConstructor(TimeScaleDBServiceImpl.class.getConstructor(TimeScaleDBConfig.class));
+    } catch (NoSuchMethodException e) {
+      log.error("TimeScaleDbServiceImpl Initialization Failed in due to missing constructor", e);
+    }
+
+    if (configuration.getEnableDashboardTimescale() != null && configuration.getEnableDashboardTimescale()) {
+      bind(TimeScaleDBConfig.class)
+          .annotatedWith(Names.named("TimeScaleDBConfig"))
+          .toInstance(configuration.getTimeScaleDBConfig() != null ? configuration.getTimeScaleDBConfig()
+                                                                   : TimeScaleDBConfig.builder().build());
+    } else {
+      bind(TimeScaleDBConfig.class)
+          .annotatedWith(Names.named("TimeScaleDBConfig"))
+          .toInstance(TimeScaleDBConfig.builder().build());
+    }
 
     registerEventsFrameworkMessageListeners();
   }
@@ -340,9 +367,7 @@ public class PipelineServiceModule extends AbstractModule {
   @Named("yaml-schema-mapper")
   @Singleton
   public ObjectMapper getYamlSchemaObjectMapper() {
-    ObjectMapper objectMapper = Jackson.newObjectMapper();
-    PipelineServiceApplication.configureObjectMapper(objectMapper);
-    return objectMapper;
+    return Jackson.newObjectMapper();
   }
 
   @Provides

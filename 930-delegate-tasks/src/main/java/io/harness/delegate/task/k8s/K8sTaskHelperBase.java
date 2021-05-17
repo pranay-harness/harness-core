@@ -49,6 +49,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FileData;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.container.ContainerInfo;
@@ -149,6 +150,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -290,7 +292,7 @@ public class K8sTaskHelperBase {
 
   public List<K8sPod> getPodDetailsWithLabels(KubernetesConfig kubernetesConfig, String namespace, String releaseName,
       Map<String, String> labels, long timeoutinMillis) throws Exception {
-    return timeLimiter.callWithTimeout(
+    return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMillis(timeoutinMillis),
         ()
             -> kubernetesContainerService.getRunningPodsWithLabels(kubernetesConfig, namespace, labels)
                    .stream()
@@ -319,8 +321,7 @@ public class K8sTaskHelperBase {
                          .labels(metadata.getLabels() != null ? new HashMap<>(metadata.getLabels()) : null)
                          .build();
                    })
-                   .collect(toList()),
-        timeoutinMillis, TimeUnit.MILLISECONDS, true);
+                   .collect(toList()));
   }
 
   public List<K8sPod> getPodDetailsWithTrack(KubernetesConfig kubernetesConfig, String namespace, String releaseName,
@@ -352,7 +353,7 @@ public class K8sTaskHelperBase {
 
   private <T> T waitForLoadBalancerService(String name, Callable<T> getLoadBalancerService, int timeoutInSeconds) {
     try {
-      return timeLimiter.callWithTimeout(() -> {
+      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(timeoutInSeconds), () -> {
         while (true) {
           T result = getLoadBalancerService.call();
           if (result != null) {
@@ -364,7 +365,7 @@ public class K8sTaskHelperBase {
               sleepTimeInSeconds);
           sleep(ofSeconds(sleepTimeInSeconds));
         }
-      }, timeoutInSeconds, TimeUnit.SECONDS, true);
+      });
     } catch (UncheckedTimeoutException e) {
       log.error("Timed out waiting for LoadBalancer service. Moving on.", e);
     } catch (Exception e) {
@@ -1706,11 +1707,10 @@ public class K8sTaskHelperBase {
       for (KubernetesResource kubernetesResource : resources) {
         String steadyCondition = kubernetesResource.getMetadataAnnotationValue(HarnessAnnotations.steadyStateCondition);
         currentSteadyCondition = steadyCondition;
-        success = timeLimiter.callWithTimeout(
+        success = HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMillis(timeoutInMillis),
             ()
                 -> doStatusCheckForCustomResources(client, kubernetesResource.getResourceId(), steadyCondition,
-                    k8sDelegateTaskParams, executionLogCallback),
-            timeoutInMillis, TimeUnit.MILLISECONDS, true);
+                    k8sDelegateTaskParams, executionLogCallback));
 
         if (!success) {
           break;

@@ -2,7 +2,9 @@ package io.harness.filters;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.SecretRefData;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
@@ -17,7 +19,6 @@ import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorFactory;
 import io.harness.walktree.visitor.entityreference.EntityReferenceExtractorVisitor;
 
@@ -33,6 +34,7 @@ import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 @OwnedBy(PIPELINE)
+@TargetModule(HarnessModule._882_PMS_SDK_CORE)
 public abstract class GenericStageFilterJsonCreator implements FilterJsonCreator<StageElementConfig> {
   @Inject private SimpleVisitorFactory simpleVisitorFactory;
 
@@ -92,12 +94,13 @@ public abstract class GenericStageFilterJsonCreator implements FilterJsonCreator
 
   private Set<EntityDetailProtoDTO> getReferences(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, StageInfoConfig stageInfoConfig, String stageIdentifier) {
-    List<LevelNode> levelNodes = new LinkedList<>();
-    levelNodes.add(LevelNode.builder().qualifierName(YAMLFieldNameConstants.PIPELINE).build());
-    levelNodes.add(LevelNode.builder().qualifierName(YAMLFieldNameConstants.STAGES).build());
-    levelNodes.add(LevelNode.builder().qualifierName(stageIdentifier).build());
+    List<String> qualifiedNameList = new LinkedList<>();
+    qualifiedNameList.add(YAMLFieldNameConstants.PIPELINE);
+    qualifiedNameList.add(YAMLFieldNameConstants.STAGES);
+    qualifiedNameList.add(stageIdentifier);
+    qualifiedNameList.add(YAMLFieldNameConstants.SPEC);
     EntityReferenceExtractorVisitor visitor = simpleVisitorFactory.obtainEntityReferenceExtractorVisitor(
-        accountIdentifier, orgIdentifier, projectIdentifier, levelNodes);
+        accountIdentifier, orgIdentifier, projectIdentifier, qualifiedNameList);
     visitor.walkElementTree(stageInfoConfig);
     return visitor.getEntityReferenceSet();
   }

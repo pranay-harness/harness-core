@@ -28,6 +28,7 @@ import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
 
 import software.wings.beans.TaskType;
+import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
@@ -162,6 +163,10 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       log.debug("Fetching done for host {} for stateExecutionId {} for metrics {}", node,
           dataCollectionInfo.getStateExecutionId(), metricNames);
 
+      if (TimeSeriesDataRecord.shouldLogForBuildDotCom(
+              dataCollectionInfo.getNewRelicConfig().getAccountId(), dataCollectionInfo.getServiceId())) {
+        log.info("for {} retrieved records {} ", dataCollectionInfo.getStateExecutionId(), records);
+      }
       log.debug(records.toString());
       return records;
     }

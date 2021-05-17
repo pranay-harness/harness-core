@@ -20,6 +20,7 @@ import io.harness.pms.barriers.beans.BarrierExecutionInfo;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.repositories.TimeoutInstanceRepository;
 import io.harness.rule.Owner;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierPositionInfo;
@@ -27,9 +28,11 @@ import io.harness.steps.barriers.beans.BarrierPositionInfo.BarrierPosition;
 import io.harness.steps.barriers.beans.BarrierSetupInfo;
 import io.harness.steps.barriers.beans.StageDetail;
 import io.harness.steps.barriers.service.BarrierService;
+import io.harness.timeout.TimeoutInstance;
+import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTracker;
 
-import com.google.common.collect.ImmutableSet;
 import io.fabric8.utils.Lists;
+import java.util.Collections;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,11 +44,12 @@ import org.mockito.internal.util.collections.Sets;
 public class PMSBarrierServiceTest extends PipelineServiceTestBase {
   @Mock private BarrierService barrierService;
   @Mock private NodeExecutionService nodeExecutionService;
+  @Mock private TimeoutInstanceRepository timeoutInstanceRepository;
   private PMSBarrierServiceImpl pmsBarrierService;
 
   @Before
   public void setUp() {
-    pmsBarrierService = new PMSBarrierServiceImpl(nodeExecutionService, barrierService);
+    pmsBarrierService = new PMSBarrierServiceImpl(nodeExecutionService, barrierService, timeoutInstanceRepository);
   }
 
   @Test
@@ -95,18 +99,19 @@ public class PMSBarrierServiceTest extends PipelineServiceTestBase {
 
     assertThat(barrierExecutionInfoList).isNotNull();
     assertThat(barrierExecutionInfoList.size()).isEqualTo(1);
-    assertThat(barrierExecutionInfoList.get(0))
-        .isEqualTo(BarrierExecutionInfo.builder()
-                       .name(instance1.getName())
-                       .identifier(instance1.getIdentifier())
-                       .startedAt(0)
-                       .started(false)
-                       .timeoutIn(0)
-                       .stages(ImmutableSet.of(StageDetail.builder()
-                                                   .identifier(stageNode.getNode().getIdentifier())
-                                                   .name(stageNode.getNode().getName())
-                                                   .build()))
-                       .build());
+
+    BarrierExecutionInfo barrierExecutionInfo = barrierExecutionInfoList.get(0);
+    assertThat(barrierExecutionInfo).isNotNull();
+    assertThat(barrierExecutionInfo.getName()).isEqualTo(instance1.getName());
+    assertThat(barrierExecutionInfo.getIdentifier()).isEqualTo(instance1.getIdentifier());
+    assertThat(barrierExecutionInfo.getStartedAt()).isEqualTo(0);
+    assertThat(barrierExecutionInfo.isStarted()).isFalse();
+    assertThat(barrierExecutionInfo.getStages())
+        .containsExactlyInAnyOrder(StageDetail.builder()
+                                       .identifier(stageNode.getNode().getIdentifier())
+                                       .name(stageNode.getNode().getName())
+                                       .build());
+    assertThat(barrierExecutionInfo.getTimeoutIn()).isEqualTo(0);
   }
 
   @Test
@@ -115,6 +120,13 @@ public class PMSBarrierServiceTest extends PipelineServiceTestBase {
   public void shouldTestGetBarrierExecutionInfo() {
     Ambiance ambiance = Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build();
     String planNodeId = generateUuid();
+    String timeoutId = generateUuid();
+
+    NodeExecution nodeExecution =
+        NodeExecution.builder().timeoutInstanceIds(Collections.singletonList(timeoutId)).build();
+
+    TimeoutInstance timeoutInstance =
+        TimeoutInstance.builder().tracker(new AbsoluteTimeoutTracker(System.currentTimeMillis())).build();
 
     BarrierExecutionInstance instance1 =
         BarrierExecutionInstance.builder()
@@ -124,7 +136,6 @@ public class PMSBarrierServiceTest extends PipelineServiceTestBase {
             .identifier(generateUuid())
             .planExecutionId(ambiance.getPlanExecutionId())
             .setupInfo(BarrierSetupInfo.builder()
-                           .timeout(10_000L)
                            .stages(Sets.newSet(
                                StageDetail.builder().name("stage-name").identifier("stage-identifier").build()))
                            .build())
@@ -136,20 +147,20 @@ public class PMSBarrierServiceTest extends PipelineServiceTestBase {
 
     when(barrierService.findByPlanNodeIdAndPlanExecutionId(planNodeId, ambiance.getPlanExecutionId()))
         .thenReturn(instance1);
+    when(nodeExecutionService.getByPlanNodeUuid(planNodeId, ambiance.getPlanExecutionId())).thenReturn(nodeExecution);
+    when(timeoutInstanceRepository.findAllById(nodeExecution.getTimeoutInstanceIds()))
+        .thenReturn(Lists.newArrayList(timeoutInstance));
 
     BarrierExecutionInfo barrierExecutionInfo =
         pmsBarrierService.getBarrierExecutionInfo(planNodeId, ambiance.getPlanExecutionId());
 
     assertThat(barrierExecutionInfo).isNotNull();
-    assertThat(barrierExecutionInfo)
-        .isEqualTo(BarrierExecutionInfo.builder()
-                       .name(instance1.getName())
-                       .identifier(instance1.getIdentifier())
-                       .startedAt(0)
-                       .started(false)
-                       .timeoutIn(10_000L)
-                       .stages(ImmutableSet.of(
-                           StageDetail.builder().identifier("stage-identifier").name("stage-name").build()))
-                       .build());
+    assertThat(barrierExecutionInfo.getName()).isEqualTo(instance1.getName());
+    assertThat(barrierExecutionInfo.getIdentifier()).isEqualTo(instance1.getIdentifier());
+    assertThat(barrierExecutionInfo.getStartedAt()).isEqualTo(0);
+    assertThat(barrierExecutionInfo.isStarted()).isFalse();
+    assertThat(barrierExecutionInfo.getStages())
+        .containsExactlyInAnyOrder(StageDetail.builder().identifier("stage-identifier").name("stage-name").build());
+    assertThat(barrierExecutionInfo.getTimeoutIn()).isLessThanOrEqualTo(System.currentTimeMillis());
   }
 }

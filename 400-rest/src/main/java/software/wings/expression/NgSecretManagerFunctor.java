@@ -1,5 +1,6 @@
 package software.wings.expression;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -9,6 +10,7 @@ import static io.harness.security.SimpleEncryption.CHARSET;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
 import io.harness.data.encoding.EncodingUtils;
@@ -20,13 +22,13 @@ import io.harness.exception.FunctorException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionFunctor;
 import io.harness.ng.core.BaseNGAccess;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.utils.IdentifierRefHelper;
 
-import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.lang.reflect.Field;
@@ -38,6 +40,7 @@ import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Value;
 
+@OwnedBy(CDP)
 @Value
 @Builder
 public class NgSecretManagerFunctor implements ExpressionFunctor, NgSecretManagerFunctorInterface {
@@ -46,7 +49,7 @@ public class NgSecretManagerFunctor implements ExpressionFunctor, NgSecretManage
   private final String orgId;
   private final String projectId;
   private final SecretManager secretManager;
-  private final NGSecretService ngSecretService;
+  private final SecretManagerClientService ngSecretService;
   private SecretManagerMode mode;
 
   @Builder.Default private Map<String, String> evaluatedSecrets = new HashMap<>();

@@ -1,11 +1,13 @@
 package io.harness.accesscontrol.permissions;
 
+import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.permissions.persistence.PermissionDao;
 import io.harness.accesscontrol.resources.resourcetypes.ResourceType;
 import io.harness.accesscontrol.resources.resourcetypes.ResourceTypeService;
 import io.harness.accesscontrol.roles.RoleService;
+import io.harness.accesscontrol.roles.filter.RoleFilter;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
@@ -39,10 +41,15 @@ public class PermissionServiceImpl implements PermissionService {
   private final RoleService roleService;
   private final TransactionTemplate transactionTemplate;
 
-  private static final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy(
+  private static final RetryPolicy<Object> removePermissionTransactionRetryPolicy = RetryUtils.getRetryPolicy(
       "[Retrying]: Failed to remove permission from roles and remove the permission; attempt: {}",
       "[Failed]: Failed to remove permission from roles and remove the permission; attempt: {}",
       ImmutableList.of(TransactionException.class), Duration.ofSeconds(5), 3, log);
+
+  private static final RetryPolicy<Object> addPermissionTransactionRetryPolicy =
+      RetryUtils.getRetryPolicy("[Retrying]: Failed to add permission to roles and update the permission; attempt: {}",
+          "[Failed]: Failed to add permission to roles and update the permission; attempt: {}",
+          ImmutableList.of(TransactionException.class), Duration.ofSeconds(5), 3, log);
 
   @Inject
   public PermissionServiceImpl(PermissionDao permissionDao, ResourceTypeService resourceTypeService,
@@ -92,8 +99,22 @@ public class PermissionServiceImpl implements PermissionService {
     //    if (!permissionUpdate.getAllowedScopeLevels().equals(currentPermission.getAllowedScopeLevels())) {
     //      throw new InvalidRequestException("Cannot change the the scopes at which this permission can be used.");
     //    }
-    if (PermissionStatus.INACTIVE.equals(permissionUpdate.getStatus())) {
-      return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+    if (shouldIncludePermissionInAllRoles(permissionUpdate)) {
+      return Failsafe.with(addPermissionTransactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+        RoleFilter roleFilter = RoleFilter.builder()
+                                    .allowedScopeLevelsFilter(permissionUpdate.getAllowedScopeLevels())
+                                    .managedFilter(NO_FILTER)
+                                    .build();
+        boolean updateSuccessful = roleService.addPermissionToRoles(permissionUpdate.getIdentifier(), roleFilter);
+        if (!updateSuccessful) {
+          throw new UnexpectedException(String.format(
+              "The addition of permission in roles has failed for permission, %s", permissionUpdate.getIdentifier()));
+        }
+        permissionUpdate.setVersion(currentPermission.getVersion());
+        return permissionDao.update(permissionUpdate);
+      }));
+    } else if (PermissionStatus.INACTIVE.equals(permissionUpdate.getStatus())) {
+      return Failsafe.with(removePermissionTransactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
         boolean updateSuccessful = roleService.removePermissionFromRoles(permissionUpdate.getIdentifier());
         if (!updateSuccessful) {
           throw new UnexpectedException(String.format(
@@ -110,7 +131,7 @@ public class PermissionServiceImpl implements PermissionService {
 
   @Override
   public Permission delete(String identifier) {
-    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+    return Failsafe.with(removePermissionTransactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
       boolean updateSuccessful = roleService.removePermissionFromRoles(identifier);
       if (!updateSuccessful) {
         throw new UnexpectedException(
@@ -122,5 +143,11 @@ public class PermissionServiceImpl implements PermissionService {
 
   public Optional<ResourceType> getResourceTypeFromPermission(@Valid @NotNull Permission permission) {
     return resourceTypeService.getByPermissionKey(permission.getPermissionMetadata(1));
+  }
+
+  private boolean shouldIncludePermissionInAllRoles(Permission permissionUpdate) {
+    return permissionUpdate.isIncludeInAllRoles()
+        && (PermissionStatus.EXPERIMENTAL.equals(permissionUpdate.getStatus())
+            || PermissionStatus.ACTIVE.equals(permissionUpdate.getStatus()));
   }
 }

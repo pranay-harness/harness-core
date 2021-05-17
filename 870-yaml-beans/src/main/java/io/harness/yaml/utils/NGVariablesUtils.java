@@ -1,5 +1,7 @@
 package io.harness.yaml.utils;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.yaml.core.variables.NGVariable;
 import io.harness.yaml.core.variables.SecretNGVariable;
@@ -9,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
 public class NGVariablesUtils {
   public Map<String, Object> getMapOfVariables(List<NGVariable> variables, long expressionFunctorToken) {
@@ -32,12 +35,13 @@ public class NGVariablesUtils {
   }
 
   public Map<String, Object> applyVariableOverrides(
-      Map<String, Object> originalVariablesMap, List<NGVariable> overrideVariables) {
+      Map<String, Object> originalVariablesMap, List<NGVariable> overrideVariables, long expressionFunctorToken) {
     if (EmptyPredicate.isEmpty(overrideVariables)) {
       return originalVariablesMap;
     }
-    overrideVariables.forEach(
-        overrideVariable -> originalVariablesMap.put(overrideVariable.getName(), overrideVariable.getCurrentValue()));
+
+    Map<String, Object> overrideVariablesMap = getMapOfVariables(overrideVariables, expressionFunctorToken);
+    originalVariablesMap.putAll(overrideVariablesMap);
     return originalVariablesMap;
   }
 }

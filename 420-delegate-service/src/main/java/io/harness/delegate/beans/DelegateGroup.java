@@ -2,12 +2,14 @@ package io.harness.delegate.beans;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
+import java.util.Date;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -31,6 +33,10 @@ public class DelegateGroup implements PersistentEntity, UuidAware {
   @NotEmpty private String accountId;
 
   private K8sConfigDetails k8sConfigDetails;
+
+  @Builder.Default private DelegateGroupStatus status = DelegateGroupStatus.ENABLED;
+
+  @FdTtlIndex private Date validUntil;
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

@@ -1,7 +1,20 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
+
+shared_dependencies = [
+    "//:lombok",
+    "//955-delegate-beans:module",
+    "//960-persistence:module",
+    "@maven//:com_esotericsoftware_kryo",
+    "@maven//:com_google_code_findbugs_annotations",
+    "@maven//:com_google_guava_guava",
+    "@maven//:com_google_inject_guice",
+    "@maven//:org_apache_commons_commons_lang3",
+    "@maven//:org_mongodb_mongo_java_driver",
+    "@maven//:org_mongodb_morphia_morphia",
+    "@maven//:org_slf4j_slf4j_api",
+]
 
 java_library(
     name = "module",
@@ -9,25 +22,12 @@ java_library(
     resources = [
     ],
     visibility = ["//visibility:public"],
-    deps = [
-        "//:lombok",
-        "//955-delegate-beans:module",
-        "//960-persistence:module",
-        "@maven//:com_esotericsoftware_kryo",
-        "@maven//:com_google_code_findbugs_annotations",
-        "@maven//:com_google_guava_guava",
-        "@maven//:com_google_inject_guice",
-        "@maven//:org_apache_commons_commons_lang3",
-        "@maven//:org_mongodb_mongo_java_driver",
-        "@maven//:org_mongodb_morphia_morphia",
-        "@maven//:org_slf4j_slf4j_api",
-    ],
+    deps = shared_dependencies,
 )
 
 java_library(
-    name = "tests",
-    testonly = True,
-    srcs = glob(["src/test/**/*.java"]),
+    name = "supporter-test",
+    srcs = glob(["src/supporter-test/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
         ":module",
@@ -40,8 +40,18 @@ java_library(
     ],
 )
 
+java_library(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":module",
+        ":supporter-test",
+        "//:lombok",
+    ],
+)
+
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

@@ -1,14 +1,11 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 shared_dependencies = [
     "//330-ci-beans:module",
     "//440-connector-nextgen:module",
     "//850-ng-pipeline-commons:module",
-    "//870-orchestration:module",
-    "//876-orchestration-beans:module",
     "//878-pipeline-service-utilities:module",
     "//879-pms-sdk:module",
     "//890-sm-core:module",
@@ -450,6 +447,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

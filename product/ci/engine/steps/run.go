@@ -19,8 +19,7 @@ import (
 //go:generate mockgen -source run.go -package=steps -destination mocks/run_mock.go RunStep
 
 const (
-	outputEnvSuffix string = "output"
-	maxAddonRetries        = 2000 // max retry time of 200 seconds
+	maxAddonRetries = 2000 // max retry time of 200 seconds
 )
 
 var (

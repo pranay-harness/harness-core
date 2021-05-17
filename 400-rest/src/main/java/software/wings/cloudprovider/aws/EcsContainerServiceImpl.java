@@ -1,5 +1,7 @@
 package software.wings.cloudprovider.aws;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INIT_TIMEOUT;
@@ -19,6 +21,9 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.container.ContainerInfo;
 import io.harness.container.ContainerInfo.Status;
 import io.harness.ecs.EcsContainerDetails;
@@ -87,6 +92,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -97,7 +103,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
@@ -110,6 +115,8 @@ import org.jetbrains.annotations.NotNull;
  */
 @Singleton
 @Slf4j
+@OwnedBy(CDP)
+@TargetModule(_930_DELEGATE_TASKS)
 public class EcsContainerServiceImpl implements EcsContainerService {
   @Inject private AwsHelperService awsHelperService = new AwsHelperService();
   @Inject private TimeLimiter timeLimiter;
@@ -861,12 +868,12 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   private void waitForAllInstanceToRegisterWithCluster(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, Integer clusterSize) {
     try {
-      timeLimiter.callWithTimeout(() -> {
+      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(10), () -> {
         while (!allInstancesRegisteredWithCluster(region, awsConfig, encryptedDataDetails, clusterName, clusterSize)) {
           sleep(ofSeconds(10));
         }
         return true;
-      }, 10L, TimeUnit.MINUTES, true);
+      });
     } catch (UncheckedTimeoutException e) {
       throw new WingsException(INIT_TIMEOUT)
           .addParam("message", "Timed out waiting for instances to register with cluster");
@@ -880,12 +887,12 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   private void waitForAllInstancesToBeReady(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String region, String autoscalingGroupName, Integer clusterSize) {
     try {
-      timeLimiter.callWithTimeout(() -> {
+      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(10), () -> {
         while (!allInstanceInReadyState(awsConfig, encryptedDataDetails, region, autoscalingGroupName, clusterSize)) {
           sleep(ofSeconds(10));
         }
         return true;
-      }, 10L, TimeUnit.MINUTES, true);
+      });
     } catch (UncheckedTimeoutException e) {
       throw new WingsException(INIT_TIMEOUT).addParam("message", "Timed out waiting for instances to be ready");
     } catch (WingsException e) {
@@ -957,13 +964,12 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   private void waitForTasksToBeInRunningState(UpdateServiceCountRequestData requestData) {
     long timeoutDuration = requestData.getTimeOut() == null ? 10L : requestData.getTimeOut().longValue();
     try {
-      timeLimiter.callWithTimeout(() -> {
+      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeoutDuration), () -> {
         while (notAllDesiredTasksRunning(requestData)) {
           sleep(ofSeconds(10));
         }
-
         return true;
-      }, timeoutDuration, TimeUnit.MINUTES, true);
+      });
     } catch (UncheckedTimeoutException e) {
       throw new TimeoutException(
           "Timed out waiting for tasks to be in running state", "Timeout", e, WingsException.SRE);
@@ -1434,7 +1440,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     ExecutionLogCallback executionLogCallback = requestData.getExecutionLogCallback();
     try {
       executionLogCallback.saveExecutionLog("Waiting for service to be in steady state...", LogLevel.INFO);
-      timeLimiter.callWithTimeout(() -> {
+      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(serviceSteadyStateTimeout), () -> {
         while (true) {
           List<Service> services = getEcsServicesForCluster(requestData.getRegion(), requestData.getAwsConfig(),
               requestData.getEncryptedDataDetails(), requestData.getCluster(),
@@ -1450,7 +1456,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
           }
           sleep(ofSeconds(10));
         }
-      }, serviceSteadyStateTimeout, TimeUnit.MINUTES, true);
+      });
     } catch (UncheckedTimeoutException e) {
       String msg = new StringBuilder(128)
                        .append("Timed out waiting for service: ")
@@ -1480,7 +1486,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             + " to reflect updated desired count: " + data.getDesiredCount(),
         LogLevel.INFO);
     try {
-      timeLimiter.callWithTimeout(() -> {
+      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeout), () -> {
         while (true) {
           service[0] = getEcsServicesForCluster(data.getRegion(), data.getAwsConfig(), data.getEncryptedDataDetails(),
               data.getCluster(), Arrays.asList(data.getServiceName()))
@@ -1493,7 +1499,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
           }
           sleep(ofSeconds(1));
         }
-      }, timeout, TimeUnit.MINUTES, true);
+      });
     } catch (UncheckedTimeoutException e) {
       log.warn("Service update failed {}", service[0]);
       executionLogCallback.saveExecutionLog(

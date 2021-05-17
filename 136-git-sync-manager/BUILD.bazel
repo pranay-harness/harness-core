@@ -1,8 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//:macros.bzl", "run_analysis")
 load("//:macros.bzl", "test_targets_list")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
 
 java_library(
     name = "module",
@@ -41,7 +40,6 @@ java_library(
         "@maven//:io_grpc_grpc_protobuf_lite",
         "@maven//:io_grpc_grpc_services",
         "@maven//:io_grpc_grpc_stub",
-        "@maven//:io_grpc_grpc_testing",
         "@maven//:org_jetbrains_annotations",
         "@maven//:ru_vyarus_guice_validator",
         "@maven//:org_apache_commons_commons_lang3",
@@ -88,6 +86,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

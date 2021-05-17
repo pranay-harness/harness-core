@@ -13,7 +13,6 @@ import io.harness.telemetry.Destination;
 import io.harness.telemetry.TelemetrySdkTestBase;
 import io.harness.telemetry.segment.SegmentReporterImpl;
 
-import com.google.inject.Inject;
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +28,7 @@ import org.mockito.Mockito;
 @OwnedBy(HarnessTeam.GTM)
 public class GroupEventInterceptorTest extends TelemetrySdkTestBase {
   @Mock SegmentReporterImpl segmentReporterImpl;
-  @Inject @InjectMocks GroupEventInterceptor groupEventInterceptor;
+  @InjectMocks GroupEventInterceptor groupEventInterceptor;
   @Mock SendGroupEvent sendGroupEvent;
   @Captor private ArgumentCaptor<String> groupNameCapture;
   @Captor private ArgumentCaptor<HashMap<String, Object>> propertyCapture;

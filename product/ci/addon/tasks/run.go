@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -152,7 +153,7 @@ func (r *runTask) execute(ctx context.Context, retryCount int32) (map[string]str
 	ctx, cancel := context.WithTimeout(ctx, time.Second*time.Duration(r.timeoutSecs))
 	defer cancel()
 
-	outputFile := fmt.Sprintf("%s/%s%s", r.tmpFilePath, r.id, outputEnvSuffix)
+	outputFile := filepath.Join(r.tmpFilePath, fmt.Sprintf("%s%s", r.id, outputEnvSuffix))
 	cmdToExecute, err := r.getScript(ctx, outputFile)
 	if err != nil {
 		return nil, err
@@ -167,7 +168,7 @@ func (r *runTask) execute(ctx context.Context, retryCount int32) (map[string]str
 
 	cmd := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).
 		WithStdout(r.procWriter).WithStderr(r.procWriter).WithEnvVarsMap(envVars)
-	err = runCmd(ctx, cmd, r.id, cmdArgs, retryCount, start, r.logMetrics, r.log, r.addonLogger)
+	err = runCmd(ctx, cmd, r.id, cmdArgs, retryCount, start, r.logMetrics, r.addonLogger)
 	if err != nil {
 		return nil, err
 	}

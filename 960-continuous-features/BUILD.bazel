@@ -1,6 +1,7 @@
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//:macros.bzl", "run_analysis")
+
+HarnessTeam = "CF"
 
 java_library(
     name = "module",
@@ -26,6 +27,4 @@ java_library(
 
 #run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

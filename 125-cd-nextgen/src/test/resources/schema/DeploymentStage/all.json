@@ -151,17 +151,38 @@
       ],
       "properties": {
         "disallowPipelineExecutor": {
-          "type": "boolean"
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "minimumCount": {
-          "type": "integer",
-          "format": "int32"
+          "oneOf": [
+            {
+              "type": "integer",
+              "format": "int32"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "userGroups": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "string"
+            }
+          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -178,7 +199,7 @@
           "type": "string"
         },
         "primary": {
-          "$ref": "#/definitions/ArtifactSpecWrapper"
+          "$ref": "#/definitions/PrimaryArtifact"
         },
         "sidecars": {
           "type": "array",
@@ -206,26 +227,6 @@
         },
         "identifier": {
           "type": "string"
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "ArtifactSpecWrapper": {
-      "type": "object",
-      "required": [
-        "type"
-      ],
-      "properties": {
-        "spec": {
-          "$ref": "#/definitions/ArtifactConfig"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "Dockerhub",
-            "Gcr",
-            "Ecr"
-          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -272,8 +273,8 @@
             "gitFetchType": {
               "type": "string",
               "enum": [
-                "BRANCH",
-                "COMMIT"
+                "Branch",
+                "Commit"
               ]
             },
             "metadata": {
@@ -289,6 +290,34 @@
               "type": "string"
             }
           }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "folderPath"
+              ]
+            },
+            {
+              "required": [
+                "paths"
+              ]
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "commitId"
+              ]
+            },
+            {
+              "required": [
+                "branch"
+              ]
+            }
+          ]
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -347,9 +376,6 @@
         "type"
       ],
       "properties": {
-        "spec": {
-          "$ref": "#/definitions/CriteriaSpec"
-        },
         "type": {
           "type": "string",
           "enum": [
@@ -358,7 +384,41 @@
           ]
         }
       },
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Jexl"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/JexlCriteriaSpec"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "KeyValues"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/KeyValuesCriteriaSpec"
+              }
+            }
+          }
+        }
+      ]
     },
     "DeleteManifestPathSpec": {
       "allOf": [
@@ -398,14 +458,7 @@
         },
         {
           "type": "object",
-          "properties": {
-            "resourceNames": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
+          "properties": { }
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -424,7 +477,10 @@
           "type": "string"
         },
         "resourceNames": {
-          "type": "string"
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "type": {
           "type": "string",
@@ -440,9 +496,6 @@
     "DeleteResourcesWrapper": {
       "type": "object",
       "properties": {
-        "spec": {
-          "$ref": "#/definitions/DeleteResourcesBaseSpec"
-        },
         "type": {
           "type": "string",
           "enum": [
@@ -452,7 +505,57 @@
           ]
         }
       },
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ManifestPath"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/DeleteManifestPathSpec"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ReleaseName"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/DeleteReleaseNameSpec"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ResourceName"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/DeleteResourceNameSpec"
+              }
+            }
+          }
+        }
+      ]
     },
     "DeploymentStageConfig": {
       "type": "object",
@@ -498,6 +601,20 @@
               "type": "string"
             }
           }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "tagRegex"
+              ]
+            },
+            {
+              "required": [
+                "tag"
+              ]
+            }
+          ]
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -565,6 +682,9 @@
     },
     "ExecutionElementConfig": {
       "type": "object",
+      "required": [
+        "steps"
+      ],
       "properties": {
         "rollbackSteps": {
           "type": "array",
@@ -576,7 +696,9 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/ExecutionWrapperConfig"
-          }
+          },
+          "maxItems": 2147483647,
+          "minItems": 1
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -645,7 +767,7 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "FeatureUpdateStepInfo": {
+    "FlagConfigurationStepInfo": {
       "allOf": [
         {
           "$ref": "#/definitions/StepSpecType"
@@ -655,7 +777,6 @@
           "required": [
             "environment",
             "feature",
-            "featureUpdateRef",
             "instructions",
             "state"
           ],
@@ -666,13 +787,26 @@
             "feature": {
               "type": "string"
             },
-            "featureUpdateRef": {
-              "type": "string"
-            },
             "instructions": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/PatchInstruction"
+                "oneOf": [
+                  {
+                    "$ref": "#/definitions/AddSegmentToVariationTargetMapYaml"
+                  },
+                  {
+                    "$ref": "#/definitions/AddTargetsToVariationTargetMapYaml"
+                  },
+                  {
+                    "$ref": "#/definitions/RemoveSegmentToVariationTargetMapYaml"
+                  },
+                  {
+                    "$ref": "#/definitions/RemoveTargetsToVariationTargetMapYaml"
+                  },
+                  {
+                    "$ref": "#/definitions/SetFeatureFlagStateYaml"
+                  }
+                ]
               }
             },
             "state": {
@@ -730,6 +864,9 @@
             },
             "folderPath": {
               "type": "string"
+            },
+            "metadata": {
+              "type": "string"
             }
           }
         }
@@ -759,8 +896,8 @@
             "gitFetchType": {
               "type": "string",
               "enum": [
-                "BRANCH",
-                "COMMIT"
+                "Branch",
+                "Commit"
               ]
             },
             "metadata": {
@@ -776,6 +913,34 @@
               "type": "string"
             }
           }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "folderPath"
+              ]
+            },
+            {
+              "required": [
+                "paths"
+              ]
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "commitId"
+              ]
+            },
+            {
+              "required": [
+                "branch"
+              ]
+            }
+          ]
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -803,23 +968,58 @@
             "gitFetchType": {
               "type": "string",
               "enum": [
-                "BRANCH",
-                "COMMIT"
+                "Branch",
+                "Commit"
               ]
             },
             "metadata": {
               "type": "string"
             },
             "paths": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             "repoName": {
               "type": "string"
             }
           }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "folderPath"
+              ]
+            },
+            {
+              "required": [
+                "paths"
+              ]
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "commitId"
+              ]
+            },
+            {
+              "required": [
+                "branch"
+              ]
+            }
+          ]
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -847,8 +1047,8 @@
             "gitFetchType": {
               "type": "string",
               "enum": [
-                "BRANCH",
-                "COMMIT"
+                "Branch",
+                "Commit"
               ]
             },
             "metadata": {
@@ -864,6 +1064,34 @@
               "type": "string"
             }
           }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "folderPath"
+              ]
+            },
+            {
+              "required": [
+                "paths"
+              ]
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "commitId"
+              ]
+            },
+            {
+              "required": [
+                "branch"
+              ]
+            }
+          ]
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -894,7 +1122,14 @@
               "$ref": "#/definitions/Approvers"
             },
             "includePipelineExecutionHistory": {
-              "type": "boolean"
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             }
           }
         }
@@ -932,7 +1167,17 @@
               "type": "string"
             },
             "skipResourceVersioning": {
-              "type": "boolean"
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldBoolean"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
             },
             "store": {
               "$ref": "#/definitions/StoreConfigWrapper"
@@ -1021,7 +1266,17 @@
             "outputVariables": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/NGVariable"
+                "oneOf": [
+                  {
+                    "$ref": "#/definitions/NumberNGVariable"
+                  },
+                  {
+                    "$ref": "#/definitions/SecretNGVariable"
+                  },
+                  {
+                    "$ref": "#/definitions/StringNGVariable"
+                  }
+                ]
               }
             },
             "requestBody": {
@@ -1044,6 +1299,9 @@
           "type": "object",
           "properties": {
             "connectorRef": {
+              "type": "string"
+            },
+            "metadata": {
               "type": "string"
             }
           }
@@ -1111,14 +1369,45 @@
         "provisioner": {
           "$ref": "#/definitions/ExecutionElementConfig"
         },
-        "spec": {
-          "$ref": "#/definitions/Infrastructure"
-        },
         "type": {
           "type": "string"
         }
       },
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "KubernetesDirect"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/K8SDirectInfrastructure"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "KubernetesGcp"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/K8sGcpInfrastructure"
+              }
+            }
+          }
+        }
+      ]
     },
     "InlineTerraformBackendConfigSpec": {
       "allOf": [
@@ -1189,9 +1478,6 @@
     "InstanceSelectionWrapper": {
       "type": "object",
       "properties": {
-        "spec": {
-          "$ref": "#/definitions/InstanceSelectionBase"
-        },
         "type": {
           "type": "string",
           "enum": [
@@ -1200,7 +1486,41 @@
           ]
         }
       },
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Count"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/CountInstanceSelection"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Percentage"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/PercentageInstanceSelection"
+              }
+            }
+          }
+        }
+      ]
     },
     "JexlCriteriaSpec": {
       "allOf": [
@@ -1356,9 +1676,6 @@
         },
         {
           "type": "object",
-          "required": [
-            "skipDryRun"
-          ],
           "properties": {
             "filePaths": {
               "type": "array",
@@ -1367,10 +1684,30 @@
               }
             },
             "skipDryRun": {
-              "$ref": "#/definitions/ParameterFieldBoolean"
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldBoolean"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
             },
             "skipSteadyStateCheck": {
-              "$ref": "#/definitions/ParameterFieldBoolean"
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldBoolean"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
             }
           }
         }
@@ -1402,7 +1739,17 @@
           "type": "object",
           "properties": {
             "skipDryRun": {
-              "$ref": "#/definitions/ParameterFieldBoolean"
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldBoolean"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
             }
           }
         }
@@ -1440,7 +1787,17 @@
               "$ref": "#/definitions/InstanceSelectionWrapper"
             },
             "skipDryRun": {
-              "$ref": "#/definitions/ParameterFieldBoolean"
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldBoolean"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
             }
           }
         }
@@ -1462,7 +1819,17 @@
               "$ref": "#/definitions/DeleteResourcesWrapper"
             },
             "skipDryRun": {
-              "$ref": "#/definitions/ParameterFieldBoolean"
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldBoolean"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
             }
           }
         }
@@ -1509,7 +1876,17 @@
               "type": "string"
             },
             "skipResourceVersioning": {
-              "type": "boolean"
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldBoolean"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
             },
             "store": {
               "$ref": "#/definitions/StoreConfigWrapper"
@@ -1528,7 +1905,17 @@
           "type": "object",
           "properties": {
             "skipDryRun": {
-              "$ref": "#/definitions/ParameterFieldBoolean"
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldBoolean"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
             }
           }
         }
@@ -1542,12 +1929,19 @@
         },
         {
           "type": "object",
-          "required": [
-            "skipDryRun"
-          ],
           "properties": {
             "skipDryRun": {
-              "type": "boolean"
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldBoolean"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
             }
           }
         }
@@ -1569,10 +1963,30 @@
               "$ref": "#/definitions/InstanceSelectionWrapper"
             },
             "skipDryRun": {
-              "$ref": "#/definitions/ParameterFieldBoolean"
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldBoolean"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
             },
             "skipSteadyStateCheck": {
-              "$ref": "#/definitions/ParameterFieldBoolean"
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldBoolean"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
             },
             "workload": {
               "type": "string"
@@ -1600,7 +2014,14 @@
               }
             },
             "matchAnyCondition": {
-              "type": "boolean"
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             }
           }
         }
@@ -1638,7 +2059,17 @@
               "type": "string"
             },
             "skipResourceVersioning": {
-              "type": "boolean"
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldBoolean"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
             },
             "store": {
               "$ref": "#/definitions/StoreConfigWrapper"
@@ -1659,14 +2090,109 @@
         "identifier": {
           "type": "string"
         },
-        "spec": {
-          "$ref": "#/definitions/ManifestAttributes"
-        },
         "type": {
           "type": "string"
         }
       },
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "HelmChart"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/HelmChartManifest"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "K8sManifest"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/K8sManifest"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Kustomize"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/KustomizeManifest"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "OpenshiftParam"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/OpenshiftParamManifest"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "OpenshiftTemplate"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/OpenshiftManifest"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Values"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/ValuesManifest"
+              }
+            }
+          }
+        }
+      ]
     },
     "ManifestConfigWrapper": {
       "type": "object",
@@ -1798,9 +2324,6 @@
       "properties": {
         "overrideSet": {
           "$ref": "#/definitions/NGVariableOverrideSets"
-        },
-        "uuid": {
-          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -1814,7 +2337,17 @@
         "variables": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/NGVariable"
+            "oneOf": [
+              {
+                "$ref": "#/definitions/NumberNGVariable"
+              },
+              {
+                "$ref": "#/definitions/SecretNGVariable"
+              },
+              {
+                "$ref": "#/definitions/StringNGVariable"
+              }
+            ]
           }
         }
       },
@@ -1901,7 +2434,16 @@
         "errors": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "AnyOther",
+              "Authentication",
+              "Connectivity",
+              "Timeout",
+              "Authorization",
+              "Verification",
+              "DelegateProvisioning"
+            ]
           }
         }
       },
@@ -1981,7 +2523,17 @@
               "type": "string"
             },
             "skipResourceVersioning": {
-              "type": "boolean"
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldBoolean"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
             },
             "store": {
               "$ref": "#/definitions/StoreConfigWrapper"
@@ -2163,7 +2715,17 @@
           "type": "object",
           "properties": {
             "percentage": {
-              "$ref": "#/definitions/ParameterFieldInteger"
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldInteger"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                }
+              ]
             }
           }
         }
@@ -2174,7 +2736,14 @@
       "type": "object",
       "properties": {
         "allowSimultaneousDeployments": {
-          "type": "boolean"
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "environment": {
           "$ref": "#/definitions/EnvironmentYaml"
@@ -2207,6 +2776,73 @@
               ]
             }
           ]
+        }
+      ]
+    },
+    "PrimaryArtifact": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Dockerhub",
+            "Gcr",
+            "Ecr"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Dockerhub"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/DockerHubArtifactConfig"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Ecr"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/EcrArtifactConfig"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Gcr"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/GcrArtifactConfig"
+              }
+            }
+          }
         }
       ]
     },
@@ -2424,6 +3060,9 @@
             "folderPath": {
               "type": "string"
             },
+            "metadata": {
+              "type": "string"
+            },
             "region": {
               "type": "string"
             }
@@ -2475,12 +3114,6 @@
         "stageOverrides": {
           "$ref": "#/definitions/StageOverridesConfig"
         },
-        "tags": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
         "useFromStage": {
           "$ref": "#/definitions/ServiceUseFromStage"
         }
@@ -2489,6 +3122,11 @@
       "allOf": [
         {
           "oneOf": [
+            {
+              "required": [
+                "useFromStage"
+              ]
+            },
             {
               "required": [
                 "service"
@@ -2506,14 +3144,45 @@
     "ServiceDefinition": {
       "type": "object",
       "properties": {
-        "spec": {
-          "$ref": "#/definitions/ServiceSpec"
-        },
         "type": {
           "type": "string"
         }
       },
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Kubernetes"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/KubernetesServiceSpec"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "NativeHelm"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/NativeHelmServiceSpec"
+              }
+            }
+          }
+        }
+      ]
     },
     "ServiceOverrides": {
       "type": "object",
@@ -2678,14 +3347,29 @@
     "ShellScriptSourceWrapper": {
       "type": "object",
       "properties": {
-        "spec": {
-          "$ref": "#/definitions/ShellScriptBaseSource"
-        },
         "type": {
           "type": "string"
         }
       },
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Inline"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/ShellScriptInlineSource"
+              }
+            }
+          }
+        }
+      ]
     },
     "ShellScriptStepInfo": {
       "allOf": [
@@ -2706,7 +3390,17 @@
             "environmentVariables": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/NGVariable"
+                "oneOf": [
+                  {
+                    "$ref": "#/definitions/NumberNGVariable"
+                  },
+                  {
+                    "$ref": "#/definitions/SecretNGVariable"
+                  },
+                  {
+                    "$ref": "#/definitions/StringNGVariable"
+                  }
+                ]
               }
             },
             "executionTarget": {
@@ -2716,12 +3410,32 @@
               "type": "string"
             },
             "onDelegate": {
-              "$ref": "#/definitions/ParameterFieldBoolean"
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldBoolean"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
             },
             "outputVariables": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/NGVariable"
+                "oneOf": [
+                  {
+                    "$ref": "#/definitions/NumberNGVariable"
+                  },
+                  {
+                    "$ref": "#/definitions/SecretNGVariable"
+                  },
+                  {
+                    "$ref": "#/definitions/StringNGVariable"
+                  }
+                ]
               }
             },
             "shell": {
@@ -2748,9 +3462,6 @@
         "identifier": {
           "type": "string"
         },
-        "spec": {
-          "$ref": "#/definitions/ArtifactConfig"
-        },
         "type": {
           "type": "string",
           "enum": [
@@ -2760,7 +3471,57 @@
           ]
         }
       },
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Dockerhub"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/DockerHubArtifactConfig"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Ecr"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/EcrArtifactConfig"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Gcr"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/GcrArtifactConfig"
+              }
+            }
+          }
+        }
+      ]
     },
     "SidecarArtifactWrapper": {
       "type": "object",
@@ -2804,7 +3565,17 @@
         "variables": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/NGVariable"
+            "oneOf": [
+              {
+                "$ref": "#/definitions/NumberNGVariable"
+              },
+              {
+                "$ref": "#/definitions/SecretNGVariable"
+              },
+              {
+                "$ref": "#/definitions/StringNGVariable"
+              }
+            ]
           }
         }
       },
@@ -2850,20 +3621,355 @@
         "name": {
           "type": "string"
         },
-        "skipCondition": {
-          "type": "string"
-        },
-        "spec": {
-          "$ref": "#/definitions/StepSpecType"
-        },
         "timeout": {
           "type": "string"
         },
         "type": {
           "type": "string"
+        },
+        "when": {
+          "$ref": "#/definitions/StepWhenCondition"
         }
       },
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Barrier"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/BarrierStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "FlagConfiguration"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/FlagConfigurationStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "HarnessApproval"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/HarnessApprovalStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Http"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/HttpStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "JiraApproval"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/JiraApprovalStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "JiraCreate"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/JiraCreateStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "JiraUpdate"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/JiraUpdateStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "K8sApply"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/K8sApplyStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "K8sBGSwapServices"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/K8sBGSwapServicesStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "K8sBlueGreenDeploy"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/K8sBlueGreenStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "K8sCanaryDelete"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/K8sCanaryDeleteStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "K8sCanaryDeploy"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/K8sCanaryStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "K8sDelete"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/K8sDeleteStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "K8sRollingDeploy"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/K8sRollingStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "K8sRollingRollback"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/K8sRollingRollbackStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "K8sScale"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/K8sScaleStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ShellScript"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/ShellScriptStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "TerraformApply"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/TerraformApplyStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "TerraformDestroy"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/TerraformDestroyStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "TerraformPlan"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/TerraformPlanStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "TerraformRollback"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/TerraformRollbackStepInfo"
+              }
+            }
+          }
+        }
+      ]
     },
     "StepGroupElementConfig": {
       "type": "object",
@@ -2890,14 +3996,16 @@
             "$ref": "#/definitions/ExecutionWrapperConfig"
           }
         },
-        "skipCondition": {
-          "type": "string"
-        },
         "steps": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/ExecutionWrapperConfig"
-          }
+          },
+          "maxItems": 2147483647,
+          "minItems": 1
+        },
+        "when": {
+          "$ref": "#/definitions/StepWhenCondition"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -2929,6 +4037,26 @@
       "discriminator": "type",
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "StepWhenCondition": {
+      "type": "object",
+      "required": [
+        "stageStatus"
+      ],
+      "properties": {
+        "condition": {
+          "type": "string"
+        },
+        "stageStatus": {
+          "type": "string",
+          "enum": [
+            "Success",
+            "Failure",
+            "All"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "StoreConfig": {
       "type": "object",
       "discriminator": "type",
@@ -2940,14 +4068,125 @@
         "metadata": {
           "type": "string"
         },
-        "spec": {
-          "$ref": "#/definitions/StoreConfig"
-        },
         "type": {
           "type": "string"
         }
       },
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Bitbucket"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/BitbucketStore"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Gcs"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/GcsStoreConfig"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Git"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/GitStore"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "GitLab"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/GitLabStore"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Github"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/GithubStore"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Http"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/HttpStoreConfig"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "S3"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/S3StoreConfig"
+              }
+            }
+          }
+        }
+      ]
     },
     "StringNGVariable": {
       "allOf": [
@@ -2997,6 +4236,12 @@
             "configuration": {
               "$ref": "#/definitions/TerrformStepConfiguration"
             },
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
             "metadata": {
               "type": "string"
             },
@@ -3011,14 +4256,29 @@
     "TerraformBackendConfig": {
       "type": "object",
       "properties": {
-        "spec": {
-          "$ref": "#/definitions/TerraformBackendConfigSpec"
-        },
         "type": {
           "type": "string"
         }
       },
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Inline"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/InlineTerraformBackendConfigSpec"
+              }
+            }
+          }
+        }
+      ]
     },
     "TerraformBackendConfigSpec": {
       "type": "object",
@@ -3034,6 +4294,34 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "TerraformDestroyStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "configuration": {
+              "$ref": "#/definitions/TerrformStepConfiguration"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "metadata": {
+              "type": "string"
+            },
+            "provisionerIdentifier": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "TerraformExecutionData": {
       "type": "object",
       "properties": {
@@ -3046,7 +4334,17 @@
         "environmentVariables": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/NGVariable"
+            "oneOf": [
+              {
+                "$ref": "#/definitions/NumberNGVariable"
+              },
+              {
+                "$ref": "#/definitions/SecretNGVariable"
+              },
+              {
+                "$ref": "#/definitions/StringNGVariable"
+              }
+            ]
           }
         },
         "targets": {
@@ -3058,7 +4356,7 @@
         "varFiles": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/TerraformVarFile"
+            "$ref": "#/definitions/TerraformVarFileWrapper"
           }
         },
         "workspace": {
@@ -3067,21 +4365,172 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "TerraformPlanExecutionData": {
+      "type": "object",
+      "properties": {
+        "backendConfig": {
+          "$ref": "#/definitions/TerraformBackendConfig"
+        },
+        "command": {
+          "type": "string",
+          "enum": [
+            "Apply",
+            "Destroy"
+          ]
+        },
+        "configFiles": {
+          "$ref": "#/definitions/TerraformConfigFilesWrapper"
+        },
+        "environmentVariables": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/NumberNGVariable"
+              },
+              {
+                "$ref": "#/definitions/SecretNGVariable"
+              },
+              {
+                "$ref": "#/definitions/StringNGVariable"
+              }
+            ]
+          }
+        },
+        "secretManagerRef": {
+          "type": "string"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "varFiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TerraformVarFileWrapper"
+          }
+        },
+        "workspace": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TerraformPlanStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "configuration": {
+              "$ref": "#/definitions/TerraformPlanExecutionData"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "provisionerIdentifier": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TerraformRollbackStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "required": [
+            "provisionerIdentifier"
+          ],
+          "properties": {
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "provisionerIdentifier": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "TerraformVarFile": {
       "type": "object",
       "properties": {
-        "spec": {
-          "$ref": "#/definitions/TerraformVarFileSpec"
+        "identifier": {
+          "type": "string"
         },
+        "type": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Inline"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/InlineTerraformVarFileSpec"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Remote"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/RemoteTerraformVarFileSpec"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "TerraformVarFileSpec": {
+      "type": "object",
+      "discriminator": "type",
+      "properties": {
         "type": {
           "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "TerraformVarFileSpec": {
+    "TerraformVarFileWrapper": {
       "type": "object",
-      "discriminator": "type",
+      "properties": {
+        "varFile": {
+          "$ref": "#/definitions/TerraformVarFile"
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "TerrformStepConfiguration": {

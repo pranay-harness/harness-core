@@ -25,6 +25,7 @@ public class NextGenRegistrars {
           .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
           .addAll(CDNGRegistrars.kryoRegistrars)
           .addAll(OutboxEventRegistrars.kryoRegistrars)
+          .addAll(NGFileServiceRegistrars.kryoRegistrars)
           .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
           .add(PipelineServiceUtilKryoRegistrar.class)
           .build();
@@ -40,17 +41,18 @@ public class NextGenRegistrars {
           .add(AccessControlMigrationMorphiaRegistrar.class)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .addAll(OutboxEventRegistrars.morphiaRegistrars)
+          .addAll(NGFileServiceRegistrars.morphiaRegistrars)
           .addAll(GitSyncRegistrars.morphiaRegistrars)
           .addAll(NGAuditCommonsRegistrars.morphiaRegistrars)
           .add(MockRoleAssignmentMorphiaRegistrar.class)
           .add(InvitesMorphiaRegistrar.class)
           .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
+          .addAll(LicenseManagerRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =
       ImmutableList.<YamlSchemaRootClass>builder()
           .addAll(ConnectorNextGenRegistrars.yamlSchemaRegistrars)
-          .addAll(OrchestrationStepsModuleRegistrars.yamlSchemaRegistrars)
           .addAll(CDNGRegistrars.yamlSchemaRegistrars)
           .add(YamlSchemaRootClass.builder()
                    .entityType(EntityType.SECRETS)

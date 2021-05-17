@@ -82,8 +82,6 @@ import lombok.EqualsAndHashCode;
 
 /**
  * Used to load all the application configuration.
- *
- * @author Rishi
  */
 @TargetModule(HarnessModule._360_CG_MANAGER)
 @Data
@@ -116,6 +114,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("awsInstanceTypes") private List<String> awsInstanceTypes;
   @JsonProperty("awsRegionIdToName") private Map<String, String> awsRegionIdToName;
   @JsonProperty("apiUrl") private String apiUrl;
+  @JsonProperty("exportAccountDataBatchSize") private int exportAccountDataBatchSize;
   @JsonProperty("supportEmail") private String supportEmail;
   @JsonProperty("envPath") private String envPath;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
@@ -124,6 +123,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("featuresEnabled") private String featureNames;
   @JsonProperty("kubectlVersion") private String kubectlVersion;
   @JsonProperty("ocVersion") private String ocVersion;
+  @JsonProperty("scmVersion") private String scmVersion;
   @JsonProperty("trialRegistrationAllowed") private boolean trialRegistrationAllowed;
   @JsonProperty("ngManagerAvailable") private boolean ngManagerAvailable;
   @JsonProperty(value = "trialRegistrationAllowedForBugathon", defaultValue = "false")
@@ -134,6 +134,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("executionLogStorageMode") private DataStorageMode executionLogsStorageMode;
   @JsonProperty("fileStorageMode") private DataStorageMode fileStorageMode;
   @JsonProperty("clusterName") private String clusterName;
+  @JsonProperty("deploymentClusterName") private String deploymentClusterName;
   @JsonProperty("ceSetUpConfig") private CESetUpConfig ceSetUpConfig;
   @JsonProperty("marketoConfig") private MarketoConfig marketoConfig;
   @JsonProperty("segmentConfig") private SegmentConfig segmentConfig;

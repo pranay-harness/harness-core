@@ -5,9 +5,10 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_ORGANIZATION_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_PROJECT_PERMISSION;
-import static io.harness.ng.accesscontrol.PlatformResourceTypes.ACCOUNT;
+import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_USERGROUP_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformResourceTypes.ORGANIZATION;
 import static io.harness.ng.accesscontrol.PlatformResourceTypes.PROJECT;
+import static io.harness.ng.accesscontrol.PlatformResourceTypes.USERGROUP;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
@@ -22,6 +23,7 @@ import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.AccessControlDTO;
 import io.harness.accesscontrol.clients.PermissionCheckDTO;
+import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
@@ -55,6 +57,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.validation.constraints.Max;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -145,10 +148,10 @@ public class NGAggregateResource {
 
   @GET
   @Path("organizations")
-  @NGAccessControlCheck(resourceType = ACCOUNT, permission = VIEW_ORGANIZATION_PERMISSION)
+  @NGAccessControlCheck(resourceType = ORGANIZATION, permission = VIEW_ORGANIZATION_PERMISSION)
   @ApiOperation(value = "Get OrganizationAggregateDTO list", nickname = "getOrganizationAggregateDTOList")
   public ResponseDTO<PageResponse<OrganizationAggregateDTO>> list(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @ResourceIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
     OrganizationFilterDTO organizationFilterDTO = OrganizationFilterDTO.builder().searchTerm(searchTerm).build();
     if (isEmpty(pageRequest.getSortOrders())) {
@@ -170,14 +173,17 @@ public class NGAggregateResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @BeanParam PageRequest pageRequest,
-      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @QueryParam("userSize") @DefaultValue("6") @Max(20) int userSize) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USERGROUP, null), VIEW_USERGROUP_PERMISSION);
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order =
           SortOrder.Builder.aSortOrder().withField(ProjectKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
       pageRequest.setSortOrders(ImmutableList.of(order));
     }
     return ResponseDTO.newResponse(aggregateUserGroupService.listAggregateUserGroups(
-        pageRequest, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm));
+        pageRequest, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, userSize));
   }
 
   @POST
@@ -188,6 +194,8 @@ public class NGAggregateResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Body AggregateACLRequest aggregateACLRequest) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USERGROUP, null), VIEW_USERGROUP_PERMISSION);
     return ResponseDTO.newResponse(aggregateUserGroupService.listAggregateUserGroups(
         accountIdentifier, orgIdentifier, projectIdentifier, aggregateACLRequest));
   }
@@ -200,6 +208,8 @@ public class NGAggregateResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USERGROUP, identifier), VIEW_USERGROUP_PERMISSION);
     return ResponseDTO.newResponse(aggregateUserGroupService.getAggregatedUserGroup(
         accountIdentifier, orgIdentifier, projectIdentifier, identifier));
   }

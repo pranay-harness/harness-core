@@ -5,6 +5,8 @@ import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationStepsTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
@@ -26,6 +28,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class BarrierVisitorTest extends OrchestrationStepsTestBase {
   @Inject private Injector injector;
   private BarrierVisitor barrierVisitor;
@@ -84,22 +87,15 @@ public class BarrierVisitorTest extends OrchestrationStepsTestBase {
             .name("myBarrier1Name")
             .stages(ImmutableSet.of(StageDetail.builder().identifier(vbStage).name(vbStage).build(),
                 StageDetail.builder().identifier(sampleStage).name(sampleStage).build()))
-            .timeout(600_000)
             .build(),
         "myBarrierId2",
         BarrierSetupInfo.builder()
             .identifier("myBarrierId2")
             .name("myBarrier2Name")
             .stages(ImmutableSet.of(StageDetail.builder().identifier(vbStage).name(vbStage).build()))
-            .timeout(1_200_000)
             .build(),
         "myBarrierId3",
-        BarrierSetupInfo.builder()
-            .identifier("myBarrierId3")
-            .name("myBarrier3Name")
-            .stages(new HashSet<>())
-            .timeout(0)
-            .build());
+        BarrierSetupInfo.builder().identifier("myBarrierId3").name("myBarrier3Name").stages(new HashSet<>()).build());
 
     assertThat(barrierVisitor.getBarrierIdentifierMap()).isNotEmpty();
     assertThat(barrierVisitor.getBarrierIdentifierMap().size()).isEqualTo(3);

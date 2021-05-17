@@ -19,4 +19,6 @@ public class SyncTaskContext {
   private long timeout;
   private List<String> tags;
   private String correlationId;
+  private String orgIdentifier;
+  private String projectIdentifier;
 }

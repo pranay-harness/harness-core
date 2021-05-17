@@ -1,5 +1,6 @@
 package io.harness.repositories.inputset.custom;
 
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.ngpipeline.inputset.mappers.InputSetFilterHelper;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
 
@@ -25,6 +26,8 @@ import org.springframework.data.repository.support.PageableExecutionUtils;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @Slf4j
+@ToBeDeleted
+@Deprecated
 public class InputSetRepositoryCustomImpl implements InputSetRepositoryCustom {
   private final MongoTemplate mongoTemplate;
   private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(10);

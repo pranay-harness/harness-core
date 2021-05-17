@@ -1,142 +1,80 @@
 package io.harness.ng.core.user.service.impl;
 
-import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.ng.core.user.UserMembershipUpdateMechanism.SYSTEM;
+import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 
-import io.harness.accesscontrol.AccessControlAdminClient;
-import io.harness.accesscontrol.principals.PrincipalDTO;
-import io.harness.accesscontrol.principals.PrincipalType;
-import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
+import static java.time.Duration.ofHours;
+import static java.time.Duration.ofMinutes;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ng.core.invites.entities.Role;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
+import io.harness.iterator.PersistenceIteratorFactory;
+import io.harness.mongo.iterator.MongoPersistenceIterator;
+import io.harness.mongo.iterator.filter.SpringFilterExpander;
+import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
+import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.entities.UserMembership;
-import io.harness.ng.core.user.entities.UserProjectMap;
-import io.harness.ng.core.user.entities.UserProjectMap.UserProjectMapKeys;
+import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
 import io.harness.ng.core.user.service.NgUserService;
-import io.harness.ng.resourcegroup.migration.DefaultResourceGroupCreationService;
-import io.harness.remote.client.NGRestUtils;
-import io.harness.repositories.user.spring.UserProjectMapRepository;
-import io.harness.security.SecurityContextBuilder;
-import io.harness.security.dto.ServicePrincipal;
+import io.harness.resourcegroup.model.ResourceGroup;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
-import io.dropwizard.lifecycle.Managed;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Update;
 
-// Migrate UserProjectMap collection to UserMembership Collection
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 @OwnedBy(PL)
-public class UserMembershipMigrationService implements Managed {
-  private static final String DEFAULT_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
-  private final UserProjectMapRepository userProjectMapRepository;
-  private final NgUserService ngUserService;
-  private final AccessControlAdminClient accessControlAdminClient;
-  private final DefaultResourceGroupCreationService defaultResourceGroupCreationService;
-  private final ExecutorService executorService = Executors.newSingleThreadExecutor(
-      new ThreadFactoryBuilder().setNameFormat("usermembership-migration-worker-thread").build());
-  private Future userMembershipMigrationJob;
-  Map<String, String> oldToNewRoleMap = new HashMap<>();
-
-  @Inject
-  public UserMembershipMigrationService(UserProjectMapRepository userProjectMapRepository, NgUserService ngUserService,
-      AccessControlAdminClient accessControlAdminClient,
-      DefaultResourceGroupCreationService defaultResourceGroupCreationService) {
-    this.userProjectMapRepository = userProjectMapRepository;
-    this.ngUserService = ngUserService;
-    this.accessControlAdminClient = accessControlAdminClient;
-    this.defaultResourceGroupCreationService = defaultResourceGroupCreationService;
-    oldToNewRoleMap.put("Project Viewer", "_project_viewer");
-    oldToNewRoleMap.put("Project Member", "_project_viewer");
-    oldToNewRoleMap.put("Project Admin", "_project_admin");
-    oldToNewRoleMap.put("Organization Viewer", "_organization_viewer");
-    oldToNewRoleMap.put("Organization Member", "_organization_viewer");
-    oldToNewRoleMap.put("Organization Admin", "_organization_admin");
-    oldToNewRoleMap.put("Account Viewer", "_account_viewer");
-    oldToNewRoleMap.put("Account Member", "_account_viewer");
-    oldToNewRoleMap.put("Account Admin", "_account_admin");
-  }
+public class UserMembershipMigrationService implements MongoPersistenceIterator.Handler<UserMembership> {
+  @Inject PersistenceIteratorFactory persistenceIteratorFactory;
+  @Inject MongoTemplate mongoTemplate;
+  @Inject NgUserService ngUserService;
 
   @Override
-  public void start() throws Exception {
-    userMembershipMigrationJob = executorService.submit(this::userMembershipMigrationJob);
-  }
-
-  @Override
-  public void stop() throws Exception {
-    if (userMembershipMigrationJob != null) {
-      userMembershipMigrationJob.cancel(true);
+  public void handle(UserMembership userMembership) {
+    if (isNotBlank(userMembership.getName())) {
+      return;
     }
-    executorService.shutdown();
-    executorService.awaitTermination(5, TimeUnit.SECONDS);
-  }
-
-  private void userMembershipMigrationJob() {
-    log.info("Starting migration of UserProjectMap to UserMembership");
-    SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
     try {
-      Criteria criteria = Criteria.where(UserProjectMapKeys.moved)
-                              .exists(false)
-                              .orOperator(Criteria.where(UserProjectMapKeys.tries).exists(false),
-                                  Criteria.where(UserProjectMapKeys.tries).lt(3));
-      Optional<UserProjectMap> userProjectMapOptional = userProjectMapRepository.findFirstByCriteria(criteria);
-      while (userProjectMapOptional.isPresent()) {
-        UserProjectMap userProjectMap = userProjectMapOptional.get();
-        try {
-          handleMigration(userProjectMap);
-          userProjectMap.setMoved(true);
-        } finally {
-          int triesDone = userProjectMap.getTries() != null ? userProjectMap.getTries() : 0;
-          userProjectMap.setTries(triesDone + 1);
-        }
-        userProjectMapRepository.save(userProjectMap);
-        userProjectMapOptional = userProjectMapRepository.findFirstByCriteria(criteria);
+      Optional<UserInfo> userOpt = ngUserService.getUserById(userMembership.getUserId());
+      if (!userOpt.isPresent()) {
+        return;
       }
-    } catch (Exception exception) {
-      log.error("Exception occurred during migration of UserProjectMap to UserMembership", exception);
+      UserInfo user = userOpt.get();
+      Update update = new Update().set(UserMembershipKeys.name, user.getName());
+      ngUserService.update(userMembership.getUserId(), update);
+    } catch (InvalidRequestException | UnexpectedException e) {
+      /**
+       * Do nothing. This exception will occur for users are present in nextgen but not registered in currentgen. This
+       * will happen for stale users. It is to be decided whether to clean them up in nextgen or not
+       */
     }
-    SecurityContextBuilder.unsetCompleteContext();
-    log.info("Completed migration of UserProjectMap to UserMembership");
   }
 
-  private void handleMigration(UserProjectMap userProjectMap) {
-    UserMembership.Scope scope = UserMembership.Scope.builder()
-                                     .accountIdentifier(userProjectMap.getAccountIdentifier())
-                                     .orgIdentifier(userProjectMap.getOrgIdentifier())
-                                     .projectIdentifier(userProjectMap.getProjectIdentifier())
-                                     .build();
-    ngUserService.addUserToScope(userProjectMap.getUserId(), scope, null, SYSTEM);
-
-    //    Create role assignment for the user
-    List<Role> roles = userProjectMap.getRoles();
-    for (Role role : roles) {
-      if (!oldToNewRoleMap.containsKey(role.getName())) {
-        log.error("unidentified rolename {} found while migrating userProjectMap to userMembership", role.getName());
-        continue;
-      }
-      RoleAssignmentDTO roleAssignmentDTO =
-          RoleAssignmentDTO.builder()
-              .roleIdentifier(oldToNewRoleMap.get(role.getName()))
-              .disabled(false)
-              .resourceGroupIdentifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER)
-              .principal(PrincipalDTO.builder().identifier(userProjectMap.getUserId()).type(PrincipalType.USER).build())
-              .build();
-      try {
-        NGRestUtils.getResponse(accessControlAdminClient.createRoleAssignment(userProjectMap.getAccountIdentifier(),
-            userProjectMap.getOrgIdentifier(), userProjectMap.getProjectIdentifier(), roleAssignmentDTO));
-      } catch (Exception e) {
-        log.error("Couldn't migrate role {} for user {}", role, userProjectMap.getUserId(), e);
-      }
-    }
+  public void registerIterators() {
+    persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
+        PersistenceIteratorFactory.PumpExecutorOptions.builder()
+            .name(this.getClass().getName())
+            .poolSize(3)
+            .interval(ofMinutes(1))
+            .build(),
+        ResourceGroup.class,
+        MongoPersistenceIterator.<UserMembership, SpringFilterExpander>builder()
+            .clazz(UserMembership.class)
+            .fieldName(UserMembershipKeys.nextIteration)
+            .targetInterval(ofMinutes(30))
+            .acceptableNoAlertDelay(ofHours(1))
+            .handler(this)
+            .schedulingType(REGULAR)
+            .persistenceProvider(new SpringPersistenceProvider<>(mongoTemplate))
+            .redistribute(true));
   }
 }

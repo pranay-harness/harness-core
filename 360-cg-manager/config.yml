@@ -59,6 +59,7 @@ executionLogStorageMode: MONGO
 #                        GOOGLE_CLOUD_DATA_STORE
 fileStorageMode: MONGO
 clusterName: ""
+deploymentClusterName: ""
 bugsnagApiKey: ""
 numberOfRemindersBeforeAccountDeletion: 3
 
@@ -264,6 +265,10 @@ mongo:
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
   indexManagerMode: AUTO
+  mongoSSLConfig:
+    mongoSSLEnabled: false
+    mongoTrustStorePath:
+    mongoTrustStorePassword:
 
 events-mongo:
   uri: mongodb://localhost:27017/events
@@ -290,6 +295,7 @@ deployMode: KUBERNETES
 envPath: ""
 
 kubectlVersion: v1.13.2
+scmVersion: 444bed53
 
 portal:
   url: https://localhost:8000
@@ -324,6 +330,11 @@ gcpMarketplaceConfig:
 
 cfClientConfig:
   apiKey: ""
+  configUrl: "https://config.feature-flags.uat.harness.io/api/1.0"
+  eventUrl: "https://event.feature-flags.uat.harness.io/api/1.0"
+  analyticsEnabled: true
+  connectionTimeout: 10000
+  readTimeout: 30000
 
 cfMigrationConfig:
   enabled: false
@@ -333,6 +344,8 @@ cfMigrationConfig:
   org: "default_org"
   project: "project1"
   environment: "environment1"
+  connectionTimeout: 10000
+  readTimeout: 30000
 
 featuresEnabled: ""
 
@@ -575,3 +588,5 @@ delegateGrpcServicePort: 8080
 logStreamingServiceConfig:
   baseUrl: http://localhost:8079
   serviceToken: token
+
+exportAccountDataBatchSize: 1000

@@ -1,5 +1,7 @@
 package software.wings.service.intfc.security;
 
+import static io.harness.annotations.dev.HarnessModule._890_SM_CORE;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.FileBucket.CONFIGS;
@@ -10,6 +12,8 @@ import static io.harness.security.SimpleEncryption.CHARSET;
 
 import static software.wings.service.intfc.security.NGSecretManagerService.isReadOnlySecretManager;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.encryptors.KmsEncryptorsRegistry;
@@ -38,6 +42,8 @@ import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 
+@OwnedBy(PL)
+@TargetModule(_890_SM_CORE)
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class NGSecretFileServiceImpl implements NGSecretFileService {
@@ -66,6 +72,7 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
         }
         break;
       case GCP_KMS:
+      case KMS:
       case LOCAL:
         encryptedRecord = kmsRegistry.getKmsEncryptor(secretManagerConfig)
                               .encryptSecret(accountIdentifier, fileContent, secretManagerConfig);
@@ -198,6 +205,7 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
         switch (secretManagerConfigOptional.get().getEncryptionType()) {
           case LOCAL:
           case GCP_KMS:
+          case KMS:
             fileService.deleteFile(String.valueOf(encryptedData.getEncryptedValue()), CONFIGS);
             break;
           default:

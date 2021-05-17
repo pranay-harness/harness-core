@@ -33,7 +33,7 @@ public class Instance {
     // TODO add more indexes
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("unique_identification")
+                 .name("unique_account_org_project_id")
                  .unique(true)
                  .field(InstanceKeys.accountIdentifier)
                  .field(InstanceKeys.orgIdentifier)

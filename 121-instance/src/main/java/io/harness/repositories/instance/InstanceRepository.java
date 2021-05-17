@@ -1,15 +1,12 @@
 package io.harness.repositories.instance;
 
+import io.harness.annotation.HarnessRepo;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.entities.instance.Instance;
 
-import java.util.List;
+import org.springframework.data.repository.CrudRepository;
 
+@HarnessRepo
 @OwnedBy(HarnessTeam.DX)
-public interface InstanceRepository {
-  List<Instance> getActiveInstancesByAccount(String accountIdentifier, long timestamp);
-
-  List<Instance> getInstances(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String infrastructureMappingId);
-}
+public interface InstanceRepository extends CrudRepository<Instance, String>, InstanceRepositoryCustom {}

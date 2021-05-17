@@ -411,16 +411,21 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
             }
 
             int i = 0;
-
+            Set<Integer> collectionMinuteSet = new HashSet<>();
+            collectionMinuteSet.add(logCollectionMinute);
             for (LogElement logObject : logs) {
               long timestamp = logObject.getTimeStamp();
 
-              if (logObject.getTimeStamp() != 0) {
+              if (logObject.getTimeStamp() != 0 && !is24X7Task() && !isPerMinuteWorkflowState()) {
                 int collectionMin =
                     (int) ((Timestamp.minuteBoundary(timestamp) - collectionStartTime) / TimeUnit.MINUTES.toMillis(1));
                 logObject.setLogCollectionMinute(collectionMin);
+                if (collectionMin >= 0) {
+                  collectionMinuteSet.add(collectionMin);
+                }
               } else {
                 logObject.setLogCollectionMinute(logCollectionMinute);
+                collectionMinuteSet.add(logCollectionMinute);
               }
 
               logObject.setClusterLabel(String.valueOf(i++));
@@ -439,7 +444,13 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
             }
             filteredLogs.forEach(logObject -> allHosts.add(logObject.getHost()));
             for (String host : allHosts) {
-              addHeartbeat(host, dataCollectionInfo, logCollectionMinute, filteredLogs);
+              if (isNotEmpty(collectionMinuteSet)) {
+                for (Integer heartBeatMinute : collectionMinuteSet) {
+                  addHeartbeat(host, dataCollectionInfo, heartBeatMinute, filteredLogs);
+                }
+              } else {
+                addHeartbeat(host, dataCollectionInfo, logCollectionMinute, filteredLogs);
+              }
             }
 
             if (!dataCollectionInfo.isShouldDoHostBasedFiltering()) {

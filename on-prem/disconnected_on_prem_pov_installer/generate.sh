@@ -261,6 +261,29 @@ for kustomizeVersion in v3.5.4; do
 
 done
 
+for scmVersion in 444bed53; do
+  echo "Adding scm" $scmVersion
+
+  SCM_LINUX_DIR="${IMAGES_DIR}/scm/linux/$scmVersion/"
+  SCM_MAC_DIR="${IMAGES_DIR}/scm/darwin/$scmVersion/"
+
+  echo "$SCM_MAC_DIR"
+  echo "$SCM_LINUX_DIR"
+
+  SCM_LINUX_URL=https://app.harness.io/storage/harness-download/harness-scm/release/"$scmVersion"/bin/linux/amd64/scm
+  SCM_MAC_URL=https://app.harness.io/storage/harness-download/harness-scm/release/"$scmVersion"/bin/darwin/amd64/scm
+
+  echo "$SCM_LINUX_DIR"
+  echo "$SCM_MAC_DIR"
+
+  mkdir -p $SCM_LINUX_DIR
+  mkdir -p $SCM_MAC_DIR
+
+  curl -L -o "${SCM_MAC_DIR}scm" "${SCM_MAC_URL}"
+  curl -L -o "${SCM_LINUX_DIR}scm" "${SCM_LINUX_URL}"
+
+done
+
 cp delegate.jar "${IMAGES_DIR}/"
 cp watcher.jar "${IMAGES_DIR}/"
 mv "${JRE_SOLARIS_1}" "${IMAGES_DIR}/"

@@ -20,6 +20,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -67,6 +68,7 @@ import lombok.Setter;
 
 @OwnedBy(CDP)
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class EcsBGUpdateRoute53DNSWeightState extends State {
   public static final String UPDATE_ROUTE_53_DNS_WEIGHTS = "Update Route 53 DNS Weights";
   private static final int MIN_WEIGHT = 0;
@@ -212,9 +214,12 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, infrastructureMapping.getEnvId())
             .setupAbstraction(
                 Cd1SetupFields.ENV_TYPE_FIELD, context.fetchRequiredEnvironment().getEnvironmentType().name())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("ECS Blue Green Update Route task execution")
             .build();
 
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .async(true)
@@ -262,4 +267,9 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
+  }
 }

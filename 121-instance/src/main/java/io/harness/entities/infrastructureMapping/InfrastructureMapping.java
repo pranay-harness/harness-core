@@ -6,7 +6,6 @@ import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.PersistentEntity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import lombok.Data;
@@ -18,7 +17,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Data
 @FieldNameConstants(innerTypeName = "InfrastructureMappingKeys")
 @Entity(value = "InfrastructureMapping")
-@JsonIgnoreProperties(ignoreUnknown = true)
 // TODO check use-case of @Document
 @Document("infrastructureMapping")
 @OwnedBy(HarnessTeam.DX)
@@ -26,7 +24,7 @@ public abstract class InfrastructureMapping implements PersistentEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("unique_identification")
+                 .name("unique_account_org_project_id")
                  .unique(true)
                  .field(InfrastructureMappingKeys.accountIdentifier)
                  .field(InfrastructureMappingKeys.orgIdentifier)

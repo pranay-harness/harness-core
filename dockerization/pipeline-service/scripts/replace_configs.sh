@@ -10,7 +10,7 @@ replace_key_value () {
   fi
 }
 
-yq write -i $CONFIG_FILE server.adminConnectors “[]”
+yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
 yq delete -i $CONFIG_FILE grpcServerConfig.connectors[0]
 
@@ -124,11 +124,15 @@ if [[ "" != "$CI_MANAGER_AUTHORITY" ]]; then
 fi
 
 if [[ "" != "$SCM_SERVICE_URI" ]]; then
-  yq write -i $CONFIG_FILE scmConnectionConfig.url "$SCM_SERVICE_URI"
+  yq write -i $CONFIG_FILE gitSdkConfiguration.scmConnectionConfig.url "$SCM_SERVICE_URI"
 fi
 
 if [[ "" != "$PIPELINE_SERVICE_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE pipelineServiceBaseUrl "$PIPELINE_SERVICE_BASE_URL"
+fi
+
+if [[ "" != "$PMS_API_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE pmsApiBaseUrl "$PMS_API_BASE_URL"
 fi
 
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
@@ -171,6 +175,22 @@ if [[ "" != "$MANAGER_CLIENT_BASEURL" ]]; then
   yq write -i $CONFIG_FILE managerClientConfig.baseUrl "$MANAGER_CLIENT_BASEURL"
 fi
 
+if [[ "" != "$TIMESCALE_PASSWORD" ]]; then
+  yq write -i $CONFIG_FILE timescaledb.timescaledbPassword "$TIMESCALE_PASSWORD"
+fi
+
+if [[ "" != "$TIMESCALE_URI" ]]; then
+  yq write -i $CONFIG_FILE timescaledb.timescaledbUrl "$TIMESCALE_URI"
+fi
+
+if [[ "" != "$TIMESCALEDB_USERNAME" ]]; then
+  yq write -i $CONFIG_FILE timescaledb.timescaledbUsername "$TIMESCALEDB_USERNAME"
+fi
+
+if [[ "" != "$ENABLE_DASHBOARD_TIMESCALE" ]]; then
+  yq write -i $CONFIG_FILE enableDashboardTimescale $ENABLE_DASHBOARD_TIMESCALE
+fi
+
 replace_key_value eventsFramework.redis.sentinel $EVENTS_FRAMEWORK_USE_SENTINEL
 replace_key_value eventsFramework.redis.envNamespace $EVENTS_FRAMEWORK_ENV_NAMESPACE
 replace_key_value eventsFramework.redis.redisUrl $EVENTS_FRAMEWORK_REDIS_URL
@@ -193,3 +213,4 @@ replace_key_value logStreamingServiceConfig.serviceToken "$LOG_STREAMING_SERVICE
 
 replace_key_value iteratorsConfig.approvalInstanceIteratorConfig.enabled "$APPROVAL_INSTANCE_ITERATOR_ENABLED"
 replace_key_value iteratorsConfig.approvalInstanceIteratorConfig.targetIntervalInSeconds "$APPROVAL_INSTANCE_ITERATOR_INTERVAL_SEC"
+replace_key_value orchestrationStepConfig.ffServerBaseUrl "$FF_SERVER_BASE_URL"

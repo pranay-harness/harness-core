@@ -14,6 +14,7 @@ import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
@@ -64,6 +65,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@BreakDependencyOn("software.wings.service.InstanceSyncConstants")
 public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
   public static final String NO_DELEGATE_AVAILABLE_TO_HANDLE_PERPETUAL_TASK =
       "No delegate available to handle perpetual task of %s task type";

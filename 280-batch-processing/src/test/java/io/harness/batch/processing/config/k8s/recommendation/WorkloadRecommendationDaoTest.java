@@ -8,6 +8,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.beans.recommendation.ResourceId;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 

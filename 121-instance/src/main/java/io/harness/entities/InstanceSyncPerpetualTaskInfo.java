@@ -30,7 +30,7 @@ public class InstanceSyncPerpetualTaskInfo implements PersistentEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("unique_identification")
+                 .name("unique_account_org_project_id")
                  .unique(true)
                  .field(InstanceSyncPerpetualTaskInfoKeys.accountIdentifier)
                  .field(InstanceSyncPerpetualTaskInfoKeys.orgIdentifier)

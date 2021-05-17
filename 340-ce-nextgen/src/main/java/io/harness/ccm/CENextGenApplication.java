@@ -6,6 +6,11 @@ import static io.harness.remote.NGObjectMapperHelper.configureNGObjectMapper;
 
 import io.harness.AuthorizationServiceHeader;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.eventframework.CENGEventConsumerService;
+import io.harness.cf.AbstractCfModule;
+import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
+import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.ff.FeatureFlagService;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
@@ -15,6 +20,7 @@ import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.persistence.HPersistence;
+import io.harness.resource.VersionInfoResource;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.threading.ExecutorModule;
@@ -27,11 +33,14 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.dropwizard.Application;
+import io.dropwizard.configuration.ConfigurationSourceProvider;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.jersey.setup.JerseyEnvironment;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import io.federecio.dropwizard.swagger.SwaggerBundle;
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -70,9 +79,23 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
   public void initialize(Bootstrap<CENextGenConfiguration> bootstrap) {
     initializeLogging();
     // Enable variable substitution with environment variables
-    bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
-        bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
+    bootstrap.setConfigurationSourceProvider(getConfigurationProvider(bootstrap.getConfigurationSourceProvider()));
+    bootstrap.addBundle(getSwaggerBundle());
+    bootstrap.setMetricRegistry(metricRegistry);
     configureObjectMapper(bootstrap.getObjectMapper());
+  }
+
+  private static SubstitutingSourceProvider getConfigurationProvider(ConfigurationSourceProvider sourceProvider) {
+    return new SubstitutingSourceProvider(sourceProvider, new EnvironmentVariableSubstitutor(false));
+  }
+
+  private static SwaggerBundle<CENextGenConfiguration> getSwaggerBundle() {
+    return new SwaggerBundle<CENextGenConfiguration>() {
+      @Override
+      protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(CENextGenConfiguration appConfig) {
+        return appConfig.getSwaggerBundleConfiguration();
+      }
+    };
   }
 
   public static void configureObjectMapper(final ObjectMapper mapper) {
@@ -85,8 +108,18 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
         20, 100, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
     log.info("Starting CE NextGen Application ...");
     MaintenanceController.forceMaintenance(true);
-    Injector injector =
-        Guice.createInjector(new CENextGenModule(configuration), new MetricRegistryModule(metricRegistry));
+    Injector injector = Guice.createInjector(
+        new CENextGenModule(configuration), new MetricRegistryModule(metricRegistry), new AbstractCfModule() {
+          @Override
+          public CfClientConfig cfClientConfig() {
+            return configuration.getCfClientConfig();
+          }
+
+          @Override
+          public CfMigrationConfig cfMigrationConfig() {
+            return configuration.getCfMigrationConfig();
+          }
+        });
 
     // create collection and indexes
     injector.getInstance(HPersistence.class);
@@ -99,7 +132,9 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
     registerHealthCheck(environment, injector);
     registerExceptionMappers(environment.jersey());
     registerCorrelationFilter(environment, injector);
+    registerScheduledJobs(injector);
     MaintenanceController.forceMaintenance(false);
+    createConsumerThreadsToListenToEvents(environment, injector);
   }
 
   private void registerExceptionMappers(JerseyEnvironment jersey) {
@@ -118,12 +153,17 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
     healthService.registerMonitor(injector.getInstance(HPersistence.class));
   }
 
+  private void registerScheduledJobs(Injector injector) {
+    injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
+  }
+
   private void registerResources(Environment environment, Injector injector) {
     for (Class<?> resource : CENextGenConfiguration.getResourceClasses()) {
       if (Resource.isAcceptable(resource)) {
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
   }
 
   private void registerAuthFilters(CENextGenConfiguration configuration, Environment environment) {
@@ -157,5 +197,9 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
   private void initializeFeatureFlags(CENextGenConfiguration configuration, Injector injector) {
     injector.getInstance(FeatureFlagService.class)
         .initializeFeatureFlags(configuration.getDeployMode(), configuration.getFeatureFlagsEnabled());
+  }
+
+  private void createConsumerThreadsToListenToEvents(Environment environment, Injector injector) {
+    environment.lifecycle().manage(injector.getInstance(CENGEventConsumerService.class));
   }
 }

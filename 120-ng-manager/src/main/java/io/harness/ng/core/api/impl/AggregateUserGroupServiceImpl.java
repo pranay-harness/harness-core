@@ -25,17 +25,18 @@ import io.harness.ng.core.dto.RoleAssignmentMetadataDTO;
 import io.harness.ng.core.dto.UserGroupAggregateDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
 import io.harness.ng.core.entities.UserGroup;
-import io.harness.ng.core.invites.dto.UserSearchDTO;
-import io.harness.ng.core.user.remote.UserSearchMapper;
+import io.harness.ng.core.invites.dto.UserMetadataDTO;
+import io.harness.ng.core.user.remote.mapper.UserMetadataMapper;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.utils.UserGroupMapper;
+import io.harness.user.remote.UserFilterNG;
 import io.harness.utils.PageUtils;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -64,7 +65,7 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
 
   @Override
   public PageResponse<UserGroupAggregateDTO> listAggregateUserGroups(PageRequest pageRequest, String accountIdentifier,
-      String orgIdentifier, String projectIdentifier, String searchTerm) {
+      String orgIdentifier, String projectIdentifier, String searchTerm, int userSize) {
     Page<UserGroup> userGroupPageResponse = userGroupService.list(
         accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, getPageRequest(pageRequest));
 
@@ -78,27 +79,37 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
     Map<String, List<RoleAssignmentMetadataDTO>> userGroupRoleAssignmentsMap =
         getPrincipalRoleAssignmentMap(accountIdentifier, orgIdentifier, projectIdentifier, roleAssignmentFilterDTO);
 
-    Set<String> userIdentifiers =
-        userGroupPageResponse.stream().map(UserGroup::getUsers).reduce(new HashSet<>(), (total, subset) -> {
-          total.addAll(subset);
-          return total;
-        });
+    List<String> userIdentifiers = userGroupPageResponse.stream()
+                                       .map(ug -> getLastNElementsReversed(ug.getUsers(), userSize))
+                                       .flatMap(List::stream)
+                                       .filter(Objects::nonNull)
+                                       .distinct()
+                                       .collect(Collectors.toList());
 
-    Map<String, UserSearchDTO> userSearchDTOMap =
-        ngUserService.getUsersByIds(new ArrayList<>(userIdentifiers), accountIdentifier)
+    Map<String, UserMetadataDTO> userMetadataMap =
+        ngUserService.listCurrentGenUsers(accountIdentifier, UserFilterNG.builder().userIds(userIdentifiers).build())
             .stream()
-            .map(UserSearchMapper::writeDTO)
-            .collect(Collectors.toMap(UserSearchDTO::getUuid, Function.identity()));
+            .map(UserMetadataMapper::writeDTO)
+            .collect(Collectors.toMap(UserMetadataDTO::getUuid, Function.identity()));
 
     return PageUtils.getNGPageResponse(userGroupPageResponse.map(userGroup -> {
-      List<UserSearchDTO> users =
-          userGroup.getUsers().stream().map(userSearchDTOMap::get).filter(Objects::nonNull).collect(toList());
+      List<UserMetadataDTO> users = getLastNElementsReversed(userGroup.getUsers(), userSize)
+                                        .stream()
+                                        .map(userMetadataMap::get)
+                                        .filter(Objects::nonNull)
+                                        .collect(toList());
       return UserGroupAggregateDTO.builder()
           .userGroupDTO(UserGroupMapper.toDTO(userGroup))
           .roleAssignmentsMetadataDTO(userGroupRoleAssignmentsMap.get(userGroup.getIdentifier()))
           .users(users)
+          .lastModifiedAt(userGroup.getLastModifiedAt())
           .build();
     }));
+  }
+
+  public static <T> List<T> getLastNElementsReversed(List<T> list, int n) {
+    List<T> result = list.subList(Math.max(list.size() - n, 0), list.size());
+    return Lists.reverse(result);
   }
 
   @Override
@@ -126,26 +137,29 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
                                                 .build();
     List<UserGroup> userGroups = userGroupService.list(userGroupFilterDTO);
 
-    Set<String> userIdentifiers =
-        userGroups.stream().map(UserGroup::getUsers).reduce(new HashSet<>(), (total, subset) -> {
-          total.addAll(subset);
-          return total;
-        });
+    Set<String> userIdentifiers = userGroups.stream()
+                                      .map(UserGroup::getUsers)
+                                      .flatMap(List::stream)
+                                      .filter(Objects::nonNull)
+                                      .collect(Collectors.toSet());
 
-    Map<String, UserSearchDTO> userSearchDTOMap =
-        ngUserService.getUsersByIds(new ArrayList<>(userIdentifiers), accountIdentifier)
+    Map<String, UserMetadataDTO> userMetadataMap =
+        ngUserService
+            .listCurrentGenUsers(
+                accountIdentifier, UserFilterNG.builder().userIds(new ArrayList<>(userIdentifiers)).build())
             .stream()
-            .map(UserSearchMapper::writeDTO)
-            .collect(Collectors.toMap(UserSearchDTO::getUuid, Function.identity()));
+            .map(UserMetadataMapper::writeDTO)
+            .collect(Collectors.toMap(UserMetadataDTO::getUuid, Function.identity()));
 
     return userGroups.stream()
         .map(userGroup -> {
-          List<UserSearchDTO> users =
-              userGroup.getUsers().stream().map(userSearchDTOMap::get).filter(Objects::nonNull).collect(toList());
+          List<UserMetadataDTO> users =
+              userGroup.getUsers().stream().map(userMetadataMap::get).filter(Objects::nonNull).collect(toList());
           return UserGroupAggregateDTO.builder()
               .userGroupDTO(UserGroupMapper.toDTO(userGroup))
               .roleAssignmentsMetadataDTO(userGroupRoleAssignmentsMap.get(userGroup.getIdentifier()))
               .users(users)
+              .lastModifiedAt(userGroup.getLastModifiedAt())
               .build();
         })
         .collect(toList());
@@ -166,18 +180,20 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
     Map<String, List<RoleAssignmentMetadataDTO>> userGroupRoleAssignmentsMap =
         getPrincipalRoleAssignmentMap(accountIdentifier, orgIdentifier, projectIdentifier, roleAssignmentFilterDTO);
 
-    Set<String> userIdentifiers =
-        userGroupOpt.get().getUsers() == null ? new HashSet<>() : userGroupOpt.get().getUsers();
+    List<String> userIdentifiers =
+        userGroupOpt.get().getUsers() == null ? new ArrayList<>() : userGroupOpt.get().getUsers();
 
-    List<UserSearchDTO> users = ngUserService.getUsersByIds(new ArrayList<>(userIdentifiers), accountIdentifier)
-                                    .stream()
-                                    .map(UserSearchMapper::writeDTO)
-                                    .collect(toList());
+    List<UserMetadataDTO> users =
+        ngUserService.listCurrentGenUsers(accountIdentifier, UserFilterNG.builder().userIds(userIdentifiers).build())
+            .stream()
+            .map(UserMetadataMapper::writeDTO)
+            .collect(toList());
 
     return UserGroupAggregateDTO.builder()
         .userGroupDTO(UserGroupMapper.toDTO(userGroupOpt.get()))
         .roleAssignmentsMetadataDTO(userGroupRoleAssignmentsMap.get(userGroupIdentifier))
         .users(users)
+        .lastModifiedAt(userGroupOpt.get().getLastModifiedAt())
         .build();
   }
 
@@ -208,6 +224,7 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
                        .roleName(roleMap.get(roleAssignment.getRoleIdentifier()).getRole().getName())
                        .resourceGroupName(resourceGroupMap.get(roleAssignment.getResourceGroupIdentifier()).getName())
                        .managedRole(roleMap.get(roleAssignment.getRoleIdentifier()).isHarnessManaged())
+                       .managedRoleAssignment(roleAssignment.isManaged())
                        .build(),
                 toList())));
   }

@@ -1,6 +1,8 @@
 package io.harness.artifacts.docker.service;
 
+import static io.harness.artifacts.docker.beans.DockerImageManifestResponse.DockerImageManifestHistoryElement;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.HARSH;
 
 import static java.util.Arrays.asList;
@@ -15,7 +17,9 @@ import io.harness.artifacts.docker.beans.DockerImageManifestResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.junit.Rule;
@@ -49,14 +53,62 @@ public class DockerRegistryUtilsTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldGetLabelsIfNonEmptyTags() throws IOException {
     Call<DockerImageManifestResponse> requestCall = mock(Call.class);
-    DockerImageManifestResponse dockerImageManifestResponse = new DockerImageManifestResponse();
-    dockerImageManifestResponse.setName("abc");
-    Response<DockerImageManifestResponse> response = Response.success(dockerImageManifestResponse);
-    when(requestCall.execute()).thenReturn(response);
+    when(requestCall.execute()).thenReturn(Response.success(getDockerImageManifestResponse(null)));
     when(dockerRegistryRestClient.getImageManifest(any(), any(), any())).thenReturn(requestCall);
 
     List<Map<String, String>> labelsMap =
         dockerRegistryUtils.getLabels(dockerRegistryRestClient, null, AUTH_HEADER, IMAGE_NAME, asList("abc", "abc1"));
     assertThat(labelsMap).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldGetLabelsIfNonEmptyTagsWithValidLabels() throws IOException {
+    Call<DockerImageManifestResponse> requestCall = mock(Call.class);
+    when(requestCall.execute())
+        .thenReturn(Response.success(getDockerImageManifestResponse(
+            "{\"architecture\":\"amd64\",\"config\":{\"Labels\":{\"maintainer\":\"NGINX Docker Maintainers <docker-maint@nginx.com>\",\"please\":\"work\"}}}")))
+        .thenReturn(Response.success(getDockerImageManifestResponse(
+            "{\"architecture\":\"amd64\",\"container_config\":{\"Labels\":{\"appname\":\"python-hello\",\"author\":\"deepakputhraya\"}},\"config\":{\"Labels\":{\"appname\":\"hello-world\",\"author\":\"deepakputhraya\",\"version\":\"4.0\"}}}")))
+        .thenReturn(Response.success(getDockerImageManifestResponse(
+            "{\"architecture\":\"amd64\",\"container_config\":{\"Labels\":{\"maintainer\":\"docker-maint@nginx.com\",\"please\":\"work\"}}}")));
+    when(dockerRegistryRestClient.getImageManifest(any(), any(), any())).thenReturn(requestCall);
+
+    List<Map<String, String>> labelsMap = dockerRegistryUtils.getLabels(
+        dockerRegistryRestClient, null, AUTH_HEADER, IMAGE_NAME, asList("abc", "abc1", "abc3"));
+    assertThat(labelsMap).isNotEmpty();
+    assertThat(labelsMap).hasSize(3);
+
+    assertThat(labelsMap.get(0)).hasSize(2);
+    assertThat(labelsMap.get(0))
+        .isEqualTo(ImmutableMap.<String, String>builder()
+                       .put("please", "work")
+                       .put("maintainer", "NGINX Docker Maintainers <docker-maint@nginx.com>")
+                       .build());
+
+    assertThat(labelsMap.get(1)).hasSize(3);
+    assertThat(labelsMap.get(1))
+        .isEqualTo(ImmutableMap.<String, String>builder()
+                       .put("appname", "python-hello")
+                       .put("author", "deepakputhraya")
+                       .put("version", "4.0")
+                       .build());
+
+    assertThat(labelsMap.get(2)).hasSize(2);
+    assertThat(labelsMap.get(2))
+        .isEqualTo(ImmutableMap.<String, String>builder()
+                       .put("please", "work")
+                       .put("maintainer", "docker-maint@nginx.com")
+                       .build());
+  }
+
+  private DockerImageManifestResponse getDockerImageManifestResponse(String v1Compatibility) {
+    DockerImageManifestResponse dockerImageManifestResponse = new DockerImageManifestResponse();
+    dockerImageManifestResponse.setName("abc");
+    DockerImageManifestHistoryElement history = new DockerImageManifestHistoryElement();
+    history.setV1Compatibility(v1Compatibility);
+    dockerImageManifestResponse.setHistory(Collections.singletonList(history));
+    return dockerImageManifestResponse;
   }
 }

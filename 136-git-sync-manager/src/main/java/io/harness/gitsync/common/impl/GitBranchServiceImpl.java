@@ -1,106 +1,135 @@
 package io.harness.gitsync.common.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.utils.PageUtils.getNGPageResponse;
+import static io.harness.gitsync.common.beans.BranchSyncStatus.SYNCING;
+import static io.harness.gitsync.common.beans.BranchSyncStatus.UNSYNCED;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.IdentifierRef;
-import io.harness.connector.impl.ConnectorErrorMessagesHelper;
-import io.harness.connector.services.ConnectorService;
-import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.InvalidRequestException;
+import io.harness.gitsync.common.beans.BranchSyncStatus;
 import io.harness.gitsync.common.beans.GitBranch;
 import io.harness.gitsync.common.beans.GitBranch.GitBranchKeys;
-import io.harness.gitsync.common.beans.YamlGitConfig;
 import io.harness.gitsync.common.dtos.GitBranchDTO;
 import io.harness.gitsync.common.dtos.GitBranchDTO.SyncedBranchDTOKeys;
+import io.harness.gitsync.common.dtos.GitBranchListDTO;
 import io.harness.gitsync.common.service.GitBranchService;
+import io.harness.gitsync.common.service.HarnessToGitHelperService;
+import io.harness.gitsync.common.service.ScmOrchestratorService;
+import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.ng.beans.PageResponse;
-import io.harness.product.ci.scm.proto.ListBranchesResponse;
 import io.harness.repositories.gitBranches.GitBranchesRepository;
-import io.harness.repositories.repositories.yamlGitConfig.YamlGitConfigRepository;
-import io.harness.service.ScmClient;
-import io.harness.tasks.DecryptGitApiAccessHelper;
-import io.harness.utils.IdentifierRefHelper;
+import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @OwnedBy(DX)
 public class GitBranchServiceImpl implements GitBranchService {
-  private final DecryptGitApiAccessHelper decryptGitApiAccessHelper;
-  private final ScmClient scmClient;
-  private final ConnectorService connectorService;
-  private final YamlGitConfigRepository yamlGitConfigRepository;
-  private final ConnectorErrorMessagesHelper connectorErrorMessagesHelper;
   private final GitBranchesRepository gitBranchesRepository;
-
-  @Inject
-  public GitBranchServiceImpl(DecryptGitApiAccessHelper decryptGitApiAccessHelper, ScmClient scmClient,
-      @Named("connectorDecoratorService") ConnectorService connectorService,
-      YamlGitConfigRepository yamlGitConfigRepository, ConnectorErrorMessagesHelper connectorErrorMessagesHelper,
-      GitBranchesRepository gitBranchesRepository) {
-    this.decryptGitApiAccessHelper = decryptGitApiAccessHelper;
-    this.scmClient = scmClient;
-    this.connectorService = connectorService;
-    this.yamlGitConfigRepository = yamlGitConfigRepository;
-    this.connectorErrorMessagesHelper = connectorErrorMessagesHelper;
-    this.gitBranchesRepository = gitBranchesRepository;
-  }
+  private final YamlGitConfigService yamlGitConfigService;
+  private final ExecutorService executorService;
+  private final HarnessToGitHelperService harnessToGitHelperService;
+  private final ScmOrchestratorService scmOrchestratorService;
 
   @Override
-  public List<String> listBranchesForRepoByConnector(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String connectorIdentifier, String repoURL) {
-    ScmConnector scmConnector =
-        connectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier)
-            .map(connectorResponseDTO
-                -> decryptGitApiAccessHelper.decryptScmApiAccess(
-                    (ScmConnector) connectorResponseDTO.getConnector().getConnectorConfig(), accountIdentifier,
-                    projectIdentifier, orgIdentifier))
-            .orElseThrow(()
-                             -> new InvalidRequestException(connectorErrorMessagesHelper.createConnectorNotFoundMessage(
-                                 accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier)));
-    scmConnector.setUrl(repoURL);
-    ListBranchesResponse listBranchesResponse = scmClient.listBranches(scmConnector);
-    return listBranchesResponse.getBranchesList();
-  }
-
-  @Override
-  public List<String> listBranchesForRepoByGitSyncConfig(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String yamlGitConfigIdentifier) {
-    YamlGitConfig yamlGitConfig =
-        yamlGitConfigRepository
-            .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifier(
-                accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigIdentifier)
-            .orElseThrow(()
-                             -> new InvalidRequestException(
-                                 "No Git Config exists with the identifier" + yamlGitConfigIdentifier));
-    IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(yamlGitConfig.getGitConnectorRef(),
-        yamlGitConfig.getAccountId(), yamlGitConfig.getOrgIdentifier(), yamlGitConfig.getProjectIdentifier());
-    return listBranchesForRepoByConnector(identifierRef.getAccountIdentifier(), identifierRef.getOrgIdentifier(),
-        identifierRef.getProjectIdentifier(), identifierRef.getIdentifier(), yamlGitConfig.getRepo());
-  }
-
-  @Override
-  public PageResponse<GitBranchDTO> listBranchesWithStatus(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String yamlGitConfigIdentifier, int page, int size, String searchTerm) {
+  public GitBranchListDTO listBranchesWithStatus(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String yamlGitConfigIdentifier, io.harness.ng.beans.PageRequest pageRequest,
+      String searchTerm, BranchSyncStatus branchSyncStatus) {
+    YamlGitConfigDTO yamlGitConfig =
+        yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, yamlGitConfigIdentifier);
     Page<GitBranch> syncedBranchPage = gitBranchesRepository.findAll(
-        getCriteria(accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigIdentifier, searchTerm),
-        PageRequest.of(page, size,
+        getCriteria(accountIdentifier, yamlGitConfig.getRepo(), searchTerm, branchSyncStatus),
+        PageRequest.of(pageRequest.getPageIndex(), pageRequest.getPageSize(),
             Sort.by(
                 Sort.Order.asc(SyncedBranchDTOKeys.branchSyncStatus), Sort.Order.asc(SyncedBranchDTOKeys.branchName))));
     final List<GitBranchDTO> gitBranchDTOList = buildEntityDtoFromPage(syncedBranchPage);
-    return getNGPageResponse(syncedBranchPage, gitBranchDTOList);
+    PageResponse<GitBranchDTO> ngPageResponse = PageUtils.getNGPageResponse(syncedBranchPage, gitBranchDTOList);
+    GitBranchDTO defaultBranch =
+        getDefaultBranchStatus(yamlGitConfig.getRepo(), yamlGitConfig.getBranch(), accountIdentifier);
+    return GitBranchListDTO.builder().branches(ngPageResponse).defaultBranch(defaultBranch).build();
+  }
+
+  private GitBranchDTO getDefaultBranchStatus(String repo, String branch, String accountIdentifier) {
+    GitBranch gitBranch = get(accountIdentifier, repo, branch);
+    if (gitBranch == null) {
+      return null;
+    }
+    return GitBranchDTO.builder().branchName(branch).branchSyncStatus(gitBranch.getBranchSyncStatus()).build();
+  }
+
+  @Override
+  public Boolean syncNewBranch(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String yamlGitConfigIdentifier, String branchName) {
+    YamlGitConfigDTO yamlGitConfig =
+        yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, yamlGitConfigIdentifier);
+    checkBranchIsNotAlreadyShortlisted(yamlGitConfig.getRepo(), accountIdentifier, branchName);
+    updateBranchSyncStatus(accountIdentifier, yamlGitConfig.getRepo(), branchName, SYNCING);
+    executorService.submit(
+        ()
+            -> harnessToGitHelperService.processFilesInBranch(accountIdentifier, yamlGitConfigIdentifier,
+                projectIdentifier, orgIdentifier, branchName, null, yamlGitConfig.getRepo()));
+    return true;
+  }
+
+  @Override
+  public void updateBranchSyncStatus(
+      String accountIdentifier, String repoURL, String branchName, BranchSyncStatus branchSyncStatus) {
+    Criteria criteria = Criteria.where(GitBranchKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(GitBranchKeys.repoURL)
+                            .is(repoURL)
+                            .and(GitBranchKeys.branchName)
+                            .is(branchName);
+    Update updateOperation = new Update();
+    updateOperation.set(GitBranchKeys.branchSyncStatus, branchSyncStatus);
+    gitBranchesRepository.update(new Query(criteria), updateOperation);
+  }
+
+  @Override
+  public void createBranches(String accountId, String orgIdentifier, String projectIdentifier, String gitConnectorRef,
+      String repoUrl, String yamlGitConfigIdentifier) {
+    final int MAX_BRANCH_SIZE = 5000;
+    final List<String> branches = scmOrchestratorService.processScmRequest(scmClientFacilitatorService
+        -> scmClientFacilitatorService.listBranchesForRepoByConnector(accountId, orgIdentifier, projectIdentifier,
+            gitConnectorRef, repoUrl,
+            io.harness.ng.beans.PageRequest.builder().pageSize(MAX_BRANCH_SIZE).pageIndex(0).build(), null),
+        projectIdentifier, orgIdentifier, accountId);
+    for (String branchName : branches) {
+      GitBranch gitBranch = GitBranch.builder()
+                                .accountIdentifier(accountId)
+                                .branchName(branchName)
+                                .branchSyncStatus(BranchSyncStatus.UNSYNCED)
+                                .repoURL(repoUrl)
+                                .build();
+      save(gitBranch);
+    }
+  }
+
+  @Override
+  public void save(GitBranch gitBranch) {
+    try {
+      gitBranchesRepository.save(gitBranch);
+    } catch (DuplicateKeyException duplicateKeyException) {
+      log.error("The branch %s in repo %s is already stored", gitBranch.getRepoURL(), gitBranch.getRepoURL());
+    }
   }
 
   private List<GitBranchDTO> buildEntityDtoFromPage(Page<GitBranch> gitBranchPage) {
@@ -114,17 +143,36 @@ public class GitBranchServiceImpl implements GitBranchService {
         .build();
   }
 
-  private Criteria getCriteria(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      String yamlGitConfigIdentifier, String searchTerm) {
-    return Criteria.where(GitBranchKeys.accountIdentifier)
-        .is(accountIdentifier)
-        .and(GitBranchKeys.projectIdentifier)
-        .is(projectIdentifier)
-        .and(GitBranchKeys.orgIdentifier)
-        .is(orgIdentifier)
-        .and(GitBranchKeys.yamlGitConfigIdentifier)
-        .is(yamlGitConfigIdentifier)
-        .and(GitBranchKeys.branchName)
-        .regex(searchTerm, "i");
+  private Criteria getCriteria(
+      String accountIdentifier, String repoURL, String searchTerm, BranchSyncStatus branchSyncStatus) {
+    Criteria criteria =
+        Criteria.where(GitBranchKeys.accountIdentifier).is(accountIdentifier).and(GitBranchKeys.repoURL).is(repoURL);
+    if (isNotBlank(searchTerm)) {
+      criteria.and(GitBranchKeys.branchName).regex(searchTerm, "i");
+    }
+    if (branchSyncStatus != null) {
+      criteria.and(GitBranchKeys.branchSyncStatus).is(branchSyncStatus);
+    }
+    return criteria;
+  }
+
+  @Override
+  public GitBranch get(String accountIdentifier, String repoURL, String branchName) {
+    Criteria criteria = Criteria.where(GitBranchKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(GitBranchKeys.repoURL)
+                            .is(repoURL)
+                            .and(GitBranchKeys.branchName)
+                            .is(branchName);
+    return gitBranchesRepository.findOne(criteria);
+  }
+
+  @Override
+  public void checkBranchIsNotAlreadyShortlisted(String repoURL, String accountId, String branch) {
+    GitBranch gitBranch = get(accountId, repoURL, branch);
+    if (gitBranch.getBranchSyncStatus() != UNSYNCED) {
+      throw new InvalidRequestException(
+          String.format("The branch %s in repo %s is already %s", branch, repoURL, gitBranch.getBranchSyncStatus()));
+    }
   }
 }

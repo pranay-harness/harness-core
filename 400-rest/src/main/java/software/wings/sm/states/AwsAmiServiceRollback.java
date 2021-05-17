@@ -138,7 +138,7 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
             .targetGroupArns(infrastructureMapping.getTargetGroupArns())
             .context(context)
             .build();
-    createAndQueueResizeTask(amiResizeTaskRequestData);
+    createAndQueueResizeTask(amiResizeTaskRequestData, context);
 
     AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData = prepareStateExecutionData(activity.getUuid(),
         serviceSetupElement, amiServiceDeployElement.getInstanceCount(), amiServiceDeployElement.getInstanceUnitType(),

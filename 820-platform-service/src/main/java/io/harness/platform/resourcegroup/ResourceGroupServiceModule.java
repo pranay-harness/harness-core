@@ -4,7 +4,9 @@ import static io.harness.AuthorizationServiceHeader.RESOUCE_GROUP_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
+import io.harness.AccessControlClientModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
@@ -27,11 +29,10 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
 import io.harness.platform.PlatformConfiguration;
-import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroup.ResourceGroupModule;
-import io.harness.resourcegroup.framework.beans.ResourceGroupConstants;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.PrimaryVersionManagerRegistrars;
 import io.harness.serializer.morphia.ResourceGroupSerializer;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
@@ -78,6 +79,7 @@ public class ResourceGroupServiceModule extends AbstractModule {
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(ResourceGroupSerializer.morphiaRegistrars)
+            .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -99,26 +101,11 @@ public class ResourceGroupServiceModule extends AbstractModule {
         return new NoopUserProvider();
       }
     });
-    install(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(QueueController.class).toInstance(new QueueController() {
-          @Override
-          public boolean isPrimary() {
-            return true;
-          }
-
-          @Override
-          public boolean isNotPrimary() {
-            return false;
-          }
-        });
-      }
-    });
     install(ExecutorModule.getInstance());
     bind(PlatformConfiguration.class).toInstance(appConfig);
     bind(HPersistence.class).to(MongoPersistence.class);
     install(VersionModule.getInstance());
+    install(PrimaryVersionManagerModule.getInstance());
     install(new ValidationModule(getValidatorFactory()));
     install(new ResourceGroupPersistenceModule());
     install(PersistentLockModule.getInstance());
@@ -127,7 +114,17 @@ public class ResourceGroupServiceModule extends AbstractModule {
     install(new AuditClientModule(this.appConfig.getResoureGroupServiceConfig().getAuditClientConfig(),
         this.appConfig.getPlatformSecrets().getNgManagerServiceSecret(), RESOUCE_GROUP_SERVICE.getServiceId(),
         this.appConfig.getResoureGroupServiceConfig().isEnableAudit()));
+    install(AccessControlClientModule.getInstance(
+        this.appConfig.getAccessControlClientConfig(), RESOUCE_GROUP_SERVICE.getServiceId()));
     install(new TransactionOutboxModule());
+  }
+
+  @Provides
+  @Singleton
+  DistributedLockImplementation distributedLockImplementation() {
+    return appConfig.getResoureGroupServiceConfig().getDistributedLockImplementation() == null
+        ? MONGO
+        : appConfig.getResoureGroupServiceConfig().getDistributedLockImplementation();
   }
 
   @Provides
@@ -135,12 +132,6 @@ public class ResourceGroupServiceModule extends AbstractModule {
   @Singleton
   RedisConfig redisLockConfig() {
     return appConfig.getResoureGroupServiceConfig().getRedisConfig();
-  }
-
-  @Provides
-  @Singleton
-  DistributedLockImplementation distributedLockImplementation() {
-    return MONGO;
   }
 
   @Provides
@@ -164,7 +155,7 @@ public class ResourceGroupServiceModule extends AbstractModule {
   }
 
   @Provides
-  @Named(ResourceGroupConstants.ENTITY_CRUD)
+  @Named(EventsFrameworkConstants.ENTITY_CRUD)
   Producer getProducer() {
     RedisConfig redisConfig = appConfig.getResoureGroupServiceConfig().getRedisConfig();
     if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
@@ -175,7 +166,7 @@ public class ResourceGroupServiceModule extends AbstractModule {
   }
 
   @Provides
-  @Named(ResourceGroupConstants.ENTITY_CRUD)
+  @Named(EventsFrameworkConstants.ENTITY_CRUD)
   Consumer getConsumer() {
     RedisConfig redisConfig = appConfig.getResoureGroupServiceConfig().getRedisConfig();
     if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {

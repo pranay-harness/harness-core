@@ -11,6 +11,7 @@ import static io.harness.delegate.configuration.InstallUtils.installHelm;
 import static io.harness.delegate.configuration.InstallUtils.installKubectl;
 import static io.harness.delegate.configuration.InstallUtils.installKustomize;
 import static io.harness.delegate.configuration.InstallUtils.installOc;
+import static io.harness.delegate.configuration.InstallUtils.installScm;
 import static io.harness.delegate.configuration.InstallUtils.installTerraformConfigInspect;
 import static io.harness.delegate.message.ManagerMessageConstants.JRE_VERSION;
 import static io.harness.delegate.message.ManagerMessageConstants.MIGRATE;
@@ -49,6 +50,7 @@ import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
 import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
+import static io.harness.eraro.ErrorCode.REVOKED_TOKEN;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.filesystem.FileIo.acquireLock;
 import static io.harness.filesystem.FileIo.isLocked;
@@ -79,6 +81,8 @@ import static org.apache.commons.lang3.StringUtils.substringBefore;
 
 import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateHeartbeatResponse;
 import io.harness.configuration.DeployMode;
@@ -146,6 +150,7 @@ import software.wings.beans.DelegateTaskFactory;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.delegation.CommandParameters;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
 import software.wings.delegatetasks.ActivityBasedLogSanitizer;
@@ -249,6 +254,7 @@ import retrofit2.Response;
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 @BreakDependencyOn("software.wings.delegatetasks.validation.DelegateConnectionResult")
 @BreakDependencyOn("io.harness.delegate.beans.Delegate")
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static final int POLL_INTERVAL_SECONDS = 3;
   private static final long UPGRADE_TIMEOUT = TimeUnit.HOURS.toMillis(2);
@@ -273,6 +279,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       "Duplicate delegate with same delegateId:%s and connectionId:%s exists";
 
   private final String delegateSessionIdentifier = System.getenv().get("DELEGATE_SESSION_IDENTIFIER");
+  private final String delegateOrgIdentifier = System.getenv().get("DELEGATE_ORG_IDENTIFIER");
+  private final String delegateProjectIdentifier = System.getenv().get("DELEGATE_PROJECT_IDENTIFIER");
   private final String delegateSize = System.getenv().get("DELEGATE_SIZE");
   private final String delegateDescription = System.getenv().get("DELEGATE_DESCRIPTION");
   private final int delegateTaskLimit = isNotBlank(System.getenv().get("DELEGATE_TASK_LIMIT"))
@@ -377,7 +385,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @SuppressWarnings("unchecked")
   public void run(boolean watched) {
     try {
-      DelegateAgentManagerClientFactory.setDelegateAgentService(this);
       accountId = delegateConfiguration.getAccountId();
       if (perpetualTaskWorker != null) {
         perpetualTaskWorker.setAccountId(accountId);
@@ -421,6 +428,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       boolean tfConfigInspectInstalled = installTerraformConfigInspect(delegateConfiguration);
       boolean ocInstalled = installOc(delegateConfiguration);
       boolean kustomizeInstalled = installKustomize(delegateConfiguration);
+      boolean scmInstalled = installScm(delegateConfiguration);
 
       long start = clock.millis();
       String descriptionFromConfigFile = isBlank(delegateDescription) ? "" : delegateDescription;
@@ -456,6 +464,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           .ip(getLocalHostAddress())
                                           .accountId(accountId)
                                           .sessionIdentifier(delegateSessionIdentifier)
+                                          .orgIdentifier(delegateOrgIdentifier)
+                                          .projectIdentifier(delegateProjectIdentifier)
                                           .delegateSize(delegateSize)
                                           .hostName(HOST_NAME)
                                           .delegateName(delegateName)
@@ -535,7 +545,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       startProfileCheck();
 
       if (!kubectlInstalled || !goTemplateInstalled || !helmInstalled || !chartMuseumInstalled
-          || !tfConfigInspectInstalled || !harnessPywinrmInstalled) {
+          || !tfConfigInspectInstalled || !harnessPywinrmInstalled || !scmInstalled) {
         systemExecutor.submit(() -> {
           boolean kubectl = kubectlInstalled;
           boolean goTemplate = goTemplateInstalled;
@@ -545,9 +555,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           boolean oc = ocInstalled;
           boolean kustomize = kustomizeInstalled;
           boolean harnessPywinrm = harnessPywinrmInstalled;
+          boolean scm = scmInstalled;
 
           int retries = CLIENT_TOOL_RETRIES;
-          while ((!kubectl || !goTemplate || !helm || !chartMuseum || !tfConfigInspect || !harnessPywinrm)
+          while ((!kubectl || !goTemplate || !helm || !chartMuseum || !tfConfigInspect || !harnessPywinrm || !scm)
               && retries > 0) {
             sleep(ofSeconds(15L));
             if (!kubectl) {
@@ -577,6 +588,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             if (!kustomize) {
               kustomize = installKustomize(delegateConfiguration);
             }
+            if (!scm) {
+              scm = installScm(delegateConfiguration);
+            }
 
             retries--;
           }
@@ -603,6 +617,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           }
           if (!kustomize) {
             log.error("Failed to install kustomize after {} retries", CLIENT_TOOL_RETRIES);
+          }
+          if (!scm) {
+            log.error("Failed to install scm after {} retries", CLIENT_TOOL_RETRIES);
           }
         });
       }
@@ -815,9 +832,13 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     } else if (StringUtils.startsWith(message, JRE_VERSION)) {
       updateJreVersion(StringUtils.substringAfter(message, JRE_VERSION));
     } else if (StringUtils.contains(message, INVALID_TOKEN.name())) {
+      log.warn("Delegate used invalid token. Self destruct procedure will be initiated.");
       initiateSelfDestruct();
     } else if (StringUtils.contains(message, EXPIRED_TOKEN.name())) {
       log.warn("Delegate used expired token. It will be frozen and drained.");
+      freeze();
+    } else if (StringUtils.contains(message, REVOKED_TOKEN.name())) {
+      log.warn("Delegate used revoked token. It will be frozen and drained.");
       freeze();
     } else if (!StringUtils.equals(message, "X")) {
       log.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
@@ -916,12 +937,17 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       if (response != null && !response.isSuccessful()) {
         String errorResponse = response.errorBody().string();
         if (errorResponse.contains(INVALID_TOKEN.name())) {
+          log.warn("Delegate used invalid token. Self destruct procedure will be initiated.");
           initiateSelfDestruct();
         } else if (errorResponse.contains(
                        String.format(DUPLICATE_DELEGATE_ERROR_MESSAGE, delegateId, delegateConnectionId))) {
           initiateSelfDestruct();
-        } else if (response.code() == EXPIRED_TOKEN.getStatus().getCode()) {
-          log.warn("Delegate was not authorized to invoke manager. New token should be generated.");
+        } else if (errorResponse.contains(EXPIRED_TOKEN.name())) {
+          log.warn("Delegate used expired token. It will be frozen and drained.");
+          freeze();
+        } else if (errorResponse.contains(REVOKED_TOKEN.name()) || errorResponse.contains("Revoked Delegate Token")) {
+          log.warn("Delegate used revoked token. It will be frozen and drained.");
+          freeze();
         }
         response.errorBody().close();
       }
@@ -994,7 +1020,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void checkForProfile() {
-    if (shouldContactManager() && !executingProfile.get() && !isLocked(new File("profile"))) {
+    if (shouldContactManager() && !executingProfile.get() && !isLocked(new File("profile")) && !frozen.get()) {
       try {
         log.info("Checking for profile ...");
         DelegateProfileParams profileParams = getProfile();
@@ -1551,7 +1577,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       lastHeartbeatSentAt.set(clock.millis());
 
       RestResponse<DelegateHeartbeatResponse> delegateParamsResponse =
-          execute(delegateAgentManagerClient.delegateHeartbeat(accountId, delegateParams));
+          delegateExecute(delegateAgentManagerClient.delegateHeartbeat(accountId, delegateParams));
       long now = clock.millis();
       log.info("Delegate {} received heartbeat response {} after sending. {} since last response.", delegateId,
           getDurationString(lastHeartbeatSentAt.get(), now), getDurationString(lastHeartbeatReceivedAt.get(), now));
@@ -1694,7 +1720,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
 
     if (frozen.get()) {
-      log.info("Delegate process with detected time out of sync is running. Won't acquire tasks.");
+      log.info(
+          "Delegate process with detected time out of sync or with revoked token is running. Won't acquire tasks.");
       return;
     }
 
@@ -2020,6 +2047,12 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             secrets.add(String.valueOf(encryptionService.getDecryptedValue(encryptedVariable.getValue(), false)));
           }
         }
+      } else if (parameters[0] instanceof CommandParameters) {
+        // Command
+        CommandParameters commandParameters = (CommandParameters) parameters[0];
+        activityId = commandParameters.getActivityId();
+        secrets.addAll(secretsFromMaskedVariables(
+            commandParameters.getServiceVariables(), commandParameters.getSafeDisplayServiceVariables()));
       }
     } else {
       if (parameters.length >= 2 && parameters[0] instanceof Command

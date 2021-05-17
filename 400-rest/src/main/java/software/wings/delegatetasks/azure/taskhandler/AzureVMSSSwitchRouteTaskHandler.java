@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.azure.taskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.azure.model.AzureConstants.AZURE_LOAD_BALANCER_DETAIL_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.AZURE_VMSS_SWAP_BACKEND_POOL;
 import static io.harness.azure.model.AzureConstants.BG_BLUE_TAG_VALUE;
@@ -24,8 +25,10 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
 import io.harness.delegate.task.azure.request.AzureLoadBalancerDetailForBGDeployment;
 import io.harness.delegate.task.azure.request.AzureVMSSSwitchRouteTaskParameters;
@@ -42,9 +45,9 @@ import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSetVM;
 import com.microsoft.azure.management.network.LoadBalancer;
 import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
+import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 @NoArgsConstructor
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
   @Override
   protected AzureVMSSTaskExecutionResponse executeTaskInternal(
@@ -316,7 +320,7 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
         Collectors.toMap(HasName::name, VirtualMachineScaleSetVM::instanceId));
 
     try {
-      timeLimiter.callWithTimeout(() -> {
+      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeoutIntervalInMin), () -> {
         nameToInstanceId.keySet().forEach(vmName -> {
           logCallback.saveExecutionLog(
               format("Updating virtual machine instance: [%s] for the scale set: [%s]", vmName, vmss.name()));
@@ -326,7 +330,7 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
         logCallback.saveExecutionLog(
             format("All virtual machine instances updated for the scale set: [%s]", vmss.name()));
         return Boolean.TRUE;
-      }, timeoutIntervalInMin, TimeUnit.MINUTES, true);
+      });
     } catch (Exception e) {
       throw new InvalidRequestException("Error while updating Virtual Machine Scale Set VM instances", e);
     }

@@ -1,7 +1,10 @@
 package io.harness.core;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CastedField;
 import io.harness.exceptions.RecasterException;
+import io.harness.utils.RecastReflectionUtils;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -18,6 +21,7 @@ import org.bson.Document;
 import org.modelmapper.internal.objenesis.Objenesis;
 import org.modelmapper.internal.objenesis.ObjenesisStd;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 public class RecastObjectCreator implements RecastObjectFactory {
   private static final Objenesis objenesis = new ObjenesisStd(true);
@@ -96,7 +100,7 @@ public class RecastObjectCreator implements RecastObjectFactory {
 
   @Override
   public <T> T createInstance(final Class<T> clazz, final Document document) {
-    Class<T> c = getClass(document);
+    Class<T> c = RecastReflectionUtils.getClass(document);
     if (c == null) {
       c = clazz;
     }
@@ -106,7 +110,7 @@ public class RecastObjectCreator implements RecastObjectFactory {
   @Override
   @SuppressWarnings("unchecked")
   public Object createInstance(final Recaster mapper, final CastedField cf, final Document document) {
-    Class c = getClass(document);
+    Class<?> c = RecastReflectionUtils.getClass(document);
     if (c == null) {
       c = cf.isSingleValue() ? cf.getType() : cf.getSubClass();
       if (c.equals(Object.class)) {
@@ -136,22 +140,6 @@ public class RecastObjectCreator implements RecastObjectFactory {
 
   protected ClassLoader getClassLoaderForClass() {
     return Thread.currentThread().getContextClassLoader();
-  }
-
-  @SuppressWarnings("unchecked")
-  private <T> Class<T> getClass(final Document document) {
-    // see if there is a className value
-    Class<?> c = null;
-    if (document.containsKey(Recaster.RECAST_CLASS_KEY)) {
-      final String className = document.getString(Recaster.RECAST_CLASS_KEY);
-      // TODO : add caching here
-      try {
-        c = Class.forName(className, true, getClassLoaderForClass());
-      } catch (ClassNotFoundException e) {
-        log.warn("Class not found defined in dbObj: ", e);
-      }
-    }
-    return (Class<T>) c;
   }
 
   /**

@@ -24,7 +24,7 @@ import com.google.inject.Inject;
 import java.util.List;
 
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._870_CG_YAML_BEANS)
+@TargetModule(HarnessModule._870_CG_YAML)
 public class TerragruntInfrastructureProvisionerYamlHandler
     extends InfrastructureProvisionerYamlHandler<Yaml, TerragruntInfrastructureProvisioner> {
   @Inject SecretManager secretManager;

@@ -9,15 +9,17 @@ import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationSubject;
 import io.harness.pms.sdk.core.registries.OrchestrationEventHandlerRegistry;
 import io.harness.queue.QueueConsumer;
-import io.harness.queue.QueueListener;
+import io.harness.queue.QueueListenerWithObservers;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
-public class SdkOrchestrationEventListener extends QueueListener<OrchestrationEvent> {
+@Singleton
+public class SdkOrchestrationEventListener extends QueueListenerWithObservers<OrchestrationEvent> {
   @Inject private OrchestrationEventHandlerRegistry handlerRegistry;
 
   @Inject
@@ -26,7 +28,7 @@ public class SdkOrchestrationEventListener extends QueueListener<OrchestrationEv
   }
 
   @Override
-  public void onMessage(OrchestrationEvent event) {
+  public void onMessageInternal(OrchestrationEvent event) {
     try (AutoLogContext ignore = event.autoLogContext()) {
       log.info("Notifying for OrchestrationEvent");
 

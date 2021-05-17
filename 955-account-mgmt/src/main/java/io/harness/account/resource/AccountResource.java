@@ -1,5 +1,7 @@
 package io.harness.account.resource;
 
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+
 import io.harness.account.AccountClient;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -9,6 +11,8 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.security.annotations.NextGenManagerAuth;
+
+import software.wings.security.annotations.AuthRule;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
@@ -33,6 +37,7 @@ import javax.ws.rs.core.MediaType;
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 @NextGenManagerAuth
+@AuthRule(permissionType = LOGGED_IN)
 public class AccountResource {
   private final AccountClient accountClient;
 

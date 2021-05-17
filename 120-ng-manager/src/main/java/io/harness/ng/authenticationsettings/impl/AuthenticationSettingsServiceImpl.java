@@ -12,8 +12,10 @@ import io.harness.ng.authenticationsettings.dtos.mechanisms.OAuthSettings;
 import io.harness.ng.authenticationsettings.dtos.mechanisms.SAMLSettings;
 import io.harness.ng.authenticationsettings.dtos.mechanisms.UsernamePasswordSettings;
 import io.harness.ng.authenticationsettings.remote.AuthSettingsManagerClient;
+import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 
 import software.wings.beans.loginSettings.LoginSettings;
+import software.wings.beans.loginSettings.PasswordStrengthPolicy;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
@@ -92,128 +94,51 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
   }
 
   private List<NGAuthSettings> buildAuthSettingsList(SSOConfig ssoConfig, String accountIdentifier) {
-    List<NGAuthSettings> settingsList = new ArrayList<>();
-    AuthenticationMechanism authenticationMechanism = ssoConfig.getAuthenticationMechanism();
-    if (authenticationMechanism == AuthenticationMechanism.USER_PASSWORD) {
-      LoginSettings loginSettings = getResponse(managerClient.getUserNamePasswordSettings(accountIdentifier));
-      settingsList.add(UsernamePasswordSettings.builder().loginSettings(loginSettings).build());
-      OauthSettings oAuthSettings = (OauthSettings) getOauthSetting(ssoConfig);
-      SamlSettings samlSettings = (SamlSettings) getSAMLSetting(ssoConfig);
-      if (oAuthSettings != null) {
-        settingsList.add(OAuthSettings.builder()
-                             .allowedProviders(oAuthSettings.getAllowedProviders())
-                             .filter(oAuthSettings.getFilter())
-                             .build());
-      }
-      if (samlSettings != null) {
-        settingsList.add(SAMLSettings.builder()
-                             .groupMembershipAttr(samlSettings.getGroupMembershipAttr())
-                             .logoutUrl(samlSettings.getLogoutUrl())
-                             .origin(samlSettings.getOrigin())
-                             .displayName(samlSettings.getDisplayName())
-                             .authorizationEnabled(samlSettings.isAuthorizationEnabled())
-                             .build());
-      }
-    } else if (authenticationMechanism == AuthenticationMechanism.OAUTH) {
-      OauthSettings oAuthSettings = (OauthSettings) getOauthSetting(ssoConfig);
-      settingsList.add(OAuthSettings.builder()
-                           .allowedProviders(oAuthSettings.getAllowedProviders())
-                           .filter(oAuthSettings.getFilter())
-                           .build());
-      SamlSettings samlSettings = (SamlSettings) getSAMLSetting(ssoConfig);
-      if (samlSettings != null) {
-        settingsList.add(SAMLSettings.builder()
-                             .groupMembershipAttr(samlSettings.getGroupMembershipAttr())
-                             .logoutUrl(samlSettings.getLogoutUrl())
-                             .origin(samlSettings.getOrigin())
-                             .displayName(samlSettings.getDisplayName())
-                             .authorizationEnabled(samlSettings.isAuthorizationEnabled())
-                             .build());
-      }
-    } else if (authenticationMechanism == AuthenticationMechanism.LDAP) {
-      LdapSettings ldapSettings = (LdapSettings) getLDAPSetting(ssoConfig);
-      settingsList.add(LDAPSettings.builder()
-                           .connectionSettings(ldapSettings.getConnectionSettings())
-                           .userSettingsList(ldapSettings.getUserSettingsList())
-                           .groupSettingsList(ldapSettings.getGroupSettingsList())
-                           .build());
-      OauthSettings oAuthSettings = (OauthSettings) getOauthSetting(ssoConfig);
-      SamlSettings samlSettings = (SamlSettings) getSAMLSetting(ssoConfig);
-      if (oAuthSettings != null) {
-        settingsList.add(OAuthSettings.builder()
-                             .allowedProviders(oAuthSettings.getAllowedProviders())
-                             .filter(oAuthSettings.getFilter())
-                             .build());
-      }
-      if (samlSettings != null) {
-        settingsList.add(SAMLSettings.builder()
-                             .groupMembershipAttr(samlSettings.getGroupMembershipAttr())
-                             .logoutUrl(samlSettings.getLogoutUrl())
-                             .origin(samlSettings.getOrigin())
-                             .displayName(samlSettings.getDisplayName())
-                             .authorizationEnabled(samlSettings.isAuthorizationEnabled())
-                             .build());
-      }
-    } else if (authenticationMechanism == AuthenticationMechanism.SAML) {
-      LoginSettings loginSettings = getResponse(managerClient.getUserNamePasswordSettings(accountIdentifier));
-      settingsList.add(UsernamePasswordSettings.builder().loginSettings(loginSettings).build());
-      SamlSettings samlSettings = (SamlSettings) getSAMLSetting(ssoConfig);
-      settingsList.add(SAMLSettings.builder()
-                           .groupMembershipAttr(samlSettings.getGroupMembershipAttr())
-                           .logoutUrl(samlSettings.getLogoutUrl())
-                           .origin(samlSettings.getOrigin())
-                           .displayName(samlSettings.getDisplayName())
-                           .authorizationEnabled(samlSettings.isAuthorizationEnabled())
-                           .build());
-      OauthSettings oAuthSettings = (OauthSettings) getOauthSetting(ssoConfig);
-      if (oAuthSettings != null) {
-        settingsList.add(OAuthSettings.builder()
-                             .allowedProviders(oAuthSettings.getAllowedProviders())
-                             .filter(oAuthSettings.getFilter())
-                             .build());
-      }
-    }
+    List<NGAuthSettings> settingsList = getNGAuthSettings(ssoConfig);
+
+    LoginSettings loginSettings = getResponse(managerClient.getUserNamePasswordSettings(accountIdentifier));
+    settingsList.add(UsernamePasswordSettings.builder().loginSettings(loginSettings).build());
+
     return settingsList;
   }
 
-  private SSOSettings getOauthSetting(SSOConfig ssoConfig) {
+  private List<NGAuthSettings> getNGAuthSettings(SSOConfig ssoConfig) {
     List<SSOSettings> ssoSettings = ssoConfig.getSsoSettings();
-    if (EmptyPredicate.isEmpty(ssoSettings)) {
-      return null;
-    }
-    for (SSOSettings ssoSetting : ssoSettings) {
-      if (ssoSetting.getType().equals(SSOType.OAUTH)) {
-        return ssoSetting;
-      }
-    }
-    return null;
-  }
+    List<NGAuthSettings> result = new ArrayList<>();
 
-  private SSOSettings getSAMLSetting(SSOConfig ssoConfig) {
-    List<SSOSettings> ssoSettings = ssoConfig.getSsoSettings();
     if (EmptyPredicate.isEmpty(ssoSettings)) {
-      return null;
+      return result;
     }
+
     for (SSOSettings ssoSetting : ssoSettings) {
       if (ssoSetting.getType().equals(SSOType.SAML)) {
-        return ssoSetting;
+        SamlSettings samlSettings = (SamlSettings) ssoSetting;
+        result.add(SAMLSettings.builder()
+                       .groupMembershipAttr(samlSettings.getGroupMembershipAttr())
+                       .logoutUrl(samlSettings.getLogoutUrl())
+                       .origin(samlSettings.getOrigin())
+                       .displayName(samlSettings.getDisplayName())
+                       .authorizationEnabled(samlSettings.isAuthorizationEnabled())
+                       .build());
+
+      } else if (ssoSetting.getType().equals(SSOType.OAUTH)) {
+        OauthSettings oAuthSettings = (OauthSettings) ssoSetting;
+        result.add(OAuthSettings.builder()
+                       .allowedProviders(oAuthSettings.getAllowedProviders())
+                       .filter(oAuthSettings.getFilter())
+                       .build());
+      } else if (ssoSetting.getType().equals(SSOType.LDAP)) {
+        LdapSettings ldapSettings = (LdapSettings) ssoSetting;
+        result.add(LDAPSettings.builder()
+                       .connectionSettings(ldapSettings.getConnectionSettings())
+                       .userSettingsList(ldapSettings.getUserSettingsList())
+                       .groupSettingsList(ldapSettings.getGroupSettingsList())
+                       .build());
       }
     }
-    return null;
+    return result;
   }
 
-  private SSOSettings getLDAPSetting(SSOConfig ssoConfig) {
-    List<SSOSettings> ssoSettings = ssoConfig.getSsoSettings();
-    if (EmptyPredicate.isEmpty(ssoSettings)) {
-      return null;
-    }
-    for (SSOSettings ssoSetting : ssoSettings) {
-      if (ssoSetting.getType().equals(SSOType.LDAP)) {
-        return ssoSetting;
-      }
-    }
-    return null;
-  }
   private RequestBody createPartFromString(String string) {
     if (string == null) {
       return null;
@@ -254,5 +179,16 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
   @Override
   public LoginTypeResponse getSAMLLoginTest(@NotNull String accountIdentifier) {
     return getResponse(managerClient.getSAMLLoginTest(accountIdentifier));
+  }
+
+  @Override
+  public boolean setTwoFactorAuthAtAccountLevel(
+      String accountIdentifier, TwoFactorAdminOverrideSettings twoFactorAdminOverrideSettings) {
+    return getResponse(managerClient.setTwoFactorAuthAtAccountLevel(accountIdentifier, twoFactorAdminOverrideSettings));
+  }
+
+  @Override
+  public PasswordStrengthPolicy getPasswordStrengthSettings(String accountIdentifier) {
+    return getResponse(managerClient.getPasswordStrengthSettings(accountIdentifier));
   }
 }

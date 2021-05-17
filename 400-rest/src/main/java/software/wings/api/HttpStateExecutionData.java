@@ -3,7 +3,9 @@ package software.wings.api;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.KeyValuePair;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
@@ -40,6 +42,7 @@ import org.w3c.dom.Document;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("httpStateExecutionData")
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class HttpStateExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData, Outcome {
   private String httpUrl;
   private String httpMethod;
@@ -160,10 +163,5 @@ public class HttpStateExecutionData extends StateExecutionData implements Delega
     putNotNull(executionDetails, "warningMessage",
         ExecutionDataValue.builder().displayName("Warning").value(warningMessage).build());
     return executionDetails;
-  }
-
-  @Override
-  public String getType() {
-    return "httpStateExecutionData";
   }
 }

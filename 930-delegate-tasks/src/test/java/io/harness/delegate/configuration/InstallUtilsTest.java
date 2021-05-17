@@ -1,10 +1,12 @@
 package io.harness.delegate.configuration;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.delegate.configuration.InstallUtils.helm2Version;
 import static io.harness.delegate.configuration.InstallUtils.helm3Version;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static io.harness.rule.OwnerRule.RIHAZ;
+import static io.harness.rule.OwnerRule.SHUBHAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.VUK;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -14,6 +16,7 @@ import static org.assertj.core.api.Assumptions.assumeThat;
 
 import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.FunctionalTests;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -28,6 +31,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(DEL)
 public class InstallUtilsTest extends CategoryTest implements MockableTestMixin {
   DelegateConfiguration delegateConfiguration =
       DelegateConfiguration.builder().managerUrl("localhost").maxCachedArtifacts(10).build();
@@ -74,6 +78,34 @@ public class InstallUtilsTest extends CategoryTest implements MockableTestMixin 
       assertThat(InstallUtils.getTerraformConfigInspectDownloadUrl(delegateConfiguration))
           .isEqualTo(
               "https://app.harness.io/storage/harness-download/harness-terraform-config-inspect/v1.0/windows/amd64/terraform-config-inspect");
+    } finally {
+      setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", win);
+      setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", mac);
+    }
+  }
+
+  @Test
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void testGetScmDownloadUrlPath() throws Exception {
+    boolean useCdn = delegateConfiguration.isUseCdn();
+    assertThat(useCdn).isFalse();
+
+    boolean win = SystemUtils.IS_OS_MAC;
+    boolean mac = SystemUtils.IS_OS_WINDOWS;
+
+    try {
+      setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", false);
+      setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", false);
+      assertThat(InstallUtils.getScmDownloadUrl(delegateConfiguration))
+          .isEqualTo(
+              "https://app.harness.io/storage/harness-download/harness-scm/release/444bed53/bin/linux/amd64/scm");
+
+      setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", false);
+      setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", true);
+      assertThat(InstallUtils.getScmDownloadUrl(delegateConfiguration))
+          .isEqualTo(
+              "https://app.harness.io/storage/harness-download/harness-scm/release/444bed53/bin/darwin/amd64/scm");
     } finally {
       setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", win);
       setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", mac);

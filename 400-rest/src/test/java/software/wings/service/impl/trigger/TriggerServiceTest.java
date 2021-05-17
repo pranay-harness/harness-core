@@ -2,6 +2,7 @@ package software.wings.service.impl.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.FeatureName.GITHUB_WEBHOOK_AUTHENTICATION;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
@@ -38,6 +39,7 @@ import static software.wings.beans.trigger.WebhookEventType.PULL_REQUEST;
 import static software.wings.beans.trigger.WebhookEventType.PUSH;
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
 import static software.wings.beans.trigger.WebhookSource.GITHUB;
+import static software.wings.beans.trigger.WebhookSource.GITLAB;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.artifact;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildArtifactTrigger;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildArtifactTriggerWithArtifactSelections;
@@ -105,6 +107,7 @@ import static org.mockito.Mockito.when;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.EncryptedData;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -160,6 +163,7 @@ import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookParameters;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.common.MongoIdempotentRegistry;
+import software.wings.dl.WingsPersistence;
 import software.wings.infra.AwsInstanceInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfrastructureDefinition;
@@ -215,6 +219,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   private static final String CATALOG_SERVICE_NAME = "Catalog";
   private static final String ARTIFACT_STREAM_ID_1 = "ARTIFACT_STREAM_ID_1";
   private static final String BUILD_NUMBER = "123";
+  private static final String SECRET_ID = "secret_id";
 
   @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private PipelineService pipelineService;
@@ -244,6 +249,7 @@ public class TriggerServiceTest extends WingsBaseTest {
 
   @Inject @InjectMocks TriggerServiceHelper triggerServiceHelper;
   @Inject @InjectMocks private TriggerServiceImpl triggerService;
+  @Inject private WingsPersistence wingsPersistence;
 
   Trigger webhookConditionTrigger = buildWebhookCondTrigger();
 
@@ -3764,5 +3770,58 @@ public class TriggerServiceTest extends WingsBaseTest {
     triggerService.addArtifactsFromSelectionsTriggeringArtifactSource(
         APP_ID, Trigger.builder().build(), selectedArtifacts, collectedArtifacts);
     assertThat(selectedArtifacts).containsAll(collectedArtifacts);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorIfWebHookSecretNotGivenWithGithub() {
+    when(featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, ACCOUNT_ID)).thenReturn(true);
+
+    Trigger bitbucketTrigger = createWebHookTriggerWithSecret(BITBUCKET);
+    assertThatThrownBy(() -> triggerService.save(bitbucketTrigger))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("WebHook Secret is only supported with Github repository");
+
+    Trigger gitLabTrigger = createWebHookTriggerWithSecret(GITLAB);
+    assertThatThrownBy(() -> triggerService.save(gitLabTrigger))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("WebHook Secret is only supported with Github repository");
+
+    Trigger customTrigger = createWebHookTriggerWithSecret(null);
+    assertThatThrownBy(() -> triggerService.save(customTrigger))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("WebHook Secret is only supported with Github repository");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldSaveWebHookSecretWithTrigger() {
+    when(featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, ACCOUNT_ID)).thenReturn(true);
+    wingsPersistence.save(EncryptedData.builder().uuid(SECRET_ID).build());
+
+    Trigger trigger = triggerService.save(createWebHookTriggerWithSecret(GITHUB));
+    assertThat(trigger).isNotNull();
+    assertThat(trigger.getCondition()).isNotNull();
+    WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
+    assertThat(webHookTriggerCondition.getWebHookSecret()).isEqualTo(SECRET_ID);
+  }
+
+  private Trigger createWebHookTriggerWithSecret(WebhookSource webhookSource) {
+    return Trigger.builder()
+        .workflowId(WORKFLOW_ID)
+        .workflowType(ORCHESTRATION)
+        .uuid(TRIGGER_ID)
+        .appId(APP_ID)
+        .name(TRIGGER_NAME)
+        .accountId(ACCOUNT_ID)
+        .condition(WebHookTriggerCondition.builder()
+                       .webhookSource(webhookSource)
+                       .webHookToken(WebHookToken.builder().build())
+                       .webHookSecret(SECRET_ID)
+                       .parameters(ImmutableMap.of("MyVar", "MyVal"))
+                       .build())
+        .build();
   }
 }

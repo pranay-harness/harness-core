@@ -43,15 +43,8 @@ public class SyncStatus implements PersistentEntity {
         .build();
   }
 
-  // TODO remove static keys and use lombok keys
-  public static final String SERVICE_ID_KEY = "serviceId";
-  public static final String ENV_ID_KEY = "envId";
-  public static final String INFRA_MAPPING_ID_KEY = "infraMappingId";
-  public static final String ORG_ID_KEY = "orgId";
-  public static final String PROJECT_ID_KEY = "projectId";
-  public static final String ID_KEY = "id";
-
   @Id @org.mongodb.morphia.annotations.Id private String id;
+  private String accountIdentifier;
   private String orgIdentifier;
   private String projectIdentifier;
   private String envId;

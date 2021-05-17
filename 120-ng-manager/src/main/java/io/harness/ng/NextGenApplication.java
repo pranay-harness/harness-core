@@ -7,7 +7,7 @@ import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.getResourceClasses;
-import static io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
+import static io.harness.pms.listener.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
 import static com.google.common.collect.ImmutableMap.of;
 
@@ -18,8 +18,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.CDNGModuleInfoProvider;
 import io.harness.cdng.creator.CDNGPlanCreatorProvider;
 import io.harness.cdng.creator.filters.CDNGFilterCreationResponseMerger;
-import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
 import io.harness.cdng.orchestration.NgStepRegistrar;
+import io.harness.cf.AbstractCfModule;
+import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.gitsync.ConnectorGitSyncHelper;
@@ -37,6 +39,10 @@ import io.harness.health.HealthService;
 import io.harness.logstreaming.LogStreamingModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.migration.MigrationProvider;
+import io.harness.migration.NGMigrationSdkInitHelper;
+import io.harness.migration.NGMigrationSdkModule;
+import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.EtagFilter;
 import io.harness.ng.core.event.NGEventConsumerService;
@@ -47,11 +53,14 @@ import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapp
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.user.service.impl.UserMembershipMigrationService;
+import io.harness.ng.core.user.service.impl.UserProjectMigrationService;
+import io.harness.ng.migration.NGCoreMigrationProvider;
 import io.harness.ng.resourcegroup.migration.DefaultResourceGroupCreationService;
 import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkInitHelper;
@@ -63,6 +72,7 @@ import io.harness.registrars.CDServiceAdviserRegistrar;
 import io.harness.registrars.NGExecutionEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.request.RequestContextFilter;
+import io.harness.resource.VersionInfoResource;
 import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.UserPrincipalVerificationFilter;
@@ -195,8 +205,20 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
       }
     });
     modules.add(new MetricRegistryModule(metricRegistry));
+    modules.add(NGMigrationSdkModule.getInstance());
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(appConfig)));
     modules.add(new LogStreamingModule(appConfig.getLogStreamingServiceConfig().getBaseUrl()));
+    modules.add(new AbstractCfModule() {
+      @Override
+      public CfClientConfig cfClientConfig() {
+        return appConfig.getCfClientConfig();
+      }
+
+      @Override
+      public CfMigrationConfig cfMigrationConfig() {
+        return appConfig.getCfMigrationConfig();
+      }
+    });
     if (appConfig.getShouldDeployWithGitSync()) {
       modules.add(GitSyncGrpcModule.getInstance());
       GitSyncSdkConfiguration gitSyncSdkConfiguration = getGitSyncConfiguration(appConfig);
@@ -224,7 +246,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerEtagFilter(environment, injector);
     registerScheduleJobs(injector);
     registerWaitEnginePublishers(injector);
-    registerExecutionPlanCreators(injector);
     registerAuthFilters(appConfig, environment, injector);
     registerRequestContextFilter(environment);
     registerPipelineSDK(appConfig, injector);
@@ -232,6 +253,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerHealthCheck(environment, injector);
     registerIterators(injector);
     registerJobs(injector);
+    registerMigrations(injector);
+    registerQueueListeners(injector);
 
     intializeGitSync(injector, appConfig);
     //  This is ordered below health registration so that kubernetes deployment readiness check passes under 10 minutes
@@ -239,6 +262,26 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerManagedBeans(environment, injector);
 
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void registerQueueListeners(Injector injector) {
+    log.info("Initializing queue listeners...");
+    QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
+    queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 1);
+  }
+
+  private void registerMigrations(Injector injector) {
+    NGMigrationConfiguration config = getMigrationSdkConfiguration();
+    NGMigrationSdkInitHelper.initialize(injector, config);
+  }
+
+  private NGMigrationConfiguration getMigrationSdkConfiguration() {
+    return NGMigrationConfiguration.builder()
+        .microservice(Microservice.CORE)
+        .migrationProviderList(new ArrayList<Class<? extends MigrationProvider>>() {
+          { add(NGCoreMigrationProvider.class); } // Add all migration provider classes here
+        })
+        .build();
   }
 
   private void blockingMigrations(Injector injector, NextGenConfiguration appConfig) {
@@ -254,6 +297,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     configureObjectMapper(ngObjectMapper);
     Set<GitSyncEntitiesConfiguration> gitSyncEntitiesConfigurations = new HashSet<>();
     gitSyncEntitiesConfigurations.add(GitSyncEntitiesConfiguration.builder()
+                                          .entityType(EntityType.CONNECTORS)
                                           .yamlClass(ConnectorDTO.class)
                                           .entityClass(Connector.class)
                                           .entityHelperClass(ConnectorGitSyncHelper.class)
@@ -285,11 +329,13 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
           injector.getInstance(Key.get(ServiceManager.class, Names.named("git-sync"))).startAsync();
       serviceManager.awaitHealthy();
       Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
+      log.info("Git Sync SDK registration complete.");
     }
   }
 
   public void registerIterators(Injector injector) {
     injector.getInstance(WebhookEventProcessingService.class).registerIterators();
+    injector.getInstance(UserMembershipMigrationService.class).registerIterators();
   }
 
   public void registerJobs(Injector injector) {
@@ -352,7 +398,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
-    environment.lifecycle().manage(injector.getInstance(UserMembershipMigrationService.class));
+    environment.lifecycle().manage(injector.getInstance(UserProjectMigrationService.class));
     createConsumerThreadsToListenToEvents(environment, injector);
   }
 
@@ -371,6 +417,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
   }
 
   private void registerJerseyProviders(Environment environment, Injector injector) {
@@ -423,10 +470,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .scheduleWithFixedDelay(injector.getInstance(DelegateProgressServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
         .scheduleWithFixedDelay(injector.getInstance(ProgressUpdateService.class), 0L, 5L, TimeUnit.SECONDS);
-  }
-
-  private void registerExecutionPlanCreators(Injector injector) {
-    injector.getInstance(ExecutionPlanCreatorRegistrar.class).register();
   }
 
   private void registerAuthFilters(NextGenConfiguration configuration, Environment environment, Injector injector) {

@@ -25,13 +25,11 @@ import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
-import io.harness.tasks.ProgressData;
 import io.harness.timeout.TimeoutDetails;
 
 import com.google.common.collect.ImmutableList;
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -99,9 +97,9 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   List<StepOutcomeRef> outcomeRefs;
 
-  Map<String, List<ProgressData>> progressDataMap;
-
   @Singular List<UnitProgress> unitProgresses;
+
+  org.bson.Document progressData;
 
   AdviserResponse adviserResponse;
   // Timeouts for advisers
@@ -189,6 +187,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
                  .name("parentId_status_idx")
                  .field(NodeExecutionKeys.parentId)
                  .field(NodeExecutionKeys.status)
+                 .field(NodeExecutionKeys.oldRetry)
                  .build())
         .build();
   }

@@ -7,6 +7,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.accesscontrol.common.filter.ManagedFilter;
 import io.harness.accesscontrol.permissions.Permission;
 import io.harness.accesscontrol.permissions.PermissionFilter;
+import io.harness.accesscontrol.permissions.PermissionFilter.IncludedInAllRolesFilter;
 import io.harness.accesscontrol.permissions.PermissionService;
 import io.harness.accesscontrol.permissions.PermissionStatus;
 import io.harness.accesscontrol.roleassignments.RoleAssignment;
@@ -42,6 +43,8 @@ public class RoleServiceImpl implements RoleService {
   private final PermissionService permissionService;
   private final ScopeService scopeService;
   private final RoleAssignmentService roleAssignmentService;
+  private static final Set<PermissionStatus> ALLOWED_PERMISSION_STATUS =
+      Sets.newHashSet(PermissionStatus.EXPERIMENTAL, PermissionStatus.ACTIVE, PermissionStatus.DEPRECATED);
 
   @Inject
   public RoleServiceImpl(RoleDao roleDao, PermissionService permissionService, ScopeService scopeService,
@@ -56,6 +59,7 @@ public class RoleServiceImpl implements RoleService {
   public Role create(Role role) {
     validateScopes(role);
     validatePermissions(role);
+    addCompulsoryPermissions(role);
     return roleDao.create(role);
   }
 
@@ -83,6 +87,7 @@ public class RoleServiceImpl implements RoleService {
       throw new InvalidRequestException("Cannot change the the scopes at which this role can be used.");
     }
     validatePermissions(roleUpdate);
+    addCompulsoryPermissions(roleUpdate);
     roleUpdate.setVersion(currentRole.getVersion());
     roleUpdate.setCreatedAt(currentRole.getCreatedAt());
     roleUpdate.setLastModifiedAt(currentRole.getLastModifiedAt());
@@ -93,6 +98,11 @@ public class RoleServiceImpl implements RoleService {
   @Override
   public boolean removePermissionFromRoles(String permissionIdentifier) {
     return roleDao.removePermissionFromRoles(permissionIdentifier);
+  }
+
+  @Override
+  public boolean addPermissionToRoles(String permissionIdentifier, RoleFilter roleFilter) {
+    return roleDao.addPermissionToRoles(permissionIdentifier, roleFilter);
   }
 
   @Override
@@ -122,11 +132,9 @@ public class RoleServiceImpl implements RoleService {
   }
 
   private void validatePermissions(Role role) {
-    Set<PermissionStatus> allowedPermissionStatus =
-        Sets.newHashSet(PermissionStatus.EXPERIMENTAL, PermissionStatus.ACTIVE, PermissionStatus.DEPRECATED);
     PermissionFilter permissionFilter = PermissionFilter.builder()
                                             .identifierFilter(role.getPermissions())
-                                            .statusFilter(allowedPermissionStatus)
+                                            .statusFilter(ALLOWED_PERMISSION_STATUS)
                                             .allowedScopeLevelsFilter(role.getAllowedScopeLevels())
                                             .build();
     List<Permission> permissionList = permissionService.list(permissionFilter);
@@ -155,5 +163,19 @@ public class RoleServiceImpl implements RoleService {
             scopeLevel, scopeLevel));
       }
     }
+  }
+
+  private void addCompulsoryPermissions(Role role) {
+    PermissionFilter permissionFilter =
+        PermissionFilter.builder()
+            .allowedScopeLevelsFilter(role.getAllowedScopeLevels())
+            .statusFilter(ALLOWED_PERMISSION_STATUS)
+            .includedInAllRolesFilter(IncludedInAllRolesFilter.PERMISSIONS_INCLUDED_IN_ALL_ROLES)
+            .build();
+    List<Permission> permissionList = permissionService.list(permissionFilter);
+    permissionList = permissionList == null ? new ArrayList<>() : permissionList;
+    Set<String> compulsoryPermissions =
+        permissionList.stream().map(Permission::getIdentifier).collect(Collectors.toSet());
+    role.getPermissions().addAll(compulsoryPermissions);
   }
 }

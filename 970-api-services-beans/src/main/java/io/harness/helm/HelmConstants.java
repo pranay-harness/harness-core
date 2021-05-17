@@ -1,12 +1,17 @@
 package io.harness.helm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import java.util.concurrent.TimeUnit;
 
 /**
  * Created by anubhaw on 3/23/18.
  */
+@OwnedBy(CDP)
 public final class HelmConstants {
   public static final String HELM_PATH_PLACEHOLDER = "${HELM_PATH}";
 
@@ -21,6 +26,9 @@ public final class HelmConstants {
   public static final String USERNAME = "${USERNAME}";
   public static final String PASSWORD = "${PASSWORD}";
   public static final String HELM_HOME_PATH_FLAG = "${HELM_HOME_PATH_FLAG}";
+  public static final String WORKING_DIR_BASE = "./repository/helm-values/";
+  public static final String VALUES_YAML = "values.yaml";
+  public static final String CHARTS_YAML_KEY = "Chart.yaml";
 
   public static final class V2Commands {
     // The reason we are using ^ and $ before and after ${RELEASE_NAME} is because helm list doesn't take releaseName as

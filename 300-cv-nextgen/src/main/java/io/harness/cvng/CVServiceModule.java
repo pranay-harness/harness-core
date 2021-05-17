@@ -1,5 +1,9 @@
 package io.harness.cvng;
 
+import static io.harness.cvng.cdng.services.impl.CVNGNotifyEventListener.CVNG_ORCHESTRATION;
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
@@ -61,6 +65,7 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.CVConfigTransformer;
 import io.harness.cvng.core.services.api.CVEventService;
 import io.harness.cvng.core.services.api.CVNGLogService;
+import io.harness.cvng.core.services.api.CVNGYamlSchemaService;
 import io.harness.cvng.core.services.api.CVSetupService;
 import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
@@ -76,6 +81,7 @@ import io.harness.cvng.core.services.api.MonitoringSourceImportStatusCreator;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.NewRelicService;
 import io.harness.cvng.core.services.api.OnboardingService;
+import io.harness.cvng.core.services.api.PrometheusService;
 import io.harness.cvng.core.services.api.SplunkService;
 import io.harness.cvng.core.services.api.StackdriverService;
 import io.harness.cvng.core.services.api.TimeSeriesRecordService;
@@ -87,6 +93,7 @@ import io.harness.cvng.core.services.impl.AppDynamicsServiceImpl;
 import io.harness.cvng.core.services.impl.CVConfigServiceImpl;
 import io.harness.cvng.core.services.impl.CVEventServiceImpl;
 import io.harness.cvng.core.services.impl.CVNGLogServiceImpl;
+import io.harness.cvng.core.services.impl.CVNGYamlSchemaServiceImpl;
 import io.harness.cvng.core.services.impl.CVSetupServiceImpl;
 import io.harness.cvng.core.services.impl.DSConfigServiceImpl;
 import io.harness.cvng.core.services.impl.DataCollectionTaskServiceImpl;
@@ -101,6 +108,8 @@ import io.harness.cvng.core.services.impl.NewRelicCVConfigTransformer;
 import io.harness.cvng.core.services.impl.NewRelicDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.NewRelicServiceImpl;
 import io.harness.cvng.core.services.impl.OnboardingServiceImpl;
+import io.harness.cvng.core.services.impl.PrometheusCVConfigTransformer;
+import io.harness.cvng.core.services.impl.PrometheusServiceImpl;
 import io.harness.cvng.core.services.impl.SplunkCVConfigTransformer;
 import io.harness.cvng.core.services.impl.SplunkDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.SplunkServiceImpl;
@@ -136,14 +145,30 @@ import io.harness.cvng.verificationjob.services.impl.VerificationJobServiceImpl;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
-import io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventListener;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.redis.RedisConfig;
+import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
+import io.harness.serializer.CvNextGenRegistrars;
+import io.harness.serializer.jackson.HarnessJacksonModule;
 import io.harness.threading.ThreadPool;
+import io.harness.waiter.AbstractWaiterModule;
 import io.harness.waiter.AsyncWaitEngineImpl;
 import io.harness.waiter.WaitNotifyEngine;
-import io.harness.waiter.WaiterModule;
+import io.harness.waiter.WaiterConfiguration;
+import io.harness.waiter.WaiterConfiguration.PersistenceLayer;
+import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
+import software.wings.jersey.JsonViews;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.introspect.Annotated;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.databind.jsontype.NamedType;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -153,7 +178,9 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import io.dropwizard.jackson.Jackson;
 import java.time.Clock;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -177,7 +204,13 @@ public class CVServiceModule extends AbstractModule {
    */
   @Override
   protected void configure() {
-    install(WaiterModule.getInstance());
+    install(YamlSdkModule.getInstance());
+    install(new AbstractWaiterModule() {
+      @Override
+      public WaiterConfiguration waiterConfiguration() {
+        return WaiterConfiguration.builder().persistenceLayer(PersistenceLayer.MORPHIA).build();
+      }
+    });
     bind(ExecutorService.class)
         .toInstance(ThreadPool.create(1, 20, 5, TimeUnit.SECONDS,
             new ThreadFactoryBuilder()
@@ -224,6 +257,9 @@ public class CVServiceModule extends AbstractModule {
     bind(CVConfigTransformer.class)
         .annotatedWith(Names.named(DataSourceType.NEW_RELIC.name()))
         .to(NewRelicCVConfigTransformer.class);
+    bind(CVConfigTransformer.class)
+        .annotatedWith(Names.named(DataSourceType.PROMETHEUS.name()))
+        .to(PrometheusCVConfigTransformer.class);
     bind(CVConfigTransformer.class)
         .annotatedWith(Names.named(DataSourceType.SPLUNK.name()))
         .to(SplunkCVConfigTransformer.class);
@@ -318,6 +354,8 @@ public class CVServiceModule extends AbstractModule {
     // We are dependent on source of truth (Manager) for this.
     bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
     bind(CVNGStepTaskService.class).to(CVNGStepTaskServiceImpl.class);
+    bind(PrometheusService.class).to(PrometheusServiceImpl.class);
+    bind(CVNGYamlSchemaService.class).to(CVNGYamlSchemaServiceImpl.class);
   }
 
   private void bindTheMonitoringSourceImportStatusCreators() {
@@ -338,7 +376,7 @@ public class CVServiceModule extends AbstractModule {
   @Provides
   @Singleton
   public AsyncWaitEngine asyncWaitEngine(WaitNotifyEngine waitNotifyEngine) {
-    return new AsyncWaitEngineImpl(waitNotifyEngine, NgOrchestrationNotifyEventListener.NG_ORCHESTRATION);
+    return new AsyncWaitEngineImpl(waitNotifyEngine, CVNG_ORCHESTRATION);
   }
 
   @Provides
@@ -350,5 +388,41 @@ public class CVServiceModule extends AbstractModule {
         new ThreadFactoryBuilder().setNameFormat("cvngParallelExecutor-%d").setPriority(Thread.MIN_PRIORITY).build());
     Runtime.getRuntime().addShutdownHook(new Thread(() -> cvngParallelExecutor.shutdownNow()));
     return cvngParallelExecutor;
+  }
+
+  @Provides
+  @Named("yaml-schema-mapper")
+  @Singleton
+  public ObjectMapper getYamlSchemaObjectMapper() {
+    ObjectMapper objectMapper = Jackson.newObjectMapper();
+    configureYAMLSchemaObjectMapper(objectMapper);
+    return objectMapper;
+  }
+
+  @Provides
+  @Singleton
+  List<YamlSchemaRootClass> yamlSchemaRootClasses() {
+    return ImmutableList.<YamlSchemaRootClass>builder().addAll(CvNextGenRegistrars.yamlSchemaRegistrars).build();
+  }
+
+  private void configureYAMLSchemaObjectMapper(final ObjectMapper mapper) {
+    final AnnotationAwareJsonSubtypeResolver subtypeResolver =
+        AnnotationAwareJsonSubtypeResolver.newInstance(mapper.getSubtypeResolver());
+    mapper.setSubtypeResolver(subtypeResolver);
+    mapper.setConfig(mapper.getSerializationConfig().withView(JsonViews.Public.class));
+    mapper.setAnnotationIntrospector(new JacksonAnnotationIntrospector() {
+      @Override
+      public List<NamedType> findSubtypes(Annotated a) {
+        final List<NamedType> subtypesFromSuper = super.findSubtypes(a);
+        if (isNotEmpty(subtypesFromSuper)) {
+          return subtypesFromSuper;
+        }
+        return emptyIfNull(subtypeResolver.findSubtypes(a));
+      }
+    });
+    mapper.registerModule(new Jdk8Module());
+    mapper.registerModule(new GuavaModule());
+    mapper.registerModule(new JavaTimeModule());
+    mapper.registerModule(new HarnessJacksonModule());
   }
 }

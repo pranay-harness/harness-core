@@ -1,9 +1,11 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.HINGER;
+import static io.harness.rule.OwnerRule.LUCAS;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.RUSHABH;
@@ -34,15 +36,22 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.FeatureName;
 import io.harness.cache.HarnessCacheManager;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateToken;
+import io.harness.delegate.beans.DelegateTokenStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.exception.AccessDeniedException;
@@ -64,6 +73,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
+import software.wings.beans.Service;
 import software.wings.beans.User;
 import software.wings.beans.User.Builder;
 import software.wings.beans.Workflow;
@@ -104,10 +114,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.MorphiaIterator;
+import org.mongodb.morphia.query.Query;
 
 /**
  * Created by anubhaw on 8/31/16.
  */
+@OwnedBy(PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class AuthServiceTest extends WingsBaseTest {
   private final String VALID_TOKEN = "VALID_TOKEN";
   private final String INVALID_TOKEN = "INVALID_TOKEN";
@@ -573,6 +588,134 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = LUCAS)
+  @Category(UnitTests.class)
+  public void shouldValidateDelegateToken_Active() {
+    DelegateToken delegateToken = DelegateToken.builder()
+                                      .accountId(ACCOUNT_ID)
+                                      .name("default")
+                                      .value(accountKey)
+                                      .status(DelegateTokenStatus.ACTIVE)
+                                      .build();
+
+    when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(true);
+
+    Query mockQuery = mock(Query.class);
+    FieldEnd<Service> fieldEnd = mock(FieldEnd.class);
+
+    MorphiaIterator<DelegateToken, DelegateToken> morphiaIterator = mock(MorphiaIterator.class);
+
+    doReturn(mockQuery).when(persistence).createQuery(DelegateToken.class);
+    doReturn(fieldEnd).when(mockQuery).field(anyString());
+    doReturn(mockQuery).when(fieldEnd).equal(any());
+
+    when(morphiaIterator.hasNext()).thenReturn(true).thenReturn(false);
+    when(morphiaIterator.next()).thenReturn(delegateToken);
+    when(mockQuery.fetch()).thenReturn(morphiaIterator);
+
+    TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
+
+    authService.validateDelegateToken(ACCOUNT_ID, tokenGenerator.getToken("https", "localhost", 9090, "hostname"));
+  }
+
+  @Test
+  @Owner(developers = LUCAS)
+  @Category(UnitTests.class)
+  public void shouldValidateDelegateTokenThrowsInvalidTokenException() {
+    DelegateToken delegateToken = DelegateToken.builder()
+                                      .accountId(ACCOUNT_ID)
+                                      .name("default")
+                                      .value(accountKey)
+                                      .status(DelegateTokenStatus.REVOKED)
+                                      .build();
+
+    when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(true);
+
+    Query mockQuery = mock(Query.class);
+    FieldEnd<Service> fieldEnd = mock(FieldEnd.class);
+
+    MorphiaIterator<DelegateToken, DelegateToken> morphiaIterator = mock(MorphiaIterator.class);
+
+    doReturn(mockQuery).when(persistence).createQuery(DelegateToken.class);
+    doReturn(fieldEnd).when(mockQuery).field(anyString());
+    doReturn(mockQuery).when(fieldEnd).equal(any());
+
+    when(morphiaIterator.hasNext()).thenReturn(false);
+    when(morphiaIterator.next()).thenReturn(delegateToken);
+    when(mockQuery.fetch()).thenReturn(morphiaIterator);
+
+    TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
+
+    assertThatThrownBy(()
+                           -> authService.validateDelegateToken(
+                               ACCOUNT_ID, tokenGenerator.getToken("https", "localhost", 9090, "hostname")))
+        .isInstanceOf(InvalidTokenException.class);
+  }
+
+  @Test
+  @Owner(developers = LUCAS)
+  @Category(UnitTests.class)
+  public void shouldValidateDelegateToken_Revoked() {
+    DelegateToken delegateTokenRevoked = DelegateToken.builder()
+                                             .accountId(ACCOUNT_ID)
+                                             .name("TokenName")
+                                             .value(accountKey)
+                                             .status(DelegateTokenStatus.REVOKED)
+                                             .build();
+    when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(true);
+
+    Query mockQuery = mock(Query.class);
+    FieldEnd<Service> fieldEnd = mock(FieldEnd.class);
+
+    MorphiaIterator<DelegateToken, DelegateToken> morphiaIterator = mock(MorphiaIterator.class);
+
+    doReturn(mockQuery).when(persistence).createQuery(DelegateToken.class);
+    doReturn(fieldEnd).when(mockQuery).field(anyString());
+    doReturn(mockQuery).when(fieldEnd).equal(any());
+
+    when(morphiaIterator.hasNext()).thenReturn(true).thenReturn(false);
+    when(morphiaIterator.next()).thenReturn(delegateTokenRevoked);
+    when(mockQuery.fetch()).thenReturn(morphiaIterator);
+
+    TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
+
+    authService.validateDelegateToken(ACCOUNT_ID, tokenGenerator.getToken("https", "localhost", 9090, "hostname"));
+  }
+
+  @Test
+  @Owner(developers = LUCAS)
+  @Category(UnitTests.class)
+  public void shouldValidateDelegateToken_FailToDecrypt() {
+    DelegateToken delegateTokenActive = DelegateToken.builder()
+                                            .accountId(ACCOUNT_ID)
+                                            .name("TokenName")
+                                            .value("InvalidTokenValue")
+                                            .status(DelegateTokenStatus.ACTIVE)
+                                            .build();
+    when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(true);
+
+    Query mockQuery = mock(Query.class);
+    FieldEnd<Service> fieldEnd = mock(FieldEnd.class);
+
+    MorphiaIterator<DelegateToken, DelegateToken> morphiaIterator = mock(MorphiaIterator.class);
+
+    doReturn(mockQuery).when(persistence).createQuery(DelegateToken.class);
+    doReturn(fieldEnd).when(mockQuery).field(anyString());
+    doReturn(mockQuery).when(fieldEnd).equal(any());
+
+    when(morphiaIterator.hasNext()).thenReturn(true).thenReturn(false);
+    when(morphiaIterator.next()).thenReturn(delegateTokenActive);
+    when(mockQuery.fetch()).thenReturn(morphiaIterator);
+
+    TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
+
+    assertThatThrownBy(()
+                           -> authService.validateDelegateToken(
+                               ACCOUNT_ID, tokenGenerator.getToken("https", "localhost", 9090, "hostname")))
+        .isInstanceOf(InvalidTokenException.class);
+  }
+
+  @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void shouldNotValidateDelegateToken() {
@@ -653,7 +796,8 @@ public class AuthServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGenerateBearerTokenWithJWTToken() throws UnsupportedEncodingException {
     when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(true);
-    Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").build();
+    Account mockAccount =
+        Account.Builder.anAccount().withUuid("kmpySmUISimoRrJL6NL73w").withAccountKey("TestAccount").build();
     User mockUser = getMockUser(mockAccount);
     mockUser.setDefaultAccountId("kmpySmUISimoRrJL6NL73w");
     mockUser.setUuid("kmpySmUISimoRrJL6NL73w");
@@ -684,7 +828,8 @@ public class AuthServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGenerateBearerTokenWithoutJWTToken() {
     when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(false);
-    Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").build();
+    Account mockAccount =
+        Account.Builder.anAccount().withUuid("kmpySmUISimoRrJL6NL73w").withAccountKey("TestAccount").build();
     User mockUser = getMockUser(mockAccount);
     mockUser.setDefaultAccountId("kmpySmUISimoRrJL6NL73w");
     mockUser.setUuid("kmpySmUISimoRrJL6NL73w");

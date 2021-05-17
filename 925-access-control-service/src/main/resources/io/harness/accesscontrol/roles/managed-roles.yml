@@ -3,6 +3,7 @@ roles:
       name: Project Admin
       description: Administrate an existing project.
       permissions:
+        - core_user_invite
         - core_project_view
         - core_project_edit
         - core_project_delete
@@ -27,6 +28,16 @@ roles:
         - core_environment_delete
         - core_environment_access
         - core_audit_view
+        - core_usergroup_view
+        - core_usergroup_manage
+        - core_user_view
+        - core_user_manage
+        - core_role_view
+        - core_role_edit
+        - core_role_delete
+        - core_resourcegroup_view
+        - core_resourcegroup_edit
+        - core_resourcegroup_delete
       allowedScopeLevels:
         - project
       managed: true
@@ -41,6 +52,10 @@ roles:
         - core_service_view
         - core_environment_view
         - core_audit_view
+        - core_usergroup_view
+        - core_user_view
+        - core_role_view
+        - core_resourcegroup_view
       allowedScopeLevels:
         - project
       managed: true
@@ -48,6 +63,7 @@ roles:
       name: Organization Admin
       description: Administer an existing organizationn
       permissions:
+        - core_user_invite
         - core_organization_view
         - core_organization_edit
         - core_organization_delete
@@ -70,6 +86,16 @@ roles:
         - core_environment_delete
         - core_environment_access
         - core_audit_view
+        - core_usergroup_view
+        - core_usergroup_manage
+        - core_user_view
+        - core_user_manage
+        - core_role_view
+        - core_role_edit
+        - core_role_delete
+        - core_resourcegroup_view
+        - core_resourcegroup_edit
+        - core_resourcegroup_delete
       allowedScopeLevels:
         - organization
       managed: true
@@ -85,6 +111,10 @@ roles:
         - core_service_view
         - core_environment_view
         - core_audit_view
+        - core_usergroup_view
+        - core_user_view
+        - core_role_view
+        - core_resourcegroup_view
       allowedScopeLevels:
         - organization
       managed: true
@@ -92,6 +122,7 @@ roles:
       name: Account Admin
       description: Administer an account
       permissions:
+        - core_user_invite
         - core_organization_view
         - core_organization_create
         - core_secret_view
@@ -111,6 +142,20 @@ roles:
         - core_environment_delete
         - core_environment_access
         - core_audit_view
+        - core_usergroup_view
+        - core_usergroup_manage
+        - core_user_view
+        - core_user_manage
+        - core_role_view
+        - core_role_edit
+        - core_role_delete
+        - core_resourcegroup_view
+        - core_resourcegroup_edit
+        - core_resourcegroup_delete
+        - core_license_view
+        - core_authsetting_view
+        - core_authsetting_edit
+        - core_authsetting_delete
       allowedScopeLevels:
         - account
       managed: true
@@ -124,6 +169,12 @@ roles:
         - core_service_view
         - core_environment_view
         - core_audit_view
+        - core_usergroup_view
+        - core_user_view
+        - core_role_view
+        - core_resourcegroup_view
+        - core_license_view
+        - core_authsetting_view
       allowedScopeLevels:
         - account
       managed: true
@@ -143,6 +194,10 @@ roles:
         - core_environment_view
         - core_environment_access
         - core_audit_view
+        - core_usergroup_view
+        - core_user_view
+        - core_role_view
+        - core_resourcegroup_view
       allowedScopeLevels:
         - project
       managed: true

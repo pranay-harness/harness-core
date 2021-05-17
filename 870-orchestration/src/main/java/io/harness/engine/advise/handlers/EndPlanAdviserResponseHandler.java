@@ -31,6 +31,7 @@ public class EndPlanAdviserResponseHandler implements AdviserResponseHandler {
           InterruptPackage.builder()
               .planExecutionId(nodeExecution.getAmbiance().getPlanExecutionId())
               .interruptType(InterruptType.ABORT_ALL)
+              .nodeExecutionId(nodeExecution.getUuid())
               .interruptConfig(
                   InterruptConfig.newBuilder()
                       .setIssuedBy(

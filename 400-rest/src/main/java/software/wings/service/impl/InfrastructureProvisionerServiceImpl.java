@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -16,7 +18,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 import static org.atteo.evo.inflector.English.plural;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.ARMResourceType;
@@ -138,7 +139,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 @OwnedBy(CDP)
 @Singleton
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(_861_CG_ORCHESTRATION_STATES)
 @ValidateOnExecution
 @Slf4j
 public class InfrastructureProvisionerServiceImpl implements InfrastructureProvisionerService {
@@ -585,12 +586,12 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Override
   public Map<String, Object> resolveProperties(Map<String, Object> contextMap, List<BlueprintProperty> properties,
       Optional<ManagerExecutionLogCallback> executionLogCallbackOptional, Optional<String> region,
-      boolean infraRefactor, String infraProvisionerTypeKey) {
+      String infraProvisionerTypeKey) {
     Map<String, Object> propertyNameEvaluatedMap = getPropertyNameEvaluatedMap(
         properties.stream()
             .map(property -> new NameValuePair(property.getName(), property.getValue(), property.getValueType()))
             .collect(toList()),
-        contextMap, infraRefactor, infraProvisionerTypeKey);
+        contextMap, infraProvisionerTypeKey);
 
     for (BlueprintProperty property : properties) {
       if (isNotEmpty(property.getFields())) {
@@ -603,14 +604,13 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         if (evaluatedValue instanceof List) {
           List<Map<String, Object>> fieldsEvaluatedList = new ArrayList<>();
           for (Object evaluatedEntry : (List) evaluatedValue) {
-            fieldsEvaluatedList.add(getPropertyNameEvaluatedMap(
-                fields, (Map<String, Object>) evaluatedEntry, infraRefactor, infraProvisionerTypeKey));
+            fieldsEvaluatedList.add(
+                getPropertyNameEvaluatedMap(fields, (Map<String, Object>) evaluatedEntry, infraProvisionerTypeKey));
           }
           propertyNameEvaluatedMap.put(propertyName, fieldsEvaluatedList);
 
         } else {
-          getPropertyNameEvaluatedMap(
-              fields, (Map<String, Object>) evaluatedValue, infraRefactor, infraProvisionerTypeKey);
+          getPropertyNameEvaluatedMap(fields, (Map<String, Object>) evaluatedValue, infraProvisionerTypeKey);
         }
       }
     }
@@ -621,14 +621,14 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
   @NotNull
   @VisibleForTesting
-  Map<String, Object> getPropertyNameEvaluatedMap(List<NameValuePair> properties, Map<String, Object> contextMap,
-      boolean infraRefactor, String infrastructureProvisionerTypeKey) {
+  Map<String, Object> getPropertyNameEvaluatedMap(
+      List<NameValuePair> properties, Map<String, Object> contextMap, String infrastructureProvisionerTypeKey) {
     Map<String, Object> propertyNameEvaluatedMap = new HashMap<>();
     for (NameValuePair property : properties) {
       if (isEmpty(property.getValue())) {
         continue;
       }
-      if (infraRefactor && !property.getValue().contains("$")) {
+      if (!property.getValue().contains("$")) {
         propertyNameEvaluatedMap.put(property.getName(), property.getValue());
         continue;
       }
@@ -639,15 +639,20 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         // ignore this exception, it is based on user input
       }
       if (evaluated == null) {
-        if (!infraRefactor || property.getValue().contains(format("${%s.", infrastructureProvisionerTypeKey))) {
+        evaluated = evaluator.substitute(property.getValue(), contextMap);
+        if (isNullString(evaluated)
+            && property.getValue().contains(format("${%s.", infrastructureProvisionerTypeKey))) {
+          log.info("Unresolved expression \"{}\" ", property.getValue());
           throw new InvalidRequestException(format("Unable to resolve \"%s\" ", property.getValue()), USER);
         }
-        log.info("Unresolved expression \"{}\" ", property.getValue());
-        evaluated = property.getValue();
       }
       propertyNameEvaluatedMap.put(property.getName(), evaluated);
     }
     return propertyNameEvaluatedMap;
+  }
+
+  private boolean isNullString(Object evaluated) {
+    return evaluated == null || "null".equals(evaluated);
   }
 
   private void addToExecutionLog(Optional<ManagerExecutionLogCallback> executionLogCallbackOptional, String msg) {
@@ -752,20 +757,22 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         DelegateTask.builder()
             .accountId(accountId)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
-            .data(TaskData.builder()
-                      .async(false)
-                      .taskType(TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK.name())
-                      .parameters(new Object[] {
-                          TerraformProvisionParameters.builder()
-                              .scriptPath(terraformDirectory)
-                              .sourceRepoSettingId(gitSettingAttribute.getUuid())
-                              .sourceRepo(gitConfig)
-                              .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
-                              .sourceRepoBranch(sourceRepoBranch)
-                              .commitId(commitId)
-                              .build()})
-                      .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
-                      .build())
+            .data(
+                TaskData.builder()
+                    .async(false)
+                    .taskType(TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK.name())
+                    .parameters(new Object[] {
+                        TerraformProvisionParameters.builder()
+                            .scriptPath(terraformDirectory)
+                            .sourceRepoSettingId(gitSettingAttribute.getUuid())
+                            .sourceRepo(gitConfig)
+                            .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
+                            .sourceRepoBranch(sourceRepoBranch)
+                            .commitId(commitId)
+                            .isGitHostConnectivityCheck(featureFlagService.isEnabled(GIT_HOST_CONNECTIVITY, accountId))
+                            .build()})
+                    .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
+                    .build())
             .build();
 
     DelegateResponseData notifyResponseData;
@@ -831,21 +838,22 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         DelegateTask.builder()
             .accountId(accountId)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
-            .data(TaskData.builder()
-                      .async(false)
-                      .taskType(TaskType.TERRAFORM_FETCH_TARGETS_TASK.name())
-                      .parameters(new Object[] {
-                          TerraformProvisionParameters.builder()
-                              .sourceRepoSettingId(settingAttribute.getUuid())
-                              .sourceRepo(gitConfig)
-                              .sourceRepoBranch(terraformInfrastructureProvisioner.getSourceRepoBranch())
-                              .commitId(terraformInfrastructureProvisioner.getCommitId())
-
-                              .scriptPath(normalizeScriptPath(terraformInfrastructureProvisioner.getPath()))
-                              .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
-                              .build()})
-                      .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
-                      .build())
+            .data(
+                TaskData.builder()
+                    .async(false)
+                    .taskType(TaskType.TERRAFORM_FETCH_TARGETS_TASK.name())
+                    .parameters(new Object[] {
+                        TerraformProvisionParameters.builder()
+                            .sourceRepoSettingId(settingAttribute.getUuid())
+                            .sourceRepo(gitConfig)
+                            .sourceRepoBranch(terraformInfrastructureProvisioner.getSourceRepoBranch())
+                            .commitId(terraformInfrastructureProvisioner.getCommitId())
+                            .scriptPath(normalizeScriptPath(terraformInfrastructureProvisioner.getPath()))
+                            .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
+                            .isGitHostConnectivityCheck(featureFlagService.isEnabled(GIT_HOST_CONNECTIVITY, accountId))
+                            .build()})
+                    .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
+                    .build())
             .build();
     DelegateResponseData responseData;
     try {
@@ -1020,15 +1028,17 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     List<BlueprintProperty> properties = getBlueprintProperties(infrastructureDefinition);
     addProvisionerKeys(properties, infrastructureProvisioner);
     return resolveProperties(
-        contextMap, properties, Optional.empty(), Optional.empty(), true, infrastructureProvisioner.variableKey());
+        contextMap, properties, Optional.empty(), Optional.empty(), infrastructureProvisioner.variableKey());
   }
 
   void addProvisionerKeys(List<BlueprintProperty> properties, InfrastructureProvisioner infrastructureProvisioner) {
     if (infrastructureProvisioner instanceof ShellScriptInfrastructureProvisioner) {
       properties.forEach(property -> {
-        property.setValue(format("${%s.%s}", infrastructureProvisioner.variableKey(), property.getValue()));
-        if (isNotEmpty(property.getFields())) {
-          property.getFields().forEach(field -> field.setValue(format("${%s}", field.getValue())));
+        if (property.getValue() != null) {
+          property.setValue(format("${%s.%s}", infrastructureProvisioner.variableKey(), property.getValue()));
+          if (isNotEmpty(property.getFields())) {
+            property.getFields().forEach(field -> field.setValue(format("${%s}", field.getValue())));
+          }
         }
       });
     }

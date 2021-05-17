@@ -57,11 +57,6 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
   }
 
   @Override
-  public FileBatchContentResponse getHarnessFilesOfBranch(ScmConnector scmConnector, String branch) {
-    return scmServiceGitClient.getHarnessFilesOfBranch(scmConnector, branch);
-  }
-
-  @Override
   public FileContent getLatestFile(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails) {
     return scmServiceGitClient.getLatestFile(scmConnector, gitFilePathDetails);
   }
@@ -78,8 +73,8 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
   }
 
   @Override
-  public FindFilesInBranchResponse findFilesInBranch(ScmConnector scmConnector, String branch) {
-    return scmServiceGitClient.findFilesInBranch(scmConnector, branch);
+  public FindFilesInBranchResponse findFilesInBranch(ScmConnector scmConnector, String branchName) {
+    return scmServiceGitClient.findFilesInBranch(scmConnector, branchName);
   }
 
   @Override
@@ -88,8 +83,8 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
   }
 
   @Override
-  public GetLatestCommitResponse getLatestCommit(ScmConnector scmConnector, String branch) {
-    return scmServiceGitClient.getLatestCommit(scmConnector, branch);
+  public GetLatestCommitResponse getLatestCommit(ScmConnector scmConnector, String branchName) {
+    return scmServiceGitClient.getLatestCommit(scmConnector, branchName);
   }
 
   @Override
@@ -98,13 +93,13 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
   }
 
   @Override
-  public ListCommitsResponse listCommits(ScmConnector scmConnector, String branch) {
-    return scmServiceGitClient.listCommits(scmConnector, branch);
+  public ListCommitsResponse listCommits(ScmConnector scmConnector, String branchName) {
+    return scmServiceGitClient.listCommits(scmConnector, branchName);
   }
 
   @Override
-  public FileBatchContentResponse listFiles(ScmConnector connector, List<String> filePaths, String branch) {
-    return scmServiceGitClient.getHarnessFilesOfBranch(connector, branch);
+  public FileBatchContentResponse listFiles(ScmConnector connector, List<String> foldersList, String branchName) {
+    return scmServiceGitClient.listFiles(connector, foldersList, branchName);
   }
 
   @Override

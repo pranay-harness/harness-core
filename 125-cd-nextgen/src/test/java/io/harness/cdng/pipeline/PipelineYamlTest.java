@@ -1,5 +1,6 @@
 package io.harness.cdng.pipeline;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -9,11 +10,12 @@ import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
-import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
+import io.harness.cdng.artifact.bean.yaml.SidecarArtifactWrapper;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.cdng.k8s.K8sRollingRollbackStepInfo;
@@ -59,6 +61,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDC)
 public class PipelineYamlTest extends CategoryTest {
   @Test
   @Owner(developers = ARCHIT)
@@ -129,7 +132,7 @@ public class PipelineYamlTest extends CategoryTest {
     ServiceConfig service = deploymentStage.getServiceConfig();
 
     // Test Service Tags
-    List<NGTag> tags = convertToList(service.getTags());
+    List<NGTag> tags = convertToList(service.getService().getTags());
     assertThat(tags.size()).isEqualTo(2);
     Set<String> tagStrings = tags.stream().map(tag -> tag.getKey() + ": " + tag.getValue()).collect(toSet());
     assertThat(tagStrings).containsOnly("k1: v1", "k2: v2");
@@ -150,7 +153,7 @@ public class PipelineYamlTest extends CategoryTest {
     assertThat(numberNGVariable.getValue().getValue()).isEqualTo(13);
 
     // Primary Artifacts
-    ArtifactConfig primary = serviceSpec.getArtifacts().getPrimary().getArtifactConfig();
+    ArtifactConfig primary = serviceSpec.getArtifacts().getPrimary().getSpec();
     assertThat(primary).isInstanceOf(DockerHubArtifactConfig.class);
     DockerHubArtifactConfig dockerArtifact = (DockerHubArtifactConfig) primary;
     assertThat(dockerArtifact.getImagePath()).isInstanceOf(ParameterField.class);
@@ -160,8 +163,8 @@ public class PipelineYamlTest extends CategoryTest {
     // Sidecar Artifact
     SidecarArtifactWrapper sidecarArtifactWrapper = serviceSpec.getArtifacts().getSidecars().get(0);
     SidecarArtifact sidecarArtifact = sidecarArtifactWrapper.getSidecar();
-    assertThat(sidecarArtifact.getArtifactConfig()).isInstanceOf(DockerHubArtifactConfig.class);
-    dockerArtifact = (DockerHubArtifactConfig) sidecarArtifact.getArtifactConfig();
+    assertThat(sidecarArtifact.getSpec()).isInstanceOf(DockerHubArtifactConfig.class);
+    dockerArtifact = (DockerHubArtifactConfig) sidecarArtifact.getSpec();
     assertThat(dockerArtifact.getTag()).isInstanceOf(ParameterField.class);
     assertThat(dockerArtifact.getTag().isExpression()).isTrue();
     assertThat(dockerArtifact.getTag().getExpressionValue()).isEqualTo("<+input>");
@@ -170,7 +173,7 @@ public class PipelineYamlTest extends CategoryTest {
     // Manifests
     ManifestConfigWrapper manifestConfigWrapper = serviceSpec.getManifests().get(0);
     ManifestConfig manifestConfig = manifestConfigWrapper.getManifest();
-    GitStore storeConfig = (GitStore) manifestConfig.getManifestAttributes().getStoreConfig();
+    GitStore storeConfig = (GitStore) manifestConfig.getSpec().getStoreConfig();
     assertThat(storeConfig.getPaths()).isInstanceOf(ParameterField.class);
     assertThat(storeConfig.getPaths().isExpression()).isTrue();
     assertThat(storeConfig.getPaths().getExpressionValue()).isEqualTo("<+input>");
@@ -183,7 +186,7 @@ public class PipelineYamlTest extends CategoryTest {
     // manifestOverrideSet
     manifestConfigWrapper = serviceSpec.getManifestOverrideSets().get(0).getOverrideSet().getManifests().get(0);
     manifestConfig = manifestConfigWrapper.getManifest();
-    storeConfig = (GitStore) manifestConfig.getManifestAttributes().getStoreConfig();
+    storeConfig = (GitStore) manifestConfig.getSpec().getStoreConfig();
     assertThat(storeConfig.getConnectorRef()).isInstanceOf(ParameterField.class);
     assertThat(storeConfig.getConnectorRef().isExpression()).isTrue();
     assertThat(storeConfig.getConnectorRef().getExpressionValue()).isEqualTo("<+input>");
@@ -275,15 +278,9 @@ public class PipelineYamlTest extends CategoryTest {
     // Service
     service = deploymentStage.getServiceConfig();
     assertThat(service.getUseFromStage()).isNotNull();
-    assertThat(service.getUseFromStage().getStage()).isInstanceOf(ParameterField.class);
-    assertThat(service.getUseFromStage().getStage().isExpression()).isTrue();
-    assertThat(service.getUseFromStage().getStage().getExpressionValue()).isEqualTo("<+input>");
-    assertThat(service.getUseFromStage().getStage().getInputSetValidator().getParameters()).isEqualTo("^prod*");
-    assertThat(service.getUseFromStage().getStage().getInputSetValidator().getValidatorType())
-        .isEqualTo(InputSetValidatorType.REGEX);
+    assertThat(service.getUseFromStage().getStage()).isEqualTo("prod");
     StageOverridesConfig stageOverrides = service.getStageOverrides();
-    storeConfig =
-        (GitStore) stageOverrides.getManifests().get(0).getManifest().getManifestAttributes().getStoreConfig();
+    storeConfig = (GitStore) stageOverrides.getManifests().get(0).getManifest().getSpec().getStoreConfig();
     assertThat(storeConfig.getConnectorRef()).isInstanceOf(ParameterField.class);
     assertThat(storeConfig.getConnectorRef().isExpression()).isTrue();
     assertThat(storeConfig.getConnectorRef().getExpressionValue()).isEqualTo("<+input>");

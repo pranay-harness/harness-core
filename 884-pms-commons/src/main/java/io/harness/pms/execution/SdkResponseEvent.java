@@ -6,21 +6,27 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
+import io.harness.metrics.ThreadAutoLogContext;
+import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
+import io.harness.pms.contracts.execution.events.SdkResponseEventType;
 import io.harness.queue.Queuable;
+import io.harness.queue.WithMonitoring;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Singular;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.NonFinal;
 import org.mongodb.morphia.annotations.Entity;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@OwnedBy(HarnessTeam.CDC)
 @Value
 @Builder
 @EqualsAndHashCode(callSuper = false)
@@ -29,11 +35,28 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("SdkResponseEvent")
 @HarnessEntity(exportable = false)
 @TypeAlias("SdkResponseEvent")
-public class SdkResponseEvent extends Queuable {
-  @Singular List<SdkResponseEventInternal> sdkResponseEventInternals;
+@OwnedBy(HarnessTeam.PIPELINE)
+public class SdkResponseEvent extends Queuable implements WithMonitoring {
+  SdkResponseEventType sdkResponseEventType;
+  SdkResponseEventRequest sdkResponseEventRequest;
+  @Getter @Setter @NonFinal @CreatedDate Long createdAt;
+  @Setter @NonFinal @Version Long version;
 
   public AutoLogContext autoLogContext() {
     Map<String, String> logContext = new HashMap<>();
     return new AutoLogContext(logContext, OVERRIDE_NESTS);
+  }
+
+  @Override
+  public ThreadAutoLogContext metricContext() {
+    Map<String, String> logContext = new HashMap<>();
+    logContext.put("eventType", sdkResponseEventType.name());
+    logContext.put("runtimeId", sdkResponseEventRequest.getNodeExecutionId());
+    return new ThreadAutoLogContext(logContext, OVERRIDE_NESTS);
+  }
+
+  @Override
+  public String getMetricPrefix() {
+    return "sdk_response_event";
   }
 }

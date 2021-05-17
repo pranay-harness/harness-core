@@ -7,6 +7,5 @@ import io.harness.annotations.dev.OwnedBy;
 public enum InstanceSyncFlowType {
   NEW_DEPLOYMENT,
   PERPETUAL_TASK,
-  ITERATOR,
   MANUAL;
 }

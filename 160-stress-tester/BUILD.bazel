@@ -1,8 +1,8 @@
 load("@rules_java//java:defs.bzl", "java_binary")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//:macros.bzl", "run_analysis")
 
 # to run:
-# bazel run //160-stress-tester:module -- server /Users/matt/portal3/160-stress-tester/config.yml
+# bazel run //160-stress-tester:module -- server `pwd`/160-stress-tester/config.yml
 java_binary(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
@@ -32,8 +32,10 @@ java_binary(
     resources = [],
     visibility = ["//visibility:public"],
     runtime_deps = [
-        ":module",
+        ":module_deploy.jar",
     ],
 )
 
-checkstyle()
+run_analysis(
+    run_pmd = False,
+)

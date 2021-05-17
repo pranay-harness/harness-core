@@ -10,6 +10,7 @@ import static io.harness.notification.constant.NotificationServiceConstants.SLAC
 import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
@@ -46,14 +47,17 @@ import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
 import io.harness.platform.PlatformConfiguration;
 import io.harness.queue.QueueConsumer;
-import io.harness.queue.QueueController;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NotificationRegistrars;
+import io.harness.serializer.PrimaryVersionManagerRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.threading.ExecutorModule;
 import io.harness.user.UserClientModule;
 import io.harness.usergroups.UserGroupClientModule;
 import io.harness.version.VersionModule;
+import io.harness.waiter.AbstractWaiterModule;
+import io.harness.waiter.WaiterConfiguration;
+import io.harness.waiter.WaiterConfiguration.PersistenceLayer;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -124,6 +128,7 @@ public class NotificationServiceModule extends AbstractModule {
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(NotificationRegistrars.morphiaRegistrars)
+            .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -147,6 +152,12 @@ public class NotificationServiceModule extends AbstractModule {
     });
 
     install(ExecutorModule.getInstance());
+    install(new AbstractWaiterModule() {
+      @Override
+      public WaiterConfiguration waiterConfiguration() {
+        return WaiterConfiguration.builder().persistenceLayer(PersistenceLayer.MORPHIA).build();
+      }
+    });
     bind(ManagedScheduledExecutorService.class)
         .annotatedWith(Names.named("delegate-response"))
         .toInstance(new ManagedScheduledExecutorService("delegate-response"));
@@ -164,6 +175,7 @@ public class NotificationServiceModule extends AbstractModule {
         this.appConfig.getNotificationServiceConfig().getDelegateServiceGrpcConfig().getAuthority()));
 
     install(VersionModule.getInstance());
+    install(PrimaryVersionManagerModule.getInstance());
     install(new ValidationModule(getValidatorFactory()));
 
     install(new NotificationPersistenceModule());
@@ -184,22 +196,6 @@ public class NotificationServiceModule extends AbstractModule {
     bind(NotificationService.class).to(NotificationServiceImpl.class);
     bind(NotificationTemplateService.class).to(NotificationTemplateServiceImpl.class);
     bindMessageConsumer();
-    install(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(QueueController.class).toInstance(new QueueController() {
-          @Override
-          public boolean isPrimary() {
-            return true;
-          }
-
-          @Override
-          public boolean isNotPrimary() {
-            return false;
-          }
-        });
-      }
-    });
   }
 
   @Provides

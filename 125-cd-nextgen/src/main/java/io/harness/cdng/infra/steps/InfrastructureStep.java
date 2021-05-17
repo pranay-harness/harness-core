@@ -1,11 +1,12 @@
 package io.harness.cdng.infra.steps;
 
-import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static java.lang.String.format;
 
+import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.clients.AccessControlClient;
-import io.harness.accesscontrol.clients.PermissionCheckDTO;
+import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.annotations.dev.OwnedBy;
@@ -20,12 +21,9 @@ import io.harness.cdng.infra.yaml.K8sGcpInfrastructure;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.eraro.ErrorCode;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
-import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
@@ -50,7 +48,6 @@ import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rbac.CDNGRbacPermissions;
 import io.harness.steps.EntityReferenceExtractorUtils;
-import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.executable.SyncExecutableWithRbac;
 import io.harness.walktree.visitor.SimpleVisitorFactory;
 
@@ -60,7 +57,7 @@ import com.google.inject.name.Named;
 import java.util.Collections;
 import java.util.Set;
 
-@OwnedBy(PIPELINE)
+@OwnedBy(CDC)
 public class InfrastructureStep implements SyncExecutableWithRbac<InfraStepParameters> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.INFRASTRUCTURE.getName()).build();
@@ -113,8 +110,8 @@ public class InfrastructureStep implements SyncExecutableWithRbac<InfraStepParam
         .status(Status.SUCCEEDED)
         .stepOutcome(StepOutcome.builder()
                          .outcome(infrastructureOutcome)
-                         .name(OutcomeExpressionConstants.INFRASTRUCTURE)
-                         .group(StepOutcomeGroup.STAGE.name())
+                         .name(OutcomeExpressionConstants.OUTPUT)
+                         .group(OutcomeExpressionConstants.INFRASTRUCTURE_GROUP)
                          .build())
         .unitProgressList(Collections.singletonList(UnitProgress.newBuilder()
                                                         .setUnitName(INFRASTRUCTURE_COMMAND_UNIT)
@@ -171,17 +168,11 @@ public class InfrastructureStep implements SyncExecutableWithRbac<InfraStepParam
     Set<EntityDetailProtoDTO> entityDetails =
         entityReferenceExtractorUtils.extractReferredEntities(ambiance, stepParameters.getPipelineInfrastructure());
     pipelineRbacHelper.checkRuntimePermissions(ambiance, entityDetails);
-    boolean hasAccess = accessControlClient.hasAccess(principal, principalType,
-        PermissionCheckDTO.builder()
-            .permission(CDNGRbacPermissions.ENVIRONMENT_CREATE_PERMISSION)
-            .resourceIdentifier(projectIdentifier)
-            .resourceScope(
-                ResourceScope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build())
-            .resourceType("PROJECT")
-            .build());
-    if (!hasAccess) {
-      throw new AccessDeniedException(
-          "Validation for Infrastructure Step failed", ErrorCode.NG_ACCESS_DENIED, WingsException.USER);
+    if (stepParameters.getPipelineInfrastructure().getEnvironmentRef() == null
+        || EmptyPredicate.isEmpty(stepParameters.getPipelineInfrastructure().getEnvironmentRef().getValue())) {
+      accessControlClient.checkForAccessOrThrow(Principal.of(principalType, principal),
+          ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier), Resource.of("ENVIRONMENT", null),
+          CDNGRbacPermissions.ENVIRONMENT_CREATE_PERMISSION, "Validation for Infrastructure Step failed");
     }
   }
 }

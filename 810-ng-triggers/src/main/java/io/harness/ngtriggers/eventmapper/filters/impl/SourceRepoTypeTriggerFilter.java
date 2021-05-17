@@ -1,11 +1,13 @@
 package io.harness.ngtriggers.eventmapper.filters.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_ENABLED_TRIGGER_FOR_SOURCEREPO_TYPE;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse.WebhookEventMappingResponseBuilder;
@@ -26,10 +28,11 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
+@OwnedBy(PIPELINE)
 public class SourceRepoTypeTriggerFilter implements TriggerFilter {
   @Override
   public WebhookEventMappingResponse applyFilter(FilterRequestData filterRequestData) {
-    WebhookEventMappingResponseBuilder builder = WebhookEventMappingResponse.builder();
+    WebhookEventMappingResponseBuilder builder = initWebhookEventMappingResponse(filterRequestData);
     TriggerWebhookEvent triggerWebhookEvent = filterRequestData.getWebhookPayloadData().getOriginalEvent();
     List<TriggerDetails> filteredList = null;
 
@@ -42,7 +45,7 @@ public class SourceRepoTypeTriggerFilter implements TriggerFilter {
 
     if (isEmpty(filteredList)) {
       String msg = String.format("No enabled trigger found for sourceRepoType {} for project: {}",
-          triggerWebhookEvent.getSourceRepoType(), filterRequestData.getProjectFqn());
+          triggerWebhookEvent.getSourceRepoType(), filterRequestData.getAccountId());
       log.info(msg);
       builder.failedToFindTrigger(true)
           .webhookEventResponse(WebhookEventResponseHelper.toResponse(

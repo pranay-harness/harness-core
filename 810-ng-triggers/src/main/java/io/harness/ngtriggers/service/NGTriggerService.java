@@ -30,6 +30,8 @@ public interface NGTriggerService {
   List<NGTriggerEntity> listEnabledTriggersForCurrentProject(
       String accountId, String orgIdentifier, String projectIdentifier);
 
+  List<NGTriggerEntity> listEnabledTriggersForAccount(String accountId);
+
   List<NGTriggerEntity> findTriggersForCustomWehbook(
       TriggerWebhookEvent triggerWebhookEvent, boolean isDeleted, boolean enabled);
 

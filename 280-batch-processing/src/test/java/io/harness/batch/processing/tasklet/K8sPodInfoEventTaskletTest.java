@@ -10,6 +10,7 @@ import static io.harness.rule.OwnerRule.UTSAV;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -32,10 +33,12 @@ import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.tasklet.support.HarnessServiceInfoFetcher;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.event.grpc.PublishedMessage;
+import io.harness.ff.FeatureFlagService;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.PodEvent;
 import io.harness.perpetualtask.k8s.watch.PodEvent.EventType;
@@ -86,6 +89,7 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
   @Mock private PublishedMessageDao publishedMessageDao;
   @Mock private HarnessServiceInfoFetcher harnessServiceInfoFetcher;
   @Mock private ClusterDataGenerationValidator clusterDataGenerationValidator;
+  @Mock private FeatureFlagService featureFlagService;
 
   private static final String POD_UID = "pod_uid";
   private static final String POD_NAME = "pod_name";
@@ -125,6 +129,7 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
     when(instanceDataBulkWriteService.updateList(any())).thenReturn(true);
     when(harnessServiceInfoFetcher.fetchHarnessServiceInfo(any(), any(), any(), any(), any()))
         .thenReturn(Optional.empty());
+    when(featureFlagService.isEnabled(eq(FeatureName.NODE_RECOMMENDATION_1), eq(ACCOUNT_ID))).thenReturn(false);
   }
 
   @Test

@@ -4,7 +4,6 @@ import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.pms.serializer.jackson.NGHarnessJacksonModule;
-import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 import io.harness.serializer.jackson.HarnessJacksonModule;
 
@@ -42,6 +41,5 @@ public class NGPipelineObjectMapperHelper {
     mapper.registerModule(new JavaTimeModule());
     mapper.registerModule(new HarnessJacksonModule());
     mapper.registerModule(new NGHarnessJacksonModule());
-    mapper.registerModule(new PmsBeansJacksonModule());
   }
 }

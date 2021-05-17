@@ -1,11 +1,13 @@
 package io.harness.yaml.core.variables;
 
-import io.harness.common.SwaggerConstants;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.validator.NGVariableName;
 import io.harness.visitor.helpers.variables.StringVariableVisitorHelper;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
-import io.harness.yaml.core.LevelNodeQualifierName;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -25,8 +27,9 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(NGVariableConstants.STRING_TYPE)
 @SimpleVisitorHelper(helperClass = StringVariableVisitorHelper.class)
 @TypeAlias("io.harness.yaml.core.variables.StringNGVariable")
+@OwnedBy(CDC)
 public class StringNGVariable implements NGVariable {
-  String name;
+  @NGVariableName String name;
   @ApiModelProperty(allowableValues = NGVariableConstants.STRING_TYPE) NGVariableType type = NGVariableType.STRING;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> value;
   String description;
@@ -34,13 +37,6 @@ public class StringNGVariable implements NGVariable {
   @JsonProperty("default") String defaultValue;
 
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder()
-        .qualifierName(LevelNodeQualifierName.NG_VARIABLES + LevelNodeQualifierName.PATH_CONNECTOR + name)
-        .build();
-  }
 
   @Override
   public ParameterField<?> getCurrentValue() {

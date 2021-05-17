@@ -3,7 +3,7 @@ package io.harness.app;
 import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
-import static io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
+import static io.harness.pms.listener.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
 import static java.util.Collections.singletonList;
 
@@ -18,8 +18,6 @@ import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.exception.GeneralException;
-import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
-import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
@@ -29,8 +27,10 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.Store;
 import io.harness.persistence.UserProvider;
+import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkInitHelper;
@@ -41,6 +41,7 @@ import io.harness.queue.QueuePublisher;
 import io.harness.registrars.ExecutionAdvisers;
 import io.harness.registrars.ExecutionRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
+import io.harness.resource.VersionInfoResource;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.serializer.CiBeansRegistrars;
@@ -64,8 +65,6 @@ import io.harness.yaml.YamlSdkConfiguration;
 import io.harness.yaml.YamlSdkInitHelper;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
-
-import software.wings.security.ThreadLocalUserProvider;
 
 import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -225,7 +224,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     modules.add(new AbstractMongoModule() {
       @Override
       public UserProvider userProvider() {
-        return new ThreadLocalUserProvider();
+        return new NoopUserProvider();
       }
     });
 
@@ -233,7 +232,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     addGuiceValidationModule(modules);
     modules.add(new CIManagerServiceModule(configuration));
     modules.add(YamlSdkModule.getInstance());
-    modules.add(ExecutionPlanModule.getInstance());
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(configuration)));
 
     Injector injector = Guice.createInjector(modules);
@@ -243,14 +241,20 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     registerManagedBeans(environment, injector);
     registerHealthCheck(environment, injector);
     registerAuthFilters(configuration, environment);
-    registerExecutionPlanCreators(injector);
     registerCorrelationFilter(environment, injector);
     registerStores(configuration, injector);
     registerYamlSdk(injector);
     scheduleJobs(injector);
+    registerQueueListener(injector);
     log.info("Starting app done");
     MaintenanceController.forceMaintenance(false);
     LogManager.shutdown();
+  }
+
+  private void registerQueueListener(Injector injector) {
+    log.info("Initializing queue listeners...");
+    QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
+    queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 1);
   }
 
   @Override
@@ -278,6 +282,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
   }
 
   private void registerPMSSDK(CIManagerConfiguration config, Injector injector) {
@@ -362,10 +367,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         injector.getInstance(NotifyQueuePublisherRegister.class);
     notifyQueuePublisherRegister.register(
         NG_ORCHESTRATION, payload -> publisher.send(singletonList(NG_ORCHESTRATION), payload));
-  }
-
-  private void registerExecutionPlanCreators(Injector injector) {
-    injector.getInstance(CIExecutionPlanCreatorRegistrar.class).register();
   }
 
   private void registerAuthFilters(CIManagerConfiguration configuration, Environment environment) {

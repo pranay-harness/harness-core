@@ -1,5 +1,6 @@
 package software.wings.service.impl.appdynamics;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
 import static io.harness.cvng.core.services.CVNextGenConstants.ERRORS_PACK_IDENTIFIER;
 import static io.harness.cvng.core.services.CVNextGenConstants.INFRASTRUCTURE_PACK_IDENTIFIER;
 import static io.harness.cvng.core.services.CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER;
@@ -8,6 +9,7 @@ import static io.harness.rule.OwnerRule.RAGHU;
 
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -21,6 +23,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.MetricPackDTO;
@@ -32,6 +35,7 @@ import io.harness.encryption.SecretRefData;
 import io.harness.persistence.HPersistence;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.YamlUtils;
 
@@ -61,7 +65,6 @@ import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.security.SecureRandom;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -80,6 +83,7 @@ import retrofit2.Response;
 /**
  * Created by rsingh on 4/24/18.
  */
+@OwnedBy(CV)
 @Slf4j
 public class AppdynamicsApiTest extends WingsBaseTest {
   private static final SecureRandom random = new SecureRandom();
@@ -91,6 +95,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   @Inject private SecretDecryptionService secretDecryptionService;
   @Inject private RequestExecutor requestExecutor;
   @Inject private DataCollectionExecutorService dataCollectionService;
+  @Mock private SecretManagerClientService ngSecretService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private AppdynamicsRestClient appdynamicsRestClient;
   @Mock private DelegateLogService delegateLogService;
@@ -108,6 +113,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     doNothing().when(delegateLogService).save(anyString(), any(ThirdPartyApiCallLog.class));
 
     FieldUtils.writeField(appdynamicsService, "delegateProxyFactory", delegateProxyFactory, true);
+    FieldUtils.writeField(appdynamicsService, "ngSecretService", ngSecretService, true);
     FieldUtils.writeField(appdynamicsResource, "appdynamicsService", appdynamicsService, true);
     FieldUtils.writeField(delegateService, "encryptionService", encryptionService, true);
     FieldUtils.writeField(delegateService, "secretDecryptionService", secretDecryptionService, true);
@@ -115,6 +121,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     FieldUtils.writeField(delegateService, "requestExecutor", requestExecutor, true);
     FieldUtils.writeField(delegateService, "dataCollectionService", dataCollectionService, true);
     accountId = "TrPOn4AoS022KD8HzSDefA";
+    when(ngSecretService.getEncryptionDetails(any(), any())).thenReturn(emptyList());
   }
 
   @Test
@@ -206,8 +213,8 @@ public class AppdynamicsApiTest extends WingsBaseTest {
                                               .password(UUID.randomUUID().toString().toCharArray())
                                               .accountname(UUID.randomUUID().toString())
                                               .build();
-    List<AppdynamicsMetric> tierBTMetrics = delegateService.getTierBTMetrics(appDynamicsConfig, random.nextLong(),
-        random.nextLong(), Collections.emptyList(), createApiCallLog(accountId, null));
+    List<AppdynamicsMetric> tierBTMetrics = delegateService.getTierBTMetrics(
+        appDynamicsConfig, random.nextLong(), random.nextLong(), emptyList(), createApiCallLog(accountId, null));
     assertThat(tierBTMetrics).hasSize(2);
     assertThat(tierBTMetrics).isEqualTo(bts);
   }
@@ -301,8 +308,8 @@ public class AppdynamicsApiTest extends WingsBaseTest {
                                               .build();
     List<AppdynamicsMetricData> tierBTMetricData =
         delegateService.getTierBTMetricData(appDynamicsConfig, random.nextLong(), generateUuid(), generateUuid(),
-            generateUuid(), System.currentTimeMillis() - random.nextInt(), System.currentTimeMillis(),
-            Collections.emptyList(), createApiCallLog(accountId, null));
+            generateUuid(), System.currentTimeMillis() - random.nextInt(), System.currentTimeMillis(), emptyList(),
+            createApiCallLog(accountId, null));
     assertThat(tierBTMetricData).hasSize(2);
     assertThat(tierBTMetricData).isEqualTo(btData);
   }

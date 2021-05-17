@@ -1,17 +1,23 @@
 package io.harness.ng.core.invites.remote;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_USER_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformResourceTypes.USER;
 import static io.harness.ng.core.invites.remote.InviteMapper.toInviteList;
 
 import static org.apache.commons.lang3.StringUtils.stripToNull;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.accesscontrol.AccountIdentifier;
+import io.harness.accesscontrol.NGAccessControlCheck;
+import io.harness.accesscontrol.OrgIdentifier;
+import io.harness.accesscontrol.ProjectIdentifier;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.invites.remote.InviteAcceptResponse;
-import io.harness.ng.accesscontrol.user.remote.ACLAggregateFilter;
+import io.harness.ng.accesscontrol.user.ACLAggregateFilter;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.BaseNGAccess;
@@ -100,10 +106,11 @@ public class InviteResource {
   @POST
   @Path("aggregate")
   @ApiOperation(value = "Get a page of pending users for access control", nickname = "getPendingUsersAggregated")
+  @NGAccessControlCheck(resourceType = USER, permission = VIEW_USER_PERMISSION)
   public ResponseDTO<PageResponse<InviteDTO>> getPendingInvites(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @QueryParam("searchTerm") String searchTerm, @BeanParam PageRequest pageRequest,
       ACLAggregateFilter aclAggregateFilter) {
     PageResponse<InviteDTO> inviteDTOs = inviteService.getPendingInvites(

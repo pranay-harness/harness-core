@@ -10,8 +10,10 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class OutcomeExpressionConstants {
   public final String SERVICE = "service";
-  public final String INFRASTRUCTURE = "infra";
-  public final String ARTIFACTS = "ARTIFACTS";
+  public final String ARTIFACTS = "artifacts";
+  public final String MANIFESTS = "manifests";
+  public final String INFRASTRUCTURE_OUTCOME = "stage.spec.infrastructure.output";
+  public final String INFRASTRUCTURE_GROUP = "infrastructureGroup";
   public final String K8S_ROLL_OUT = "rollingOutcome";
   public final String K8S_BLUE_GREEN_OUTCOME = "k8sBlueGreenOutcome";
   public final String K8S_APPLY_OUTCOME = "k8sApplyOutcome";
@@ -21,4 +23,5 @@ public class OutcomeExpressionConstants {
   public final String ENVIRONMENT = "env";
   public final String OUTPUT = "output";
   public final String TERRAFORM_OUTPUT = "terraform";
+  public final String TERRAFORM_CONFIG = "terraformConfig";
 }

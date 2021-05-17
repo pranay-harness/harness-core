@@ -13,7 +13,7 @@ import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.execution.PlanExecution;
+import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
@@ -23,6 +23,7 @@ import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.InterruptDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.preflight.PreFlightDTO;
+import io.harness.pms.preflight.service.PreflightService;
 import io.harness.pms.rbac.PipelineRbacPermissions;
 import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
 
@@ -33,6 +34,7 @@ import io.swagger.annotations.ApiParam;
 import java.io.IOException;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -61,6 +63,7 @@ public class PlanExecutionResource {
   @Inject private final TriggeredByHelper triggeredByHelper;
   @Inject private final OrchestrationEventLogRepository orchestrationEventLogRepository;
   @Inject private final AccessControlClient accessControlClient;
+  @Inject private final PreflightService preflightService;
 
   @POST
   @Path("/{identifier}")
@@ -73,16 +76,15 @@ public class PlanExecutionResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier @NotEmpty String pipelineIdentifier,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
       @ApiParam(hidden = true) String inputSetPipelineYaml) throws IOException {
-    PlanExecution planExecution = pipelineExecuteHelper.runPipelineWithInputSetPipelineYaml(accountId, orgIdentifier,
-        projectIdentifier, pipelineIdentifier, inputSetPipelineYaml,
+    PlanExecutionResponseDto planExecutionResponseDto = pipelineExecuteHelper.runPipelineWithInputSetPipelineYaml(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetPipelineYaml,
         ExecutionTriggerInfo.newBuilder()
             .setTriggerType(MANUAL)
             .setTriggeredBy(triggeredByHelper.getFromSecurityContext())
             .build());
-    PlanExecutionResponseDto planExecutionResponseDto =
-        PlanExecutionResponseDto.builder().planExecution(planExecution).build();
     return ResponseDTO.newResponse(planExecutionResponseDto);
   }
 
@@ -97,16 +99,16 @@ public class PlanExecutionResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier @NotEmpty String pipelineIdentifier,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
       @NotNull @Valid MergeInputSetRequestDTOPMS mergeInputSetRequestDTO) throws IOException {
     ExecutionTriggerInfo triggerInfo = ExecutionTriggerInfo.newBuilder()
                                            .setTriggerType(MANUAL)
                                            .setTriggeredBy(triggeredByHelper.getFromSecurityContext())
                                            .build();
-    PlanExecution planExecution = pipelineExecuteHelper.runPipelineWithInputSetReferencesList(accountId, orgIdentifier,
-        projectIdentifier, pipelineIdentifier, mergeInputSetRequestDTO.getInputSetReferences(), triggerInfo);
     PlanExecutionResponseDto planExecutionResponseDto =
-        PlanExecutionResponseDto.builder().planExecution(planExecution).build();
+        pipelineExecuteHelper.runPipelineWithInputSetReferencesList(accountId, orgIdentifier, projectIdentifier,
+            pipelineIdentifier, mergeInputSetRequestDTO.getInputSetReferences(), triggerInfo);
     return ResponseDTO.newResponse(planExecutionResponseDto);
   }
 
@@ -120,7 +122,7 @@ public class PlanExecutionResource {
       @NotNull @QueryParam("interruptType") PlanExecutionInterruptType executionInterruptType,
       @NotNull @PathParam("planExecutionId") String planExecutionId) {
     PipelineExecutionSummaryEntity executionSummaryEntity =
-        pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId);
+        pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId, false);
 
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of("PIPELINE", executionSummaryEntity.getPipelineIdentifier()),
@@ -169,8 +171,9 @@ public class PlanExecutionResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier @NotEmpty String pipelineIdentifier,
-      @ApiParam(hidden = true) String inputSetPipelineYaml) throws IOException {
-    return ResponseDTO.newResponse(pipelineExecuteHelper.startPreflightCheck(
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo, @ApiParam(hidden = true) String inputSetPipelineYaml)
+      throws IOException {
+    return ResponseDTO.newResponse(preflightService.startPreflightCheck(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetPipelineYaml));
   }
 
@@ -183,7 +186,7 @@ public class PlanExecutionResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam("preflightCheckId") String preflightCheckId,
       @ApiParam(hidden = true) String inputSetPipelineYaml) {
-    return ResponseDTO.newResponse(pipelineExecuteHelper.getPreflightCheckResponse(preflightCheckId));
+    return ResponseDTO.newResponse(preflightService.getPreflightCheckResponse(preflightCheckId));
   }
 
   @GET

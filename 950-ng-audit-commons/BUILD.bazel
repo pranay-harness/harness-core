@@ -1,11 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
+load("//:macros.bzl", "run_analysis")
 
 shared_dependencies = [
     "//:lombok",
@@ -25,15 +20,4 @@ java_library(
     deps = shared_dependencies,
 )
 
-checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":maven_deps",
-        ":module",
-    ],
-)
-
-pmd()
+run_analysis()

@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
+import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
@@ -28,4 +29,8 @@ public interface NextGenService {
   int getEnvironmentCount(String accountId, String orgIdentifier, String projectIdentifier);
 
   ProjectDTO getProject(String accountIdentifier, String orgIdentifier, String projectIdentifier);
+
+  ProjectDTO getCachedProject(String accountIdentifier, String orgIdentifier, String projectIdentifier);
+
+  OrganizationDTO getOrganization(String accountIdentifier, String orgIdentifier);
 }

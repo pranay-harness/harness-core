@@ -16,6 +16,7 @@ import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -31,7 +32,7 @@ public class DeploymentSummary implements PersistentEntity {
     // TODO add more indexes
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("unique_identification")
+                 .name("unique_account_org_project_id")
                  .unique(true)
                  .field(DeploymentSummaryKeys.accountIdentifier)
                  .field(DeploymentSummaryKeys.orgIdentifier)
@@ -40,6 +41,7 @@ public class DeploymentSummary implements PersistentEntity {
         .build();
   }
 
+  @Id @org.mongodb.morphia.annotations.Id private String id;
   private String accountIdentifier;
   private String orgIdentifier;
   private String projectIdentifier;

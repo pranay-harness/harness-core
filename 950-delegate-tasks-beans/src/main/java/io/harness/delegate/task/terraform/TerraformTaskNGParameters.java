@@ -1,18 +1,22 @@
 package io.harness.delegate.task.terraform;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 import static io.harness.expression.Expression.DISALLOW_SECRETS;
 
-import static java.util.Collections.emptyList;
-
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
+import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
+import io.harness.delegate.capability.ProcessExecutionCapabilityHelper;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.expression.ExpressionReflectionUtils.NestedAnnotationResolver;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
 
@@ -25,7 +29,8 @@ import lombok.Value;
 @Value
 @Builder
 @OwnedBy(CDP)
-public class TerraformTaskNGParameters implements TaskParameters, ExecutionCapabilityDemander {
+public class TerraformTaskNGParameters
+    implements TaskParameters, ExecutionCapabilityDemander, NestedAnnotationResolver {
   @NonNull String accountId;
   String currentStateFileId;
 
@@ -33,15 +38,18 @@ public class TerraformTaskNGParameters implements TaskParameters, ExecutionCapab
   @NonNull String entityId;
   String workspace;
   @NonNull GitFetchFilesConfig configFile;
-  List<GitFetchFilesConfig> remoteVarfiles;
-  @Expression(ALLOW_SECRETS) List<String> inlineVarFiles;
+  @Expression(ALLOW_SECRETS) List<TerraformVarFileInfo> varFileInfos;
   @Expression(ALLOW_SECRETS) String backendConfig;
   @Expression(DISALLOW_SECRETS) List<String> targets;
   @Expression(ALLOW_SECRETS) Map<String, String> environmentVariables;
   boolean saveTerraformStateJson;
+  long timeoutInMillis;
 
   // For plan
   TerraformCommand terraformCommand;
+
+  // To aid in logging
+  TerraformCommandUnit terraformCommandUnit;
 
   // For Apply when inheriting from plan
   EncryptionConfig encryptionConfig;
@@ -50,7 +58,32 @@ public class TerraformTaskNGParameters implements TaskParameters, ExecutionCapab
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    // ToDo: Implement me
-    return emptyList();
+    List<ExecutionCapability> capabilities = ProcessExecutionCapabilityHelper.generateExecutionCapabilitiesForTerraform(
+        configFile.getGitStoreDelegateConfig().getEncryptedDataDetails(), maskingEvaluator);
+    if (configFile != null) {
+      capabilities.add(GitConnectionNGCapability.builder()
+                           .gitConfig((GitConfigDTO) configFile.getGitStoreDelegateConfig().getGitConfigDTO())
+                           .encryptedDataDetails(configFile.getGitStoreDelegateConfig().getEncryptedDataDetails())
+                           .sshKeySpecDTO(configFile.getGitStoreDelegateConfig().getSshKeySpecDTO())
+                           .build());
+    }
+    if (varFileInfos != null && isNotEmpty(varFileInfos)) {
+      for (TerraformVarFileInfo varFileInfo : varFileInfos) {
+        if (varFileInfo instanceof RemoteTerraformVarFileInfo) {
+          GitFetchFilesConfig gitFetchFilesConfig = ((RemoteTerraformVarFileInfo) varFileInfo).getGitFetchFilesConfig();
+          capabilities.add(
+              GitConnectionNGCapability.builder()
+                  .gitConfig((GitConfigDTO) gitFetchFilesConfig.getGitStoreDelegateConfig().getGitConfigDTO())
+                  .encryptedDataDetails(gitFetchFilesConfig.getGitStoreDelegateConfig().getEncryptedDataDetails())
+                  .sshKeySpecDTO(gitFetchFilesConfig.getGitStoreDelegateConfig().getSshKeySpecDTO())
+                  .build());
+        }
+      }
+    }
+    if (encryptionConfig != null) {
+      capabilities.addAll(
+          EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilityForSecretManager(encryptionConfig, null));
+    }
+    return capabilities;
   }
 }

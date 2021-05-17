@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.QUEUED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
@@ -19,6 +20,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -37,8 +41,10 @@ import org.mockito.Mock;
 /**
  * Created by sgurubelli on 7/30/18.
  */
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ExecutionEventListenerTest extends WingsBaseTest {
-  @Inject @InjectMocks private ExecutionEventListener executionEventListener;
+  @Inject @InjectMocks private software.wings.service.impl.ExecutionEventListener executionEventListener;
   @Inject private HPersistence persistence;
   @Mock private StateMachineExecutor stateMachineExecutor;
   @Mock private AppService appService;
@@ -105,9 +111,8 @@ public class ExecutionEventListenerTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  public void shouldQueueWorkflowInfraRefactor() throws Exception {
+  public void shouldQueueWorkflow() throws Exception {
     when(appService.getAccountIdByAppId(any())).thenReturn(ACCOUNT_ID);
-    //    when(featureFlagService.isEnabled(any(), any())).thenReturn(true);
     WorkflowExecution queuedExecution = WorkflowExecution.builder()
                                             .infraDefinitionIds(asList(INFRA_DEFINITION_ID))
                                             .appId(APP_ID)

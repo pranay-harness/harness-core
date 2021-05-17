@@ -50,6 +50,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>960-persistence</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>970-ng-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

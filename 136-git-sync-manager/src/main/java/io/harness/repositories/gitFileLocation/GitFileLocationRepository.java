@@ -20,8 +20,8 @@ public interface GitFileLocationRepository
   long countByProjectIdAndOrganizationIdAndAccountIdAndScopeAndEntityType(
       String projectId, String orgId, String accountId, Scope scope, String entityType);
 
-  Optional<GitFileLocation> findByEntityIdentifierFQNAndEntityTypeAndAccountId(
-      String fqn, String entityType, String accountId);
+  Optional<GitFileLocation> findByEntityIdentifierFQNAndEntityTypeAndAccountIdAndBranch(
+      String fqn, String entityType, String accountId, String branch);
 
   Optional<GitFileLocation> findByEntityGitPathAndGitSyncConfigIdAndAccountId(
       String entityGitPath, String gitSyncConfigId, String accountId);

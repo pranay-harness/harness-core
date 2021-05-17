@@ -3,6 +3,7 @@ package io.harness.migration;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.migration.entities.NGSchema;
 
 import java.util.List;
 
@@ -14,7 +15,12 @@ public interface MigrationProvider {
   String getServiceName();
 
   /**
+   * @return a Entity class that will extend NGSchema class
+   */
+  Class<? extends NGSchema> getSchemaClass();
+
+  /**
    * @return list of all the Migrations for a service
    */
-  List<MigrationDetails> getMigrationDetailsList();
+  List<Class<? extends MigrationDetails>> getMigrationDetailsList();
 }

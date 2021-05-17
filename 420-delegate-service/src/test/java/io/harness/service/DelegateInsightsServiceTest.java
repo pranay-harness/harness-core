@@ -1,6 +1,5 @@
 package io.harness.service;
 
-import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.NICOLAS;
 
@@ -9,21 +8,22 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.DelegateServiceTestBase;
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.DelegateInsightsBarDetails;
+import io.harness.delegate.beans.DelegateInsightsDetails;
+import io.harness.delegate.beans.DelegateInsightsType;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.service.impl.DelegateInsightsServiceImpl;
 import io.harness.service.intfc.DelegateCache;
 
-import software.wings.beans.DelegateInsightsBarDetails;
-import software.wings.beans.DelegateInsightsDetails;
 import software.wings.beans.DelegateInsightsSummary;
-import software.wings.beans.DelegateInsightsType;
 import software.wings.beans.DelegateTaskUsageInsights;
 import software.wings.beans.DelegateTaskUsageInsights.DelegateTaskUsageInsightsKeys;
 import software.wings.beans.DelegateTaskUsageInsightsEventType;
@@ -37,7 +37,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-@OwnedBy(DEL)
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateInsightsServiceTest extends DelegateServiceTestBase {
   private static final String TEST_ACCOUNT_ID = "testAccountId";
   private static final String TEST_TASK_ID = "testTaskId";

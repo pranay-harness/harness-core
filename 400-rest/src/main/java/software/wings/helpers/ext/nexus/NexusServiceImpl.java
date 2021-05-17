@@ -8,7 +8,9 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
@@ -33,10 +35,8 @@ import java.io.InputStream;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javax.net.ssl.SSLHandshakeException;
@@ -51,6 +51,7 @@ import retrofit2.Retrofit;
  * Created by srinivas on 3/28/17.
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._960_API_SERVICES)
 @Singleton
 @Slf4j
 public class NexusServiceImpl implements NexusService {
@@ -198,45 +199,6 @@ public class NexusServiceImpl implements NexusService {
   }
 
   @Override
-  public List<String> getGroupIdPathsUsingPrivateApis(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String repositoryFormat) {
-    List<String> groupIds = new ArrayList<>();
-    try {
-      return timeLimiter.callWithTimeout(
-          ()
-              -> nexusThreeService.collectGroupIds(nexusConfig, encryptionDetails, repoId, groupIds, repositoryFormat),
-          5L, TimeUnit.MINUTES, true);
-    } catch (WingsException e) {
-      throw e;
-    } catch (SocketTimeoutException e) {
-      throw new ArtifactServerException(
-          "Timed out while connecting to the nexus server " + nexusConfig.getNexusUrl() + " under repo " + repoId, e,
-          USER);
-    } catch (TimeoutException e) {
-      throw new ArtifactServerException("Timed out while fetching images/groups from Nexus server "
-              + nexusConfig.getNexusUrl() + " under repo " + repoId,
-          e, USER);
-    } catch (Exception e) {
-      log.error(
-          "Failed to fetch images/groups from Nexus server " + nexusConfig.getNexusUrl() + " under repo " + repoId, e);
-      if (e.getCause() instanceof XMLStreamException) {
-        throw new InvalidArtifactServerException("Nexus may not be running", e);
-      } else if (e.getCause() instanceof SocketTimeoutException) {
-        throw new ArtifactServerException(
-            "Timed out while connecting to the nexus server " + nexusConfig.getNexusUrl() + " under repo " + repoId,
-            e.getCause(), USER);
-      } else if (e.getCause() instanceof TimeoutException) {
-        throw new ArtifactServerException("Timed out while fetching images/groups from Nexus server "
-                + nexusConfig.getNexusUrl() + " under repo " + repoId,
-            e.getCause(), USER);
-      } else {
-        throw new ArtifactServerException(
-            "Failed to fetch images/groups from Nexus xxxxxxxx " + e.getMessage(), e.getCause(), USER);
-      }
-    }
-  }
-
-  @Override
   public List<String> getArtifactPaths(
       NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId) {
     try {
@@ -317,36 +279,16 @@ public class NexusServiceImpl implements NexusService {
   }
 
   @Override
-  public List<String> getArtifactNamesUsingPrivateApis(NexusConfig nexusConfig,
-      List<EncryptedDataDetail> encryptionDetails, String repoId, String path, String repositoryFormat) {
-    Set<String> artifactIds = new HashSet<>();
-    try {
-      if (repositoryFormat.equals(RepositoryFormat.maven.name())) {
-        return timeLimiter.callWithTimeout(
-            ()
-                -> new ArrayList<>(nexusThreeService.getArtifactNamesUsingPrivateApis(
-                    nexusConfig, encryptionDetails, repoId, path, artifactIds, repositoryFormat)),
-            5L, TimeUnit.MINUTES, true);
-      }
-    } catch (final Exception e) {
-      throw new ArtifactServerException(
-          format("Failed to fetch artifactIds for Repository %s under path %s", repoId, path), e);
-    }
-    return new ArrayList<>();
-  }
-
-  @Override
   public List<BuildDetails> getVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoId, String groupId, String artifactName, String extension, String classifier,
-      boolean supportForNexusGroupReposEnabled) {
+      String repoId, String groupId, String artifactName, String extension, String classifier) {
     try {
       boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
       if (isNexusTwo) {
         return nexusTwoService.getVersions(
             nexusConfig, encryptionDetails, repoId, groupId, artifactName, extension, classifier);
       } else {
-        return nexusThreeService.getVersions(nexusConfig, encryptionDetails, repoId, groupId, artifactName, extension,
-            classifier, supportForNexusGroupReposEnabled);
+        return nexusThreeService.getVersions(
+            nexusConfig, encryptionDetails, repoId, groupId, artifactName, extension, classifier);
       }
     } catch (final IOException e) {
       log.error(
@@ -387,15 +329,13 @@ public class NexusServiceImpl implements NexusService {
 
   @Override
   public List<BuildDetails> getVersions(String repositoryFormat, NexusConfig nexusConfig,
-      List<EncryptedDataDetail> encryptionDetails, String repoId, String packageName,
-      boolean supportForNexusGroupReposEnabled) {
+      List<EncryptedDataDetail> encryptionDetails, String repoId, String packageName) {
     try {
       boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
       if (isNexusTwo) {
         return nexusTwoService.getVersions(repositoryFormat, nexusConfig, encryptionDetails, repoId, packageName);
       } else {
-        return nexusThreeService.getPackageVersions(
-            nexusConfig, encryptionDetails, repoId, packageName, supportForNexusGroupReposEnabled);
+        return nexusThreeService.getPackageVersions(nexusConfig, encryptionDetails, repoId, packageName);
       }
     } catch (final IOException e) {
       log.error(

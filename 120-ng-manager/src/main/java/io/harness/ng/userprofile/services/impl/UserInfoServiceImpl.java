@@ -1,4 +1,3 @@
-
 package io.harness.ng.userprofile.services.impl;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -15,13 +14,17 @@ import io.harness.user.remote.UserClient;
 
 import com.google.inject.Inject;
 import java.util.Optional;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @OwnedBy(HarnessTeam.PL)
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserInfoServiceImpl implements UserInfoService {
   @Inject private UserClient userClient;
 
   @Override
-  public UserInfo get() {
+  public UserInfo getCurrentUser() {
     Optional<String> userEmail = getUserEmail();
     if (userEmail.isPresent()) {
       Optional<UserInfo> userInfo = RestClientUtils.getResponse(userClient.getUserByEmailId(userEmail.get()));

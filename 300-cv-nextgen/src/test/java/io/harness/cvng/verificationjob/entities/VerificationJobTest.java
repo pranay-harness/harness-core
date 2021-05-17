@@ -2,9 +2,11 @@ package io.harness.cvng.verificationjob.entities;
 
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.DURATION_KEY;
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.ENV_IDENTIFIER_KEY;
+import static io.harness.cvng.verificationjob.CVVerificationJobConstants.SENSITIVITY_KEY;
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.SERVICE_IDENTIFIER_KEY;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -53,7 +55,6 @@ public class VerificationJobTest extends CategoryTest {
     testFieldForNotNull(VerificationJobKeys.envIdentifier);
     testFieldForNotNull(VerificationJobKeys.serviceIdentifier);
     testFieldForNotNull(VerificationJobKeys.serviceIdentifier);
-    testFieldForNotNull(VerificationJobKeys.type);
     createVerificationJob().validate();
   }
 
@@ -65,6 +66,16 @@ public class VerificationJobTest extends CategoryTest {
     verificationJob = spy(verificationJob);
     verificationJob.validate();
     verify(verificationJob, times(1)).validateParams();
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testValidate_allMonitoringSourcesEnabled() {
+    VerificationJob verificationJob = createVerificationJob();
+    verificationJob.setAllMonitoringSourcesEnabled(true);
+    assertThatThrownBy(() -> verificationJob.validate())
+        .hasMessage("Monitoring Sources should be null or empty if allMonitoringSources is enabled");
   }
 
   @Test
@@ -174,6 +185,21 @@ public class VerificationJobTest extends CategoryTest {
     assertThat(resolvedVerificationJob.getServiceIdentifier()).isEqualTo(verificationJob.getServiceIdentifier());
     assertThat(resolvedVerificationJob.getEnvIdentifier()).isEqualTo(verificationJob.getEnvIdentifier());
     assertThat(resolvedVerificationJob.getDuration().toMinutes()).isEqualTo(5);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void testResolveCommonJobRuntimeParams_sensitivity() {
+    TestVerificationJob verificationJob = (TestVerificationJob) createVerificationJob();
+    verificationJob.setSensitivity("<+input>", true);
+    verificationJob.setDuration("<+input>", true);
+    Map<String, String> runtimeParams = new HashMap<>();
+    runtimeParams.put(SENSITIVITY_KEY, "High");
+
+    TestVerificationJob resolvedVerificationJob =
+        (TestVerificationJob) verificationJob.resolveVerificationJob(runtimeParams);
+    assertThat(resolvedVerificationJob.getSensitivity()).isEqualTo(Sensitivity.HIGH);
   }
 
   @Test

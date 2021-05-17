@@ -26,6 +26,7 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -73,15 +74,16 @@ public class RoleAssignmentResource {
   }
 
   @POST
-  @Path("/multi")
+  @Path("/multi/internal")
   @ApiOperation(value = "Create Multiple Role Assignments", nickname = "createRoleAssignments")
   public ResponseDTO<List<RoleAssignmentResponseDTO>> create(
       @NotNull @QueryParam(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam("managed") @DefaultValue("false") Boolean managed,
       RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO) {
     List<RoleAssignmentDTO> roleAssignmentsPayload = roleAssignmentCreateRequestDTO.getRoleAssignments();
-    return ResponseDTO.newResponse(
-        roleAssignmentService.createMulti(accountIdentifier, orgIdentifier, projectIdentifier, roleAssignmentsPayload));
+    return ResponseDTO.newResponse(roleAssignmentService.createMulti(
+        accountIdentifier, orgIdentifier, projectIdentifier, roleAssignmentsPayload, managed));
   }
 }

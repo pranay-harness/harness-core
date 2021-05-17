@@ -8,13 +8,15 @@ directories:
   125-cd-nextgen
   136-git-sync-manager
   160-model-gen-tool
-  190-deployment-functional-tests
   160-stress-tester
+  190-deployment-functional-tests
+  200-functional-test
   210-command-library-server
   220-graphql-test
   230-model-test
   250-watcher
   260-delegate
+  270-delegate-service-app
   270-verification
   280-batch-processing
   300-cv-nextgen
@@ -24,6 +26,7 @@ directories:
   340-ce-nextgen
   350-event-server
   360-cg-manager
+  374-ceng-graphql
   375-ce-graphql
   380-cg-graphql
   390-db-migration
@@ -45,15 +48,14 @@ directories:
   830-notification-service
   830-resource-group
   835-notification-senders
-  850-execution-plan
   850-ng-pipeline-commons
   860-orchestration-steps
   860-orchestration-visualization
-  870-cg-yaml-beans
   870-cg-orchestration
+  870-cg-yaml
   870-orchestration
-  871-cg-beans
   870-yaml-beans
+  871-cg-beans
   874-orchestration-delay
   876-orchestration-beans
   878-pipeline-service-utilities
@@ -63,6 +65,7 @@ directories:
   888-pms-client
   890-pms-contracts
   890-sm-core
+  900-git-sync-sdk
   910-delegate-service-driver
   910-delegate-task-grpc-service
   920-delegate-agent-beans
@@ -71,9 +74,9 @@ directories:
   925-access-control-service
   930-delegate-tasks
   930-ng-core-clients
+  930-ng-license-manager
   955-alert-beans
   955-delegate-beans
-  935-access-control-decision
   940-cg-audit-service
   940-feature-flag
   940-ng-audit-service
@@ -82,7 +85,7 @@ directories:
   940-resource-group-beans
   940-secret-manager-client
   945-ng-audit-client
-  949-git-sync-sdk
+  946-access-control-decision
   946-access-control-aggregator
   947-access-control-core
   947-access-control-decision-commons
@@ -91,11 +94,10 @@ directories:
   949-access-control-commons
   950-cg-ng-shared-orchestration-beans
   950-command-library-common
-  950-log-client
   950-common-entities
   950-delegate-tasks-beans
-  953-events-api
   950-events-framework
+  950-log-client
   950-ng-audit-commons
   950-ng-authentication-service
   950-ng-core
@@ -104,19 +106,26 @@ directories:
   950-timeout-engine
   950-wait-engine
   950-walktree-visitor
-  953-git-sync-commons
   952-scm-java-client
+  953-events-api
+  953-git-sync-commons
   954-connector-beans
   955-account-mgmt
+  955-alert-beans
+  955-delegate-beans
   955-filters-sdk
   955-outbox-sdk
   955-setup-usage-sdk
   958-migration-sdk
+  958-ng-file-service-sdk
+  959-file-service-commons
   959-psql-database-models
   960-api-services
   960-continuous-features
   960-expression-service
   960-ng-core-beans
+  960-ng-signup-beans
+  960-ng-license-beans
   960-notification-beans
   960-persistence
   960-recaster
@@ -124,16 +133,17 @@ directories:
   970-api-services-beans
   970-grpc
   970-ng-commons
-  970-telemetry-beans
   970-rbac-core
+  970-telemetry-beans
   980-commons
   990-commons-test
+  cargo
+  dockerization
+  project
   run-configurations
-  200-functional-test
+  scripts
   tools
   toolset
-  scripts
-  cargo
 
 import_run_configurations:
   run-configurations/AccessControlMicroservice.xml
@@ -145,6 +155,7 @@ import_run_configurations:
   run-configurations/CVNGApp.xml
   run-configurations/DataGenApp.xml
   run-configurations/DelegateApp.xml
+  run-configurations/DelegateServiceApp.xml
   run-configurations/EventsFrameworkTest.xml
   run-configurations/GitSyncTestApp.xml
   run-configurations/NextGenManager.xml
@@ -153,3 +164,4 @@ import_run_configurations:
   run-configurations/VerificationServiceApp.xml
   run-configurations/Watcher.xml
   run-configurations/WingsApp.xml
+  run-configurations/PipelineService.xml

@@ -2,7 +2,6 @@ package io.harness.delegate.app;
 
 import static io.harness.annotations.dev.HarnessModule._420_DELEGATE_AGENT;
 import static io.harness.configuration.DeployMode.DEPLOY_MODE;
-import static io.harness.configuration.DeployMode.isOnPrem;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
 import static io.harness.delegate.message.MessageConstants.NEW_DELEGATE;
 import static io.harness.delegate.message.MessageConstants.WATCHER_DATA;
@@ -11,12 +10,15 @@ import static io.harness.delegate.message.MessageConstants.WATCHER_PROCESS;
 import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
 import static io.harness.delegate.service.DelegateAgentServiceImpl.getDelegateId;
-import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.*;
+import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractAuthority;
+import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractScheme;
+import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractTarget;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.message.MessageService;
@@ -78,6 +80,8 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 @Slf4j
 @TargetModule(_420_DELEGATE_AGENT)
+@BreakDependencyOn("io.harness.serializer.ManagerRegistrars")
+@BreakDependencyOn("io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar")
 public class DelegateApplication {
   private static String processId = String.valueOf(ProcessControl.myProcessId());
   private static DelegateConfiguration configuration;

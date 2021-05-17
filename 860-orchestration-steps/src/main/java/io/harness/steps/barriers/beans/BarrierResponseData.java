@@ -1,6 +1,6 @@
 package io.harness.steps.barriers.beans;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.tasks.ResponseData;
@@ -8,10 +8,18 @@ import io.harness.tasks.ResponseData;
 import lombok.Builder;
 import lombok.Value;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 @Value
 @Builder
 public class BarrierResponseData implements ResponseData {
   boolean failed;
-  String errorMessage;
+  BarrierError barrierError;
+
+  @OwnedBy(PIPELINE)
+  @Value
+  @Builder
+  public static class BarrierError {
+    boolean timedOut;
+    String errorMessage;
+  }
 }

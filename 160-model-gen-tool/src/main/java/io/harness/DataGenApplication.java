@@ -9,6 +9,9 @@ import static org.mockito.Mockito.mock;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheModule;
 import io.harness.capability.CapabilityModule;
+import io.harness.cf.AbstractCfModule;
+import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.DeployMode;
 import io.harness.cvng.client.CVNGClientModule;
@@ -27,6 +30,8 @@ import io.harness.persistence.UserProvider;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.service.DelegateServiceModule;
+import io.harness.service.impl.DelegateTokenServiceImpl;
+import io.harness.service.intfc.DelegateTokenService;
 import io.harness.springdata.SpringPersistenceModule;
 import io.harness.stream.AtmosphereBroadcaster;
 import io.harness.stream.StreamModule;
@@ -170,7 +175,17 @@ public class DataGenApplication extends Application<MainConfiguration> {
         bind(CommandLibraryServiceHttpClient.class).toInstance(mock(CommandLibraryServiceHttpClient.class));
       }
     });
+    modules.add(new AbstractCfModule() {
+      @Override
+      public CfClientConfig cfClientConfig() {
+        return configuration.getCfClientConfig();
+      }
 
+      @Override
+      public CfMigrationConfig cfMigrationConfig() {
+        return configuration.getCfMigrationConfig();
+      }
+    });
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
     modules.add(new AlertModule());
@@ -259,5 +274,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     AccountServiceImpl accountService = (AccountServiceImpl) injector.getInstance(Key.get(AccountService.class));
     accountService.getAccountCrudSubject().register(
         (DelegateProfileServiceImpl) injector.getInstance(Key.get(DelegateProfileService.class)));
+    accountService.getAccountCrudSubject().register(
+        (DelegateTokenServiceImpl) injector.getInstance(Key.get(DelegateTokenService.class)));
   }
 }

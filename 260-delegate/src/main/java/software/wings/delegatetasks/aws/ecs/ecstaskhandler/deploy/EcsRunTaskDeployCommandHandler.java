@@ -11,6 +11,7 @@ import static java.time.Duration.ofSeconds;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.CommandExecutionException;
 import io.harness.exception.ExceptionUtils;
@@ -43,9 +44,9 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import groovy.lang.Singleton;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
@@ -270,7 +271,7 @@ public class EcsRunTaskDeployCommandHandler extends EcsCommandTaskHandler {
     final AwsConfig awsConfig =
         awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails, false);
     try {
-      timeLimiter.callWithTimeout(() -> {
+      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeout), () -> {
         while (true) {
           List<Task> tasks = ecsDeployCommandTaskHelper.getTasksFromTaskArn(
               awsConfig, clusterName, region, triggeredRunTaskArns, encryptedDataDetails, executionLogCallback);
@@ -312,7 +313,7 @@ public class EcsRunTaskDeployCommandHandler extends EcsCommandTaskHandler {
           executionLogCallback.saveExecutionLog(taskStatusLog);
           sleep(ofSeconds(10));
         }
-      }, timeout, TimeUnit.MINUTES, true);
+      });
     } catch (UncheckedTimeoutException e) {
       executionLogCallback.saveExecutionLog(
           "Timed out waiting for run tasks to complete", LogLevel.ERROR, CommandExecutionStatus.FAILURE);

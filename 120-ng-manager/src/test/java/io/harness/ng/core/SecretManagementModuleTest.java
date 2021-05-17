@@ -2,6 +2,7 @@ package io.harness.ng.core;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.VIKAS;
+import static io.harness.secretmanagerclient.SecretManagementClientModule.SECRET_MANAGER_CLIENT_SERVICE;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -15,9 +16,7 @@ import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.govern.ProviderModule;
 import io.harness.ng.core.activityhistory.service.NGActivityService;
 import io.harness.ng.core.api.NGSecretManagerService;
-import io.harness.ng.core.api.NGSecretService;
 import io.harness.ng.core.api.impl.NGSecretManagerServiceImpl;
-import io.harness.ng.core.api.impl.NGSecretServiceImpl;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
 import io.harness.outbox.api.OutboxService;
 import io.harness.redis.RedisConfig;
@@ -33,10 +32,12 @@ import io.harness.service.DelegateGrpcClientWrapper;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -103,6 +104,13 @@ public class SecretManagementModuleTest extends CategoryTest {
         return mock(NGActivityService.class);
       }
     });
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      SecretManagerClientService registerNGSecretManagerClientService() {
+        return mock(SecretManagerClientService.class);
+      }
+    });
     modules.add(new EventsFrameworkModule(EventsFrameworkConfiguration.builder()
                                               .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
                                               .build()));
@@ -130,11 +138,8 @@ public class SecretManagementModuleTest extends CategoryTest {
     assertThat(ngSecretManagerService).isNotNull();
     assertThat(ngSecretManagerService).isInstanceOf(NGSecretManagerServiceImpl.class);
 
-    NGSecretService ngSecretService = injector.getInstance(NGSecretService.class);
-    assertThat(ngSecretService).isNotNull();
-    assertThat(ngSecretService).isInstanceOf(NGSecretServiceImpl.class);
-
-    SecretManagerClientService secretManagerClientService = injector.getInstance(SecretManagerClientService.class);
+    SecretManagerClientService secretManagerClientService =
+        injector.getInstance(Key.get(SecretManagerClientService.class, Names.named(SECRET_MANAGER_CLIENT_SERVICE)));
     assertThat(secretManagerClientService).isNotNull();
     assertThat(secretManagerClientService).isInstanceOf(SecretManagerClientServiceImpl.class);
   }

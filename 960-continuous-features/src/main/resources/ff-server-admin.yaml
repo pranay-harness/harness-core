@@ -76,6 +76,7 @@ paths:
                 - archived
       security:
         - BearerAuth: []
+        - ApiKeyAuth: []
       responses:
         '201':
           description: Created
@@ -102,6 +103,7 @@ paths:
         - $ref: '#/components/parameters/pageSize'
       security:
         - BearerAuth: []
+        - ApiKeyAuth: []
       responses:
         '200':
           $ref: '#/components/responses/FeaturesResponse'
@@ -126,6 +128,7 @@ paths:
         - $ref: '#/components/parameters/environmentOptionalQueryParam'
       security:
         - BearerAuth: []
+        - ApiKeyAuth: []
       responses:
         '200':
           $ref: '#/components/responses/FeatureResponse'
@@ -182,6 +185,7 @@ paths:
                 - instructions
       security:
         - BearerAuth: []
+        - ApiKeyAuth: []
       responses:
         '200':
           $ref: '#/components/responses/FeatureResponse'
@@ -208,6 +212,7 @@ paths:
         - $ref: '#/components/parameters/projectQueryParam'
       security:
         - BearerAuth: []
+        - ApiKeyAuth: []
       responses:
         '204':
           description: No content
@@ -221,12 +226,16 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 components:
   securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: api-key
     BearerAuth:
       type: http
       scheme: bearer
   parameters:
     accountQueryParam:
-      name: account
+      name: accountIdentifier
       in: query
       required: true
       description: Account

@@ -11,6 +11,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -30,6 +32,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateProfileResourceNgTest {
   private static final String TEST_ACCOUNT_ID = generateUuid();
   private static final String TEST_DELEGATE_PROFILE_ID = generateUuid();
@@ -55,12 +58,13 @@ public class DelegateProfileResourceNgTest {
     pageResponse.setResponse(Collections.singletonList(DelegateProfileDetailsNg.builder().build()));
     pageResponse.setTotal(1L);
 
-    when(delegateProfileManagerNgService.list(TEST_ACCOUNT_ID, pageRequest)).thenReturn(pageResponse);
+    when(delegateProfileManagerNgService.list(TEST_ACCOUNT_ID, pageRequest, "orgId", "projectId"))
+        .thenReturn(pageResponse);
 
     RestResponse<PageResponse<DelegateProfileDetailsNg>> restResponse =
-        delegateProfileNgResource.list(pageRequest, TEST_ACCOUNT_ID);
+        delegateProfileNgResource.list(pageRequest, TEST_ACCOUNT_ID, "orgId", "projectId");
 
-    verify(delegateProfileManagerNgService, times(1)).list(TEST_ACCOUNT_ID, pageRequest);
+    verify(delegateProfileManagerNgService, times(1)).list(TEST_ACCOUNT_ID, pageRequest, "orgId", "projectId");
     assertThat(restResponse.getResource().size()).isEqualTo(1);
     assertThat(restResponse.getResource().get(0)).isNotNull();
   }

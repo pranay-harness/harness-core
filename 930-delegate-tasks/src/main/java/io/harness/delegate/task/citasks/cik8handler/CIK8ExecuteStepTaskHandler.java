@@ -1,9 +1,15 @@
 package io.harness.delegate.task.citasks.cik8handler;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static java.lang.String.format;
+
 import io.harness.delegate.beans.ci.CIExecuteStepTaskParams;
 import io.harness.delegate.beans.ci.CIK8ExecuteStepTaskParams;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
 import io.harness.delegate.task.citasks.CIExecuteStepTaskHandler;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.product.ci.engine.proto.ExecuteStepRequest;
 import io.harness.product.ci.engine.proto.LiteEngineGrpc;
@@ -19,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CIK8ExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
   @NotNull private Type type = Type.K8;
+  public static final String DELEGATE_NAMESPACE = "DELEGATE_NAMESPACE";
 
   @Override
   public Type getType() {
@@ -41,7 +48,15 @@ public class CIK8ExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
           .build();
     }
 
-    String target = String.format("%s:%d", cik8ExecuteStepTaskParams.getIp(), cik8ExecuteStepTaskParams.getPort());
+    String namespacedDelegateSvcEndpoint =
+        getNamespacedDelegateSvcEndpoint(cik8ExecuteStepTaskParams.getDelegateSvcEndpoint());
+    log.info("Delegate service endpoint for step {}: {}", executeStepRequest.getStep().getId(),
+        namespacedDelegateSvcEndpoint);
+    if (isNotEmpty(namespacedDelegateSvcEndpoint)) {
+      executeStepRequest = executeStepRequest.toBuilder().setDelegateSvcEndpoint(namespacedDelegateSvcEndpoint).build();
+    }
+
+    String target = format("%s:%d", cik8ExecuteStepTaskParams.getIp(), cik8ExecuteStepTaskParams.getPort());
     ManagedChannelBuilder managedChannelBuilder = ManagedChannelBuilder.forTarget(target).usePlaintext();
     if (!cik8ExecuteStepTaskParams.isLocal()) {
       managedChannelBuilder.proxyDetector(GrpcUtil.NOOP_PROXY_DETECTOR);
@@ -65,5 +80,20 @@ public class CIK8ExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
           .errorMessage(e.getMessage())
           .build();
     }
+  }
+
+  private String getNamespacedDelegateSvcEndpoint(String delegateSvcEndpoint) {
+    String namespace = System.getenv(DELEGATE_NAMESPACE);
+    if (isEmpty(namespace)) {
+      return delegateSvcEndpoint;
+    }
+
+    String[] svcArr = delegateSvcEndpoint.split(":");
+    if (svcArr.length != 2) {
+      throw new InvalidArgumentsException(
+          format("Delegate service endpoint provided is invalid: %s", delegateSvcEndpoint));
+    }
+
+    return format("%s.%s.svc.cluster.local:%s", svcArr[0], namespace, svcArr[1]);
   }
 }

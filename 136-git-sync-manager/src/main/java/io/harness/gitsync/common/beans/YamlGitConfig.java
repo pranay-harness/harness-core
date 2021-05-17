@@ -63,7 +63,6 @@ public class YamlGitConfig implements PersistentEntity, UuidAware, CreatedAtAwar
   List<YamlGitConfigDTO.RootFolder> rootFolders;
   YamlGitConfigDTO.RootFolder defaultRootFolder;
   @NotNull private ConnectorType gitConnectorType;
-
   @CreatedBy private EmbeddedUser createdBy;
   @CreatedDate private long createdAt;
   @LastModifiedBy private EmbeddedUser lastUpdatedBy;

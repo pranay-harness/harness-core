@@ -24,12 +24,13 @@ import io.harness.git.GitClientHelper;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
+import io.harness.plancreator.steps.common.StageElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.stateutils.buildstate.ConnectorUtils;
-import io.harness.steps.StepOutcomeGroup;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -49,7 +50,6 @@ public class GitBuildStatusUtility {
   private static final String GITHUB_PENDING = "pending";
   private static final String BITBUCKET_FAILED = "FAILED";
   private static final String BITBUCKET_SUCCESS = "SUCCESSFUL";
-  private static final String BITBUCKET_STOPPED = "STOPPED";
   private static final String BITBUCKET_PENDING = "INPROGRESS";
   private static final String GITLAB_FAILED = "failed";
   private static final String GITLAB_CANCELED = "canceled";
@@ -67,9 +67,11 @@ public class GitBuildStatusUtility {
   }
 
   public void sendStatusToGit(NodeExecution nodeExecution, Ambiance ambiance, String accountId) {
-    IntegrationStageStepParametersPMS integrationStageStepParameters = RecastOrchestrationUtils.fromDocument(
-        nodeExecution.getResolvedStepParameters(), IntegrationStageStepParametersPMS.class);
+    StageElementParameters stageElementParameters =
+        RecastOrchestrationUtils.fromDocument(nodeExecution.getResolvedStepParameters(), StageElementParameters.class);
 
+    IntegrationStageStepParametersPMS integrationStageStepParameters =
+        (IntegrationStageStepParametersPMS) stageElementParameters.getSpecConfig();
     BuildStatusUpdateParameter buildStatusUpdateParameter =
         integrationStageStepParameters.getBuildStatusUpdateParameter();
 
@@ -102,11 +104,11 @@ public class GitBuildStatusUtility {
 
         String taskId = delegateGrpcClientWrapper.submitAsyncTask(delegateTaskRequest, Duration.ZERO);
         log.info("Submitted git status update request for stage {}, planId {}, commitId {}, status {} with taskId {}",
-            buildStatusUpdateParameter.getIdentifier(), nodeExecution.getStatus().name(),
+            buildStatusUpdateParameter.getIdentifier(), ambiance.getPlanExecutionId(),
             buildStatusUpdateParameter.getSha(), buildStatusUpdateParameter.getState(), taskId);
       } else {
         log.info("Skipping git status update request for stage {}, planId {}, commitId {}, status {}, scm type {}",
-            buildStatusUpdateParameter.getIdentifier(), nodeExecution.getStatus().name(),
+            buildStatusUpdateParameter.getIdentifier(), ambiance.getPlanExecutionId(),
             buildStatusUpdateParameter.getSha(), buildStatusUpdateParameter.getState(),
             ciBuildStatusPushParameters.getGitSCMType());
       }
@@ -214,7 +216,7 @@ public class GitBuildStatusUtility {
     if (status == Status.ERRORED) {
       return GITHUB_ERROR;
     }
-    if (status == Status.ABORTED || status == Status.FAILED) {
+    if (status == Status.ABORTED || status == Status.FAILED || status == Status.EXPIRED) {
       return GITHUB_FAILED;
     }
     if (status == Status.SUCCEEDED) {
@@ -231,7 +233,7 @@ public class GitBuildStatusUtility {
   }
 
   private String getGitLabStatus(Status status) {
-    if (status == Status.ERRORED || status == Status.FAILED) {
+    if (status == Status.ERRORED || status == Status.FAILED || status == Status.EXPIRED) {
       return GITLAB_FAILED;
     }
     if (status == Status.ABORTED) {
@@ -254,8 +256,8 @@ public class GitBuildStatusUtility {
     if (status == Status.ERRORED) {
       return BITBUCKET_FAILED;
     }
-    if (status == Status.ABORTED || status == Status.FAILED) {
-      return BITBUCKET_STOPPED;
+    if (status == Status.ABORTED || status == Status.FAILED || status == Status.EXPIRED) {
+      return BITBUCKET_FAILED;
     }
     if (status == Status.SUCCEEDED) {
       return BITBUCKET_SUCCESS;

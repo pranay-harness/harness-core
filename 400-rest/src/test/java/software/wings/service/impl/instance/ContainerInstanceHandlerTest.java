@@ -58,6 +58,7 @@ import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
+import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.k8s.model.HarnessLabels;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
@@ -95,7 +96,6 @@ import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.response.K8sInstanceSyncResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.impl.ContainerMetadata;

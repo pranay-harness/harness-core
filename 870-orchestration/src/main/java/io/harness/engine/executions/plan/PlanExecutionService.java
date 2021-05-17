@@ -29,5 +29,10 @@ public interface PlanExecutionService extends StepStatusUpdate {
 
   List<PlanExecution> findAllByPlanExecutionIdIn(List<String> planExecutionIds);
 
-  Status calculateEndStatus(String planExecutionId);
+  List<PlanExecution> findPrevUnTerminatedPlanExecutionsByExecutionTag(
+      PlanExecution planExecution, String executionTag);
+
+  Status calculateStatus(String planExecutionId);
+
+  PlanExecution updateCalculatedStatus(String planExecutionId);
 }

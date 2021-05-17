@@ -1,13 +1,21 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//:macros.bzl", "run_analysis")
 load("//:tools/bazel/JavaPackageRules.bzl", "java_package")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+
+HarnessTeam = "GTM"
 
 shared_dependencies = [
     "//:lombok",
     "//930-ng-core-clients:module",
+    "//940-notification-client:module",
+    "//950-ng-authentication-service:module",
+    "//955-account-mgmt:module",
     "//960-ng-core-beans:module",
+    "//960-notification-beans:module",
+    "//960-notification-beans/src/main/proto:960_notification_beans_java_proto",
+    "//970-telemetry-beans:module",
+    "@maven//:org_mindrot_jbcrypt",
 ]
 
 java_library(
@@ -17,6 +25,26 @@ java_library(
     deps = shared_dependencies,
 )
 
-checkstyle()
+java_library(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":module",
+        "//:lombok",
+        "//950-telemetry:module",
+        "//960-persistence:supporter-test",
+        "//990-commons-test:module",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_powermock_powermock_core",
+        "@maven//:org_powermock_powermock_module_junit4",
+        "@maven//:org_reflections_reflections",
+    ],
+)
 
-pmd()
+run_tests()
+
+run_analysis()

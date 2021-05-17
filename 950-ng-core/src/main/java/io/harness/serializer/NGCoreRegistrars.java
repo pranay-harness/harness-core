@@ -15,6 +15,7 @@ public class NGCoreRegistrars {
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(NGCoreBeansRegistrars.kryoRegistrars)
           .addAll(PersistenceRegistrars.kryoRegistrars)
+          .addAll(ConnectorBeansRegistrars.kryoRegistrars)
           .add(NGCoreKryoRegistrar.class)
           .build();
 
@@ -22,6 +23,7 @@ public class NGCoreRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(NGCoreBeansRegistrars.morphiaRegistrars)
           .addAll(SetupUsageRegistrars.morphiaRegistrars)
+          .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .add(NGCoreMorphiaClassesRegistrar.class)
           .build();
 

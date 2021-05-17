@@ -1,22 +1,20 @@
 package io.harness.serializer.morphia;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
-import io.harness.steps.approval.stage.ApprovalStageStepParameters;
 import io.harness.steps.approval.step.entities.ApprovalInstance;
 import io.harness.steps.approval.step.harness.entities.HarnessApprovalInstance;
 import io.harness.steps.approval.step.jira.entities.JiraApprovalInstance;
-import io.harness.steps.barriers.BarrierStepParameters;
+import io.harness.steps.barriers.BarrierSpecParameters;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierOutcome;
-import io.harness.steps.cf.FeatureUpdateStepParameters;
+import io.harness.steps.cf.FlagConfigurationStepParameters;
 import io.harness.steps.dummy.DummySectionOutcome;
 import io.harness.steps.dummy.DummySectionStepParameters;
 import io.harness.steps.fork.ForkStepParameters;
-import io.harness.steps.resourcerestraint.ResourceRestraintStepParameters;
+import io.harness.steps.resourcerestraint.ResourceRestraintSpecParameters;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintOutcome;
 import io.harness.steps.section.SectionStepParameters;
@@ -25,7 +23,7 @@ import io.harness.steps.section.chain.SectionChainStepParameters;
 
 import java.util.Set;
 
-@OwnedBy(CDC)
+@OwnedBy(HarnessTeam.PIPELINE)
 public class OrchestrationStepsMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
@@ -38,9 +36,9 @@ public class OrchestrationStepsMorphiaRegistrar implements MorphiaRegistrar {
 
   @Override
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
-    h.put("steps.barriers.BarrierStepParameters", BarrierStepParameters.class);
+    h.put("steps.barriers.BarrierSpecParameters", BarrierSpecParameters.class);
     h.put("steps.barriers.beans.BarrierOutcome", BarrierOutcome.class);
-    h.put("steps.resourcerestraint.ResourceRestraintStepParameters", ResourceRestraintStepParameters.class);
+    h.put("steps.resourcerestraint.ResourceRestraintSpecParameters", ResourceRestraintSpecParameters.class);
     h.put("steps.resourcerestraint.beans.ResourceRestraintOutcome", ResourceRestraintOutcome.class);
     h.put("steps.dummy.DummySectionOutcome", DummySectionOutcome.class);
     h.put("steps.dummy.DummySectionStepParameters", DummySectionStepParameters.class);
@@ -48,9 +46,8 @@ public class OrchestrationStepsMorphiaRegistrar implements MorphiaRegistrar {
     h.put("steps.section.chain.SectionChainPassThroughData", SectionChainPassThroughData.class);
     h.put("steps.section.chain.SectionStepParameters", SectionChainStepParameters.class);
     h.put("steps.section.SectionStepParameters", SectionStepParameters.class);
-    h.put("steps.approval.ApprovalStageStepParameters", ApprovalStageStepParameters.class);
 
     // Feature Flag
-    h.put("steps.cf.FeatureUpdateStepParameters", FeatureUpdateStepParameters.class);
+    h.put("steps.cf.FlagConfigurationStepParameters", FlagConfigurationStepParameters.class);
   }
 }

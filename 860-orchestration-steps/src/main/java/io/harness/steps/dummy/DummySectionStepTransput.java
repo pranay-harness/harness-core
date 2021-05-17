@@ -18,9 +18,4 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("dummySectionStepTransput")
 public class DummySectionStepTransput implements ExecutionSweepingOutput {
   Map<String, String> map;
-
-  @Override
-  public String getType() {
-    return "dummySectionStepTransput";
-  }
 }

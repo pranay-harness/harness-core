@@ -1,14 +1,13 @@
 package software.wings.delegatetasks.azure.taskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.task.azure.request.AzureVMSSTaskParameters.AzureVMSSTaskType.AZURE_VMSS_SWITCH_ROUTE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.IVAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -16,12 +15,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureAutoScaleSettingsClient;
 import io.harness.azure.client.AzureComputeClient;
 import io.harness.azure.client.AzureNetworkClient;
 import io.harness.azure.model.AzureConfig;
 import io.harness.category.element.UnitTests;
+import io.harness.concurent.HTimeLimiterMocker;
 import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
 import io.harness.delegate.task.azure.request.AzureLoadBalancerDetailForBGDeployment;
 import io.harness.delegate.task.azure.request.AzureVMSSSwitchRouteTaskParameters;
@@ -52,6 +53,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import rx.Observable;
 
+@OwnedBy(CDP)
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureVMSSSwitchRouteTaskHandlerTest extends WingsBaseTest {
   @Mock private AzureComputeClient azureComputeClient;
@@ -133,7 +135,7 @@ public class AzureVMSSSwitchRouteTaskHandlerTest extends WingsBaseTest {
     LoadBalancer loadBalancer = mock(LoadBalancer.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
     doNothing().when(mockCallback).saveExecutionLog(anyString(), any(), any());
-    doReturn(Boolean.TRUE).when(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(mockTimeLimiter).thenReturn(Boolean.TRUE);
 
     AzureConfig azureConfig = AzureConfig.builder().build();
     when(

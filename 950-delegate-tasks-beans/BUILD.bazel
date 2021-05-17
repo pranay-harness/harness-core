@@ -1,19 +1,20 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 shared_dependencies = [
     "//950-delegate-tasks-beans/src/main/proto:950_delegate_tasks_beans_java_proto",
+    "//952-scm-java-client:module",
     "//954-connector-beans:module",
     "//955-delegate-beans:module",
-    "//952-scm-java-client:module",
+    "//959-file-service-commons:module",
     "//960-api-services:module",
     "//960-persistence:module",
     "//960-yaml-sdk:module",
-    "//970-api-services-beans:module",
     "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_service_beans_proto",
+    "//970-api-services-beans:module",
     "//970-ng-commons:module",
+    "//970-rbac-core:module",
     "//980-commons:module",
     "//:lombok",
     "@maven//:com_esotericsoftware_kryo",
@@ -60,6 +61,9 @@ java_library(
     deps = [
         ":module",
         "//:lombok",
+        "//955-delegate-beans:module",
+        "//970-rbac-core:module",
+        "//980-commons:module",
         "//990-commons-test:module",
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
@@ -70,6 +74,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

@@ -4,12 +4,8 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
-import io.harness.cdng.manifest.yaml.StoreConfig;
-import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.terraform.TFTaskType;
 import io.harness.delegate.task.terraform.TerraformCommand;
 import io.harness.delegate.task.terraform.TerraformCommandUnit;
@@ -40,7 +36,6 @@ import io.harness.supplier.ThrowingSupplier;
 import software.wings.beans.TaskType;
 
 import com.google.inject.Inject;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +59,8 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
   public TaskRequest obtainTask(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     TerraformApplyStepParameters stepParameters = (TerraformApplyStepParameters) stepElementParameters.getSpec();
-    TerraformStepConfigurationType configurationType = stepParameters.getStepConfigurationType();
+    helper.validateApplyStepParamsInline(stepParameters);
+    TerraformStepConfigurationType configurationType = stepParameters.getConfiguration().getType();
     switch (configurationType) {
       case INLINE:
         return obtainInlineTask(ambiance, stepParameters, stepElementParameters);
@@ -78,32 +74,30 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
 
   private TaskRequest obtainInlineTask(
       Ambiance ambiance, TerraformApplyStepParameters stepParameters, StepElementParameters stepElementParameters) {
+    helper.validateApplyStepConfigFilesInline(stepParameters);
+    TerrformStepConfigurationParameters configuration = stepParameters.getConfiguration();
+    TerraformExecutionDataParameters spec = configuration.getSpec();
     TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder();
     String accountId = AmbianceHelper.getAccountId(ambiance);
     builder.accountId(accountId);
-    String entityId = helper.generateFullIdentifier(stepParameters.getProvisionerIdentifier(), ambiance);
+    String provisionerIdentifier =
+        ParameterFieldHelper.getParameterFieldValue(stepParameters.getProvisionerIdentifier());
+    String entityId = helper.generateFullIdentifier(provisionerIdentifier, ambiance);
     builder.currentStateFileId(helper.getLatestFileId(entityId))
         .taskType(TFTaskType.APPLY)
         .terraformCommand(TerraformCommand.APPLY)
+        .terraformCommandUnit(TerraformCommandUnit.Apply)
         .entityId(entityId)
-        .workspace(ParameterFieldHelper.getParameterFieldValue(stepParameters.getWorkspace()))
+        .workspace(ParameterFieldHelper.getParameterFieldValue(spec.getWorkspace()))
         .configFile(helper.getGitFetchFilesConfig(
-            stepParameters.getConfigFilesWrapper().getStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
-        .inlineVarFiles(ParameterFieldHelper.getParameterFieldValue(stepParameters.getInlineVarFiles()));
-    if (EmptyPredicate.isNotEmpty(stepParameters.getRemoteVarFiles())) {
-      List<GitFetchFilesConfig> varFilesConfig = new ArrayList<>();
-      int i = 1;
-      for (StoreConfigWrapper varFileWrapper : stepParameters.getRemoteVarFiles()) {
-        varFilesConfig.add(helper.getGitFetchFilesConfig(
-            varFileWrapper.getStoreConfig(), ambiance, String.format(TerraformStepHelper.TF_VAR_FILES, i)));
-        i++;
-      }
-      builder.remoteVarfiles(varFilesConfig);
-    }
-    builder.backendConfig(ParameterFieldHelper.getParameterFieldValue(stepParameters.getBackendConfig()))
-        .targets(ParameterFieldHelper.getParameterFieldValue(stepParameters.getTargets()))
+            spec.getConfigFiles().getStore().getSpec(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
+        .varFileInfos(helper.toTerraformVarFileInfo(spec.getVarFiles(), ambiance))
+        .backendConfig(helper.getBackendConfig(spec.getBackendConfig()))
+        .targets(ParameterFieldHelper.getParameterFieldValue(spec.getTargets()))
         .saveTerraformStateJson(cdFeatureFlagHelper.isEnabled(accountId, FeatureName.EXPORT_TF_PLAN))
-        .environmentVariables(helper.getEnvironmentVariablesMap(stepParameters.getEnvironmentVariables()));
+        .environmentVariables(helper.getEnvironmentVariablesMap(spec.getEnvironmentVariables()))
+        .timeoutInMillis(
+            StepUtils.getTimeoutMillis(stepElementParameters.getTimeout(), TerraformConstants.DEFAULT_TIMEOUT));
 
     TaskData taskData =
         TaskData.builder()
@@ -113,43 +107,36 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
             .parameters(new Object[] {builder.build()})
             .build();
 
-    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer,
-        Collections.singletonList(TerraformCommandUnit.Apply.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName());
+    return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+        Collections.singletonList(TerraformCommandUnit.Apply.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName(),
+        StepUtils.getTaskSelectors(stepParameters.getDelegateSelectors()));
   }
 
   private TaskRequest obtainInheritedTask(
       Ambiance ambiance, TerraformApplyStepParameters stepParameters, StepElementParameters stepElementParameters) {
-    TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder()
-                                                   .taskType(TFTaskType.APPLY)
-                                                   .entityId(stepParameters.getProvisionerIdentifier());
+    TerraformTaskNGParametersBuilder builder =
+        TerraformTaskNGParameters.builder().taskType(TFTaskType.APPLY).terraformCommandUnit(TerraformCommandUnit.Apply);
     String accountId = AmbianceHelper.getAccountId(ambiance);
     builder.accountId(accountId);
-    String entityId = helper.generateFullIdentifier(stepParameters.getProvisionerIdentifier(), ambiance);
+    String provisionerIdentifier =
+        ParameterFieldHelper.getParameterFieldValue(stepParameters.getProvisionerIdentifier());
+    String entityId = helper.generateFullIdentifier(provisionerIdentifier, ambiance);
     builder.entityId(entityId);
     builder.currentStateFileId(helper.getLatestFileId(entityId));
-    TerraformInheritOutput inheritOutput =
-        helper.getSavedInheritOutput(stepParameters.getProvisionerIdentifier(), ambiance);
+    TerraformInheritOutput inheritOutput = helper.getSavedInheritOutput(provisionerIdentifier, ambiance);
     builder.workspace(inheritOutput.getWorkspace())
         .configFile(helper.getGitFetchFilesConfig(
-            inheritOutput.getConfigFiles(), ambiance, TerraformStepHelper.TF_CONFIG_FILES));
-    if (EmptyPredicate.isNotEmpty(inheritOutput.getRemoteVarFiles())) {
-      List<GitFetchFilesConfig> varFilesConfig = new ArrayList<>();
-      int i = 1;
-      for (StoreConfig storeConfig : inheritOutput.getRemoteVarFiles()) {
-        varFilesConfig.add(
-            helper.getGitFetchFilesConfig(storeConfig, ambiance, String.format(TerraformStepHelper.TF_VAR_FILES, i)));
-        i++;
-      }
-      builder.remoteVarfiles(varFilesConfig);
-    }
-    builder.inlineVarFiles(inheritOutput.getInlineVarFiles())
+            inheritOutput.getConfigFiles(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
+        .varFileInfos(helper.toDelegateTask(inheritOutput.getVarFileConfigs(), ambiance))
         .backendConfig(inheritOutput.getBackendConfig())
         .targets(inheritOutput.getTargets())
         .saveTerraformStateJson(cdFeatureFlagHelper.isEnabled(accountId, FeatureName.EXPORT_TF_PLAN))
         .encryptionConfig(inheritOutput.getEncryptionConfig())
         .encryptedTfPlan(inheritOutput.getEncryptedTfPlan())
         .planName(inheritOutput.getPlanName())
-        .environmentVariables(inheritOutput.getEnvironmentVariables());
+        .environmentVariables(inheritOutput.getEnvironmentVariables())
+        .timeoutInMillis(
+            StepUtils.getTimeoutMillis(stepElementParameters.getTimeout(), TerraformConstants.DEFAULT_TIMEOUT));
 
     TaskData taskData =
         TaskData.builder()
@@ -159,15 +146,16 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
             .parameters(new Object[] {builder.build()})
             .build();
 
-    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer,
-        Collections.singletonList(TerraformCommandUnit.Apply.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName());
+    return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+        Collections.singletonList(TerraformCommandUnit.Apply.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName(),
+        StepUtils.getTaskSelectors(stepParameters.getDelegateSelectors()));
   }
 
   @Override
   public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepElementParameters,
       ThrowingSupplier<TerraformTaskNGResponse> responseSupplier) throws Exception {
     TerraformApplyStepParameters stepParameters = (TerraformApplyStepParameters) stepElementParameters.getSpec();
-    TerraformStepConfigurationType configurationType = stepParameters.getStepConfigurationType();
+    TerraformStepConfigurationType configurationType = stepParameters.getConfiguration().getType();
     switch (configurationType) {
       case INLINE:
         return handleTaskResultInline(ambiance, stepParameters, responseSupplier);
@@ -179,8 +167,8 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
     }
   }
 
-  private StepResponse handleTaskResultInline(Ambiance ambiance, TerraformApplyStepParameters stepParameters,
-      ThrowingSupplier<TerraformTaskNGResponse> responseSupplier) throws Exception {
+  private StepResponseBuilder createStepResponseBuilder(ThrowingSupplier<TerraformTaskNGResponse> responseSupplier)
+      throws Exception {
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
     TerraformTaskNGResponse terraformTaskNGResponse = responseSupplier.get();
     List<UnitProgress> unitProgresses = terraformTaskNGResponse.getUnitProgressData() == null
@@ -206,22 +194,47 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
             "Unhandled type CommandExecutionStatus: " + terraformTaskNGResponse.getCommandExecutionStatus().name(),
             WingsException.USER);
     }
+    return stepResponseBuilder;
+  }
 
+  private void addStepOutcomeToStepResponse(
+      StepResponseBuilder stepResponseBuilder, TerraformTaskNGResponse terraformTaskNGResponse) {
+    stepResponseBuilder.stepOutcome(
+        StepResponse.StepOutcome.builder()
+            .name(OutcomeExpressionConstants.TERRAFORM_OUTPUT)
+            .outcome(TerraformApplyOutcome.builder()
+                         .outputs(helper.parseTerraformOutputs(terraformTaskNGResponse.getOutputs()))
+                         .build())
+            .build());
+  }
+
+  private StepResponse handleTaskResultInline(Ambiance ambiance, TerraformApplyStepParameters stepParameters,
+      ThrowingSupplier<TerraformTaskNGResponse> responseSupplier) throws Exception {
+    StepResponseBuilder stepResponseBuilder = createStepResponseBuilder(responseSupplier);
+    TerraformTaskNGResponse terraformTaskNGResponse = responseSupplier.get();
     if (CommandExecutionStatus.SUCCESS == terraformTaskNGResponse.getCommandExecutionStatus()) {
       helper.saveRollbackDestroyConfigInline(stepParameters, terraformTaskNGResponse, ambiance);
-      stepResponseBuilder.stepOutcome(
-          StepResponse.StepOutcome.builder()
-              .name(OutcomeExpressionConstants.TERRAFORM_OUTPUT)
-              .outcome(TerraformApplyOutcome.builder()
-                           .outputs(helper.parseTerraformOutputs(terraformTaskNGResponse.getOutputs()))
-                           .build())
-              .build());
+      addStepOutcomeToStepResponse(stepResponseBuilder, terraformTaskNGResponse);
+      helper.updateParentEntityIdAndVersion(
+          helper.generateFullIdentifier(
+              ParameterFieldHelper.getParameterFieldValue(stepParameters.getProvisionerIdentifier()), ambiance),
+          terraformTaskNGResponse.getStateFileId());
     }
     return stepResponseBuilder.build();
   }
 
   private StepResponse handleTaskResultInherited(Ambiance ambiance, TerraformApplyStepParameters stepParameters,
       ThrowingSupplier<TerraformTaskNGResponse> responseSupplier) throws Exception {
-    return null;
+    StepResponseBuilder stepResponseBuilder = createStepResponseBuilder(responseSupplier);
+    TerraformTaskNGResponse terraformTaskNGResponse = responseSupplier.get();
+    if (CommandExecutionStatus.SUCCESS == terraformTaskNGResponse.getCommandExecutionStatus()) {
+      helper.saveRollbackDestroyConfigInherited(stepParameters, ambiance);
+      addStepOutcomeToStepResponse(stepResponseBuilder, terraformTaskNGResponse);
+      helper.updateParentEntityIdAndVersion(
+          helper.generateFullIdentifier(
+              ParameterFieldHelper.getParameterFieldValue(stepParameters.getProvisionerIdentifier()), ambiance),
+          terraformTaskNGResponse.getStateFileId());
+    }
+    return stepResponseBuilder.build();
   }
 }

@@ -1,5 +1,11 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.infrastructure.Host;
 
 import com.github.reinert.jjschema.Attributes;
@@ -15,6 +21,8 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Transient;
 
 @FieldNameConstants(innerTypeName = "PhysicalInfrastructureMappingBaseKeys")
+@OwnedBy(CDP)
+@TargetModule(_871_CG_BEANS)
 public abstract class PhysicalInfrastructureMappingBase extends InfrastructureMapping {
   @Attributes(title = "Host Names", required = true) private List<String> hostNames;
   private List<Host> hosts;
@@ -28,7 +36,7 @@ public abstract class PhysicalInfrastructureMappingBase extends InfrastructureMa
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends InfrastructureMapping.YamlWithComputeProvider {
+  public static class Yaml extends YamlWithComputeProvider {
     private List<String> hostNames;
     private List<Host> hosts;
     private String loadBalancer;

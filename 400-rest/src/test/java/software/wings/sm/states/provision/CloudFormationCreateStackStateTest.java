@@ -30,6 +30,7 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -42,6 +43,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.GitFile;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -88,6 +90,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -132,6 +135,8 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
   @Spy private GitFileConfigHelperService gitFileConfigHelperService;
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private LogService logService;
+  @Mock private FeatureFlagService featureFlagService;
+  @Mock private StateExecutionService stateExecutionService;
 
   @InjectMocks @Spy private CloudFormationCreateStackState state = new CloudFormationCreateStackState("stateName");
 
@@ -159,6 +164,7 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
 
     SettingAttribute settingAttribute = aSettingAttribute().withValue(awsConfig).build();
     doReturn(settingAttribute).when(settingsService).get(anyString());
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   @Test

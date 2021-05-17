@@ -57,9 +57,8 @@ public class TriggerFilterHelper {
 
   public Criteria createCriteriaForCustomWebhookTriggerGetList(
       TriggerWebhookEvent triggerWebhookEvent, String searchTerm, boolean deleted, boolean enabled) {
-    Criteria criteria = createCriteriaForWebhookTriggerGetList(triggerWebhookEvent.getAccountId(),
-        triggerWebhookEvent.getOrgIdentifier(), triggerWebhookEvent.getProjectIdentifier(), emptyList(), searchTerm,
-        deleted, enabled);
+    Criteria criteria = createCriteriaForWebhookTriggerGetList(
+        triggerWebhookEvent.getAccountId(), null, null, emptyList(), searchTerm, deleted, enabled);
     if (triggerWebhookEvent.getSourceRepoType().equalsIgnoreCase(WebhookSourceRepo.CUSTOM.name())) {
       if (triggerWebhookEvent.getTriggerIdentifier() != null) {
         criteria.and(NGTriggerEntityKeys.identifier).is(triggerWebhookEvent.getTriggerIdentifier());

@@ -1,5 +1,11 @@
 package io.harness.pms.rbac;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static java.lang.String.format;
+
+import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.AccessControlDTO;
@@ -9,6 +15,7 @@ import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.AccessDeniedException;
@@ -17,51 +24,95 @@ import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
+import io.harness.pms.execution.utils.AmbianceUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 
 /**
  * Helper class to perform validation checks on EntityDetail object. It constructs the access permission on its
  * own for the given referredEntity
  */
-@Singleton
 @OwnedBy(HarnessTeam.PIPELINE)
+@Singleton
+@Slf4j
 public class PipelineRbacHelper {
   @Inject EntityDetailProtoToRestMapper entityDetailProtoToRestMapper;
   @Inject @Named("PRIVILEGED") AccessControlClient accessControlClient;
+  @Inject InternalReferredEntityExtractor internalReferredEntityExtractor;
+  private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
+  private final int MAX_ATTEMPTS = 3;
 
   public void checkRuntimePermissions(Ambiance ambiance, Set<EntityDetailProtoDTO> entityDetailsProto) {
     List<EntityDetail> entityDetails =
         entityDetailProtoToRestMapper.createEntityDetailsDTO(new ArrayList<>(entityDetailsProto));
-    ExecutionPrincipalInfo executionPrincipalInfo = ambiance.getMetadata().getPrincipalInfo();
-    String principal = executionPrincipalInfo.getPrincipal();
-    if (principal == null) {
+    checkRuntimePermissions(ambiance, entityDetails, false);
+  }
+
+  public void checkRuntimePermissions(
+      Ambiance ambiance, List<EntityDetail> entityDetails, boolean shouldExtractInternalEntities) {
+    if (isEmpty(entityDetails)) {
       return;
     }
+    ExecutionPrincipalInfo executionPrincipalInfo = ambiance.getMetadata().getPrincipalInfo();
+
+    // NOTE: rbac should not be validated for triggers so this field is set to false for trigger based execution.
+    if (!executionPrincipalInfo.getShouldValidateRbac()) {
+      return;
+    }
+    String principal = executionPrincipalInfo.getPrincipal();
+    if (EmptyPredicate.isEmpty(principal)) {
+      throw new AccessDeniedException("Execution with empty principal found. Please contact harness customer care.",
+          ErrorCode.NG_ACCESS_DENIED, WingsException.USER);
+    }
+
+    String accountId = AmbianceUtils.getAccountId(ambiance);
+    if (shouldExtractInternalEntities) {
+      entityDetails.addAll(internalReferredEntityExtractor.extractInternalEntities(accountId, entityDetails));
+    }
+
     PrincipalType principalType = PrincipalTypeProtoToPrincipalTypeMapper.convertToAccessControlPrincipalType(
         executionPrincipalInfo.getPrincipalType());
     List<PermissionCheckDTO> permissionCheckDTOS =
         entityDetails.stream().map(this::convertToPermissionCheckDTO).collect(Collectors.toList());
-    AccessCheckResponseDTO accessCheckResponseDTO =
-        accessControlClient.checkForAccess(principal, principalType, permissionCheckDTOS);
-    if (accessCheckResponseDTO == null) {
-      return;
-    }
-    List<AccessControlDTO> nonPermittedResources = accessCheckResponseDTO.getAccessControlList()
-                                                       .stream()
-                                                       .filter(accessControlDTO -> !accessControlDTO.isPermitted())
-                                                       .collect(Collectors.toList());
-    if (nonPermittedResources.size() != 0) {
-      throwAccessDeniedError(nonPermittedResources);
+
+    Optional<AccessCheckResponseDTO> accessCheckResponseDTO;
+    RetryPolicy<Object> retryPolicy = getRetryPolicy(format("[Retrying failed call to check permissions attempt: {}"),
+        format("Failed to check permissions after retrying {} times"));
+
+    if (isNotEmpty(permissionCheckDTOS)) {
+      accessCheckResponseDTO =
+          Failsafe.with(retryPolicy)
+              .get(()
+                       -> Optional.of(accessControlClient.checkForAccess(
+                           Principal.builder().principalIdentifier(principal).principalType(principalType).build(),
+                           permissionCheckDTOS)));
+
+      if (!accessCheckResponseDTO.isPresent()) {
+        return;
+      }
+
+      List<AccessControlDTO> nonPermittedResources = accessCheckResponseDTO.get()
+                                                         .getAccessControlList()
+                                                         .stream()
+                                                         .filter(accessControlDTO -> !accessControlDTO.isPermitted())
+                                                         .collect(Collectors.toList());
+      if (nonPermittedResources.size() != 0) {
+        throwAccessDeniedError(nonPermittedResources);
+      }
     }
   }
 
@@ -93,8 +144,13 @@ public class PipelineRbacHelper {
     StringBuilder errors = new StringBuilder();
     for (String resourceType : allErrors.keySet()) {
       for (String resourceIdentifier : allErrors.get(resourceType).keySet()) {
-        errors.append(String.format("For %s with identifier %s, these permissions are not there: %s.\n", resourceType,
-            resourceIdentifier, allErrors.get(resourceType).get(resourceIdentifier).toString()));
+        if (EmptyPredicate.isEmpty(resourceIdentifier)) {
+          errors.append(String.format("For %s, these permissions are not there: %s.\n", resourceType,
+              allErrors.get(resourceType).get(resourceIdentifier).toString()));
+        } else {
+          errors.append(String.format("For %s with identifier %s, these permissions are not there: %s.\n", resourceType,
+              resourceIdentifier, allErrors.get(resourceType).get(resourceIdentifier).toString()));
+        }
       }
     }
 
@@ -107,10 +163,13 @@ public class PipelineRbacHelper {
         && identifierRef.getMetadata().getOrDefault("new", "false").equals("true")) {
       return PermissionCheckDTO.builder()
           .permission(PipelineReferredEntityPermissionHelper.getPermissionForGivenType(entityDetail.getType(), true))
-          .resourceIdentifier(
-              PipelineReferredEntityPermissionHelper.getParentResourceIdentifierForCreate(identifierRef))
-          .resourceScope(PipelineReferredEntityPermissionHelper.getResourceScopeForCreate(identifierRef))
-          .resourceType(PipelineReferredEntityPermissionHelper.getEntityTypeForCreate(identifierRef))
+          .resourceIdentifier(null)
+          .resourceScope(ResourceScope.builder()
+                             .accountIdentifier(identifierRef.getAccountIdentifier())
+                             .orgIdentifier(identifierRef.getOrgIdentifier())
+                             .projectIdentifier(identifierRef.getProjectIdentifier())
+                             .build())
+          .resourceType(PipelineReferredEntityPermissionHelper.getEntityName(entityDetail.getType()))
           .build();
     }
     return PermissionCheckDTO.builder()
@@ -125,8 +184,12 @@ public class PipelineRbacHelper {
         .build();
   }
 
-  public PermissionCheckDTO convertToPermissionCheckDTO(EntityDetailProtoDTO entityDetailProto) {
-    EntityDetail entityDetail = entityDetailProtoToRestMapper.createEntityDetailDTO(entityDetailProto);
-    return convertToPermissionCheckDTO(entityDetail);
+  private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {
+    return new RetryPolicy<>()
+        .handle(Exception.class)
+        .withDelay(RETRY_SLEEP_DURATION)
+        .withMaxAttempts(MAX_ATTEMPTS)
+        .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
+        .onFailure(event -> log.error(failureMessage, event.getAttemptCount(), event.getFailure()));
   }
 }

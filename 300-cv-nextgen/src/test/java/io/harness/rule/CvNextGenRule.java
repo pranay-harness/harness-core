@@ -2,6 +2,9 @@ package io.harness.rule;
 
 import static io.harness.CvNextGenTestBase.getResourceFilePath;
 
+import io.harness.cf.AbstractCfModule;
+import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
 import io.harness.cvng.CVServiceModule;
 import io.harness.cvng.EventsFrameworkModule;
@@ -130,6 +133,17 @@ public class CvNextGenRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
         NGManagerServiceConfig.builder().managerServiceSecret("secret").ngManagerUrl("http://test-ng-host").build()));
     modules.add(new VerificationManagerClientModule("http://test-host"));
     modules.add(new MetricsModule());
+    modules.add(new AbstractCfModule() {
+      @Override
+      public CfClientConfig cfClientConfig() {
+        return CfClientConfig.builder().build();
+      }
+
+      @Override
+      public CfMigrationConfig cfMigrationConfig() {
+        return CfMigrationConfig.builder().build();
+      }
+    });
     return modules;
   }
 

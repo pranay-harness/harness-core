@@ -2,7 +2,7 @@ package io.harness.cdng.provision.terraform;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.manifest.yaml.StoreConfig;
+import io.harness.cdng.manifest.yaml.GitStoreConfig;
 import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
@@ -21,9 +21,8 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("terraformInheritOutput")
 public class TerraformInheritOutput implements ExecutionSweepingOutput {
   String workspace;
-  StoreConfig configFiles;
-  List<String> inlineVarFiles;
-  List<StoreConfig> remoteVarFiles;
+  GitStoreConfig configFiles;
+  List<TerraformVarFileConfig> varFileConfigs;
   String backendConfig;
   List<String> targets;
   Map<String, String> environmentVariables;
@@ -31,9 +30,4 @@ public class TerraformInheritOutput implements ExecutionSweepingOutput {
   EncryptionConfig encryptionConfig;
   EncryptedRecordData encryptedTfPlan;
   String planName;
-
-  @Override
-  public String getType() {
-    return "terraformInheritOutput";
-  }
 }

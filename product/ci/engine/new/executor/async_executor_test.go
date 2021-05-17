@@ -56,7 +56,7 @@ func TestExecuteStepSuccess(t *testing.T) {
 
 	oldStepExecutor := newStepExecutor
 	defer func() { newStepExecutor = oldStepExecutor }()
-	newStepExecutor = func(tmpFilePath string, log *zap.SugaredLogger) StepExecutor {
+	newStepExecutor = func(tmpFilePath, delegateSvcEndpoint string, log *zap.SugaredLogger) StepExecutor {
 		return mockStepExecutor
 	}
 	executeStep(arg, log.Sugar())
@@ -85,7 +85,7 @@ func TestExecuteStepFail(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	oldStepExecutor := newStepExecutor
 	defer func() { newStepExecutor = oldStepExecutor }()
-	newStepExecutor = func(tmpFilePath string, log *zap.SugaredLogger) StepExecutor {
+	newStepExecutor = func(tmpFilePath, delegateSvcEndpoint string, log *zap.SugaredLogger) StepExecutor {
 		return mockStepExecutor
 	}
 	executeStep(arg, log.Sugar())

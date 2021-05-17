@@ -24,6 +24,8 @@ import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheConfig.CacheConfigBuilder;
 import io.harness.cache.CacheModule;
 import io.harness.capability.CapabilityModule;
+import io.harness.cf.AbstractCfModule;
+import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.config.PublisherConfiguration;
@@ -71,6 +73,7 @@ import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 
+import software.wings.DataStorageMode;
 import software.wings.WingsTestModule;
 import software.wings.app.AuthModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
@@ -220,6 +223,17 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
       }
     });
     addQueueModules(modules);
+    modules.add(new AbstractCfModule() {
+      @Override
+      public CfClientConfig cfClientConfig() {
+        return CfClientConfig.builder().build();
+      }
+
+      @Override
+      public CfMigrationConfig cfMigrationConfig() {
+        return CfMigrationConfig.builder().build();
+      }
+    });
 
     CacheConfigBuilder cacheConfigBuilder =
         CacheConfig.builder().disabledCaches(new HashSet<>()).cacheNamespace("harness-cache");
@@ -329,6 +343,10 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
             .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
             .build());
 
+    configuration.setFileStorageMode(DataStorageMode.MONGO);
+    configuration.setClusterName("");
+
+    configuration.setCfClientConfig(CfClientConfig.builder().build());
     configuration.setTimeScaleDBConfig(TimeScaleDBConfig.builder().build());
     configuration.setCfMigrationConfig(CfMigrationConfig.builder()
                                            .account("testAccount")

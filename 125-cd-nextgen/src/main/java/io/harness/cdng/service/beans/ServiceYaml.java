@@ -1,10 +1,11 @@
 package io.harness.cdng.service.beans;
 
-import io.harness.cdng.visitor.YamlTypes;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.visitor.helpers.serviceconfig.ServiceEntityVisitorHelper;
-import io.harness.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 
@@ -19,6 +20,7 @@ import lombok.experimental.Wither;
 @Data
 @Builder
 @SimpleVisitorHelper(helperClass = ServiceEntityVisitorHelper.class)
+@OwnedBy(CDC)
 public class ServiceYaml implements Visitable {
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) private String identifier;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private String name;
@@ -26,9 +28,4 @@ public class ServiceYaml implements Visitable {
   @Wither Map<String, String> tags;
 
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.SERVICE_ENTITY).build();
-  }
 }

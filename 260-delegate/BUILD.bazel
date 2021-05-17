@@ -1,13 +1,23 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//:macros.bzl", "run_analysis")
 load("//:macros.bzl", "test_targets_list")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:build-properties.bzl", "build_fullVersion")
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
     "@maven//:io_netty_netty_all",
+    "@maven//:io_grpc_grpc_alts",
+    "@maven//:io_grpc_grpc_api",
+    "@maven//:io_grpc_grpc_auth",
+    "@maven//:io_grpc_grpc_context",
+    "@maven//:io_grpc_grpc_core",
+    "@maven//:io_grpc_grpc_grpclb",
+    "@maven//:io_grpc_grpc_netty",
+    "@maven//:io_grpc_grpc_netty_shaded",
+    "@maven//:io_grpc_grpc_protobuf",
+    "@maven//:io_grpc_grpc_protobuf_lite",
+    "@maven//:io_grpc_grpc_services",
+    "@maven//:io_grpc_grpc_stub",
 ] + [
     "//400-rest:module",
     "//420-delegate-agent:module",
@@ -17,9 +27,7 @@ shared_dependencies = [
     "//450-ce-views:module",
     "//490-ce-commons:module",
     "//835-notification-senders:module",
-    "//850-execution-plan:module",
     "//860-orchestration-steps:module",
-    "//860-orchestration-visualization:module",
     "//870-orchestration:module",
     "//870-yaml-beans:module",
     "//876-orchestration-beans:module",
@@ -340,19 +348,6 @@ shared_dependencies = [
     "@maven//:io_github_resilience4j_resilience4j_ratelimiter",
     "@maven//:io_github_resilience4j_resilience4j_retrofit",
     "@maven//:io_github_resilience4j_resilience4j_retry",
-    "@maven//:io_grpc_grpc_alts",
-    "@maven//:io_grpc_grpc_api",
-    "@maven//:io_grpc_grpc_auth",
-    "@maven//:io_grpc_grpc_context",
-    "@maven//:io_grpc_grpc_core",
-    "@maven//:io_grpc_grpc_grpclb",
-    "@maven//:io_grpc_grpc_netty",
-    "@maven//:io_grpc_grpc_netty_shaded",
-    "@maven//:io_grpc_grpc_protobuf",
-    "@maven//:io_grpc_grpc_protobuf_lite",
-    "@maven//:io_grpc_grpc_services",
-    "@maven//:io_grpc_grpc_stub",
-    "@maven//:io_grpc_grpc_testing",
     "@maven//:io_gsonfire_gson_fire",
     "@maven//:io_jsonwebtoken_jjwt",
     "@maven//:io_kubernetes_client_java",
@@ -673,9 +668,6 @@ shared_dependencies = [
 java_binary(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
-    deploy_manifest_lines = [
-        "Application-Version: version=" + build_fullVersion,
-    ],
     main_class = "io.harness.delegate.app.DelegateApplication",
     resources = [
         "//260-delegate/src/main/resources:resource",
@@ -685,7 +677,7 @@ java_binary(
 )
 
 test_dependencies = [
-    "@delegate//:com_squareup_okhttp3_okhttp",
+    "@maven//:com_squareup_okhttp3_okhttp",
 ] + [
     "//400-rest:supporter-test",
     "//955-alert-beans:module",
@@ -726,7 +718,13 @@ java_library(
     deps = test_dependencies +
            shared_dependencies + [
         ":module",
+        "@maven//:io_grpc_grpc_testing",
     ],
 )
 
 run_tests()
+
+run_analysis(
+    run_checkstyle = False,
+    run_pmd = False,
+)

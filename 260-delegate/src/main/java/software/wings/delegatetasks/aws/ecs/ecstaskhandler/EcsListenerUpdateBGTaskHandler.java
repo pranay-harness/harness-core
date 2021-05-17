@@ -3,8 +3,10 @@ package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LogLevel.ERROR;
+import static io.harness.threading.Morpheus.sleep;
 
 import static java.lang.String.format;
+import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -81,6 +83,14 @@ public class EcsListenerUpdateBGTaskHandler extends EcsCommandTaskHandler {
           request.isRollback(), executionLogCallback);
 
       if (!request.isRollback() && request.isDownsizeOldService()) {
+        // delay when downsizeOldServiceDelayInSecs is positive and there is a service that needs to be downsized
+        if (request.isEcsBgDownsizeDelayEnabled() && request.getDownsizeOldServiceDelayInSecs() > 0l
+            && request.getServiceNameDownsized() != null) {
+          executionLogCallback.saveExecutionLog(format("Waiting for %d seconds before downsizing service %s",
+              request.getDownsizeOldServiceDelayInSecs(), request.getServiceNameDownsized()));
+          sleep(ofSeconds(request.getDownsizeOldServiceDelayInSecs()));
+        }
+
         ecsSwapRoutesCommandTaskHelper.downsizeOlderService(request.getAwsConfig(), encryptedDataDetails,
             request.getRegion(), request.getCluster(), request.getServiceNameDownsized(), executionLogCallback,
             request.getServiceSteadyStateTimeout());

@@ -92,11 +92,13 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.model.EventType;
 import io.harness.exception.GeneralException;
+import io.harness.exception.SignupException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.UserRegistrationException;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
 import io.harness.rule.Owner;
 
@@ -108,6 +110,7 @@ import software.wings.beans.AccountJoinRequest;
 import software.wings.beans.AccountRole;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.ApplicationRole;
+import software.wings.beans.Base.BaseKeys;
 import software.wings.beans.EmailVerificationToken;
 import software.wings.beans.Event.Type;
 import software.wings.beans.LicenseInfo;
@@ -119,6 +122,8 @@ import software.wings.beans.User.UserKeys;
 import software.wings.beans.UserInvite;
 import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.marketplace.MarketPlaceType;
+import software.wings.beans.security.AccessRequest;
+import software.wings.beans.security.HarnessUserGroup;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.sso.SamlSettings;
@@ -138,19 +143,22 @@ import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.authentication.LogoutResponse;
 import software.wings.security.authentication.MarketPlaceConfig;
 import software.wings.security.authentication.TOTPAuthHandler;
+import software.wings.service.impl.AccessRequestServiceImpl;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.AwsMarketPlaceApiHandlerImpl;
+import software.wings.service.impl.HarnessUserGroupServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.impl.UserServiceLimitChecker;
+import software.wings.service.intfc.AccessRequestService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EmailNotificationService;
+import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
-import software.wings.service.intfc.signup.SignupException;
 import software.wings.signup.BlackListedDomainChecker;
 import software.wings.signup.SignupServiceImpl;
 import software.wings.utils.WingsTestConstants;
@@ -166,6 +174,8 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -270,6 +280,9 @@ public class UserServiceTest extends WingsBaseTest {
   @Inject @InjectMocks SecretManager secretManager;
   @Inject @InjectMocks private AwsMarketPlaceApiHandlerImpl marketPlaceService;
   @Inject WingsPersistence realWingsPersistence;
+
+  @InjectMocks private HarnessUserGroupService harnessUserGroupService = mock(HarnessUserGroupServiceImpl.class);
+  @InjectMocks private AccessRequestService accessRequestService = mock(AccessRequestServiceImpl.class);
   private Query<User> userQuery;
 
   /**
@@ -307,6 +320,7 @@ public class UserServiceTest extends WingsBaseTest {
     userQuery = realWingsPersistence.createQuery(User.class);
     when(configurationController.isPrimary()).thenReturn(true);
     when(harnessCacheManager.getCache(anyString(), eq(String.class), eq(User.class), any())).thenReturn(cache);
+    when(harnessUserGroupService.isHarnessSupportUser(any())).thenReturn(false);
   }
 
   @Test
@@ -328,12 +342,167 @@ public class UserServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void test_fetchUserSupportAccountWithNoAccessRequest() {
+    String accountId1 = generateUuid();
+    String accountId2 = generateUuid();
+    Account account1 = Account.Builder.anAccount().withUuid(accountId1).build();
+    Account account2 = Account.Builder.anAccount().withUuid(accountId2).build();
+
+    User user = userBuilder.uuid(USER_ID).accounts(Arrays.asList(account1)).build();
+    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(user);
+    when(harnessUserGroupService.isHarnessSupportUser(USER_ID)).thenReturn(true);
+    List<Account> accountList = Arrays.asList(account2);
+    when(harnessUserGroupService.listAllowedSupportAccounts(any())).thenReturn(accountList);
+
+    user = userService.get(USER_ID);
+
+    assertThat(user.getAccounts().size()).isEqualTo(1);
+    assertThat(user.getAccounts().get(0).getUuid()).isEqualTo(account1.getUuid());
+    assertThat(user.getSupportAccounts().size()).isEqualTo(1);
+    assertThat(user.getSupportAccounts().get(0).getUuid()).isEqualTo(account2.getUuid());
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void test_fetchUserSupportAccountWithAccessRequest() {
+    String accountId1 = generateUuid();
+    String accountId2 = generateUuid();
+    String accountId3 = generateUuid();
+    Account account1 = Account.Builder.anAccount().withUuid(accountId1).build();
+    account1.setHarnessSupportAccessAllowed(false);
+    Account account2 = Account.Builder.anAccount().withUuid(accountId2).build();
+    Account account3 = Account.Builder.anAccount().withUuid(accountId3).build();
+    account3.setHarnessSupportAccessAllowed(false);
+    wingsPersistence.save(Arrays.asList(account1, account2, account3));
+
+    User user = userBuilder.uuid(USER_ID).accounts(Arrays.asList(account1)).build();
+    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(user);
+    when(harnessUserGroupService.isHarnessSupportUser(any())).thenReturn(true);
+    List<Account> accountList = Arrays.asList(account2);
+    when(harnessUserGroupService.listAllowedSupportAccounts(any())).thenReturn(accountList);
+    when(accountService.getAccountsWithDisabledHarnessUserGroupAccess())
+        .thenReturn(Sets.newHashSet(accountId3, accountId1));
+    when(accountService.get(accountId3)).thenReturn(account3);
+
+    AccessRequest accessRequest1 = AccessRequest.builder()
+                                       .accountId(accountId3)
+                                       .memberIds(Sets.newHashSet(USER_ID))
+                                       .accessStartAt(Instant.now().toEpochMilli())
+                                       .accessEndAt(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli())
+                                       .accessActive(true)
+                                       .accessType(AccessRequest.AccessType.MEMBER_ACCESS)
+                                       .build();
+    String harnessUserGroupId = generateUuid();
+    HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()
+                                            .uuid(harnessUserGroupId)
+                                            .memberIds(Sets.newHashSet(USER_ID))
+                                            .groupType(HarnessUserGroup.GroupType.RESTRICTED)
+                                            .accountIds(Sets.newHashSet(accountId3))
+                                            .build();
+    AccessRequest accessRequest2 = AccessRequest.builder()
+                                       .accountId(accountId3)
+                                       .harnessUserGroupId(harnessUserGroupId)
+                                       .accessStartAt(Instant.now().toEpochMilli())
+                                       .accessEndAt(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli())
+                                       .accessActive(true)
+                                       .accessType(AccessRequest.AccessType.GROUP_ACCESS)
+                                       .build();
+
+    when(accessRequestService.getActiveAccessRequestForAccount(accountId3))
+        .thenReturn(Arrays.asList(accessRequest1, accessRequest2));
+    when(harnessUserGroupService.get(harnessUserGroupId)).thenReturn(harnessUserGroup);
+    user = userService.get(USER_ID);
+    user.setAccounts(Arrays.asList(account1));
+
+    assertThat(user.getAccounts().get(0).getUuid()).isEqualTo(account1.getUuid());
+    assertThat(user.getSupportAccounts().size()).isEqualTo(2);
+    assertThat(user.getSupportAccounts().get(0).getUuid()).isEqualTo(account2.getUuid());
+    assertThat(user.getSupportAccounts().get(1).getUuid()).isEqualTo(account3.getUuid());
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void test_fetchUserSupportAccountWithIncorrectAccessRequests() {
+    String accountId1 = generateUuid();
+    String accountId2 = generateUuid();
+    String accountId3 = generateUuid();
+    Account account1 = Account.Builder.anAccount().withUuid(accountId1).build();
+    account1.setHarnessSupportAccessAllowed(false);
+    Account account2 = Account.Builder.anAccount().withUuid(accountId2).build();
+    Account account3 = Account.Builder.anAccount().withUuid(accountId3).build();
+    account3.setHarnessSupportAccessAllowed(false);
+    wingsPersistence.save(Arrays.asList(account1, account2, account3));
+
+    User user = userBuilder.uuid(USER_ID).accounts(Arrays.asList(account1)).build();
+    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(user);
+    when(harnessUserGroupService.isHarnessSupportUser(USER_ID)).thenReturn(true);
+    List<Account> accountList = Arrays.asList(account2);
+    when(harnessUserGroupService.listAllowedSupportAccounts(any())).thenReturn(accountList);
+    when(accountService.getAccountsWithDisabledHarnessUserGroupAccess())
+        .thenReturn(Sets.newHashSet(accountId3, accountId1));
+    when(accountService.get(accountId3)).thenReturn(account3);
+
+    // Access Request that doesn't have member Ids.
+    AccessRequest accessRequest1 = AccessRequest.builder()
+                                       .accountId(accountId3)
+                                       .memberIds(Sets.newHashSet())
+                                       .accessStartAt(Instant.now().toEpochMilli())
+                                       .accessEndAt(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli())
+                                       .accessActive(true)
+                                       .accessType(AccessRequest.AccessType.MEMBER_ACCESS)
+                                       .build();
+
+    // Harness user group with no members.
+    String harnessUserGroupId1 = generateUuid();
+    HarnessUserGroup harnessUserGroup1 = HarnessUserGroup.builder()
+                                             .uuid(harnessUserGroupId1)
+                                             .groupType(HarnessUserGroup.GroupType.RESTRICTED)
+                                             .accountIds(Sets.newHashSet(accountId3))
+                                             .build();
+
+    AccessRequest accessRequest2 = AccessRequest.builder()
+                                       .accountId(accountId3)
+                                       .harnessUserGroupId(harnessUserGroupId1)
+                                       .accessStartAt(Instant.now().toEpochMilli())
+                                       .accessEndAt(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli())
+                                       .accessActive(true)
+                                       .accessType(AccessRequest.AccessType.GROUP_ACCESS)
+                                       .build();
+
+    // harness user group to return null
+    String harnessUserGroupId2 = generateUuid();
+    AccessRequest accessRequest3 = AccessRequest.builder()
+                                       .accountId(accountId3)
+                                       .harnessUserGroupId(harnessUserGroupId2)
+                                       .accessStartAt(Instant.now().toEpochMilli())
+                                       .accessEndAt(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli())
+                                       .accessActive(true)
+                                       .accessType(AccessRequest.AccessType.GROUP_ACCESS)
+                                       .build();
+
+    when(accessRequestService.getActiveAccessRequestForAccount(accountId3))
+        .thenReturn(Arrays.asList(accessRequest1, accessRequest2, accessRequest3));
+    when(harnessUserGroupService.get(harnessUserGroupId1)).thenReturn(harnessUserGroup1);
+    user = userService.get(USER_ID);
+    user.setAccounts(Arrays.asList(account1));
+
+    assertThat(user.getAccounts().get(0).getUuid()).isEqualTo(account1.getUuid());
+    assertThat(user.getSupportAccounts().size()).isEqualTo(1);
+    assertThat(user.getSupportAccounts().get(0).getUuid()).isEqualTo(account2.getUuid());
+  }
+
+  @Test
   @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testMarketPlaceSignUp() {
     when(configuration.getPortal().getJwtMarketPlaceSecret()).thenReturn("TESTSECRET");
     when(configuration.getMarketPlaceConfig())
         .thenReturn(MarketPlaceConfig.builder().awsMarketPlaceProductCode("CD").build());
+
     UserInvite testInvite = anUserInvite().withUuid(USER_INVITE_ID).withEmail(USER_EMAIL).build();
     testInvite.setPassword("TestPassword".toCharArray());
     MarketPlace marketPlace = MarketPlace.builder()
@@ -360,7 +529,6 @@ public class UserServiceTest extends WingsBaseTest {
       log.info("Expected error " + e.getMessage());
       assertThat(e).isInstanceOf(UnauthorizedException.class);
     }
-
     when(wingsPersistence.get(UserInvite.class, USER_INVITE_ID)).thenReturn(testInvite);
     when(userService.getUserByEmail(USER_EMAIL)).thenReturn(savedUser);
     try {
@@ -371,7 +539,7 @@ public class UserServiceTest extends WingsBaseTest {
       assertThat(e).isInstanceOf(UserRegistrationException.class);
     }
 
-    when(userService.getUserByEmail(USER_EMAIL)).thenReturn(null);
+    when(wingsPersistence.createQuery(User.class).filter(any(), any()).get()).thenReturn(null);
     try {
       userService.completeMarketPlaceSignup(savedUser, testInvite, MarketPlaceType.AWS);
       fail("");
@@ -634,8 +802,8 @@ public class UserServiceTest extends WingsBaseTest {
     updateOperations.set("roles", roles);
 
     userService.update(user);
-    verify(wingsPersistence).update(user, updateOperations);
-    verify(wingsPersistence).getWithAppId(User.class, APP_ID, USER_ID);
+    Query<User> userQuery = wingsPersistence.createQuery(User.class).filter(BaseKeys.uuid, user.getUuid());
+    verify(wingsPersistence).findAndModify(userQuery, updateOperations, HPersistence.returnNewOptions);
     verify(cache).remove(USER_ID);
   }
 
@@ -651,8 +819,8 @@ public class UserServiceTest extends WingsBaseTest {
     verify(updateOperations).set(UserKeys.name, USER_NAME);
     UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
     updateOperations.set(UserKeys.name, USER_NAME);
-    verify(wingsPersistence).update(user, updateOperations);
-    verify(wingsPersistence).getWithAppId(User.class, APP_ID, USER_ID);
+    Query<User> userQuery = wingsPersistence.createQuery(User.class).filter(BaseKeys.uuid, user.getUuid());
+    verify(wingsPersistence).findAndModify(userQuery, updateOperations, HPersistence.returnNewOptions);
     verify(cache).remove(USER_ID);
   }
 
@@ -677,8 +845,8 @@ public class UserServiceTest extends WingsBaseTest {
     verify(updateOperations).unset(UserKeys.name);
     UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
     updateOperations.unset(UserKeys.name);
-    verify(wingsPersistence).update(user, updateOperations);
-    verify(wingsPersistence).getWithAppId(User.class, APP_ID, USER_ID);
+    Query<User> query = wingsPersistence.createQuery(User.class).filter(BaseKeys.uuid, user.getUuid());
+    verify(wingsPersistence).findAndModify(query, updateOperations, HPersistence.returnNewOptions);
     verify(cache).remove(USER_ID);
   }
 
@@ -725,8 +893,9 @@ public class UserServiceTest extends WingsBaseTest {
   public void shouldDeleteUser() {
     when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.uuid(USER_ID).build());
     when(wingsPersistence.delete(User.class, USER_ID)).thenReturn(true);
+    when(wingsPersistence.findAndDelete(any(), any())).thenReturn(userBuilder.uuid(USER_ID).build());
     userService.delete(ACCOUNT_ID, USER_ID);
-    verify(wingsPersistence).delete(User.class, USER_ID);
+    verify(wingsPersistence).findAndDelete(any(), any());
     verify(cache).remove(USER_ID);
     verify(auditServiceHelper, times(1)).reportDeleteForAuditingUsingAccountId(eq(ACCOUNT_ID), any(User.class));
   }
@@ -1038,7 +1207,8 @@ public class UserServiceTest extends WingsBaseTest {
     userInvite.setPassword(USER_PASSWORD);
     userService.completeInvite(userInvite);
 
-    verify(wingsPersistence, times(3)).updateFields(any(Class.class), anyString(), any(HashMap.class));
+    verify(wingsPersistence, times(1)).updateFields(any(Class.class), anyString(), any(HashMap.class));
+    verify(wingsPersistence, times(2)).findAndModify(any(), any(), any());
   }
 
   @Test
@@ -1469,35 +1639,36 @@ public class UserServiceTest extends WingsBaseTest {
   @Owner(developers = VOJIN)
   @Category(UnitTests.class)
   public void setNewDefaultAccountIdTest() {
+    String defaultAccountCandidate;
     Account account1 = getAccount(AccountStatus.ACTIVE, PAID, "111");
     Account account2 = getAccount(AccountStatus.ACTIVE, ESSENTIALS, "222");
     User user1 = anUser().accounts(Arrays.asList(account2, account1)).build();
-    userService.setNewDefaultAccountId(user1);
+    defaultAccountCandidate = user1.getDefaultAccountCandidate();
 
-    assertThat(user1.getDefaultAccountId()).isEqualTo("111");
+    assertThat(defaultAccountCandidate).isEqualTo("111");
 
     Account account3 = getAccount(AccountStatus.EXPIRED, PAID, "111");
     Account account4 = getAccount(AccountStatus.ACTIVE, TRIAL, "222");
     User user2 = anUser().accounts(Arrays.asList(account3, account4)).build();
-    userService.setNewDefaultAccountId(user2);
+    defaultAccountCandidate = user2.getDefaultAccountCandidate();
 
-    assertThat(user2.getDefaultAccountId()).isEqualTo("222");
+    assertThat(defaultAccountCandidate).isEqualTo("222");
 
     Account account5 = getAccount(AccountStatus.INACTIVE, PAID, "111");
     Account account6 = getAccount(AccountStatus.DELETED, ESSENTIALS, "222");
     Account account7 = getAccount(AccountStatus.EXPIRED, TRIAL, "333");
     User user3 = anUser().accounts(Arrays.asList(account5, account6, account7)).build();
-    userService.setNewDefaultAccountId(user3);
+    defaultAccountCandidate = user3.getDefaultAccountCandidate();
 
-    assertThat(user3.getDefaultAccountId()).isEqualTo("333");
+    assertThat(defaultAccountCandidate).isEqualTo("333");
 
     Account account8 = getAccount(AccountStatus.DELETED, PAID, "111");
     Account account9 = getAccount(AccountStatus.DELETED, ESSENTIALS, "222");
     Account account10 = getAccount(AccountStatus.DELETED, TRIAL, "333");
     User user4 = anUser().accounts(Arrays.asList(account8, account9, account10)).build();
-    userService.setNewDefaultAccountId(user4);
+    defaultAccountCandidate = user4.getDefaultAccountCandidate();
 
-    assertThat(user4.getDefaultAccountId()).isEqualTo("111");
+    assertThat(defaultAccountCandidate).isEqualTo("111");
   }
 
   private Account getAccount(String accountStatus, String accountType, String uuid) {

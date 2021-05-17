@@ -14,6 +14,7 @@ import io.harness.steps.resourcerestraint.service.ResourceRestraintServiceImpl;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 public class OrchestrationStepsModule extends AbstractModule {
   private final OrchestrationStepConfig configuration;
@@ -41,9 +42,14 @@ public class OrchestrationStepsModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("cfPipelineAPI")
   CFApi providesCfAPI() {
     ApiClient apiClient = new ApiClient();
-    apiClient.setBasePath(configuration.getFfServerBaseUrl());
+
+    if (configuration != null) {
+      apiClient.setBasePath(configuration.getFfServerBaseUrl());
+    }
+
     return new CFApi(apiClient);
   }
 

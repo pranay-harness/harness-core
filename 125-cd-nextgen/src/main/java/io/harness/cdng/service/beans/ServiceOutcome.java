@@ -1,5 +1,8 @@
 package io.harness.cdng.service.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
 import io.harness.pms.sdk.core.data.Outcome;
@@ -18,6 +21,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("serviceOutcome")
 @JsonTypeName("serviceOutcome")
+@OwnedBy(CDC)
 public class ServiceOutcome implements Outcome {
   String identifier;
   String name;
@@ -40,11 +44,6 @@ public class ServiceOutcome implements Outcome {
 
   StageOverridesOutcome stageOverrides;
 
-  @Override
-  public String getType() {
-    return "serviceOutcome";
-  }
-
   public String getServiceDefinitionType() {
     return type;
   }
@@ -61,11 +60,6 @@ public class ServiceOutcome implements Outcome {
   public static class ArtifactsOutcome implements Outcome {
     private ArtifactOutcome primary;
     @Singular private Map<String, ArtifactOutcome> sidecars;
-
-    @Override
-    public String getType() {
-      return "serviceOutcome_artifactsOutcome";
-    }
   }
 
   @Data
@@ -80,11 +74,6 @@ public class ServiceOutcome implements Outcome {
     ParameterField<List<String>> useVariableOverrideSets;
     ParameterField<List<String>> useArtifactOverrideSets;
     ParameterField<List<String>> useManifestOverrideSets;
-
-    @Override
-    public String getType() {
-      return "serviceOutcome_stageOverridesOutcome";
-    }
   }
 
   @Data
@@ -93,11 +82,6 @@ public class ServiceOutcome implements Outcome {
   @JsonTypeName("serviceOutcome_artifactsWrapperOutcome")
   public static class ArtifactsWrapperOutcome implements Outcome {
     ArtifactsOutcome artifacts;
-
-    @Override
-    public String getType() {
-      return "serviceOutcome_artifactsWrapperOutcome";
-    }
   }
 
   @Data
@@ -106,11 +90,6 @@ public class ServiceOutcome implements Outcome {
   @JsonTypeName("serviceOutcome_manifestsWrapperOutcome")
   public static class ManifestsWrapperOutcome implements Outcome {
     Map<String, ManifestOutcome> manifests;
-
-    @Override
-    public String getType() {
-      return "serviceOutcome_manifestsWrapperOutcome";
-    }
   }
 
   @Data
@@ -119,10 +98,5 @@ public class ServiceOutcome implements Outcome {
   @JsonTypeName("serviceOutcome_variablesWrapperOutcome")
   public static class VariablesWrapperOutcome implements Outcome {
     Map<String, Object> variables;
-
-    @Override
-    public String getType() {
-      return "serviceOutcome_variablesWrapperOutcome";
-    }
   }
 }

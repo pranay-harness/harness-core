@@ -1,9 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//:macros.bzl", "run_analysis")
 load("//:macros.bzl", "test_targets_list")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:build-properties.bzl", "build_fullVersion")
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
@@ -25,9 +23,6 @@ java_binary(
         "src/main/**/*.java",
     ]),
     data = ["//:resource"],
-    deploy_manifest_lines = [
-        "Application-Version: version=" + build_fullVersion,
-    ],
     main_class = "io.harness.watcher.app.WatcherApplication",
     resources = [
         "//250-watcher/src/main/resources:resource",
@@ -41,7 +36,7 @@ java_binary(
 )
 
 test_dependencies = [
-    "@delegate//:com_squareup_okhttp3_okhttp",
+    "@maven//:com_squareup_okhttp3_okhttp",
 ] + [
     "//990-commons-test:module",
     "@maven//:org_awaitility_awaitility",
@@ -65,6 +60,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()
