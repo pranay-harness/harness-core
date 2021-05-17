@@ -14,6 +14,7 @@ import io.harness.walktree.visitor.Visitable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -33,9 +34,9 @@ public class TerraformDestroyStepInfo extends TerraformDestroyBaseStepInfo imple
   @JsonProperty("configuration") TerrformStepConfiguration terrformStepConfiguration;
 
   @Builder(builderMethodName = "infoBuilder")
-  public TerraformDestroyStepInfo(
-      ParameterField<String> provisionerIdentifier, TerrformStepConfiguration terrformStepConfiguration) {
-    super(provisionerIdentifier);
+  public TerraformDestroyStepInfo(ParameterField<String> provisionerIdentifier,
+      ParameterField<List<String>> delegateSelectors, TerrformStepConfiguration terrformStepConfiguration) {
+    super(provisionerIdentifier, delegateSelectors);
     this.terrformStepConfiguration = terrformStepConfiguration;
   }
 
@@ -56,6 +57,7 @@ public class TerraformDestroyStepInfo extends TerraformDestroyBaseStepInfo imple
     Validator.notNullCheck("Terraform Step configuration is null", terrformStepConfiguration);
     return TerraformDestroyStepParameters.infoBuilder()
         .provisionerIdentifier(provisionerIdentifier)
+        .delegateSelectors(delegateSelectors)
         .configuration(terrformStepConfiguration.toStepParameters())
         .build();
   }
