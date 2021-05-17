@@ -9,7 +9,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.rest.RestResponse;
 
-import software.wings.beans.User;
 import software.wings.beans.security.HarnessSupportUserDTO;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.beans.security.HarnessUserGroupDTO;
