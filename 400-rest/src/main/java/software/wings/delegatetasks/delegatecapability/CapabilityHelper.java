@@ -3,8 +3,6 @@ package software.wings.delegatetasks.delegatecapability;
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.capability.ProcessExecutionCapabilityHelper.TERRAFORM;
-import static io.harness.delegate.capability.ProcessExecutionCapabilityHelper.TERRAGRUNT;
 
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 
@@ -15,6 +13,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
 import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.task.TaskParameters;
@@ -36,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import lombok.AccessLevel;
@@ -49,6 +49,10 @@ import org.eclipse.jgit.transport.URIish;
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class CapabilityHelper {
+  public static final String TERRAFORM = "terraform";
+  public static final String TERRAGRUNT = "terragrunt";
+  public static final String HELM = "helm";
+
   public static List<ExecutionCapability> generateDelegateCapabilities(ExecutionCapabilityDemander capabilityDemander,
       List<EncryptedDataDetail> encryptedDataDetails, ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
@@ -252,6 +256,10 @@ public class CapabilityHelper {
                 .scheme("ssh")
                 .url(gitConfig.getRepoUrl())
                 .build());
+      }
+      if (isNotEmpty(gitConfig.getDelegateSelectors())) {
+        executionCapabilities.add(
+            SelectorCapability.builder().selectors(new HashSet<>(gitConfig.getDelegateSelectors())).build());
       }
     }
     return executionCapabilities;

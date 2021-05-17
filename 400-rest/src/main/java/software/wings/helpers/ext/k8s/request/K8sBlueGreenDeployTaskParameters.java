@@ -1,15 +1,21 @@
 package software.wings.helpers.ext.k8s.request;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.expression.Expression;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.HelmVersion;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.Builder;
@@ -38,5 +44,19 @@ public class K8sBlueGreenDeployTaskParameters extends K8sTaskParameters implemen
     this.valuesYamlList = valuesYamlList;
     this.skipDryRun = skipDryRun;
     this.skipVersioningForAllK8sObjects = skipVersioningForAllK8sObjects;
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    List<ExecutionCapability> capabilities =
+        new ArrayList<>(super.fetchRequiredExecutionCapabilities(maskingEvaluator));
+    if (k8sDelegateManifestConfig == null || k8sDelegateManifestConfig.getGitConfig() == null
+        || isEmpty(k8sDelegateManifestConfig.getGitConfig().getDelegateSelectors())) {
+      return capabilities;
+    }
+    capabilities.add(SelectorCapability.builder()
+                         .selectors(new HashSet<>(k8sDelegateManifestConfig.getGitConfig().getDelegateSelectors()))
+                         .build());
+    return capabilities;
   }
 }

@@ -140,6 +140,7 @@ public class CreateConnectorDataFetcherTest {
                                                                      .commitMessage(RequestField.ofNullable(MESSAGE))
                                                                      .build()))
                     .passwordSecretId(RequestField.ofNullable(PASSWORD))
+                    .delegateSelectors(RequestField.ofNull())
                     .build())
             .build(),
         MutationContext.builder().accountId(ACCOUNT_ID).build());
@@ -187,6 +188,7 @@ public class CreateConnectorDataFetcherTest {
                                                                      .build()))
                     .sshSettingId(RequestField.ofNullable(SSH))
                     .usageScope(RequestField.ofNullable(QLUsageScope.builder().build()))
+                    .delegateSelectors(RequestField.ofNull())
                     .build())
             .build(),
         MutationContext.builder().accountId(ACCOUNT_ID).build());
