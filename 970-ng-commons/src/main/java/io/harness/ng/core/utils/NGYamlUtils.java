@@ -24,7 +24,9 @@ public class NGYamlUtils {
           .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
           .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
           .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-          .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true)
+          .configure(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS, false)
+          .configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
+          .configure(DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT, true)
           .enable(SerializationFeature.INDENT_OUTPUT);
 
   public static String getYamlString(YamlDTO yamlObject) {
