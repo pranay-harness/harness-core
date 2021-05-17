@@ -2736,7 +2736,14 @@
       "type": "object",
       "properties": {
         "allowSimultaneousDeployments": {
-          "type": "boolean"
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "environment": {
           "$ref": "#/definitions/EnvironmentYaml"
