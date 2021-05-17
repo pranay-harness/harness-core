@@ -1,14 +1,12 @@
-package io.harness.ngpipeline.expressions.functors;
+package io.harness.ngtriggers.expressions.functors;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.LateBindingValue;
-import io.harness.ngpipeline.common.AmbianceHelper;
+import io.harness.ngtriggers.helpers.TriggerAmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.triggers.ParsedPayload;
 import io.harness.yaml.utils.JsonPipelineUtils;
@@ -18,7 +16,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-@TargetModule(HarnessModule._810_NG_TRIGGERS)
 public class TriggerFunctor implements LateBindingValue {
   private final Ambiance ambiance;
 
@@ -47,7 +44,7 @@ public class TriggerFunctor implements LateBindingValue {
         jsonObject.put("type", "WEBHOOK");
         break;
       default:
-        if (isEmpty(AmbianceHelper.getEventPayload(ambiance))) {
+        if (isEmpty(ambiance.getMetadata().getTriggerPayload().getJsonPayload())) {
           jsonObject.put("type", "SCHEDULED");
         } else {
           jsonObject.put("type", "CUSTOM");
@@ -56,10 +53,10 @@ public class TriggerFunctor implements LateBindingValue {
     }
 
     // headers
-    jsonObject.put("header", ambiance.getMetadata().getTriggerPayload().getHeadersMap());
+    jsonObject.put("header", TriggerAmbianceHelper.getEventPayload(ambiance));
     // payload
     try {
-      jsonObject.put("payload", JsonPipelineUtils.read(AmbianceHelper.getEventPayload(ambiance), HashMap.class));
+      jsonObject.put("payload", JsonPipelineUtils.read(TriggerAmbianceHelper.getEventPayload(ambiance), HashMap.class));
     } catch (IOException e) {
       throw new InvalidRequestException("Event payload could not be converted to a hashmap");
     }

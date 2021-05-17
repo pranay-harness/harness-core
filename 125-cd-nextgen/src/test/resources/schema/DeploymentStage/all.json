@@ -4229,6 +4229,12 @@
             "configuration": {
               "$ref": "#/definitions/TerrformStepConfiguration"
             },
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
             "metadata": {
               "type": "string"
             },
@@ -4291,6 +4297,12 @@
           "properties": {
             "configuration": {
               "$ref": "#/definitions/TerrformStepConfiguration"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "metadata": {
               "type": "string"
@@ -4410,6 +4422,12 @@
             "configuration": {
               "$ref": "#/definitions/TerraformPlanExecutionData"
             },
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
             "provisionerIdentifier": {
               "type": "string"
             }
@@ -4429,6 +4447,12 @@
             "provisionerIdentifier"
           ],
           "properties": {
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
             "provisionerIdentifier": {
               "type": "string"
             }

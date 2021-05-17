@@ -1,5 +1,6 @@
 package io.harness.yaml.core;
 
+import io.harness.beans.WithIdentifier;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
@@ -9,7 +10,6 @@ import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
-import io.harness.yaml.core.intfc.WithIdentifier;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;

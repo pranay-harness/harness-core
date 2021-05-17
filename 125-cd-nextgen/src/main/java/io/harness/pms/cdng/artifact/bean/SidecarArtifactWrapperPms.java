@@ -3,7 +3,7 @@ package io.harness.pms.cdng.artifact.bean;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.WRAPPER_OBJECT;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
-import io.harness.yaml.core.intfc.WithIdentifier;
+import io.harness.beans.WithIdentifier;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
