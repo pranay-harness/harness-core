@@ -2,6 +2,7 @@ package io.harness.cdng.pipeline.executions;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
@@ -24,6 +25,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @OwnedBy(HarnessTeam.PIPELINE)
+@ToBeDeleted
 public class PipelineExecutionUpdateEventHandler implements AsyncOrchestrationEventHandler {
   @Inject private NgPipelineExecutionService ngPipelineExecutionService;
   @Inject private NodeExecutionServiceImpl nodeExecutionService;
