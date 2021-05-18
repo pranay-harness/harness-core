@@ -73,7 +73,7 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
   private static final Class<StepElementConfig> STEP_ELEMENT_CONFIG_CLASS = StepElementConfig.class;
   private static final String APPROVAL_NAMESPACE = "approval";
 
-  private static final int CACHE_EVICTION_TIME_HOUR = 1;
+  private static final int CACHE_EVICTION_TIME_HOUR = 3;
 
   private final YamlSchemaProvider yamlSchemaProvider;
   private final YamlSchemaGenerator yamlSchemaGenerator;
