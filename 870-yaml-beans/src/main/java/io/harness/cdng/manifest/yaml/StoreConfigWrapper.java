@@ -2,10 +2,12 @@ package io.harness.cdng.manifest.yaml;
 
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
+import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.visitor.helpers.manifest.StoreConfigWrapperVisitorHelper;
+import io.harness.exception.UnexpectedTypeException;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -41,6 +43,11 @@ public class StoreConfigWrapper implements OverridesApplier<StoreConfigWrapper>,
   public StoreConfigWrapper applyOverrides(StoreConfigWrapper overrideConfig) {
     StoreConfigWrapper resultantConfig = this;
     if (overrideConfig != null) {
+      if (!overrideConfig.getType().equals(resultantConfig.getType())) {
+        throw new UnexpectedTypeException(format("Unable to apply store override of type '%s' to store of type '%s'",
+            overrideConfig.getType(), resultantConfig.getType()));
+      }
+
       resultantConfig = resultantConfig.withSpec(spec.applyOverrides(overrideConfig.getSpec()));
     }
     return resultantConfig;
