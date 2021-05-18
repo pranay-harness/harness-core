@@ -25,7 +25,7 @@ stageOverrides:
         connectorRef: docker_public1
         imagePath: library/nginx
         tag: latest
-      type: Dockerhub
+      type: DockerRegistry
     sidecars:
       - sidecar:
           spec:
@@ -33,7 +33,7 @@ stageOverrides:
             imagePath: library/fedora
             tag: "33"
           identifier: sc1
-          type: Dockerhub
+          type: DockerRegistry
   useVariableOverrideSets:
     - vo1
   variables:
@@ -119,7 +119,7 @@ serviceDefinition:
                 connectorRef: docker_public1
                 imagePath: library/nginx
                 tag: stable
-              type: Dockerhub
+              type: DockerRegistry
       - overrideSet:
           identifier: ao2
           artifacts:
@@ -130,14 +130,14 @@ serviceDefinition:
                     imagePath: library/fedora
                     tag: "34"
                   identifier: sc1
-                  type: Dockerhub
+                  type: DockerRegistry
               - sidecar:
                   spec:
                     connectorRef: docker_public
                     imagePath: library/fedora
                     tag: "35"
                   identifier: sc3
-                  type: Dockerhub
+                  type: DockerRegistry
     variableOverrideSets:
       - overrideSet:
           identifier: vo1
@@ -194,20 +194,20 @@ serviceDefinition:
               imagePath: library/fedora
               tag: "35"
             identifier: sc1
-            type: Dockerhub
+            type: DockerRegistry
         - sidecar:
             spec:
               connectorRef: docker_public1
               imagePath: library/nginx
               tag: mainline
             identifier: sc2
-            type: Dockerhub
+            type: DockerRegistry
       primary:
         spec:
           connectorRef: docker_public1
           imagePath: library/nginx
           tag: stable-perl
-        type: Dockerhub
+        type: DockerRegistry
     variables:
       - name: v1
         type: String

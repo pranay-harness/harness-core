@@ -35,7 +35,7 @@ public class ArtifactConfigToDelegateReqMapperTest extends CategoryTest {
     assertThat(dockerDelegateRequest.getDockerConnectorDTO()).isEqualTo(connectorDTO);
     assertThat(dockerDelegateRequest.getEncryptedDataDetails()).isEqualTo(encryptedDataDetailList);
     assertThat(dockerDelegateRequest.getImagePath()).isEqualTo(dockerHubArtifactConfig.getImagePath().getValue());
-    assertThat(dockerDelegateRequest.getSourceType()).isEqualTo(ArtifactSourceType.DOCKER_HUB);
+    assertThat(dockerDelegateRequest.getSourceType()).isEqualTo(ArtifactSourceType.DOCKER_REGISTRY);
     assertThat(dockerDelegateRequest.getTagsList()).isNull();
     assertThat(dockerDelegateRequest.getTag()).isEqualTo("");
     assertThat(dockerDelegateRequest.getTagRegex()).isEqualTo("\\*");

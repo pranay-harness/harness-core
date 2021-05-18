@@ -258,7 +258,7 @@ public class PipelineExecutionHelperTest extends CDNGTestBase {
                          .primaryArtifact(true)
                          .imagePath("image")
                          .tag("tag")
-                         .type(ArtifactSourceType.DOCKER_HUB.getDisplayName())
+                         .type(ArtifactSourceType.DOCKER_REGISTRY.getDisplayName())
                          .build())
             .sidecars(Maps.of("sidecar1", DockerArtifactOutcome.builder().imagePath("image1").tag("tag1").build()))
             .build();
