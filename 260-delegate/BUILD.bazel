@@ -2,6 +2,7 @@ load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:macros.bzl", "run_analysis")
 load("//:macros.bzl", "test_targets_list")
+load("@rules_spring//springboot:springboot.bzl", "springboot")
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
@@ -665,15 +666,27 @@ shared_dependencies = [
     "//:lombok",
 ]
 
-java_binary(
+java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
-    main_class = "io.harness.delegate.app.DelegateApplication",
     resources = [
         "//260-delegate/src/main/resources:resource",
     ],
     visibility = ["//visibility:public"],
-    deps = shared_dependencies,
+    deps = ["@maven//:org_springframework_boot_spring_boot_loader"] + shared_dependencies,
+)
+
+java_binary(
+    name = "execute",
+    main_class = "io.harness.delegate.app.DelegateApplication",
+    runtime_deps = [":module"],
+)
+
+springboot(
+    name = "module_deploy",
+    boot_app_class = "io.harness.delegate.app.DelegateApplication",
+    java_library = ":module",
+    visibility = ["//visibility:public"],
 )
 
 test_dependencies = [

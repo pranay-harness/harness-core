@@ -49,7 +49,7 @@ BAZEL_MODULES="\
   //990-commons-test:module \
 "
 
-bazel ${bazelrc} build `bazel query //...:* | grep module_deploy.jar` ${BAZEL_ARGUMENTS} --remote_download_outputs=all
+bazel ${bazelrc} build `bazel query "//...:*" | grep "module_deploy.jar"` ${BAZEL_ARGUMENTS} --remote_download_outputs=all
 
 build_bazel_module() {
   module=$1
