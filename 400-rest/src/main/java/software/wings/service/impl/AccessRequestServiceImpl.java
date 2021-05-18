@@ -101,6 +101,7 @@ public class AccessRequestServiceImpl implements AccessRequestService {
   }
 
   public AccessRequestDTO toAccessRequestDTO(AccessRequest accessRequest) {
+    notNullCheck("Invalid AccessRequest", accessRequest);
     AccessRequestDTO accessRequestDTO = AccessRequestDTO.builder()
                                             .accessRequestId(accessRequest.getUuid())
                                             .accessType(accessRequest.getAccessType())
@@ -118,9 +119,11 @@ public class AccessRequestServiceImpl implements AccessRequestService {
     return accessRequestDTO;
   }
 
-  public List<AccessRequestDTO> toAccessRequestDTO(List<AccessRequest> accessRequests) {
+  public List<AccessRequestDTO> toAccessRequestDTO(List<AccessRequest> accessRequestList) {
     List<AccessRequestDTO> accessRequestDTOList = new ArrayList<>();
-    accessRequests.forEach(accessRequest -> accessRequestDTOList.add(toAccessRequestDTO(accessRequest)));
+    if (isNotEmpty(accessRequestList)) {
+      accessRequestList.forEach(accessRequest -> accessRequestDTOList.add(toAccessRequestDTO(accessRequest)));
+    }
     return accessRequestDTOList;
   }
 
