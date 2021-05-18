@@ -1592,7 +1592,6 @@ maven_install(
         "io.grpc:grpc-grpclb:1.33.1",
         "io.grpc:grpc-netty-shaded:1.33.1",
         "io.grpc:grpc-netty:1.33.1",
-        "io.grpc:grpc-protobuf-lite:1.33.1",
         "io.grpc:grpc-protobuf:1.33.1",
         "io.grpc:grpc-services:1.33.1",
         "io.grpc:grpc-stub:1.33.1",
