@@ -440,7 +440,7 @@ public class AuthenticationFilterTest extends CategoryTest {
   private Method getMockResourceMethod() {
     Class mockClass = SecretsResourceNG.class;
     try {
-      return mockClass.getMethod("get", String.class, String.class, String.class, String.class);
+      return mockClass.getMethod("getEncryptedDataMigrationDTO", String.class, String.class, String.class, String.class);
     } catch (NoSuchMethodException e) {
       return null;
     }
