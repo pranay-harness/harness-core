@@ -150,30 +150,30 @@ public class LdapGroupSyncJobTest {
 
     // less than 0 minute should return MIN_LDAP_SYNC_TIMEOUT
     long ldapSyncTimeout = ldapGroupSyncJob.getLdapSyncTimeout(NEGATIVE_TIME);
-    Assert.assertEquals(MIN_LDAP_SYNC_TIMEOUT, ldapSyncTimeout);
+    assertThat(MIN_LDAP_SYNC_TIMEOUT).isEqualTo(ldapSyncTimeout);
 
     // less than 1 minute should return MIN_LDAP_SYNC_TIMEOUT
     ldapSyncTimeout = ldapGroupSyncJob.getLdapSyncTimeout(HALF_MINUTE);
-    Assert.assertEquals(MIN_LDAP_SYNC_TIMEOUT, ldapSyncTimeout);
+    assertThat(MIN_LDAP_SYNC_TIMEOUT).isEqualTo(ldapSyncTimeout);
 
     // 1 minute should return 1 minute
     ldapSyncTimeout = ldapGroupSyncJob.getLdapSyncTimeout(ONE_MINUTE);
-    Assert.assertEquals(ONE_MINUTE, ldapSyncTimeout);
+    assertThat(ONE_MINUTE).isEqualTo(ldapSyncTimeout);
 
     // 2 mins should return 2 minutes as is
     ldapSyncTimeout = ldapGroupSyncJob.getLdapSyncTimeout(TWO_MINUTE);
-    Assert.assertEquals(TWO_MINUTE, ldapSyncTimeout);
+    assertThat(TWO_MINUTE).isEqualTo(ldapSyncTimeout);
 
     // 3 minutes should return 3 minute
     ldapSyncTimeout = ldapGroupSyncJob.getLdapSyncTimeout(THREE_MINUTE);
-    Assert.assertEquals(THREE_MINUTE, ldapSyncTimeout);
+    assertThat(THREE_MINUTE).isEqualTo(ldapSyncTimeout);
 
     // 4 minutes should return MAX_LDAP_SYNC_TIMEOUT
     ldapSyncTimeout = ldapGroupSyncJob.getLdapSyncTimeout(FOUR_MINUTE);
-    Assert.assertEquals(MAX_LDAP_SYNC_TIMEOUT, ldapSyncTimeout);
+    assertThat(MAX_LDAP_SYNC_TIMEOUT).isEqualTo(ldapSyncTimeout);
 
     // Anything greater than MAX_LDAP_SYNC_TIMEOUT should return MAX_LDAP_SYNC_TIMEOUT
     ldapSyncTimeout = ldapGroupSyncJob.getLdapSyncTimeout(VERY_LARGE_TIME);
-    Assert.assertEquals(MAX_LDAP_SYNC_TIMEOUT, ldapSyncTimeout);
+    assertThat(MAX_LDAP_SYNC_TIMEOUT).isEqualTo(ldapSyncTimeout);
   }
 }
