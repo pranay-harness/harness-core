@@ -99,7 +99,7 @@ public class AzureStorageSyncEventWriter extends EventWriter implements ItemWrit
     int size = 100;
     do {
       response = execute(connectorResourceClient.listConnectors(accountId, null, null, page, size,
-          ConnectorFilterPropertiesDTO.builder().types(Arrays.asList(ConnectorType.CE_AZURE)).build()));
+          ConnectorFilterPropertiesDTO.builder().types(Arrays.asList(ConnectorType.CE_AZURE)).build(), false));
       if (response != null && isNotEmpty(response.getContent())) {
         nextGenConnectors.addAll(response.getContent());
       }
