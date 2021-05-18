@@ -42,5 +42,6 @@ public enum SnippetTag implements YamlSnippetTags {
   httphelmrepo,
   newrelic,
   gcpcloudcost,
-  prometheus
+  prometheus,
+  datadog,
 }

@@ -127,7 +127,7 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
     builder.workspace(inheritOutput.getWorkspace())
         .configFile(helper.getGitFetchFilesConfig(
             inheritOutput.getConfigFiles(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
-        .varFileInfos(helper.toDelegateTask(inheritOutput.getVarFileConfigs(), ambiance))
+        .varFileInfos(helper.prepareTerraformVarFileInfo(inheritOutput.getVarFileConfigs(), ambiance))
         .backendConfig(inheritOutput.getBackendConfig())
         .targets(inheritOutput.getTargets())
         .saveTerraformStateJson(cdFeatureFlagHelper.isEnabled(accountId, FeatureName.EXPORT_TF_PLAN))

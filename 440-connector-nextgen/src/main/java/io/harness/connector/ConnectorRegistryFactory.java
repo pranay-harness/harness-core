@@ -35,6 +35,8 @@ import io.harness.connector.mappers.ceazure.CEAzureDTOToEntity;
 import io.harness.connector.mappers.ceazure.CEAzureEntityToDTO;
 import io.harness.connector.mappers.cek8s.CEKubernetesDTOToEntity;
 import io.harness.connector.mappers.cek8s.CEKubernetesEntityToDTO;
+import io.harness.connector.mappers.datadogmapper.DatadogDTOToEntity;
+import io.harness.connector.mappers.datadogmapper.DatadogEntityToDTO;
 import io.harness.connector.mappers.docker.DockerDTOToEntity;
 import io.harness.connector.mappers.docker.DockerEntityToDTO;
 import io.harness.connector.mappers.gcpcloudcost.GcpCloudCostDTOToEntity;
@@ -115,6 +117,9 @@ public class ConnectorRegistryFactory {
     registrar.put(ConnectorType.NEW_RELIC,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
             NoOpConnectorValidationParamsProvider.class, NewRelicDTOToEntity.class, NewRelicEntityToDTO.class));
+    registrar.put(ConnectorType.DATADOG,
+        new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
+            NoOpConnectorValidationParamsProvider.class, DatadogDTOToEntity.class, DatadogEntityToDTO.class));
     registrar.put(ConnectorType.SPLUNK,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
             NoOpConnectorValidationParamsProvider.class, SplunkDTOToEntity.class, SplunkEntityToDTO.class));

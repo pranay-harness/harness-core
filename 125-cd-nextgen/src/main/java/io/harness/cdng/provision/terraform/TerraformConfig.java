@@ -14,6 +14,7 @@ import io.harness.persistence.PersistentEntity;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -46,14 +47,14 @@ public class TerraformConfig implements PersistentEntity, CreatedAtAware {
   }
 
   @Id @org.mongodb.morphia.annotations.Id private String uuid;
-  String accountId;
-  String orgId;
-  String projectId;
-  String entityId;
-  String pipelineExecutionId;
-  long createdAt;
+  @NotNull String accountId;
+  @NotNull String orgId;
+  @NotNull String projectId;
+  @NotNull String entityId;
+  @NotNull String pipelineExecutionId;
+  @NotNull long createdAt;
 
-  GitStoreConfigDTO configFiles;
+  @NotNull GitStoreConfigDTO configFiles;
   List<TerraformVarFileConfig> varFileConfigs;
   String backendConfig;
   Map<String, String> environmentVariables;

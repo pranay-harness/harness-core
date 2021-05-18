@@ -18,6 +18,7 @@ import io.harness.cdng.Deployment.ExecutionDeploymentDetailInfo;
 import io.harness.cdng.Deployment.ExecutionDeploymentInfo;
 import io.harness.cdng.Deployment.HealthDeploymentDashboard;
 import io.harness.cdng.Deployment.HealthDeploymentInfo;
+import io.harness.cdng.Deployment.LastWorkloadInfo;
 import io.harness.cdng.Deployment.ServiceDeploymentInfo;
 import io.harness.cdng.Deployment.TimeAndStatusDeployment;
 import io.harness.cdng.Deployment.TotalDeploymentInfo;
@@ -37,10 +38,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -239,7 +240,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   }
 
   public TimeAndStatusDeployment queryCalculatorTimeAndStatus(String query) {
-    List<String> time = new ArrayList<>();
+    List<Long> time = new ArrayList<>();
     List<String> status = new ArrayList<>();
 
     int totalTries = 0;
@@ -251,7 +252,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         resultSet = statement.executeQuery();
         while (resultSet != null && resultSet.next()) {
           status.add(resultSet.getString("status"));
-          time.add(resultSet.getString("startts"));
+          time.add(Long.valueOf(resultSet.getString("startts")));
         }
         successfulOperation = true;
       } catch (SQLException ex) {
@@ -293,7 +294,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     endInterval = endInterval + getTimeUnitToGroupBy(DAY);
     String query = queryBuilderSelectStatusTime(accountId, orgId, projectId, previousStartInterval, endInterval);
 
-    List<String> time = new ArrayList<>();
+    List<Long> time = new ArrayList<>();
     List<String> status = new ArrayList<>();
     List<String> envType = new ArrayList<>();
 
@@ -323,7 +324,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     }
 
     for (int i = 0; i < time.size(); i++) {
-      long currentTimeEpoch = Long.parseLong(time.get(i));
+      long currentTimeEpoch = time.get(i);
       if (currentTimeEpoch >= startInterval && currentTimeEpoch < endInterval) {
         currentTimeEpoch = getStartingDateEpochValue(currentTimeEpoch, startInterval);
         total++;
@@ -358,15 +359,15 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
     while (startDateCopy < endDateCopy) {
       totalDateAndCount.add(DeploymentDateAndCount.builder()
-                                .time(String.valueOf(startDateCopy))
+                                .time(startDateCopy)
                                 .deployments(Deployment.builder().count(totalCountMap.get(startDateCopy)).build())
                                 .build());
       successDateAndCount.add(DeploymentDateAndCount.builder()
-                                  .time(String.valueOf(startDateCopy))
+                                  .time(startDateCopy)
                                   .deployments(Deployment.builder().count(successCountMap.get(startDateCopy)).build())
                                   .build());
       failedDateAndCount.add(DeploymentDateAndCount.builder()
-                                 .time(String.valueOf(startDateCopy))
+                                 .time(startDateCopy)
                                  .deployments(Deployment.builder().count(failedCountMap.get(startDateCopy)).build())
                                  .build());
       startDateCopy = startDateCopy + timeUnitPerDay;
@@ -394,7 +395,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         .build();
   }
 
-  private ExecutionDeployment getExecutionDeployment(String time, long total, long success, long failed) {
+  private ExecutionDeployment getExecutionDeployment(Long time, long total, long success, long failed) {
     return ExecutionDeployment.builder()
         .time(time)
         .deployments(DeploymentCount.builder().total(total).success(success).failure(failed).build())
@@ -455,13 +456,13 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     }
 
     TimeAndStatusDeployment timeAndStatusDeployment = queryCalculatorTimeAndStatus(query);
-    List<String> time = timeAndStatusDeployment.getTime();
+    List<Long> time = timeAndStatusDeployment.getTime();
     List<String> status = timeAndStatusDeployment.getStatus();
 
     List<ExecutionDeployment> executionDeployments = new ArrayList<>();
 
     for (int i = 0; i < time.size(); i++) {
-      long currentTimeEpoch = Long.parseLong(time.get(i));
+      long currentTimeEpoch = time.get(i);
       currentTimeEpoch = getStartingDateEpochValue(currentTimeEpoch, startInterval);
       totalCountMap.put(currentTimeEpoch, totalCountMap.get(currentTimeEpoch) + 1);
       if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
@@ -475,7 +476,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     endDateCopy = endInterval;
 
     while (startDateCopy < endDateCopy) {
-      executionDeployments.add(getExecutionDeployment(String.valueOf(startDateCopy), totalCountMap.get(startDateCopy),
+      executionDeployments.add(getExecutionDeployment(startDateCopy, totalCountMap.get(startDateCopy),
           successCountMap.get(startDateCopy), failedCountMap.get(startDateCopy)));
       startDateCopy = startDateCopy + timeUnitPerDay;
     }
@@ -564,8 +565,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   public DeploymentStatusInfoList queryCalculatorDeploymentInfo(String queryStatus) {
     List<String> planExecutionIdList = new ArrayList<>();
     List<String> namePipelineList = new ArrayList<>();
-    List<String> startTs = new ArrayList<>();
-    List<String> endTs = new ArrayList<>();
+    List<Long> startTs = new ArrayList<>();
+    List<Long> endTs = new ArrayList<>();
     List<String> deploymentStatus = new ArrayList<>();
 
     int totalTries = 0;
@@ -578,12 +579,12 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         while (resultSet != null && resultSet.next()) {
           planExecutionIdList.add(resultSet.getString("id"));
           namePipelineList.add(resultSet.getString("name"));
-          startTs.add(resultSet.getString("startts"));
+          startTs.add(Long.valueOf(resultSet.getString("startts")));
           deploymentStatus.add(resultSet.getString("status"));
           if (resultSet.getString("endTs") != null) {
-            endTs.add(resultSet.getString("endTs"));
+            endTs.add(Long.valueOf(resultSet.getString("endTs")));
           } else {
-            endTs.add(LocalDateTime.now().toString().replace('T', ' '));
+            endTs.add(new Date().getTime());
           }
         }
         successfulOperation = true;
@@ -605,8 +606,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   public List<DeploymentStatusInfo> getDeploymentStatusInfo(String queryStatus, String queryServiceNameTagId) {
     List<String> planExecutionIdList = new ArrayList<>();
     List<String> namePipelineList = new ArrayList<>();
-    List<String> startTs = new ArrayList<>();
-    List<String> endTs = new ArrayList<>();
+    List<Long> startTs = new ArrayList<>();
+    List<Long> endTs = new ArrayList<>();
     List<String> deploymentStatus = new ArrayList<>();
 
     HashMap<String, List<ServiceDeploymentInfo>> serviceTagMap = new HashMap<>();
@@ -625,8 +626,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     List<DeploymentStatusInfo> statusInfo = new ArrayList<>();
     for (int i = 0; i < planExecutionIdList.size(); i++) {
       String planExecutionId = planExecutionIdList.get(i);
-      String startTime = startTs.get(i);
-      String endTime = endTs.get(i);
+      long startTime = startTs.get(i);
+      long endTime = endTs.get(i);
       statusInfo.add(this.getDeploymentStatusInfoObject(
           namePipelineList.get(i), startTime, endTime, deploymentStatus.get(i), serviceTagMap.get(planExecutionId)));
     }
@@ -660,8 +661,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         .build();
   }
 
-  private DeploymentStatusInfo getDeploymentStatusInfoObject(String name, String startTime, String endTime,
-      String status, List<ServiceDeploymentInfo> serviceDeploymentInfos) {
+  private DeploymentStatusInfo getDeploymentStatusInfoObject(
+      String name, Long startTime, Long endTime, String status, List<ServiceDeploymentInfo> serviceDeploymentInfos) {
     return DeploymentStatusInfo.builder()
         .name(name)
         .startTs(startTime)
@@ -682,8 +683,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     return ServiceDeploymentInfo.builder().build();
   }
 
-  private WorkloadDeploymentInfo getWorkloadDeploymentInfo(String workload, String workloadId, String lastExecuted,
-      long totalDeployment, String lastStatus, String deploymentType, long success, long previousSuccess,
+  private WorkloadDeploymentInfo getWorkloadDeploymentInfo(String workload, String workloadId,
+      LastWorkloadInfo lastWorkloadInfo, long totalDeployment, long success, long previousSuccess,
       List<WorkloadDateCountInfo> dateCount) {
     double percentSuccess = 0.0;
     if (totalDeployment != 0) {
@@ -693,26 +694,25 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     return WorkloadDeploymentInfo.builder()
         .serviceName(workload)
         .serviceId(workloadId)
-        .lastExecuted(lastExecuted)
-        .totalDeployments(totalDeployment)
-        .lastStatus(lastStatus)
+        .lastExecuted(lastWorkloadInfo)
         .percentSuccess(percentSuccess)
-        .deploymentType(deploymentType)
+        .totalDeployments(totalDeployment)
         .rateSuccess(getRate(success, previousSuccess))
         .workload(dateCount)
         .build();
   }
 
   public DashboardWorkloadDeployment getWorkloadDeploymentInfoCalculation(List<String> workloadsId, List<String> status,
-      List<String> startTs, List<String> deploymentTypeList, HashMap<String, String> uniqueWorkloadNameAndId,
-      long startDate, long endDate) {
+      List<Long> startTs, List<Long> endTs, List<String> deploymentTypeList,
+      HashMap<String, String> uniqueWorkloadNameAndId, long startDate, long endDate) {
     List<WorkloadDeploymentInfo> workloadDeploymentInfoList = new ArrayList<>();
 
     for (String workloadId : uniqueWorkloadNameAndId.keySet()) {
       long totalDeployment = 0;
       long success = 0;
       long previousSuccess = 0;
-      long lastExecuted = 0L;
+      long lastExecutedStartTs = 0L;
+      long lastExecutedEndTs = 0L;
       String lastStatus = null;
       String deploymentType = null;
 
@@ -728,7 +728,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
       for (int i = 0; i < workloadsId.size(); i++) {
         if (workloadsId.get(i).contentEquals(workloadId)) {
-          long currentTimeEpoch = Long.parseLong(startTs.get(i));
+          long currentTimeEpoch = startTs.get(i);
           if (currentTimeEpoch >= startDate && currentTimeEpoch < endDate) {
             currentTimeEpoch = getStartingDateEpochValue(currentTimeEpoch, startDate);
             totalDeployment++;
@@ -736,13 +736,15 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
             if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
               success++;
             }
-            if (lastExecuted == 0) {
-              lastExecuted = Long.parseLong(startTs.get(i));
+            if (lastExecutedStartTs == 0) {
+              lastExecutedStartTs = startTs.get(i);
+              lastExecutedEndTs = endTs.get(i);
               lastStatus = status.get(i);
               deploymentType = deploymentTypeList.get(i);
             } else {
-              if (lastExecuted < Long.parseLong(startTs.get(i))) {
-                lastExecuted = Long.parseLong(startTs.get(i));
+              if (lastExecutedStartTs < startTs.get(i)) {
+                lastExecutedStartTs = startTs.get(i);
+                lastExecutedEndTs = endTs.get(i);
                 lastStatus = status.get(i);
                 deploymentType = deploymentTypeList.get(i);
               }
@@ -761,14 +763,19 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         endDateCopy = endDate;
         while (startDateCopy < endDateCopy) {
           dateCount.add(WorkloadDateCountInfo.builder()
-                            .date(String.valueOf(startDateCopy))
+                            .date(startDateCopy)
                             .execution(WorkloadCountInfo.builder().count(deploymentCountMap.get(startDateCopy)).build())
                             .build());
           startDateCopy = startDateCopy + DAY_IN_MS;
         }
-        workloadDeploymentInfoList.add(
-            getWorkloadDeploymentInfo(uniqueWorkloadNameAndId.get(workloadId), workloadId, String.valueOf(lastExecuted),
-                totalDeployment, lastStatus, deploymentType, success, previousSuccess, dateCount));
+        LastWorkloadInfo lastWorkloadInfo = LastWorkloadInfo.builder()
+                                                .startTime(lastExecutedStartTs)
+                                                .endTime(lastExecutedEndTs)
+                                                .status(lastStatus)
+                                                .deploymentType(deploymentType)
+                                                .build();
+        workloadDeploymentInfoList.add(getWorkloadDeploymentInfo(uniqueWorkloadNameAndId.get(workloadId), workloadId,
+            lastWorkloadInfo, totalDeployment, success, previousSuccess, dateCount));
       }
     }
     return DashboardWorkloadDeployment.builder().workloadDeploymentInfoList(workloadDeploymentInfoList).build();
@@ -783,8 +790,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
     List<String> workloadsId = new ArrayList<>();
     List<String> status = new ArrayList<>();
-    List<String> startTs = new ArrayList<>();
-    List<String> endTs = new ArrayList<>();
+    List<Long> startTs = new ArrayList<>();
+    List<Long> endTs = new ArrayList<>();
     List<String> deploymentTypeList = new ArrayList<>();
 
     HashMap<String, String> uniqueWorkloadNameAndId = new HashMap<>();
@@ -799,11 +806,16 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         while (resultSet != null && resultSet.next()) {
           String serviceName = resultSet.getString("service_name");
           String service_id = resultSet.getString("service_id");
-          String startTime = resultSet.getString("startTs");
+          long startTime = Long.parseLong(resultSet.getString("startTs"));
           workloadsId.add(service_id);
           status.add(resultSet.getString("status"));
           startTs.add(startTime);
-          endTs.add(resultSet.getString("endTs"));
+
+          if (resultSet.getString("endTs") != null) {
+            endTs.add(Long.valueOf(resultSet.getString("endTs")));
+          } else {
+            endTs.add(null);
+          }
           deploymentTypeList.add(resultSet.getString("deployment_type"));
 
           if (!uniqueWorkloadNameAndId.containsKey(service_id)) {
@@ -818,7 +830,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
       }
     }
     return getWorkloadDeploymentInfoCalculation(
-        workloadsId, status, startTs, deploymentTypeList, uniqueWorkloadNameAndId, startInterval, endInterval);
+        workloadsId, status, startTs, endTs, deploymentTypeList, uniqueWorkloadNameAndId, startInterval, endInterval);
   }
 
   public long getTimeUnitToGroupBy(TimeGroupType timeGroupType) {

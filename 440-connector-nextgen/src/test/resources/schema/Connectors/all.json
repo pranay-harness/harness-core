@@ -1078,7 +1078,8 @@
             "GcpCloudCost",
             "CEK8sCluster",
             "HttpHelmRepo",
-            "NewRelic"
+            "NewRelic",
+            "Datadog"
           ]
         }
       },
@@ -1224,6 +1225,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/AwsCodeCommitConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Datadog"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/DatadogConnectorDTO"
               }
             }
           }
@@ -1514,6 +1531,40 @@
           "type": "string"
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "DatadogConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "apiKeyRef",
+            "applicationKeyRef",
+            "url"
+          ],
+          "properties": {
+            "apiKeyRef": {
+              "type": "string"
+            },
+            "applicationKeyRef": {
+              "type": "string"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "url": {
+              "type": "string"
+            }
+          }
+        }
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "DockerAuthCredentialsDTO": {

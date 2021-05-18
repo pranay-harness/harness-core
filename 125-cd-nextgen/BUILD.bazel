@@ -14,7 +14,6 @@ java_library(
         "//:lombok",
         "//400-rest:module",
         "//440-connector-nextgen:module",
-        "//850-execution-plan:module",
         "//850-ng-pipeline-commons:module",
         "//860-orchestration-steps:module",
         "//879-pms-sdk:module",

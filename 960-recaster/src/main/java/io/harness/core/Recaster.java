@@ -2,6 +2,9 @@ package io.harness.core;
 
 import static java.lang.String.format;
 
+import io.harness.annotation.RecasterAlias;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CastedClass;
 import io.harness.beans.CastedField;
 import io.harness.exceptions.CastedFieldException;
@@ -9,6 +12,7 @@ import io.harness.exceptions.RecasterException;
 import io.harness.fieldrecaster.ComplexFieldRecaster;
 import io.harness.fieldrecaster.FieldRecaster;
 import io.harness.fieldrecaster.SimpleValueFieldRecaster;
+import io.harness.utils.RecastReflectionUtils;
 
 import java.util.Collection;
 import java.util.List;
@@ -18,6 +22,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Getter
 @Slf4j
 public class Recaster {
@@ -69,17 +74,19 @@ public class Recaster {
       return null;
     }
 
-    if (!document.containsKey(RECAST_CLASS_KEY)) {
-      throw new RecasterException(
-          format("The document does not contain a %s key. Determining entity type is impossible.", RECAST_CLASS_KEY));
+    Object classIdentifier = RecastReflectionUtils.getDocumentIdentifier(document);
+
+    if (classIdentifier == null) {
+      throw new RecasterException(format(
+          "The document does not contain any identifiers %s. Determining entity type is impossible. Consider adding %s annotation to your class",
+          RECAST_CLASS_KEY, RecasterAlias.class.getSimpleName()));
     }
 
     T entity;
     entity = objectFactory.createInstance(entityClass, document);
 
     if (!entityClass.isAssignableFrom(entity.getClass())) {
-      throw new RecasterException(
-          format("%s class cannot be mapped to %s", document.get(RECAST_CLASS_KEY), entityClass.getName()));
+      throw new RecasterException(format("%s class cannot be mapped to %s", classIdentifier, entityClass.getName()));
     }
 
     entity = fromDocument(document, entity);
@@ -100,10 +107,9 @@ public class Recaster {
         try {
           readCastedField(document, cf, entity);
         } catch (final Exception e) {
-          log.error("Cannot map [{}] to [{}] class", document.get(RECAST_CLASS_KEY), entity.getClass(), e);
           throw new CastedFieldException(
-              format("Cannot map [%s] to [%s] class for field [%s]", document.get(RECAST_CLASS_KEY), entity.getClass(),
-                  cf.getField().getName()),
+              format("Cannot map [%s] to [%s] class for field [%s]",
+                  RecastReflectionUtils.getDocumentIdentifier(document), entity.getClass(), cf.getField().getName()),
               e);
         }
       }
@@ -145,14 +151,15 @@ public class Recaster {
   }
 
   private <T> T fromDocument(final Document document) {
-    if (document.containsKey(RECAST_CLASS_KEY)) {
+    if (RecastReflectionUtils.containsIdentifier(document)) {
       T entity = getObjectFactory().createInstance(null, document);
       entity = fromDocument(document, entity);
 
       return entity;
     } else {
-      throw new RecasterException(
-          format("The document does not contain a %s key. Determining entity type is impossible.", RECAST_CLASS_KEY));
+      throw new RecasterException(format(
+          "The document does not contain any identifiers %s. Determining entity type is impossible. Consider adding %s annotation to your class",
+          RECAST_CLASS_KEY, RecasterAlias.class.getSimpleName()));
     }
   }
 
@@ -182,7 +189,8 @@ public class Recaster {
 
     Document document = new Document();
     final CastedClass cc = getCastedClass(entity);
-    document.put(RECAST_CLASS_KEY, entity.getClass().getName());
+
+    RecastReflectionUtils.setDocumentIdentifier(document, entity.getClass());
 
     if (transformer.hasCustomTransformer(entity.getClass())) {
       Object encode = transformer.encode(entity);
@@ -215,8 +223,9 @@ public class Recaster {
       try {
         writeCastedField(entity, cf, document, involvedObjects);
       } catch (Exception e) {
-        throw new CastedFieldException(format("Cannot map [%s] to [%s] class for field [%s]",
-                                           document.get(RECAST_CLASS_KEY), entity.getClass(), cf.getField().getName()),
+        throw new CastedFieldException(
+            format("Cannot map [%s] to [%s] class for field [%s]",
+                RecastReflectionUtils.getDocumentIdentifier(document), entity.getClass(), cf.getField().getName()),
             e);
       }
     }

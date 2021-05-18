@@ -36,6 +36,7 @@ import io.harness.delegate.beans.connector.ceazure.BillingExportSpecDTO;
 import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
 import io.harness.delegate.beans.connector.ceazure.CEAzureFeatures;
 import io.harness.delegate.beans.connector.cek8s.CEKubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.datadog.DatadogConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerAuthCredentialsDTO;
 import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
@@ -271,5 +272,6 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(GcpCloudCostConnectorDTO.class, 19666);
     kryo.register(BitbucketSshCredentialsDTO.class, 19667);
     kryo.register(PrometheusConnectorDTO.class, 19668);
+    kryo.register(DatadogConnectorDTO.class, 19669);
   }
 }

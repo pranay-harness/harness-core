@@ -1,15 +1,13 @@
 package io.harness.delegate.task.artifacts.gcr;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
+import static io.harness.delegate.beans.connector.ConnectorCapabilityBaseHelper.populateDelegateSelectorCapability;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.SelectorCapability;
+import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.task.artifacts.ArtifactSourceDelegateRequest;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -17,7 +15,7 @@ import io.harness.exception.UnknownEnumTypeException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -47,21 +45,22 @@ public class GcrArtifactDelegateRequest implements ArtifactSourceDelegateRequest
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    List<ExecutionCapability> capabilities =
+        new ArrayList<>(EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
+            encryptedDataDetails, maskingEvaluator));
     if (gcpConnectorDTO.getCredential() != null) {
       if (gcpConnectorDTO.getCredential().getGcpCredentialType() == GcpCredentialType.INHERIT_FROM_DELEGATE) {
-        if (EmptyPredicate.isNotEmpty(gcpConnectorDTO.getDelegateSelectors())) {
-          return singletonList(SelectorCapability.builder().selectors(gcpConnectorDTO.getDelegateSelectors()).build());
-        }
-        return emptyList();
+        populateDelegateSelectorCapability(capabilities, gcpConnectorDTO.getDelegateSelectors());
       } else if (gcpConnectorDTO.getCredential().getGcpCredentialType() == GcpCredentialType.MANUAL_CREDENTIALS) {
+        populateDelegateSelectorCapability(capabilities, gcpConnectorDTO.getDelegateSelectors());
         final String GCS_URL = "https://storage.cloud.google.com/";
-        return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+        capabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
             GCS_URL, maskingEvaluator));
       } else {
         throw new UnknownEnumTypeException(
             "Gcr Credential Type", String.valueOf(gcpConnectorDTO.getCredential().getGcpCredentialType()));
       }
     }
-    return emptyList();
+    return capabilities;
   }
 }

@@ -22,9 +22,10 @@ public class CDNGRegistrars {
           .addAll(ManagerRegistrars.kryoRegistrars)
           .addAll(SMCoreRegistrars.kryoRegistrars)
           .addAll(DelegateServiceDriverRegistrars.kryoRegistrars)
-          .addAll(ExecutionPlanModuleRegistrars.kryoRegistrars)
           .addAll(NGPipelineRegistrars.kryoRegistrars)
           .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
+          .addAll(YamlBeansModuleRegistrars.kryoRegistrars)
+          .addAll(OrchestrationStepsModuleRegistrars.kryoRegistrars)
           .add(NGKryoRegistrar.class)
           .build();
 
@@ -33,11 +34,12 @@ public class CDNGRegistrars {
           .addAll(ManagerRegistrars.morphiaRegistrars)
           .addAll(SMCoreRegistrars.morphiaRegistrars)
           .addAll(DelegateServiceDriverRegistrars.morphiaRegistrars)
-          .addAll(ExecutionPlanModuleRegistrars.morphiaRegistrars)
           .addAll(NGPipelineRegistrars.morphiaRegistrars)
           .addAll(ConnectorNextGenRegistrars.morphiaRegistrars)
           .add(NGMorphiaRegistrar.class)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
+          .addAll(YamlBeansModuleRegistrars.morphiaRegistrars)
+          .addAll(OrchestrationStepsModuleRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =

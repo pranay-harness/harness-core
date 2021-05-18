@@ -423,6 +423,8 @@ public enum ErrorCode {
 
   INVALID_ROLLBACK,
 
+  DATA_COLLECTION_ERROR,
+
   SUMO_DATA_COLLECTION_ERROR,
 
   DEPLOYMENT_GOVERNANCE_ERROR,
@@ -520,7 +522,8 @@ public enum ErrorCode {
   SCM_UNPROCESSABLE_ENTITY,
   SCM_UNAUTHORIZED,
   DATA,
-  CONTEXT;
+  CONTEXT,
+  PR_CREATION_ERROR;
 
   private Status status = BAD_REQUEST;
   private String description;

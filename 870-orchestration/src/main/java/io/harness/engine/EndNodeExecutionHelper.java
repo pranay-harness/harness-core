@@ -77,15 +77,13 @@ public class EndNodeExecutionHelper {
 
     stepOutcomeProtos.forEach(proto -> {
       if (isNotEmpty(proto.getOutcome())) {
-        String instanceId =
-            pmsOutcomeService.consume(ambiance, proto.getName(), proto.getOutcome(), proto.getGroup(), false);
+        String instanceId = pmsOutcomeService.consume(ambiance, proto.getName(), proto.getOutcome(), proto.getGroup());
         outcomeRefs.add(StepOutcomeRef.newBuilder().setName(proto.getName()).setInstanceId(instanceId).build());
       }
     });
     graphOutcomesList.forEach(proto -> {
       if (isNotEmpty(proto.getOutcome())) {
-        String instanceId =
-            pmsOutcomeService.consume(ambiance, proto.getName(), proto.getOutcome(), proto.getGroup(), true);
+        String instanceId = pmsOutcomeService.consume(ambiance, proto.getName(), proto.getOutcome(), proto.getGroup());
         outcomeRefs.add(StepOutcomeRef.newBuilder().setName(proto.getName()).setInstanceId(instanceId).build());
       }
     });

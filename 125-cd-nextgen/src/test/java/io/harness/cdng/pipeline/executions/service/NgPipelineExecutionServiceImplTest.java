@@ -46,9 +46,9 @@ import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.execution.ExecutionStatus;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.repositories.pipeline.PipelineExecutionRepository;
 import io.harness.rule.Owner;
-import io.harness.steps.StepOutcomeGroup;
 
 import io.fabric8.utils.Lists;
 import java.util.ArrayList;

@@ -33,17 +33,4 @@ public class StepOutcomeMapper {
     }
     return builder.build();
   }
-
-  public StepOutcomeProto toGraphOutcomeProto(StepOutcome stepOutcome) {
-    StepOutcomeProto.Builder builder = StepOutcomeProto.newBuilder().setName(stepOutcome.getName() + GRAPH_KEY);
-    if (stepOutcome.getGroup() != null) {
-      builder.setGroup(stepOutcome.getGroup());
-    }
-    if (stepOutcome.getOutcome() != null && stepOutcome.getOutcome().toViewJson() != null) {
-      builder.setOutcome(stepOutcome.getOutcome().toViewJson());
-    } else {
-      return null;
-    }
-    return builder.build();
-  }
 }

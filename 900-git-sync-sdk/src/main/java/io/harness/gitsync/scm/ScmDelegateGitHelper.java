@@ -19,8 +19,10 @@ import software.wings.beans.TaskType;
 
 import com.google.inject.Inject;
 import java.time.Duration;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
+@Slf4j
 @OwnedBy(DX)
 public class ScmDelegateGitHelper implements ScmGitHelper {
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
@@ -43,6 +45,7 @@ public class ScmDelegateGitHelper implements ScmGitHelper {
                                                   .build();
     DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
     ScmPushTaskResponseData scmPushTaskResponseData = (ScmPushTaskResponseData) responseData;
+    ScmPushResponse scmPushResponse = null;
     switch (changeType) {
       case ADD:
         ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(

@@ -93,7 +93,18 @@ java_binary(
     deps = shared_dependencies,
 )
 
+java_library(
+    name = "testsupport",
+    srcs = glob(["src/testsupport/**/*.java"]),
+    deps = [
+        ":module",
+        "//990-commons-test:module",
+        "@maven//:org_springframework_batch_spring_batch_core",
+    ],
+)
+
 test_dependencies = shared_dependencies + [
+    ":testsupport",
     ":module",
     "//400-rest:supporter-test",
     "//960-persistence:supporter-test",

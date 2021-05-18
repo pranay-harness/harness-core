@@ -1,10 +1,12 @@
 package io.harness.pms.yaml;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CastedField;
-import io.harness.core.Recaster;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterDocumentField.ParameterDocumentFieldKeys;
+import io.harness.utils.RecastReflectionUtils;
 
 import java.lang.reflect.Type;
 import java.util.Optional;
@@ -13,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
 @Slf4j
 public class ParameterDocumentFieldMapper {
@@ -91,8 +94,9 @@ public class ParameterDocumentFieldMapper {
     }
 
     Document doc = (Document) o;
-    String recastClass = (String) doc.getOrDefault(Recaster.RECAST_CLASS_KEY, "");
-    if (!recastClass.equals(ParameterField.class.getName())) {
+    Object recastClass = Optional.ofNullable(RecastReflectionUtils.getDocumentIdentifier(doc)).orElse("");
+    String recasterAliasValue = RecastReflectionUtils.obtainRecasterAliasValueOrNull(ParameterField.class);
+    if (!recastClass.equals(ParameterField.class.getName()) && !recastClass.equals(recasterAliasValue)) {
       return Optional.empty();
     }
 

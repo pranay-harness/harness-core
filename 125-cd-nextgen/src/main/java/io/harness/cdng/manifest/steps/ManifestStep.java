@@ -1,5 +1,7 @@
 package io.harness.cdng.manifest.steps;
 
+import static java.lang.String.format;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.mappers.ManifestOutcomeMapper;
@@ -7,6 +9,7 @@ import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.service.steps.ServiceStepsHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.UnexpectedTypeException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logstreaming.NGLogCallback;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -41,9 +44,9 @@ public class ManifestStep implements SyncExecutable<ManifestStepParameters> {
   public StepResponse executeSync(Ambiance ambiance, ManifestStepParameters stepParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData) {
     NGLogCallback logCallback = serviceStepsHelper.getServiceLogCallback(ambiance);
-    logCallback.saveExecutionLog(String.format("Processing manifest [%s]...", stepParameters.getIdentifier()));
+    logCallback.saveExecutionLog(format("Processing manifest [%s]...", stepParameters.getIdentifier()));
     ManifestAttributes finalManifest = applyManifestsOverlay(stepParameters);
-    logCallback.saveExecutionLog(String.format("Processed manifest [%s]", stepParameters.getIdentifier()));
+    logCallback.saveExecutionLog(format("Processed manifest [%s]", stepParameters.getIdentifier()));
     return StepResponse.builder()
         .status(Status.SUCCEEDED)
         .stepOutcome(StepOutcome.builder()
@@ -72,6 +75,12 @@ public class ManifestStep implements SyncExecutable<ManifestStepParameters> {
     }
     ManifestAttributes resultantManifest = manifestList.get(0);
     for (ManifestAttributes manifest : manifestList.subList(1, manifestList.size())) {
+      if (!manifest.getKind().equals(resultantManifest.getKind())) {
+        throw new UnexpectedTypeException(
+            format("Unable to apply manifest override of type '%s' to manifest of type '%s' with identifier '%s'",
+                manifest.getKind(), resultantManifest.getKind(), resultantManifest.getIdentifier()));
+      }
+
       resultantManifest = resultantManifest.applyOverrides(manifest);
     }
     return resultantManifest;
