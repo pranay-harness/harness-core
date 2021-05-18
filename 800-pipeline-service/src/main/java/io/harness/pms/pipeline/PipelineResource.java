@@ -231,7 +231,8 @@ public class PipelineResource implements YamlSchemaResource {
     }
 
     Page<PMSPipelineSummaryResponseDTO> pipelines =
-        pmsPipelineService.list(criteria, pageRequest).map(PMSPipelineDtoMapper::preparePipelineSummary);
+        pmsPipelineService.list(criteria, pageRequest, accountId, orgId, projectId)
+            .map(PMSPipelineDtoMapper::preparePipelineSummary);
 
     return ResponseDTO.newResponse(pipelines);
   }
