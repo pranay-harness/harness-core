@@ -29,7 +29,7 @@ if [ "${RUN_BAZEL_FUNCTIONAL_TESTS}" == "true" ]; then
   MANAGER_PID=$!
   java -Xbootclasspath/p:alpn-boot-8.1.13.v20181017.jar -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar /home/jenkins/.bazel-dirs/bin/260-delegate/module_deploy.jar /home/jenkins/workspace/pr-portal-funtional-tests/260-delegate/config-delegate.yml &
   DELEGATE_PID=$!
-  bazel test --keep_going ${BAZEL_ARGUMENTS} --jobs=3 -- //200-functional-test/... || true
+  bazel test --keep_going ${BAZEL_ARGUMENTS} --jobs=2 -- //200-functional-test/... || true
   kill -9 $MANAGER_PID
   kill -9 $DELEGATE_PID
 fi
