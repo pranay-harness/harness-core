@@ -104,8 +104,8 @@ public class DeploymentEventListener implements AsyncOrchestrationEventHandler {
 
   private AbstractInstanceHandler getInstanceHandler(Ambiance ambiance) {
     InfrastructureOutcome infrastructureOutcome = (InfrastructureOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
 
-    return instanceHandlerFactoryService.getInstanceHandlerByType(infrastructureOutcome.getType());
+    return instanceHandlerFactoryService.getInstanceHandlerByType(infrastructureOutcome.getKind());
   }
 }

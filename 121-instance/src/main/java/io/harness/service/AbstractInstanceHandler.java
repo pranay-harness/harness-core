@@ -222,7 +222,7 @@ public abstract class AbstractInstanceHandler<T extends InstanceHandlerKey, U ex
     infrastructureMapping.setOrgIdentifier(AmbianceHelper.getOrgIdentifier(ambiance));
     infrastructureMapping.setProjectIdentifier(AmbianceHelper.getProjectIdentifier(ambiance));
     infrastructureMapping.setServiceId(serviceOutcome.getIdentifier());
-    infrastructureMapping.setInfrastructureMappingType(infrastructureOutcome.getType());
+    infrastructureMapping.setInfrastructureMappingType(infrastructureOutcome.getKind());
     infrastructureMapping.setEnvId(infrastructureOutcome.getEnvironment().getIdentifier());
 
     // TODO set deployment type and id
@@ -294,7 +294,7 @@ public abstract class AbstractInstanceHandler<T extends InstanceHandlerKey, U ex
 
   protected final InfrastructureOutcome getInfrastructureOutcomeFromAmbiance(Ambiance ambiance) {
     return (InfrastructureOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
   }
 
   // ---------------------------- PRIVATE METHODS ---------------------------
