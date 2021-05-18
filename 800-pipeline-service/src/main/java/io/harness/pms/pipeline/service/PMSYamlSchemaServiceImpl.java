@@ -39,6 +39,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.inject.Inject;
@@ -49,8 +52,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -65,12 +73,24 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
   private static final Class<StepElementConfig> STEP_ELEMENT_CONFIG_CLASS = StepElementConfig.class;
   private static final String APPROVAL_NAMESPACE = "approval";
 
+  private static final int CACHE_EVICTION_TIME_HOUR = 1;
+
   private final YamlSchemaProvider yamlSchemaProvider;
   private final YamlSchemaGenerator yamlSchemaGenerator;
   private final Map<String, YamlSchemaClient> yamlSchemaClientMapper;
   private final YamlSchemaValidator yamlSchemaValidator;
 
   private final PmsSdkInstanceService pmsSdkInstanceService;
+
+  private final LoadingCache<SchemaKey, JsonNode> schemaCache =
+      CacheBuilder.newBuilder()
+          .expireAfterAccess(CACHE_EVICTION_TIME_HOUR, TimeUnit.HOURS)
+          .build(new CacheLoader<SchemaKey, JsonNode>() {
+            @Override
+            public JsonNode load(@NotNull final SchemaKey schemaKey) {
+              return getPipelineYamlSchema(schemaKey.getProjectId(), schemaKey.getOrgId(), schemaKey.getScope());
+            }
+          });
 
   public JsonNode getPipelineYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope) {
     JsonNode pipelineSchema =
@@ -278,7 +298,8 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
   @Override
   public void validateYamlSchema(String orgId, String projectId, String yaml) {
     try {
-      JsonNode schema = getPipelineYamlSchema(projectId, orgId, Scope.PROJECT);
+      JsonNode schema =
+          schemaCache.get(SchemaKey.builder().projectId(projectId).orgId(orgId).scope(Scope.PROJECT).build());
       String schemaString = JsonPipelineUtils.writeJsonString(schema);
       Set<String> errors = yamlSchemaValidator.validate(yaml, schemaString);
       if (!errors.isEmpty()) {
@@ -298,5 +319,14 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
         yamlSchemaGenerator.removeUnwantedNodes(jsonNode, YAMLFieldNameConstants.ROLLBACK_STEPS);
       }
     }
+  }
+
+  @Value
+  @Builder
+  @EqualsAndHashCode(callSuper = false)
+  private static class SchemaKey {
+    String projectId;
+    String orgId;
+    Scope scope;
   }
 }
