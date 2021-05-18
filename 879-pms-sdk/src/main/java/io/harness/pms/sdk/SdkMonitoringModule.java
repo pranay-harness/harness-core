@@ -16,6 +16,6 @@ public class SdkMonitoringModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    install(new MetricsModule());
+    install(MetricsModule.getInstance());
   }
 }

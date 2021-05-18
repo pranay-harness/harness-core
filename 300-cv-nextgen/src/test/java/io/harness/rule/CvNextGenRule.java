@@ -132,7 +132,7 @@ public class CvNextGenRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     modules.add(new NextGenClientModule(
         NGManagerServiceConfig.builder().managerServiceSecret("secret").ngManagerUrl("http://test-ng-host").build()));
     modules.add(new VerificationManagerClientModule("http://test-host"));
-    modules.add(new MetricsModule());
+    modules.add(MetricsModule.getInstance());
     modules.add(new AbstractCfModule() {
       @Override
       public CfClientConfig cfClientConfig() {

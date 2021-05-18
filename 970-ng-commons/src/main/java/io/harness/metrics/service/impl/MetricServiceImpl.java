@@ -15,6 +15,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.opencensus.common.Duration;
 import io.opencensus.common.Scope;
 import io.opencensus.exporter.stats.stackdriver.StackdriverStatsConfiguration;
@@ -51,12 +52,19 @@ import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 
 @Slf4j
+@Singleton
 public class MetricServiceImpl implements MetricService {
-  @Inject private HarnessMetricRegistry harnessMetricRegistry;
   private static boolean WILL_PUBLISH_METRICS;
-
   static Map<String, MetricGroup> metricGroupMap;
   static List<MetricConfiguration> metricConfigDefinitions;
+
+  private HarnessMetricRegistry harnessMetricRegistry;
+
+  @Inject
+  MetricServiceImpl(HarnessMetricRegistry harnessMetricRegistry) {
+    this.harnessMetricRegistry = harnessMetricRegistry;
+    initializeMetrics();
+  }
 
   public static Set<String> listFilesUsingFileWalk(String dir, int depth) throws IOException {
     try (Stream<Path> stream = Files.walk(Paths.get(dir), depth)) {
@@ -92,7 +100,7 @@ public class MetricServiceImpl implements MetricService {
     }
   }
 
-  private void fetchAndInitMetricDefinitions() {
+  private static void fetchAndInitMetricDefinitions() {
     if (metricConfigDefinitions == null) {
       Reflections reflections = new Reflections("metrics.metricDefinitions", new ResourcesScanner());
       Set<String> metricDefinitionFileNames = reflections.getResources(Pattern.compile(".*\\.yaml"));
@@ -133,8 +141,7 @@ public class MetricServiceImpl implements MetricService {
     }
   }
 
-  @Override
-  public void initializeMetrics() {
+  public static void initializeMetrics() {
     if (isNotEmpty(System.getenv("GOOGLE_APPLICATION_CREDENTIALS"))) {
       WILL_PUBLISH_METRICS = true;
     }

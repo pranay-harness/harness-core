@@ -3,8 +3,6 @@ package io.harness.pms.sdk;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.metrics.jobs.RecordMetricsJob;
-import io.harness.metrics.service.api.MetricService;
 import io.harness.monitoring.MonitoringQueueObserver;
 import io.harness.pms.contracts.plan.InitializeSdkRequest;
 import io.harness.pms.contracts.plan.PmsServiceGrpc;
@@ -90,8 +88,8 @@ public class PmsSdkInitHelper {
   }
 
   private static void initializeMetrics(Injector injector) {
-    injector.getInstance(MetricService.class).initializeMetrics();
-    injector.getInstance(RecordMetricsJob.class).scheduleMetricsTasks();
+    // injector.getInstance(MetricService.class).initializeMetrics();
+    // injector.getInstance(RecordMetricsJob.class).scheduleMetricsTasks();
   }
 
   private static void registerObserversForEvents(Injector injector) {

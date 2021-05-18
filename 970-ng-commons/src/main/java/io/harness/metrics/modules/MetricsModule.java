@@ -10,6 +10,17 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class MetricsModule extends AbstractModule {
+  private static MetricsModule instance;
+
+  public static MetricsModule getInstance() {
+    if (instance == null) {
+      instance = new MetricsModule();
+    }
+    return instance;
+  }
+
+  private MetricsModule() {}
+
   @Override
   protected void configure() {
     bind(MetricService.class).to(MetricServiceImpl.class);

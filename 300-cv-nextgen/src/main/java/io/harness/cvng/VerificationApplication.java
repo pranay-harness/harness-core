@@ -71,8 +71,6 @@ import io.harness.iterator.PersistenceIterator;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
-import io.harness.metrics.jobs.RecordMetricsJob;
-import io.harness.metrics.service.api.MetricService;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
@@ -311,9 +309,6 @@ public class VerificationApplication extends Application<VerificationConfigurati
     YamlSdkInitHelper.initialize(injector, yamlSdkConfiguration);
     initializeServiceSecretKeys();
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
-    if (!configuration.getShouldConfigureWithPMS()) {
-      initMetrics(injector);
-    }
     autoCreateCollectionsAndIndexes(injector);
     registerCorrelationFilter(environment, injector);
     registerAuthFilters(environment, injector, configuration);
@@ -400,11 +395,6 @@ public class VerificationApplication extends Application<VerificationConfigurati
         .filterCreationResponseMerger(new CVNGFilterCreationResponseMerger())
         .executionSummaryModuleInfoProviderClass(CVNGModuleInfoProvider.class)
         .build();
-  }
-
-  private void initMetrics(Injector injector) {
-    injector.getInstance(MetricService.class).initializeMetrics();
-    injector.getInstance(RecordMetricsJob.class).scheduleMetricsTasks();
   }
 
   private void autoCreateCollectionsAndIndexes(Injector injector) {
