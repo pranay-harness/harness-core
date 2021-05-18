@@ -115,6 +115,8 @@ public class PipelineResource implements YamlSchemaResource {
       @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo, @NotNull @ApiParam(hidden = true) String yaml) {
     log.info("Creating pipeline");
 
+    pmsYamlSchemaService.validateYamlSchema(orgId, projectId, yaml);
+
     PipelineEntity pipelineEntity = PMSPipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
     PipelineEntity createdEntity = pmsPipelineService.create(pipelineEntity);
 
@@ -174,6 +176,8 @@ public class PipelineResource implements YamlSchemaResource {
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId,
       @BeanParam GitEntityUpdateInfoDTO gitEntityInfo, @NotNull @ApiParam(hidden = true) String yaml) {
     log.info("Updating pipeline");
+
+    pmsYamlSchemaService.validateYamlSchema(orgId, projectId, yaml);
 
     PipelineEntity pipelineEntity = PMSPipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
     if (!pipelineEntity.getIdentifier().equals(pipelineId)) {
@@ -240,7 +244,8 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId) {
+      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     log.info("Get pipeline Summary");
 
     PMSPipelineSummaryResponseDTO pipelineSummary = PMSPipelineDtoMapper.preparePipelineSummary(
@@ -270,7 +275,7 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @QueryParam("searchTerm") String searchTerm,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo, @QueryParam("searchTerm") String searchTerm,
       @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size,
       @QueryParam("sort") List<String> sort, @QueryParam("filterIdentifier") String filterIdentifier,
@@ -288,8 +293,14 @@ public class PipelineResource implements YamlSchemaResource {
     }
 
     Page<PipelineExecutionSummaryDTO> planExecutionSummaryDTOS =
-        pmsExecutionService.getPipelineExecutionSummaryEntity(criteria, pageRequest)
-            .map(PipelineExecutionSummaryDtoMapper::toDto);
+        pmsExecutionService.getPipelineExecutionSummaryEntity(criteria, pageRequest).map(e -> {
+          Optional<PipelineEntity> optionalPipelineEntity =
+              pmsPipelineService.get(accountId, orgId, projectId, e.getPipelineIdentifier(), false);
+          if (!optionalPipelineEntity.isPresent()) {
+            throw new InvalidRequestException("Pipeline with identifier " + e.getPipelineIdentifier() + " not found");
+          }
+          return PipelineExecutionSummaryDtoMapper.toDto(e, optionalPipelineEntity.get());
+        });
 
     return ResponseDTO.newResponse(planExecutionSummaryDTOS);
   }
@@ -302,18 +313,27 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @QueryParam("filter") String filter, @QueryParam("stageNodeId") String stageNodeId,
-      @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
+      @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     log.info("Get Execution Detail");
 
     PipelineExecutionSummaryEntity executionSummaryEntity =
         pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId, false);
+
+    Optional<PipelineEntity> optionalPipelineEntity =
+        pmsPipelineService.get(accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier(), false);
+    if (!optionalPipelineEntity.isPresent()) {
+      throw new InvalidRequestException(
+          "Pipeline with identifier " + executionSummaryEntity.getPipelineIdentifier() + " not found");
+    }
 
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of("PIPELINE", executionSummaryEntity.getPipelineIdentifier()), PipelineRbacPermissions.PIPELINE_VIEW);
 
     PipelineExecutionDetailDTO pipelineExecutionDetailDTO =
         PipelineExecutionDetailDTO.builder()
-            .pipelineExecutionSummary(PipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntity))
+            .pipelineExecutionSummary(
+                PipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntity, optionalPipelineEntity.get()))
             .executionGraph(ExecutionGraphMapper.toExecutionGraph(
                 pmsExecutionService.getOrchestrationGraph(stageNodeId, planExecutionId)))
             .build();

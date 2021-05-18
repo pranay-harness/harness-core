@@ -15,7 +15,6 @@ import (
 	"github.com/golang/protobuf/proto"
 	pb "github.com/wings-software/portal/953-events-api/src/main/proto/io/harness/eventsframework/schemas/webhookpayloads"
 	scmpb "github.com/wings-software/portal/product/ci/scm/proto"
-	"github.com/wings-software/portal/product/ci/ti-service/config"
 	"github.com/wings-software/portal/product/ci/ti-service/db"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.uber.org/zap"
@@ -41,14 +40,9 @@ func New(endpoint, password string, enableTLS bool, certPath string, log *zap.Su
 			log.Errorw("could not read certificate file", "path", certPath, zap.Error(err))
 			return nil, err
 		}
-		// Base64 decode the PEM file
-		rootPemDec, err := base64.StdEncoding.DecodeString(string(rootPem))
-		if err != nil {
-			log.Errorw("could not b64 decode cert", "path", certPath, zap.Error(err))
-			return nil, err
-		}
+
 		roots := x509.NewCertPool()
-		ok := roots.AppendCertsFromPEM(rootPemDec)
+		ok := roots.AppendCertsFromPEM(rootPem)
 		if !ok {
 			log.Errorw("could not use cert", "path", certPath, zap.Error(err))
 			return nil, err
@@ -84,11 +78,11 @@ func (r *RedisBroker) Run() {
 }
 
 // Callback which will be invoked for merging of partial call graph
-func (r *RedisBroker) RegisterMerge(ctx context.Context, topic string, fn MergeCallbackFn, db db.Db, config config.Config) {
-	r.Register(topic, r.getCallback(ctx, fn, db, config))
+func (r *RedisBroker) RegisterMerge(ctx context.Context, topic string, fn MergeCallbackFn, db db.Db) {
+	r.Register(topic, r.getCallback(ctx, fn, db))
 }
 
-func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn, db db.Db, config config.Config) func(msg *redisqueue.Message) error {
+func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn, db db.Db) func(msg *redisqueue.Message) error {
 	return func(msg *redisqueue.Message) error {
 		var accountId string
 		var webhookResp interface{}
@@ -120,8 +114,7 @@ func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn, db db
 			pList := strings.Split(p, "/")
 			branch := pList[len(pList)-1]
 			if len(p) == 0 || len(branch) == 0 {
-				r.log.Errorw("could not get any branch or repo", "account_id", accountId, "branch", branch, "repo", repo)
-				return errors.New("could not get a branch or repo in the webhook push payload")
+				return nil
 			}
 			req := types.MergePartialCgRequest{AccountId: accountId, TargetBranch: branch, Repo: repo}
 			commitList := []string{}
@@ -129,13 +122,13 @@ func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn, db db
 				commitList = append(commitList, c.GetSha())
 			}
 			// Get list of files corresponding to these sha values
-			req.Diff, err = db.GetDiffFiles(ctx, config.TimeScaleDb.CoverageTable, accountId, commitList)
+			req.Diff, err = db.GetDiffFiles(ctx, accountId, commitList)
 			if err != nil {
-				r.log.Errorw("could not get changed files list", "account_id", accountId, "commitList", commitList, zap.Error(err))
+				r.log.Errorw("could not get changed files list", "account_id", accountId, "commitList", commitList, "repo", repo, zap.Error(err))
 				return err
 			}
 			if len(req.Diff.Sha) == 0 {
-				r.log.Warnw("commit info is empty, skipping merge")
+				r.log.Warnw("commit info is empty, skipping merge", "account_id", accountId, "repo", repo)
 			} else {
 				r.log.Infow("got a push webhook payload", "account_id", accountId,
 					"repo", repo, "commit_file_mapping", req.Diff,

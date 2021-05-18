@@ -7,6 +7,8 @@ import static io.harness.rule.OwnerRule.SAMARTH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 
@@ -19,6 +21,7 @@ import io.harness.dto.OrchestrationAdjacencyListDTO;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.JsonSchemaValidationException;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.NodeExecutionToExecutioNodeMapper;
@@ -132,6 +135,18 @@ public class PipelineResourceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = SAMARTH)
+  @Category(UnitTests.class)
+  public void testCreatePipelineWithSchemaErrors() throws IOException {
+    doThrow(JsonSchemaValidationException.class)
+        .when(pmsYamlSchemaService)
+        .validateYamlSchema(ORG_IDENTIFIER, PROJ_IDENTIFIER, yaml);
+
+    assertThatThrownBy(() -> pipelineResource.createPipeline(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, yaml))
+        .isInstanceOf(JsonSchemaValidationException.class);
+  }
+
+  @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testGetPipeline() {
@@ -185,6 +200,20 @@ public class PipelineResourceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = SAMARTH)
+  @Category(UnitTests.class)
+  public void testUpdatePipelineWithSchemaErrors() {
+    doThrow(JsonSchemaValidationException.class)
+        .when(pmsYamlSchemaService)
+        .validateYamlSchema(ORG_IDENTIFIER, PROJ_IDENTIFIER, yaml);
+
+    assertThatThrownBy(()
+                           -> pipelineResource.updatePipeline(
+                               null, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null, yaml))
+        .isInstanceOf(JsonSchemaValidationException.class);
+  }
+
+  @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testDeletePipeline() {
@@ -204,7 +233,7 @@ public class PipelineResourceTest extends CategoryTest {
         .when(pmsPipelineService)
         .get(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, false);
     ResponseDTO<PMSPipelineSummaryResponseDTO> pipelineSummary =
-        pipelineResource.getPipelineSummary(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER);
+        pipelineResource.getPipelineSummary(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null);
     assertThat(pipelineSummary.getData().getName()).isEqualTo(PIPELINE_IDENTIFIER);
     assertThat(pipelineSummary.getData().getIdentifier()).isEqualTo(PIPELINE_IDENTIFIER);
     assertThat(pipelineSummary.getData().getDescription()).isNull();
@@ -226,7 +255,7 @@ public class PipelineResourceTest extends CategoryTest {
 
     assertThatThrownBy(()
                            -> pipelineResource.getPipelineSummary(
-                               ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, incorrectPipelineIdentifier))
+                               ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, incorrectPipelineIdentifier, null))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage(String.format(
             "Pipeline with the given ID: %s does not exist or has been deleted", incorrectPipelineIdentifier));
@@ -265,9 +294,13 @@ public class PipelineResourceTest extends CategoryTest {
     doReturn(pipelineExecutionSummaryEntities)
         .when(pmsExecutionService)
         .getPipelineExecutionSummaryEntity(any(), any());
+    doReturn(Optional.of(PipelineEntity.builder().build()))
+        .when(pmsPipelineService)
+        .get(anyString(), anyString(), anyString(), anyString(), anyBoolean());
+
     Page<PipelineExecutionSummaryDTO> content = pipelineResource
                                                     .getListOfExecutions(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER,
-                                                        null, null, 0, 10, null, null, null, null, null, true)
+                                                        null, null, null, 0, 10, null, null, null, null, null, true)
                                                     .getData();
     assertThat(content).isNotEmpty();
     assertThat(content.getNumberOfElements()).isEqualTo(1);
@@ -287,9 +320,12 @@ public class PipelineResourceTest extends CategoryTest {
         .when(pmsExecutionService)
         .getPipelineExecutionSummaryEntity(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PLAN_EXECUTION_ID, false);
     doReturn(orchestrationGraph).when(pmsExecutionService).getOrchestrationGraph(STAGE_NODE_ID, PLAN_EXECUTION_ID);
+    doReturn(Optional.of(PipelineEntity.builder().build()))
+        .when(pmsPipelineService)
+        .get(anyString(), anyString(), anyString(), anyString(), anyBoolean());
 
     ResponseDTO<PipelineExecutionDetailDTO> executionDetails = pipelineResource.getExecutionDetail(
-        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, STAGE_NODE_ID, PLAN_EXECUTION_ID);
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, STAGE_NODE_ID, PLAN_EXECUTION_ID, null);
 
     assertThat(executionDetails.getData().getPipelineExecutionSummary().getPipelineIdentifier())
         .isEqualTo(PIPELINE_IDENTIFIER);
@@ -314,7 +350,7 @@ public class PipelineResourceTest extends CategoryTest {
 
     assertThatThrownBy(()
                            -> pipelineResource.getExecutionDetail(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null,
-                               STAGE_NODE_ID, invalidPlanExecutionId))
+                               STAGE_NODE_ID, invalidPlanExecutionId, null))
         .isInstanceOf(InvalidRequestException.class);
   }
 }

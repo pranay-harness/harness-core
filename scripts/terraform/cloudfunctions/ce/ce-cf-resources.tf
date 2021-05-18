@@ -35,6 +35,17 @@ resource "google_pubsub_topic" "ce-awsdata-ec2-cpu-topic" {
   project = "${var.projectId}"
 }
 
+# PubSub topic for AWS EBS Inventory data pipeline. scheduler pushes into this
+resource "google_pubsub_topic" "ce-awsdata-ebs-inventory-topic" {
+  name = "ce-awsdata-ebs-inventory-scheduler"
+  project = "${var.projectId}"
+}
+
+# PubSub topic for AWS EBS Inventory Metrics data pipeline. scheduler pushes into this
+resource "google_pubsub_topic" "ce-awsdata-ebs-metrics-topic" {
+  name = "ce-awsdata-ebs-metrics-inventory-scheduler"
+  project = "${var.projectId}"
+}
 
 data "archive_file" "ce-clusterdata" {
   type        = "zip"
@@ -210,6 +221,10 @@ data "archive_file" "ce-awsdata-ec2" {
     filename = "aws_ec2_inventory_schema.py"
   }
   source {
+    content  = "${file("${path.module}/src/python/aws_ebs_inventory_schema.py")}"
+    filename = "aws_ebs_inventory_schema.py"
+  }
+  source {
     content  = "${file("${path.module}/src/python/unified_schema.py")}"
     filename = "unified_schema.py"
   }
@@ -241,6 +256,84 @@ data "archive_file" "ce-awsdata-ec2-cpu" {
   source {
     content  = "${file("${path.module}/src/python/aws_ec2_inventory_schema.py")}"
     filename = "aws_ec2_inventory_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/aws_ebs_inventory_schema.py")}"
+    filename = "aws_ebs_inventory_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/unified_schema.py")}"
+    filename = "unified_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/preaggregated_schema.py")}"
+    filename = "preaggregated_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/util.py")}"
+    filename = "util.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/requirements.txt")}"
+    filename = "requirements.txt"
+  }
+}
+
+data "archive_file" "ce-awsdata-ebs" {
+  type        = "zip"
+  output_path = "${path.module}/files/ce-awsdata-ebs.zip"
+  source {
+    content  = "${file("${path.module}/src/python/aws_ebs_data_main.py")}"
+    filename = "main.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/clusterdata_schema.py")}"
+    filename = "clusterdata_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/aws_ec2_inventory_schema.py")}"
+    filename = "aws_ec2_inventory_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/aws_ebs_inventory_schema.py")}"
+    filename = "aws_ebs_inventory_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/unified_schema.py")}"
+    filename = "unified_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/preaggregated_schema.py")}"
+    filename = "preaggregated_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/util.py")}"
+    filename = "util.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/requirements.txt")}"
+    filename = "requirements.txt"
+  }
+}
+
+data "archive_file" "ce-awsdata-ebs-metrics" {
+  type        = "zip"
+  output_path = "${path.module}/files/ce-awsdata-ebs-metrics.zip"
+  source {
+    content  = "${file("${path.module}/src/python/aws_ebs_metrics_data_main.py")}"
+    filename = "main.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/clusterdata_schema.py")}"
+    filename = "clusterdata_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/aws_ec2_inventory_schema.py")}"
+    filename = "aws_ec2_inventory_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/aws_ebs_inventory_schema.py")}"
+    filename = "aws_ebs_inventory_schema.py"
   }
   source {
     content  = "${file("${path.module}/src/python/unified_schema.py")}"
@@ -314,6 +407,20 @@ resource "google_storage_bucket_object" "ce-awsdata-ec2-cpu-archive" {
   bucket = "${google_storage_bucket.bucket1.name}"
   source = "${path.module}/files/ce-awsdata-ec2-cpu.zip"
   depends_on = ["data.archive_file.ce-awsdata-ec2-cpu"]
+}
+
+resource "google_storage_bucket_object" "ce-awsdata-ebs-archive" {
+  name = "ce-awsdata.${data.archive_file.ce-awsdata-ebs.output_md5}.zip"
+  bucket = "${google_storage_bucket.bucket1.name}"
+  source = "${path.module}/files/ce-awsdata-ebs.zip"
+  depends_on = ["data.archive_file.ce-awsdata-ebs"]
+}
+
+resource "google_storage_bucket_object" "ce-awsdata-ebs-metrics-archive" {
+  name = "ce-awsdata.${data.archive_file.ce-awsdata-ebs-metrics.output_md5}.zip"
+  bucket = "${google_storage_bucket.bucket1.name}"
+  source = "${path.module}/files/ce-awsdata-ebs-metrics.zip"
+  depends_on = ["data.archive_file.ce-awsdata-ebs-metrics"]
 }
 
 resource "google_cloudfunctions_function" "ce-clusterdata-function" {
@@ -518,6 +625,60 @@ resource "google_cloudfunctions_function" "ce-awsdata-ec2-cpu-function" {
   event_trigger {
     event_type = "google.pubsub.topic.publish"
     resource   = "${google_pubsub_topic.ce-awsdata-ec2-cpu-topic.name}"
+    failure_policy {
+      retry = false
+    }
+  }
+}
+
+resource "google_cloudfunctions_function" "ce-awsdata-ebs-function" {
+  name                      = "ce-awsdata-ebs-terraform"
+  description               = "This cloudfunction gets triggered upon event in a pubsub topic"
+  entry_point               = "main"
+  available_memory_mb       = 256
+  timeout                   = 540
+  runtime                   = "python38"
+  project                   = "${var.projectId}"
+  region                    = "${var.region}"
+  source_archive_bucket     = "${google_storage_bucket.bucket1.name}"
+  source_archive_object     = "${google_storage_bucket_object.ce-awsdata-ebs-archive.name}"
+
+  environment_variables = {
+    disabled = "false"
+    enable_for_accounts = ""
+    GCP_PROJECT = "${var.projectId}"
+  }
+
+  event_trigger {
+    event_type = "google.pubsub.topic.publish"
+    resource   = "${google_pubsub_topic.ce-awsdata-ebs-inventory-topic.name}"
+    failure_policy {
+      retry = false
+    }
+  }
+}
+
+resource "google_cloudfunctions_function" "ce-awsdata-ebs-metrics-function" {
+  name                      = "ce-awsdata-ebs-metrics-terraform"
+  description               = "This cloudfunction gets triggered upon event in a pubsub topic"
+  entry_point               = "main"
+  available_memory_mb       = 256
+  timeout                   = 540
+  runtime                   = "python38"
+  project                   = "${var.projectId}"
+  region                    = "${var.region}"
+  source_archive_bucket     = "${google_storage_bucket.bucket1.name}"
+  source_archive_object     = "${google_storage_bucket_object.ce-awsdata-ebs-metrics-archive.name}"
+
+  environment_variables = {
+    disabled = "false"
+    enable_for_accounts = ""
+    GCP_PROJECT = "${var.projectId}"
+  }
+
+  event_trigger {
+    event_type = "google.pubsub.topic.publish"
+    resource   = "${google_pubsub_topic.ce-awsdata-ebs-metrics-topic.name}"
     failure_policy {
       retry = false
     }

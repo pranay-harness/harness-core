@@ -1,15 +1,15 @@
 package io.harness.gitsync.common.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.gitsync.GitSyncModule.SCM_ON_MANAGER;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.gitsync.common.YamlConstants;
 import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.gitsync.common.dtos.SaasGitDTO;
-import io.harness.gitsync.common.service.ScmClientFacilitatorService;
+import io.harness.gitsync.common.impl.GitUtils;
+import io.harness.gitsync.common.service.ScmOrchestratorService;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.OrgIdentifier;
 import io.harness.ng.core.ProjectIdentifier;
@@ -20,12 +20,12 @@ import io.harness.ng.core.utils.URLDecoderUtility;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.util.List;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -34,8 +34,8 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import lombok.AllArgsConstructor;
 import org.hibernate.validator.constraints.NotBlank;
-import retrofit2.http.Body;
 
 @Api("/scm")
 @Path("/scm")
@@ -47,14 +47,10 @@ import retrofit2.http.Body;
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 @NextGenManagerAuth
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @OwnedBy(DX)
 public class ScmFacilitatorResource {
-  private final ScmClientFacilitatorService scmClientFacilitatorService;
-
-  @Inject
-  public ScmFacilitatorResource(@Named(SCM_ON_MANAGER) ScmClientFacilitatorService scmClientFacilitatorService) {
-    this.scmClientFacilitatorService = scmClientFacilitatorService;
-  }
+  private final ScmOrchestratorService scmOrchestratorService;
 
   @GET
   @Path("listRepoBranches")
@@ -68,9 +64,11 @@ public class ScmFacilitatorResource {
       @QueryParam(NGCommonEntityConstants.PAGE) @DefaultValue("0") int pageNum,
       @QueryParam(NGCommonEntityConstants.SIZE) @DefaultValue("50") int pageSize,
       @QueryParam(NGCommonEntityConstants.SEARCH_TERM) @DefaultValue("") String searchTerm) {
-    return ResponseDTO.newResponse(scmClientFacilitatorService.listBranchesForRepoByConnector(accountIdentifier,
-        orgIdentifier, projectIdentifier, connectorIdentifierRef, URLDecoderUtility.getDecodedString(repoURL),
-        PageRequest.builder().pageIndex(pageNum).pageSize(pageSize).build(), searchTerm));
+    return ResponseDTO.newResponse(scmOrchestratorService.processScmRequest(scmClientFacilitatorService
+        -> scmClientFacilitatorService.listBranchesForRepoByConnector(accountIdentifier, orgIdentifier,
+            projectIdentifier, connectorIdentifierRef, URLDecoderUtility.getDecodedString(repoURL),
+            PageRequest.builder().pageIndex(pageNum).pageSize(pageSize).build(), searchTerm),
+        projectIdentifier, orgIdentifier, accountIdentifier));
   }
 
   @GET
@@ -84,9 +82,11 @@ public class ScmFacilitatorResource {
       @QueryParam(NGCommonEntityConstants.PAGE) @DefaultValue("0") int pageNum,
       @QueryParam(NGCommonEntityConstants.SIZE) @DefaultValue("50") int pageSize,
       @QueryParam(NGCommonEntityConstants.SEARCH_TERM) @DefaultValue("") String searchTerm) {
-    return ResponseDTO.newResponse(scmClientFacilitatorService.listBranchesForRepoByGitSyncConfig(accountIdentifier,
-        orgIdentifier, projectIdentifier, yamlGitConfigIdentifier,
-        PageRequest.builder().pageIndex(pageNum).pageSize(pageSize).build(), searchTerm));
+    return ResponseDTO.newResponse(scmOrchestratorService.processScmRequest(scmClientFacilitatorService
+        -> scmClientFacilitatorService.listBranchesForRepoByGitSyncConfig(accountIdentifier, orgIdentifier,
+            projectIdentifier, yamlGitConfigIdentifier,
+            PageRequest.builder().pageIndex(pageNum).pageSize(pageSize).build(), searchTerm),
+        projectIdentifier, orgIdentifier, accountIdentifier));
   }
 
   @GET
@@ -99,14 +99,30 @@ public class ScmFacilitatorResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @QueryParam(YamlConstants.FILE_PATH) @NotBlank @NotNull String filePath,
       @QueryParam(YamlConstants.BRANCH) String branch, @QueryParam(YamlConstants.COMMIT_ID) String commitId) {
-    return ResponseDTO.newResponse(scmClientFacilitatorService.getFileContent(
-        yamlGitConfigIdentifier, accountIdentifier, orgIdentifier, projectIdentifier, filePath, branch, commitId));
+    return ResponseDTO.newResponse(scmOrchestratorService.processScmRequest(scmClientFacilitatorService
+        -> scmClientFacilitatorService.getFileContent(
+            yamlGitConfigIdentifier, accountIdentifier, orgIdentifier, projectIdentifier, filePath, branch, commitId),
+        projectIdentifier, orgIdentifier, accountIdentifier));
   }
 
   @POST
   @Path("isSaasGit")
   @ApiOperation(value = "Checks if Saas is possible", nickname = "isSaasGit")
-  public ResponseDTO<SaasGitDTO> isSaasGit(@Body @NotNull ScmConnector scmConnector) {
-    return ResponseDTO.newResponse(scmClientFacilitatorService.isSaasGit(scmConnector));
+  public ResponseDTO<SaasGitDTO> isSaasGit(@QueryParam(NGCommonEntityConstants.REPO_URL) String repoURL) {
+    return ResponseDTO.newResponse(GitUtils.isSaasGit(URLDecoderUtility.getDecodedString(repoURL)));
+  }
+
+  @POST
+  @Path("createPR")
+  @ApiOperation(value = "creates a pull request", nickname = "createPR")
+  public ResponseDTO<Boolean> createPR(@NotNull @QueryParam(YamlConstants.YAML_GIT_CONFIG) String yamlGitConfigRef,
+      @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Valid GitPRCreateRequest gitCreatePRRequest) {
+    return ResponseDTO.newResponse(scmOrchestratorService.processScmRequest(scmClientFacilitatorService
+        -> scmClientFacilitatorService.createPullRequest(
+            accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigRef, gitCreatePRRequest),
+        projectIdentifier, orgIdentifier, accountIdentifier));
   }
 }

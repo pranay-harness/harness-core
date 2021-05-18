@@ -46,7 +46,7 @@ import org.junit.experimental.categories.Category;
 @Slf4j
 public class K8sWatchServiceDelegateTest extends DelegateTestBase {
   private static final String CLUSTER_ID = "cluster-id";
-  private static final String KUBE_UID = "kube-uid";
+  private static final String KUBE_UID = "ed044e6a-8b7f-456c-b035-f05e9ce56a60";
   private K8sWatchServiceDelegate k8sWatchServiceDelegate;
   private WatcherFactory watcherFactory;
 
@@ -86,7 +86,7 @@ public class K8sWatchServiceDelegateTest extends DelegateTestBase {
                                                                    .withApiVersion("v1")
                                                                    .withNewMetadata()
                                                                    .withName("kube-system")
-                                                                   .withUid("ed044e6a-8b7f-456c-b035-f05e9ce56a60")
+                                                                   .withUid(KUBE_UID)
                                                                    .endMetadata()
                                                                    .build()))));
   }

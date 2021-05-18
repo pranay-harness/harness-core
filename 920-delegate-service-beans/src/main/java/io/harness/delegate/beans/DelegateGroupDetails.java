@@ -18,13 +18,16 @@ import lombok.Value;
 @Value
 @Builder
 public class DelegateGroupDetails {
+  private String groupId;
   private String delegateType;
   private String groupName;
   private String groupHostName;
+  private String delegateDescription;
+  private String delegateConfigurationId;
+  private DelegateSizeDetails sizeDetails;
   private Map<String, SelectorType> groupImplicitSelectors;
   private DelegateInsightsDetails delegateInsightsDetails;
   private long lastHeartBeat;
   private boolean activelyConnected;
-  private int delegateReplicas;
   private List<DelegateGroupListing.DelegateInner> delegateInstanceDetails;
 }

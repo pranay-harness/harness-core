@@ -2,6 +2,7 @@ package io.harness.pms.Dashboard;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -46,10 +47,10 @@ public class PipelineDashboardOverviewResource {
   @Path("/pipelineHealth")
   @ApiOperation(value = "Get pipeline health", nickname = "getPipelinedHealth")
   public ResponseDTO<DashboardPipelineHealthInfo> getPipelinedHealth(
-      @NotNull @QueryParam("accountId") String accountIdentifier,
-      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @QueryParam("pipelineIdentifier") String pipelineIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
       @NotNull @QueryParam("moduleInfo") String moduleInfo,
       @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
           "startInterval") String startInterval,
@@ -73,10 +74,10 @@ public class PipelineDashboardOverviewResource {
   @Path("/pipelineExecution")
   @ApiOperation(value = "Get pipeline execution", nickname = "getPipelineExecution")
   public ResponseDTO<DashboardPipelineExecutionInfo> getPipelineExecution(
-      @NotNull @QueryParam("accountId") String accountIdentifier,
-      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @QueryParam("pipelineIdentifier") String pipelineIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
       @NotNull @QueryParam("moduleInfo") String moduleInfo,
       @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
           "startInterval") String startInterval,

@@ -19,6 +19,7 @@ import software.wings.delegatetasks.validation.capabilities.GitConnectionCapabil
 import software.wings.service.impl.ContainerServiceParams;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,11 +61,16 @@ public class GitFetchFilesTaskParams implements ActivityAccess, TaskParameters, 
       } else {
         for (Map.Entry<String, GitFetchFilesConfig> entry : gitFetchFilesConfigMap.entrySet()) {
           GitFetchFilesConfig gitFetchFileConfig = entry.getValue();
+          final GitConfig gitConfig = gitFetchFileConfig.getGitConfig();
           executionCapabilities.add(GitConnectionCapability.builder()
-                                        .gitConfig(gitFetchFileConfig.getGitConfig())
-                                        .settingAttribute(gitFetchFileConfig.getGitConfig().getSshSettingAttribute())
+                                        .gitConfig(gitConfig)
+                                        .settingAttribute(gitConfig.getSshSettingAttribute())
                                         .encryptedDataDetails(gitFetchFileConfig.getEncryptedDataDetails())
                                         .build());
+          if (isNotEmpty(gitConfig.getDelegateSelectors())) {
+            executionCapabilities.add(
+                SelectorCapability.builder().selectors(new HashSet<>(gitConfig.getDelegateSelectors())).build());
+          }
         }
       }
     }

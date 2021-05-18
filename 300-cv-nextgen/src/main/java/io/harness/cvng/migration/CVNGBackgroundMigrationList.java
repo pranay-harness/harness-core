@@ -46,6 +46,7 @@ public class CVNGBackgroundMigrationList {
         .add(Pair.of(12, CreateDefaultVerificationJobsMigration.class))
         .add(Pair.of(13, FixRuntimeParamInCanaryBlueGreenVerificationJob.class))
         .add(Pair.of(14, UpdateApdexMetricCriteria.class))
+        .add(Pair.of(15, FixRuntimeParamInCanaryBlueGreenVerificationJob.class))
         .build();
   }
 }

@@ -158,8 +158,6 @@ aeriform("//830-resource-group:tests")
 
 aeriform("//835-notification-senders:module")
 
-aeriform("//850-execution-plan:module")
-
 aeriform("//850-execution-plan:tests")
 
 aeriform("//850-ng-pipeline-commons:module")

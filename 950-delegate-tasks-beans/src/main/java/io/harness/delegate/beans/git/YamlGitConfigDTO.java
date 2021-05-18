@@ -40,7 +40,6 @@ public class YamlGitConfigDTO {
 
   private String entityFQN;
   private Scope scope;
-  private boolean executeOnDelegate;
 
   @Data
   @FieldDefaults(level = AccessLevel.PRIVATE)

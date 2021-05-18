@@ -10,7 +10,6 @@ import io.harness.delegate.beans.ErrorNotifyResponseData.ErrorNotifyResponseData
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.exception.exceptionmanager.ExceptionManager;
-import io.harness.logging.ExceptionLogger;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -30,12 +29,10 @@ public class DelegateExceptionManager {
     }
 
     Exception exception = (Exception) throwable;
-    WingsException processedException = exceptionManager.processException(exception);
-    DelegateResponseData responseData =
-        prepareErrorResponse(processedException, errorNotifyResponseDataBuilder).exception(processedException).build();
-
-    ExceptionLogger.logProcessedMessages(processedException, DELEGATE, log);
-    return responseData;
+    WingsException processedException = exceptionManager.processException(exception, DELEGATE, log);
+    return prepareErrorResponse(processedException, errorNotifyResponseDataBuilder)
+        .exception(processedException)
+        .build();
   }
 
   // ---------- PRIVATE METHODS -------------

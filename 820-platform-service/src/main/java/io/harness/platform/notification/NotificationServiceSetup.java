@@ -14,6 +14,7 @@ import io.harness.notification.service.api.SeedDataPopulaterService;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListenerController;
 import io.harness.remote.CharsetResponseFilter;
+import io.harness.resource.VersionInfoResource;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 
 import com.google.inject.Injector;
@@ -73,6 +74,7 @@ public class NotificationServiceSetup {
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
   }
 
   private void registerCharsetResponseFilter(Environment environment, Injector injector) {

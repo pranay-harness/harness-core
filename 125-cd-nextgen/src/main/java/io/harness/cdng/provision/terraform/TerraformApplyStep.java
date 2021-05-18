@@ -90,12 +90,14 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
         .entityId(entityId)
         .workspace(ParameterFieldHelper.getParameterFieldValue(spec.getWorkspace()))
         .configFile(helper.getGitFetchFilesConfig(
-            spec.getConfigFiles().getStore().getStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
+            spec.getConfigFiles().getStore().getSpec(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
         .varFileInfos(helper.toTerraformVarFileInfo(spec.getVarFiles(), ambiance))
         .backendConfig(helper.getBackendConfig(spec.getBackendConfig()))
         .targets(ParameterFieldHelper.getParameterFieldValue(spec.getTargets()))
         .saveTerraformStateJson(cdFeatureFlagHelper.isEnabled(accountId, FeatureName.EXPORT_TF_PLAN))
-        .environmentVariables(helper.getEnvironmentVariablesMap(spec.getEnvironmentVariables()));
+        .environmentVariables(helper.getEnvironmentVariablesMap(spec.getEnvironmentVariables()))
+        .timeoutInMillis(
+            StepUtils.getTimeoutMillis(stepElementParameters.getTimeout(), TerraformConstants.DEFAULT_TIMEOUT));
 
     TaskData taskData =
         TaskData.builder()
@@ -105,8 +107,9 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
             .parameters(new Object[] {builder.build()})
             .build();
 
-    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer,
-        Collections.singletonList(TerraformCommandUnit.Apply.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName());
+    return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+        Collections.singletonList(TerraformCommandUnit.Apply.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName(),
+        StepUtils.getTaskSelectors(stepParameters.getDelegateSelectors()));
   }
 
   private TaskRequest obtainInheritedTask(
@@ -124,14 +127,16 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
     builder.workspace(inheritOutput.getWorkspace())
         .configFile(helper.getGitFetchFilesConfig(
             inheritOutput.getConfigFiles(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
-        .varFileInfos(helper.toDelegateTask(inheritOutput.getVarFileConfigs(), ambiance))
+        .varFileInfos(helper.prepareTerraformVarFileInfo(inheritOutput.getVarFileConfigs(), ambiance))
         .backendConfig(inheritOutput.getBackendConfig())
         .targets(inheritOutput.getTargets())
         .saveTerraformStateJson(cdFeatureFlagHelper.isEnabled(accountId, FeatureName.EXPORT_TF_PLAN))
         .encryptionConfig(inheritOutput.getEncryptionConfig())
         .encryptedTfPlan(inheritOutput.getEncryptedTfPlan())
         .planName(inheritOutput.getPlanName())
-        .environmentVariables(inheritOutput.getEnvironmentVariables());
+        .environmentVariables(inheritOutput.getEnvironmentVariables())
+        .timeoutInMillis(
+            StepUtils.getTimeoutMillis(stepElementParameters.getTimeout(), TerraformConstants.DEFAULT_TIMEOUT));
 
     TaskData taskData =
         TaskData.builder()
@@ -141,8 +146,9 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
             .parameters(new Object[] {builder.build()})
             .build();
 
-    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer,
-        Collections.singletonList(TerraformCommandUnit.Apply.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName());
+    return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+        Collections.singletonList(TerraformCommandUnit.Apply.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName(),
+        StepUtils.getTaskSelectors(stepParameters.getDelegateSelectors()));
   }
 
   @Override

@@ -3,6 +3,7 @@ package io.harness.pms.sdk.core.resolver.outputs;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.contracts.service.OptionalSweepingOutputResolveBlobResponse;
@@ -42,13 +43,14 @@ public class ExecutionSweepingGrpcOutputService implements ExecutionSweepingOutp
 
   @Override
   public String consume(Ambiance ambiance, String name, ExecutionSweepingOutput value, String groupName) {
+    SweepingOutputConsumeBlobRequest.Builder builder =
+        SweepingOutputConsumeBlobRequest.newBuilder().setAmbiance(ambiance).setName(name).setValue(
+            RecastOrchestrationUtils.toDocumentJson(value));
+    if (EmptyPredicate.isNotEmpty(groupName)) {
+      builder.setGroupName(groupName);
+    }
     SweepingOutputConsumeBlobResponse sweepingOutputConsumeBlobResponse =
-        sweepingOutputServiceBlockingStub.consume(SweepingOutputConsumeBlobRequest.newBuilder()
-                                                      .setAmbiance(ambiance)
-                                                      .setName(name)
-                                                      .setGroupName(groupName)
-                                                      .setValue(RecastOrchestrationUtils.toDocumentJson(value))
-                                                      .build());
+        sweepingOutputServiceBlockingStub.consume(builder.build());
     return sweepingOutputConsumeBlobResponse.getResponse();
   }
 

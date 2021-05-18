@@ -103,9 +103,7 @@ RUN cd /tmp \
     && rm -rf /tmp/*
 
 RUN curl -fsSL https://get.docker.com/ | sh \
-    && yum -y install epel-release \
-    && yum -y install python-pip \
-    && python --version
+    && yum -y install python36
 
 ENV python /usr/bin/python
 ENV PATH ${PATH}:/usr/bin/python

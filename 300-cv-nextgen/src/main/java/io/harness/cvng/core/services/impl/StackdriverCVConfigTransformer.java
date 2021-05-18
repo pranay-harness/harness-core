@@ -1,18 +1,15 @@
 package io.harness.cvng.core.services.impl;
 
-import io.harness.cvng.beans.TimeSeriesThresholdType;
+import io.harness.cvng.core.beans.RiskProfile;
 import io.harness.cvng.core.beans.StackdriverDSConfig;
 import io.harness.cvng.core.beans.StackdriverDSConfig.StackdriverConfiguration;
 import io.harness.cvng.core.beans.StackdriverDefinition;
-import io.harness.cvng.core.entities.MetricPack.MetricDefinition;
 import io.harness.cvng.core.entities.StackdriverCVConfig;
 import io.harness.cvng.core.services.api.CVConfigTransformer;
 import io.harness.serializer.JsonUtils;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class StackdriverCVConfigTransformer implements CVConfigTransformer<StackdriverCVConfig, StackdriverDSConfig> {
   @Override
@@ -35,12 +32,12 @@ public class StackdriverCVConfigTransformer implements CVConfigTransformer<Stack
                           .jsonMetricDefinition(JsonUtils.asObject(metricInfo.getJsonMetricDefinition(), Object.class))
                           .isManualQuery(metricInfo.isManualQuery())
                           .dashboardPath(cvConfig.getDashboardPath())
-                          .riskProfile(
-                              StackdriverDefinition.RiskProfile.builder()
-                                  .category(cvConfig.getMetricPack().getCategory())
-                                  .metricType(metricInfo.getMetricType())
-                                  .thresholdTypes(getThresholdTypeOfMetric(metricInfo.getMetricName(), cvConfig))
-                                  .build())
+                          .riskProfile(RiskProfile.builder()
+                                           .category(cvConfig.getMetricPack().getCategory())
+                                           .metricType(metricInfo.getMetricType())
+                                           .thresholdTypes(
+                                               cvConfig.getThresholdTypeOfMetric(metricInfo.getMetricName(), cvConfig))
+                                           .build())
                           .build())
                   .build();
           configurationList.add(configuration);
@@ -49,16 +46,5 @@ public class StackdriverCVConfigTransformer implements CVConfigTransformer<Stack
       dsConfig.setMetricConfigurations(configurationList);
     }
     return dsConfig;
-  }
-
-  private List<TimeSeriesThresholdType> getThresholdTypeOfMetric(String metricName, StackdriverCVConfig cvConfig) {
-    Set<TimeSeriesThresholdType> thresholdTypes = new HashSet<>();
-    for (MetricDefinition metricDefinition : cvConfig.getMetricPack().getMetrics()) {
-      if (metricDefinition.getName().equals(metricName)) {
-        metricDefinition.getThresholds().forEach(
-            threshold -> thresholdTypes.add(threshold.getCriteria().getThresholdType()));
-      }
-    }
-    return new ArrayList<>(thresholdTypes);
   }
 }

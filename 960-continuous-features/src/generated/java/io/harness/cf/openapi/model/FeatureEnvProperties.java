@@ -12,21 +12,9 @@
 
 package io.harness.cf.openapi.model;
 
-import io.harness.cf.openapi.model.FeatureState;
-import io.harness.cf.openapi.model.Serve;
-import io.harness.cf.openapi.model.ServingRule;
-import io.harness.cf.openapi.model.VariationMap;
-
-import com.google.gson.TypeAdapter;
-import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
-import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -34,7 +22,7 @@ import java.util.Objects;
  * FeatureEnvProperties
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen",
-    date = "2021-04-12T12:00:52.324-07:00[America/Los_Angeles]")
+    date = "2021-05-11T09:07:44.775-07:00[America/Los_Angeles]")
 public class FeatureEnvProperties {
   public static final String SERIALIZED_NAME_ENVIRONMENT = "environment";
   @SerializedName(SERIALIZED_NAME_ENVIRONMENT) private String environment;

@@ -14,7 +14,6 @@ import io.harness.secretmanagerclient.remote.SecretManagerClient;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,12 +36,6 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
       @NotNull SecretManagerConfigUpdateDTO secretManagerConfigUpdateDTO) {
     return getResponse(secretManagerClient.updateSecretManager(
         identifier, accountIdentifier, orgIdentifier, projectIdentifier, secretManagerConfigUpdateDTO));
-  }
-
-  @Override
-  public List<SecretManagerConfigDTO> listSecretManagers(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    return getResponse(secretManagerClient.listSecretManagers(accountIdentifier, orgIdentifier, projectIdentifier));
   }
 
   @Override

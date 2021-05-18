@@ -145,13 +145,12 @@ public class K8sMetricCollectorTest extends CategoryTest {
     stubFor(get(urlMatching("^/api/v1/nodes/node2-name/proxy/stats/summary" + URL_REGEX_SUFFIX))
                 .willReturn(aResponse().withStatus(200).withBody("some random response")));
 
-    k8sMetricCollector =
-        new K8sMetricCollector(eventPublisher, k8sMetricsClient, CLUSTER_DETAILS, now.minus(10, ChronoUnit.MINUTES));
+    k8sMetricCollector = new K8sMetricCollector(eventPublisher, CLUSTER_DETAILS, now.minus(10, ChronoUnit.MINUTES));
     doNothing()
         .when(eventPublisher)
         .publishMessage(messageArgumentCaptor.capture(), any(Timestamp.class),
             eq(Collections.singletonMap(HealthStatusService.CLUSTER_ID_IDENTIFIER, CLUSTER_DETAILS.getClusterId())));
-    k8sMetricCollector.collectAndPublishMetrics(now);
+    k8sMetricCollector.collectAndPublishMetrics(k8sMetricsClient, now);
     verifyZeroInteractions(eventPublisher);
   }
 
@@ -266,13 +265,13 @@ public class K8sMetricCollectorTest extends CategoryTest {
     stubFor(get(urlMatching("^/api/v1/nodes/node[12]-name/proxy/stats/summary" + URL_REGEX_SUFFIX))
                 .willReturn(aResponse().withStatus(200).withBody(resourceToString)));
 
-    k8sMetricCollector = new K8sMetricCollector(eventPublisher, k8sMetricsClient, CLUSTER_DETAILS, now);
+    k8sMetricCollector = new K8sMetricCollector(eventPublisher, CLUSTER_DETAILS, now);
     doNothing()
         .when(eventPublisher)
         .publishMessage(messageArgumentCaptor.capture(), any(Timestamp.class),
             eq(Collections.singletonMap(HealthStatusService.CLUSTER_ID_IDENTIFIER, CLUSTER_DETAILS.getClusterId())));
-    k8sMetricCollector.collectAndPublishMetrics(now.plus(30, ChronoUnit.SECONDS));
-    k8sMetricCollector.collectAndPublishMetrics(now.plus(30, ChronoUnit.MINUTES));
+    k8sMetricCollector.collectAndPublishMetrics(k8sMetricsClient, now.plus(30, ChronoUnit.SECONDS));
+    k8sMetricCollector.collectAndPublishMetrics(k8sMetricsClient, now.plus(30, ChronoUnit.MINUTES));
 
     verify(2, getRequestedFor(urlMatching("^/api/v1/nodes/node[12]-name/proxy/stats/summary" + URL_REGEX_SUFFIX)));
 

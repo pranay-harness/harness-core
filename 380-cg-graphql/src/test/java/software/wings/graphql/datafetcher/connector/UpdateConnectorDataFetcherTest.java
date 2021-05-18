@@ -31,6 +31,7 @@ import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -149,6 +150,7 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
                                                                      .authorEmailId(RequestField.ofNullable(EMAIL))
                                                                      .commitMessage(RequestField.ofNullable(MESSAGE))
                                                                      .build()))
+                    .delegateSelectors(RequestField.ofNull())
                     .passwordSecretId(RequestField.ofNullable(PASSWORD))
                     .build())
             .build(),
@@ -203,6 +205,7 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
                                                                      .authorEmailId(RequestField.ofNullable(EMAIL))
                                                                      .commitMessage(RequestField.ofNullable(MESSAGE))
                                                                      .build()))
+                    .delegateSelectors(RequestField.ofNull())
                     .sshSettingId(RequestField.ofNullable(SSH))
                     .usageScope(RequestField.ofNullable(QLUsageScope.builder().build()))
                     .build())
@@ -993,23 +996,15 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
 
     doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
 
-    doThrow(new ConstraintViolationException(new HashSet<>()))
-        .when(settingsService)
-        .saveWithPruning(isA(SettingAttribute.class), isA(String.class), isA(String.class));
+    verify(settingsService, never()).saveWithPruning(isA(SettingAttribute.class), isA(String.class), isA(String.class));
 
-    doReturn(SettingAttribute.Builder.aSettingAttribute()
-                 .withCategory(SettingAttribute.SettingCategory.HELM_REPO)
-                 .withValue(GCSHelmRepoConfig.builder().accountId(ACCOUNT_ID).build())
-                 .build())
+    doThrow(new ConstraintViolationException(new HashSet<>()))
         .when(settingsService)
         .updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
 
-    doNothing()
-        .when(settingServiceHelper)
+    verify(settingServiceHelper, never())
         .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
 
-    doReturn(QLGCSHelmRepoConnector.builder()).when(connectorsController).getConnectorBuilder(any());
-    doReturn(QLGCSHelmRepoConnector.builder()).when(connectorsController).populateConnector(any(), any());
     doReturn(new EncryptedData()).when(secretManager).getSecretById(ACCOUNT_ID, PASSWORD);
     doReturn(setting).when(settingsService).getByAccountAndId(ACCOUNT_ID, "GCP");
 

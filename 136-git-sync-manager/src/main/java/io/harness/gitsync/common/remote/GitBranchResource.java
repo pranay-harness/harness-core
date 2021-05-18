@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.common.YamlConstants;
+import io.harness.gitsync.common.beans.BranchSyncStatus;
 import io.harness.gitsync.common.dtos.GitBranchListDTO;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.sdk.GitSyncApiConstants;
@@ -21,6 +22,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import javax.validation.constraints.Max;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -57,11 +59,12 @@ public class GitBranchResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.PAGE) @DefaultValue("0") int pageNum,
-      @QueryParam(NGCommonEntityConstants.SIZE) int pageSize,
-      @QueryParam(NGCommonEntityConstants.SEARCH_TERM) @DefaultValue("") String searchTerm) {
-    return ResponseDTO.newResponse(
-        gitBranchService.listBranchesWithStatus(accountIdentifier, orgIdentifier, projectIdentifier,
-            yamlGitConfigIdentifier, PageRequest.builder().pageIndex(pageNum).pageSize(pageSize).build(), searchTerm));
+      @QueryParam(NGCommonEntityConstants.SIZE) @Max(100) int pageSize,
+      @QueryParam(NGCommonEntityConstants.SEARCH_TERM) @DefaultValue("") String searchTerm,
+      BranchSyncStatus branchSyncStatus) {
+    return ResponseDTO.newResponse(gitBranchService.listBranchesWithStatus(accountIdentifier, orgIdentifier,
+        projectIdentifier, yamlGitConfigIdentifier, PageRequest.builder().pageIndex(pageNum).pageSize(pageSize).build(),
+        searchTerm, branchSyncStatus));
   }
 
   @POST

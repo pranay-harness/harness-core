@@ -297,3 +297,27 @@ permissions:
       - account
       - organization
       - project
+  - identifier: core_license_view
+    name: View Licenses
+    status: ACTIVE
+    includeInAllRoles: true
+    allowedScopeLevels:
+      - account
+  - identifier: core_authsetting_view
+    name: View Auth setting
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+  - identifier: core_authsetting_edit
+    name: Edit Auth setting
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+  - identifier: core_authsetting_delete
+    name: Edit Auth setting
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account

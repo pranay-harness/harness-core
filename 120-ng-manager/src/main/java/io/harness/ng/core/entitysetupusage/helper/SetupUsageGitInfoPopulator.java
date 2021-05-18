@@ -2,6 +2,7 @@ package io.harness.ng.core.entitysetupusage.helper;
 
 import static io.harness.EntityType.CONNECTORS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.gitsync.interceptor.GitSyncConstants.DEFAULT;
 
 import static java.util.stream.Collectors.toList;
 
@@ -41,7 +42,7 @@ public class SetupUsageGitInfoPopulator {
       return;
     }
     GitEntityInfo gitEntityInfo = getGitEntityInfoFromContext();
-    if (gitEntityInfo == null) {
+    if (gitEntityInfo == null || doesGitInfoContainsDefaultValue(gitEntityInfo)) {
       return;
     }
     String repoIdentifier = gitEntityInfo.getYamlGitConfigId();
@@ -59,10 +60,17 @@ public class SetupUsageGitInfoPopulator {
     populateRepoBranchInReferredEntities(referredEntities, repoIdentifier, branch, isDefault);
   }
 
+  private boolean doesGitInfoContainsDefaultValue(GitEntityInfo gitBranchInfo) {
+    boolean isRepoNull =
+        isEmpty(gitBranchInfo.getYamlGitConfigId()) || gitBranchInfo.getYamlGitConfigId().equals(DEFAULT);
+    boolean isBranchNull = isEmpty(gitBranchInfo.getBranch()) || gitBranchInfo.getBranch().equals(DEFAULT);
+    return isRepoNull || isBranchNull;
+  }
+
   private Boolean checkWhetherIsDefaultBranch(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String repoIdentifier, String branch) {
     YamlGitConfigDTO yamlGitConfigDTO =
-        yamlGitConfigService.get(accountIdentifier, orgIdentifier, projectIdentifier, repoIdentifier);
+        yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, repoIdentifier);
     if (yamlGitConfigDTO == null) {
       throw new UnexpectedException(
           String.format("No yaml git config exists with the id %s, in account %s, org %s, project %s", repoIdentifier,

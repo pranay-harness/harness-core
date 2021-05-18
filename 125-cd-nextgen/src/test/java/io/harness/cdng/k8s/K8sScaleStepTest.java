@@ -17,6 +17,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.manifest.steps.ManifestsOutcome;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfig;
@@ -95,12 +96,12 @@ public class K8sScaleStepTest extends CategoryTest {
         .when(k8sStepHelper)
         .queueK8sTask(eq(stepElementParameters), any(K8sDeployRequest.class), eq(ambiance), eq(infrastructureOutcome));
 
-    doReturn(serviceOutcome)
+    doReturn(new ManifestsOutcome(serviceOutcome.getManifestResults()))
         .when(outcomeService)
-        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.SERVICE));
+        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.MANIFESTS));
     doReturn(infrastructureOutcome)
         .when(outcomeService)
-        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
     doReturn("test-scale-count-release").when(k8sStepHelper).getReleaseName(infrastructureOutcome);
     doReturn(manifestOutcome).when(k8sStepHelper).getK8sSupportedManifestOutcome(any(LinkedList.class));
 
@@ -147,12 +148,12 @@ public class K8sScaleStepTest extends CategoryTest {
         .when(k8sStepHelper)
         .queueK8sTask(eq(stepElementParameters), any(K8sDeployRequest.class), eq(ambiance), eq(infrastructureOutcome));
 
-    doReturn(serviceOutcome)
+    doReturn(new ManifestsOutcome(serviceOutcome.getManifestResults()))
         .when(outcomeService)
-        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.SERVICE));
+        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.MANIFESTS));
     doReturn(infrastructureOutcome)
         .when(outcomeService)
-        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
     doReturn("test-scale-percentage-release").when(k8sStepHelper).getReleaseName(infrastructureOutcome);
     doReturn(manifestOutcome).when(k8sStepHelper).getK8sSupportedManifestOutcome(any(LinkedList.class));
 

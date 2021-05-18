@@ -20,7 +20,6 @@ import io.harness.perpetualtask.k8s.watch.PodEvent;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
@@ -29,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 public class K8sPodEventTasklet implements Tasklet {
-  private JobParameters parameters;
   @Autowired private BatchMainConfig config;
   @Autowired private PublishedMessageDao publishedMessageDao;
   @Autowired private ClusterDataGenerationValidator clusterDataGenerationValidator;
@@ -39,16 +37,14 @@ public class K8sPodEventTasklet implements Tasklet {
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) {
-    parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
-    String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
-    Long startTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE);
-    Long endTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE);
+    final CCMJobConstants jobConstants = new CCMJobConstants(chunkContext);
     int batchSize = config.getBatchQueryConfig().getQueryBatchSize();
 
     String messageType = EventTypeConstants.K8S_POD_EVENT;
     List<PublishedMessage> publishedMessageList;
     PublishedMessageReader publishedMessageReader =
-        new PublishedMessageReader(publishedMessageDao, accountId, messageType, startTime, endTime, batchSize);
+        new PublishedMessageReader(publishedMessageDao, jobConstants.getAccountId(), messageType,
+            jobConstants.getJobStartTime(), jobConstants.getJobEndTime(), batchSize);
     do {
       publishedMessageList = publishedMessageReader.getNext();
 
@@ -58,7 +54,7 @@ public class K8sPodEventTasklet implements Tasklet {
                                                   .collect(Collectors.toList());
       instanceDataBulkWriteService.updateList(instanceEventList);
 
-      if (featureFlagService.isEnabled(FeatureName.NODE_RECOMMENDATION_1, accountId)) {
+      if (featureFlagService.isEnabled(FeatureName.NODE_RECOMMENDATION_1, jobConstants.getAccountId())) {
         instanceInfoTimescaleDAO.updatePodStopEvent(
             instanceEventList.stream().filter(x -> x.getType() == EventType.STOP).collect(Collectors.toList()));
       }
