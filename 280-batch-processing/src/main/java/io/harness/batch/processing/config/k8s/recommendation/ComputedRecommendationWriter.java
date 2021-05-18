@@ -239,12 +239,12 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
 
   @VisibleForTesting
   public void setContainerLevelCost(Map<String, ContainerRecommendation> containerRecommendationMap, Cost lastDayCost) {
-    BigDecimal totalCpu = totalCurrentResource(containerRecommendationMap, CPU);
-    BigDecimal totalMemory = totalCurrentResource(containerRecommendationMap, MEMORY);
+    BigDecimal totalCpu = totalCurrentResourceValue(containerRecommendationMap, CPU);
+    BigDecimal totalMemory = totalCurrentResourceValue(containerRecommendationMap, MEMORY);
 
     for (ContainerRecommendation containerRecommendation : containerRecommendationMap.values()) {
-      BigDecimal containerCpu = getContainerRequest(containerRecommendation.getCurrent(), CPU, BigDecimal.ZERO);
-      BigDecimal containerMemory = getContainerRequest(containerRecommendation.getCurrent(), MEMORY, BigDecimal.ZERO);
+      BigDecimal containerCpu = getResourceValue(containerRecommendation.getCurrent(), CPU, BigDecimal.ZERO);
+      BigDecimal containerMemory = getResourceValue(containerRecommendation.getCurrent(), MEMORY, BigDecimal.ZERO);
 
       BigDecimal fractionCpu = containerCpu.setScale(cpuScale, HALF_UP).divide(totalCpu, costScale, HALF_UP);
       BigDecimal fractionMemory =
@@ -311,24 +311,15 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
     BigDecimal resourceChange = BigDecimal.ZERO;
     boolean atLeastOneContainerComputable = false;
     for (ContainerRecommendation containerRecommendation : containerRecommendations.values()) {
-      BigDecimal current = ofNullable(containerRecommendation.getCurrent())
-                               .map(ResourceRequirement::getRequests)
-                               .map(requests -> requests.get(resource))
-                               .map(Quantity::fromString)
-                               .map(Quantity::getNumber)
-                               .orElse(null);
+      BigDecimal current = getResourceValue(containerRecommendation.getCurrent(), resource, null);
 
       ResourceRequirement recommendedResource = containerRecommendation.getGuaranteed();
       if (containerRecommendation.getPercentileBased() != null
           && containerRecommendation.getPercentileBased().containsKey(String.format(PERCENTILE_KEY, 90))) {
         recommendedResource = containerRecommendation.getPercentileBased().get(String.format(PERCENTILE_KEY, 90));
       }
-      BigDecimal recommended = ofNullable(recommendedResource)
-                                   .map(ResourceRequirement::getRequests)
-                                   .map(requests -> requests.get(resource))
-                                   .map(Quantity::fromString)
-                                   .map(Quantity::getNumber)
-                                   .orElse(null);
+      BigDecimal recommended = getResourceValue(recommendedResource, resource, null);
+
       if (current != null && recommended != null) {
         resourceChange = resourceChange.add(recommended.subtract(current));
         resourceCurrent = resourceCurrent.add(current);
@@ -342,19 +333,19 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
   }
 
   @NonNull
-  static BigDecimal totalCurrentResource(
+  static BigDecimal totalCurrentResourceValue(
       Map<String, ContainerRecommendation> containerRecommendations, String resource) {
     BigDecimal totalResource = BigDecimal.ZERO;
 
     for (ContainerRecommendation containerRecommendation : containerRecommendations.values()) {
-      BigDecimal current = getContainerRequest(containerRecommendation.getCurrent(), resource, BigDecimal.ZERO);
+      BigDecimal current = getResourceValue(containerRecommendation.getCurrent(), resource, BigDecimal.ZERO);
       totalResource = totalResource.add(current);
     }
 
     return totalResource;
   }
 
-  static BigDecimal getContainerRequest(
+  static BigDecimal getResourceValue(
       ResourceRequirement resourceRequirement, String resource, BigDecimal defaultValue) {
     return ofNullable(resourceRequirement)
         .map(ResourceRequirement::getRequests)
