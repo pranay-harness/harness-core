@@ -83,7 +83,8 @@ public class ConnectorPreflightHandler {
           execute(connectorResourceClient.listConnectors(accountIdentifier, null, null, PAGE, SIZE,
               ConnectorFilterPropertiesDTO.builder()
                   .connectorIdentifiers(scopeToConnectorIdentifiers.get(Scope.ACCOUNT))
-                  .build()));
+                  .build(),
+              false));
       connectorResponses.addAll(response.getContent());
     }
     if (scopeToConnectorIdentifiers.containsKey(Scope.ORG)) {
@@ -91,7 +92,8 @@ public class ConnectorPreflightHandler {
           execute(connectorResourceClient.listConnectors(accountIdentifier, orgIdentifier, null, PAGE, SIZE,
               ConnectorFilterPropertiesDTO.builder()
                   .connectorIdentifiers(scopeToConnectorIdentifiers.get(Scope.ORG))
-                  .build()));
+                  .build(),
+              false));
       connectorResponses.addAll(response.getContent());
     }
     if (scopeToConnectorIdentifiers.containsKey(Scope.PROJECT)) {
@@ -99,7 +101,8 @@ public class ConnectorPreflightHandler {
           connectorResourceClient.listConnectors(accountIdentifier, orgIdentifier, projectIdentifier, PAGE, SIZE,
               ConnectorFilterPropertiesDTO.builder()
                   .connectorIdentifiers(scopeToConnectorIdentifiers.get(Scope.PROJECT))
-                  .build()));
+                  .build(),
+              false));
       connectorResponses.addAll(response.getContent());
     }
     return connectorResponses;
