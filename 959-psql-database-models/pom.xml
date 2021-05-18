@@ -53,7 +53,8 @@
                             node_pool |
                             ce_recommendations |
                             billing_data
-                            </includes>
+                            node_pool_aggregated |
+                            is_alive | time_bucket </includes>
                             <excludes />
                             <inputSchema>public</inputSchema>
                         </database>

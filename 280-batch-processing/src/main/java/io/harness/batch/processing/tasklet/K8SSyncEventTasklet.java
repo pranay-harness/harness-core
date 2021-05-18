@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
@@ -34,7 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 public class K8SSyncEventTasklet extends EventWriter implements Tasklet {
-  private JobParameters parameters;
   @Autowired private BatchMainConfig config;
   @Autowired private PublishedMessageDao publishedMessageDao;
   @Autowired private InstanceDataBulkWriteService instanceDataBulkWriteService;
@@ -46,15 +44,13 @@ public class K8SSyncEventTasklet extends EventWriter implements Tasklet {
     if (config.getBatchQueryConfig().isSyncJobDisabled()) {
       return null;
     }
-    parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
+    final CCMJobConstants jobConstants = new CCMJobConstants(chunkContext);
     int batchSize = config.getBatchQueryConfig().getQueryBatchSize();
-    Long startTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE);
-    Long endTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE);
-    String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
 
     String messageType = EventTypeConstants.K8S_SYNC_EVENT;
     PublishedMessageReader publishedMessageReader =
-        new PublishedMessageReader(publishedMessageDao, accountId, messageType, startTime, endTime, batchSize);
+        new PublishedMessageReader(publishedMessageDao, jobConstants.getAccountId(), messageType,
+            jobConstants.getJobStartTime(), jobConstants.getJobEndTime(), batchSize);
     List<PublishedMessage> publishedMessageList;
     do {
       publishedMessageList = publishedMessageReader.getNext();
@@ -62,12 +58,12 @@ public class K8SSyncEventTasklet extends EventWriter implements Tasklet {
 
       instanceDataBulkWriteService.updateList(lifecycleList);
 
-      if (featureFlagService.isEnabled(FeatureName.NODE_RECOMMENDATION_1, accountId)) {
+      if (featureFlagService.isEnabled(FeatureName.NODE_RECOMMENDATION_1, jobConstants.getAccountId())) {
         // Since lifecycle event update uses instanceId (which is an uuid) as 'where' clause
         // we can safely assume that it can't co exists between node_info and pod_info tables.
-        instanceInfoTimescaleDAO.updateNodeLifecycleEvent(accountId, lifecycleList);
+        instanceInfoTimescaleDAO.updateNodeLifecycleEvent(jobConstants.getAccountId(), lifecycleList);
 
-        instanceInfoTimescaleDAO.updatePodLifecycleEvent(accountId, lifecycleList);
+        instanceInfoTimescaleDAO.updatePodLifecycleEvent(jobConstants.getAccountId(), lifecycleList);
       }
 
     } while (publishedMessageList.size() == batchSize);

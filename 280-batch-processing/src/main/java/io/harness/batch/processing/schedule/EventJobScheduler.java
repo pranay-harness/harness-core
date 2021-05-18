@@ -28,15 +28,15 @@ import io.harness.batch.processing.tasklet.support.HarnessServiceInfoFetcher;
 import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
 import io.harness.batch.processing.view.CEMetaDataRecordUpdateService;
 import io.harness.batch.processing.view.ViewCostUpdateService;
+import io.harness.beans.FeatureName;
 import io.harness.cf.client.api.CfClient;
 import io.harness.cf.client.dto.Target;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
@@ -77,6 +77,7 @@ public class EventJobScheduler {
   @Autowired private CEMetaDataRecordUpdateService ceMetaDataRecordUpdateService;
   @Autowired private CEDataCleanupRequestService ceDataCleanupRequestService;
   @Autowired private CfClient cfClient;
+  @Autowired private FeatureFlagService featureFlagService;
 
   @PostConstruct
   public void orderJobs() {
@@ -287,6 +288,11 @@ public class EventJobScheduler {
 
   @SuppressWarnings("squid:S1166") // not required to rethrow exceptions.
   private void runJob(String accountId, Job job, boolean runningMode) {
+    if (BatchJobType.K8S_NODE_RECOMMENDATION == BatchJobType.fromJob(job)
+        && !featureFlagService.isEnabled(FeatureName.NODE_RECOMMENDATION_AGGREGATE, accountId)) {
+      return;
+    }
+
     try {
       BatchJobType batchJobType = BatchJobType.fromJob(job);
       BatchJobBucket batchJobBucket = batchJobType.getBatchJobBucket();
@@ -295,10 +301,7 @@ public class EventJobScheduler {
            AutoLogContext ignore1 = new BatchJobBucketLogContext(batchJobBucket.name(), OVERRIDE_ERROR);
            AutoLogContext ignore2 = new BatchJobTypeLogContext(batchJobType.name(), OVERRIDE_ERROR);
            AutoLogContext ignore3 = new BatchJobRunningModeContext(runningMode, OVERRIDE_ERROR)) {
-        Instant startedAt = Instant.now();
         batchJobRunner.runJob(accountId, job, runningMode);
-        log.info(
-            "BatchJobType: {} took {} s", batchJobType.name(), Duration.between(startedAt, Instant.now()).getSeconds());
       }
     } catch (Exception ex) {
       log.error("Exception while running job {}", job);
