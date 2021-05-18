@@ -54,8 +54,8 @@ public class OrganisationChangeEventMessageProcessorTest extends CvNextGenTestBa
     cvConfigService.save(cvConfig2);
     VerificationJobDTO verificationJobDTO1 = createVerificationJobDTO("organisation1");
     VerificationJobDTO verificationJobDTO2 = createVerificationJobDTO("organisation2");
-    verificationJobService.upsert(accountId, verificationJobDTO1);
-    verificationJobService.upsert(accountId, verificationJobDTO2);
+    verificationJobService.create(accountId, verificationJobDTO1);
+    verificationJobService.create(accountId, verificationJobDTO2);
     organizationChangeEventMessageProcessor.processDeleteAction(OrganizationEntityChangeDTO.newBuilder()
                                                                     .setAccountIdentifier(accountId)
                                                                     .setIdentifier("organisation1")
@@ -100,8 +100,8 @@ public class OrganisationChangeEventMessageProcessorTest extends CvNextGenTestBa
     cvConfigService.save(cvConfig2);
     VerificationJobDTO verificationJobDTO1 = createVerificationJobDTO("organisation1");
     VerificationJobDTO verificationJobDTO2 = createVerificationJobDTO("organisation2");
-    verificationJobService.upsert(accountId, verificationJobDTO1);
-    verificationJobService.upsert(accountId, verificationJobDTO2);
+    verificationJobService.create(accountId, verificationJobDTO1);
+    verificationJobService.create(accountId, verificationJobDTO2);
     organizationChangeEventMessageProcessor.processDeleteAction(
         OrganizationEntityChangeDTO.newBuilder().setAccountIdentifier(accountId).build());
     assertThat(verificationJobService.getVerificationJobDTO(

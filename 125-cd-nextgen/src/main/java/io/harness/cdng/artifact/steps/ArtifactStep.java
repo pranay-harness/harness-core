@@ -8,6 +8,7 @@ import io.harness.cdng.artifact.utils.ArtifactStepHelper;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.cdng.service.steps.ServiceStepsHelper;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.TaskSelector;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.artifacts.ArtifactSourceDelegateRequest;
 import io.harness.delegate.task.artifacts.ArtifactTaskType;
@@ -99,8 +100,9 @@ public class ArtifactStep implements TaskExecutable<ArtifactStepParameters, Arti
                               finalArtifact.getIdentifier()),
               LogColor.Cyan, LogWeight.Bold));
     }
-    return StepUtils.prepareTaskRequest(
-        ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2, Collections.emptyList(), false, taskName);
+    List<TaskSelector> delegateSelectors = artifactStepHelper.getDelegateSelectors(finalArtifact, ambiance);
+    return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+        TaskCategory.DELEGATE_TASK_V2, Collections.emptyList(), false, taskName, delegateSelectors);
   }
 
   @Override

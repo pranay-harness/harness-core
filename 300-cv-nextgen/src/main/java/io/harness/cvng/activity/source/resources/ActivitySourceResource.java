@@ -45,12 +45,10 @@ public class ActivitySourceResource {
   @POST
   @Timed
   @ExceptionMetered
-  @ApiOperation(value = "register a kubernetes event source", nickname = "registerActivitySource")
-  public ResponseDTO<String> registerActivitySource(@QueryParam("accountId") @NotNull String accountId,
-      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @Body ActivitySourceDTO activitySourceDTO) {
-    return ResponseDTO.newResponse(
-        activitySourceService.saveActivitySource(accountId, orgIdentifier, projectIdentifier, activitySourceDTO));
+  @ApiOperation(value = "create an activity source", nickname = "createActivitySourceV2")
+  public ResponseDTO<String> createActivitySourceV2(
+      @QueryParam("accountId") @NotNull String accountId, @Body ActivitySourceDTO activitySourceDTO) {
+    return ResponseDTO.newResponse(activitySourceService.create(accountId, activitySourceDTO));
   }
 
   @POST

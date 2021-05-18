@@ -23,7 +23,8 @@ public interface PMSInputSetService {
   boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier,
       String identifier, Long version);
 
-  Page<InputSetEntity> list(Criteria criteria, Pageable pageable);
+  Page<InputSetEntity> list(
+      Criteria criteria, Pageable pageable, String accountIdentifier, String orgIdentifier, String projectIdentifier);
 
   void deleteInputSetsOnPipelineDeletion(PipelineEntity pipelineEntity);
 }
