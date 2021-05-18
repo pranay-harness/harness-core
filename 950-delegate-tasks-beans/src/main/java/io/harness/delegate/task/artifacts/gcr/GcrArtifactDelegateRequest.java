@@ -36,6 +36,7 @@ public class GcrArtifactDelegateRequest implements ArtifactSourceDelegateRequest
   List<String> tagsList;
   /** RegistryHostName */
   String registryHostname;
+  String connectorRef;
   /** Gcp Connector*/
   GcpConnectorDTO gcpConnectorDTO;
   /** Encrypted details for decrypting.*/
