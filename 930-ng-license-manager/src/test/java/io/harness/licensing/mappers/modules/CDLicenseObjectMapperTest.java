@@ -6,9 +6,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.licensing.LicenseTestBase;
-import io.harness.licensing.beans.modules.CEModuleLicenseDTO;
+import io.harness.licensing.beans.modules.CDModuleLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
-import io.harness.licensing.entities.modules.CEModuleLicense;
+import io.harness.licensing.entities.modules.CDModuleLicense;
 import io.harness.licensing.entities.modules.ModuleLicense;
 import io.harness.rule.Owner;
 
@@ -17,25 +17,22 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
-public class CELicenseObjectMapperTest extends LicenseTestBase {
-  @InjectMocks CELicenseObjectMapper objectMapper;
-  private CEModuleLicense moduleLicense;
-  private CEModuleLicenseDTO moduleLicenseDTO;
-  private static final long DEFAULT_SPEND = 250000;
-  private static final int DEFAULT_CLUSTERS = 2;
-  private static final int DEFAULT_RETENTIOn = 30;
+public class CDLicenseObjectMapperTest extends LicenseTestBase {
+  @InjectMocks CDLicenseObjectMapper objectMapper;
+  private CDModuleLicense moduleLicense;
+  private CDModuleLicenseDTO moduleLicenseDTO;
+  private static final int DEFAULT_MAX_WORK_LOAD = 5;
+  private static final int DEFAULT_DEPLOYMENT_PER_DAY = 10;
 
   @Before
   public void setUp() {
-    moduleLicense = CEModuleLicense.builder()
-                        .numberOfCluster(DEFAULT_CLUSTERS)
-                        .spendLimit(DEFAULT_SPEND)
-                        .dataRetentionInDays(DEFAULT_RETENTIOn)
+    moduleLicense = CDModuleLicense.builder()
+                        .maxWorkLoads(DEFAULT_MAX_WORK_LOAD)
+                        .deploymentsPerDay(DEFAULT_DEPLOYMENT_PER_DAY)
                         .build();
-    moduleLicenseDTO = CEModuleLicenseDTO.builder()
-                           .numberOfCluster(DEFAULT_CLUSTERS)
-                           .spendLimit(DEFAULT_SPEND)
-                           .dataRetentionInDays(DEFAULT_RETENTIOn)
+    moduleLicenseDTO = CDModuleLicenseDTO.builder()
+                           .maxWorkLoads(DEFAULT_MAX_WORK_LOAD)
+                           .deploymentsPerDay(DEFAULT_DEPLOYMENT_PER_DAY)
                            .build();
   }
 

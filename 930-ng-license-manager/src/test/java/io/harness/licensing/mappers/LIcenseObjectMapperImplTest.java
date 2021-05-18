@@ -48,8 +48,8 @@ public class LIcenseObjectMapperImplTest extends LicenseTestBase {
                                  .moduleType(DEFAULT_MODULE_TYPE)
                                  .startTime(0)
                                  .expiryTime(0)
-                                 .createdAt(0)
-                                 .lastModifiedAt(0)
+                                 .createdAt(0L)
+                                 .lastModifiedAt(0L)
                                  .build();
     defaultModuleLicense = CIModuleLicense.builder().numberOfCommitters(DEFAULT_NUMBER_OF_COMMITTERS).build();
     defaultModuleLicense.setId("id");
