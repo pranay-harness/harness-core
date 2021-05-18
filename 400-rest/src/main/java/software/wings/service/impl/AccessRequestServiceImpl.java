@@ -229,6 +229,7 @@ public class AccessRequestServiceImpl implements AccessRequestService {
   }
 
   private Set<String> getEmailIds(AccessRequest accessRequest) {
+    notNullCheck("Invalid AccessRequest", accessRequest);
     Set<String> emailIds = new HashSet<>();
     accessRequest.getMemberIds().forEach(memberId -> {
       User user = userService.get(memberId);
