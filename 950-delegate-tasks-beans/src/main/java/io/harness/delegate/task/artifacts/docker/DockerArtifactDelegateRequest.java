@@ -35,6 +35,7 @@ public class DockerArtifactDelegateRequest implements ArtifactSourceDelegateRequ
   String tagRegex;
   /** List of buildNumbers/tags */
   List<String> tagsList;
+  String connectorRef;
   /** DockerHub Connector*/
   DockerConnectorDTO dockerConnectorDTO;
   /** Encrypted details for decrypting.*/

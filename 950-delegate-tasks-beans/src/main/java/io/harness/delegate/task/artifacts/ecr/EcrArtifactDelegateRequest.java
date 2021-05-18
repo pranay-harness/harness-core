@@ -37,6 +37,7 @@ public class EcrArtifactDelegateRequest implements ArtifactSourceDelegateRequest
   List<String> tagsList;
   /** Region */
   String region;
+  String connectorRef;
   /** aws Connector*/
   AwsConnectorDTO awsConnectorDTO;
   /** Encrypted details for decrypting.*/
