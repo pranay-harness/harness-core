@@ -122,6 +122,22 @@ public class ValidateAndMergeHelper {
     }
   }
 
+  public String mergeInputSetIntoPipeline(String accountId, String orgIdentifier, String projectIdentifier,
+      String pipelineIdentifier, String mergedRuntimeInputYaml) {
+    Optional<PipelineEntity> optionalPipelineEntity =
+        pmsPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
+    if (!optionalPipelineEntity.isPresent()) {
+      throw new InvalidRequestException("Pipeline with identifier " + pipelineIdentifier + " not present");
+    }
+    PipelineEntity pipelineEntity = optionalPipelineEntity.get();
+    try {
+      return io.harness.pms.merger.helpers.MergeHelper.mergeInputSetIntoPipeline(
+          pipelineEntity.getYaml(), mergedRuntimeInputYaml, false);
+    } catch (IOException e) {
+      throw new InvalidRequestException("Could not merge input sets : " + e.getMessage());
+    }
+  }
+
   private void confirmPipelineIdentifier(String inputSetYaml, String pipelineIdentifier) {
     if (PMSInputSetElementMapper.isPipelineAbsent(inputSetYaml)) {
       throw new InvalidRequestException(
