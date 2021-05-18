@@ -7,6 +7,7 @@ import io.harness.timescaledb.tables.BillingData;
 import io.harness.timescaledb.tables.CeRecommendations;
 import io.harness.timescaledb.tables.KubernetesUtilizationData;
 import io.harness.timescaledb.tables.NodeInfo;
+import io.harness.timescaledb.tables.NodePoolAggregated;
 import io.harness.timescaledb.tables.PodInfo;
 import io.harness.timescaledb.tables.WorkloadInfo;
 
@@ -35,6 +36,11 @@ public class Tables {
    * The table <code>public.node_info</code>.
    */
   public static final NodeInfo NODE_INFO = NodeInfo.NODE_INFO;
+
+  /**
+   * The table <code>public.node_pool_aggregated</code>.
+   */
+  public static final NodePoolAggregated NODE_POOL_AGGREGATED = NodePoolAggregated.NODE_POOL_AGGREGATED;
 
   /**
    * The table <code>public.pod_info</code>.

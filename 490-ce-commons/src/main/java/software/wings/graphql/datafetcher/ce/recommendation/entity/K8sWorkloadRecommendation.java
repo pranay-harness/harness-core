@@ -1,8 +1,10 @@
 package software.wings.graphql.datafetcher.ce.recommendation.entity;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.data.structure.MongoMapSanitizer;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -40,6 +42,7 @@ import org.mongodb.morphia.annotations.PrePersist;
 @FieldNameConstants(innerTypeName = "K8sWorkloadRecommendationKeys")
 @StoreIn("events")
 @Entity(value = "k8sWorkloadRecommendation", noClassnameStored = true)
+@OwnedBy(CE)
 public final class K8sWorkloadRecommendation
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
@@ -101,6 +104,11 @@ public final class K8sWorkloadRecommendation
   int numDays;
 
   HarnessServiceInfo harnessServiceInfo;
+
+  // decision whether to show the recommendation in the Recommendation Overview List page or not.
+  public boolean shouldShowRecommendation() {
+    return validRecommendation && lastDayCostAvailable && numDays >= 1;
+  }
 
   @PostLoad
   public void postLoad() {
