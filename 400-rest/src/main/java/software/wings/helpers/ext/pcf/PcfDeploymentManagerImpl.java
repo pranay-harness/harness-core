@@ -23,16 +23,21 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.logging.LogLevel;
+import io.harness.pcf.CfCliClient;
+import io.harness.pcf.CfSdkClient;
 import io.harness.pcf.PivotalClientApiException;
+import io.harness.pcf.model.PcfAppAutoscalarRequestData;
+import io.harness.pcf.model.PcfRequestConfig;
 
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -54,12 +59,13 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   public static final String DELIMITER = "__";
   private static final List<String> STATUS_ENV_VARIABLES =
       Arrays.asList(HARNESS__STATUS__INDENTIFIER, HARNESS__STATUS__IDENTIFIER);
-  @Inject PcfClient pcfClient;
+  @Inject private CfCliClient cfCliClient;
+  @Inject private CfSdkClient cfSdkClient;
 
   @Override
   public List<String> getOrganizations(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
     try {
-      List<OrganizationSummary> organizationSummaries = pcfClient.getOrganizations(pcfRequestConfig);
+      List<OrganizationSummary> organizationSummaries = cfSdkClient.getOrganizations(pcfRequestConfig);
       return organizationSummaries.stream().map(OrganizationSummary::getName).collect(toList());
     } catch (Exception e) {
       throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
@@ -69,7 +75,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   @Override
   public List<String> getSpacesForOrganization(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
     try {
-      return pcfClient.getSpacesForOrganization(pcfRequestConfig);
+      return cfSdkClient.getSpacesForOrganization(pcfRequestConfig);
     } catch (Exception e) {
       throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }
@@ -78,7 +84,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   @Override
   public List<String> getRouteMaps(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
     try {
-      return pcfClient.getRoutesForSpace(pcfRequestConfig);
+      return cfSdkClient.getRoutesForSpace(pcfRequestConfig);
     } catch (Exception e) {
       throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }
@@ -87,8 +93,15 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   @Override
   public ApplicationDetail createApplication(PcfCreateApplicationRequestData requestData,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+    PcfRequestConfig pcfRequestConfig = requestData.getPcfRequestConfig();
     try {
-      pcfClient.pushApplicationUsingManifest(requestData, executionLogCallback);
+      if (pcfRequestConfig.isUseCFCLI()) {
+        cfCliClient.pushAppByCli(requestData, executionLogCallback);
+      } else {
+        Path path = Paths.get(requestData.getManifestFilePath());
+        cfSdkClient.pushAppBySdk(pcfRequestConfig, path, executionLogCallback);
+      }
+
       return getApplicationByName(requestData.getPcfRequestConfig());
     } catch (Exception e) {
       throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
@@ -98,7 +111,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   @Override
   public ApplicationDetail getApplicationByName(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
     try {
-      return pcfClient.getApplicationByName(pcfRequestConfig);
+      return cfSdkClient.getApplicationByName(pcfRequestConfig);
     } catch (Exception e) {
       throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }
@@ -107,18 +120,18 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   @Override
   public ApplicationDetail resizeApplication(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
     try {
-      ApplicationDetail applicationDetail = pcfClient.getApplicationByName(pcfRequestConfig);
-      pcfClient.scaleApplications(pcfRequestConfig);
+      ApplicationDetail applicationDetail = cfSdkClient.getApplicationByName(pcfRequestConfig);
+      cfSdkClient.scaleApplications(pcfRequestConfig);
       if (pcfRequestConfig.getDesiredCount() > 0 && applicationDetail.getInstances() == 0) {
-        pcfClient.startApplication(pcfRequestConfig);
+        cfSdkClient.startApplication(pcfRequestConfig);
       }
 
       // is scales down to 0, stop application
       if (pcfRequestConfig.getDesiredCount() == 0) {
-        pcfClient.stopApplication(pcfRequestConfig);
+        cfSdkClient.stopApplication(pcfRequestConfig);
       }
 
-      return pcfClient.getApplicationByName(pcfRequestConfig);
+      return cfSdkClient.getApplicationByName(pcfRequestConfig);
     } catch (Exception e) {
       throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }
@@ -139,7 +152,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
       try {
         startedProcess = startTailingLogsIfNeeded(pcfRequestConfig, executionLogCallback, startedProcess);
 
-        applicationDetail = pcfClient.getApplicationByName(pcfRequestConfig);
+        applicationDetail = cfSdkClient.getApplicationByName(pcfRequestConfig);
         if (reachedDesiredState(applicationDetail, pcfRequestConfig.getDesiredCount())) {
           steadyStateReached = true;
           destroyProcess(startedProcess);
@@ -212,7 +225,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     try {
       if (startedProcess == null || startedProcess.getProcess() == null || !startedProcess.getProcess().isAlive()) {
         executionLogCallback.saveExecutionLog("# Printing next Log batch: ");
-        startedProcess = pcfClient.tailLogsForPcf(pcfRequestConfig, executionLogCallback);
+        startedProcess = cfCliClient.tailLogsForPcf(pcfRequestConfig, executionLogCallback);
       }
     } catch (PivotalClientApiException e) {
       executionLogCallback.saveExecutionLog("Failed while retrieving logs in this attempt", LogLevel.WARN);
@@ -225,9 +238,9 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
       ExecutionLogCallback logCallback) throws PivotalClientApiException {
     try {
       if (pcfRequestConfig.isUseCFCLI()) {
-        pcfClient.unmapRoutesForApplicationUsingCli(pcfRequestConfig, paths, logCallback);
+        cfCliClient.unmapRoutesForApplicationUsingCli(pcfRequestConfig, paths, logCallback);
       } else {
-        pcfClient.unmapRoutesForApplication(pcfRequestConfig, paths);
+        cfSdkClient.unmapRoutesForApplication(pcfRequestConfig, paths);
       }
     } catch (Exception e) {
       throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
@@ -239,9 +252,9 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
       ExecutionLogCallback logCallback) throws PivotalClientApiException {
     try {
       if (pcfRequestConfig.isUseCFCLI()) {
-        pcfClient.mapRoutesForApplicationUsingCli(pcfRequestConfig, paths, logCallback);
+        cfCliClient.mapRoutesForApplicationUsingCli(pcfRequestConfig, paths, logCallback);
       } else {
-        pcfClient.mapRoutesForApplication(pcfRequestConfig, paths);
+        cfSdkClient.mapRoutesForApplication(pcfRequestConfig, paths);
       }
     } catch (Exception e) {
       throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
@@ -252,7 +265,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   public List<ApplicationSummary> getDeployedServicesWithNonZeroInstances(
       PcfRequestConfig pcfRequestConfig, String prefix) throws PivotalClientApiException {
     try {
-      List<ApplicationSummary> applicationSummaries = pcfClient.getApplications(pcfRequestConfig);
+      List<ApplicationSummary> applicationSummaries = cfSdkClient.getApplications(pcfRequestConfig);
       if (CollectionUtils.isEmpty(applicationSummaries)) {
         return Collections.EMPTY_LIST;
       }
@@ -272,7 +285,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   public List<ApplicationSummary> getPreviousReleases(PcfRequestConfig pcfRequestConfig, String prefix)
       throws PivotalClientApiException {
     try {
-      List<ApplicationSummary> applicationSummaries = pcfClient.getApplications(pcfRequestConfig);
+      List<ApplicationSummary> applicationSummaries = cfSdkClient.getApplications(pcfRequestConfig);
       if (CollectionUtils.isEmpty(applicationSummaries)) {
         return Collections.EMPTY_LIST;
       }
@@ -301,7 +314,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   @Override
   public void deleteApplication(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
     try {
-      pcfClient.deleteApplication(pcfRequestConfig);
+      cfSdkClient.deleteApplication(pcfRequestConfig);
     } catch (Exception e) {
       throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
     }
@@ -310,7 +323,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   @Override
   public String stopApplication(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
     try {
-      pcfClient.stopApplication(pcfRequestConfig);
+      cfSdkClient.stopApplication(pcfRequestConfig);
       return getDetailedApplicationState(pcfRequestConfig);
     } catch (Exception e) {
       throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION + ExceptionUtils.getMessage(e), e);
@@ -327,10 +340,10 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
       path = new StringBuilder(64).append("/").append(path).toString();
     }
 
-    pcfClient.createRouteMap(pcfRequestConfig, host, domain, path, tcpRoute, useRandomPort, port);
+    cfSdkClient.createRouteMap(pcfRequestConfig, host, domain, path, tcpRoute, useRandomPort, port);
 
     String routePath = generateRouteUrl(host, domain, path, tcpRoute, useRandomPort, port);
-    Optional<Route> route = pcfClient.getRouteMap(pcfRequestConfig, routePath);
+    Optional<Route> route = cfSdkClient.getRouteMap(pcfRequestConfig, routePath);
     if (route.isPresent()) {
       return routePath;
     } else {
@@ -359,16 +372,16 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   @Override
   public boolean checkIfAppHasAutoscalarAttached(PcfAppAutoscalarRequestData appAutoscalarRequestData,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
-    return pcfClient.checkIfAppHasAutoscalarAttached(appAutoscalarRequestData, executionLogCallback);
+    return cfCliClient.checkIfAppHasAutoscalerAttached(appAutoscalarRequestData, executionLogCallback);
   }
 
   @Override
   public void performConfigureAutoscalar(PcfAppAutoscalarRequestData appAutoscalarRequestData,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     boolean autoscalarAttached =
-        pcfClient.checkIfAppHasAutoscalarAttached(appAutoscalarRequestData, executionLogCallback);
+        cfCliClient.checkIfAppHasAutoscalerAttached(appAutoscalarRequestData, executionLogCallback);
     if (autoscalarAttached) {
-      pcfClient.performConfigureAutoscalar(appAutoscalarRequestData, executionLogCallback);
+      cfCliClient.performConfigureAutoscaler(appAutoscalarRequestData, executionLogCallback);
     } else {
       executionLogCallback.saveExecutionLog(
           color(new StringBuilder(128)
@@ -386,7 +399,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     // If we want to enable it, its expected to be disabled and vice versa
     appAutoscalarRequestData.setExpectedEnabled(!enable);
     boolean autoscalarAttachedWithExpectedStatus =
-        pcfClient.checkIfAppHasAutoscalarWithExpectedState(appAutoscalarRequestData, executionLogCallback);
+        cfCliClient.checkIfAppHasAutoscalerWithExpectedState(appAutoscalarRequestData, executionLogCallback);
 
     if (autoscalarAttachedWithExpectedStatus) {
       executionLogCallback.saveExecutionLog(color(new StringBuilder(128)
@@ -396,7 +409,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
                                                       .append(appAutoscalarRequestData.getApplicationName())
                                                       .toString(),
           White, Bold));
-      pcfClient.changeAutoscalarState(appAutoscalarRequestData, executionLogCallback, enable);
+      cfCliClient.changeAutoscalerState(appAutoscalarRequestData, executionLogCallback, enable);
       return true;
     } else {
       executionLogCallback.saveExecutionLog(
@@ -411,7 +424,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   public boolean isActiveApplication(PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback)
       throws PivotalClientApiException {
     // If we want to enable it, its expected to be disabled and vice versa
-    ApplicationEnvironments applicationEnvironments = pcfClient.getApplicationEnvironmentsByName(pcfRequestConfig);
+    ApplicationEnvironments applicationEnvironments = cfSdkClient.getApplicationEnvironmentsByName(pcfRequestConfig);
     if (applicationEnvironments != null && EmptyPredicate.isNotEmpty(applicationEnvironments.getUserProvided())) {
       for (String statusKey : STATUS_ENV_VARIABLES) {
         if (applicationEnvironments.getUserProvided().containsKey(statusKey)
@@ -428,7 +441,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     // If we want to enable it, its expected to be disabled and vice versa
     removeOldStatusVariableIfExist(pcfRequestConfig, executionLogCallback);
-    pcfClient.setEnvVariablesForApplication(
+    cfCliClient.setEnvVariablesForApplication(
         Collections.singletonMap(
             HARNESS__STATUS__IDENTIFIER, activeStatus ? HARNESS__ACTIVE__IDENTIFIER : HARNESS__STAGE__IDENTIFIER),
         pcfRequestConfig, executionLogCallback);
@@ -436,11 +449,11 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
 
   private void removeOldStatusVariableIfExist(
       PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
-    ApplicationEnvironments applicationEnvironments = pcfClient.getApplicationEnvironmentsByName(pcfRequestConfig);
+    ApplicationEnvironments applicationEnvironments = cfSdkClient.getApplicationEnvironmentsByName(pcfRequestConfig);
     if (applicationEnvironments != null && EmptyPredicate.isNotEmpty(applicationEnvironments.getUserProvided())) {
       Map<String, Object> userProvided = applicationEnvironments.getUserProvided();
       if (userProvided.containsKey(HARNESS__STATUS__INDENTIFIER)) {
-        pcfClient.unsetEnvVariablesForApplication(
+        cfCliClient.unsetEnvVariablesForApplication(
             Collections.singletonList(HARNESS__STATUS__INDENTIFIER), pcfRequestConfig, executionLogCallback);
       }
     }
@@ -450,12 +463,12 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   public void unsetEnvironmentVariableForAppStatus(
       PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     // If we want to enable it, its expected to be disabled and vice versa
-    ApplicationEnvironments applicationEnvironments = pcfClient.getApplicationEnvironmentsByName(pcfRequestConfig);
+    ApplicationEnvironments applicationEnvironments = cfSdkClient.getApplicationEnvironmentsByName(pcfRequestConfig);
     if (applicationEnvironments != null && EmptyPredicate.isNotEmpty(applicationEnvironments.getUserProvided())) {
       Map<String, Object> userProvided = applicationEnvironments.getUserProvided();
       for (String statusKey : STATUS_ENV_VARIABLES) {
         if (userProvided.containsKey(statusKey)) {
-          pcfClient.unsetEnvVariablesForApplication(
+          cfCliClient.unsetEnvVariablesForApplication(
               Collections.singletonList(statusKey), pcfRequestConfig, executionLogCallback);
         }
       }
@@ -503,7 +516,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
 
   private String getDetailedApplicationState(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
-    ApplicationDetail applicationDetail = pcfClient.getApplicationByName(pcfRequestConfig);
+    ApplicationDetail applicationDetail = cfSdkClient.getApplicationByName(pcfRequestConfig);
     return new StringBuilder("Application Created : ")
         .append(applicationDetail.getName())
         .append(", Details: ")

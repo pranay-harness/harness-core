@@ -9,12 +9,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pcf.PivotalClientApiException;
+import io.harness.pcf.model.PcfAppAutoscalarRequestData;
+import io.harness.pcf.model.PcfRequestConfig;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 
 import java.util.ArrayList;
@@ -25,7 +26,7 @@ import org.mockito.Mock;
 @OwnedBy(CDP)
 public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   private final PcfDeploymentManagerUnsupported deploymentManager = new PcfDeploymentManagerUnsupported();
-  private final PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();
+  private final io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();
   @Mock private ExecutionLogCallback mockLogCallback;
 
   @Test

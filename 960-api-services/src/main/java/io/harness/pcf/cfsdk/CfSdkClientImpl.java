@@ -1,4 +1,4 @@
-package software.wings.helpers.ext.pcf;
+package io.harness.pcf.cfsdk;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -13,12 +13,9 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
+import io.harness.pcf.CfSdkClient;
 import io.harness.pcf.PivotalClientApiException;
-import io.harness.pcf.cfsdk.CloudFoundryOperationsProvider;
-import io.harness.pcf.cfsdk.CloudFoundryOperationsWrapper;
 import io.harness.pcf.model.PcfRequestConfig;
 
 import software.wings.beans.command.ExecutionLogCallback;
@@ -34,7 +31,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -48,7 +44,6 @@ import org.cloudfoundry.doppler.LogMessage;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationEnvironments;
 import org.cloudfoundry.operations.applications.ApplicationManifest;
-import org.cloudfoundry.operations.applications.ApplicationManifest.Builder;
 import org.cloudfoundry.operations.applications.ApplicationManifestUtils;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.DeleteApplicationRequest;
@@ -74,9 +69,8 @@ import org.cloudfoundry.operations.routes.UnmapRouteRequest;
 
 @Singleton
 @Slf4j
-@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
-public class PcfClientImpl implements PcfClient {
+public class CfSdkClientImpl implements CfSdkClient {
   public static final String BIN_BASH = "/bin/bash";
   public static final String SUCCESS = "SUCCESS";
   public static final String PCF_PROXY_PROPERTY = "https_proxy";
@@ -366,7 +360,7 @@ public class PcfClientImpl implements PcfClient {
   }
 
   @Override
-  public void pushUsingPcfSdk(PcfRequestConfig pcfRequestConfig, Path path, ExecutionLogCallback executionLogCallback)
+  public void pushAppBySdk(PcfRequestConfig pcfRequestConfig, Path path, ExecutionLogCallback executionLogCallback)
       throws PivotalClientApiException, InterruptedException {
     executionLogCallback.saveExecutionLog(
         "Using SDK to create application, Deprecated... Please enable flag: USE_PCF_CLI");
@@ -452,7 +446,7 @@ public class PcfClientImpl implements PcfClient {
 
     // Add user provided environment variables
     if (pcfRequestConfig.getServiceVariables() != null) {
-      for (Entry<String, String> entry : pcfRequestConfig.getServiceVariables().entrySet()) {
+      for (Map.Entry<String, String> entry : pcfRequestConfig.getServiceVariables().entrySet()) {
         builder.environmentVariable(entry.getKey(), entry.getValue());
       }
     }
@@ -479,7 +473,7 @@ public class PcfClientImpl implements PcfClient {
         .build();
   }
 
-  private void addRouteMapsToManifest(PcfRequestConfig pcfRequestConfig, Builder builder) {
+  private void addRouteMapsToManifest(PcfRequestConfig pcfRequestConfig, ApplicationManifest.Builder builder) {
     // Set routeMaps
     if (isNotEmpty(pcfRequestConfig.getRouteMaps())) {
       List<org.cloudfoundry.operations.applications.Route> routeList =

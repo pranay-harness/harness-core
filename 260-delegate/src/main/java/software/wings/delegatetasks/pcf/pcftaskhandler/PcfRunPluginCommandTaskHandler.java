@@ -23,15 +23,15 @@ import io.harness.exception.UnexpectedException;
 import io.harness.filesystem.FileIo;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
+import io.harness.pcf.CfCliClient;
 import io.harness.pcf.PivotalClientApiException;
 import io.harness.pcf.model.CfCliVersion;
 import io.harness.pcf.model.PcfConstants;
+import io.harness.pcf.model.PcfRequestConfig;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.helpers.ext.pcf.PcfClient;
-import software.wings.helpers.ext.pcf.PcfRequestConfig;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfRunPluginCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfRunPluginScriptRequestData;
@@ -59,7 +59,7 @@ import org.apache.commons.lang3.tuple.Pair;
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(HarnessTeam.CDP)
 public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
-  @Inject PcfClient pcfClient;
+  @Inject private CfCliClient cfCliClient;
 
   /**
    * Execute the pcf plugin command
@@ -129,7 +129,7 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
               .pcfRequestConfig(pcfRequestConfig)
               .pluginCommandRequest(pluginCommandRequest)
               .build();
-      pcfClient.runPcfPluginScript(pcfRunPluginScriptRequestData, executionLogCallback);
+      cfCliClient.runPcfPluginScript(pcfRunPluginScriptRequestData, executionLogCallback);
 
       executionLogCallback.saveExecutionLog(
           "\n ----------  PCF Run Plugin Command completed successfully", INFO, CommandExecutionStatus.SUCCESS);

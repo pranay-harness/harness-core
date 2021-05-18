@@ -23,15 +23,20 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.pcf.CfCliClient;
+import io.harness.pcf.CfSdkClient;
 import io.harness.pcf.PivotalClientApiException;
+import io.harness.pcf.model.PcfAppAutoscalarRequestData;
+import io.harness.pcf.model.PcfRequestConfig;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,7 +61,8 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
 
 public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
-  @Mock PcfClientImpl client;
+  @Mock CfCliClient cfCliClient;
+  @Mock CfSdkClient cfSdkClient;
   @Mock ExecutionLogCallback logCallback;
   @InjectMocks @Spy PcfDeploymentManagerImpl deploymentManager;
 
@@ -67,7 +73,7 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
     OrganizationSummary summary1 = OrganizationSummary.builder().id("1").name("org1").build();
     OrganizationSummary summary2 = OrganizationSummary.builder().id("2").name("org2").build();
 
-    when(client.getOrganizations(any())).thenReturn(Arrays.asList(summary1, summary2));
+    when(cfSdkClient.getOrganizations(any())).thenReturn(Arrays.asList(summary1, summary2));
     List<String> orgs = deploymentManager.getOrganizations(null);
     assertThat(orgs).isNotNull();
     assertThat(orgs).containsExactly("org1", "org2");
@@ -146,33 +152,33 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testChangeAutoscalarState() throws Exception {
-    reset(client);
-    doReturn(false).doReturn(true).when(client).checkIfAppHasAutoscalarWithExpectedState(any(), any());
+    reset(cfCliClient);
+    doReturn(false).doReturn(true).when(cfCliClient).checkIfAppHasAutoscalerWithExpectedState(any(), any());
 
-    doNothing().when(client).changeAutoscalarState(any(), any(), anyBoolean());
+    doNothing().when(cfCliClient).changeAutoscalerState(any(), any(), anyBoolean());
 
     doNothing().when(logCallback).saveExecutionLog(anyString());
     deploymentManager.changeAutoscalarState(PcfAppAutoscalarRequestData.builder().build(), logCallback, true);
-    verify(client, never()).changeAutoscalarState(any(), any(), anyBoolean());
+    verify(cfCliClient, never()).changeAutoscalerState(any(), any(), anyBoolean());
 
     deploymentManager.changeAutoscalarState(PcfAppAutoscalarRequestData.builder().build(), logCallback, true);
-    verify(client, times(1)).changeAutoscalarState(any(), any(), anyBoolean());
+    verify(cfCliClient, times(1)).changeAutoscalerState(any(), any(), anyBoolean());
   }
 
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testPerformConfigureAutoscalar() throws Exception {
-    reset(client);
-    doReturn(false).doReturn(true).when(client).checkIfAppHasAutoscalarAttached(any(), any());
-    doNothing().when(client).performConfigureAutoscalar(any(), any());
+    reset(cfCliClient);
+    doReturn(false).doReturn(true).when(cfCliClient).checkIfAppHasAutoscalerAttached(any(), any());
+    doNothing().when(cfCliClient).performConfigureAutoscaler(any(), any());
 
     doNothing().when(logCallback).saveExecutionLog(anyString());
     deploymentManager.performConfigureAutoscalar(PcfAppAutoscalarRequestData.builder().build(), logCallback);
-    verify(client, never()).performConfigureAutoscalar(any(), any());
+    verify(cfCliClient, never()).performConfigureAutoscaler(any(), any());
 
     deploymentManager.performConfigureAutoscalar(PcfAppAutoscalarRequestData.builder().build(), logCallback);
-    verify(client, times(1)).performConfigureAutoscalar(any(), any());
+    verify(cfCliClient, times(1)).performConfigureAutoscaler(any(), any());
   }
 
   @Test
@@ -224,7 +230,8 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
     doReturn(process).when(process).destroyForcibly();
     doNothing().when(process).destroy();
 
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().desiredCount(1).timeOutIntervalInMins(1).build();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig =
+        io.harness.pcf.model.PcfRequestConfig.builder().desiredCount(1).timeOutIntervalInMins(1).build();
     InstanceDetail instanceDetail1 = InstanceDetail.builder()
                                          .cpu(2.0)
                                          .diskQuota((long) 2.23)
@@ -235,8 +242,8 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
                                          .state("RUNNING")
                                          .build();
     ApplicationDetail applicationDetail = generateApplicationDetail(1, new InstanceDetail[] {instanceDetail1});
-    doReturn(applicationDetail).when(client).getApplicationByName(any());
-    doNothing().when(client).scaleApplications(any());
+    doReturn(applicationDetail).when(cfSdkClient).getApplicationByName(any());
+    doNothing().when(cfSdkClient).scaleApplications(any());
     ApplicationDetail applicationDetail1 =
         deploymentManager.upsizeApplicationWithSteadyStateCheck(pcfRequestConfig, logCallback);
     assertThat(applicationDetail).isEqualTo(applicationDetail1);
@@ -256,7 +263,7 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
       reset(startedProcess);
       reset(process);
       applicationDetail = generateApplicationDetail(1, new InstanceDetail[] {instanceDetail2});
-      doReturn(applicationDetail).when(client).getApplicationByName(any());
+      doReturn(applicationDetail).when(cfSdkClient).getApplicationByName(any());
       deploymentManager.upsizeApplicationWithSteadyStateCheck(pcfRequestConfig, logCallback);
     } catch (PivotalClientApiException e) {
       assertThat(e.getMessage().contains("Failed to reach steady state")).isTrue();
@@ -267,43 +274,43 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testStartTailingLogsIfNeeded() throws Exception {
-    reset(client);
+    reset(cfCliClient);
     StartedProcess startedProcess = mock(StartedProcess.class);
     Process process = mock(Process.class);
 
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = io.harness.pcf.model.PcfRequestConfig.builder().build();
     pcfRequestConfig.setUseCFCLI(true);
-    doReturn(startedProcess).when(client).tailLogsForPcf(any(), any());
+    doReturn(startedProcess).when(cfCliClient).tailLogsForPcf(any(), any());
     // startedProcess = null
     deploymentManager.startTailingLogsIfNeeded(pcfRequestConfig, logCallback, null);
-    verify(client, times(1)).tailLogsForPcf(any(), any());
+    verify(cfCliClient, times(1)).tailLogsForPcf(any(), any());
 
-    reset(client);
-    doReturn(startedProcess).when(client).tailLogsForPcf(any(), any());
+    reset(cfCliClient);
+    doReturn(startedProcess).when(cfCliClient).tailLogsForPcf(any(), any());
     doReturn(null).when(startedProcess).getProcess();
     // startedProcess.getProcess() = null
     deploymentManager.startTailingLogsIfNeeded(pcfRequestConfig, logCallback, startedProcess);
-    verify(client, times(1)).tailLogsForPcf(any(), any());
+    verify(cfCliClient, times(1)).tailLogsForPcf(any(), any());
 
-    reset(client);
+    reset(cfCliClient);
     doReturn(process).when(startedProcess).getProcess();
     doReturn(false).when(process).isAlive();
     deploymentManager.startTailingLogsIfNeeded(pcfRequestConfig, logCallback, startedProcess);
-    verify(client, times(1)).tailLogsForPcf(any(), any());
+    verify(cfCliClient, times(1)).tailLogsForPcf(any(), any());
 
-    reset(client);
+    reset(cfCliClient);
     doReturn(true).when(process).isAlive();
     deploymentManager.startTailingLogsIfNeeded(pcfRequestConfig, logCallback, startedProcess);
-    verify(client, never()).tailLogsForPcf(any(), any());
+    verify(cfCliClient, never()).tailLogsForPcf(any(), any());
 
-    reset(client);
+    reset(cfCliClient);
     pcfRequestConfig.setUseCFCLI(false);
     deploymentManager.startTailingLogsIfNeeded(pcfRequestConfig, logCallback, null);
-    verify(client, never()).tailLogsForPcf(any(), any());
+    verify(cfCliClient, never()).tailLogsForPcf(any(), any());
 
-    reset(client);
+    reset(cfCliClient);
     pcfRequestConfig.setUseCFCLI(true);
-    doThrow(PivotalClientApiException.class).when(client).tailLogsForPcf(any(), any());
+    doThrow(PivotalClientApiException.class).when(cfCliClient).tailLogsForPcf(any(), any());
     deploymentManager.startTailingLogsIfNeeded(pcfRequestConfig, logCallback, null);
   }
 
@@ -311,18 +318,20 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testSetEnvironmentVariableForAppStatus() throws Exception {
-    reset(client);
-    deploymentManager.setEnvironmentVariableForAppStatus(PcfRequestConfig.builder().build(), true, logCallback);
+    reset(cfCliClient);
+    deploymentManager.setEnvironmentVariableForAppStatus(
+        io.harness.pcf.model.PcfRequestConfig.builder().build(), true, logCallback);
     ArgumentCaptor<Map> mapCaptor = ArgumentCaptor.forClass(Map.class);
-    verify(client, times(1)).setEnvVariablesForApplication(mapCaptor.capture(), any(), any());
+    verify(cfCliClient, times(1)).setEnvVariablesForApplication(mapCaptor.capture(), any(), any());
     Map map = mapCaptor.getValue();
 
     assertThat(map).isNotNull();
     assertThat(map.size()).isEqualTo(1);
     assertThat(map.get(HARNESS__STATUS__IDENTIFIER)).isEqualTo(HARNESS__ACTIVE__IDENTIFIER);
 
-    deploymentManager.setEnvironmentVariableForAppStatus(PcfRequestConfig.builder().build(), false, logCallback);
-    verify(client, times(2)).setEnvVariablesForApplication(mapCaptor.capture(), any(), any());
+    deploymentManager.setEnvironmentVariableForAppStatus(
+        io.harness.pcf.model.PcfRequestConfig.builder().build(), false, logCallback);
+    verify(cfCliClient, times(2)).setEnvVariablesForApplication(mapCaptor.capture(), any(), any());
     map = mapCaptor.getValue();
 
     assertThat(map).isNotNull();
@@ -334,17 +343,19 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testUnsetEnvironmentVariableForAppStatus() throws Exception {
-    reset(client);
+    reset(cfSdkClient);
+    reset(cfCliClient);
     Map<String, String> userProvided = new HashMap<>();
     userProvided.put(HARNESS__STATUS__IDENTIFIER, HARNESS__STAGE__IDENTIFIER);
     ApplicationEnvironments applicationEnvironments =
         ApplicationEnvironments.builder().userProvided(userProvided).build();
 
-    doReturn(applicationEnvironments).when(client).getApplicationEnvironmentsByName(any());
+    doReturn(applicationEnvironments).when(cfSdkClient).getApplicationEnvironmentsByName(any());
 
-    deploymentManager.unsetEnvironmentVariableForAppStatus(PcfRequestConfig.builder().build(), logCallback);
+    deploymentManager.unsetEnvironmentVariableForAppStatus(
+        io.harness.pcf.model.PcfRequestConfig.builder().build(), logCallback);
     ArgumentCaptor<List> listCaptor = ArgumentCaptor.forClass(List.class);
-    verify(client).unsetEnvVariablesForApplication(listCaptor.capture(), any(), any());
+    verify(cfCliClient).unsetEnvVariablesForApplication(listCaptor.capture(), any(), any());
     List list = listCaptor.getValue();
 
     assertThat(list).isNotNull();
@@ -404,8 +415,9 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testGetOrganizationsFail() throws Exception {
-    doThrow(Exception.class).when(client).getOrganizations(any());
-    assertThatThrownBy(() -> deploymentManager.getOrganizations(PcfRequestConfig.builder().build()))
+    doThrow(Exception.class).when(cfSdkClient).getOrganizations(any());
+    assertThatThrownBy(
+        () -> deploymentManager.getOrganizations(io.harness.pcf.model.PcfRequestConfig.builder().build()))
         .isInstanceOf(PivotalClientApiException.class);
   }
 
@@ -413,8 +425,9 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testGetSpacesForOrganization() throws Exception {
-    when(client.getSpacesForOrganization(any())).thenReturn(Arrays.asList("space1", "space2"));
-    List<String> spaces = deploymentManager.getSpacesForOrganization(PcfRequestConfig.builder().build());
+    when(cfSdkClient.getSpacesForOrganization(any())).thenReturn(Arrays.asList("space1", "space2"));
+    List<String> spaces =
+        deploymentManager.getSpacesForOrganization(io.harness.pcf.model.PcfRequestConfig.builder().build());
     assertThat(spaces).isNotNull();
     assertThat(spaces).containsExactly("space1", "space2");
   }
@@ -423,8 +436,9 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testGetSpacesForOrganizationFail() throws Exception {
-    doThrow(Exception.class).when(client).getSpacesForOrganization(any());
-    assertThatThrownBy(() -> deploymentManager.getSpacesForOrganization(PcfRequestConfig.builder().build()))
+    doThrow(Exception.class).when(cfSdkClient).getSpacesForOrganization(any());
+    assertThatThrownBy(
+        () -> deploymentManager.getSpacesForOrganization(io.harness.pcf.model.PcfRequestConfig.builder().build()))
         .isInstanceOf(PivotalClientApiException.class);
   }
 
@@ -432,8 +446,8 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testGetRouteMaps() throws Exception {
-    when(client.getRoutesForSpace(any())).thenReturn(Arrays.asList("route1", "route2"));
-    List<String> routeMaps = deploymentManager.getRouteMaps(PcfRequestConfig.builder().build());
+    when(cfSdkClient.getRoutesForSpace(any())).thenReturn(Arrays.asList("route1", "route2"));
+    List<String> routeMaps = deploymentManager.getRouteMaps(io.harness.pcf.model.PcfRequestConfig.builder().build());
     assertThat(routeMaps).isNotNull();
     assertThat(routeMaps).containsExactly("route1", "route2");
   }
@@ -442,8 +456,8 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testGetRouteMapsFail() throws Exception {
-    doThrow(Exception.class).when(client).getRoutesForSpace(any());
-    assertThatThrownBy(() -> deploymentManager.getRouteMaps(PcfRequestConfig.builder().build()))
+    doThrow(Exception.class).when(cfSdkClient).getRoutesForSpace(any());
+    assertThatThrownBy(() -> deploymentManager.getRouteMaps(io.harness.pcf.model.PcfRequestConfig.builder().build()))
         .isInstanceOf(PivotalClientApiException.class);
   }
 
@@ -453,8 +467,12 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   public void testCreateApplication() throws Exception {
     String appName = "App_1";
     PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().applicationName(appName).build();
-    PcfCreateApplicationRequestData pcfCreateApplicationRequestData =
-        PcfCreateApplicationRequestData.builder().pcfRequestConfig(pcfRequestConfig).build();
+    Path manifestFilePath = Paths.get("manifest-file-path");
+    PcfCreateApplicationRequestData pcfCreateApplicationRequestData = PcfCreateApplicationRequestData.builder()
+                                                                          .manifestFilePath("manifest-file-path")
+                                                                          .pcfRequestConfig(pcfRequestConfig)
+                                                                          .build();
+
     ApplicationDetail applicationDetail = ApplicationDetail.builder()
                                               .name(appName)
                                               .stack("stack")
@@ -466,8 +484,9 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
                                               .runningInstances(2)
                                               .build();
 
-    doNothing().when(client).pushApplicationUsingManifest(eq(pcfCreateApplicationRequestData), eq(logCallback));
-    when(client.getApplicationByName(eq(pcfRequestConfig))).thenReturn(applicationDetail);
+    doNothing().when(cfCliClient).pushAppByCli(eq(pcfCreateApplicationRequestData), eq(logCallback));
+    doNothing().when(cfSdkClient).pushAppBySdk(eq(pcfRequestConfig), eq(manifestFilePath), eq(logCallback));
+    when(cfSdkClient.getApplicationByName(eq(pcfRequestConfig))).thenReturn(applicationDetail);
 
     ApplicationDetail application = deploymentManager.createApplication(pcfCreateApplicationRequestData, logCallback);
     assertThat(application).isNotNull();
@@ -483,7 +502,8 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testCreateApplicationPushApplicationUsingManifestFail() throws Exception {
-    doThrow(Exception.class).when(client).pushApplicationUsingManifest(any(), any());
+    doThrow(Exception.class).when(cfSdkClient).pushAppBySdk(any(), any(), any());
+    doThrow(Exception.class).when(cfCliClient).pushAppByCli(any(), any());
     assertThatThrownBy(
         () -> deploymentManager.createApplication(PcfCreateApplicationRequestData.builder().build(), logCallback))
         .isInstanceOf(PivotalClientApiException.class);
@@ -493,7 +513,7 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testCreateApplicationGetApplicationByNameFail() throws Exception {
-    doThrow(Exception.class).when(client).getApplicationByName(any());
+    doThrow(Exception.class).when(cfSdkClient).getApplicationByName(any());
     assertThatThrownBy(
         () -> deploymentManager.createApplication(PcfCreateApplicationRequestData.builder().build(), logCallback))
         .isInstanceOf(PivotalClientApiException.class);
@@ -504,7 +524,8 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testResizeApplication() throws Exception {
     String appName = "App_1";
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().applicationName(appName).desiredCount(2).build();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig =
+        io.harness.pcf.model.PcfRequestConfig.builder().applicationName(appName).desiredCount(2).build();
     ApplicationDetail applicationDetail = ApplicationDetail.builder()
                                               .name(appName)
                                               .stack("stack")
@@ -515,7 +536,7 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
                                               .requestedState("running")
                                               .runningInstances(2)
                                               .build();
-    when(client.getApplicationByName(eq(pcfRequestConfig))).thenReturn(applicationDetail);
+    when(cfSdkClient.getApplicationByName(eq(pcfRequestConfig))).thenReturn(applicationDetail);
     ApplicationDetail application = deploymentManager.resizeApplication(pcfRequestConfig);
     assertThat(application).isNotNull();
     assertThat(application.getName()).isEqualTo(appName);
@@ -530,8 +551,9 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testResizeApplicationFail() throws Exception {
-    doThrow(Exception.class).when(client).scaleApplications(any());
-    assertThatThrownBy(() -> deploymentManager.resizeApplication(PcfRequestConfig.builder().build()))
+    doThrow(Exception.class).when(cfSdkClient).scaleApplications(any());
+    assertThatThrownBy(
+        () -> deploymentManager.resizeApplication(io.harness.pcf.model.PcfRequestConfig.builder().build()))
         .isInstanceOf(PivotalClientApiException.class);
   }
 
@@ -539,18 +561,19 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testUnmapRouteMapForApplication() throws Exception {
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().useCFCLI(true).build();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig =
+        io.harness.pcf.model.PcfRequestConfig.builder().useCFCLI(true).build();
     List<String> paths = Arrays.asList("path1", "path2");
     deploymentManager.unmapRouteMapForApplication(pcfRequestConfig, paths, logCallback);
-    verify(client, times(1)).unmapRoutesForApplicationUsingCli(eq(pcfRequestConfig), eq(paths), eq(logCallback));
+    verify(cfCliClient, times(1)).unmapRoutesForApplicationUsingCli(eq(pcfRequestConfig), eq(paths), eq(logCallback));
 
-    reset(client);
+    reset(cfSdkClient);
     pcfRequestConfig.setUseCFCLI(false);
     deploymentManager.unmapRouteMapForApplication(pcfRequestConfig, paths, logCallback);
-    verify(client, times(1)).unmapRoutesForApplication(eq(pcfRequestConfig), eq(paths));
+    verify(cfSdkClient, times(1)).unmapRoutesForApplication(eq(pcfRequestConfig), eq(paths));
 
-    reset(client);
-    doThrow(Exception.class).when(client).unmapRoutesForApplication(eq(pcfRequestConfig), eq(paths));
+    reset(cfSdkClient);
+    doThrow(Exception.class).when(cfSdkClient).unmapRoutesForApplication(eq(pcfRequestConfig), eq(paths));
     assertThatThrownBy(() -> deploymentManager.unmapRouteMapForApplication(pcfRequestConfig, paths, logCallback))
         .isInstanceOf(PivotalClientApiException.class);
   }
@@ -559,18 +582,19 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testMapRouteMapForApplication() throws Exception {
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().useCFCLI(true).build();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig =
+        io.harness.pcf.model.PcfRequestConfig.builder().useCFCLI(true).build();
     List<String> paths = Arrays.asList("path1", "path2");
     deploymentManager.mapRouteMapForApplication(pcfRequestConfig, paths, logCallback);
-    verify(client, times(1)).mapRoutesForApplicationUsingCli(eq(pcfRequestConfig), eq(paths), eq(logCallback));
+    verify(cfCliClient, times(1)).mapRoutesForApplicationUsingCli(eq(pcfRequestConfig), eq(paths), eq(logCallback));
 
-    reset(client);
+    reset(cfSdkClient);
     pcfRequestConfig.setUseCFCLI(false);
     deploymentManager.mapRouteMapForApplication(pcfRequestConfig, paths, logCallback);
-    verify(client, times(1)).mapRoutesForApplication(eq(pcfRequestConfig), eq(paths));
+    verify(cfSdkClient, times(1)).mapRoutesForApplication(eq(pcfRequestConfig), eq(paths));
 
-    reset(client);
-    doThrow(Exception.class).when(client).mapRoutesForApplication(eq(pcfRequestConfig), eq(paths));
+    reset(cfSdkClient);
+    doThrow(Exception.class).when(cfSdkClient).mapRoutesForApplication(eq(pcfRequestConfig), eq(paths));
     assertThatThrownBy(() -> deploymentManager.mapRouteMapForApplication(pcfRequestConfig, paths, logCallback))
         .isInstanceOf(PivotalClientApiException.class);
   }
@@ -580,35 +604,35 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetDeployedServicesWithNonZeroInstances() throws Exception {
     String prefix = "app";
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = io.harness.pcf.model.PcfRequestConfig.builder().build();
 
-    when(client.getApplications(eq(pcfRequestConfig))).thenReturn(Collections.emptyList());
+    when(cfSdkClient.getApplications(eq(pcfRequestConfig))).thenReturn(Collections.emptyList());
     List<ApplicationSummary> deployedServicesWithNonZeroInstances =
         deploymentManager.getDeployedServicesWithNonZeroInstances(pcfRequestConfig, prefix);
     assertThat(deployedServicesWithNonZeroInstances).isNotNull();
     assertThat(deployedServicesWithNonZeroInstances.size()).isEqualTo(0);
 
-    reset(client);
+    reset(cfSdkClient);
     ApplicationSummary appSummary1 = getApplicationSummary(prefix + PcfDeploymentManagerImpl.DELIMITER + 1, 2);
     ApplicationSummary appSummary2 = getApplicationSummary(prefix + PcfDeploymentManagerImpl.DELIMITER + 2, 2);
     List<ApplicationSummary> applicationSummaries = Arrays.asList(appSummary1, appSummary2);
-    when(client.getApplications(eq(pcfRequestConfig))).thenReturn(applicationSummaries);
+    when(cfSdkClient.getApplications(eq(pcfRequestConfig))).thenReturn(applicationSummaries);
     deployedServicesWithNonZeroInstances =
         deploymentManager.getDeployedServicesWithNonZeroInstances(pcfRequestConfig, prefix);
     assertThat(deployedServicesWithNonZeroInstances).isNotNull();
     assertThat(deployedServicesWithNonZeroInstances.size()).isEqualTo(2);
 
-    reset(client);
+    reset(cfSdkClient);
     ApplicationSummary appSummary3 = getApplicationSummary(prefix + PcfDeploymentManagerImpl.DELIMITER + 1, 0);
     ApplicationSummary appSummary4 = getApplicationSummary(prefix + PcfDeploymentManagerImpl.DELIMITER + 2, 2);
-    when(client.getApplications(eq(pcfRequestConfig))).thenReturn(Arrays.asList(appSummary3, appSummary4));
+    when(cfSdkClient.getApplications(eq(pcfRequestConfig))).thenReturn(Arrays.asList(appSummary3, appSummary4));
     deployedServicesWithNonZeroInstances =
         deploymentManager.getDeployedServicesWithNonZeroInstances(pcfRequestConfig, prefix);
     assertThat(deployedServicesWithNonZeroInstances).isNotNull();
     assertThat(deployedServicesWithNonZeroInstances.size()).isEqualTo(1);
 
-    reset(client);
-    doThrow(Exception.class).when(client).getApplications(eq(pcfRequestConfig));
+    reset(cfSdkClient);
+    doThrow(Exception.class).when(cfSdkClient).getApplications(eq(pcfRequestConfig));
     assertThatThrownBy(() -> deploymentManager.getDeployedServicesWithNonZeroInstances(pcfRequestConfig, prefix))
         .isInstanceOf(PivotalClientApiException.class);
   }
@@ -618,33 +642,33 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetPreviousReleases() throws Exception {
     String prefix = "app";
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = io.harness.pcf.model.PcfRequestConfig.builder().build();
 
-    when(client.getApplications(eq(pcfRequestConfig))).thenReturn(Collections.emptyList());
+    when(cfSdkClient.getApplications(eq(pcfRequestConfig))).thenReturn(Collections.emptyList());
     List<ApplicationSummary> previousReleasesApplication =
         deploymentManager.getPreviousReleases(pcfRequestConfig, prefix);
     assertThat(previousReleasesApplication).isNotNull();
     assertThat(previousReleasesApplication.size()).isEqualTo(0);
 
-    reset(client);
+    reset(cfSdkClient);
     ApplicationSummary appSummary1 = getApplicationSummary(prefix + PcfDeploymentManagerImpl.DELIMITER + 1, 2);
     ApplicationSummary appSummary2 = getApplicationSummary(prefix + PcfDeploymentManagerImpl.DELIMITER + 2, 2);
     List<ApplicationSummary> applicationSummaries = Arrays.asList(appSummary1, appSummary2);
-    when(client.getApplications(eq(pcfRequestConfig))).thenReturn(applicationSummaries);
+    when(cfSdkClient.getApplications(eq(pcfRequestConfig))).thenReturn(applicationSummaries);
     previousReleasesApplication = deploymentManager.getPreviousReleases(pcfRequestConfig, prefix);
     assertThat(previousReleasesApplication).isNotNull();
     assertThat(previousReleasesApplication.size()).isEqualTo(2);
 
-    reset(client);
+    reset(cfSdkClient);
     ApplicationSummary appSummary3 = getApplicationSummary(prefix + PcfDeploymentManagerImpl.DELIMITER + 1, 0);
     ApplicationSummary appSummary4 = getApplicationSummary("filter" + PcfDeploymentManagerImpl.DELIMITER + 2, 2);
-    when(client.getApplications(eq(pcfRequestConfig))).thenReturn(Arrays.asList(appSummary3, appSummary4));
+    when(cfSdkClient.getApplications(eq(pcfRequestConfig))).thenReturn(Arrays.asList(appSummary3, appSummary4));
     previousReleasesApplication = deploymentManager.getPreviousReleases(pcfRequestConfig, prefix);
     assertThat(previousReleasesApplication).isNotNull();
     assertThat(previousReleasesApplication.size()).isEqualTo(1);
 
-    reset(client);
-    doThrow(Exception.class).when(client).getApplications(eq(pcfRequestConfig));
+    reset(cfSdkClient);
+    doThrow(Exception.class).when(cfSdkClient).getApplications(eq(pcfRequestConfig));
     assertThatThrownBy(() -> deploymentManager.getPreviousReleases(pcfRequestConfig, prefix))
         .isInstanceOf(PivotalClientApiException.class);
   }
@@ -665,12 +689,12 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testDeleteApplication() throws Exception {
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = io.harness.pcf.model.PcfRequestConfig.builder().build();
     deploymentManager.deleteApplication(pcfRequestConfig);
-    verify(client, times(1)).deleteApplication(eq(pcfRequestConfig));
+    verify(cfSdkClient, times(1)).deleteApplication(eq(pcfRequestConfig));
 
-    reset(client);
-    doThrow(Exception.class).when(client).deleteApplication(eq(pcfRequestConfig));
+    reset(cfSdkClient);
+    doThrow(Exception.class).when(cfSdkClient).deleteApplication(eq(pcfRequestConfig));
     assertThatThrownBy(() -> deploymentManager.deleteApplication(pcfRequestConfig))
         .isInstanceOf(PivotalClientApiException.class);
   }
@@ -680,7 +704,8 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testStopApplication() throws Exception {
     String appName = "app_1";
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().applicationName(appName).build();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig =
+        io.harness.pcf.model.PcfRequestConfig.builder().applicationName(appName).build();
     ApplicationDetail applicationDetail = ApplicationDetail.builder()
                                               .name(appName)
                                               .stack("stack")
@@ -691,14 +716,14 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
                                               .requestedState("running")
                                               .runningInstances(2)
                                               .build();
-    when(client.getApplicationByName(eq(pcfRequestConfig))).thenReturn(applicationDetail);
+    when(cfSdkClient.getApplicationByName(eq(pcfRequestConfig))).thenReturn(applicationDetail);
 
     String message = deploymentManager.stopApplication(pcfRequestConfig);
-    verify(client, times(1)).stopApplication(eq(pcfRequestConfig));
+    verify(cfSdkClient, times(1)).stopApplication(eq(pcfRequestConfig));
     assertThat(message.contains(appName)).isEqualTo(true);
 
-    reset(client);
-    doThrow(Exception.class).when(client).stopApplication(eq(pcfRequestConfig));
+    reset(cfSdkClient);
+    doThrow(Exception.class).when(cfSdkClient).stopApplication(eq(pcfRequestConfig));
     assertThatThrownBy(() -> deploymentManager.stopApplication(pcfRequestConfig))
         .isInstanceOf(PivotalClientApiException.class);
   }
@@ -707,7 +732,7 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testCreateRouteMap() throws Exception {
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = io.harness.pcf.model.PcfRequestConfig.builder().build();
     String host = "localhost";
     String domain = "harness";
     String path = "/console.pivotal";
@@ -716,45 +741,45 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
 
     // tcpRoute without random port
     Optional<Route> route = Optional.of(Route.builder().domain(domain).host(host).id("1").space("test").build());
-    when(client.getRouteMap(eq(pcfRequestConfig), eq(tcpRouteNonRandomPortPath))).thenReturn(route);
+    when(cfSdkClient.getRouteMap(eq(pcfRequestConfig), eq(tcpRouteNonRandomPortPath))).thenReturn(route);
     String routeMap = deploymentManager.createRouteMap(pcfRequestConfig, host, domain, path, true, false, port);
     assertThat(routeMap).isNotNull();
     assertThat(routeMap.equalsIgnoreCase(tcpRouteNonRandomPortPath)).isEqualTo(true);
 
-    reset(client);
-    when(client.getRouteMap(eq(pcfRequestConfig), eq(tcpRouteNonRandomPortPath))).thenReturn(Optional.empty());
+    reset(cfSdkClient);
+    when(cfSdkClient.getRouteMap(eq(pcfRequestConfig), eq(tcpRouteNonRandomPortPath))).thenReturn(Optional.empty());
     assertThatThrownBy(() -> deploymentManager.createRouteMap(pcfRequestConfig, host, domain, path, true, false, port))
         .isInstanceOf(PivotalClientApiException.class);
 
     // tcpRoute with RandomPort
-    reset(client);
+    reset(cfSdkClient);
     String tcpRouteRandomPortPath = domain;
-    when(client.getRouteMap(eq(pcfRequestConfig), eq(tcpRouteRandomPortPath))).thenReturn(route);
+    when(cfSdkClient.getRouteMap(eq(pcfRequestConfig), eq(tcpRouteRandomPortPath))).thenReturn(route);
     routeMap = deploymentManager.createRouteMap(pcfRequestConfig, host, domain, path, true, true, null);
     assertThat(routeMap).isNotNull();
     assertThat(routeMap.equalsIgnoreCase(tcpRouteRandomPortPath)).isEqualTo(true);
 
     // nonTcpRoute with nonBlankPath
-    reset(client);
+    reset(cfSdkClient);
     String nonTcpRouteNonBlankPath = host + "." + domain + path;
-    when(client.getRouteMap(eq(pcfRequestConfig), eq(nonTcpRouteNonBlankPath))).thenReturn(route);
+    when(cfSdkClient.getRouteMap(eq(pcfRequestConfig), eq(nonTcpRouteNonBlankPath))).thenReturn(route);
     routeMap = deploymentManager.createRouteMap(pcfRequestConfig, host, domain, path, false, true, null);
     assertThat(routeMap).isNotNull();
     assertThat(routeMap.equalsIgnoreCase(nonTcpRouteNonBlankPath)).isEqualTo(true);
 
-    reset(client);
+    reset(cfSdkClient);
     String emptyDomain = "";
     assertThatThrownBy(
         () -> deploymentManager.createRouteMap(pcfRequestConfig, host, emptyDomain, path, true, false, port))
         .isInstanceOf(PivotalClientApiException.class);
 
-    reset(client);
+    reset(cfSdkClient);
     String emptyHost = "";
     assertThatThrownBy(
         () -> deploymentManager.createRouteMap(pcfRequestConfig, emptyHost, domain, path, false, false, port))
         .isInstanceOf(PivotalClientApiException.class);
 
-    reset(client);
+    reset(cfSdkClient);
     assertThatThrownBy(() -> deploymentManager.createRouteMap(pcfRequestConfig, host, domain, path, true, false, null))
         .isInstanceOf(PivotalClientApiException.class);
   }
@@ -764,13 +789,13 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testCheckConnectivity() throws Exception {
     PcfConfig pcfConfig = PcfConfig.builder().username("user".toCharArray()).password("test".toCharArray()).build();
-    when(client.getOrganizations(any())).thenReturn(Collections.emptyList());
+    when(cfSdkClient.getOrganizations(any())).thenReturn(Collections.emptyList());
     String message = deploymentManager.checkConnectivity(pcfConfig, false, false);
-    verify(client, times(1)).getOrganizations(any());
+    verify(cfSdkClient, times(1)).getOrganizations(any());
     assertThat(message.equalsIgnoreCase("SUCCESS")).isEqualTo(true);
 
-    reset(client);
-    doThrow(Exception.class).when(client).getOrganizations(any());
+    reset(cfSdkClient);
+    doThrow(Exception.class).when(cfSdkClient).getOrganizations(any());
     message = deploymentManager.checkConnectivity(pcfConfig, false, false);
     assertThat(message.equalsIgnoreCase("SUCCESS")).isEqualTo(false);
   }
@@ -780,23 +805,24 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testCheckIfAppHasAutoscalarAttached() throws Exception {
     deploymentManager.checkIfAppHasAutoscalarAttached(PcfAppAutoscalarRequestData.builder().build(), logCallback);
-    verify(client, times(1)).checkIfAppHasAutoscalarAttached(any(), any());
+    verify(cfCliClient, times(1)).checkIfAppHasAutoscalerAttached(any(), any());
   }
 
   @Test
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testIsActiveApplication() throws Exception {
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().applicationName("app_1").build();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig =
+        io.harness.pcf.model.PcfRequestConfig.builder().applicationName("app_1").build();
     Map<String, String> userProvider = new HashMap<>();
     userProvider.put(HARNESS__STATUS__IDENTIFIER, HARNESS__ACTIVE__IDENTIFIER);
     ApplicationEnvironments environments = ApplicationEnvironments.builder().userProvided(userProvider).build();
 
-    when(client.getApplicationEnvironmentsByName(eq(pcfRequestConfig))).thenReturn(environments);
+    when(cfSdkClient.getApplicationEnvironmentsByName(eq(pcfRequestConfig))).thenReturn(environments);
     assertThat(deploymentManager.isActiveApplication(pcfRequestConfig, logCallback)).isEqualTo(true);
 
-    reset(client);
-    when(client.getApplicationEnvironmentsByName(eq(pcfRequestConfig)))
+    reset(cfSdkClient);
+    when(cfSdkClient.getApplicationEnvironmentsByName(eq(pcfRequestConfig)))
         .thenReturn(ApplicationEnvironments.builder().build());
     assertThat(deploymentManager.isActiveApplication(pcfRequestConfig, logCallback)).isEqualTo(false);
   }
@@ -813,7 +839,8 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
     doReturn(process).when(process).destroyForcibly();
     doNothing().when(process).destroy();
 
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().desiredCount(1).timeOutIntervalInMins(1).build();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig =
+        PcfRequestConfig.builder().desiredCount(1).timeOutIntervalInMins(1).build();
     InstanceDetail instanceDetail1 = InstanceDetail.builder()
                                          .cpu(2.0)
                                          .diskQuota((long) 2.23)
@@ -825,12 +852,12 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
                                          .build();
     ApplicationDetail applicationDetail = generateApplicationDetail(1, new InstanceDetail[] {instanceDetail1});
     doReturn(applicationDetail).when(deploymentManager).resizeApplication(eq(pcfRequestConfig));
-    doThrow(InterruptedException.class).when(client).getApplicationByName(eq(pcfRequestConfig));
+    doThrow(InterruptedException.class).when(cfSdkClient).getApplicationByName(eq(pcfRequestConfig));
     assertThatThrownBy(() -> deploymentManager.upsizeApplicationWithSteadyStateCheck(pcfRequestConfig, logCallback))
         .isInstanceOf(PivotalClientApiException.class);
 
-    reset(client);
-    doReturn(applicationDetail).when(client).getApplicationByName(eq(pcfRequestConfig));
+    reset(cfSdkClient);
+    doReturn(applicationDetail).when(cfSdkClient).getApplicationByName(eq(pcfRequestConfig));
     doThrow(Exception.class).when(deploymentManager).destroyProcess(eq(startedProcess));
     ApplicationDetail applicationDetail1 =
         deploymentManager.upsizeApplicationWithSteadyStateCheck(pcfRequestConfig, logCallback);

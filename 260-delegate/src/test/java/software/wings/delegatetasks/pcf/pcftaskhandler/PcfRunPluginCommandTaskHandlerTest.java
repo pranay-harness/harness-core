@@ -21,6 +21,7 @@ import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.pcf.CfCliClient;
 import io.harness.pcf.PivotalClientApiException;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -31,7 +32,6 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.pcf.PcfCommandTaskHelper;
-import software.wings.helpers.ext.pcf.PcfClient;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
@@ -67,7 +67,7 @@ public class PcfRunPluginCommandTaskHandlerTest extends WingsBaseTest {
   @Mock private PcfCommandTaskHelper pcfCommandTaskHelper;
   @Mock ExecutionLogCallback executionLogCallback;
   @Mock EncryptedDataDetail encryptedDataDetail;
-  @Mock PcfClient pcfClient;
+  @Mock CfCliClient cfCliClient;
 
   @Spy @InjectMocks PcfRunPluginCommandTaskHandler pcfRunPluginCommandTaskHandler;
 
@@ -84,15 +84,16 @@ public class PcfRunPluginCommandTaskHandlerTest extends WingsBaseTest {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_executeTaskInternal() throws PivotalClientApiException {
-    doNothing().when(pcfClient).runPcfPluginScript(
-        any(PcfRunPluginScriptRequestData.class), Mockito.eq(executionLogCallback));
+    doNothing()
+        .when(cfCliClient)
+        .runPcfPluginScript(any(PcfRunPluginScriptRequestData.class), Mockito.eq(executionLogCallback));
     PcfRunPluginCommandRequest pcfCommandRequest = getPcfRunPluginCommandRequest();
     pcfRunPluginCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback, false);
 
     // verify
     ArgumentCaptor<PcfRunPluginScriptRequestData> argumentCaptor =
         ArgumentCaptor.forClass(PcfRunPluginScriptRequestData.class);
-    verify(pcfClient).runPcfPluginScript(argumentCaptor.capture(), eq(executionLogCallback));
+    verify(cfCliClient).runPcfPluginScript(argumentCaptor.capture(), eq(executionLogCallback));
 
     final PcfRunPluginScriptRequestData pcfRunPluginScriptRequestData = argumentCaptor.getValue();
     assertThat(pcfRunPluginScriptRequestData.getWorkingDirectory()).isNotNull();

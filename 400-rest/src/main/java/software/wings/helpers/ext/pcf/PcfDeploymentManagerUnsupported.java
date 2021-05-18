@@ -4,10 +4,11 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pcf.PivotalClientApiException;
+import io.harness.pcf.model.PcfAppAutoscalarRequestData;
+import io.harness.pcf.model.PcfRequestConfig;
 
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 
 import com.google.inject.Singleton;
@@ -21,12 +22,14 @@ public class PcfDeploymentManagerUnsupported implements PcfDeploymentManager {
   public static final String DELIMITER = "__";
 
   @Override
-  public List<String> getOrganizations(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
+  public List<String> getOrganizations(io.harness.pcf.model.PcfRequestConfig pcfRequestConfig)
+      throws PivotalClientApiException {
     throw new PivotalClientApiException("PCF operations not supported.");
   }
 
   @Override
-  public List<String> getSpacesForOrganization(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
+  public List<String> getSpacesForOrganization(io.harness.pcf.model.PcfRequestConfig pcfRequestConfig)
+      throws PivotalClientApiException {
     throw new PivotalClientApiException("PCF operations not supported by this API.");
   }
 
@@ -37,51 +40,56 @@ public class PcfDeploymentManagerUnsupported implements PcfDeploymentManager {
   }
 
   @Override
-  public ApplicationDetail resizeApplication(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
+  public ApplicationDetail resizeApplication(io.harness.pcf.model.PcfRequestConfig pcfRequestConfig)
+      throws PivotalClientApiException {
     throw new PivotalClientApiException("PCF operations not supported by this API.");
   }
 
   @Override
-  public void deleteApplication(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
+  public void deleteApplication(io.harness.pcf.model.PcfRequestConfig pcfRequestConfig)
+      throws PivotalClientApiException {
     throw new PivotalClientApiException("PCF operations not supported by this API.");
   }
 
   @Override
-  public String stopApplication(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
+  public String stopApplication(io.harness.pcf.model.PcfRequestConfig pcfRequestConfig)
+      throws PivotalClientApiException {
     throw new PivotalClientApiException("PCF operations not supported by this API.");
   }
 
   @Override
-  public ApplicationDetail getApplicationByName(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
+  public ApplicationDetail getApplicationByName(io.harness.pcf.model.PcfRequestConfig pcfRequestConfig)
+      throws PivotalClientApiException {
     throw new PivotalClientApiException("PCF operations not supported by this API.");
   }
 
   @Override
-  public void unmapRouteMapForApplication(PcfRequestConfig pcfRequestConfig, List<String> paths,
+  public void unmapRouteMapForApplication(io.harness.pcf.model.PcfRequestConfig pcfRequestConfig, List<String> paths,
       ExecutionLogCallback logCallback) throws PivotalClientApiException {
     throw new PivotalClientApiException("PCF operations not supported by this API.");
   }
 
   @Override
-  public void mapRouteMapForApplication(PcfRequestConfig pcfRequestConfig, List<String> paths,
+  public void mapRouteMapForApplication(io.harness.pcf.model.PcfRequestConfig pcfRequestConfig, List<String> paths,
       ExecutionLogCallback logCallback) throws PivotalClientApiException {
     throw new PivotalClientApiException("PCF operations not supported by this API.");
   }
 
   @Override
   public List<ApplicationSummary> getDeployedServicesWithNonZeroInstances(
-      PcfRequestConfig pcfRequestConfig, String prefix) throws PivotalClientApiException {
+      io.harness.pcf.model.PcfRequestConfig pcfRequestConfig, String prefix) throws PivotalClientApiException {
     throw new PivotalClientApiException("PCF operations not supported by this API.");
   }
 
   @Override
-  public List<ApplicationSummary> getPreviousReleases(PcfRequestConfig pcfRequestConfig, String prefix)
+  public List<ApplicationSummary> getPreviousReleases(
+      io.harness.pcf.model.PcfRequestConfig pcfRequestConfig, String prefix) throws PivotalClientApiException {
+    throw new PivotalClientApiException("PCF operations not supported by this API.");
+  }
+
+  @Override
+  public List<String> getRouteMaps(io.harness.pcf.model.PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException {
-    throw new PivotalClientApiException("PCF operations not supported by this API.");
-  }
-
-  @Override
-  public List<String> getRouteMaps(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
     throw new PivotalClientApiException("PCF operations not supported by this API.");
   }
 
@@ -92,8 +100,9 @@ public class PcfDeploymentManagerUnsupported implements PcfDeploymentManager {
   }
 
   @Override
-  public String createRouteMap(PcfRequestConfig pcfRequestConfig, String host, String domain, String path,
-      boolean tcpRoute, boolean useRandomPort, Integer port) throws PivotalClientApiException, InterruptedException {
+  public String createRouteMap(io.harness.pcf.model.PcfRequestConfig pcfRequestConfig, String host, String domain,
+      String path, boolean tcpRoute, boolean useRandomPort, Integer port)
+      throws PivotalClientApiException, InterruptedException {
     throw new PivotalClientApiException("PCF operations not supported by this API.");
   }
 
@@ -116,20 +125,20 @@ public class PcfDeploymentManagerUnsupported implements PcfDeploymentManager {
   }
 
   @Override
-  public ApplicationDetail upsizeApplicationWithSteadyStateCheck(
-      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
-    throw new PivotalClientApiException("PCF operations not supported by this API.");
-  }
-
-  @Override
-  public boolean isActiveApplication(PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback)
-      throws PivotalClientApiException {
-    throw new PivotalClientApiException("PCF operations not supported by this API.");
-  }
-
-  @Override
-  public void setEnvironmentVariableForAppStatus(PcfRequestConfig pcfRequestConfig, boolean activeStatus,
+  public ApplicationDetail upsizeApplicationWithSteadyStateCheck(io.harness.pcf.model.PcfRequestConfig pcfRequestConfig,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+    throw new PivotalClientApiException("PCF operations not supported by this API.");
+  }
+
+  @Override
+  public boolean isActiveApplication(io.harness.pcf.model.PcfRequestConfig pcfRequestConfig,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+    throw new PivotalClientApiException("PCF operations not supported by this API.");
+  }
+
+  @Override
+  public void setEnvironmentVariableForAppStatus(io.harness.pcf.model.PcfRequestConfig pcfRequestConfig,
+      boolean activeStatus, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     throw new PivotalClientApiException("PCF operations not supported by this API.");
   }
 

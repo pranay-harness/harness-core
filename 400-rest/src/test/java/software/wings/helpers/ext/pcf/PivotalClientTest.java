@@ -55,7 +55,10 @@ import io.harness.pcf.PcfUtils;
 import io.harness.pcf.PivotalClientApiException;
 import io.harness.pcf.cfcli.CfCliCommandResolver;
 import io.harness.pcf.cfcli.CfCliCommandType;
+import io.harness.pcf.cfsdk.CloudFoundryOperationsWrapper;
 import io.harness.pcf.model.CfCliVersion;
+import io.harness.pcf.model.PcfAppAutoscalarRequestData;
+import io.harness.pcf.model.PcfRequestConfig;
 import io.harness.pcf.model.PcfRouteInfo;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
@@ -70,7 +73,6 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
-import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 import software.wings.helpers.ext.pcf.request.PcfRunPluginScriptRequestData;
@@ -365,15 +367,19 @@ public class PivotalClientTest extends CategoryTest {
     assertThat(client.getPathFromRouteMap(routeOptional.get())).isEqualTo("qa.harness.io/api");
   }
 
-  private PcfRequestConfig getPcfRequestConfig() {
-    return PcfRequestConfig.builder().timeOutIntervalInMins(1).orgName("org").applicationName("app").build();
+  private io.harness.pcf.model.PcfRequestConfig getPcfRequestConfig() {
+    return io.harness.pcf.model.PcfRequestConfig.builder()
+        .timeOutIntervalInMins(1)
+        .orgName("org")
+        .applicationName("app")
+        .build();
   }
 
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testGetCloudFoundryOperationsWrapper() throws Exception {
-    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
     pcfRequestConfig.setUserName("username");
     pcfRequestConfig.setPassword("password");
     pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
@@ -388,7 +394,7 @@ public class PivotalClientTest extends CategoryTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testGetCFOperationsWrapperForConnectionContextException() {
-    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
 
     try {
       mockedClient.getCloudFoundryOperationsWrapper(pcfRequestConfig);
@@ -402,7 +408,7 @@ public class PivotalClientTest extends CategoryTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testGetCFOperationsWrapperForTokenProviderException() {
-    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
     pcfRequestConfig.setUserName("username");
     pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
 
@@ -419,7 +425,7 @@ public class PivotalClientTest extends CategoryTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testGetOrganizationsException() {
-    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
     pcfRequestConfig.setUserName("username");
     pcfRequestConfig.setPassword("password");
     pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
@@ -437,7 +443,7 @@ public class PivotalClientTest extends CategoryTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testGetApplicationByNameException() {
-    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
     pcfRequestConfig.setUserName("username");
     pcfRequestConfig.setPassword("password");
     pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
@@ -455,7 +461,7 @@ public class PivotalClientTest extends CategoryTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testGetApplicationEnvironmentsByName_Exception() {
-    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
     pcfRequestConfig.setUserName("username");
     pcfRequestConfig.setPassword("password");
     pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
@@ -474,7 +480,7 @@ public class PivotalClientTest extends CategoryTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testGetRouteMapException() {
-    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
     pcfRequestConfig.setUserName("username");
     pcfRequestConfig.setPassword("password");
     pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
@@ -493,7 +499,7 @@ public class PivotalClientTest extends CategoryTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testGetApplicationsException() {
-    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
     pcfRequestConfig.setUserName("username");
     pcfRequestConfig.setPassword("password");
     pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
@@ -510,7 +516,7 @@ public class PivotalClientTest extends CategoryTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testGetSpacesForOrganizationException() {
-    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
     pcfRequestConfig.setUserName("username");
     pcfRequestConfig.setPassword("password");
     pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
@@ -528,7 +534,7 @@ public class PivotalClientTest extends CategoryTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testDeleteApplicationException() {
-    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
     pcfRequestConfig.setUserName("username");
     pcfRequestConfig.setPassword("password");
     pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
@@ -546,7 +552,7 @@ public class PivotalClientTest extends CategoryTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testStopApplicationException() {
-    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
     pcfRequestConfig.setUserName("username");
     pcfRequestConfig.setPassword("password");
     pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
@@ -564,7 +570,7 @@ public class PivotalClientTest extends CategoryTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testGetTasksException() {
-    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
     pcfRequestConfig.setUserName("username");
     pcfRequestConfig.setPassword("password");
     pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
@@ -582,7 +588,7 @@ public class PivotalClientTest extends CategoryTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testScaleApplicationsException() {
-    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
     pcfRequestConfig.setUserName("username");
     pcfRequestConfig.setPassword("password");
     pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
@@ -600,7 +606,7 @@ public class PivotalClientTest extends CategoryTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testStartApplicationException() {
-    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
     pcfRequestConfig.setUserName("username");
     pcfRequestConfig.setPassword("password");
     pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
@@ -618,7 +624,7 @@ public class PivotalClientTest extends CategoryTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testUnmapRouteMapForAppException() {
-    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
     pcfRequestConfig.setUserName("username");
     pcfRequestConfig.setPassword("password");
     pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
@@ -638,7 +644,7 @@ public class PivotalClientTest extends CategoryTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testMapRouteMapForAppException() {
-    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
     pcfRequestConfig.setUserName("username");
     pcfRequestConfig.setPassword("password");
     pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
@@ -666,7 +672,8 @@ public class PivotalClientTest extends CategoryTest {
     ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
     doNothing().when(logCallback).saveExecutionLog(anyString());
 
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().useCFCLI(true).build();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig =
+        io.harness.pcf.model.PcfRequestConfig.builder().useCFCLI(true).build();
 
     PcfCreateApplicationRequestData requestData =
         PcfCreateApplicationRequestData.builder().manifestFilePath("path").pcfRequestConfig(pcfRequestConfig).build();
@@ -682,9 +689,10 @@ public class PivotalClientTest extends CategoryTest {
     pcfRequestConfig.setUseCFCLI(false);
     // actual call
     client.pushApplicationUsingManifest(requestData, logCallback);
-    ArgumentCaptor<PcfRequestConfig> pcfRequestCaptor = ArgumentCaptor.forClass(PcfRequestConfig.class);
+    ArgumentCaptor<io.harness.pcf.model.PcfRequestConfig> pcfRequestCaptor =
+        ArgumentCaptor.forClass(io.harness.pcf.model.PcfRequestConfig.class);
     verify(client).pushUsingPcfSdk(pcfRequestCaptor.capture(), any());
-    PcfRequestConfig captorValueConfig = pcfRequestCaptor.getValue();
+    io.harness.pcf.model.PcfRequestConfig captorValueConfig = pcfRequestCaptor.getValue();
     assertThat(captorValueConfig).isEqualTo(pcfRequestConfig);
   }
 
@@ -738,7 +746,8 @@ public class PivotalClientTest extends CategoryTest {
 
     doReturn(asList(route, route1)).when(pcfClient1).getRouteMapsByNames(anyList(), any());
     doNothing().when(pcfClient1).mapRouteMapForApp(any(), any());
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().spaceName(space).build();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig =
+        io.harness.pcf.model.PcfRequestConfig.builder().spaceName(space).build();
 
     List<String> routes = new ArrayList<>();
     String path1 = "myapp.cfapps.io";
@@ -797,7 +806,8 @@ public class PivotalClientTest extends CategoryTest {
         PcfAppAutoscalarRequestData.builder()
             .autoscalarFilePath(file.getAbsolutePath())
             .timeoutInMins(1)
-            .pcfRequestConfig(PcfRequestConfig.builder().cfCliPath("cf").cfCliVersion(CfCliVersion.V6).build())
+            .pcfRequestConfig(
+                io.harness.pcf.model.PcfRequestConfig.builder().cfCliPath("cf").cfCliVersion(CfCliVersion.V6).build())
             .build(),
         logCallback);
 
@@ -842,7 +852,8 @@ public class PivotalClientTest extends CategoryTest {
             .applicationName(APP_NAME)
             .applicationGuid(APP_NAME)
             .timeoutInMins(1)
-            .pcfRequestConfig(PcfRequestConfig.builder().cfCliPath("cf").cfCliVersion(CfCliVersion.V6).build())
+            .pcfRequestConfig(
+                io.harness.pcf.model.PcfRequestConfig.builder().cfCliPath("cf").cfCliVersion(CfCliVersion.V6).build())
             .build();
     assertThat(pcfClient.checkIfAppHasAutoscalarAttached(autoscalarRequestData, logCallback)).isTrue();
 
@@ -870,11 +881,12 @@ public class PivotalClientTest extends CategoryTest {
     doReturn(processResult).when(processExecutor).execute();
     doReturn(0).doReturn(1).when(processResult).getExitValue();
 
-    PcfAppAutoscalarRequestData pcfAppAutoscalarRequestData = PcfAppAutoscalarRequestData.builder()
-                                                                  .applicationName(APP_NAME)
-                                                                  .timeoutInMins(1)
-                                                                  .pcfRequestConfig(PcfRequestConfig.builder().build())
-                                                                  .build();
+    PcfAppAutoscalarRequestData pcfAppAutoscalarRequestData =
+        PcfAppAutoscalarRequestData.builder()
+            .applicationName(APP_NAME)
+            .timeoutInMins(1)
+            .pcfRequestConfig(io.harness.pcf.model.PcfRequestConfig.builder().build())
+            .build();
     doReturn(processExecutor).when(pcfClient).createProccessExecutorForPcfTask(anyLong(), anyString(), anyMap(), any());
     doReturn("cf").when(pcfClient).generateChangeAutoscalarStateCommand(any(), anyBoolean());
     pcfClient.changeAutoscalarState(pcfAppAutoscalarRequestData, logCallback, true);
@@ -900,7 +912,7 @@ public class PivotalClientTest extends CategoryTest {
     PcfClientImpl pcfClient = spy(PcfClientImpl.class);
     Map<String, String> appAutoscalarEnvMapForCustomPlugin = pcfClient.getAppAutoscalarEnvMapForCustomPlugin(
         PcfAppAutoscalarRequestData.builder()
-            .pcfRequestConfig(PcfRequestConfig.builder().endpointUrl("test").build())
+            .pcfRequestConfig(io.harness.pcf.model.PcfRequestConfig.builder().endpointUrl("test").build())
             .configPathVar(PATH)
             .build());
 
@@ -915,7 +927,7 @@ public class PivotalClientTest extends CategoryTest {
   public void testCreateProccessExecutorForPcfTask() throws Exception {
     Map<String, String> appAutoscalarEnvMapForCustomPlugin = pcfClient.getAppAutoscalarEnvMapForCustomPlugin(
         PcfAppAutoscalarRequestData.builder()
-            .pcfRequestConfig(PcfRequestConfig.builder().endpointUrl("test").build())
+            .pcfRequestConfig(io.harness.pcf.model.PcfRequestConfig.builder().endpointUrl("test").build())
             .configPathVar(PATH)
             .build());
     ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
@@ -935,7 +947,7 @@ public class PivotalClientTest extends CategoryTest {
   public void testCreateExecutorForAutoscalarPluginCheck() {
     Map<String, String> appAutoscalarEnvMapForCustomPlugin = pcfClient.getAppAutoscalarEnvMapForCustomPlugin(
         PcfAppAutoscalarRequestData.builder()
-            .pcfRequestConfig(PcfRequestConfig.builder().endpointUrl("test").build())
+            .pcfRequestConfig(io.harness.pcf.model.PcfRequestConfig.builder().endpointUrl("test").build())
             .configPathVar(PATH)
             .build());
     ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
@@ -958,7 +970,8 @@ public class PivotalClientTest extends CategoryTest {
     PcfAppAutoscalarRequestData autoscalarRequestData =
         PcfAppAutoscalarRequestData.builder()
             .applicationName(APP_NAME)
-            .pcfRequestConfig(PcfRequestConfig.builder().cfCliPath("cf").cfCliVersion(CfCliVersion.V6).build())
+            .pcfRequestConfig(
+                io.harness.pcf.model.PcfRequestConfig.builder().cfCliPath("cf").cfCliVersion(CfCliVersion.V6).build())
             .build();
     String command = pcfClient.generateChangeAutoscalarStateCommand(autoscalarRequestData, true);
     assertThat(command).isEqualTo("cf enable-autoscaling " + APP_NAME);
@@ -976,7 +989,7 @@ public class PivotalClientTest extends CategoryTest {
 
     PcfAppAutoscalarRequestData autoscalarRequestData =
         PcfAppAutoscalarRequestData.builder()
-            .pcfRequestConfig(PcfRequestConfig.builder().loggedin(true).build())
+            .pcfRequestConfig(io.harness.pcf.model.PcfRequestConfig.builder().loggedin(true).build())
             .build();
     pcfClient.logInForAppAutoscalarCliCommand(autoscalarRequestData, logCallback);
     verify(pcfClient, never()).doLogin(any(), any(), anyString());
@@ -994,12 +1007,13 @@ public class PivotalClientTest extends CategoryTest {
       throws PivotalClientApiException, InterruptedException, TimeoutException, IOException {
     final PcfRunPluginScriptRequestData requestData =
         PcfRunPluginScriptRequestData.builder()
-            .pcfRequestConfig(PcfRequestConfig.builder().timeOutIntervalInMins(5).build())
+            .pcfRequestConfig(io.harness.pcf.model.PcfRequestConfig.builder().timeOutIntervalInMins(5).build())
             .workingDirectory("/tmp/abc")
             .build();
     ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
     doNothing().when(logCallback).saveExecutionLog(anyString());
-    doReturn(true).when(pcfClient).doLogin(any(PcfRequestConfig.class), any(ExecutionLogCallback.class), anyString());
+    doReturn(true).when(pcfClient).doLogin(
+        any(io.harness.pcf.model.PcfRequestConfig.class), any(ExecutionLogCallback.class), anyString());
     doReturn(new ProcessResult(0, null)).when(pcfClient).runProcessExecutor(any(ProcessExecutor.class));
     pcfClient.runPcfPluginScript(requestData, logCallback);
   }
@@ -1008,8 +1022,8 @@ public class PivotalClientTest extends CategoryTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void test_getConnectionContext() throws Exception {
-    PcfRequestConfig pcfRequestConfig =
-        PcfRequestConfig.builder().endpointUrl("test").timeOutIntervalInMins(10).build();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig =
+        io.harness.pcf.model.PcfRequestConfig.builder().endpointUrl("test").timeOutIntervalInMins(10).build();
 
     ConnectionContext connectionContext = pcfClient.getConnectionContext(pcfRequestConfig);
     assertThat(connectionContext instanceof DefaultConnectionContext).isTrue();
@@ -1022,8 +1036,10 @@ public class PivotalClientTest extends CategoryTest {
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
   public void testIgnoringConnectionContextCache() throws Exception {
-    PcfRequestConfig pcfRequestConfig =
-        PcfRequestConfig.builder().endpointUrl("test").ignorePcfConnectionContextCache(true).build();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = io.harness.pcf.model.PcfRequestConfig.builder()
+                                                                 .endpointUrl("test")
+                                                                 .ignorePcfConnectionContextCache(true)
+                                                                 .build();
 
     ConnectionContext firstConnectionContext = pcfClient.getConnectionContext(pcfRequestConfig);
     ConnectionContext secondConnectionContext = pcfClient.getConnectionContext(pcfRequestConfig);
@@ -1035,8 +1051,10 @@ public class PivotalClientTest extends CategoryTest {
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
   public void testNotIgnoringConnectionContextCache() throws Exception {
-    PcfRequestConfig pcfRequestConfig =
-        PcfRequestConfig.builder().endpointUrl("test").ignorePcfConnectionContextCache(false).build();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = io.harness.pcf.model.PcfRequestConfig.builder()
+                                                                 .endpointUrl("test")
+                                                                 .ignorePcfConnectionContextCache(false)
+                                                                 .build();
 
     ConnectionContext firstConnectionContext = pcfClient.getConnectionContext(pcfRequestConfig);
     ConnectionContext secondConnectionContext = pcfClient.getConnectionContext(pcfRequestConfig);
@@ -1048,12 +1066,12 @@ public class PivotalClientTest extends CategoryTest {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getRecentLogs() throws PivotalClientApiException {
-    final PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
-                                                  .applicationName("app_name")
-                                                  .orgName("org_name")
-                                                  .spaceName("space_name")
-                                                  .timeOutIntervalInMins(5)
-                                                  .build();
+    final io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = io.harness.pcf.model.PcfRequestConfig.builder()
+                                                                       .applicationName("app_name")
+                                                                       .orgName("org_name")
+                                                                       .spaceName("space_name")
+                                                                       .timeOutIntervalInMins(5)
+                                                                       .build();
     final LogMessage logMessage1 =
         LogMessage.builder().message("msg1").messageType(MessageType.OUT).timestamp(1574924788770064207L).build();
     final LogMessage logMessage2 =
@@ -1073,12 +1091,12 @@ public class PivotalClientTest extends CategoryTest {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_getRecentLogs_fail() throws PivotalClientApiException {
-    final PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
-                                                  .applicationName("app_name")
-                                                  .timeOutIntervalInMins(5)
-                                                  .spaceName("space_name")
-                                                  .orgName("org_name")
-                                                  .build();
+    final io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = io.harness.pcf.model.PcfRequestConfig.builder()
+                                                                       .applicationName("app_name")
+                                                                       .timeOutIntervalInMins(5)
+                                                                       .spaceName("space_name")
+                                                                       .orgName("org_name")
+                                                                       .build();
     final LogMessage logMessage1 =
         LogMessage.builder().message("msg1").messageType(MessageType.OUT).timestamp(1574924788770064207L).build();
     Flux<LogMessage> result = Flux.create(sink -> {
@@ -1095,9 +1113,13 @@ public class PivotalClientTest extends CategoryTest {
   public void test_getProcessExecutorForLogTailing() {
     ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
     doNothing().when(logCallback).saveExecutionLog(anyString());
-    ProcessExecutor processExecutorForLogTailing = client.getProcessExecutorForLogTailing(
-        PcfRequestConfig.builder().cfCliPath("cf").cfCliVersion(CfCliVersion.V6).applicationName(APP_NAME).build(),
-        logCallback);
+    ProcessExecutor processExecutorForLogTailing =
+        client.getProcessExecutorForLogTailing(io.harness.pcf.model.PcfRequestConfig.builder()
+                                                   .cfCliPath("cf")
+                                                   .cfCliVersion(CfCliVersion.V6)
+                                                   .applicationName(APP_NAME)
+                                                   .build(),
+            logCallback);
 
     assertThat(processExecutorForLogTailing.getCommand())
         .containsExactly(BIN_BASH, "-c", CF_COMMAND_FOR_APP_LOG_TAILING.replace(APP_TOKEN, APP_NAME));
@@ -1111,7 +1133,8 @@ public class PivotalClientTest extends CategoryTest {
     ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
     doNothing().when(logCallback).saveExecutionLog(anyString());
 
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().applicationName(APP_NAME).loggedin(true).build();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig =
+        io.harness.pcf.model.PcfRequestConfig.builder().applicationName(APP_NAME).loggedin(true).build();
     ProcessExecutor processExecutor = mock(ProcessExecutor.class);
     StartedProcess startedProcess = mock(StartedProcess.class);
     doReturn(processExecutor).when(client).getProcessExecutorForLogTailing(any(), any());
@@ -1147,15 +1170,15 @@ public class PivotalClientTest extends CategoryTest {
     Map<String, String> env = new HashMap<>();
     env.put("CF_HOME", "CF_HOME");
     doReturn(env).when(client).getEnvironmentMapForPcfExecutor(anyString(), anyString());
-    PcfRequestConfig config = PcfRequestConfig.builder()
-                                  .endpointUrl("api.pivotal.io")
-                                  .userName("user")
-                                  .cfCliPath("cf")
-                                  .cfCliVersion(CfCliVersion.V6)
-                                  .password("passwd")
-                                  .orgName("org with space")
-                                  .spaceName("space with name")
-                                  .build();
+    io.harness.pcf.model.PcfRequestConfig config = io.harness.pcf.model.PcfRequestConfig.builder()
+                                                       .endpointUrl("api.pivotal.io")
+                                                       .userName("user")
+                                                       .cfCliPath("cf")
+                                                       .cfCliVersion(CfCliVersion.V6)
+                                                       .password("passwd")
+                                                       .orgName("org with space")
+                                                       .spaceName("space with name")
+                                                       .build();
     client.doLogin(config, mockCallback, "conf");
     verify(client, times(3)).executeCommand(anyString(), anyMap(), any());
   }
@@ -1212,14 +1235,14 @@ public class PivotalClientTest extends CategoryTest {
     PcfClientImpl client = spy(PcfClientImpl.class);
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
-    PcfRequestConfig requestConfig = PcfRequestConfig.builder()
-                                         .useCFCLI(true)
-                                         .cfCliPath("cf")
-                                         .cfCliVersion(CfCliVersion.V6)
-                                         .loggedin(false)
-                                         .cfHomeDirPath("/cf/home")
-                                         .applicationName("App_BG_00")
-                                         .build();
+    io.harness.pcf.model.PcfRequestConfig requestConfig = io.harness.pcf.model.PcfRequestConfig.builder()
+                                                              .useCFCLI(true)
+                                                              .cfCliPath("cf")
+                                                              .cfCliVersion(CfCliVersion.V6)
+                                                              .loggedin(false)
+                                                              .cfHomeDirPath("/cf/home")
+                                                              .applicationName("App_BG_00")
+                                                              .build();
     doReturn(true).when(client).doLogin(any(), any(), anyString());
     List<Domain> domains = singletonList(Domain.builder().name("example.com").id("id").status(Status.OWNED).build());
     doReturn(domains).when(client).getAllDomainsForSpace(any());
@@ -1249,7 +1272,7 @@ public class PivotalClientTest extends CategoryTest {
     ExecutionLogCallback logger = mock(ExecutionLogCallback.class);
     doNothing().when(logger).saveExecutionLog(anyString());
 
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = io.harness.pcf.model.PcfRequestConfig.builder().build();
     Set<String> domains = new HashSet<>();
     domains.add("apps.io");
     domains.add("harness.io");
@@ -1317,7 +1340,7 @@ public class PivotalClientTest extends CategoryTest {
     reset(mockedClient);
     doReturn(false).when(mockedClient).doLogin(any(), any(), anyString());
 
-    PcfRequestConfig pcfRequestConfig = getPcfRequestConfigWithCfCliPath();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = getPcfRequestConfigWithCfCliPath();
     ExecutionLogCallback logger = mock(ExecutionLogCallback.class);
     doNothing().when(logger).saveExecutionLog(anyString());
 
@@ -1358,7 +1381,7 @@ public class PivotalClientTest extends CategoryTest {
     reset(mockedClient);
     doReturn(false).when(mockedClient).doLogin(any(), any(), anyString());
 
-    PcfRequestConfig pcfRequestConfig = getPcfRequestConfigWithCfCliPath();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = getPcfRequestConfigWithCfCliPath();
     ExecutionLogCallback logger = mock(ExecutionLogCallback.class);
     doNothing().when(logger).saveExecutionLog(anyString());
 
@@ -1404,7 +1427,7 @@ public class PivotalClientTest extends CategoryTest {
     PcfCommandSetupRequest pcfCommandSetupRequest = PcfCommandSetupRequest.builder().build();
     PcfCreateApplicationRequestData requestData =
         PcfCreateApplicationRequestData.builder()
-            .pcfRequestConfig(PcfRequestConfig.builder().endpointUrl("test").build())
+            .pcfRequestConfig(io.harness.pcf.model.PcfRequestConfig.builder().endpointUrl("test").build())
             .build();
     pcfCommandSetupRequest.setArtifactStreamAttributes(artifactStreamAttributes);
     requestData.setSetupRequest(pcfCommandSetupRequest);
@@ -1486,7 +1509,7 @@ public class PivotalClientTest extends CategoryTest {
   @Owner(developers = TATHAGAT)
   @Category(UnitTests.class)
   public void testunmapRoutesForApplicationException() throws PivotalClientApiException, InterruptedException {
-    PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = getPcfRequestConfig();
     pcfRequestConfig.setUserName("username");
     pcfRequestConfig.setPassword("password");
     pcfRequestConfig.setEndpointUrl("api.run.pivotal.io");
@@ -1534,7 +1557,8 @@ public class PivotalClientTest extends CategoryTest {
             .applicationGuid(APP_NAME)
             .expectedEnabled(true)
             .timeoutInMins(1)
-            .pcfRequestConfig(PcfRequestConfig.builder().cfCliPath("cf").cfCliVersion(CfCliVersion.V6).build())
+            .pcfRequestConfig(
+                io.harness.pcf.model.PcfRequestConfig.builder().cfCliPath("cf").cfCliVersion(CfCliVersion.V6).build())
             .build();
     PcfAppAutoscalarRequestData autoscalarRequestDataWithExpectedEnableFalse =
         PcfAppAutoscalarRequestData.builder()
@@ -1542,7 +1566,8 @@ public class PivotalClientTest extends CategoryTest {
             .applicationGuid(APP_NAME)
             .expectedEnabled(false)
             .timeoutInMins(1)
-            .pcfRequestConfig(PcfRequestConfig.builder().cfCliPath("cf").cfCliVersion(CfCliVersion.V6).build())
+            .pcfRequestConfig(
+                io.harness.pcf.model.PcfRequestConfig.builder().cfCliPath("cf").cfCliVersion(CfCliVersion.V6).build())
             .build();
 
     assertThat(
@@ -1577,13 +1602,13 @@ public class PivotalClientTest extends CategoryTest {
     ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
     doNothing().when(logCallback).saveExecutionLog(anyString());
 
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
-                                            .applicationName("app")
-                                            .userName("username")
-                                            .password("password")
-                                            .loggedin(true)
-                                            .useCFCLI(true)
-                                            .build();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = io.harness.pcf.model.PcfRequestConfig.builder()
+                                                                 .applicationName("app")
+                                                                 .userName("username")
+                                                                 .password("password")
+                                                                 .loggedin(true)
+                                                                 .useCFCLI(true)
+                                                                 .build();
 
     doReturn(pcfRequestConfig).when(requestData).getPcfRequestConfig();
     doReturn("path").when(requestData).getManifestFilePath();
@@ -1614,14 +1639,14 @@ public class PivotalClientTest extends CategoryTest {
   @Owner(developers = TATHAGAT)
   @Category(UnitTests.class)
   public void testcreateRouteMap() throws PivotalClientApiException, InterruptedException {
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
-                                            .applicationName("app")
-                                            .userName("username")
-                                            .password("password")
-                                            .spaceName("space")
-                                            .orgName("org")
-                                            .spaceName("space")
-                                            .build();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = io.harness.pcf.model.PcfRequestConfig.builder()
+                                                                 .applicationName("app")
+                                                                 .userName("username")
+                                                                 .password("password")
+                                                                 .spaceName("space")
+                                                                 .orgName("org")
+                                                                 .spaceName("space")
+                                                                 .build();
 
     CreateRouteRequest createRouteRequest = CreateRouteRequest.builder()
                                                 .host("host")
@@ -1652,17 +1677,17 @@ public class PivotalClientTest extends CategoryTest {
         routes.stream()
             .map(routeMap -> org.cloudfoundry.operations.applications.Route.builder().route(routeMap).build())
             .collect(toList());
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
-                                            .timeOutIntervalInMins(1)
-                                            .orgName("org")
-                                            .applicationName("app")
-                                            .routeMaps(routes)
-                                            .build();
+    io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = io.harness.pcf.model.PcfRequestConfig.builder()
+                                                                 .timeOutIntervalInMins(1)
+                                                                 .orgName("org")
+                                                                 .applicationName("app")
+                                                                 .routeMaps(routes)
+                                                                 .build();
     ApplicationManifest.Builder builder = ApplicationManifest.builder();
     builder.name("builder");
 
     Method method = PcfClientImpl.class.getDeclaredMethod(
-        "addRouteMapsToManifest", PcfRequestConfig.class, ApplicationManifest.Builder.class);
+        "addRouteMapsToManifest", io.harness.pcf.model.PcfRequestConfig.class, ApplicationManifest.Builder.class);
     method.setAccessible(true);
     method.invoke(client, pcfRequestConfig, builder);
     ApplicationManifest applicationManifest = builder.build();
@@ -1730,7 +1755,7 @@ public class PivotalClientTest extends CategoryTest {
     System.clearProperty("http.nonProxyHosts");
   }
 
-  private PcfRequestConfig getPcfRequestConfigWithCfCliPath() {
+  private io.harness.pcf.model.PcfRequestConfig getPcfRequestConfigWithCfCliPath() {
     return PcfRequestConfig.builder()
         .useCFCLI(true)
         .cfCliPath("cf")

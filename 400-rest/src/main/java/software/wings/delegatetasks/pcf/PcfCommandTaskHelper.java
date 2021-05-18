@@ -74,6 +74,8 @@ import io.harness.exception.WingsException;
 import io.harness.pcf.CfCliDelegateResolver;
 import io.harness.pcf.PivotalClientApiException;
 import io.harness.pcf.model.CfCliVersion;
+import io.harness.pcf.model.PcfAppAutoscalarRequestData;
+import io.harness.pcf.model.PcfRequestConfig;
 
 import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
@@ -90,8 +92,6 @@ import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.pcf.InvalidPcfStateException;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
-import software.wings.helpers.ext.pcf.PcfRequestConfig;
-import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;

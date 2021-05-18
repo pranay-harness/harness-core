@@ -1,11 +1,5 @@
-package software.wings.helpers.ext.pcf;
+package io.harness.pcf;
 
-import static io.harness.annotations.dev.HarnessTeam.CDP;
-
-import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
-import io.harness.pcf.PivotalClientApiException;
 import io.harness.pcf.model.PcfRequestConfig;
 
 import software.wings.beans.command.ExecutionLogCallback;
@@ -17,12 +11,11 @@ import org.cloudfoundry.doppler.LogMessage;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationEnvironments;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
+import org.cloudfoundry.operations.domains.Domain;
 import org.cloudfoundry.operations.organizations.OrganizationSummary;
 import org.cloudfoundry.operations.routes.Route;
 
-@TargetModule(HarnessModule._930_DELEGATE_TASKS)
-@OwnedBy(CDP)
-public interface PcfClient {
+public interface CfSdkClient {
   /**
    * Get organizations.
    *
@@ -103,28 +96,151 @@ public interface PcfClient {
    */
   void deleteApplication(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException, InterruptedException;
 
-  void pushUsingPcfSdk(PcfRequestConfig pcfRequestConfig, Path path, ExecutionLogCallback executionLogCallback)
+  /**
+   * Push application.
+   *
+   * @param pcfRequestConfig
+   * @param path Path
+   * @param executionLogCallback
+   * @throws PivotalClientApiException
+   * @throws InterruptedException
+   */
+  void pushAppBySdk(PcfRequestConfig pcfRequestConfig, Path path, ExecutionLogCallback executionLogCallback)
       throws PivotalClientApiException, InterruptedException;
 
+  /**
+   * Create route.
+   *
+   * @param pcfRequestConfig
+   * @param host
+   * @param domain
+   * @param path
+   * @param tcpRoute
+   * @param useRandomPort
+   * @param port
+   * @throws PivotalClientApiException
+   * @throws InterruptedException
+   */
   void createRouteMap(PcfRequestConfig pcfRequestConfig, String host, String domain, String path, boolean tcpRoute,
       boolean useRandomPort, Integer port) throws PivotalClientApiException, InterruptedException;
+
+  /**
+   * Unmap route.
+   *
+   * @param pcfRequestConfig
+   * @param route
+   * @throws PivotalClientApiException
+   * @throws InterruptedException
+   */
   void unmapRouteMapForApp(PcfRequestConfig pcfRequestConfig, Route route)
       throws PivotalClientApiException, InterruptedException;
+
+  /**
+   * Map routes.
+   *
+   * @param pcfRequestConfig
+   * @param routes
+   * @throws PivotalClientApiException
+   * @throws InterruptedException
+   */
   void mapRoutesForApplication(PcfRequestConfig pcfRequestConfig, List<String> routes)
       throws PivotalClientApiException, InterruptedException;
+
+  /**
+   * Map route.
+   *
+   * @param pcfRequestConfig
+   * @param route
+   * @throws PivotalClientApiException
+   * @throws InterruptedException
+   */
   void mapRouteMapForApp(PcfRequestConfig pcfRequestConfig, Route route)
       throws PivotalClientApiException, InterruptedException;
-  List<Route> getRouteMapsByNames(List<String> paths, PcfRequestConfig pcfRequestConfig)
-      throws PivotalClientApiException, InterruptedException;
-  void getTasks(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException, InterruptedException;
-  List<String> getRoutesForSpace(PcfRequestConfig pcfRequestConfig)
-      throws PivotalClientApiException, InterruptedException;
-  Optional<Route> getRouteMap(PcfRequestConfig pcfRequestConfig, String route)
-      throws PivotalClientApiException, InterruptedException;
+
+  /**
+   * Unmap route.
+   *
+   * @param pcfRequestConfig
+   * @param routes
+   * @throws PivotalClientApiException
+   * @throws InterruptedException
+   */
   void unmapRoutesForApplication(PcfRequestConfig pcfRequestConfig, List<String> routes)
       throws PivotalClientApiException, InterruptedException;
+
+  /**
+   * Get route.
+   *
+   * @param pcfRequestConfig
+   * @param route
+   * @return
+   * @throws PivotalClientApiException
+   * @throws InterruptedException
+   */
+  Optional<Route> getRouteMap(PcfRequestConfig pcfRequestConfig, String route)
+      throws PivotalClientApiException, InterruptedException;
+
+  /**
+   * Get route.
+   *
+   * @param paths
+   * @param pcfRequestConfig
+   * @return
+   * @throws PivotalClientApiException
+   * @throws InterruptedException
+   */
+  List<Route> getRouteMapsByNames(List<String> paths, PcfRequestConfig pcfRequestConfig)
+      throws PivotalClientApiException, InterruptedException;
+
+  /**
+   * Get routes for space.
+   *
+   * @param pcfRequestConfig
+   * @return
+   * @throws PivotalClientApiException
+   * @throws InterruptedException
+   */
+  List<String> getRoutesForSpace(PcfRequestConfig pcfRequestConfig)
+      throws PivotalClientApiException, InterruptedException;
+
+  /**
+   *
+   *
+   * @param pcfRequestConfig
+   * @param logsAfterTsNs
+   * @return
+   * @throws PivotalClientApiException
+   */
   List<LogMessage> getRecentLogs(PcfRequestConfig pcfRequestConfig, long logsAfterTsNs)
       throws PivotalClientApiException;
+
+  /**
+   * Get application environments by name.
+   *
+   * @param pcfRequestConfig
+   * @return
+   * @throws PivotalClientApiException
+   */
   ApplicationEnvironments getApplicationEnvironmentsByName(PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException;
+
+  /**
+   * Get tasks.
+   *
+   * @param pcfRequestConfig
+   * @throws PivotalClientApiException
+   * @throws InterruptedException
+   */
+  void getTasks(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException, InterruptedException;
+
+  /**
+   * Get all space domains.
+   *
+   * @param pcfRequestConfig
+   * @return
+   * @throws PivotalClientApiException
+   * @throws InterruptedException
+   */
+  List<Domain> getAllDomainsForSpace(PcfRequestConfig pcfRequestConfig)
+      throws PivotalClientApiException, InterruptedException;
 }

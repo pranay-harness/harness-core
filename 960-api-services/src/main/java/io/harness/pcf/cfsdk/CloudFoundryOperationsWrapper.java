@@ -1,7 +1,8 @@
-package software.wings.helpers.ext.pcf;
+package io.harness.pcf.cfsdk;
 
-import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.TargetModule;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import lombok.Builder;
 import lombok.Data;
@@ -11,8 +12,8 @@ import org.cloudfoundry.reactor.DefaultConnectionContext;
 
 @Data
 @Builder
-@TargetModule(HarnessModule._970_API_SERVICES_BEANS)
-class CloudFoundryOperationsWrapper implements AutoCloseable {
+@OwnedBy(CDP)
+public class CloudFoundryOperationsWrapper implements AutoCloseable {
   private CloudFoundryOperations cloudFoundryOperations;
   private ConnectionContext connectionContext;
   private boolean ignorePcfConnectionContextCache;

@@ -1,9 +1,8 @@
-package software.wings.helpers.ext.pcf;
+package io.harness.pcf.model;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pcf.model.CfCliVersion;
 
 import java.util.List;
 import java.util.Map;

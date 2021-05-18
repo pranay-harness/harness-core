@@ -6,8 +6,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.pcf.PcfManifestFileData;
-
-import software.wings.helpers.ext.pcf.PcfRequestConfig;
+import io.harness.pcf.model.PcfRequestConfig;
 
 import lombok.Builder;
 import lombok.Data;

@@ -1,12 +1,10 @@
-package software.wings.helpers.ext.pcf.request;
+package io.harness.pcf.model;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-
-import software.wings.helpers.ext.pcf.PcfRequestConfig;
 
 import lombok.Builder;
 import lombok.Data;
