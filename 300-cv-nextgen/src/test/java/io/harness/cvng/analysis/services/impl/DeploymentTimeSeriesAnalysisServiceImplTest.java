@@ -83,7 +83,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
   public void testGetMetrics() {
-    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
     String verificationTaskId =
         verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
@@ -125,7 +125,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetMetrics_withNoVerificationTaskMapping() {
-    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
     TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
         deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 0);
@@ -140,7 +140,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
   public void testGetMetrics_withHostNameFilter() {
-    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
     String verificationTaskId =
         verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
@@ -170,7 +170,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetMetrics_withHostNameFilterWithOnlyFewTxn() {
-    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
     String verificationTaskId =
         verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
@@ -199,7 +199,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
   public void testGetMetrics_withWrongHostName() {
-    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
     String verificationTaskId =
         verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
@@ -214,7 +214,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
   public void testGetMetrics_withAnomalousMetricsFilter() {
-    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
     String verificationTaskId =
         verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
@@ -238,7 +238,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
   public void testGetMetrics_withHostNameAndAnomalousMetricsFilter() {
-    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
     String verificationTaskId =
         verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
@@ -266,7 +266,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
   public void testGetMetrics_withMultipleDeploymentTimeSeriesAnalyses() {
-    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
     String verificationTaskId =
         verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
@@ -301,7 +301,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
   public void testGetMetrics_withMultiplePages() {
-    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
     String verificationTaskId =
         verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
@@ -343,7 +343,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
   public void testGetMetrics_withoutDeploymentTimeSeriesAnalysis() {
-    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
     verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
 
@@ -359,7 +359,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetRecentHighestRiskScore_noData() {
-    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
     verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
     assertThat(deploymentTimeSeriesAnalysisService.getRecentHighestRiskScore(accountId, verificationJobInstanceId))
@@ -370,7 +370,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetRecentHighestRiskScore_verificationTaskIdDoesNotExists() {
-    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
     assertThatThrownBy(
         () -> deploymentTimeSeriesAnalysisService.getRecentHighestRiskScore(accountId, verificationJobInstanceId))
@@ -381,7 +381,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetRecentHighestRiskScore_getLatest() {
-    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
     String verificationTaskId =
         verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
@@ -402,7 +402,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetRecentHighestRiskScore_getRecentHighest() {
-    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
     String verificationTaskId1 =
         verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);

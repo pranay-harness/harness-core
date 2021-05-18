@@ -421,7 +421,7 @@ public class CVConfigServiceImplTest extends CvNextGenTestBase {
     int numOfEnv = 3;
     for (int i = 0; i < numOfEnv; i++) {
       AppDynamicsDSConfig dataSourceCVConfig = createAppDynamicsDataSourceCVConfig("appd-" + i, "env-" + i);
-      dsConfigService.upsert(dataSourceCVConfig);
+      dsConfigService.create(dataSourceCVConfig);
     }
 
     List<EnvToServicesDTO> envToServicesList =
@@ -758,7 +758,7 @@ public class CVConfigServiceImplTest extends CvNextGenTestBase {
     cvConfigs.add(cvConfig);
 
     AppDynamicsDSConfig dataSourceCVConfig = createAppDynamicsDataSourceCVConfig("appd", "env");
-    dsConfigService.upsert(dataSourceCVConfig);
+    dsConfigService.create(dataSourceCVConfig);
 
     save(cvConfigs);
 
