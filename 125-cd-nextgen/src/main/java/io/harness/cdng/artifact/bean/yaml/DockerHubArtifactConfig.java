@@ -1,7 +1,7 @@
 package io.harness.cdng.artifact.bean.yaml;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.delegate.task.artifacts.ArtifactSourceConstants.DOCKER_HUB_NAME;
+import static io.harness.delegate.task.artifacts.ArtifactSourceConstants.DOCKER_REGISTRY_NAME;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
@@ -39,7 +39,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@JsonTypeName(DOCKER_HUB_NAME)
+@JsonTypeName(DOCKER_REGISTRY_NAME)
 @SimpleVisitorHelper(helperClass = ConnectorRefExtractorHelper.class)
 @TypeAlias("dockerHubArtifactConfig")
 @OneOfField(fields = {"tag", "tagRegex"})
@@ -72,7 +72,7 @@ public class DockerHubArtifactConfig implements ArtifactConfig, Visitable, WithC
 
   @Override
   public ArtifactSourceType getSourceType() {
-    return ArtifactSourceType.DOCKER_HUB;
+    return ArtifactSourceType.DOCKER_REGISTRY;
   }
 
   @Override

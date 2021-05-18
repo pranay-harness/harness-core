@@ -134,7 +134,7 @@ func collectTestReports(ctx context.Context, reports []*pb.Report, stepID string
 	}
 	defer client.CloseConn()
 	repo, _ := external.GetRepo() // Add repo if it exists, otherwise keep it empty
-	sha, _ := external.GetSha() // Add sha if it exists, otherwise keep it empty
+	sha, _ := external.GetSha()   // Add sha if it exists, otherwise keep it empty
 	for _, report := range reports {
 		var rep testreports.TestReporter
 		var err error

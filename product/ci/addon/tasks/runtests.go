@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -185,6 +186,13 @@ func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) (string, error) {
 	instrArg, err := r.createJavaAgentArg()
 	if err != nil {
 		return "", err
+	}
+	re := regexp.MustCompile(`(-Duser\.\S*)`)
+	s := re.FindAllString(r.args, -1)
+	if s != nil {
+		// If user args are present, move them to instrumentation
+		r.args = re.ReplaceAllString(r.args, "")                            // Remove from arg
+		instrArg = fmt.Sprintf("\"%s %s\"", strings.Join(s, " "), instrArg) // Add to instrumentation
 	}
 	if !r.runOnlySelectedTests {
 		// Run all the tests

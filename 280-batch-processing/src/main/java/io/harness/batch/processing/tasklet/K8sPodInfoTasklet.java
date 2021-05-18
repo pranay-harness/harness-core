@@ -44,7 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
@@ -68,20 +67,16 @@ public class K8sPodInfoTasklet implements Tasklet {
   private static final String KUBE_SYSTEM_NAMESPACE = "kube-system";
   private static final String KUBE_PROXY_POD_PREFIX = "kube-proxy";
 
-  private JobParameters parameters;
-
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) {
-    parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
-    Long startTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE);
-    Long endTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE);
-    String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
+    final CCMJobConstants jobConstants = new CCMJobConstants(chunkContext);
     int batchSize = config.getBatchQueryConfig().getQueryBatchSize();
 
     String messageType = EventTypeConstants.K8S_POD_INFO;
     List<PublishedMessage> publishedMessageList;
     PublishedMessageReader publishedMessageReader =
-        new PublishedMessageReader(publishedMessageDao, accountId, messageType, startTime, endTime, batchSize);
+        new PublishedMessageReader(publishedMessageDao, jobConstants.getAccountId(), messageType,
+            jobConstants.getJobStartTime(), jobConstants.getJobEndTime(), batchSize);
     do {
       publishedMessageList = publishedMessageReader.getNext();
 
@@ -97,7 +92,7 @@ public class K8sPodInfoTasklet implements Tasklet {
                       != null)
               .collect(Collectors.toList()));
 
-      if (featureFlagService.isEnabled(FeatureName.NODE_RECOMMENDATION_1, accountId)) {
+      if (featureFlagService.isEnabled(FeatureName.NODE_RECOMMENDATION_1, jobConstants.getAccountId())) {
         instanceInfoTimescaleDAO.insertIntoPodInfo(instanceInfoList);
       }
 

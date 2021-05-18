@@ -42,7 +42,6 @@ import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
-import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.file.NGFileServiceModule;
 import io.harness.gitsync.GitSyncModule;
 import io.harness.gitsync.core.runnable.HarnessToGitPushMessageListener;
@@ -415,7 +414,6 @@ public class NextGenModule extends AbstractModule {
     });
     install(OrchestrationModule.getInstance(getOrchestrationConfig()));
     install(OrchestrationStepsModule.getInstance(null));
-    install(ExecutionPlanModule.getInstance());
     install(EntitySetupUsageModule.getInstance());
     install(PersistentLockModule.getInstance());
     install(new TransactionOutboxModule());

@@ -39,7 +39,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class SdkResponseEvent extends Queuable implements WithMonitoring {
   SdkResponseEventType sdkResponseEventType;
   SdkResponseEventRequest sdkResponseEventRequest;
-  @Getter @Setter @NonFinal @CreatedDate long createdAt;
+  @Getter @Setter @NonFinal @CreatedDate Long createdAt;
   @Setter @NonFinal @Version Long version;
 
   public AutoLogContext autoLogContext() {

@@ -58,7 +58,7 @@ public class ImagePullSecretUtils {
   public String getImagePullSecret(ArtifactOutcome artifactOutcome, Ambiance ambiance) {
     ImageDetailsBuilder imageDetailsBuilder = ImageDetails.builder();
     switch (artifactOutcome.getArtifactType()) {
-      case ArtifactSourceConstants.DOCKER_HUB_NAME:
+      case ArtifactSourceConstants.DOCKER_REGISTRY_NAME:
         getImageDetailsFromDocker((DockerArtifactOutcome) artifactOutcome, imageDetailsBuilder, ambiance);
         break;
       case ArtifactSourceConstants.GCR_NAME:

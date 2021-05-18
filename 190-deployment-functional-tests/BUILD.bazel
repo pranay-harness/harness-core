@@ -40,7 +40,10 @@ java_library(
     srcs = glob(["src/test/**/*.java"]),
     data = [
         "//190-deployment-functional-tests/src/test/resources:resource",
-    ] + ["//:resource"],
+    ] + ["//:resource"] + [
+        "//260-delegate:module_deploy",
+        "//360-cg-manager:module_deploy.jar",
+    ],
     resources = [
         "//190-deployment-functional-tests/src/test/resources:resource",
     ],
@@ -49,10 +52,6 @@ java_library(
         "manual",
     ],
     visibility = ["//visibility:public"],
-    runtime_deps = [
-        "//260-delegate:module_deploy.jar",
-        "//360-cg-manager:module_deploy.jar",
-    ],
     deps = test_dependencies,
 )
 

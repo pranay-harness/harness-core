@@ -90,7 +90,7 @@ public class ArtifactUtils {
 
     String placeholder = " type: %s, image: %s, tag/tagRegex: %s, connectorRef: %s\n";
     switch (sourceType) {
-      case DOCKER_HUB:
+      case DOCKER_REGISTRY:
         DockerHubArtifactConfig dockerHubArtifactConfig = (DockerHubArtifactConfig) artifactConfig;
         return String.format(placeholder, sourceType, dockerHubArtifactConfig.getImagePath().getValue(),
             dockerHubArtifactConfig.getTag().getValue() != null ? dockerHubArtifactConfig.getTag().getValue()

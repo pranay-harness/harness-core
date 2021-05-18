@@ -7,6 +7,7 @@ import io.harness.beans.DecryptableEntity;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.gitsync.GitFilePathDetails;
+import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.connector.impl.ConnectorErrorMessagesHelper;
 import io.harness.connector.services.ConnectorService;
@@ -16,14 +17,18 @@ import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.scm.GitFileTaskResponseData;
 import io.harness.delegate.task.scm.GitFileTaskType;
+import io.harness.delegate.task.scm.GitPRTaskType;
 import io.harness.delegate.task.scm.GitRefType;
 import io.harness.delegate.task.scm.ScmGitFileTaskParams;
 import io.harness.delegate.task.scm.ScmGitRefTaskParams;
 import io.harness.delegate.task.scm.ScmGitRefTaskResponseData;
+import io.harness.delegate.task.scm.ScmPRTaskParams;
+import io.harness.delegate.task.scm.ScmPRTaskResponseData;
 import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.BaseNGAccess;
+import io.harness.product.ci.scm.proto.CreatePRResponse;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.service.DelegateGrpcClientWrapper;
@@ -104,6 +109,42 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     final DelegateResponseData delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
     GitFileTaskResponseData gitFileTaskResponseData = (GitFileTaskResponseData) delegateResponseData;
     return validateAndGetGitFileContent(gitFileTaskResponseData.getFileContent());
+  }
+
+  @Override
+  public Boolean createPullRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String yamlGitConfigRef, GitPRCreateRequest gitCreatePRRequest) {
+    YamlGitConfigDTO yamlGitConfigDTO =
+        getYamlGitConfigDTO(accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigRef);
+    final IdentifierRef gitConnectorIdentifierRef =
+        getConnectorIdentifierRef(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
+            yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getGitConnectorRef());
+    final ScmConnector scmConnector = getScmConnector(gitConnectorIdentifierRef);
+    final BaseNGAccess baseNGAccess = getBaseNGAccess(accountIdentifier, orgIdentifier, projectIdentifier);
+    final DecryptableEntity apiAccessDecryptableEntity =
+        GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(scmConnector);
+    final List<EncryptedDataDetail> encryptionDetails =
+        secretManagerClientService.getEncryptionDetails(baseNGAccess, apiAccessDecryptableEntity);
+    ScmPRTaskParams scmPRTaskParams = ScmPRTaskParams.builder()
+                                          .scmConnector(scmConnector)
+                                          .gitPRCreateRequest(gitCreatePRRequest)
+                                          .gitPRTaskType(GitPRTaskType.CREATE_PR)
+                                          .encryptedDataDetails(encryptionDetails)
+                                          .build();
+    DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
+                                                  .accountId(accountIdentifier)
+                                                  .taskType(TaskType.SCM_PULL_REQUEST_TASK.name())
+                                                  .taskParameters(scmPRTaskParams)
+                                                  .executionTimeout(Duration.ofMinutes(2))
+                                                  .build();
+    DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    ScmPRTaskResponseData scmCreatePRResponse = (ScmPRTaskResponseData) responseData;
+    final CreatePRResponse createPRResponse = scmCreatePRResponse.getCreatePRResponse();
+    if (createPRResponse.getStatus() != 200 || createPRResponse.getStatus() != 201) {
+      log.error("Could not create the pull request from {} to {}", gitCreatePRRequest.getSourceBranch(),
+          gitCreatePRRequest.getTargetBranch());
+    }
+    return createPRResponse.getStatus() == 200 || createPRResponse.getStatus() == 201;
   }
 
   DelegateTaskRequest getDelegateTaskRequest(

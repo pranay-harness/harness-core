@@ -55,6 +55,9 @@ public class GitConnector extends Connector {
       gitConnectorInput.getCustomCommitDetails().getValue().ifPresent(
           customCommitDetailsInput -> setCustomCommitDetails(gitConfig, customCommitDetailsInput));
     }
+    if (gitConnectorInput.getDelegateSelectors().isPresent()) {
+      gitConnectorInput.getDelegateSelectors().getValue().ifPresent(gitConfig::setDelegateSelectors);
+    }
 
     SettingAttribute.Builder settingAttributeBuilder =
         SettingAttribute.Builder.aSettingAttribute().withValue(gitConfig).withAccountId(accountId).withCategory(
@@ -95,6 +98,9 @@ public class GitConnector extends Connector {
     if (gitConnectorInput.getCustomCommitDetails().isPresent()) {
       gitConnectorInput.getCustomCommitDetails().getValue().ifPresent(
           customCommitDetailsInput -> setCustomCommitDetails(gitConfig, customCommitDetailsInput));
+    }
+    if (gitConnectorInput.getDelegateSelectors().isPresent()) {
+      gitConnectorInput.getDelegateSelectors().getValue().ifPresent(gitConfig::setDelegateSelectors);
     }
 
     settingAttribute.setValue(gitConfig);

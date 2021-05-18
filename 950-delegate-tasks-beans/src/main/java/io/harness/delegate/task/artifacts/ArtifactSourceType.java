@@ -1,6 +1,6 @@
 package io.harness.delegate.task.artifacts;
 
-import static io.harness.delegate.task.artifacts.ArtifactSourceConstants.DOCKER_HUB_NAME;
+import static io.harness.delegate.task.artifacts.ArtifactSourceConstants.DOCKER_REGISTRY_NAME;
 import static io.harness.delegate.task.artifacts.ArtifactSourceConstants.ECR_NAME;
 import static io.harness.delegate.task.artifacts.ArtifactSourceConstants.GCR_NAME;
 
@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ArtifactSourceType {
-  @JsonProperty(DOCKER_HUB_NAME) DOCKER_HUB(DOCKER_HUB_NAME),
+  @JsonProperty(DOCKER_REGISTRY_NAME) DOCKER_REGISTRY(DOCKER_REGISTRY_NAME),
   @JsonProperty(GCR_NAME) GCR(GCR_NAME),
   @JsonProperty(ECR_NAME) ECR(ECR_NAME);
   private final String displayName;

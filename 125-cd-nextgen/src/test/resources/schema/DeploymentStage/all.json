@@ -2788,7 +2788,7 @@
         "type": {
           "type": "string",
           "enum": [
-            "Dockerhub",
+            "DockerRegistry",
             "Gcr",
             "Ecr"
           ]
@@ -2800,7 +2800,7 @@
           "if": {
             "properties": {
               "type": {
-                "const": "Dockerhub"
+                "const": "DockerRegistry"
               }
             }
           },
@@ -3465,7 +3465,7 @@
         "type": {
           "type": "string",
           "enum": [
-            "Dockerhub",
+            "DockerRegistry",
             "Gcr",
             "Ecr"
           ]
@@ -3477,7 +3477,7 @@
           "if": {
             "properties": {
               "type": {
-                "const": "Dockerhub"
+                "const": "DockerRegistry"
               }
             }
           },
