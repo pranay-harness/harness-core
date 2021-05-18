@@ -57,16 +57,13 @@ public class PMSInputSetServiceImplTest extends PipelineServiceTestBase {
 
   String INPUT_SET_IDENTIFIER = "identifier";
   String NAME = "identifier";
-  String inputSetFileName = "inputSet1.yml";
   String YAML;
 
   InputSetEntity inputSetEntity;
 
   String OVERLAY_INPUT_SET_IDENTIFIER = "overlay-identifier";
-  String overlayInputSetFileName = "overlay1.yml";
   List<String> inputSetReferences = ImmutableList.of("inputSet2", "inputSet22");
   String OVERLAY_YAML;
-  private String pipelineYaml;
 
   InputSetEntity overlayInputSetEntity;
   PipelineEntity pipelineEntity;
@@ -74,8 +71,25 @@ public class PMSInputSetServiceImplTest extends PipelineServiceTestBase {
   @Before
   public void setUp() throws IOException {
     ClassLoader classLoader = getClass().getClassLoader();
-    YAML =
-        Resources.toString(Objects.requireNonNull(classLoader.getResource(inputSetFileName)), StandardCharsets.UTF_8);
+    YAML = "inputSet:\n"
+        + "  identifier: input1\n"
+        + "  name: this name\n"
+        + "  description: this has a description too\n"
+        + "  tags:\n"
+        + "    company: harness\n"
+        + "    kind : normal\n"
+        + "  pipeline:\n"
+        + "    identifier: \"Test_Pipline11\"\n"
+        + "    stages:\n"
+        + "      - stage:\n"
+        + "          identifier: \"qaStage\"\n"
+        + "          spec:\n"
+        + "            execution:\n"
+        + "              steps:\n"
+        + "                - step:\n"
+        + "                    identifier: \"httpStep1\"\n"
+        + "                    spec:\n"
+        + "                      url: www.bing.com";
     inputSetEntity = InputSetEntity.builder()
                          .identifier(INPUT_SET_IDENTIFIER)
                          .name(NAME)
@@ -87,8 +101,15 @@ public class PMSInputSetServiceImplTest extends PipelineServiceTestBase {
                          .pipelineIdentifier(PIPELINE_IDENTIFIER)
                          .build();
 
-    OVERLAY_YAML = Resources.toString(
-        Objects.requireNonNull(classLoader.getResource(overlayInputSetFileName)), StandardCharsets.UTF_8);
+    OVERLAY_YAML = "overlayInputSet:\n"
+        + "  identifier: overlay1\n"
+        + "  name : thisName\n"
+        + "  tags:\n"
+        + "    isOverlaySet : yes it is\n"
+        + "  description: this is an overlay input set\n"
+        + "  inputSetReferences:\n"
+        + "    - inputSet2\n"
+        + "    - inputSet22";
     overlayInputSetEntity = InputSetEntity.builder()
                                 .identifier(OVERLAY_INPUT_SET_IDENTIFIER)
                                 .name(NAME)
@@ -102,7 +123,7 @@ public class PMSInputSetServiceImplTest extends PipelineServiceTestBase {
                                 .build();
 
     String pipelineYamlFileName = "failure-strategy.yaml";
-    pipelineYaml = Resources.toString(
+    String pipelineYaml = Resources.toString(
         Objects.requireNonNull(classLoader.getResource(pipelineYamlFileName)), StandardCharsets.UTF_8);
 
     pipelineEntity = PipelineEntity.builder()
@@ -202,7 +223,8 @@ public class PMSInputSetServiceImplTest extends PipelineServiceTestBase {
         ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, InputSetListTypePMS.ALL, "", false);
     Pageable pageRequest = PageUtils.getPageRequest(0, 10, null);
 
-    Page<InputSetEntity> list = pmsInputSetService.list(criteriaFromFilter, pageRequest);
+    Page<InputSetEntity> list =
+        pmsInputSetService.list(criteriaFromFilter, pageRequest, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER);
     assertThat(list.getContent()).isNotNull();
     assertThat(list.getContent().size()).isEqualTo(2);
     assertThat(list.getContent().get(0).getIdentifier()).isEqualTo(inputSetEntity.getIdentifier());
@@ -220,7 +242,8 @@ public class PMSInputSetServiceImplTest extends PipelineServiceTestBase {
                                          .build();
 
     pmsInputSetService.create(inputSetEntity2);
-    Page<InputSetEntity> list2 = pmsInputSetService.list(criteriaFromFilter, pageRequest);
+    Page<InputSetEntity> list2 =
+        pmsInputSetService.list(criteriaFromFilter, pageRequest, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER);
     assertThat(list2.getContent()).isNotNull();
     assertThat(list2.getContent().size()).isEqualTo(3);
     assertThat(list2.getContent().get(0).getIdentifier()).isEqualTo(inputSetEntity.getIdentifier());
