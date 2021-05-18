@@ -59,7 +59,7 @@ public class ArtifactStepHelper {
               secretManagerClientService.getEncryptionDetails(ngAccess, connectorConfig.getAuth().getCredentials());
         }
         return ArtifactConfigToDelegateReqMapper.getDockerDelegateRequest(
-            dockerConfig, connectorConfig, encryptedDataDetails);
+            dockerConfig, connectorConfig, encryptedDataDetails, dockerConfig.getConnectorRef().getValue());
       case GCR:
         GcrArtifactConfig gcrArtifactConfig = (GcrArtifactConfig) artifactConfig;
         connectorDTO = getConnector(gcrArtifactConfig.getConnectorRef().getValue(), ambiance);
@@ -69,7 +69,7 @@ public class ArtifactStepHelper {
               secretManagerClientService.getEncryptionDetails(ngAccess, gcpConnectorDTO.getCredential().getConfig());
         }
         return ArtifactConfigToDelegateReqMapper.getGcrDelegateRequest(
-            gcrArtifactConfig, gcpConnectorDTO, encryptedDataDetails);
+            gcrArtifactConfig, gcpConnectorDTO, encryptedDataDetails, gcrArtifactConfig.getConnectorRef().getValue());
       case ECR:
         EcrArtifactConfig ecrArtifactConfig = (EcrArtifactConfig) artifactConfig;
         connectorDTO = getConnector(ecrArtifactConfig.getConnectorRef().getValue(), ambiance);
@@ -80,7 +80,7 @@ public class ArtifactStepHelper {
               ngAccess, (DecryptableEntity) awsConnectorDTO.getCredential().getConfig());
         }
         return ArtifactConfigToDelegateReqMapper.getEcrDelegateRequest(
-            ecrArtifactConfig, awsConnectorDTO, encryptedDataDetails);
+            ecrArtifactConfig, awsConnectorDTO, encryptedDataDetails, ecrArtifactConfig.getConnectorRef().getValue());
       default:
         throw new UnsupportedOperationException(
             String.format("Unknown Artifact Config type: [%s]", artifactConfig.getSourceType()));

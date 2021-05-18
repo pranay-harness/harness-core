@@ -78,9 +78,11 @@ public class K8sDeleteStep extends TaskChainExecutableWithRollback implements K8
             .releaseName(releaseName)
             .commandName(K8S_DELETE_COMMAND_NAME)
             .deleteResourcesType(deleteStepParameters.getDeleteResources().getType())
-            .resources(isResourceName ? deleteStepParameters.getDeleteResources().getSpec().getResourceNames() : "")
-            .deleteNamespacesForRelease(deleteStepParameters.deleteResources.getSpec().getDeleteNamespace())
-            .filePaths(isManifestFiles ? deleteStepParameters.getDeleteResources().getSpec().getManifestPaths() : "")
+            .resources(
+                isResourceName ? deleteStepParameters.getDeleteResources().getSpec().getResourceNamesValue() : "")
+            .deleteNamespacesForRelease(deleteStepParameters.deleteResources.getSpec().getDeleteNamespaceValue())
+            .filePaths(
+                isManifestFiles ? deleteStepParameters.getDeleteResources().getSpec().getManifestPathsValue() : "")
             .valuesYamlList(k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents))
             .taskType(K8sTaskType.DELETE)
             .timeoutIntervalInMin(K8sStepHelper.getTimeoutInMin(stepParameters))

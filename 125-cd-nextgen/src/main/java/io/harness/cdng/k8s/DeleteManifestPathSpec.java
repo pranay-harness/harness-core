@@ -27,23 +27,23 @@ public class DeleteManifestPathSpec implements DeleteResourcesBaseSpec {
   }
 
   @Override
-  public String getManifestPaths() {
+  public String getManifestPathsValue() {
     List<String> filePathsList = manifestPaths != null ? manifestPaths.getValue() : Collections.emptyList();
     return filePathsList.stream().collect(Collectors.joining(","));
   }
 
   @Override
-  public String getResourceNames() {
+  public String getResourceNamesValue() {
     return "";
   }
 
   @Override
-  public Boolean getDeleteNamespace() {
+  public Boolean getDeleteNamespaceValue() {
     return Boolean.FALSE;
   }
 
   @Override
-  public Boolean getAllManifestPaths() {
+  public Boolean getAllManifestPathsValue() {
     return allManifestPaths != null && allManifestPaths.getValue() != null && allManifestPaths.getValue();
   }
 }

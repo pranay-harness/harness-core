@@ -19,29 +19,30 @@ import lombok.Data;
 @JsonTypeName("ResourceName")
 public class DeleteResourceNameSpec implements DeleteResourcesBaseSpec {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH) ParameterField<List<String>> resourceNames;
+
   @Override
   public DeleteResourcesType getType() {
     return DeleteResourcesType.ResourceName;
   }
 
   @Override
-  public String getResourceNames() {
+  public String getResourceNamesValue() {
     List<String> resourceNamesList = resourceNames != null ? resourceNames.getValue() : Collections.emptyList();
     return resourceNamesList.stream().collect(Collectors.joining(","));
   }
 
   @Override
-  public String getManifestPaths() {
+  public String getManifestPathsValue() {
     return "";
   }
 
   @Override
-  public Boolean getDeleteNamespace() {
+  public Boolean getDeleteNamespaceValue() {
     return Boolean.FALSE;
   }
 
   @Override
-  public Boolean getAllManifestPaths() {
+  public Boolean getAllManifestPathsValue() {
     return Boolean.FALSE;
   }
 }
