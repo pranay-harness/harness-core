@@ -141,7 +141,7 @@ public class MetricServiceImpl implements MetricService {
     }
   }
 
-  public static void initializeMetrics() {
+  private static void initializeMetrics() {
     if (isNotEmpty(System.getenv("GOOGLE_APPLICATION_CREDENTIALS"))) {
       WILL_PUBLISH_METRICS = true;
     }

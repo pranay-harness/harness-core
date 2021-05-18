@@ -21,6 +21,7 @@ import io.harness.exception.GeneralException;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
+import io.harness.metrics.jobs.RecordMetricsJob;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
@@ -331,6 +332,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         .scheduleWithFixedDelay(injector.getInstance(DelegateProgressServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
         .scheduleWithFixedDelay(injector.getInstance(ProgressUpdateService.class), 0L, 5L, TimeUnit.SECONDS);
+    injector.getInstance(Key.get(RecordMetricsJob.class)).scheduleMetricsTasks();
   }
 
   private void registerManagedBeans(Environment environment, Injector injector) {

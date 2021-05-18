@@ -71,6 +71,7 @@ import io.harness.iterator.PersistenceIterator;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.metrics.jobs.RecordMetricsJob;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
@@ -329,12 +330,17 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerVerificationJobInstanceTimeoutIterator(injector);
     registerPipelineSDK(configuration, injector);
     registerWaitEnginePublishers(injector);
+    registerMetricsJob(injector);
     log.info("Leaving startup maintenance mode");
     MaintenanceController.forceMaintenance(false);
     registerUpdateProgressScheduler(injector);
     runMigrations(injector);
 
     log.info("Starting app done");
+  }
+
+  private void registerMetricsJob(Injector injector) {
+    injector.getInstance(Key.get(RecordMetricsJob.class)).scheduleMetricsTasks();
   }
 
   private void registerUpdateProgressScheduler(Injector injector) {
