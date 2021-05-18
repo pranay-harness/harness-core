@@ -31,6 +31,7 @@ require (
 	github.com/sourcegraph/jsonrpc2 v0.0.0-20200429184054-15c2290dcb37 // indirect
 	github.com/stretchr/testify v1.6.1
 	github.com/vdemeester/k8s-pkg-credentialprovider v1.18.1-0.20201019120933-f1d16962a4db
+	github.com/wings-software/portal/product/log-service v0.0.0-00010101000000-000000000000
 	go.uber.org/zap v1.15.0
 	golang.org/x/tools v0.0.0-20201105220310-78b158585360 // indirect
 	google.golang.org/api v0.24.0
