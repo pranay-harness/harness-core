@@ -32,7 +32,7 @@ public class ArtifactConfigToDelegateReqMapper {
         .tagRegex(tagRegex)
         .dockerConnectorDTO(connectorDTO)
         .encryptedDataDetails(encryptedDataDetails)
-        .sourceType(ArtifactSourceType.DOCKER_HUB)
+        .sourceType(ArtifactSourceType.DOCKER_REGISTRY)
         .build();
   }
 

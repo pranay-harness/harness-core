@@ -47,7 +47,7 @@ public class ArtifactStepHelper {
     ConnectorInfoDTO connectorDTO;
     NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
     switch (artifactConfig.getSourceType()) {
-      case DOCKER_HUB:
+      case DOCKER_REGISTRY:
         DockerHubArtifactConfig dockerConfig = (DockerHubArtifactConfig) artifactConfig;
         connectorDTO = getConnector(dockerConfig.getConnectorRef().getValue(), ambiance);
         DockerConnectorDTO connectorConfig = (DockerConnectorDTO) connectorDTO.getConnectorConfig();
@@ -99,7 +99,7 @@ public class ArtifactStepHelper {
 
   public TaskType getArtifactStepTaskType(ArtifactConfig artifactConfig) {
     switch (artifactConfig.getSourceType()) {
-      case DOCKER_HUB:
+      case DOCKER_REGISTRY:
         return TaskType.DOCKER_ARTIFACT_TASK_NG;
       case GCR:
         return TaskType.GCR_ARTIFACT_TASK_NG;
