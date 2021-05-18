@@ -139,6 +139,7 @@ public class ConnectorHeartbeatPerpetualTaskClient implements PerpetualTaskServi
     }
     return DelegateTask.builder()
         .accountId(accountId)
+        .executionCapabilities(executionCapabilities)
         .data(TaskData.builder()
                   .async(false)
                   .taskType(TaskType.CAPABILITY_VALIDATION.name())
