@@ -26,6 +26,8 @@ public class NGPipelineRegistrars {
           .addAll(CommonEntitiesRegistrars.kryoRegistrars)
           .addAll(DelegateServiceBeansRegistrars.kryoRegistrars)
           .add(NGPipelineKryoRegistrar.class)
+          .addAll(WaitEngineRegistrars.kryoRegistrars)
+          .addAll(PmsCommonsModuleRegistrars.kryoRegistrars)
           .build();
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -34,8 +36,13 @@ public class NGPipelineRegistrars {
           .addAll(ProjectAndOrgRegistrars.morphiaRegistrars)
           .addAll(NGCoreClientRegistrars.morphiaRegistrars)
           .addAll(RbacCoreRegistrars.morphiaRegistrars)
+          .addAll(DelegateServiceBeansRegistrars.morphiaRegistrars)
           .addAll(YamlBeansModuleRegistrars.morphiaRegistrars)
+          .addAll(WaitEngineRegistrars.morphiaRegistrars)
+          .addAll(PmsCommonsModuleRegistrars.morphiaRegistrars)
           .add(NGPipelineMorphiaRegistrar.class)
+          .add(PmsSdkCoreMorphiaRegistrar.class)
+          .addAll(FeatureFlagRegistrars.morphiaRegistrars)
           .build();
 
   public static ImmutableList<? extends Class<? extends Converter<?, ?>>> springConverters =
