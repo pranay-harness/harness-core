@@ -40,6 +40,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.inject.Inject;
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -185,6 +186,17 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
                                .build());
   }
 
+  private Set<FieldEnumData> getFieldEnumData(Field typedField, Set<SubtypeClassMap> mapOfSubtypes) {
+    String fieldName = YamlSchemaUtils.getJsonTypeInfo(typedField).property();
+
+    return ImmutableSet.of(
+        FieldEnumData.builder()
+            .fieldName(fieldName)
+            .enumValues(ImmutableSortedSet.copyOf(
+                mapOfSubtypes.stream().map(SubtypeClassMap::getSubtypeEnum).collect(Collectors.toList())))
+            .build());
+  }
+
   private void flatten(ObjectNode objectNode) {
     JsonNode sections = objectNode.get(PROPERTIES_NODE).get("sections");
     if (sections.isObject()) {
@@ -244,8 +256,12 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     Set<SubtypeClassMap> mapOfSubtypes = YamlSchemaUtils.getMapOfSubtypesUsingReflection(typedField);
     Set<FieldSubtypeData> classFieldSubtypeData = new HashSet<>();
     classFieldSubtypeData.add(YamlSchemaUtils.getFieldSubtypeData(typedField, mapOfSubtypes));
-    swaggerDefinitionsMetaInfoMap.put(
-        STEP_ELEMENT_CONFIG, SwaggerDefinitionsMetaInfo.builder().subtypeClassMap(classFieldSubtypeData).build());
+    Set<FieldEnumData> fieldEnumData = getFieldEnumData(typedField, mapOfSubtypes);
+    swaggerDefinitionsMetaInfoMap.put(STEP_ELEMENT_CONFIG,
+        SwaggerDefinitionsMetaInfo.builder()
+            .fieldEnumData(fieldEnumData)
+            .subtypeClassMap(classFieldSubtypeData)
+            .build());
     yamlSchemaGenerator.convertSwaggerToJsonSchema(
         swaggerDefinitionsMetaInfoMap, mapper, STEP_ELEMENT_CONFIG, jsonNode);
   }
