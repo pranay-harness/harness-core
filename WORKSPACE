@@ -2037,6 +2037,9 @@ maven_install(
         "com.google.cloud:google-cloud-bigquerydatatransfer:0.126.0-beta",
         "org.springframework:spring-test:5.2.9.RELEASE",
         "org.springframework.boot:spring-boot-starter-test:2.1.6.RELEASE",
+        "io.harness:ff-java-server-sdk:0.0.7",
+        "org.apache.httpcomponents:httpmime:4.5.1",
+        "com.github.tomakehurst:wiremock-jre8-standalone:2.27.2",
     ],
     excluded_artifacts = [
         "org.clojure:clojure",
@@ -2074,38 +2077,10 @@ http_jar(
 
 load("//:bazel-credentials.bzl", "JFROG_PASSWORD", "JFROG_USERNAME")
 
-maven_install(
-    name = "maven_harness",
-    artifacts = [
-        "io.harness:ff-java-server-sdk:0.0.7",
-        "io.harness.cv:data-collection-dsl:0.21-RELEASE",
-    ],
-    repositories = [
-        "https://repo1.maven.org/maven2",
-        "https://%s:%s@harness.jfrog.io/artifactory/harness-internal" % (JFROG_USERNAME, JFROG_PASSWORD),
-    ],
-)
-
-maven_install(
-    name = "delegate",
-    artifacts = [
-        "org.apache.httpcomponents:httpmime:4.5.1",
-        "com.github.tomakehurst:wiremock-jre8-standalone:2.27.2",
-    ],
-    repositories = [
-        "https://repo1.maven.org/maven2",
-        "https://harness.jfrog.io/harness/thirdparty-annonymous",
-        "https://dl.bintray.com/michaelklishin/maven",
-        "https://repo.spring.io/plugins-release",
-        "https://palantir.bintray.com/releases",
-        "https://oss.sonatype.org/content/repositories/releases",
-        "https://jitpack.io",
-        "https://jcenter.bintray.com",
-        "https://github.com/bkper/mvn-repo/raw/master/releases",
-        "https://harness.jfrog.io/harness/datacollection-dsl",
-        "http://packages.confluent.io/maven",
-    ],
-    version_conflict_policy = "pinned",
+http_jar(
+    name = "data-collection-dsl",
+    sha256 = "4ecd616cf56582a305e19c6d177d3576fb536411e006bd32af57a8e619e7962e",
+    url = "https://%s:%s@harness.jfrog.io/artifactory/harness-internal/io/harness/cv/data-collection-dsl/0.21-RELEASE/data-collection-dsl-0.21-RELEASE.jar" % (JFROG_USERNAME, JFROG_PASSWORD),
 )
 
 maven_install(

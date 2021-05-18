@@ -662,7 +662,7 @@ shared_dependencies = [
     "@maven//:xml_apis_xml_apis",
     "@maven//:xml_resolver_xml_resolver",
     "@maven//:xpp3_xpp3",
-    "@maven_harness//:io_harness_cv_data_collection_dsl",
+    "@data-collection-dsl//jar",
     "//:lombok",
 ]
 
@@ -685,6 +685,7 @@ java_binary(
 springboot(
     name = "module_deploy",
     boot_app_class = "io.harness.delegate.app.DelegateApplication",
+    #dupeclassescheck_enable = True,
     java_library = ":module",
     visibility = ["//visibility:public"],
 )
