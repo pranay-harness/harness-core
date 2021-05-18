@@ -13,7 +13,7 @@ import lombok.Value;
 public class DeploymentStatusInfoList {
   private List<String> planExecutionIdList;
   private List<String> namePipelineList;
-  private List<String> startTs;
-  private List<String> endTs;
+  private List<Long> startTs;
+  private List<Long> endTs;
   private List<String> deploymentStatus;
 }

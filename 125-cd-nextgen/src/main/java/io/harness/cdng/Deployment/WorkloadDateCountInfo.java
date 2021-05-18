@@ -10,6 +10,6 @@ import lombok.Value;
 @Value
 @Builder
 public class WorkloadDateCountInfo {
-  private String date;
+  private Long date;
   private WorkloadCountInfo execution;
 }
