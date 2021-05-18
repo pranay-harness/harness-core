@@ -174,8 +174,9 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
-  public Page<PipelineEntity> list(Criteria criteria, Pageable pageable) {
-    return pmsPipelineRepository.findAll(criteria, pageable);
+  public Page<PipelineEntity> list(
+      Criteria criteria, Pageable pageable, String accountId, String orgIdentifier, String projectIdentifier) {
+    return pmsPipelineRepository.findAll(criteria, pageable, accountId, orgIdentifier, projectIdentifier);
   }
 
   @Override

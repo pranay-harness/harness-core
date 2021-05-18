@@ -201,7 +201,7 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     String envId = generateUuid();
     String serviceId = generateUuid();
     CD10ActivitySourceDTO cd10ActivitySourceDTO = createCD10ActivitySource(appId, envId, serviceId);
-    activitySourceService.saveActivitySource(accountId, orgIdentifier, projectIdentifier, cd10ActivitySourceDTO);
+    activitySourceService.create(accountId, cd10ActivitySourceDTO);
     VerificationJob verificationJob = createVerificationJob();
     verificationJob.setActivitySourceIdentifier(cd10ActivitySourceDTO.getIdentifier());
     realVerificationJobService.save(verificationJob);
@@ -246,7 +246,7 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     String envId = generateUuid();
     String serviceId = generateUuid();
     CD10ActivitySourceDTO cd10ActivitySourceDTO = createCD10ActivitySource(appId, envId, serviceId);
-    activitySourceService.saveActivitySource(accountId, orgIdentifier, projectIdentifier, cd10ActivitySourceDTO);
+    activitySourceService.create(accountId, cd10ActivitySourceDTO);
     VerificationJob verificationJob = createVerificationJob();
     verificationJob.setActivitySourceIdentifier(cd10ActivitySourceDTO.getIdentifier());
     verificationJob.setServiceIdentifier(generateUuid(), false);
@@ -1294,6 +1294,8 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
         .identifier(CD10ActivitySource.HARNESS_CD_10_ACTIVITY_SOURCE_IDENTIFIER)
         .name("some-name")
         .envMappings(cd10EnvMappingDTOS)
+        .orgIdentifier(orgIdentifier)
+        .projectIdentifier(projectIdentifier)
         .serviceMappings(cd10ServiceMappingDTOS)
         .build();
   }

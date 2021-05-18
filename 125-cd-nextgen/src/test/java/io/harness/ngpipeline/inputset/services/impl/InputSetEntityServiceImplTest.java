@@ -81,6 +81,7 @@ public class InputSetEntityServiceImplTest extends CDNGTestBase {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  @Ignore("Input set moved to pipeline service so test is redundant")
   public void testValidatePresenceOfRequiredFields() {
     assertThatThrownBy(() -> inputSetEntityService.validatePresenceOfRequiredFields("", null, "2"))
         .isInstanceOf(NullPointerException.class)
@@ -191,6 +192,7 @@ public class InputSetEntityServiceImplTest extends CDNGTestBase {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  @Ignore("Input set moved to pipeline service so test is redundant")
   public void testServiceLayerOnOverlayInputSet() {
     String ORG_IDENTIFIER = "orgId";
     String PROJ_IDENTIFIER = "projId";
@@ -273,6 +275,7 @@ public class InputSetEntityServiceImplTest extends CDNGTestBase {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  @Ignore("Input set moved to pipeline service so test is redundant")
   public void testList() {
     final String ORG_IDENTIFIER = "orgId";
     final String PROJ_IDENTIFIER = "projId";

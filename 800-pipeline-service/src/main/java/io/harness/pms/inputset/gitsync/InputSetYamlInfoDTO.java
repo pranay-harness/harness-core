@@ -5,8 +5,9 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
-import io.harness.plancreator.pipeline.PipelineConfig;
+import io.harness.plancreator.pipeline.PipelineInfoConfig;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
@@ -24,5 +25,5 @@ public class InputSetYamlInfoDTO {
   String orgIdentifier;
   String projectIdentifier;
 
-  PipelineConfig pipeline;
+  @JsonProperty("pipeline") PipelineInfoConfig pipelineInfoConfig;
 }
