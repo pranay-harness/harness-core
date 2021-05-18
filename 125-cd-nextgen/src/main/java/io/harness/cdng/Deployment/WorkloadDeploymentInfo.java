@@ -13,9 +13,7 @@ import lombok.Value;
 public class WorkloadDeploymentInfo {
   private String serviceName;
   private String serviceId;
-  private String lastExecuted;
-  private String lastStatus;
-  private String deploymentType;
+  private LastWorkloadInfo lastExecuted;
   private long totalDeployments;
   private double percentSuccess;
   private double rateSuccess;
