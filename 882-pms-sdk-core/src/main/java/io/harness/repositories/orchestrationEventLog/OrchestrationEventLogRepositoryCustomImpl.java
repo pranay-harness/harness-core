@@ -44,6 +44,8 @@ public class OrchestrationEventLogRepositoryCustomImpl implements OrchestrationE
     // then graph should not be in inconsistent state
     update.set(
         OrchestrationEventLogKeys.validUntil, Date.from(OffsetDateTime.now().plus(Duration.ofDays(10)).toInstant()));
+    update.set(OrchestrationEventLogKeys.isProcessed, true);
+
     mongoTemplate.updateMulti(new Query(criteria), update, OrchestrationEventLog.class);
   }
 
@@ -56,6 +58,17 @@ public class OrchestrationEventLogRepositoryCustomImpl implements OrchestrationE
   @Override
   public long getUnprocessedCount() {
     Criteria criteria = Criteria.where(OrchestrationEventLogKeys.isProcessed).is(false);
+    return mongoTemplate.count(new Query(criteria), OrchestrationEventLog.class);
+  }
+
+  public long entriesInsertedPerSecond() {
+    Criteria criteria = Criteria.where("createdAt").gt(System.currentTimeMillis() - 1000);
+    return mongoTemplate.count(new Query(criteria), OrchestrationEventLog.class);
+  }
+
+  public long entriesProcessedPerSecond() {
+    Criteria criteria = Criteria.where("createdAt").gt(System.currentTimeMillis() - 1000);
+    criteria.andOperator(Criteria.where(OrchestrationEventLogKeys.isProcessed).is(true));
     return mongoTemplate.count(new Query(criteria), OrchestrationEventLog.class);
   }
 }

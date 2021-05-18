@@ -6,3 +6,11 @@ metrics:
     metricDefinition: Number of unprocessed log counts.
     type: LastValue
     unit: count
+  - metricName: orchestration_event_log_insert_count_per_second
+    metricDefinition: Number of logs inserted per second.
+    type: LastValue
+    unit: count
+  - metricName: orchestration_event_log_processed_count_per_second
+    metricDefinition: Number of logs processed per second.
+    type: LastValue
+    unit: count

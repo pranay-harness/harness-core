@@ -124,6 +124,10 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   public void recordMetrics() {
     long count = orchestrationEventLogRepository.getUnprocessedCount();
     metricService.recordMetric("orchestration_event_log_unprocessed_count", count);
+    metricService.recordMetric(
+        "orchestration_event_log_insert_count_per_second", orchestrationEventLogRepository.entriesInsertedPerSecond());
+    metricService.recordMetric("orchestration_event_log_processed_count_per_second",
+        orchestrationEventLogRepository.entriesProcessedPerSecond());
   }
 
   @Override

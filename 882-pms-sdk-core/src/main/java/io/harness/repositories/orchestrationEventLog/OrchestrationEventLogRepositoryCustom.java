@@ -18,4 +18,8 @@ public interface OrchestrationEventLogRepositoryCustom {
   void schemaMigrationForOldEvenLog();
 
   long getUnprocessedCount();
+
+  long entriesInsertedPerSecond();
+
+  long entriesProcessedPerSecond();
 }
