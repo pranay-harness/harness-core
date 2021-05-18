@@ -107,9 +107,12 @@ public class RecommendationServiceTest extends CategoryTest {
                                                                 .setMonthlycost(MONTHLY_COST)
                                                                 .setMonthlysaving(MONTHLY_SAVING);
 
+  private static final Cost cost = Cost.builder().cpu(BigDecimal.valueOf(100)).memory(BigDecimal.valueOf(100)).build();
+
   private static final Map<? extends String, ? extends ContainerRecommendation> containerRecommendationMap =
       ImmutableMap.of(CONTAINER_NAME,
           ContainerRecommendation.builder()
+              .lastDayCost(cost)
               .current(ResourceRequirement.builder().request("cpu", "100m").limit("cpu", "2").build())
               .build());
 
@@ -181,7 +184,6 @@ public class RecommendationServiceTest extends CategoryTest {
         recommendationService.getWorkloadRecommendationById(ACCOUNT_ID, ID, OffsetDateTime.now(), OffsetDateTime.now());
 
     assertThat(workloadRecommendationDTO).isNotNull();
-    assertThat(workloadRecommendationDTO.getContainerRecommendations()).isNull();
     assertThat(workloadRecommendationDTO.getItems()).isNotNull().isEmpty();
     assertThat(workloadRecommendationDTO.getLastDayCost()).isNull();
   }
@@ -190,7 +192,6 @@ public class RecommendationServiceTest extends CategoryTest {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void getWorkloadRecommendationByIdItemFound() {
-    final Cost cost = Cost.builder().cpu(BigDecimal.valueOf(100)).memory(BigDecimal.valueOf(100)).build();
     final K8sWorkloadRecommendation workloadRecommendation = K8sWorkloadRecommendation.builder()
                                                                  .workloadName(NAME)
                                                                  .namespace(NAMESPACE)
@@ -221,12 +222,15 @@ public class RecommendationServiceTest extends CategoryTest {
     verify(k8sRecommendationDAO, times(1)).fetchPartialRecommendationHistograms(eq(ACCOUNT_ID), any(), any(), any());
 
     assertThat(workloadRecommendationDTO).isNotNull();
-    assertThat(workloadRecommendationDTO.getContainerRecommendations()).hasSize(1);
-    assertThat(workloadRecommendationDTO.getContainerRecommendations())
-        .containsExactlyInAnyOrderEntriesOf(containerRecommendationMap);
     assertThat(workloadRecommendationDTO.getLastDayCost()).isEqualTo(cost);
     assertThat(workloadRecommendationDTO.getItems()).hasSize(1);
     assertThat(workloadRecommendationDTO.getItems().get(0).getContainerName()).isEqualTo(CONTAINER_NAME);
+
+    assertThat(workloadRecommendationDTO.getItems().get(0).getContainerRecommendation()).isNotNull();
+    assertThat(workloadRecommendationDTO.getItems().get(0).getContainerRecommendation().getLastDayCost()).isNotNull();
+
+    Cost containerCost = workloadRecommendationDTO.getItems().get(0).getContainerRecommendation().getLastDayCost();
+    assertThat(containerCost).isNotNull().isEqualTo(cost);
 
     final HistogramExp cpuHistogram = workloadRecommendationDTO.getItems().get(0).getCpuHistogram();
     assertThat(cpuHistogram.getFirstBucketSize()).isEqualTo(0.01);
