@@ -55,6 +55,14 @@ grpcClientConfigs:
     target: localhost:12301
     authority: localhost
 
+grpcClientServiceSecrets:
+  cd:
+    secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+  cvng:
+    secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+  ci:
+    secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
 yamlSchemaClientConfig:
   yamlSchemaHttpClientMap:
     ci:
@@ -146,7 +154,9 @@ iteratorsConfig:
     enabled: true
     targetIntervalInSeconds: 60
 
-enableAuth: false
+enableAuth: true
+
+pipelineServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
 orchestrationStepConfig:
   ffServerBaseUrl: http://127.0.0.1:3000/api/1.0

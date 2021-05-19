@@ -399,6 +399,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
         .engineFacilitators(new HashMap<>())
         .filterCreationResponseMerger(new CVNGFilterCreationResponseMerger())
         .executionSummaryModuleInfoProviderClass(CVNGModuleInfoProvider.class)
+        .pipelineServiceSecret(config.getNgManagerServiceConfig().getManagerServiceSecret())
         .build();
   }
 

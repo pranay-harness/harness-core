@@ -1,8 +1,11 @@
 package io.harness.pms.sdk;
 
+import io.harness.AuthorizationServiceHeader;
+import io.harness.grpc.auth.GrpcAuthServiceInterceptor;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcInProcessServer;
-import io.harness.grpc.server.GrpcServer;
+import io.harness.grpc.server.GrpcInProcessServerModule;
+import io.harness.grpc.server.GrpcServerModule;
 import io.harness.pms.contracts.plan.PmsServiceGrpc;
 import io.harness.pms.contracts.plan.PmsServiceGrpc.PmsServiceBlockingStub;
 import io.harness.pms.contracts.service.EngineExpressionProtoServiceGrpc;
@@ -20,26 +23,28 @@ import io.harness.pms.sdk.core.plan.creation.creators.PlanCreatorService;
 import io.harness.pms.utils.PmsConstants;
 import io.harness.version.VersionInfo;
 
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.grpc.BindableService;
 import io.grpc.Channel;
+import io.grpc.ServerInterceptor;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.internal.GrpcUtil;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-import io.grpc.services.HealthStatusManager;
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import javax.net.ssl.SSLException;
 import lombok.extern.slf4j.Slf4j;
@@ -63,22 +68,21 @@ public class PmsSdkGrpcModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    Multibinder<Service> serviceBinder = Multibinder.newSetBinder(binder(), Service.class, Names.named("pmsServices"));
-    serviceBinder.addBinding().to(Key.get(Service.class, Names.named("pms-sdk-grpc-service")));
-  }
-
-  @Provides
-  @Singleton
-  @Named("pms-sdk-grpc-service")
-  public Service pmsSdkGrpcService(HealthStatusManager healthStatusManager, PlanCreatorService planCreatorService) {
-    Set<BindableService> cdServices = new HashSet<>();
-    cdServices.add(healthStatusManager.getHealthService());
-    cdServices.add(planCreatorService);
+    Multibinder<BindableService> bindableServiceMultibinder =
+        Multibinder.newSetBinder(binder(), BindableService.class, Names.named("sdkServices"));
+    Multibinder<ServerInterceptor> serverInterceptorMultibinder =
+        Multibinder.newSetBinder(binder(), ServerInterceptor.class);
+    serverInterceptorMultibinder.addBinding().to(GrpcAuthServiceInterceptor.class);
+    bindableServiceMultibinder.addBinding().to(PlanCreatorService.class);
     if (config.getDeploymentMode() == DeployMode.REMOTE_IN_PROCESS) {
-      return new GrpcInProcessServer("pmsSdkInternal", cdServices, Collections.emptySet(), healthStatusManager);
+      install(new GrpcInProcessServerModule(
+          getProvider(Key.get(new TypeLiteral<Set<BindableService>>() {}, Names.named("sdkServices"))),
+          getProvider(Key.get(new TypeLiteral<Set<ServerInterceptor>>() {})), "pmsServices"));
+    } else {
+      install(new GrpcServerModule(config.getGrpcServerConfig().getConnectors(),
+          getProvider(Key.get(new TypeLiteral<Set<BindableService>>() {}, Names.named("sdkServices"))),
+          getProvider(Key.get(new TypeLiteral<Set<ServerInterceptor>>() {})), "pmsServices"));
     }
-    return new GrpcServer(
-        config.getGrpcServerConfig().getConnectors().get(0), cdServices, Collections.emptySet(), healthStatusManager);
   }
 
   private String computeAuthority(String authority, VersionInfo versionInfo) {
@@ -175,6 +179,22 @@ public class PmsSdkGrpcModule extends AbstractModule {
   @Singleton
   public EngineExpressionProtoServiceBlockingStub engineExpressionGrpcClient() throws SSLException {
     return EngineExpressionProtoServiceGrpc.newBlockingStub(getChannel());
+  }
+
+  @Provides
+  @Singleton
+  @Named("grpc-services-with-auth")
+  public Set<String> grpcServicesWithAuth() throws SSLException {
+    return Sets.newHashSet("io.harness.pms.contracts.plan.PlanCreationService");
+  }
+
+  @Provides
+  @Singleton
+  @Named("serviceAuthTokens")
+  public Map<String, String> serviceIdToServiceToken() throws SSLException {
+    Map<String, String> serviceToSecretMapping = new HashMap<>();
+    serviceToSecretMapping.put(AuthorizationServiceHeader.DEFAULT.getServiceId(), config.getPipelineServiceSecret());
+    return serviceToSecretMapping;
   }
 
   @Provides

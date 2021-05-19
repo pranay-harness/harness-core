@@ -22,11 +22,11 @@ import io.harness.pms.sdk.PmsSdkHelper;
 import io.harness.pms.utils.CompletableFutures;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
+import io.harness.security.ServiceTokenGenerator;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import io.grpc.StatusRuntimeException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,16 +44,19 @@ public class FilterCreatorMergeService {
   private Map<String, PlanCreationServiceBlockingStub> planCreatorServices;
   private final PmsSdkHelper pmsSdkHelper;
   private final PipelineSetupUsageHelper pipelineSetupUsageHelper;
+  private final ServiceTokenGenerator tokenGenerator;
 
   public static final int MAX_DEPTH = 10;
   private final Executor executor = Executors.newFixedThreadPool(5);
 
   @Inject
   public FilterCreatorMergeService(Map<String, PlanCreationServiceBlockingStub> planCreatorServices,
-      PmsSdkHelper pmsSdkHelper, PipelineSetupUsageHelper pipelineSetupUsageHelper) {
+      PmsSdkHelper pmsSdkHelper, PipelineSetupUsageHelper pipelineSetupUsageHelper,
+      ServiceTokenGenerator serviceTokenGenerator) {
     this.planCreatorServices = planCreatorServices;
     this.pmsSdkHelper = pmsSdkHelper;
     this.pipelineSetupUsageHelper = pipelineSetupUsageHelper;
+    this.tokenGenerator = serviceTokenGenerator;
   }
 
   public FilterCreatorMergeServiceResponse getPipelineInfo(PipelineEntity pipelineEntity) throws IOException {
@@ -140,7 +143,7 @@ public class FilterCreatorMergeService {
           } else {
             builder.response(filterCreationResponse.getBlobResponse());
           }
-        } catch (StatusRuntimeException ex) {
+        } catch (Exception ex) {
           log.error(
               String.format("Error connecting with service: [%s]. Is this service Running?", serviceEntry.getKey()),
               ex);

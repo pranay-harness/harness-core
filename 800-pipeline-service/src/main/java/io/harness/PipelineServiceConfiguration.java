@@ -56,6 +56,8 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("grpcServerConfig") private GrpcServerConfig grpcServerConfig;
   @JsonProperty("grpcClientConfigs") private Map<String, GrpcClientConfig> grpcClientConfigs;
+  @JsonProperty("grpcClientServiceSecrets")
+  private Map<String, PipelineServiceGrpcClientConfig> grpcClientServiceSecrets;
   @JsonProperty("ngManagerServiceHttpClientConfig") private ServiceHttpClientConfig ngManagerServiceHttpClientConfig;
   @JsonProperty("ngManagerServiceSecret") private String ngManagerServiceSecret;
   @JsonProperty("jwtAuthSecret") private String jwtAuthSecret;
@@ -71,6 +73,7 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
   @JsonProperty("orchestrationStepConfig") private OrchestrationStepConfig orchestrationStepConfig;
   @JsonProperty("enableDashboardTimescale") private Boolean enableDashboardTimescale;
+  String pipelineServiceSecret;
 
   private String managerServiceSecret;
   private String managerTarget;

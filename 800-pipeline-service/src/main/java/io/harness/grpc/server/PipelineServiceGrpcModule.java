@@ -1,7 +1,9 @@
 package io.harness.grpc.server;
 
 import io.harness.PipelineServiceConfiguration;
+import io.harness.PipelineServiceGrpcClientConfig;
 import io.harness.engine.interrupts.InterruptGrpcService;
+import io.harness.grpc.auth.ServiceAuthCallCredentials;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
@@ -11,6 +13,7 @@ import io.harness.pms.plan.execution.data.service.outputs.SweepingOutputServiceI
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.sdk.service.execution.PmsExecutionGrpcService;
 import io.harness.pms.utils.PmsConstants;
+import io.harness.security.ServiceTokenGenerator;
 
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
@@ -22,6 +25,7 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.grpc.BindableService;
+import io.grpc.CallCredentials;
 import io.grpc.Channel;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.internal.GrpcUtil;
@@ -65,13 +69,17 @@ public class PipelineServiceGrpcModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public Map<String, PlanCreationServiceBlockingStub> grpcClients(PipelineServiceConfiguration configuration)
-      throws SSLException {
+  public Map<String, PlanCreationServiceBlockingStub> grpcClients(PipelineServiceConfiguration configuration,
+      @Named("sdk-call-credentials") Map<String, CallCredentials> credentialsMap) throws SSLException {
     Map<String, PlanCreationServiceBlockingStub> map = new HashMap<>();
     map.put(PmsConstants.INTERNAL_SERVICE_NAME,
-        PlanCreationServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName("pmsSdkInternal").build()));
+        PlanCreationServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName("pmsSdkInternal").build())
+            .withCallCredentials(credentialsMap.get("cd")));
+
     for (Map.Entry<String, GrpcClientConfig> entry : configuration.getGrpcClientConfigs().entrySet()) {
-      map.put(entry.getKey(), PlanCreationServiceGrpc.newBlockingStub(getChannel(entry.getValue())));
+      map.put(entry.getKey(),
+          PlanCreationServiceGrpc.newBlockingStub(getChannel(entry.getValue()))
+              .withCallCredentials(credentialsMap.get(entry.getKey())));
     }
     return map;
   }
@@ -139,5 +147,19 @@ public class PipelineServiceGrpcModule extends AbstractModule {
     services.add(engineExpressionGrpcService);
     services.add(interruptGrpcService);
     return services;
+  }
+
+  @Named("sdk-call-credentials")
+  @Provides
+  @Singleton
+  Map<String, CallCredentials> callCredentials(PipelineServiceConfiguration delegateConfiguration) {
+    Map<String, CallCredentials> map = new HashMap<>();
+    for (Map.Entry<String, PipelineServiceGrpcClientConfig> entry :
+        delegateConfiguration.getGrpcClientServiceSecrets().entrySet()) {
+      map.put(entry.getKey(),
+          new ServiceAuthCallCredentials(
+              entry.getValue().getSecret(), new ServiceTokenGenerator(), "pipeline-service"));
+    }
+    return map;
   }
 }

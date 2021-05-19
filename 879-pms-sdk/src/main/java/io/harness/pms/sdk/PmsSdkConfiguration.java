@@ -35,6 +35,7 @@ public class PmsSdkConfiguration {
   Map<FacilitatorType, Class<? extends Facilitator>> engineFacilitators;
   Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap;
   Class<? extends ExecutionSummaryModuleInfoProvider> executionSummaryModuleInfoProviderClass;
+  String pipelineServiceSecret;
 
   public enum DeployMode {
     LOCAL,

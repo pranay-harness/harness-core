@@ -1,7 +1,6 @@
 package io.harness.grpc.server;
 
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.grpc.auth.ServiceAuthServerInterceptor;
 import io.harness.grpc.auth.ServiceInfo;
 import io.harness.grpc.auth.ValidateAuthServerInterceptor;
 
@@ -11,7 +10,6 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.grpc.BindableService;
 import io.grpc.ServerInterceptor;
@@ -19,26 +17,22 @@ import io.grpc.health.v1.HealthGrpc;
 import io.grpc.protobuf.services.ProtoReflectionService;
 import io.grpc.reflection.v1alpha.ServerReflectionGrpc;
 import io.grpc.services.HealthStatusManager;
-import java.util.List;
 import java.util.Set;
 
-public class GrpcServerModule extends AbstractModule {
-  private final List<Connector> connectors;
+public class GrpcInProcessServerModule extends AbstractModule {
   private final Provider<Set<ServerInterceptor>> serverInterceptorsProvider;
   private final Provider<Set<BindableService>> bindableServicesProvider;
   private final String name;
 
-  public GrpcServerModule(List<Connector> connectors, Provider<Set<BindableService>> bindableServicesProvider,
+  public GrpcInProcessServerModule(Provider<Set<BindableService>> bindableServicesProvider,
       Provider<Set<ServerInterceptor>> serverInterceptorsProvider) {
-    this.connectors = connectors;
     this.bindableServicesProvider = bindableServicesProvider;
     this.serverInterceptorsProvider = serverInterceptorsProvider;
     name = null;
   }
 
-  public GrpcServerModule(List<Connector> connectors, Provider<Set<BindableService>> bindableServicesProvider,
+  public GrpcInProcessServerModule(Provider<Set<BindableService>> bindableServicesProvider,
       Provider<Set<ServerInterceptor>> serverInterceptorsProvider, String name) {
-    this.connectors = connectors;
     this.bindableServicesProvider = bindableServicesProvider;
     this.serverInterceptorsProvider = serverInterceptorsProvider;
     this.name = name;
@@ -47,7 +41,8 @@ public class GrpcServerModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(HealthStatusManager.class).in(Singleton.class);
-    Multibinder<BindableService> bindableServiceMultibinder = Multibinder.newSetBinder(binder(), BindableService.class);
+    Multibinder<BindableService> bindableServiceMultibinder;
+    bindableServiceMultibinder = Multibinder.newSetBinder(binder(), BindableService.class, Names.named("internal"));
     bindableServiceMultibinder.addBinding().toProvider(ProtoReflectionService::newInstance).in(Singleton.class);
     Provider<HealthStatusManager> healthStatusManagerProvider = getProvider(HealthStatusManager.class);
     bindableServiceMultibinder.addBinding().toProvider(() -> healthStatusManagerProvider.get().getHealthService());
@@ -62,17 +57,15 @@ public class GrpcServerModule extends AbstractModule {
     serverInterceptorMultibinder.addBinding().to(ValidateAuthServerInterceptor.class);
 
     MapBinder.newMapBinder(binder(), String.class, ServiceInfo.class);
-    serverInterceptorMultibinder.addBinding().to(ServiceAuthServerInterceptor.class);
     Multibinder<Service> serviceBinder;
     if (EmptyPredicate.isEmpty(name)) {
       serviceBinder = Multibinder.newSetBinder(binder(), Service.class);
     } else {
       serviceBinder = Multibinder.newSetBinder(binder(), Service.class, Names.named(name));
     }
-    connectors.forEach(connector
-        -> serviceBinder.addBinding().toProvider(
-            ()
-                -> new GrpcServer(connector, bindableServicesProvider.get(), serverInterceptorsProvider.get(),
-                    healthStatusManagerProvider.get())));
+    serviceBinder.addBinding().toProvider(
+        ()
+            -> new GrpcInProcessServer("pmsSdkInternal", bindableServicesProvider.get(),
+                serverInterceptorsProvider.get(), healthStatusManagerProvider.get()));
   }
 }
