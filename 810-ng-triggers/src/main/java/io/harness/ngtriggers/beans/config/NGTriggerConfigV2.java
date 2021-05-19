@@ -13,7 +13,7 @@ import lombok.Data;
 @Data
 @Builder
 @OwnedBy(PIPELINE)
-public class NGTriggerConfigV2 /* implements NGTriggerInterface */ {
+public class NGTriggerConfigV2 implements NGTriggerInterface {
   String name;
   @NotNull String identifier;
   String description;

@@ -9,10 +9,16 @@ public interface Constants {
   String PR = "PR";
   String PUSH = "PUSH";
 
-  String PULL_REQUEST_EVENT_TYPE = "Pull Request";
-  String MERGE_REQUEST_EVENT_TYPE = "Merge Request";
+  String GITHUB_REPO = "Github";
+  String GITLAB_REPO = "Gitlab";
+  String BITBUCKET_REPO = "Bitbucket";
+  String AWS_CODECOMMIT_REPO = "AwsCodeCommit";
+  String CUSTOM_REPO = "Custom";
+
+  String PULL_REQUEST_EVENT_TYPE = "PullRequest";
+  String MERGE_REQUEST_EVENT_TYPE = "MergeRequest";
   String PUSH_EVENT_TYPE = "Push";
-  String ISSUE_COMMENT_EVENT_TYPE = "Issue Comment";
+  String ISSUE_COMMENT_EVENT_TYPE = "IssueComment";
 
   String TRIGGER_EXECUTION_TAG_TAG_VALUE_DELIMITER = ":";
   String TRIGGER_REF_DELIMITER = "/";
@@ -43,4 +49,5 @@ public interface Constants {
   String GITLAB_REPO_EXPR_VAL = "Gitlab";
   String BITBUCKET_REPO_EXPR_VAL = "Bitbucket";
   String CUSTOM_REPO_EXPR_VAL = "Custom";
+  String AWS_CODECOMMIT_REPO_EXPR_VAL = "AwsCodeCommit";
 }

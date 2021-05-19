@@ -13,7 +13,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.ngtriggers.beans.config.NGTriggerConfig;
+import io.harness.ngtriggers.beans.config.NGTriggerConfigV2;
 import io.harness.ngtriggers.beans.dto.LastTriggerExecutionDetails;
 import io.harness.ngtriggers.beans.dto.NGTriggerDetailsResponseDTO;
 import io.harness.ngtriggers.beans.dto.NGTriggerResponseDTO;
@@ -26,7 +26,7 @@ import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
 import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
 import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
-import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
+import io.harness.ngtriggers.beans.source.webhook.v2.WebhookTriggerConfigV2;
 import io.harness.ngtriggers.beans.target.TargetType;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
@@ -71,20 +71,20 @@ public class NGTriggerResourceTest extends CategoryTest {
   private NGTriggerDetailsResponseDTO ngTriggerDetailsResponseDTO;
   private NGTriggerResponseDTO ngTriggerResponseDTO;
   private NGTriggerEntity ngTriggerEntity;
-  private NGTriggerConfig ngTriggerConfig;
+  private NGTriggerConfigV2 ngTriggerConfig;
 
   @Before
   public void setUp() throws IOException {
     MockitoAnnotations.initMocks(this);
 
     ClassLoader classLoader = getClass().getClassLoader();
-    String filename = "ng-trigger.yaml";
+    String filename = "ng-trigger-github-pr-v2.yaml";
     ngTriggerYaml =
         Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
 
-    ngTriggerConfig = YamlPipelineUtils.read(ngTriggerYaml, NGTriggerConfig.class);
-    WebhookTriggerConfig webhookTriggerConfig = (WebhookTriggerConfig) ngTriggerConfig.getSource().getSpec();
-    WebhookMetadata metadata = WebhookMetadata.builder().type(webhookTriggerConfig.getType()).build();
+    ngTriggerConfig = YamlPipelineUtils.read(ngTriggerYaml, NGTriggerConfigV2.class);
+    WebhookTriggerConfigV2 webhookTriggerConfig = (WebhookTriggerConfigV2) ngTriggerConfig.getSource().getSpec();
+    WebhookMetadata metadata = WebhookMetadata.builder().type(webhookTriggerConfig.getType().getValue()).build();
     NGTriggerMetadata ngTriggerMetadata = NGTriggerMetadata.builder().webhook(metadata).build();
 
     ngTriggerResponseDTO = NGTriggerResponseDTO.builder()
@@ -204,7 +204,7 @@ public class NGTriggerResourceTest extends CategoryTest {
     final Page<NGTriggerEntity> serviceList = new PageImpl<>(Collections.singletonList(ngTriggerEntity), pageable, 1);
     doReturn(serviceList).when(ngTriggerService).list(criteria, pageable);
 
-    when(ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, true))
+    when(ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, true, false))
         .thenReturn(ngTriggerDetailsResponseDTO);
 
     List<NGTriggerDetailsResponseDTO> content =
@@ -219,13 +219,9 @@ public class NGTriggerResourceTest extends CategoryTest {
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void testGitConnectorTrigger() throws IOException {
-    ClassLoader classLoader = getClass().getClassLoader();
-    String filename = "ng-trigger-git-connector.yaml";
-    String triggerYaml =
-        Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
-    ngTriggerConfig = YamlPipelineUtils.read(triggerYaml, NGTriggerConfig.class);
-    WebhookTriggerConfig webhookTriggerConfig = (WebhookTriggerConfig) ngTriggerConfig.getSource().getSpec();
-    assertThat(webhookTriggerConfig.getSpec().getRepoSpec().getIdentifier()).isEqualTo("account.gitAccount");
+    ngTriggerConfig = YamlPipelineUtils.read(ngTriggerYaml, NGTriggerConfigV2.class);
+    WebhookTriggerConfigV2 webhookTriggerConfig = (WebhookTriggerConfigV2) ngTriggerConfig.getSource().getSpec();
+    assertThat(webhookTriggerConfig.getSpec().fetchGitAware().fetchConnectorRef()).isEqualTo("conn");
   }
 
   @Test
@@ -233,10 +229,10 @@ public class NGTriggerResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCronTrigger() throws IOException {
     ClassLoader classLoader = getClass().getClassLoader();
-    String filename = "ng-trigger-cron.yaml";
+    String filename = "ng-trigger-cron-v2.yaml";
     String triggerYaml =
         Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
-    ngTriggerConfig = YamlPipelineUtils.read(triggerYaml, NGTriggerConfig.class);
+    ngTriggerConfig = YamlPipelineUtils.read(triggerYaml, NGTriggerConfigV2.class);
     ScheduledTriggerConfig scheduledTriggerConfig = (ScheduledTriggerConfig) ngTriggerConfig.getSource().getSpec();
     CronTriggerSpec cronTriggerSpec = (CronTriggerSpec) scheduledTriggerConfig.getSpec();
     assertThat(cronTriggerSpec.getExpression()).isEqualTo("20 4 * * *");

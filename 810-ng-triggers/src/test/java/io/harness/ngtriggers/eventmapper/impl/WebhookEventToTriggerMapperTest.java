@@ -11,15 +11,17 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.HeaderConfig;
 import io.harness.category.element.UnitTests;
-import io.harness.ngtriggers.beans.config.NGTriggerConfig;
+import io.harness.ngtriggers.beans.config.NGTriggerConfigV2;
 import io.harness.ngtriggers.beans.dto.TriggerMappingRequestData;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
-import io.harness.ngtriggers.beans.source.NGTriggerSource;
-import io.harness.ngtriggers.beans.source.webhook.CustomWebhookTriggerSpec;
-import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
-import io.harness.ngtriggers.eventmapper.filters.impl.AccountCustomTriggerFilter;
+import io.harness.ngtriggers.beans.source.NGTriggerSourceV2;
+import io.harness.ngtriggers.beans.source.NGTriggerType;
+import io.harness.ngtriggers.beans.source.WebhookTriggerType;
+import io.harness.ngtriggers.beans.source.webhook.v2.WebhookTriggerConfigV2;
+import io.harness.ngtriggers.beans.source.webhook.v2.custom.CustomTriggerSpec;
+import io.harness.ngtriggers.eventmapper.filters.impl.AccountTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.HeaderTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.JexlConditionsTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.PayloadConditionsTriggerFilter;
@@ -49,7 +51,7 @@ public class WebhookEventToTriggerMapperTest extends CategoryTest {
   @InjectMocks @Inject private TriggerFilterStore triggerFilterStore;
   @Mock private NGTriggerService ngTriggerService;
   @Mock private NGTriggerElementMapper ngTriggerElementMapper;
-  @InjectMocks @Inject AccountCustomTriggerFilter accountCustomTriggerFilter;
+  @InjectMocks @Inject AccountTriggerFilter accountTriggerFilter;
   @InjectMocks @Inject PayloadConditionsTriggerFilter payloadConditionsTriggerFilter;
   @InjectMocks @Inject HeaderTriggerFilter headerTriggerFilter;
   @InjectMocks @Inject JexlConditionsTriggerFilter jexlConditionsTriggerFilter;
@@ -59,11 +61,11 @@ public class WebhookEventToTriggerMapperTest extends CategoryTest {
   public void setup() throws Exception {
     MockitoAnnotations.initMocks(this);
     ClassLoader classLoader = getClass().getClassLoader();
-    String filename = "ng-custom-trigger.yaml";
+    String filename = "ng-custom-trigger-v0.yaml";
     ngTriggerCustomYaml =
         Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
     FieldUtils.writeField(customWebhookEventToTriggerMapper, "triggerFilterStore", triggerFilterStore, true);
-    FieldUtils.writeField(triggerFilterStore, "accountCustomTriggerFilter", accountCustomTriggerFilter, true);
+    FieldUtils.writeField(triggerFilterStore, "accountTriggerFilter", accountTriggerFilter, true);
     FieldUtils.writeField(triggerFilterStore, "payloadConditionsTriggerFilter", payloadConditionsTriggerFilter, true);
     FieldUtils.writeField(triggerFilterStore, "jexlConditionsTriggerFilter", jexlConditionsTriggerFilter, true);
     FieldUtils.writeField(triggerFilterStore, "headerTriggerFilter", headerTriggerFilter, true);
@@ -85,15 +87,18 @@ public class WebhookEventToTriggerMapperTest extends CategoryTest {
     List<NGTriggerEntity> ngTriggerEntityList = new ArrayList<>();
     ngTriggerEntityList.add(ngTriggerEntity);
 
-    NGTriggerConfig ngTriggerConfig =
-        NGTriggerConfig.builder()
-            .source(NGTriggerSource.builder()
-                        .spec(WebhookTriggerConfig.builder().spec(CustomWebhookTriggerSpec.builder().build()).build())
-                        .build())
-            .build();
+    NGTriggerConfigV2 ngTriggerConfig = NGTriggerConfigV2.builder()
+                                            .source(NGTriggerSourceV2.builder()
+                                                        .type(NGTriggerType.WEBHOOK)
+                                                        .spec(WebhookTriggerConfigV2.builder()
+                                                                  .type(WebhookTriggerType.CUSTOM)
+                                                                  .spec(CustomTriggerSpec.builder().build())
+                                                                  .build())
+                                                        .build())
+                                            .build();
 
-    when(ngTriggerService.findTriggersForCustomWehbook(event, false, true)).thenReturn(ngTriggerEntityList);
-    doReturn(ngTriggerConfig).when(ngTriggerElementMapper).toTriggerConfig(ngTriggerCustomYaml);
+    when(ngTriggerService.findTriggersForWehbookBySourceRepoType(event, false, true)).thenReturn(ngTriggerEntityList);
+    doReturn(ngTriggerConfig).when(ngTriggerElementMapper).toTriggerConfigV2(ngTriggerCustomYaml);
     WebhookEventMappingResponse webhookEventMappingResponse =
         customWebhookEventToTriggerMapper.mapWebhookEventToTriggers(
             TriggerMappingRequestData.builder().triggerWebhookEvent(event).build());
