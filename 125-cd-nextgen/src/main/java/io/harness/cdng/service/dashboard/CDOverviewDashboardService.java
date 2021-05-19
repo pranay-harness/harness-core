@@ -4,9 +4,10 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.Deployment.DashboardDeploymentActiveFailedRunningInfo;
 import io.harness.cdng.Deployment.DashboardWorkloadDeployment;
-import io.harness.cdng.Deployment.ExecutionDeploymentDetailInfo;
 import io.harness.cdng.Deployment.ExecutionDeploymentInfo;
 import io.harness.cdng.Deployment.HealthDeploymentDashboard;
+import io.harness.cdng.Deployment.ServiceDeploymentInfoDTO;
+import io.harness.cdng.Deployment.ServiceDeploymentListInfo;
 
 @OwnedBy(HarnessTeam.CDC)
 public interface CDOverviewDashboardService {
@@ -22,6 +23,10 @@ public interface CDOverviewDashboardService {
   DashboardWorkloadDeployment getDashboardWorkloadDeployment(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, long startInterval, long endInterval, long previousStartInterval);
 
-  ExecutionDeploymentDetailInfo getDeploymentsExecutionInfo(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, long startTime, long endTime);
+  ServiceDeploymentListInfo getServiceDeploymentsInfo(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, long startTime, long endTime, String serviceIdentifier, long bucketSizeInDays)
+      throws Exception;
+
+  ServiceDeploymentInfoDTO getServiceDeployments(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, long startTime, long endTime, String serviceIdentifier, long bucketSizeInDays);
 }
