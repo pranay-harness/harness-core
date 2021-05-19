@@ -8,4 +8,5 @@ public interface PluginCompatibleStep extends CIStepInfo {
   // Common for all plugin compatible step types
   ParameterField<String> getConnectorRef();
   ContainerResource getResources();
+  ParameterField<Integer> getRunAsUser();
 }
