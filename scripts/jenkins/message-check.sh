@@ -30,10 +30,12 @@ curl -v https://harness.atlassian.net/rest/api/3/issue/${KEY}?fields=id --user $
 
 echo "Result Received"
 
-if  ! grep -q "Issue does not exist" result.txt; then
-      echo "${KEY}" is not valid JIRA Key.
-      echo Please create a Jira if it does not exist
-      exit 1
+cat result.txt
+
+if  grep -q "Issue does not exist" result.txt; then
+    echo "${KEY}" is not valid JIRA Key.
+    echo Please create a Jira if it does not exist
+    exit 1
 fi
 
 #TODO: enable priorities check
