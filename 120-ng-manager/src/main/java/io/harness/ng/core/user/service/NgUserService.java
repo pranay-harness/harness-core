@@ -80,4 +80,6 @@ public interface NgUserService {
       @Nullable String orgIdentifier, @Nullable String projectIdentifier);
 
   Page<ProjectDTO> listProjects(String accountId, PageRequest pageRequest);
+
+  boolean isUserPasswordSet(String accountIdentifier, String email);
 }
