@@ -56,7 +56,6 @@ public class WebhookTriggerFilterUtilTest extends CategoryTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void parseEventTest() {
-    int i = 0;
     TriggerExpressionEvaluator triggerExpressionEvaluator =
         WebhookTriggerFilterUtils.generatorPMSExpressionEvaluator(null, emptyList(), payload);
     assertThat(WebhookTriggerFilterUtils.readFromPayload("<+trigger.payload.event_type>", triggerExpressionEvaluator))
@@ -73,6 +72,7 @@ public class WebhookTriggerFilterUtilTest extends CategoryTest {
         .isEqualTo("https://secure.gravatar.com/avatar/8e");
     assertThat(WebhookTriggerFilterUtils.readFromPayload("<+trigger.payload.user.email>", triggerExpressionEvaluator))
         .isEqualTo("cgrant@gmail.com");
+    assertThat(triggerExpressionEvaluator.renderExpression("<+trigger.eventPayload>")).isEqualTo(payload);
   }
 
   @Test
