@@ -1,28 +1,7 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
-import com.google.inject.Inject;
-import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.TargetModule;
-import io.harness.category.element.UnitTests;
-import io.harness.pcf.PivotalClientApiException;
-import io.harness.pcf.model.CfRequestConfig;
-import io.harness.rule.Owner;
-import org.cloudfoundry.operations.applications.ApplicationDetail;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import software.wings.WingsBaseTest;
-import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.delegatetasks.pcf.PcfCommandTaskHelper;
-import software.wings.helpers.ext.pcf.PcfDeploymentManager;
-import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
-import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
-
-import java.util.Arrays;
-import java.util.List;
-
 import static io.harness.rule.OwnerRule.BOJANA;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -31,6 +10,29 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.category.element.UnitTests;
+import io.harness.pcf.CfDeploymentManager;
+import io.harness.pcf.PivotalClientApiException;
+import io.harness.pcf.model.CfRequestConfig;
+import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.delegatetasks.pcf.PcfCommandTaskHelper;
+import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
+import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
+
+import com.google.inject.Inject;
+import java.util.Arrays;
+import java.util.List;
+import org.cloudfoundry.operations.applications.ApplicationDetail;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class PcfRollbackCommandTaskHandlerTest extends WingsBaseTest {
   public static final String URL = "URL";
@@ -38,7 +40,7 @@ public class PcfRollbackCommandTaskHandlerTest extends WingsBaseTest {
   public static final String SPACE = "SPACE";
 
   @Mock ExecutionLogCallback executionLogCallback;
-  @Mock PcfDeploymentManager pcfDeploymentManager;
+  @Mock CfDeploymentManager pcfDeploymentManager;
   @Mock PcfCommandTaskHelper pcfCommandTaskHelper;
 
   @InjectMocks @Inject PcfRollbackCommandTaskHandler pcfRollbackCommandTaskHandler;

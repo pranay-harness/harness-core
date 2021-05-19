@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.pcf.CfDeploymentManager;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.command.ExecutionLogCallback;
@@ -14,7 +15,6 @@ import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.LogSanitizer;
 import software.wings.delegatetasks.pcf.PcfCommandTaskHelper;
-import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.service.intfc.security.EncryptionService;
@@ -29,7 +29,7 @@ import java.util.Set;
 @OwnedBy(CDP)
 public abstract class PcfCommandTaskHandler {
   @Inject protected DelegateFileManager delegateFileManager;
-  @Inject protected PcfDeploymentManager pcfDeploymentManager;
+  @Inject protected CfDeploymentManager pcfDeploymentManager;
   @Inject protected EncryptionService encryptionService;
   @Inject protected DelegateLogService delegateLogService;
   @Inject protected PcfCommandTaskHelper pcfCommandTaskHelper;

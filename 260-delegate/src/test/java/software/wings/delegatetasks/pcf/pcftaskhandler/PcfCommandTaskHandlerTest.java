@@ -38,6 +38,7 @@ import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.filesystem.FileIo;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.pcf.CfDeploymentManager;
 import io.harness.pcf.PivotalClientApiException;
 import io.harness.pcf.model.CfAppAutoscalarRequestData;
 import io.harness.pcf.model.CfCreateApplicationRequestData;
@@ -55,7 +56,6 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.pcf.PcfCommandTaskHelper;
-import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
@@ -112,7 +112,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
   public static final String ACCOUNT_ID = "ACCOUNT_ID";
   public static final String RUNNING = "RUNNING";
 
-  @Mock PcfDeploymentManager pcfDeploymentManager;
+  @Mock CfDeploymentManager pcfDeploymentManager;
   @Mock EncryptionService encryptionService;
   @Mock EncryptedDataDetail encryptedDataDetail;
   @Mock ExecutionLogCallback executionLogCallback;
@@ -198,7 +198,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     doReturn(previousReleases).when(pcfDeploymentManager).getPreviousReleases(any(), anyString());
     doReturn(previousReleases).when(pcfDeploymentManager).getDeployedServicesWithNonZeroInstances(any(), anyString());
     doNothing().when(pcfDeploymentManager).unmapRouteMapForApplication(any(), anyList(), any());
-
+    doReturn("PASSWORD".toCharArray()).when(pcfCommandTaskHelper).getPassword(any());
     doNothing().when(pcfDeploymentManager).deleteApplication(any());
     doReturn(ApplicationDetail.builder()
                  .id("10")
@@ -1047,7 +1047,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
             .build();
     CfCreateApplicationRequestData requestData =
         CfCreateApplicationRequestData.builder()
-            .password("ABC".toCharArray())
+            .password("ABCD".toCharArray())
             .varsYmlFilePresent(true)
             .pcfManifestFileData(CfManifestFileData.builder().varFiles(new ArrayList<>()).build())
             .build();

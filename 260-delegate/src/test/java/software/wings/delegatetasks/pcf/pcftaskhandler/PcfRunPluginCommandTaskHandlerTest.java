@@ -21,7 +21,7 @@ import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.pcf.CfCliClient;
+import io.harness.pcf.CfDeploymentManager;
 import io.harness.pcf.PivotalClientApiException;
 import io.harness.pcf.model.CfRunPluginScriptRequestData;
 import io.harness.rule.Owner;
@@ -33,7 +33,6 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.pcf.PcfCommandTaskHelper;
-import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.request.PcfRunPluginCommandRequest;
@@ -61,13 +60,12 @@ public class PcfRunPluginCommandTaskHandlerTest extends WingsBaseTest {
   public static final String RUNNING = "RUNNING";
 
   @Mock private DelegateFileManager delegateFileManager;
-  @Mock private PcfDeploymentManager pcfDeploymentManager;
+  @Mock private CfDeploymentManager pcfDeploymentManager;
   @Mock private EncryptionService encryptionService;
   @Mock private DelegateLogService delegateLogService;
   @Mock private PcfCommandTaskHelper pcfCommandTaskHelper;
   @Mock ExecutionLogCallback executionLogCallback;
   @Mock EncryptedDataDetail encryptedDataDetail;
-  @Mock CfCliClient cfCliClient;
 
   @Spy @InjectMocks PcfRunPluginCommandTaskHandler pcfRunPluginCommandTaskHandler;
 
@@ -85,7 +83,7 @@ public class PcfRunPluginCommandTaskHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void test_executeTaskInternal() throws PivotalClientApiException {
     doNothing()
-        .when(cfCliClient)
+        .when(pcfDeploymentManager)
         .runPcfPluginScript(any(CfRunPluginScriptRequestData.class), Mockito.eq(executionLogCallback));
     PcfRunPluginCommandRequest pcfCommandRequest = getPcfRunPluginCommandRequest();
     pcfRunPluginCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback, false);
@@ -93,7 +91,7 @@ public class PcfRunPluginCommandTaskHandlerTest extends WingsBaseTest {
     // verify
     ArgumentCaptor<CfRunPluginScriptRequestData> argumentCaptor =
         ArgumentCaptor.forClass(CfRunPluginScriptRequestData.class);
-    verify(cfCliClient).runPcfPluginScript(argumentCaptor.capture(), eq(executionLogCallback));
+    verify(pcfDeploymentManager).runPcfPluginScript(argumentCaptor.capture(), eq(executionLogCallback));
 
     final CfRunPluginScriptRequestData pcfRunPluginScriptRequestData = argumentCaptor.getValue();
     assertThat(pcfRunPluginScriptRequestData.getWorkingDirectory()).isNotNull();

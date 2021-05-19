@@ -28,6 +28,7 @@ import io.harness.pcf.model.CfAppAutoscalarRequestData;
 import io.harness.pcf.model.CfConfig;
 import io.harness.pcf.model.CfCreateApplicationRequestData;
 import io.harness.pcf.model.CfRequestConfig;
+import io.harness.pcf.model.CfRunPluginScriptRequestData;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -469,6 +470,12 @@ public class CfDeploymentManagerImpl implements CfDeploymentManager {
         }
       }
     }
+  }
+
+  @Override
+  public void runPcfPluginScript(CfRunPluginScriptRequestData requestData, LogCallback logCallback)
+      throws PivotalClientApiException {
+    cfCliClient.runPcfPluginScript(requestData, logCallback);
   }
 
   private String generateRouteUrl(

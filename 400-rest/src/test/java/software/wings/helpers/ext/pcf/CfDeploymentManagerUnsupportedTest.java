@@ -10,12 +10,12 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pcf.PivotalClientApiException;
 import io.harness.pcf.model.CfAppAutoscalarRequestData;
+import io.harness.pcf.model.CfConfig;
 import io.harness.pcf.model.CfCreateApplicationRequestData;
 import io.harness.pcf.model.CfRequestConfig;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 
 import java.util.ArrayList;
@@ -24,8 +24,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
 @OwnedBy(CDP)
-public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
-  private final PcfDeploymentManagerUnsupported deploymentManager = new PcfDeploymentManagerUnsupported();
+public class CfDeploymentManagerUnsupportedTest extends WingsBaseTest {
+  private final CfDeploymentManagerUnsupported deploymentManager = new CfDeploymentManagerUnsupported();
   private final CfRequestConfig cfRequestConfig = CfRequestConfig.builder().build();
   @Mock private ExecutionLogCallback mockLogCallback;
 
@@ -132,7 +132,7 @@ public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testCheckConnectivity() {
-    assertThat(deploymentManager.checkConnectivity(PcfConfig.builder().build(), false, false))
+    assertThat(deploymentManager.checkConnectivity(CfConfig.builder().build(), false, false))
         .isEqualTo("FAILED: connection timed out");
   }
 

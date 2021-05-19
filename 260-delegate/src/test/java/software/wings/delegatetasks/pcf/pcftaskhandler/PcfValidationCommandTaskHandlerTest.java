@@ -9,12 +9,12 @@ import static org.mockito.Mockito.verify;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.pcf.CfDeploymentManager;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.PcfConfig;
-import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
 import software.wings.service.intfc.security.EncryptionService;
 
@@ -28,7 +28,7 @@ import org.mockito.Mock;
 
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class PcfValidationCommandTaskHandlerTest extends WingsBaseTest {
-  @Mock private PcfDeploymentManager pcfDeploymentManager;
+  @Mock private CfDeploymentManager pcfDeploymentManager;
   @Mock private EncryptionService encryptionService;
 
   @InjectMocks @Inject private PcfValidationCommandTaskHandler pcfValidationCommandTaskHandler;

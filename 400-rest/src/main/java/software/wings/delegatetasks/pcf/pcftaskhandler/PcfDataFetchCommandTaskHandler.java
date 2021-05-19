@@ -15,13 +15,13 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.pcf.CfDeploymentManager;
 import io.harness.pcf.PivotalClientApiException;
 import io.harness.pcf.model.CfRequestConfig;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
@@ -100,7 +100,7 @@ public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
     return pcfCommandExecutionResponse;
   }
 
-  private void getRunningCount(PcfDeploymentManager pcfDeploymentManager,
+  private void getRunningCount(CfDeploymentManager pcfDeploymentManager,
       PcfInfraMappingDataRequest pcfInfraMappingDataRequest, PcfInfraMappingDataResponse pcfInfraMappingDataResponse,
       PcfConfig pcfConfig) throws PivotalClientApiException {
     Integer count = Integer.valueOf(0);
@@ -128,7 +128,7 @@ public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
     pcfInfraMappingDataResponse.setRunningInstanceCount(count);
   }
 
-  private void getRoutes(PcfDeploymentManager pcfDeploymentManager,
+  private void getRoutes(CfDeploymentManager pcfDeploymentManager,
       PcfInfraMappingDataRequest pcfInfraMappingDataRequest, PcfInfraMappingDataResponse pcfInfraMappingDataResponse,
       PcfConfig pcfConfig) throws PivotalClientApiException {
     List<String> routes = pcfDeploymentManager.getRouteMaps(getPcfRequestConfig(pcfInfraMappingDataRequest, pcfConfig));
@@ -136,7 +136,7 @@ public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
     pcfInfraMappingDataResponse.setRouteMaps(routes);
   }
 
-  private void getSpaces(PcfDeploymentManager pcfDeploymentManager,
+  private void getSpaces(CfDeploymentManager pcfDeploymentManager,
       PcfInfraMappingDataRequest pcfInfraMappingDataRequest, PcfInfraMappingDataResponse pcfInfraMappingDataResponse,
       PcfConfig pcfConfig) throws PivotalClientApiException {
     List<String> spaces =
@@ -145,7 +145,7 @@ public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
     pcfInfraMappingDataResponse.setSpaces(spaces);
   }
 
-  private void getOrgs(PcfDeploymentManager pcfDeploymentManager, PcfInfraMappingDataRequest pcfInfraMappingDataRequest,
+  private void getOrgs(CfDeploymentManager pcfDeploymentManager, PcfInfraMappingDataRequest pcfInfraMappingDataRequest,
       PcfInfraMappingDataResponse pcfInfraMappingDataResponse, PcfConfig pcfConfig) throws PivotalClientApiException {
     List<String> orgs =
         pcfDeploymentManager.getOrganizations(getPcfRequestConfig(pcfInfraMappingDataRequest, pcfConfig));

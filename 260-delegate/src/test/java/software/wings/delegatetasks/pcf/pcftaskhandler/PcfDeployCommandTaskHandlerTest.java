@@ -14,15 +14,15 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.pcf.CfDeploymentManager;
 import io.harness.pcf.PivotalClientApiException;
-import io.harness.pcf.model.CfRequestConfig;
 import io.harness.pcf.model.CfAppAutoscalarRequestData;
+import io.harness.pcf.model.CfRequestConfig;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.pcf.PcfCommandTaskHelper;
-import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
@@ -40,7 +40,7 @@ import org.mockito.Mock;
 public class PcfDeployCommandTaskHandlerTest extends WingsBaseTest {
   @Mock ExecutionLogCallback executionLogCallback;
   @Mock PcfCommandTaskHelper pcfCommandTaskHelper;
-  @Mock PcfDeploymentManager pcfDeploymentManager;
+  @Mock CfDeploymentManager pcfDeploymentManager;
 
   @InjectMocks @Inject PcfDeployCommandTaskHandler pcfDeployCommandTaskHandler;
 

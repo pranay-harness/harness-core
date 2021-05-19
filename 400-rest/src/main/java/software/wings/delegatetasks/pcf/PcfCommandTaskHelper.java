@@ -1,4 +1,5 @@
 package software.wings.delegatetasks.pcf;
+
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -71,6 +72,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.pcf.CfCliDelegateResolver;
+import io.harness.pcf.CfDeploymentManager;
 import io.harness.pcf.PivotalClientApiException;
 import io.harness.pcf.model.CfAppAutoscalarRequestData;
 import io.harness.pcf.model.CfCliVersion;
@@ -91,7 +93,6 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.pcf.InvalidPcfStateException;
-import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
@@ -163,7 +164,7 @@ public class PcfCommandTaskHelper {
   public static final String DELIMITER = "__";
 
   @Inject private DelegateFileManager delegateFileManager;
-  @Inject private PcfDeploymentManager pcfDeploymentManager;
+  @Inject private CfDeploymentManager pcfDeploymentManager;
   @Inject private CfCliDelegateResolver cfCliDelegateResolver;
 
   /**
@@ -185,10 +186,9 @@ public class PcfCommandTaskHelper {
     return downSizeUpdate;
   }
 
-  public void upsizeListOfInstances(ExecutionLogCallback executionLogCallback,
-      PcfDeploymentManager pcfDeploymentManager, List<PcfServiceData> pcfServiceDataUpdated,
-      CfRequestConfig cfRequestConfig, List<PcfServiceData> upsizeList, List<PcfInstanceElement> pcfInstanceElements)
-      throws PivotalClientApiException {
+  public void upsizeListOfInstances(ExecutionLogCallback executionLogCallback, CfDeploymentManager pcfDeploymentManager,
+      List<PcfServiceData> pcfServiceDataUpdated, CfRequestConfig cfRequestConfig, List<PcfServiceData> upsizeList,
+      List<PcfInstanceElement> pcfInstanceElements) throws PivotalClientApiException {
     if (isEmpty(upsizeList)) {
       executionLogCallback.saveExecutionLog("No application To Upsize");
       return;
@@ -246,7 +246,7 @@ public class PcfCommandTaskHelper {
   }
 
   public ApplicationDetail getNewlyCreatedApplication(CfRequestConfig cfRequestConfig,
-      PcfCommandDeployRequest pcfCommandDeployRequest, PcfDeploymentManager pcfDeploymentManager)
+      PcfCommandDeployRequest pcfCommandDeployRequest, CfDeploymentManager pcfDeploymentManager)
       throws PivotalClientApiException {
     cfRequestConfig.setApplicationName(pcfCommandDeployRequest.getNewReleaseName());
     cfRequestConfig.setDesiredCount(pcfCommandDeployRequest.getUpdateCount());
@@ -515,7 +515,7 @@ public class PcfCommandTaskHelper {
 
   @VisibleForTesting
   ApplicationDetail downSize(PcfServiceData pcfServiceData, ExecutionLogCallback executionLogCallback,
-      CfRequestConfig cfRequestConfig, PcfDeploymentManager pcfDeploymentManager) throws PivotalClientApiException {
+      CfRequestConfig cfRequestConfig, CfDeploymentManager pcfDeploymentManager) throws PivotalClientApiException {
     cfRequestConfig.setApplicationName(pcfServiceData.getName());
     cfRequestConfig.setDesiredCount(pcfServiceData.getDesiredCount());
 
@@ -630,7 +630,7 @@ public class PcfCommandTaskHelper {
         cfRequestConfig, pcfDeploymentManager, executionLogCallback, pcfServiceDataUpdated, pcfInstanceElements);
   }
 
-  private void upsizeInstance(CfRequestConfig cfRequestConfig, PcfDeploymentManager pcfDeploymentManager,
+  private void upsizeInstance(CfRequestConfig cfRequestConfig, CfDeploymentManager pcfDeploymentManager,
       ExecutionLogCallback executionLogCallback, List<PcfServiceData> pcfServiceDataUpdated,
       List<PcfInstanceElement> pcfInstanceElements) throws PivotalClientApiException {
     // Get application details before upsize

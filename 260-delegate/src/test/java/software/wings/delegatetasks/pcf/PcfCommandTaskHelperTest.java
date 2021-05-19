@@ -33,6 +33,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filesystem.FileIo;
 import io.harness.pcf.CfCliDelegateResolver;
+import io.harness.pcf.CfDeploymentManager;
 import io.harness.pcf.model.CfAppAutoscalarRequestData;
 import io.harness.pcf.model.CfCliVersion;
 import io.harness.pcf.model.CfCreateApplicationRequestData;
@@ -55,7 +56,6 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.helpers.ext.pcf.InvalidPcfStateException;
-import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
@@ -270,7 +270,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
       + "  - route: stage.harness.io\n";
   private static final String RELEASE_NAME = "name"
       + "_pcfCommandHelperTest";
-  @Mock PcfDeploymentManager pcfDeploymentManager;
+  @Mock CfDeploymentManager pcfDeploymentManager;
   @Mock EncryptionService encryptionService;
   @Mock EncryptedDataDetail encryptedDataDetail;
   @Mock ExecutionLogCallback executionLogCallback;
@@ -327,7 +327,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
       file = pcfCommandTaskHelper.createManifestYamlFileLocally(
           CfCreateApplicationRequestData.builder()
               .finalManifestYaml(MANIFEST_YAML_LOCAL_RESOLVED)
-              .password("ABC".toCharArray())
+              .password("ABCD".toCharArray())
               .configPathVar(".")
               .newReleaseName(RELEASE_NAME + System.currentTimeMillis())
               .build());
@@ -661,7 +661,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   private CfCreateApplicationRequestData generatePcfCreateApplicationRequestData(
       PcfCommandSetupRequest pcfCommandSetupRequest) {
     return CfCreateApplicationRequestData.builder()
-        .password("ABC".toCharArray())
+        .password("ABCD".toCharArray())
         .newReleaseName("app1__1")
         .artifactPath("/root/app")
         .cfRequestConfig(CfRequestConfig.builder().spaceName("space").build())
@@ -744,7 +744,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   private CfCreateApplicationRequestData generatePcfCreateApplicationRequestDataDocker(
       PcfCommandSetupRequest pcfCommandSetupRequest) {
     return CfCreateApplicationRequestData.builder()
-            .password("ABC".toCharArray())
+        .password("ABCD".toCharArray())
         .newReleaseName("app1__1")
         .cfRequestConfig(CfRequestConfig.builder().spaceName("space").build())
         .build();

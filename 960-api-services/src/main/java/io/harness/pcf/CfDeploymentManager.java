@@ -8,6 +8,7 @@ import io.harness.pcf.model.CfAppAutoscalarRequestData;
 import io.harness.pcf.model.CfConfig;
 import io.harness.pcf.model.CfCreateApplicationRequestData;
 import io.harness.pcf.model.CfRequestConfig;
+import io.harness.pcf.model.CfRunPluginScriptRequestData;
 
 import java.util.List;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
@@ -68,5 +69,8 @@ public interface CfDeploymentManager {
       CfRequestConfig cfRequestConfig, boolean activeStatus, LogCallback logCallback) throws PivotalClientApiException;
 
   void unsetEnvironmentVariableForAppStatus(CfRequestConfig cfRequestConfig, LogCallback logCallback)
+      throws PivotalClientApiException;
+
+  void runPcfPluginScript(CfRunPluginScriptRequestData requestData, LogCallback logCallback)
       throws PivotalClientApiException;
 }

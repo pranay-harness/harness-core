@@ -17,6 +17,7 @@ import static org.mockito.Mockito.verify;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.pcf.CfDeploymentManager;
 import io.harness.pcf.PivotalClientApiException;
 import io.harness.pcf.model.CfRequestConfig;
 import io.harness.rule.Owner;
@@ -25,7 +26,6 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.WingsBaseTest;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
@@ -55,7 +55,7 @@ public class PcfDataFetchCommandTaskHandlerTest extends WingsBaseTest {
   public static final String SPACE = "space";
   public static final String APP_NAME = "appName";
 
-  @Mock private PcfDeploymentManager pcfDeploymentManager;
+  @Mock private CfDeploymentManager pcfDeploymentManager;
   @Mock private EncryptionService encryptionService;
   @Mock ExecutionLogCallback executionLogCallback;
 

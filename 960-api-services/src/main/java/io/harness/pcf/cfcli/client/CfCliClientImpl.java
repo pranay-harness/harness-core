@@ -368,7 +368,7 @@ public class CfCliClientImpl implements CfCliClient {
   Map<String, String> getEnvironmentMapForPcfPush(CfCreateApplicationRequestData requestData) {
     Map<String, String> environmentMapForPcfExecutor = getEnvironmentMapForPcfExecutor(
         requestData.getCfRequestConfig().getEndpointUrl(), requestData.getConfigPathVar());
-    if (true) {
+    if (requestData.isDockerBasedDeployment()) {
       char[] password = requestData.getPassword();
       if (!isEmpty(password)) {
         environmentMapForPcfExecutor.put(CF_DOCKER_CREDENTIALS, String.valueOf(password));
