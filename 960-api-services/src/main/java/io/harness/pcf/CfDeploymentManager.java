@@ -1,10 +1,9 @@
-package software.wings.helpers.ext.pcf;
+package io.harness.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.LogCallback;
-import io.harness.pcf.PivotalClientApiException;
 import io.harness.pcf.model.CfAppAutoscalarRequestData;
 import io.harness.pcf.model.CfConfig;
 import io.harness.pcf.model.CfCreateApplicationRequestData;
