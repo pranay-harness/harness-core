@@ -516,6 +516,11 @@ public class PermissionAttribute {
     /**
      * Create custom dashboard
      */
-    CREATE_CUSTOM_DASHBOARDS;
+    CREATE_CUSTOM_DASHBOARDS,
+
+    /**
+     * Manage Restricted Access
+     */
+    MANAGE_RESTRICTED_ACCESS;
   }
 }
