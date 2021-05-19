@@ -20,7 +20,15 @@ then
 fi
 
 KEY=`echo "${ghprbPullTitle}" | grep -o -iE "(${PROJECTS})-[0-9]+"`
+
+echo $KEY
+
+echo "Calling Jira API"
+echo "https://harness.atlassian.net/rest/api/3/issue/${KEY}?fields=id"
+
 curl -v https://harness.atlassian.net/rest/api/3/issue/${KEY}?fields=id --user $JIRA_USERNAME:$JIRA_PASSWORD -o result.txt > /dev/null 2>&1
+
+echo "Resulr Received"
 
 if  ! grep -q "Issue does not exist" result.txt; then
       echo "${KEY}" is not valid JIRA Key.
