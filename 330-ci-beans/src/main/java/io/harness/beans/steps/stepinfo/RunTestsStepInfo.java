@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.beans.common.SwaggerConstants.BOOLEAN_CLASSPATH;
 import static io.harness.beans.common.SwaggerConstants.INTEGER_CLASSPATH;
 import static io.harness.beans.common.SwaggerConstants.STRING_CLASSPATH;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.steps.CIStepInfo;
@@ -15,6 +16,7 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -64,8 +66,8 @@ public class RunTestsStepInfo implements CIStepInfo {
   private ParameterField<Map<String, String>> envVariables;
   @ApiModelProperty(dataType = STRING_CLASSPATH) private io.harness.pms.yaml.ParameterField<String> preCommand;
   @ApiModelProperty(dataType = STRING_CLASSPATH) private io.harness.pms.yaml.ParameterField<String> postCommand;
-  @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> privileged;
-  @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
+  @YamlSchemaTypes({string}) @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> privileged;
+  @YamlSchemaTypes({string}) @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "args", "language", "buildTool", "image", "connector",
