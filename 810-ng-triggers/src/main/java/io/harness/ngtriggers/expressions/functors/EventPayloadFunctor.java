@@ -1,5 +1,8 @@
 package io.harness.ngtriggers.expressions.functors;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.LateBindingValue;
 import io.harness.ngtriggers.helpers.TriggerAmbianceHelper;
@@ -9,6 +12,7 @@ import io.harness.yaml.utils.JsonPipelineUtils;
 import java.io.IOException;
 import java.util.HashMap;
 
+@OwnedBy(PIPELINE)
 public class EventPayloadFunctor implements LateBindingValue {
   private final Ambiance ambiance;
 

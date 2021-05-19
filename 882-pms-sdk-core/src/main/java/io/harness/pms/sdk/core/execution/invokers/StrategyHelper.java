@@ -61,7 +61,7 @@ public class StrategyHelper {
 
     FailureInfo.Builder failureInfoBuilder = FailureInfo.newBuilder().addAllFailureData(failureDataList);
     if (!EmptyPredicate.isEmpty(failureDataList)) {
-      FailureData failureData = failureDataList.get(0);
+      FailureData failureData = failureDataList.get(failureDataList.size() - 1);
       failureInfoBuilder.setErrorMessage(emptyIfNull(failureData.getMessage()))
           .addAllFailureTypes(failureData.getFailureTypesList());
     }

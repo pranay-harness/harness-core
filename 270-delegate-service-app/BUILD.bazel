@@ -346,7 +346,6 @@ shared_dependencies = [
     "@maven//:io_grpc_grpc_netty",
     "@maven//:io_grpc_grpc_netty_shaded",
     "@maven//:io_grpc_grpc_protobuf",
-    "@maven//:io_grpc_grpc_protobuf_lite",
     "@maven//:io_grpc_grpc_services",
     "@maven//:io_grpc_grpc_stub",
     "@maven//:io_gsonfire_gson_fire",

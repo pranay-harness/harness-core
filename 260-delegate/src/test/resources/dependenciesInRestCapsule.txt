@@ -331,7 +331,6 @@ io.grpc:grpc-core:jar:1.33.1
 io.grpc:grpc-grpclb:jar:1.33.1
 io.grpc:grpc-netty-shaded:jar:1.33.1
 io.grpc:grpc-netty:jar:1.33.1
-io.grpc:grpc-protobuf-lite:jar:1.33.1
 io.grpc:grpc-protobuf:jar:1.33.1
 io.grpc:grpc-services:jar:1.33.1
 io.grpc:grpc-stub:jar:1.33.1

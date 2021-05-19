@@ -32,8 +32,4 @@ public class AmbianceHelper {
         .projectIdentifier(getProjectIdentifier(ambiance))
         .build();
   }
-
-  public String getEventPayload(Ambiance ambiance) {
-    return ambiance.getMetadata().getTriggerPayload().getJsonPayload();
-  }
 }

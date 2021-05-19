@@ -19,12 +19,14 @@ import io.harness.cdng.Deployment.DeploymentInfo;
 import io.harness.cdng.Deployment.DeploymentStatusInfo;
 import io.harness.cdng.Deployment.DeploymentStatusInfoList;
 import io.harness.cdng.Deployment.ExecutionDeployment;
-import io.harness.cdng.Deployment.ExecutionDeploymentDetailInfo;
 import io.harness.cdng.Deployment.ExecutionDeploymentInfo;
 import io.harness.cdng.Deployment.HealthDeploymentDashboard;
 import io.harness.cdng.Deployment.HealthDeploymentInfo;
 import io.harness.cdng.Deployment.LastWorkloadInfo;
+import io.harness.cdng.Deployment.ServiceDeployment;
 import io.harness.cdng.Deployment.ServiceDeploymentInfo;
+import io.harness.cdng.Deployment.ServiceDeploymentInfoDTO;
+import io.harness.cdng.Deployment.ServiceDeploymentListInfo;
 import io.harness.cdng.Deployment.TimeAndStatusDeployment;
 import io.harness.cdng.Deployment.TotalDeploymentInfo;
 import io.harness.cdng.Deployment.WorkloadCountInfo;
@@ -426,74 +428,75 @@ public class CDDashboardApisTest {
   @Test
   @Owner(developers = MEENAKSHI)
   @Category(UnitTests.class)
-  public void testGetDeploymentsExecutionInfo() {
+  public void testGetDeploymentsExecutionInfo() throws Exception {
     long prevStartInterval = 1619136000000L;
     long prevEndInterval = 1619481600000L;
     long startInterval = 1619568000000L;
     long endInterval = 1619913600000L;
 
-    List<ExecutionDeployment> executionDeploymentList = new ArrayList<>();
-    List<ExecutionDeployment> prevExecutionDeploymentList = new ArrayList<>();
-    prevExecutionDeploymentList.add(ExecutionDeployment.builder()
+    List<ServiceDeployment> executionDeploymentList = new ArrayList<>();
+    List<ServiceDeployment> prevExecutionDeploymentList = new ArrayList<>();
+    prevExecutionDeploymentList.add(ServiceDeployment.builder()
                                         .time(1619136000000L)
                                         .deployments(DeploymentCount.builder().total(1).success(1).failure(0).build())
                                         .build());
-    prevExecutionDeploymentList.add(ExecutionDeployment.builder()
+    prevExecutionDeploymentList.add(ServiceDeployment.builder()
                                         .time(1619222400000L)
                                         .deployments(DeploymentCount.builder().total(4).success(3).failure(0).build())
                                         .build());
-    prevExecutionDeploymentList.add(ExecutionDeployment.builder()
+    prevExecutionDeploymentList.add(ServiceDeployment.builder()
                                         .time(1619308800000L)
                                         .deployments(DeploymentCount.builder().total(1).success(0).failure(1).build())
                                         .build());
-    prevExecutionDeploymentList.add(ExecutionDeployment.builder()
+    prevExecutionDeploymentList.add(ServiceDeployment.builder()
                                         .time(1619395200000L)
                                         .deployments(DeploymentCount.builder().total(3).success(1).failure(2).build())
                                         .build());
-    prevExecutionDeploymentList.add(ExecutionDeployment.builder()
+    prevExecutionDeploymentList.add(ServiceDeployment.builder()
                                         .time(1619481600000L)
                                         .deployments(DeploymentCount.builder().total(1).success(0).failure(1).build())
                                         .build());
 
-    executionDeploymentList.add(ExecutionDeployment.builder()
+    executionDeploymentList.add(ServiceDeployment.builder()
                                     .time(1619568000000L)
                                     .deployments(DeploymentCount.builder().total(2).success(1).failure(0).build())
                                     .build());
-    executionDeploymentList.add(ExecutionDeployment.builder()
+    executionDeploymentList.add(ServiceDeployment.builder()
                                     .time(1619654400000L)
                                     .deployments(DeploymentCount.builder().total(0).success(0).failure(0).build())
                                     .build());
-    executionDeploymentList.add(ExecutionDeployment.builder()
+    executionDeploymentList.add(ServiceDeployment.builder()
                                     .time(1619740800000L)
                                     .deployments(DeploymentCount.builder().total(3).success(1).failure(2).build())
                                     .build());
-    executionDeploymentList.add(ExecutionDeployment.builder()
+    executionDeploymentList.add(ServiceDeployment.builder()
                                     .time(1619827200000L)
                                     .deployments(DeploymentCount.builder().total(4).success(2).failure(1).build())
                                     .build());
-    executionDeploymentList.add(ExecutionDeployment.builder()
+    executionDeploymentList.add(ServiceDeployment.builder()
                                     .time(1619913600000L)
                                     .deployments(DeploymentCount.builder().total(1).success(0).failure(1).build())
                                     .build());
 
-    ExecutionDeploymentInfo executionDeploymentInfo =
-        ExecutionDeploymentInfo.builder().executionDeploymentList(executionDeploymentList).build();
-    ExecutionDeploymentInfo prevExecutionDeploymentInfo =
-        ExecutionDeploymentInfo.builder().executionDeploymentList(prevExecutionDeploymentList).build();
+    ServiceDeploymentInfoDTO serviceDeploymentListWrap =
+        ServiceDeploymentInfoDTO.builder().serviceDeploymentList(executionDeploymentList).build();
+    ServiceDeploymentInfoDTO prevExecutionDeploymentWrap =
+        ServiceDeploymentInfoDTO.builder().serviceDeploymentList(prevExecutionDeploymentList).build();
 
-    doReturn(executionDeploymentInfo)
+    doReturn(serviceDeploymentListWrap)
         .when(cdOverviewDashboardServiceImpl)
-        .getExecutionDeploymentDashboard("acc", "org", "pro", startInterval, endInterval);
-    doReturn(prevExecutionDeploymentInfo)
+        .getServiceDeployments("acc", "org", "pro", startInterval, endInterval, null, 1);
+    doReturn(prevExecutionDeploymentWrap)
         .when(cdOverviewDashboardServiceImpl)
-        .getExecutionDeploymentDashboard("acc", "org", "pro", prevStartInterval, prevEndInterval);
+        .getServiceDeployments("acc", "org", "pro", prevStartInterval, prevEndInterval, null, 1);
 
-    ExecutionDeploymentDetailInfo deploymentsExecutionInfo =
-        cdOverviewDashboardServiceImpl.getDeploymentsExecutionInfo("acc", "org", "pro", startInterval, endInterval);
+    ServiceDeploymentListInfo deploymentsExecutionInfo = cdOverviewDashboardServiceImpl.getServiceDeploymentsInfo(
+        "acc", "org", "pro", startInterval, endInterval, null, 1);
 
-    assertThat(deploymentsExecutionInfo.getExecutionDeploymentList()).isEqualTo(executionDeploymentList);
+    assertThat(deploymentsExecutionInfo.getServiceDeploymentList()).isEqualTo(executionDeploymentList);
     assertThat(deploymentsExecutionInfo.getTotalDeployments()).isEqualTo(10);
     assertThat(deploymentsExecutionInfo.getFrequency()).isEqualTo(2.0);
+    assertThat(deploymentsExecutionInfo.getFailureRate()).isEqualTo(40.0);
   }
 
   @Test
