@@ -136,7 +136,6 @@ shared_dependencies = [
     "@maven//:com_github_scribejava_scribejava_apis",
     "@maven//:com_github_scribejava_scribejava_core",
     "@maven//:com_github_stephenc_jcip_jcip_annotations",
-    "@maven//:com_github_tomakehurst_wiremock",
     "@maven//:com_github_vladimir_bukhtoyarov_bucket4j_core",
     "@maven//:com_github_zafarkhaja_java_semver",
     "@maven//:com_google_android_annotations",

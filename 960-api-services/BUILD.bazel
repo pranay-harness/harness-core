@@ -119,7 +119,7 @@ java_library(
         ":module",
         "//:lombok",
         "//990-commons-test:module",
-        "@maven//:com_github_tomakehurst_wiremock",
+        "@maven//:com_github_tomakehurst_wiremock_jre8_standalone",
     ],
 )
 
