@@ -12,7 +12,7 @@ import lombok.Data;
 @Data
 @Builder
 @OwnedBy(CDP)
-public class PcfRequestConfig {
+public class CfRequestConfig {
   private String orgName;
   private String spaceName;
   private String userName;

@@ -7,7 +7,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.pcf.model.PcfRequestConfig;
+import io.harness.pcf.model.CfRequestConfig;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.PcfConfig;
@@ -52,8 +52,8 @@ public class PcfApplicationDetailsCommandTaskHandler extends PcfCommandTaskHandl
       encryptionService.decrypt(pcfConfig, encryptedDataDetails, isInstanceSync);
 
       PcfInstanceSyncRequest pcfInstanceSyncRequest = (PcfInstanceSyncRequest) pcfCommandRequest;
-      PcfRequestConfig pcfRequestConfig =
-          PcfRequestConfig.builder()
+      CfRequestConfig cfRequestConfig =
+          CfRequestConfig.builder()
               .timeOutIntervalInMins(5)
               .applicationName(pcfInstanceSyncRequest.getPcfApplicationName())
               .userName(String.valueOf(pcfConfig.getUsername()))
@@ -65,7 +65,7 @@ public class PcfApplicationDetailsCommandTaskHandler extends PcfCommandTaskHandl
               .ignorePcfConnectionContextCache(pcfCommandRequest.isIgnorePcfConnectionContextCache())
               .build();
 
-      ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
+      ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(cfRequestConfig);
 
       pcfInstanceSyncResponse.setGuid(applicationDetail.getId());
       pcfInstanceSyncResponse.setName(applicationDetail.getName());

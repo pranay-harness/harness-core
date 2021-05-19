@@ -23,6 +23,10 @@ java_library(
         "@maven//:io_kubernetes_client_java",
         "@maven//:org_codehaus_jackson_jackson_core_asl",
         "@maven//:org_json_json",
+        "@maven//:org_cloudfoundry_cloudfoundry_client",
+        "@maven//:org_cloudfoundry_cloudfoundry_client_reactor",
+        "@maven//:org_cloudfoundry_cloudfoundry_operations",
+        "@maven//:org_cloudfoundry_cloudfoundry_util",
     ],
 )
 

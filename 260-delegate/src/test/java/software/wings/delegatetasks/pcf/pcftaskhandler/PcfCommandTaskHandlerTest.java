@@ -34,14 +34,15 @@ import static org.mockito.Mockito.when;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.task.pcf.PcfManifestFileData;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.filesystem.FileIo;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.pcf.PivotalClientApiException;
-import io.harness.pcf.model.PcfAppAutoscalarRequestData;
-import io.harness.pcf.model.PcfRequestConfig;
+import io.harness.pcf.model.CfAppAutoscalarRequestData;
+import io.harness.pcf.model.CfCreateApplicationRequestData;
+import io.harness.pcf.model.CfManifestFileData;
+import io.harness.pcf.model.CfRequestConfig;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -61,7 +62,6 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRouteUpdateRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
-import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
 import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest.ActionType;
 import software.wings.helpers.ext.pcf.request.PcfInstanceSyncRequest;
@@ -454,15 +454,15 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     FileIo.createDirectoryIfDoesNotExist(path);
 
     pcfCommandRequest.setPcfManifestsPackage(PcfManifestsPackage.builder().autoscalarManifestYml("abc").build());
-    PcfAppAutoscalarRequestData autoscalarRequestData = PcfAppAutoscalarRequestData.builder()
-                                                            .applicationName(APP_NAME)
-                                                            .applicationGuid(APP_ID)
-                                                            .configPathVar(path)
-                                                            .build();
+    CfAppAutoscalarRequestData autoscalarRequestData = CfAppAutoscalarRequestData.builder()
+                                                           .applicationName(APP_NAME)
+                                                           .applicationGuid(APP_ID)
+                                                           .configPathVar(path)
+                                                           .build();
 
     pcfDeployCommandTaskHandler.configureAutoscalarIfNeeded(
         pcfCommandRequest, applicationDetail, autoscalarRequestData, executionLogCallback);
-    ArgumentCaptor<PcfAppAutoscalarRequestData> captor = ArgumentCaptor.forClass(PcfAppAutoscalarRequestData.class);
+    ArgumentCaptor<CfAppAutoscalarRequestData> captor = ArgumentCaptor.forClass(CfAppAutoscalarRequestData.class);
     verify(pcfDeploymentManager, times(1)).performConfigureAutoscalar(captor.capture(), any());
     autoscalarRequestData = captor.getValue();
     assertThat(autoscalarRequestData.getApplicationName()).isEqualTo(APP_NAME);
@@ -625,8 +625,8 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     PcfServiceData pcfServiceData = PcfServiceData.builder().name(APP_NAME).id(APP_ID).build();
     List<PcfServiceData> upsizeList = Arrays.asList(pcfServiceData);
 
-    PcfAppAutoscalarRequestData pcfAppAutoscalarRequestData =
-        PcfAppAutoscalarRequestData.builder().configPathVar("path").build();
+    CfAppAutoscalarRequestData pcfAppAutoscalarRequestData =
+        CfAppAutoscalarRequestData.builder().configPathVar("path").build();
     doReturn(true).when(pcfDeploymentManager).changeAutoscalarState(any(), any(), anyBoolean());
 
     pcfRollbackCommandTaskHandler.enableAutoscalarIfNeeded(
@@ -709,7 +709,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
                                                 .build();
     doReturn(Collections.singletonList(applicationSummary))
         .when(pcfDeploymentManager)
-        .getPreviousReleases(any(PcfRequestConfig.class), eq(appNamePrefix));
+        .getPreviousReleases(any(CfRequestConfig.class), eq(appNamePrefix));
     pcfCommandRequest.setApplicationNamePrefix(appNamePrefix);
     pcfCommandRequest.setActionType(RUNNING_COUNT);
     pcfCommandExecutionResponse =
@@ -721,7 +721,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     // Fetch running count failure
     doThrow(Exception.class)
         .when(pcfDeploymentManager)
-        .getPreviousReleases(any(PcfRequestConfig.class), eq(appNamePrefix));
+        .getPreviousReleases(any(CfRequestConfig.class), eq(appNamePrefix));
     pcfCommandExecutionResponse =
         pcfDataFetchCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback, false);
     assertThat(pcfCommandExecutionResponse).isNotNull();
@@ -886,7 +886,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
 
     // Existing applications are empty. No op expected
     pcfRouteUpdateCommandTaskHandler.resizeOldApplications(
-        pcfCommandRequest, PcfRequestConfig.builder().build(), executionLogCallback, false, "");
+        pcfCommandRequest, CfRequestConfig.builder().build(), executionLogCallback, false, "");
     verify(pcfDeploymentManager, never()).resizeApplication(any());
 
     // Autoscalar is false, existing app is present
@@ -921,19 +921,19 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
 
     doReturn(true).when(pcfCommandTaskHelper).disableAutoscalar(any(), any());
     pcfRouteUpdateCommandTaskHandler.resizeOldApplications(
-        pcfCommandRequest, PcfRequestConfig.builder().build(), executionLogCallback, false, "");
+        pcfCommandRequest, CfRequestConfig.builder().build(), executionLogCallback, false, "");
     verify(pcfDeploymentManager, times(1)).resizeApplication(any());
     verify(pcfCommandTaskHelper, never()).disableAutoscalar(any(), any());
 
     // Autoscalar is true, existing app present
     pcfCommandRequest.setUseAppAutoscalar(true);
-    ArgumentCaptor<PcfAppAutoscalarRequestData> argumentCaptor =
-        ArgumentCaptor.forClass(PcfAppAutoscalarRequestData.class);
+    ArgumentCaptor<CfAppAutoscalarRequestData> argumentCaptor =
+        ArgumentCaptor.forClass(CfAppAutoscalarRequestData.class);
     pcfRouteUpdateCommandTaskHandler.resizeOldApplications(
-        pcfCommandRequest, PcfRequestConfig.builder().build(), executionLogCallback, false, "");
+        pcfCommandRequest, CfRequestConfig.builder().build(), executionLogCallback, false, "");
     verify(pcfDeploymentManager, times(2)).resizeApplication(any());
     verify(pcfCommandTaskHelper, times(1)).disableAutoscalar(argumentCaptor.capture(), any());
-    PcfAppAutoscalarRequestData pcfAppAutoscalarRequestData = argumentCaptor.getValue();
+    CfAppAutoscalarRequestData pcfAppAutoscalarRequestData = argumentCaptor.getValue();
     assertThat(pcfAppAutoscalarRequestData.getApplicationName()).isEqualTo("app1");
     assertThat(pcfAppAutoscalarRequestData.getApplicationGuid()).isEqualTo("10");
     assertThat(pcfAppAutoscalarRequestData.getTimeoutInMins()).isEqualTo(2);
@@ -942,7 +942,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     routeUpdateRequestConfigData.setRollback(true);
     doReturn(true).when(pcfDeploymentManager).changeAutoscalarState(any(), any(), anyBoolean());
     pcfRouteUpdateCommandTaskHandler.resizeOldApplications(
-        pcfCommandRequest, PcfRequestConfig.builder().build(), executionLogCallback, true, "");
+        pcfCommandRequest, CfRequestConfig.builder().build(), executionLogCallback, true, "");
     verify(pcfDeploymentManager, times(1)).changeAutoscalarState(argumentCaptor.capture(), any(), anyBoolean());
     pcfAppAutoscalarRequestData = argumentCaptor.getValue();
     assertThat(pcfAppAutoscalarRequestData.getApplicationName()).isEqualTo("app1");
@@ -1013,13 +1013,13 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
 
     PcfCommandSetupRequest pcfCommandSetupRequest = PcfCommandSetupRequest.builder().useAppAutoscalar(true).build();
 
-    PcfAppAutoscalarRequestData pcfAppAutoscalarRequestData =
-        PcfAppAutoscalarRequestData.builder().configPathVar("path").build();
+    CfAppAutoscalarRequestData pcfAppAutoscalarRequestData =
+        CfAppAutoscalarRequestData.builder().configPathVar("path").build();
 
     doReturn(true).when(pcfCommandTaskHelper).disableAutoscalar(any(), any());
-    ArgumentCaptor<PcfAppAutoscalarRequestData> argumentCaptor =
-        ArgumentCaptor.forClass(PcfAppAutoscalarRequestData.class);
-    pcfSetupCommandTaskHandler.downsizeApplicationToZero(applicationSummary, PcfRequestConfig.builder().build(),
+    ArgumentCaptor<CfAppAutoscalarRequestData> argumentCaptor =
+        ArgumentCaptor.forClass(CfAppAutoscalarRequestData.class);
+    pcfSetupCommandTaskHandler.downsizeApplicationToZero(applicationSummary, CfRequestConfig.builder().build(),
         pcfCommandSetupRequest, pcfAppAutoscalarRequestData, executionLogCallback);
 
     verify(pcfCommandTaskHelper, times(1)).disableAutoscalar(argumentCaptor.capture(), any());
@@ -1040,18 +1040,19 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
         .when(pcfCommandTaskHelper)
         .createManifestVarsYamlFileLocally(any(), anyString(), anyInt());
 
-    PcfCreateApplicationRequestData requestData =
-        PcfCreateApplicationRequestData.builder()
-            .setupRequest(PcfCommandSetupRequest.builder()
-                              .pcfManifestsPackage(
-                                  PcfManifestsPackage.builder().variableYmls(Arrays.asList("a:b", "c:d")).build())
-                              .releaseNamePrefix("abc")
-                              .build())
+    PcfCommandSetupRequest setupRequest =
+        PcfCommandSetupRequest.builder()
+            .pcfManifestsPackage(PcfManifestsPackage.builder().variableYmls(Arrays.asList("a:b", "c:d")).build())
+            .releaseNamePrefix("abc")
+            .build();
+    CfCreateApplicationRequestData requestData =
+        CfCreateApplicationRequestData.builder()
+            .password("ABC".toCharArray())
             .varsYmlFilePresent(true)
-            .pcfManifestFileData(PcfManifestFileData.builder().varFiles(new ArrayList<>()).build())
+            .pcfManifestFileData(CfManifestFileData.builder().varFiles(new ArrayList<>()).build())
             .build();
 
-    pcfSetupCommandTaskHandler.prepareVarsYamlFile(requestData);
+    pcfSetupCommandTaskHandler.prepareVarsYamlFile(requestData, setupRequest);
 
     assertThat(requestData.getPcfManifestFileData()).isNotNull();
     assertThat(requestData.getPcfManifestFileData().getVarFiles()).isNotEmpty();
@@ -1094,17 +1095,17 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
 
     PcfCommandDeployRequest request = PcfCommandDeployRequest.builder().build();
     pcfDeployCommandTaskHandler.generatePcfInstancesElementsForExistingApp(
-        pcfInstanceElements, PcfRequestConfig.builder().build(), request, executionLogCallback);
+        pcfInstanceElements, CfRequestConfig.builder().build(), request, executionLogCallback);
 
     request.setDownsizeAppDetail(PcfAppSetupTimeDetails.builder().applicationName("app").build());
     pcfDeployCommandTaskHandler.generatePcfInstancesElementsForExistingApp(
-        pcfInstanceElements, PcfRequestConfig.builder().build(), request, executionLogCallback);
+        pcfInstanceElements, CfRequestConfig.builder().build(), request, executionLogCallback);
     assertThat(pcfInstanceElements.size()).isEqualTo(1);
     assertThat(pcfInstanceElements.get(0).getInstanceIndex()).isEqualTo("2");
 
     doThrow(new PivotalClientApiException("e")).when(pcfDeploymentManager).getApplicationByName(any());
     pcfDeployCommandTaskHandler.generatePcfInstancesElementsForExistingApp(
-        pcfInstanceElements, PcfRequestConfig.builder().build(), request, executionLogCallback);
+        pcfInstanceElements, CfRequestConfig.builder().build(), request, executionLogCallback);
   }
 
   @Test

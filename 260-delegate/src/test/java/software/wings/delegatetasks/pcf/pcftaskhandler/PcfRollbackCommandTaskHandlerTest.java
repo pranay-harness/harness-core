@@ -1,22 +1,17 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
-import static io.harness.rule.OwnerRule.BOJANA;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyList;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
+import com.google.inject.Inject;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.pcf.PivotalClientApiException;
-import io.harness.pcf.model.PcfRequestConfig;
+import io.harness.pcf.model.CfRequestConfig;
 import io.harness.rule.Owner;
-
+import org.cloudfoundry.operations.applications.ApplicationDetail;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.pcf.PcfCommandTaskHelper;
@@ -24,14 +19,17 @@ import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 
-import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
-import org.cloudfoundry.operations.applications.ApplicationDetail;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
+import static io.harness.rule.OwnerRule.BOJANA;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class PcfRollbackCommandTaskHandlerTest extends WingsBaseTest {
@@ -62,14 +60,14 @@ public class PcfRollbackCommandTaskHandlerTest extends WingsBaseTest {
                                               .runningInstances(1)
                                               .build();
     when(pcfDeploymentManager.getApplicationByName(any())).thenReturn(applicationDetail);
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();
+    CfRequestConfig cfRequestConfig = CfRequestConfig.builder().build();
 
     // map route maps
     PcfCommandRollbackRequest pcfCommandRequest = createPcfCommandRollbackRequest(true, appName, urls);
     pcfRollbackCommandTaskHandler.restoreRoutesForOldApplication(
-        pcfCommandRequest, pcfRequestConfig, executionLogCallback);
-    assertThat(pcfRequestConfig.getApplicationName()).isEqualTo(appName);
-    verify(pcfCommandTaskHelper).mapRouteMaps(appName, urls, pcfRequestConfig, executionLogCallback);
+        pcfCommandRequest, cfRequestConfig, executionLogCallback);
+    assertThat(cfRequestConfig.getApplicationName()).isEqualTo(appName);
+    verify(pcfCommandTaskHelper).mapRouteMaps(appName, urls, cfRequestConfig, executionLogCallback);
   }
 
   @Test
@@ -87,13 +85,13 @@ public class PcfRollbackCommandTaskHandlerTest extends WingsBaseTest {
                                               .runningInstances(1)
                                               .build();
     when(pcfDeploymentManager.getApplicationByName(any())).thenReturn(applicationDetail);
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();
+    CfRequestConfig cfRequestConfig = CfRequestConfig.builder().build();
 
     PcfCommandRollbackRequest pcfCommandRequest = createPcfCommandRollbackRequest(false, null, null);
     pcfRollbackCommandTaskHandler.restoreRoutesForOldApplication(
-        pcfCommandRequest, pcfRequestConfig, executionLogCallback);
+        pcfCommandRequest, cfRequestConfig, executionLogCallback);
     verify(pcfCommandTaskHelper, never())
-        .mapRouteMaps(anyString(), anyList(), any(PcfRequestConfig.class), any(ExecutionLogCallback.class));
+        .mapRouteMaps(anyString(), anyList(), any(CfRequestConfig.class), any(ExecutionLogCallback.class));
   }
 
   @Test
@@ -112,14 +110,14 @@ public class PcfRollbackCommandTaskHandlerTest extends WingsBaseTest {
                                               .runningInstances(1)
                                               .build();
     when(pcfDeploymentManager.getApplicationByName(any())).thenReturn(applicationDetail);
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();
+    CfRequestConfig cfRequestConfig = CfRequestConfig.builder().build();
 
     PcfCommandRollbackRequest pcfCommandRequest = createPcfCommandRollbackRequest(true, appName, null);
     pcfRollbackCommandTaskHandler.restoreRoutesForOldApplication(
-        pcfCommandRequest, pcfRequestConfig, executionLogCallback);
-    assertThat(pcfRequestConfig.getApplicationName()).isEqualTo(appName);
+        pcfCommandRequest, cfRequestConfig, executionLogCallback);
+    assertThat(cfRequestConfig.getApplicationName()).isEqualTo(appName);
     verify(pcfCommandTaskHelper, never())
-        .mapRouteMaps(anyString(), anyList(), any(PcfRequestConfig.class), any(ExecutionLogCallback.class));
+        .mapRouteMaps(anyString(), anyList(), any(CfRequestConfig.class), any(ExecutionLogCallback.class));
   }
 
   @Test
@@ -139,14 +137,14 @@ public class PcfRollbackCommandTaskHandlerTest extends WingsBaseTest {
                                               .runningInstances(1)
                                               .build();
     when(pcfDeploymentManager.getApplicationByName(any())).thenReturn(applicationDetail);
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();
+    CfRequestConfig cfRequestConfig = CfRequestConfig.builder().build();
 
     List<String> urls = Arrays.asList("url2");
     PcfCommandRollbackRequest pcfCommandRequest = createPcfCommandRollbackRequest(true, appName, urls);
     pcfRollbackCommandTaskHandler.restoreRoutesForOldApplication(
-        pcfCommandRequest, pcfRequestConfig, executionLogCallback);
-    assertThat(pcfRequestConfig.getApplicationName()).isEqualTo(appName);
-    verify(pcfCommandTaskHelper).mapRouteMaps(appName, urls, pcfRequestConfig, executionLogCallback);
+        pcfCommandRequest, cfRequestConfig, executionLogCallback);
+    assertThat(cfRequestConfig.getApplicationName()).isEqualTo(appName);
+    verify(pcfCommandTaskHelper).mapRouteMaps(appName, urls, cfRequestConfig, executionLogCallback);
   }
 
   private PcfCommandRollbackRequest createPcfCommandRollbackRequest(
@@ -164,20 +162,20 @@ public class PcfRollbackCommandTaskHandlerTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testUnmapRoutesFromNewAppAfterDownsize() throws PivotalClientApiException {
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();
+    CfRequestConfig cfRequestConfig = CfRequestConfig.builder().build();
 
     // standard BG workflow
     PcfCommandRollbackRequest commandRollbackRequest =
         PcfCommandRollbackRequest.builder().isStandardBlueGreenWorkflow(true).build();
     pcfRollbackCommandTaskHandler.unmapRoutesFromNewAppAfterDownsize(
-        executionLogCallback, commandRollbackRequest, pcfRequestConfig);
+        executionLogCallback, commandRollbackRequest, cfRequestConfig);
     verify(pcfCommandTaskHelper, never()).unmapExistingRouteMaps(any(), any(), any());
 
     // no new applications
     commandRollbackRequest =
         PcfCommandRollbackRequest.builder().isStandardBlueGreenWorkflow(false).newApplicationDetails(null).build();
     pcfRollbackCommandTaskHandler.unmapRoutesFromNewAppAfterDownsize(
-        executionLogCallback, commandRollbackRequest, pcfRequestConfig);
+        executionLogCallback, commandRollbackRequest, cfRequestConfig);
     verify(pcfCommandTaskHelper, never()).unmapExistingRouteMaps(any(), any(), any());
 
     // empty name of new application details
@@ -186,7 +184,7 @@ public class PcfRollbackCommandTaskHandlerTest extends WingsBaseTest {
                                  .newApplicationDetails(PcfAppSetupTimeDetails.builder().build())
                                  .build();
     pcfRollbackCommandTaskHandler.unmapRoutesFromNewAppAfterDownsize(
-        executionLogCallback, commandRollbackRequest, pcfRequestConfig);
+        executionLogCallback, commandRollbackRequest, cfRequestConfig);
     verify(pcfCommandTaskHelper, never()).unmapExistingRouteMaps(any(), any(), any());
 
     String appName = "appName";
@@ -209,8 +207,8 @@ public class PcfRollbackCommandTaskHandlerTest extends WingsBaseTest {
             .build();
 
     pcfRollbackCommandTaskHandler.unmapRoutesFromNewAppAfterDownsize(
-        executionLogCallback, commandRollbackRequest, pcfRequestConfig);
-    assertThat(pcfRequestConfig.getApplicationName()).isEqualTo(appName);
-    verify(pcfCommandTaskHelper).unmapExistingRouteMaps(applicationDetail, pcfRequestConfig, executionLogCallback);
+        executionLogCallback, commandRollbackRequest, cfRequestConfig);
+    assertThat(cfRequestConfig.getApplicationName()).isEqualTo(appName);
+    verify(pcfCommandTaskHelper).unmapExistingRouteMaps(applicationDetail, cfRequestConfig, executionLogCallback);
   }
 }

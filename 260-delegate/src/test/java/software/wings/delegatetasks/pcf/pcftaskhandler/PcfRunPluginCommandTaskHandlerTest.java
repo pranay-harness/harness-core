@@ -23,6 +23,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.pcf.CfCliClient;
 import io.harness.pcf.PivotalClientApiException;
+import io.harness.pcf.model.CfRunPluginScriptRequestData;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -36,7 +37,6 @@ import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.request.PcfRunPluginCommandRequest;
-import software.wings.helpers.ext.pcf.request.PcfRunPluginScriptRequestData;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.service.intfc.security.EncryptionService;
 
@@ -86,16 +86,16 @@ public class PcfRunPluginCommandTaskHandlerTest extends WingsBaseTest {
   public void test_executeTaskInternal() throws PivotalClientApiException {
     doNothing()
         .when(cfCliClient)
-        .runPcfPluginScript(any(PcfRunPluginScriptRequestData.class), Mockito.eq(executionLogCallback));
+        .runPcfPluginScript(any(CfRunPluginScriptRequestData.class), Mockito.eq(executionLogCallback));
     PcfRunPluginCommandRequest pcfCommandRequest = getPcfRunPluginCommandRequest();
     pcfRunPluginCommandTaskHandler.executeTaskInternal(pcfCommandRequest, null, executionLogCallback, false);
 
     // verify
-    ArgumentCaptor<PcfRunPluginScriptRequestData> argumentCaptor =
-        ArgumentCaptor.forClass(PcfRunPluginScriptRequestData.class);
+    ArgumentCaptor<CfRunPluginScriptRequestData> argumentCaptor =
+        ArgumentCaptor.forClass(CfRunPluginScriptRequestData.class);
     verify(cfCliClient).runPcfPluginScript(argumentCaptor.capture(), eq(executionLogCallback));
 
-    final PcfRunPluginScriptRequestData pcfRunPluginScriptRequestData = argumentCaptor.getValue();
+    final CfRunPluginScriptRequestData pcfRunPluginScriptRequestData = argumentCaptor.getValue();
     assertThat(pcfRunPluginScriptRequestData.getWorkingDirectory()).isNotNull();
     assertThat(pcfRunPluginScriptRequestData.getFinalScriptString())
         .isEqualTo("cf create-service " + pcfRunPluginScriptRequestData.getWorkingDirectory() + "/manifest.yml");

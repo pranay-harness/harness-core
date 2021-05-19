@@ -27,8 +27,8 @@ import io.harness.filesystem.FileIo;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.pcf.PivotalClientApiException;
-import io.harness.pcf.model.PcfAppAutoscalarRequestData;
-import io.harness.pcf.model.PcfRequestConfig;
+import io.harness.pcf.model.CfRequestConfig;
+import io.harness.pcf.model.CfAppAutoscalarRequestData;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.api.PcfInstanceElement;
@@ -82,7 +82,7 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
     File workingDirectory = null;
     boolean exceptionOccured = false;
     Exception exception = null;
-    PcfAppAutoscalarRequestData pcfAppAutoscalarRequestData = PcfAppAutoscalarRequestData.builder().build();
+    CfAppAutoscalarRequestData pcfAppAutoscalarRequestData = CfAppAutoscalarRequestData.builder().build();
     try {
       boolean downSize = DOWNSIZE_OLD_FIRST == pcfCommandDeployRequest.getResizeStrategy();
       String commandUnitType = downSize ? Downsize : Upsize;
@@ -93,8 +93,8 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
       PcfConfig pcfConfig = pcfCommandRequest.getPcfConfig();
       encryptionService.decrypt(pcfConfig, encryptedDataDetails, false);
 
-      PcfRequestConfig pcfRequestConfig =
-          PcfRequestConfig.builder()
+      CfRequestConfig cfRequestConfig =
+          CfRequestConfig.builder()
               .userName(String.valueOf(pcfConfig.getUsername()))
               .password(String.valueOf(pcfConfig.getPassword()))
               .endpointUrl(pcfConfig.getEndpointUrl())
@@ -114,17 +114,17 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
       if (workingDirectory == null) {
         throw new PivotalClientApiException("Failed to create working CF directory");
       }
-      pcfRequestConfig.setCfHomeDirPath(workingDirectory.getAbsolutePath());
+      cfRequestConfig.setCfHomeDirPath(workingDirectory.getAbsolutePath());
 
       // Init AppAutoscalarRequestData If Needed
       if (pcfCommandDeployRequest.isUseAppAutoscalar()) {
-        pcfAppAutoscalarRequestData.setPcfRequestConfig(pcfRequestConfig);
+        pcfAppAutoscalarRequestData.setCfRequestConfig(cfRequestConfig);
         pcfAppAutoscalarRequestData.setConfigPathVar(workingDirectory.getAbsolutePath());
         pcfAppAutoscalarRequestData.setTimeoutInMins(pcfCommandDeployRequest.getTimeoutIntervalInMin());
       }
 
       ApplicationDetail details = pcfCommandTaskHelper.getNewlyCreatedApplication(
-          pcfRequestConfig, pcfCommandDeployRequest, pcfDeploymentManager);
+          cfRequestConfig, pcfCommandDeployRequest, pcfDeploymentManager);
       // No of instances to be added to newly created application in this deploy stage
       Integer stepIncrease = pcfCommandDeployRequest.getUpdateCount() - details.getInstances();
       Integer stepDecrease = pcfCommandDeployRequest.getDownSizeCount();
@@ -132,26 +132,26 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
       // downsize previous apps with non zero instances by same count new app was upsized
       List<PcfInstanceElement> pcfInstanceElementsForVerification = new ArrayList<>();
       if (DOWNSIZE_OLD_FIRST == pcfCommandDeployRequest.getResizeStrategy()) {
-        pcfCommandTaskHelper.downsizePreviousReleases(pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback,
+        pcfCommandTaskHelper.downsizePreviousReleases(pcfCommandDeployRequest, cfRequestConfig, executionLogCallback,
             pcfServiceDataUpdated, stepDecrease, pcfInstanceElementsForVerification, pcfAppAutoscalarRequestData);
-        unmapRoutesIfAppDownsizedToZero(pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback);
+        unmapRoutesIfAppDownsizedToZero(pcfCommandDeployRequest, cfRequestConfig, executionLogCallback);
         executionLogCallback.saveExecutionLog("Downsize Application Successfully Completed", INFO, SUCCESS);
 
         executionLogCallback = pcfCommandTaskHelper.getLogCallBack(delegateLogService, pcfCommandRequest.getAccountId(),
             pcfCommandRequest.getAppId(), pcfCommandRequest.getActivityId(), Upsize);
-        performUpsize(executionLogCallback, pcfCommandDeployRequest, pcfServiceDataUpdated, pcfRequestConfig, details,
+        performUpsize(executionLogCallback, pcfCommandDeployRequest, pcfServiceDataUpdated, cfRequestConfig, details,
             pcfInstanceElementsForVerification, pcfAppAutoscalarRequestData);
         executionLogCallback.saveExecutionLog("Upsize Application Successfully Completed", INFO, SUCCESS);
       } else {
-        performUpsize(executionLogCallback, pcfCommandDeployRequest, pcfServiceDataUpdated, pcfRequestConfig, details,
+        performUpsize(executionLogCallback, pcfCommandDeployRequest, pcfServiceDataUpdated, cfRequestConfig, details,
             pcfInstanceElementsForVerification, pcfAppAutoscalarRequestData);
         executionLogCallback.saveExecutionLog("Upsize Application Successfully Completed", INFO, SUCCESS);
 
         executionLogCallback = pcfCommandTaskHelper.getLogCallBack(delegateLogService, pcfCommandRequest.getAccountId(),
             pcfCommandRequest.getAppId(), pcfCommandRequest.getActivityId(), Downsize);
-        pcfCommandTaskHelper.downsizePreviousReleases(pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback,
+        pcfCommandTaskHelper.downsizePreviousReleases(pcfCommandDeployRequest, cfRequestConfig, executionLogCallback,
             pcfServiceDataUpdated, stepDecrease, pcfInstanceElementsForVerification, pcfAppAutoscalarRequestData);
-        unmapRoutesIfAppDownsizedToZero(pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback);
+        unmapRoutesIfAppDownsizedToZero(pcfCommandDeployRequest, cfRequestConfig, executionLogCallback);
         executionLogCallback.saveExecutionLog("Downsize Application Successfully Completed", INFO, SUCCESS);
       }
 
@@ -159,7 +159,7 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
       executionLogCallback = pcfCommandTaskHelper.getLogCallBack(delegateLogService, pcfCommandRequest.getAccountId(),
           pcfCommandRequest.getAppId(), pcfCommandRequest.getActivityId(), Wrapup);
       generatePcfInstancesElementsForExistingApp(
-          pcfInstanceElementsForVerification, pcfRequestConfig, pcfCommandDeployRequest, executionLogCallback);
+          pcfInstanceElementsForVerification, cfRequestConfig, pcfCommandDeployRequest, executionLogCallback);
 
       // generate response to be sent back to Manager
       pcfDeployCommandResponse.setCommandExecutionStatus(SUCCESS);
@@ -212,7 +212,7 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
 
   @VisibleForTesting
   void generatePcfInstancesElementsForExistingApp(List<PcfInstanceElement> pcfInstanceElementsForVerification,
-      PcfRequestConfig pcfRequestConfig, PcfCommandDeployRequest pcfCommandDeployRequest,
+      CfRequestConfig cfRequestConfig, PcfCommandDeployRequest pcfCommandDeployRequest,
       ExecutionLogCallback executionLogCallback) {
     PcfAppSetupTimeDetails downsizeAppDetail = pcfCommandDeployRequest.getDownsizeAppDetail();
     if (downsizeAppDetail == null || isBlank(downsizeAppDetail.getApplicationName())) {
@@ -220,8 +220,8 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
     }
 
     try {
-      pcfRequestConfig.setApplicationName(downsizeAppDetail.getApplicationName());
-      ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
+      cfRequestConfig.setApplicationName(downsizeAppDetail.getApplicationName());
+      ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(cfRequestConfig);
       applicationDetail.getInstanceDetails().forEach(instanceDetail
           -> pcfInstanceElementsForVerification.add(PcfInstanceElement.builder()
                                                         .applicationId(applicationDetail.getId())
@@ -240,17 +240,17 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
   }
 
   private void performUpsize(ExecutionLogCallback executionLogCallback, PcfCommandDeployRequest pcfCommandDeployRequest,
-      List<PcfServiceData> pcfServiceDataUpdated, PcfRequestConfig pcfRequestConfig, ApplicationDetail details,
-      List<PcfInstanceElement> pcfInstanceElementsForVerification, PcfAppAutoscalarRequestData appAutoscalarRequestData)
+      List<PcfServiceData> pcfServiceDataUpdated, CfRequestConfig cfRequestConfig, ApplicationDetail details,
+      List<PcfInstanceElement> pcfInstanceElementsForVerification, CfAppAutoscalarRequestData appAutoscalarRequestData)
       throws PivotalClientApiException, IOException {
     pcfCommandTaskHelper.upsizeNewApplication(executionLogCallback, pcfCommandDeployRequest, pcfServiceDataUpdated,
-        pcfRequestConfig, details, pcfInstanceElementsForVerification);
+        cfRequestConfig, details, pcfInstanceElementsForVerification);
     configureAutoscalarIfNeeded(pcfCommandDeployRequest, details, appAutoscalarRequestData, executionLogCallback);
   }
 
   @VisibleForTesting
   void configureAutoscalarIfNeeded(PcfCommandDeployRequest pcfCommandDeployRequest, ApplicationDetail applicationDetail,
-      PcfAppAutoscalarRequestData appAutoscalarRequestData, ExecutionLogCallback executionLogCallback)
+      CfAppAutoscalarRequestData appAutoscalarRequestData, ExecutionLogCallback executionLogCallback)
       throws PivotalClientApiException, IOException {
     if (pcfCommandDeployRequest.isUseAppAutoscalar() && pcfCommandDeployRequest.getPcfManifestsPackage() != null
         && isNotEmpty(pcfCommandDeployRequest.getPcfManifestsPackage().getAutoscalarManifestYml())
@@ -271,18 +271,18 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
   }
 
   @VisibleForTesting
-  void unmapRoutesIfAppDownsizedToZero(PcfCommandDeployRequest pcfCommandDeployRequest,
-      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+  void unmapRoutesIfAppDownsizedToZero(PcfCommandDeployRequest pcfCommandDeployRequest, CfRequestConfig cfRequestConfig,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     if (pcfCommandDeployRequest.isStandardBlueGreen() || pcfCommandDeployRequest.getDownsizeAppDetail() == null
         || isBlank(pcfCommandDeployRequest.getDownsizeAppDetail().getApplicationName())) {
       return;
     }
 
-    pcfRequestConfig.setApplicationName(pcfCommandDeployRequest.getDownsizeAppDetail().getApplicationName());
-    ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
+    cfRequestConfig.setApplicationName(pcfCommandDeployRequest.getDownsizeAppDetail().getApplicationName());
+    ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(cfRequestConfig);
 
     if (applicationDetail.getInstances() == 0) {
-      pcfCommandTaskHelper.unmapExistingRouteMaps(applicationDetail, pcfRequestConfig, executionLogCallback);
+      pcfCommandTaskHelper.unmapExistingRouteMaps(applicationDetail, cfRequestConfig, executionLogCallback);
     }
   }
 }

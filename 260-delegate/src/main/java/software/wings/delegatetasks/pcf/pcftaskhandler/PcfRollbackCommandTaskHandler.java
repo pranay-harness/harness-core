@@ -27,8 +27,8 @@ import io.harness.filesystem.FileIo;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.pcf.PivotalClientApiException;
-import io.harness.pcf.model.PcfAppAutoscalarRequestData;
-import io.harness.pcf.model.PcfRequestConfig;
+import io.harness.pcf.model.CfAppAutoscalarRequestData;
+import io.harness.pcf.model.CfRequestConfig;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.api.PcfInstanceElement;
@@ -90,8 +90,8 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
         commandRollbackRequest.setInstanceData(new ArrayList<>());
       }
 
-      PcfRequestConfig pcfRequestConfig =
-          PcfRequestConfig.builder()
+      CfRequestConfig cfRequestConfig =
+          CfRequestConfig.builder()
               .userName(String.valueOf(pcfConfig.getUsername()))
               .password(String.valueOf(pcfConfig.getPassword()))
               .endpointUrl(pcfConfig.getEndpointUrl())
@@ -110,9 +110,9 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
               .build();
 
       // Will be used if app autoscalar is configured
-      PcfAppAutoscalarRequestData autoscalarRequestData =
-          PcfAppAutoscalarRequestData.builder()
-              .pcfRequestConfig(pcfRequestConfig)
+      CfAppAutoscalarRequestData autoscalarRequestData =
+          CfAppAutoscalarRequestData.builder()
+              .cfRequestConfig(cfRequestConfig)
               .configPathVar(workingDirectory.getAbsolutePath())
               .timeoutInMins(commandRollbackRequest.getTimeoutIntervalInMin() != null
                       ? commandRollbackRequest.getTimeoutIntervalInMin()
@@ -136,17 +136,17 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
       List<PcfInstanceElement> pcfInstanceElements = new ArrayList<>();
       // During rollback, always upsize old ones
       pcfCommandTaskHelper.upsizeListOfInstances(executionLogCallback, pcfDeploymentManager, pcfServiceDataUpdated,
-          pcfRequestConfig, upsizeList, pcfInstanceElements);
-      restoreRoutesForOldApplication(commandRollbackRequest, pcfRequestConfig, executionLogCallback);
+          cfRequestConfig, upsizeList, pcfInstanceElements);
+      restoreRoutesForOldApplication(commandRollbackRequest, cfRequestConfig, executionLogCallback);
       // Enable autoscalar for older app, if it was disabled during deploy
       enableAutoscalarIfNeeded(upsizeList, autoscalarRequestData, executionLogCallback);
       executionLogCallback.saveExecutionLog("#---------- Upsize Application Successfully Completed", INFO, SUCCESS);
 
       executionLogCallback = pcfCommandTaskHelper.getLogCallBack(delegateLogService, pcfCommandRequest.getAccountId(),
           pcfCommandRequest.getAppId(), pcfCommandRequest.getActivityId(), Downsize);
-      pcfCommandTaskHelper.downSizeListOfInstances(executionLogCallback, pcfServiceDataUpdated, pcfRequestConfig,
+      pcfCommandTaskHelper.downSizeListOfInstances(executionLogCallback, pcfServiceDataUpdated, cfRequestConfig,
           downSizeList, commandRollbackRequest, autoscalarRequestData);
-      unmapRoutesFromNewAppAfterDownsize(executionLogCallback, commandRollbackRequest, pcfRequestConfig);
+      unmapRoutesFromNewAppAfterDownsize(executionLogCallback, commandRollbackRequest, cfRequestConfig);
 
       pcfDeployCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
       pcfDeployCommandResponse.setOutput(StringUtils.EMPTY);
@@ -195,7 +195,7 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
   }
 
   @VisibleForTesting
-  void enableAutoscalarIfNeeded(List<PcfServiceData> upsizeList, PcfAppAutoscalarRequestData autoscalarRequestData,
+  void enableAutoscalarIfNeeded(List<PcfServiceData> upsizeList, CfAppAutoscalarRequestData autoscalarRequestData,
       ExecutionLogCallback logCallback) throws PivotalClientApiException {
     for (PcfServiceData pcfServiceData : upsizeList) {
       if (!pcfServiceData.isDisableAutoscalarPerformed()) {
@@ -216,8 +216,8 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
    * this step will restore them.
    */
   @VisibleForTesting
-  void restoreRoutesForOldApplication(PcfCommandRollbackRequest commandRollbackRequest,
-      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+  void restoreRoutesForOldApplication(PcfCommandRollbackRequest commandRollbackRequest, CfRequestConfig cfRequestConfig,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     if (commandRollbackRequest.isStandardBlueGreenWorkflow()
         || EmptyPredicate.isEmpty(commandRollbackRequest.getAppsToBeDownSized())) {
       return;
@@ -226,8 +226,8 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
     PcfAppSetupTimeDetails pcfAppSetupTimeDetails = commandRollbackRequest.getAppsToBeDownSized().get(0);
 
     if (pcfAppSetupTimeDetails != null) {
-      pcfRequestConfig.setApplicationName(pcfAppSetupTimeDetails.getApplicationName());
-      ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
+      cfRequestConfig.setApplicationName(pcfAppSetupTimeDetails.getApplicationName());
+      ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(cfRequestConfig);
 
       if (EmptyPredicate.isEmpty(pcfAppSetupTimeDetails.getUrls())) {
         return;
@@ -236,14 +236,14 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
       if (EmptyPredicate.isEmpty(applicationDetail.getUrls())
           || !pcfAppSetupTimeDetails.getUrls().containsAll(applicationDetail.getUrls())) {
         pcfCommandTaskHelper.mapRouteMaps(pcfAppSetupTimeDetails.getApplicationName(), pcfAppSetupTimeDetails.getUrls(),
-            pcfRequestConfig, executionLogCallback);
+            cfRequestConfig, executionLogCallback);
       }
     }
   }
 
   @VisibleForTesting
   void unmapRoutesFromNewAppAfterDownsize(ExecutionLogCallback executionLogCallback,
-      PcfCommandRollbackRequest commandRollbackRequest, PcfRequestConfig pcfRequestConfig)
+      PcfCommandRollbackRequest commandRollbackRequest, CfRequestConfig cfRequestConfig)
       throws PivotalClientApiException {
     if (commandRollbackRequest.isStandardBlueGreenWorkflow()
         || commandRollbackRequest.getNewApplicationDetails() == null
@@ -251,11 +251,11 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
       return;
     }
 
-    pcfRequestConfig.setApplicationName(commandRollbackRequest.getNewApplicationDetails().getApplicationName());
-    ApplicationDetail appDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
+    cfRequestConfig.setApplicationName(commandRollbackRequest.getNewApplicationDetails().getApplicationName());
+    ApplicationDetail appDetail = pcfDeploymentManager.getApplicationByName(cfRequestConfig);
 
     if (appDetail.getInstances() == 0) {
-      pcfCommandTaskHelper.unmapExistingRouteMaps(appDetail, pcfRequestConfig, executionLogCallback);
+      pcfCommandTaskHelper.unmapExistingRouteMaps(appDetail, cfRequestConfig, executionLogCallback);
     }
   }
 }

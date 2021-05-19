@@ -26,15 +26,15 @@ import io.harness.logging.Misc;
 import io.harness.pcf.CfCliClient;
 import io.harness.pcf.PivotalClientApiException;
 import io.harness.pcf.model.CfCliVersion;
+import io.harness.pcf.model.CfRequestConfig;
+import io.harness.pcf.model.CfRunPluginScriptRequestData;
 import io.harness.pcf.model.PcfConstants;
-import io.harness.pcf.model.PcfRequestConfig;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfRunPluginCommandRequest;
-import software.wings.helpers.ext.pcf.request.PcfRunPluginScriptRequestData;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.sm.states.pcf.PcfPluginState;
 
@@ -108,8 +108,8 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
               .collect(Collectors.toList()),
           executionLogCallback);
 
-      PcfRequestConfig pcfRequestConfig =
-          PcfRequestConfig.builder()
+      CfRequestConfig cfRequestConfig =
+          CfRequestConfig.builder()
               .orgName(pluginCommandRequest.getOrganization())
               .spaceName(pluginCommandRequest.getSpace())
               .userName(String.valueOf(pcfConfig.getUsername()))
@@ -122,13 +122,11 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
               .ignorePcfConnectionContextCache(pluginCommandRequest.isIgnorePcfConnectionContextCache())
               .build();
 
-      final PcfRunPluginScriptRequestData pcfRunPluginScriptRequestData =
-          PcfRunPluginScriptRequestData.builder()
-              .workingDirectory(workingDirCanonicalPath)
-              .finalScriptString(finalScriptString)
-              .pcfRequestConfig(pcfRequestConfig)
-              .pluginCommandRequest(pluginCommandRequest)
-              .build();
+      final CfRunPluginScriptRequestData pcfRunPluginScriptRequestData = CfRunPluginScriptRequestData.builder()
+                                                                             .workingDirectory(workingDirCanonicalPath)
+                                                                             .finalScriptString(finalScriptString)
+                                                                             .cfRequestConfig(cfRequestConfig)
+                                                                             .build();
       cfCliClient.runPcfPluginScript(pcfRunPluginScriptRequestData, executionLogCallback);
 
       executionLogCallback.saveExecutionLog(

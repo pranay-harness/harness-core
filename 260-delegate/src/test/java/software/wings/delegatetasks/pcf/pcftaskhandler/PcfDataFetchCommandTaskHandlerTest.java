@@ -18,7 +18,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.pcf.PivotalClientApiException;
-import io.harness.pcf.model.PcfRequestConfig;
+import io.harness.pcf.model.CfRequestConfig;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -101,11 +101,11 @@ public class PcfDataFetchCommandTaskHandlerTest extends WingsBaseTest {
 
     verify(encryptionService, times(1)).decrypt(pcfCommandRequest.getPcfConfig(), encryptedDataDetails, false);
 
-    ArgumentCaptor<PcfRequestConfig> argument = ArgumentCaptor.forClass(PcfRequestConfig.class);
+    ArgumentCaptor<CfRequestConfig> argument = ArgumentCaptor.forClass(CfRequestConfig.class);
     verify(pcfDeploymentManager).getOrganizations(argument.capture());
-    PcfRequestConfig pcfRequestConfig = argument.getValue();
+    CfRequestConfig cfRequestConfig = argument.getValue();
 
-    assertPcfRequestConfig(pcfCommandRequest, pcfRequestConfig);
+    assertPcfRequestConfig(pcfCommandRequest, cfRequestConfig);
 
     PcfCommandResponse pcfCommandResponse = response.getPcfCommandResponse();
     assertThat(pcfCommandResponse).isInstanceOf(PcfInfraMappingDataResponse.class);
@@ -126,11 +126,11 @@ public class PcfDataFetchCommandTaskHandlerTest extends WingsBaseTest {
     PcfCommandExecutionResponse response = pcfDataFetchCommandTaskHandler.executeTaskInternal(
         pcfCommandRequest, encryptedDataDetails, executionLogCallback, false);
 
-    ArgumentCaptor<PcfRequestConfig> argument = ArgumentCaptor.forClass(PcfRequestConfig.class);
+    ArgumentCaptor<CfRequestConfig> argument = ArgumentCaptor.forClass(CfRequestConfig.class);
     verify(pcfDeploymentManager).getSpacesForOrganization(argument.capture());
-    PcfRequestConfig pcfRequestConfig = argument.getValue();
+    CfRequestConfig cfRequestConfig = argument.getValue();
 
-    assertPcfRequestConfig(pcfCommandRequest, pcfRequestConfig);
+    assertPcfRequestConfig(pcfCommandRequest, cfRequestConfig);
 
     PcfCommandResponse pcfCommandResponse = response.getPcfCommandResponse();
     assertThat(pcfCommandResponse).isInstanceOf(PcfInfraMappingDataResponse.class);
@@ -151,11 +151,11 @@ public class PcfDataFetchCommandTaskHandlerTest extends WingsBaseTest {
     PcfCommandExecutionResponse response = pcfDataFetchCommandTaskHandler.executeTaskInternal(
         pcfCommandRequest, encryptedDataDetails, executionLogCallback, false);
 
-    ArgumentCaptor<PcfRequestConfig> argument = ArgumentCaptor.forClass(PcfRequestConfig.class);
+    ArgumentCaptor<CfRequestConfig> argument = ArgumentCaptor.forClass(CfRequestConfig.class);
     verify(pcfDeploymentManager).getRouteMaps(argument.capture());
-    PcfRequestConfig pcfRequestConfig = argument.getValue();
+    CfRequestConfig cfRequestConfig = argument.getValue();
 
-    assertPcfRequestConfig(pcfCommandRequest, pcfRequestConfig);
+    assertPcfRequestConfig(pcfCommandRequest, cfRequestConfig);
 
     PcfCommandResponse pcfCommandResponse = response.getPcfCommandResponse();
     assertThat(pcfCommandResponse).isInstanceOf(PcfInfraMappingDataResponse.class);
@@ -179,11 +179,11 @@ public class PcfDataFetchCommandTaskHandlerTest extends WingsBaseTest {
     PcfCommandExecutionResponse response = pcfDataFetchCommandTaskHandler.executeTaskInternal(
         pcfCommandRequest, encryptedDataDetails, executionLogCallback, false);
 
-    ArgumentCaptor<PcfRequestConfig> argument = ArgumentCaptor.forClass(PcfRequestConfig.class);
+    ArgumentCaptor<CfRequestConfig> argument = ArgumentCaptor.forClass(CfRequestConfig.class);
     verify(pcfDeploymentManager).getPreviousReleases(argument.capture(), any());
-    PcfRequestConfig pcfRequestConfig = argument.getValue();
+    CfRequestConfig cfRequestConfig = argument.getValue();
 
-    assertPcfRequestConfig(pcfCommandRequest, pcfRequestConfig);
+    assertPcfRequestConfig(pcfCommandRequest, cfRequestConfig);
 
     PcfCommandResponse pcfCommandResponse = response.getPcfCommandResponse();
     assertThat(pcfCommandResponse).isInstanceOf(PcfInfraMappingDataResponse.class);
@@ -205,17 +205,15 @@ public class PcfDataFetchCommandTaskHandlerTest extends WingsBaseTest {
         .build();
   }
 
-  private void assertPcfRequestConfig(PcfCommandRequest pcfCommandRequest, PcfRequestConfig pcfRequestConfig) {
-    assertThat(pcfRequestConfig.getEndpointUrl()).isEqualTo(pcfCommandRequest.getPcfConfig().getEndpointUrl());
-    assertThat(pcfRequestConfig.getUserName())
-        .isEqualTo(String.valueOf(pcfCommandRequest.getPcfConfig().getUsername()));
-    assertThat(pcfRequestConfig.getPassword())
-        .isEqualTo(String.valueOf(pcfCommandRequest.getPcfConfig().getPassword()));
-    assertThat(pcfRequestConfig.isLimitPcfThreads()).isEqualTo(pcfCommandRequest.isLimitPcfThreads());
-    assertThat(pcfRequestConfig.isLimitPcfThreads()).isEqualTo(pcfCommandRequest.isLimitPcfThreads());
-    assertThat(pcfRequestConfig.isIgnorePcfConnectionContextCache())
+  private void assertPcfRequestConfig(PcfCommandRequest pcfCommandRequest, CfRequestConfig cfRequestConfig) {
+    assertThat(cfRequestConfig.getEndpointUrl()).isEqualTo(pcfCommandRequest.getPcfConfig().getEndpointUrl());
+    assertThat(cfRequestConfig.getUserName()).isEqualTo(String.valueOf(pcfCommandRequest.getPcfConfig().getUsername()));
+    assertThat(cfRequestConfig.getPassword()).isEqualTo(String.valueOf(pcfCommandRequest.getPcfConfig().getPassword()));
+    assertThat(cfRequestConfig.isLimitPcfThreads()).isEqualTo(pcfCommandRequest.isLimitPcfThreads());
+    assertThat(cfRequestConfig.isLimitPcfThreads()).isEqualTo(pcfCommandRequest.isLimitPcfThreads());
+    assertThat(cfRequestConfig.isIgnorePcfConnectionContextCache())
         .isEqualTo(pcfCommandRequest.isIgnorePcfConnectionContextCache());
-    assertThat(pcfRequestConfig.getTimeOutIntervalInMins()).isEqualTo(pcfCommandRequest.getTimeoutIntervalInMin());
+    assertThat(cfRequestConfig.getTimeOutIntervalInMins()).isEqualTo(pcfCommandRequest.getTimeoutIntervalInMin());
   }
 
   private PcfInfraMappingDataRequest getPcfInfraMappingDataRequest(PcfInfraMappingDataRequest.ActionType actionType) {

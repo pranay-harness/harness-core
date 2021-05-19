@@ -19,7 +19,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.pcf.PivotalClientApiException;
-import io.harness.pcf.model.PcfRequestConfig;
+import io.harness.pcf.model.CfRequestConfig;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -83,7 +83,7 @@ public class PcfCreatePcfResourceCommandTaskHandlerTest extends WingsBaseTest {
     doThrow(Exception.class)
         .when(pcfDeploymentManager)
         .createRouteMap(
-            any(PcfRequestConfig.class), anyString(), anyString(), anyString(), anyBoolean(), anyBoolean(), anyInt());
+            any(CfRequestConfig.class), anyString(), anyString(), anyString(), anyBoolean(), anyBoolean(), anyInt());
     PcfCommandExecutionResponse response =
         pcfSetupCommandTaskHandler.executeTaskInternal(mappingDataRequest, encryptedDataDetails, logCallback, false);
     assertThat(response).isNotNull();

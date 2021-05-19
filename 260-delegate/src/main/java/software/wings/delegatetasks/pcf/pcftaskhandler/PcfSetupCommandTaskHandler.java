@@ -21,7 +21,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.task.pcf.PcfManifestFileData;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
@@ -30,8 +29,10 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.logging.Misc;
 import io.harness.pcf.PivotalClientApiException;
-import io.harness.pcf.model.PcfAppAutoscalarRequestData;
-import io.harness.pcf.model.PcfRequestConfig;
+import io.harness.pcf.model.CfAppAutoscalarRequestData;
+import io.harness.pcf.model.CfCreateApplicationRequestData;
+import io.harness.pcf.model.CfManifestFileData;
+import io.harness.pcf.model.CfRequestConfig;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.annotation.EncryptableSetting;
@@ -40,7 +41,6 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
-import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
@@ -84,7 +84,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     if (!(pcfCommandRequest instanceof PcfCommandSetupRequest)) {
       throw new InvalidArgumentsException(Pair.of("pcfCommandRequest", "Must be instance of PcfCommandSetupRequest"));
     }
-    PcfManifestFileData pcfManifestFileData = PcfManifestFileData.builder().varFiles(new ArrayList<>()).build();
+    CfManifestFileData pcfManifestFileData = CfManifestFileData.builder().varFiles(new ArrayList<>()).build();
     PcfConfig pcfConfig = pcfCommandRequest.getPcfConfig();
     encryptionService.decrypt(pcfConfig, encryptedDataDetails, false);
     PcfCommandSetupRequest pcfCommandSetupRequest = (PcfCommandSetupRequest) pcfCommandRequest;
@@ -98,8 +98,8 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
 
       workingDirectory = generateWorkingDirectoryOnDelegate(pcfCommandSetupRequest);
 
-      PcfRequestConfig pcfRequestConfig =
-          PcfRequestConfig.builder()
+      CfRequestConfig cfRequestConfig =
+          CfRequestConfig.builder()
               .orgName(pcfCommandSetupRequest.getOrganization())
               .spaceName(pcfCommandSetupRequest.getSpace())
               .userName(String.valueOf(pcfConfig.getUsername()))
@@ -115,9 +115,9 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
               .ignorePcfConnectionContextCache(pcfCommandSetupRequest.isIgnorePcfConnectionContextCache())
               .build();
 
-      PcfAppAutoscalarRequestData pcfAppAutoscalarRequestData =
-          PcfAppAutoscalarRequestData.builder()
-              .pcfRequestConfig(pcfRequestConfig)
+      CfAppAutoscalarRequestData pcfAppAutoscalarRequestData =
+          CfAppAutoscalarRequestData.builder()
+              .cfRequestConfig(cfRequestConfig)
               .configPathVar(workingDirectory.getAbsolutePath())
               .timeoutInMins(pcfCommandSetupRequest.getTimeoutIntervalInMin())
               .build();
@@ -126,14 +126,14 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
 
       // Get all previous release names in desending order of version number
       List<ApplicationSummary> previousReleases =
-          pcfDeploymentManager.getPreviousReleases(pcfRequestConfig, pcfCommandSetupRequest.getReleaseNamePrefix());
+          pcfDeploymentManager.getPreviousReleases(cfRequestConfig, pcfCommandSetupRequest.getReleaseNamePrefix());
 
       // Print Existing applications information
       printExistingApplicationsDetails(executionLogCallback, previousReleases);
 
       // currently Active version is stamped for BG only.
       ApplicationSummary activeApplication =
-          findActiveApplication(executionLogCallback, pcfCommandSetupRequest, pcfRequestConfig, previousReleases);
+          findActiveApplication(executionLogCallback, pcfCommandSetupRequest, cfRequestConfig, previousReleases);
 
       ApplicationSummary mostRecentInactiveApplication = null;
       if (pcfCommandSetupRequest.isBlueGreen()) {
@@ -145,7 +145,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       int releaseRevision = getReleaseRevisionForNewApplication(previousReleases);
 
       // Delete any older application excpet most recent 1.
-      deleteOlderApplications(previousReleases, pcfRequestConfig, pcfCommandSetupRequest, pcfAppAutoscalarRequestData,
+      deleteOlderApplications(previousReleases, cfRequestConfig, pcfCommandSetupRequest, pcfAppAutoscalarRequestData,
           activeApplication, executionLogCallback);
       executionLogCallback.saveExecutionLog("Completed Checking Existing Application", INFO, SUCCESS);
 
@@ -154,7 +154,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
           pcfCommandRequest.getAppId(), pcfCommandRequest.getActivityId(), PcfSetup);
       executionLogCallback.saveExecutionLog(color("---------- Starting PCF App Setup Command", White, Bold));
       previousReleases =
-          pcfDeploymentManager.getPreviousReleases(pcfRequestConfig, pcfCommandSetupRequest.getReleaseNamePrefix());
+          pcfDeploymentManager.getPreviousReleases(cfRequestConfig, pcfCommandSetupRequest.getReleaseNamePrefix());
 
       Integer totalPreviousInstanceCount = CollectionUtils.isEmpty(previousReleases)
           ? Integer.valueOf(0)
@@ -172,12 +172,12 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       }
 
       boolean varsYmlPresent = checkIfVarsFilePresent(pcfCommandSetupRequest);
-      PcfCreateApplicationRequestData requestData =
-          PcfCreateApplicationRequestData.builder()
-              .pcfRequestConfig(pcfRequestConfig)
+      CfCreateApplicationRequestData requestData =
+          CfCreateApplicationRequestData.builder()
+              .cfRequestConfig(cfRequestConfig)
               .artifactPath(artifactFile == null ? null : artifactFile.getAbsolutePath())
               .configPathVar(workingDirectory.getAbsolutePath())
-              .setupRequest(pcfCommandSetupRequest)
+              .password(pcfCommandTaskHelper.getPassword(pcfCommandSetupRequest.getArtifactStreamAttributes()))
               .newReleaseName(newReleaseName)
               .pcfManifestFileData(pcfManifestFileData)
               .varsYmlFilePresent(varsYmlPresent)
@@ -190,13 +190,13 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       prepareManifestYamlFile(requestData);
       // create vars file if needed
       if (varsYmlPresent) {
-        prepareVarsYamlFile(requestData);
+        prepareVarsYamlFile(requestData, pcfCommandSetupRequest);
       }
 
       // Create new Application
       executionLogCallback.saveExecutionLog(color("\n# Creating new Application", White, Bold));
       // Update pcfRequestConfig with details to create application
-      updatePcfRequestConfig(pcfCommandSetupRequest, pcfRequestConfig, newReleaseName);
+      updatePcfRequestConfig(pcfCommandSetupRequest, cfRequestConfig, newReleaseName);
       // create PCF Application
       ApplicationDetail newApplication = createAppAndPrintDetails(executionLogCallback, requestData);
 
@@ -327,7 +327,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
   }
 
   private ApplicationSummary findActiveApplication(ExecutionLogCallback executionLogCallback,
-      PcfCommandSetupRequest pcfCommandSetupRequest, PcfRequestConfig pcfRequestConfig,
+      PcfCommandSetupRequest pcfCommandSetupRequest, CfRequestConfig cfRequestConfig,
       List<ApplicationSummary> previousReleases) throws PivotalClientApiException {
     if (isEmpty(previousReleases)) {
       return null;
@@ -337,7 +337,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     // For BG, check for Environment Variable stamped to denote active version, "HARNESS__STATUS__INDENTIFIER: ACTIVE"
     if (pcfCommandSetupRequest.isBlueGreen()) {
       currentActiveApplication =
-          pcfCommandTaskHelper.findCurrentActiveApplication(previousReleases, pcfRequestConfig, executionLogCallback);
+          pcfCommandTaskHelper.findCurrentActiveApplication(previousReleases, cfRequestConfig, executionLogCallback);
     }
 
     // If not found, get Most recent version with non-zero count.
@@ -369,8 +369,8 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
 
   @VisibleForTesting
   ApplicationDetail createAppAndPrintDetails(ExecutionLogCallback executionLogCallback,
-      PcfCreateApplicationRequestData requestData) throws PivotalClientApiException {
-    requestData.getPcfRequestConfig().setLoggedin(false);
+      CfCreateApplicationRequestData requestData) throws PivotalClientApiException {
+    requestData.getCfRequestConfig().setLoggedin(false);
     ApplicationDetail newApplication = pcfDeploymentManager.createApplication(requestData, executionLogCallback);
     executionLogCallback.saveExecutionLog(color("# Application created successfully", White, Bold));
     executionLogCallback.saveExecutionLog("# App Details: ");
@@ -393,19 +393,20 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
   }
 
   @VisibleForTesting
-  void prepareManifestYamlFile(PcfCreateApplicationRequestData requestData) throws IOException {
+  void prepareManifestYamlFile(CfCreateApplicationRequestData requestData) throws IOException {
     File manifestYamlFile = pcfCommandTaskHelper.createManifestYamlFileLocally(requestData);
     requestData.setManifestFilePath(manifestYamlFile.getAbsolutePath());
     requestData.getPcfManifestFileData().setManifestFile(manifestYamlFile);
   }
 
   @VisibleForTesting
-  void prepareVarsYamlFile(PcfCreateApplicationRequestData requestData) throws IOException {
+  void prepareVarsYamlFile(CfCreateApplicationRequestData requestData, PcfCommandSetupRequest setupRequest)
+      throws IOException {
     if (!requestData.isVarsYmlFilePresent()) {
       return;
     }
 
-    PcfManifestsPackage pcfManifestsPackage = requestData.getSetupRequest().getPcfManifestsPackage();
+    PcfManifestsPackage pcfManifestsPackage = setupRequest.getPcfManifestsPackage();
     AtomicInteger varFileIndex = new AtomicInteger(0);
     pcfManifestsPackage.getVariableYmls().forEach(varFileYml -> {
       File varsYamlFile =
@@ -418,11 +419,11 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
   }
 
   private void updatePcfRequestConfig(
-      PcfCommandSetupRequest pcfCommandSetupRequest, PcfRequestConfig pcfRequestConfig, String newReleaseName) {
-    pcfRequestConfig.setApplicationName(newReleaseName);
-    pcfRequestConfig.setRouteMaps(pcfCommandSetupRequest.getRouteMaps());
-    pcfRequestConfig.setServiceVariables(pcfCommandSetupRequest.getServiceVariables());
-    pcfRequestConfig.setSafeDisplayServiceVariables(pcfCommandSetupRequest.getSafeDisplayServiceVariables());
+      PcfCommandSetupRequest pcfCommandSetupRequest, CfRequestConfig cfRequestConfig, String newReleaseName) {
+    cfRequestConfig.setApplicationName(newReleaseName);
+    cfRequestConfig.setRouteMaps(pcfCommandSetupRequest.getRouteMaps());
+    cfRequestConfig.setServiceVariables(pcfCommandSetupRequest.getServiceVariables());
+    cfRequestConfig.setSafeDisplayServiceVariables(pcfCommandSetupRequest.getSafeDisplayServiceVariables());
   }
 
   private int getReleaseRevisionForNewApplication(List<ApplicationSummary> previousReleases) {
@@ -434,7 +435,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
 
   private void removeTempFilesCreated(PcfCommandSetupRequest pcfCommandRequest,
       ExecutionLogCallback executionLogCallback, File artifactFile, File workingDirectory,
-      PcfManifestFileData pcfManifestFileData) {
+      CfManifestFileData pcfManifestFileData) {
     try {
       executionLogCallback.saveExecutionLog("# Deleting any temporary files created");
       List<File> filesToBeRemoved = new ArrayList<>();
@@ -472,12 +473,12 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
    * 4. Keep most recent app as is, and (last LastVersopAppsToKeep - 1) apps will be downsized to 0
    * 5. All apps older than that will be deleted
    * @param previousReleases
-   * @param pcfRequestConfig
+   * @param cfRequestConfig
    * @param activeApplication
    */
   @VisibleForTesting
-  void deleteOlderApplications(List<ApplicationSummary> previousReleases, PcfRequestConfig pcfRequestConfig,
-      PcfCommandSetupRequest pcfCommandSetupRequest, PcfAppAutoscalarRequestData appAutoscalarRequestData,
+  void deleteOlderApplications(List<ApplicationSummary> previousReleases, CfRequestConfig cfRequestConfig,
+      PcfCommandSetupRequest pcfCommandSetupRequest, CfAppAutoscalarRequestData appAutoscalarRequestData,
       ApplicationSummary activeApplication, ExecutionLogCallback executionLogCallback)
       throws PivotalClientApiException {
     if (EmptyPredicate.isEmpty(previousReleases)) {
@@ -502,10 +503,10 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
           continue;
         } else if (olderValidAppsFound < olderVersionCountToKeep) {
           olderValidAppsFound++;
-          downsizeApplicationToZero(applicationSummary, pcfRequestConfig, pcfCommandSetupRequest,
+          downsizeApplicationToZero(applicationSummary, cfRequestConfig, pcfCommandSetupRequest,
               appAutoscalarRequestData, executionLogCallback);
         } else {
-          deleteApplication(applicationSummary, pcfRequestConfig, appsDeleted, executionLogCallback);
+          deleteApplication(applicationSummary, cfRequestConfig, appsDeleted, executionLogCallback);
           appsDeleted.add(applicationSummary.getName());
         }
       }
@@ -523,13 +524,13 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     }
   }
 
-  private void deleteApplication(ApplicationSummary applicationSummary, PcfRequestConfig pcfRequestConfig,
+  private void deleteApplication(ApplicationSummary applicationSummary, CfRequestConfig cfRequestConfig,
       Set<String> appsDeleted, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog(
         new StringBuilder().append("# Application Being Deleted: ").append(applicationSummary.getName()).toString());
-    pcfRequestConfig.setApplicationName(applicationSummary.getName());
+    cfRequestConfig.setApplicationName(applicationSummary.getName());
     try {
-      pcfDeploymentManager.deleteApplication(pcfRequestConfig);
+      pcfDeploymentManager.deleteApplication(cfRequestConfig);
       appsDeleted.add(applicationSummary.getName());
     } catch (PivotalClientApiException e) {
       executionLogCallback.saveExecutionLog(new StringBuilder(128)
@@ -542,8 +543,8 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
   }
 
   @VisibleForTesting
-  void downsizeApplicationToZero(ApplicationSummary applicationSummary, PcfRequestConfig pcfRequestConfig,
-      PcfCommandSetupRequest pcfCommandSetupRequest, PcfAppAutoscalarRequestData appAutoscalarRequestData,
+  void downsizeApplicationToZero(ApplicationSummary applicationSummary, CfRequestConfig cfRequestConfig,
+      PcfCommandSetupRequest pcfCommandSetupRequest, CfAppAutoscalarRequestData appAutoscalarRequestData,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     executionLogCallback.saveExecutionLog(new StringBuilder()
                                               .append("# Application Being Downsized To 0: ")
@@ -557,20 +558,20 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       pcfCommandTaskHelper.disableAutoscalar(appAutoscalarRequestData, executionLogCallback);
     }
 
-    pcfRequestConfig.setApplicationName(applicationSummary.getName());
-    pcfRequestConfig.setDesiredCount(0);
+    cfRequestConfig.setApplicationName(applicationSummary.getName());
+    cfRequestConfig.setDesiredCount(0);
     try {
-      ApplicationDetail applicationDetail = pcfDeploymentManager.resizeApplication(pcfRequestConfig);
+      ApplicationDetail applicationDetail = pcfDeploymentManager.resizeApplication(cfRequestConfig);
 
       // Unmap routes from application having 0 instances
       if (isNotEmpty(applicationDetail.getUrls())) {
         pcfDeploymentManager.unmapRouteMapForApplication(
-            pcfRequestConfig, applicationDetail.getUrls(), executionLogCallback);
+            cfRequestConfig, applicationDetail.getUrls(), executionLogCallback);
       }
 
       // Remove Env Variable "HARNESS__STATUS__INDENTIFIER"
       if (pcfCommandSetupRequest.isBlueGreen()) {
-        pcfDeploymentManager.unsetEnvironmentVariableForAppStatus(pcfRequestConfig, executionLogCallback);
+        pcfDeploymentManager.unsetEnvironmentVariableForAppStatus(cfRequestConfig, executionLogCallback);
       }
     } catch (PivotalClientApiException e) {
       executionLogCallback.saveExecutionLog(new StringBuilder(128)

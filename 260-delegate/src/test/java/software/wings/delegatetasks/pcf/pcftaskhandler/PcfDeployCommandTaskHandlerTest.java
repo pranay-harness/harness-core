@@ -15,8 +15,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.pcf.PivotalClientApiException;
-import io.harness.pcf.model.PcfAppAutoscalarRequestData;
-import io.harness.pcf.model.PcfRequestConfig;
+import io.harness.pcf.model.CfRequestConfig;
+import io.harness.pcf.model.CfAppAutoscalarRequestData;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -48,12 +48,12 @@ public class PcfDeployCommandTaskHandlerTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testUnmapRoutesIfAppDownsizedToZeroStandardBG() throws PivotalClientApiException {
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();
+    CfRequestConfig cfRequestConfig = CfRequestConfig.builder().build();
 
     PcfCommandDeployRequest pcfCommandDeployRequest =
         PcfCommandDeployRequest.builder().isStandardBlueGreen(true).build();
     pcfDeployCommandTaskHandler.unmapRoutesIfAppDownsizedToZero(
-        pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback);
+        pcfCommandDeployRequest, cfRequestConfig, executionLogCallback);
     verify(pcfCommandTaskHelper, never()).unmapExistingRouteMaps(any(), any(), any());
   }
 
@@ -61,11 +61,11 @@ public class PcfDeployCommandTaskHandlerTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testUnmapRoutesIfAppDownsizedToZeroEmptyAppDetails() throws PivotalClientApiException {
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();
+    CfRequestConfig cfRequestConfig = CfRequestConfig.builder().build();
     PcfCommandDeployRequest pcfCommandDeployRequest =
         PcfCommandDeployRequest.builder().isStandardBlueGreen(false).downsizeAppDetail(null).build();
     pcfDeployCommandTaskHandler.unmapRoutesIfAppDownsizedToZero(
-        pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback);
+        pcfCommandDeployRequest, cfRequestConfig, executionLogCallback);
     verify(pcfCommandTaskHelper, never()).unmapExistingRouteMaps(any(), any(), any());
   }
 
@@ -73,13 +73,13 @@ public class PcfDeployCommandTaskHandlerTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testUnmapRoutesIfAppDownsizedToZeroEmptyAppName() throws PivotalClientApiException {
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();
+    CfRequestConfig cfRequestConfig = CfRequestConfig.builder().build();
     PcfCommandDeployRequest pcfCommandDeployRequest = PcfCommandDeployRequest.builder()
                                                           .isStandardBlueGreen(false)
                                                           .downsizeAppDetail(PcfAppSetupTimeDetails.builder().build())
                                                           .build();
     pcfDeployCommandTaskHandler.unmapRoutesIfAppDownsizedToZero(
-        pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback);
+        pcfCommandDeployRequest, cfRequestConfig, executionLogCallback);
     verify(pcfCommandTaskHelper, never()).unmapExistingRouteMaps(any(), any(), any());
   }
 
@@ -88,7 +88,7 @@ public class PcfDeployCommandTaskHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testUnmapRoutesIfAppDownsizedToZeroEmptyAppNameNumberOfInstancesNotZero()
       throws PivotalClientApiException {
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();
+    CfRequestConfig cfRequestConfig = CfRequestConfig.builder().build();
     String appName = "appName";
     PcfCommandDeployRequest pcfCommandDeployRequest =
         PcfCommandDeployRequest.builder()
@@ -108,7 +108,7 @@ public class PcfDeployCommandTaskHandlerTest extends WingsBaseTest {
                                               .build();
     when(pcfDeploymentManager.getApplicationByName(any())).thenReturn(applicationDetail);
     pcfDeployCommandTaskHandler.unmapRoutesIfAppDownsizedToZero(
-        pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback);
+        pcfCommandDeployRequest, cfRequestConfig, executionLogCallback);
     verify(pcfCommandTaskHelper, never()).unmapExistingRouteMaps(any(), any(), any());
   }
 
@@ -116,7 +116,7 @@ public class PcfDeployCommandTaskHandlerTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testUnmapRoutesIfAppDownsizedToZero() throws PivotalClientApiException {
-    PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();
+    CfRequestConfig cfRequestConfig = CfRequestConfig.builder().build();
     String appName = "appName";
     PcfCommandDeployRequest pcfCommandDeployRequest =
         PcfCommandDeployRequest.builder()
@@ -136,9 +136,9 @@ public class PcfDeployCommandTaskHandlerTest extends WingsBaseTest {
                                               .build();
     when(pcfDeploymentManager.getApplicationByName(any())).thenReturn(applicationDetail);
     pcfDeployCommandTaskHandler.unmapRoutesIfAppDownsizedToZero(
-        pcfCommandDeployRequest, pcfRequestConfig, executionLogCallback);
-    assertThat(pcfRequestConfig.getApplicationName()).isEqualTo(appName);
-    verify(pcfCommandTaskHelper).unmapExistingRouteMaps(applicationDetail, pcfRequestConfig, executionLogCallback);
+        pcfCommandDeployRequest, cfRequestConfig, executionLogCallback);
+    assertThat(cfRequestConfig.getApplicationName()).isEqualTo(appName);
+    verify(pcfCommandTaskHelper).unmapExistingRouteMaps(applicationDetail, cfRequestConfig, executionLogCallback);
   }
 
   @Test
@@ -172,7 +172,7 @@ public class PcfDeployCommandTaskHandlerTest extends WingsBaseTest {
                                               .urls(Arrays.asList("url1"))
                                               .runningInstances(1)
                                               .build();
-    PcfAppAutoscalarRequestData pcfAppAutoscalarRequestData = PcfAppAutoscalarRequestData.builder().build();
+    CfAppAutoscalarRequestData pcfAppAutoscalarRequestData = CfAppAutoscalarRequestData.builder().build();
 
     // don't use autoscalar
     pcfCommandDeployRequest.setUseAppAutoscalar(false);

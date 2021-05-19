@@ -9,14 +9,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pcf.PivotalClientApiException;
-import io.harness.pcf.model.PcfAppAutoscalarRequestData;
-import io.harness.pcf.model.PcfRequestConfig;
+import io.harness.pcf.model.CfAppAutoscalarRequestData;
+import io.harness.pcf.model.CfCreateApplicationRequestData;
+import io.harness.pcf.model.CfRequestConfig;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 
 import java.util.ArrayList;
 import org.junit.Test;
@@ -26,14 +26,14 @@ import org.mockito.Mock;
 @OwnedBy(CDP)
 public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   private final PcfDeploymentManagerUnsupported deploymentManager = new PcfDeploymentManagerUnsupported();
-  private final io.harness.pcf.model.PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();
+  private final CfRequestConfig cfRequestConfig = CfRequestConfig.builder().build();
   @Mock private ExecutionLogCallback mockLogCallback;
 
   @Test
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testGetOrganizations() {
-    assertThatThrownBy(() -> deploymentManager.getOrganizations(pcfRequestConfig))
+    assertThatThrownBy(() -> deploymentManager.getOrganizations(cfRequestConfig))
         .isInstanceOf(PivotalClientApiException.class);
   }
 
@@ -41,7 +41,7 @@ public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testGetSpacesForOrganization() {
-    assertThatThrownBy(() -> deploymentManager.getSpacesForOrganization(pcfRequestConfig))
+    assertThatThrownBy(() -> deploymentManager.getSpacesForOrganization(cfRequestConfig))
         .isInstanceOf(PivotalClientApiException.class);
   }
 
@@ -50,7 +50,7 @@ public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testCreateApplication() {
     assertThatThrownBy(
-        () -> deploymentManager.createApplication(PcfCreateApplicationRequestData.builder().build(), mockLogCallback))
+        () -> deploymentManager.createApplication(CfCreateApplicationRequestData.builder().build(), mockLogCallback))
         .isInstanceOf(PivotalClientApiException.class);
   }
 
@@ -58,7 +58,7 @@ public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testResizeApplication() {
-    assertThatThrownBy(() -> deploymentManager.resizeApplication(pcfRequestConfig))
+    assertThatThrownBy(() -> deploymentManager.resizeApplication(cfRequestConfig))
         .isInstanceOf(PivotalClientApiException.class);
   }
 
@@ -66,7 +66,7 @@ public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testDeleteApplication() {
-    assertThatThrownBy(() -> deploymentManager.deleteApplication(pcfRequestConfig))
+    assertThatThrownBy(() -> deploymentManager.deleteApplication(cfRequestConfig))
         .isInstanceOf(PivotalClientApiException.class);
   }
 
@@ -74,7 +74,7 @@ public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testStopApplication() {
-    assertThatThrownBy(() -> deploymentManager.stopApplication(pcfRequestConfig))
+    assertThatThrownBy(() -> deploymentManager.stopApplication(cfRequestConfig))
         .isInstanceOf(PivotalClientApiException.class);
   }
 
@@ -82,7 +82,7 @@ public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testGetApplicationByName() {
-    assertThatThrownBy(() -> deploymentManager.getApplicationByName(pcfRequestConfig))
+    assertThatThrownBy(() -> deploymentManager.getApplicationByName(cfRequestConfig))
         .isInstanceOf(PivotalClientApiException.class);
   }
 
@@ -91,7 +91,7 @@ public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testUnmapRouteMapForApplication() {
     assertThatThrownBy(
-        () -> deploymentManager.unmapRouteMapForApplication(pcfRequestConfig, new ArrayList<>(), mockLogCallback))
+        () -> deploymentManager.unmapRouteMapForApplication(cfRequestConfig, new ArrayList<>(), mockLogCallback))
         .isInstanceOf(PivotalClientApiException.class);
   }
 
@@ -100,7 +100,7 @@ public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testMapRouteMapForApplication() {
     assertThatThrownBy(
-        () -> deploymentManager.mapRouteMapForApplication(pcfRequestConfig, new ArrayList<>(), mockLogCallback))
+        () -> deploymentManager.mapRouteMapForApplication(cfRequestConfig, new ArrayList<>(), mockLogCallback))
         .isInstanceOf(PivotalClientApiException.class);
   }
 
@@ -108,7 +108,7 @@ public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testGetDeployedServicesWithNonZeroInstances() {
-    assertThatThrownBy(() -> deploymentManager.getDeployedServicesWithNonZeroInstances(pcfRequestConfig, ""))
+    assertThatThrownBy(() -> deploymentManager.getDeployedServicesWithNonZeroInstances(cfRequestConfig, ""))
         .isInstanceOf(PivotalClientApiException.class);
   }
 
@@ -116,7 +116,7 @@ public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testGetPreviousReleases() {
-    assertThatThrownBy(() -> deploymentManager.getPreviousReleases(pcfRequestConfig, ""))
+    assertThatThrownBy(() -> deploymentManager.getPreviousReleases(cfRequestConfig, ""))
         .isInstanceOf(PivotalClientApiException.class);
   }
 
@@ -124,7 +124,7 @@ public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testGetRouteMaps() {
-    assertThatThrownBy(() -> deploymentManager.getRouteMaps(pcfRequestConfig))
+    assertThatThrownBy(() -> deploymentManager.getRouteMaps(cfRequestConfig))
         .isInstanceOf(PivotalClientApiException.class);
   }
 
@@ -140,7 +140,7 @@ public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testCreateRouteMap() {
-    assertThatThrownBy(() -> deploymentManager.createRouteMap(pcfRequestConfig, "", "", "", true, true, 1))
+    assertThatThrownBy(() -> deploymentManager.createRouteMap(cfRequestConfig, "", "", "", true, true, 1))
         .isInstanceOf(PivotalClientApiException.class);
   }
 
@@ -150,7 +150,7 @@ public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   public void testPerformConfigureAutoscalar() {
     assertThatThrownBy(()
                            -> deploymentManager.performConfigureAutoscalar(
-                               PcfAppAutoscalarRequestData.builder().build(), mockLogCallback))
+                               CfAppAutoscalarRequestData.builder().build(), mockLogCallback))
         .isInstanceOf(PivotalClientApiException.class);
   }
 
@@ -160,7 +160,7 @@ public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   public void testChangeAutoscalarState() {
     assertThatThrownBy(()
                            -> deploymentManager.changeAutoscalarState(
-                               PcfAppAutoscalarRequestData.builder().build(), mockLogCallback, true))
+                               CfAppAutoscalarRequestData.builder().build(), mockLogCallback, true))
         .isInstanceOf(PivotalClientApiException.class);
   }
 
@@ -170,7 +170,7 @@ public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   public void testCheckIfAppHasAutoscalarAttached() {
     assertThatThrownBy(()
                            -> deploymentManager.checkIfAppHasAutoscalarAttached(
-                               PcfAppAutoscalarRequestData.builder().build(), mockLogCallback))
+                               CfAppAutoscalarRequestData.builder().build(), mockLogCallback))
         .isInstanceOf(PivotalClientApiException.class);
   }
 
@@ -178,7 +178,7 @@ public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testUpSizeApplicationWithSteadyStateCheck() {
-    assertThatThrownBy(() -> deploymentManager.upsizeApplicationWithSteadyStateCheck(pcfRequestConfig, mockLogCallback))
+    assertThatThrownBy(() -> deploymentManager.upsizeApplicationWithSteadyStateCheck(cfRequestConfig, mockLogCallback))
         .isInstanceOf(PivotalClientApiException.class);
   }
 
@@ -186,7 +186,7 @@ public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testIsActiveApplication() {
-    assertThatThrownBy(() -> deploymentManager.isActiveApplication(pcfRequestConfig, mockLogCallback))
+    assertThatThrownBy(() -> deploymentManager.isActiveApplication(cfRequestConfig, mockLogCallback))
         .isInstanceOf(PivotalClientApiException.class);
   }
 
@@ -195,7 +195,7 @@ public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testSetEnvironmentVariableForAppStatus() {
     assertThatThrownBy(
-        () -> deploymentManager.setEnvironmentVariableForAppStatus(pcfRequestConfig, true, mockLogCallback))
+        () -> deploymentManager.setEnvironmentVariableForAppStatus(cfRequestConfig, true, mockLogCallback))
         .isInstanceOf(PivotalClientApiException.class);
   }
 
@@ -203,7 +203,7 @@ public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testUnsetEnvironmentVariableForAppStatus() {
-    assertThatThrownBy(() -> deploymentManager.unsetEnvironmentVariableForAppStatus(pcfRequestConfig, mockLogCallback))
+    assertThatThrownBy(() -> deploymentManager.unsetEnvironmentVariableForAppStatus(cfRequestConfig, mockLogCallback))
         .isInstanceOf(PivotalClientApiException.class);
   }
 }

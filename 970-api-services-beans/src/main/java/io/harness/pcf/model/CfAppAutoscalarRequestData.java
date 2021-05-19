@@ -13,8 +13,8 @@ import lombok.Data;
 @Builder
 @TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 @OwnedBy(CDP)
-public class PcfAppAutoscalarRequestData {
-  private PcfRequestConfig pcfRequestConfig;
+public class CfAppAutoscalarRequestData {
+  private CfRequestConfig cfRequestConfig;
   private String autoscalarYml;
   private String autoscalarFilePath;
   private String configPathVar;

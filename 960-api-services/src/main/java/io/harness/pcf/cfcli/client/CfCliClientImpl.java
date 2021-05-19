@@ -29,10 +29,10 @@ import static java.lang.String.join;
 import static java.util.stream.Collectors.toSet;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.task.pcf.PcfManifestFileData;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.kubectl.Utils;
+import io.harness.logging.LogCallback;
 import io.harness.network.Http;
 import io.harness.pcf.CfCliClient;
 import io.harness.pcf.CfSdkClient;
@@ -40,21 +40,13 @@ import io.harness.pcf.PcfUtils;
 import io.harness.pcf.PivotalClientApiException;
 import io.harness.pcf.cfcli.CfCliCommandResolver;
 import io.harness.pcf.cfcli.CfCliCommandType;
-import io.harness.pcf.model.PcfAppAutoscalarRequestData;
-import io.harness.pcf.model.PcfRequestConfig;
+import io.harness.pcf.model.CfAppAutoscalarRequestData;
+import io.harness.pcf.model.CfCreateApplicationRequestData;
+import io.harness.pcf.model.CfManifestFileData;
+import io.harness.pcf.model.CfRequestConfig;
+import io.harness.pcf.model.CfRunPluginScriptRequestData;
 import io.harness.pcf.model.PcfRouteInfo;
 import io.harness.pcf.model.PcfRouteInfo.PcfRouteInfoBuilder;
-
-import software.wings.beans.AwsConfig;
-import software.wings.beans.DockerConfig;
-import software.wings.beans.GcpConfig;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.beans.config.ArtifactoryConfig;
-import software.wings.beans.config.NexusConfig;
-import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
-import software.wings.helpers.ext.pcf.request.PcfRunPluginScriptRequestData;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -92,12 +84,12 @@ public class CfCliClientImpl implements CfCliClient {
   @Inject private CfSdkClient cfSdkClient;
 
   @Override
-  public void pushAppByCli(PcfCreateApplicationRequestData requestData, ExecutionLogCallback executionLogCallback)
+  public void pushAppByCli(CfCreateApplicationRequestData requestData, LogCallback executionLogCallback)
       throws PivotalClientApiException {
     log.info("Using CLI to create application");
 
     // Create a new filePath.
-    PcfRequestConfig pcfRequestConfig = requestData.getPcfRequestConfig();
+    CfRequestConfig pcfRequestConfig = requestData.getCfRequestConfig();
 
     int exitCode = 1;
     try {
@@ -107,7 +99,7 @@ public class CfCliClientImpl implements CfCliClient {
 
       executionLogCallback.saveExecutionLog("# CF_HOME value: " + requestData.getConfigPathVar());
       boolean loginSuccessful = true;
-      if (!requestData.getPcfRequestConfig().isLoggedin()) {
+      if (!requestData.getCfRequestConfig().isLoggedin()) {
         loginSuccessful = doLogin(pcfRequestConfig, executionLogCallback, requestData.getConfigPathVar());
       }
 
@@ -134,8 +126,8 @@ public class CfCliClientImpl implements CfCliClient {
   }
 
   @Override
-  public void performConfigureAutoscaler(PcfAppAutoscalarRequestData appAutoscalarRequestData,
-      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+  public void performConfigureAutoscaler(CfAppAutoscalarRequestData appAutoscalarRequestData,
+      LogCallback executionLogCallback) throws PivotalClientApiException {
     int exitCode = 1;
 
     try {
@@ -170,8 +162,8 @@ public class CfCliClientImpl implements CfCliClient {
 
   @Override
   @VisibleForTesting
-  public void changeAutoscalerState(PcfAppAutoscalarRequestData appAutoscalarRequestData,
-      ExecutionLogCallback executionLogCallback, boolean enable) throws PivotalClientApiException {
+  public void changeAutoscalerState(CfAppAutoscalarRequestData appAutoscalarRequestData,
+      LogCallback executionLogCallback, boolean enable) throws PivotalClientApiException {
     int exitCode = 1;
 
     try {
@@ -204,14 +196,14 @@ public class CfCliClientImpl implements CfCliClient {
   }
 
   @Override
-  public boolean checkIfAppHasAutoscalerAttached(PcfAppAutoscalarRequestData appAutoscalarRequestData,
-      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+  public boolean checkIfAppHasAutoscalerAttached(CfAppAutoscalarRequestData appAutoscalarRequestData,
+      LogCallback executionLogCallback) throws PivotalClientApiException {
     boolean appAutoscalarInstalled = false;
     executionLogCallback.saveExecutionLog("\n# Checking if Application: "
         + appAutoscalarRequestData.getApplicationName() + " has Autoscalar Bound to it");
 
     try {
-      PcfRequestConfig pcfRequestConfig = appAutoscalarRequestData.getPcfRequestConfig();
+      CfRequestConfig pcfRequestConfig = appAutoscalarRequestData.getCfRequestConfig();
       boolean loginSuccessful = logInForAppAutoscalarCliCommand(appAutoscalarRequestData, executionLogCallback);
       if (loginSuccessful) {
         ProcessExecutor processExecutor = createProccessExecutorForPcfTask(1,
@@ -232,10 +224,10 @@ public class CfCliClientImpl implements CfCliClient {
   }
 
   @Override
-  public boolean checkIfAppHasAutoscalerWithExpectedState(PcfAppAutoscalarRequestData appAutoscalarRequestData,
-      ExecutionLogCallback logCallback) throws PivotalClientApiException {
+  public boolean checkIfAppHasAutoscalerWithExpectedState(
+      CfAppAutoscalarRequestData appAutoscalarRequestData, LogCallback logCallback) throws PivotalClientApiException {
     boolean appAutoscalarInExpectedState = false;
-    PcfRequestConfig pcfRequestConfig = appAutoscalarRequestData.getPcfRequestConfig();
+    CfRequestConfig pcfRequestConfig = appAutoscalarRequestData.getCfRequestConfig();
     logCallback.saveExecutionLog("\n# Checking if Application: " + appAutoscalarRequestData.getApplicationName()
         + " has Autoscalar Bound to it");
 
@@ -269,8 +261,8 @@ public class CfCliClientImpl implements CfCliClient {
   }
 
   @VisibleForTesting
-  String generateChangeAutoscalarStateCommand(PcfAppAutoscalarRequestData appAutoscalarRequestData, boolean enable) {
-    PcfRequestConfig pcfRequestConfig = appAutoscalarRequestData.getPcfRequestConfig();
+  String generateChangeAutoscalarStateCommand(CfAppAutoscalarRequestData appAutoscalarRequestData, boolean enable) {
+    CfRequestConfig pcfRequestConfig = appAutoscalarRequestData.getCfRequestConfig();
     return enable ? CfCliCommandResolver.getEnableAutoscalingCliCommand(pcfRequestConfig.getCfCliPath(),
                pcfRequestConfig.getCfCliVersion(), appAutoscalarRequestData.getApplicationName())
                   : CfCliCommandResolver.getDisableAutoscalingCliCommand(pcfRequestConfig.getCfCliPath(),
@@ -278,21 +270,21 @@ public class CfCliClientImpl implements CfCliClient {
   }
 
   @VisibleForTesting
-  boolean logInForAppAutoscalarCliCommand(PcfAppAutoscalarRequestData appAutoscalarRequestData,
-      ExecutionLogCallback executionLogCallback) throws InterruptedException, TimeoutException, IOException {
+  boolean logInForAppAutoscalarCliCommand(CfAppAutoscalarRequestData appAutoscalarRequestData,
+      LogCallback executionLogCallback) throws InterruptedException, TimeoutException, IOException {
     boolean loginSuccessful = true;
-    if (!appAutoscalarRequestData.getPcfRequestConfig().isLoggedin()) {
-      loginSuccessful = doLogin(appAutoscalarRequestData.getPcfRequestConfig(), executionLogCallback,
+    if (!appAutoscalarRequestData.getCfRequestConfig().isLoggedin()) {
+      loginSuccessful = doLogin(appAutoscalarRequestData.getCfRequestConfig(), executionLogCallback,
           appAutoscalarRequestData.getConfigPathVar());
     }
-    appAutoscalarRequestData.getPcfRequestConfig().setLoggedin(loginSuccessful);
+    appAutoscalarRequestData.getCfRequestConfig().setLoggedin(loginSuccessful);
     return loginSuccessful;
   }
 
   @VisibleForTesting
-  Map<String, String> getAppAutoscalarEnvMapForCustomPlugin(PcfAppAutoscalarRequestData appAutoscalarRequestData) {
+  Map<String, String> getAppAutoscalarEnvMapForCustomPlugin(CfAppAutoscalarRequestData appAutoscalarRequestData) {
     Map<String, String> environmentMapForPcfExecutor = getEnvironmentMapForPcfExecutor(
-        appAutoscalarRequestData.getPcfRequestConfig().getEndpointUrl(), appAutoscalarRequestData.getConfigPathVar());
+        appAutoscalarRequestData.getCfRequestConfig().getEndpointUrl(), appAutoscalarRequestData.getConfigPathVar());
     // set CUSTOM_PLUGIN_HOME, NEEDED FOR AUTO-SCALAR PLUIN
     environmentMapForPcfExecutor.put(CF_PLUGIN_HOME, PcfUtils.resolvePcfPluginHome());
     return environmentMapForPcfExecutor;
@@ -300,7 +292,7 @@ public class CfCliClientImpl implements CfCliClient {
 
   @VisibleForTesting
   ProcessExecutor createProccessExecutorForPcfTask(
-      long timeout, String command, Map<String, String> env, ExecutionLogCallback executionLogCallback) {
+      long timeout, String command, Map<String, String> env, LogCallback executionLogCallback) {
     return new ProcessExecutor()
         .timeout(timeout, TimeUnit.MINUTES)
         .command(BIN_BASH, "-c", command)
@@ -339,16 +331,15 @@ public class CfCliClientImpl implements CfCliClient {
   }
 
   @NotNull
-  private String getConfigureAutosaclarCfCliCommand(PcfAppAutoscalarRequestData appAutoscalarRequestData) {
-    PcfRequestConfig pcfRequestConfig = appAutoscalarRequestData.getPcfRequestConfig();
+  private String getConfigureAutosaclarCfCliCommand(CfAppAutoscalarRequestData appAutoscalarRequestData) {
+    CfRequestConfig pcfRequestConfig = appAutoscalarRequestData.getCfRequestConfig();
     return CfCliCommandResolver.getConfigureAutoscalingCliCommand(pcfRequestConfig.getCfCliPath(),
         pcfRequestConfig.getCfCliVersion(), appAutoscalarRequestData.getApplicationName(),
         appAutoscalarRequestData.getAutoscalarFilePath());
   }
 
-  private int doCfPush(PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback,
-      String finalFilePath, PcfCreateApplicationRequestData requestData)
-      throws InterruptedException, TimeoutException, IOException {
+  private int doCfPush(CfRequestConfig pcfRequestConfig, LogCallback executionLogCallback, String finalFilePath,
+      CfCreateApplicationRequestData requestData) throws InterruptedException, TimeoutException, IOException {
     executionLogCallback.saveExecutionLog("# Performing \"cf push\"");
     Map<String, String> environmentMapForPcfExecutor = getEnvironmentMapForPcfPush(requestData);
     String command = constructCfPushCommand(requestData, finalFilePath);
@@ -374,12 +365,11 @@ public class CfCliClientImpl implements CfCliClient {
   }
 
   @VisibleForTesting
-  Map<String, String> getEnvironmentMapForPcfPush(PcfCreateApplicationRequestData requestData) {
+  Map<String, String> getEnvironmentMapForPcfPush(CfCreateApplicationRequestData requestData) {
     Map<String, String> environmentMapForPcfExecutor = getEnvironmentMapForPcfExecutor(
-        requestData.getPcfRequestConfig().getEndpointUrl(), requestData.getConfigPathVar());
-    ArtifactStreamAttributes artifactStreamAttributes = requestData.getSetupRequest().getArtifactStreamAttributes();
-    if (artifactStreamAttributes.isDockerBasedDeployment()) {
-      char[] password = getPassword(artifactStreamAttributes);
+        requestData.getCfRequestConfig().getEndpointUrl(), requestData.getConfigPathVar());
+    if (true) {
+      char[] password = requestData.getPassword();
       if (!isEmpty(password)) {
         environmentMapForPcfExecutor.put(CF_DOCKER_CREDENTIALS, String.valueOf(password));
       }
@@ -387,15 +377,15 @@ public class CfCliClientImpl implements CfCliClient {
     return environmentMapForPcfExecutor;
   }
 
-  private String constructCfPushCommand(PcfCreateApplicationRequestData requestData, String finalFilePath) {
-    PcfRequestConfig pcfRequestConfig = requestData.getPcfRequestConfig();
+  private String constructCfPushCommand(CfCreateApplicationRequestData requestData, String finalFilePath) {
+    CfRequestConfig pcfRequestConfig = requestData.getCfRequestConfig();
     if (!requestData.isVarsYmlFilePresent()) {
       return CfCliCommandResolver.getPushCliCommand(
           pcfRequestConfig.getCfCliPath(), pcfRequestConfig.getCfCliVersion(), finalFilePath);
     }
 
     List<String> varFiles = new ArrayList<>();
-    PcfManifestFileData pcfManifestFileData = requestData.getPcfManifestFileData();
+    CfManifestFileData pcfManifestFileData = requestData.getPcfManifestFileData();
     if (isNotEmpty(pcfManifestFileData.getVarFiles())) {
       pcfManifestFileData.getVarFiles().forEach(varsFile -> {
         if (varsFile != null) {
@@ -406,29 +396,6 @@ public class CfCliClientImpl implements CfCliClient {
 
     return CfCliCommandResolver.getPushCliCommand(
         pcfRequestConfig.getCfCliPath(), pcfRequestConfig.getCfCliVersion(), finalFilePath, varFiles);
-  }
-
-  private char[] getPassword(ArtifactStreamAttributes artifactStreamAttributes) {
-    char[] password = null;
-    SettingAttribute serverSetting = artifactStreamAttributes.getServerSetting();
-    if (serverSetting.getValue() instanceof DockerConfig) {
-      DockerConfig dockerConfig = (DockerConfig) serverSetting.getValue();
-      password = dockerConfig.getPassword();
-    } else if (serverSetting.getValue() instanceof AwsConfig) {
-      AwsConfig awsConfig = (AwsConfig) serverSetting.getValue();
-      password = awsConfig.getSecretKey();
-    } else if (serverSetting.getValue() instanceof ArtifactoryConfig) {
-      ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) serverSetting.getValue();
-      password = artifactoryConfig.getPassword();
-    } else if (serverSetting.getValue() instanceof GcpConfig) {
-      GcpConfig gcpConfig = (GcpConfig) serverSetting.getValue();
-      String serviceAccountKeyFileContent = new String(gcpConfig.getServiceAccountKeyFileContent());
-      password = serviceAccountKeyFileContent.replaceAll("\n", "").toCharArray();
-    } else if (serverSetting.getValue() instanceof NexusConfig) {
-      NexusConfig nexusConfig = (NexusConfig) serverSetting.getValue();
-      password = nexusConfig.getPassword();
-    }
-    return password;
   }
 
   @VisibleForTesting
@@ -463,7 +430,7 @@ public class CfCliClientImpl implements CfCliClient {
     }
   }
 
-  int executeCommand(String command, Map<String, String> env, ExecutionLogCallback logCallback)
+  int executeCommand(String command, Map<String, String> env, LogCallback logCallback)
       throws IOException, InterruptedException, TimeoutException {
     logCallback.saveExecutionLog(format("Executing command: [%s]", command));
     ProcessExecutor executor = new ProcessExecutor()
@@ -487,7 +454,7 @@ public class CfCliClientImpl implements CfCliClient {
     return resultCode;
   }
 
-  boolean doLogin(PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback, String configPathVar)
+  boolean doLogin(CfRequestConfig pcfRequestConfig, LogCallback executionLogCallback, String configPathVar)
       throws IOException, InterruptedException, TimeoutException {
     executionLogCallback.saveExecutionLog("# Performing \"login\"");
 
@@ -519,7 +486,7 @@ public class CfCliClientImpl implements CfCliClient {
     return exitValue == 0;
   }
 
-  private void logManifestFile(String finalFilePath, ExecutionLogCallback executionLogCallback) {
+  private void logManifestFile(String finalFilePath, LogCallback executionLogCallback) {
     String content;
     try {
       content = new String(Files.readAllBytes(Paths.get(finalFilePath)), Charsets.UTF_8);
@@ -537,9 +504,9 @@ public class CfCliClientImpl implements CfCliClient {
   }
 
   @Override
-  public void runPcfPluginScript(PcfRunPluginScriptRequestData pcfRunPluginScriptRequestData,
-      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
-    PcfRequestConfig pcfRequestConfig = pcfRunPluginScriptRequestData.getPcfRequestConfig();
+  public void runPcfPluginScript(CfRunPluginScriptRequestData pcfRunPluginScriptRequestData,
+      LogCallback executionLogCallback) throws PivotalClientApiException {
+    CfRequestConfig pcfRequestConfig = pcfRunPluginScriptRequestData.getCfRequestConfig();
     int exitCode = -1;
     try {
       executionLogCallback.saveExecutionLog("# Final Script to execute :");
@@ -592,7 +559,7 @@ public class CfCliClientImpl implements CfCliClient {
   }
 
   @Override
-  public StartedProcess tailLogsForPcf(PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback)
+  public StartedProcess tailLogsForPcf(CfRequestConfig pcfRequestConfig, LogCallback executionLogCallback)
       throws PivotalClientApiException {
     try {
       boolean loginSuccessful = pcfRequestConfig.isLoggedin()
@@ -613,8 +580,7 @@ public class CfCliClientImpl implements CfCliClient {
   }
 
   @VisibleForTesting
-  ProcessExecutor getProcessExecutorForLogTailing(
-      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) {
+  ProcessExecutor getProcessExecutorForLogTailing(CfRequestConfig pcfRequestConfig, LogCallback executionLogCallback) {
     return new ProcessExecutor()
         .timeout(pcfRequestConfig.getTimeOutIntervalInMins(), TimeUnit.MINUTES)
         .command(BIN_BASH, "-c",
@@ -632,8 +598,8 @@ public class CfCliClientImpl implements CfCliClient {
   }
 
   @Override
-  public void unmapRoutesForApplicationUsingCli(PcfRequestConfig pcfRequestConfig, List<String> routes,
-      ExecutionLogCallback logCallback) throws PivotalClientApiException, InterruptedException {
+  public void unmapRoutesForApplicationUsingCli(CfRequestConfig pcfRequestConfig, List<String> routes,
+      LogCallback logCallback) throws PivotalClientApiException, InterruptedException {
     executeRoutesOperationForApplicationUsingCli(CfCliCommandType.UNMAP_ROUTE, pcfRequestConfig, routes, logCallback);
   }
 
@@ -681,8 +647,8 @@ public class CfCliClientImpl implements CfCliClient {
   }
 
   @Override
-  public void mapRoutesForApplicationUsingCli(PcfRequestConfig pcfRequestConfig, List<String> routes,
-      ExecutionLogCallback logCallback) throws PivotalClientApiException {
+  public void mapRoutesForApplicationUsingCli(
+      CfRequestConfig pcfRequestConfig, List<String> routes, LogCallback logCallback) throws PivotalClientApiException {
     executeRoutesOperationForApplicationUsingCli(CfCliCommandType.MAP_ROUTE, pcfRequestConfig, routes, logCallback);
   }
 
@@ -696,8 +662,8 @@ public class CfCliClientImpl implements CfCliClient {
   }
 
   @VisibleForTesting
-  void executeRoutesOperationForApplicationUsingCli(CfCliCommandType commandType, PcfRequestConfig pcfRequestConfig,
-      List<String> routes, ExecutionLogCallback logCallback) throws PivotalClientApiException {
+  void executeRoutesOperationForApplicationUsingCli(CfCliCommandType commandType, CfRequestConfig pcfRequestConfig,
+      List<String> routes, LogCallback logCallback) throws PivotalClientApiException {
     try {
       if (!pcfRequestConfig.isUseCFCLI()) {
         throw new InvalidRequestException("Trying to map routes using Cli without flag in Pcf request Config");
@@ -747,7 +713,7 @@ public class CfCliClientImpl implements CfCliClient {
   }
 
   private String getRouteCommandForTcpType(
-      CfCliCommandType commandType, PcfRequestConfig pcfRequestConfig, PcfRouteInfo info) {
+      CfCliCommandType commandType, CfRequestConfig pcfRequestConfig, PcfRouteInfo info) {
     if (commandType == CfCliCommandType.UNMAP_ROUTE) {
       return CfCliCommandResolver.getUnmapRouteCommand(pcfRequestConfig.getCfCliPath(),
           pcfRequestConfig.getCfCliVersion(), pcfRequestConfig.getApplicationName(), info.getDomain(), info.getPort());
@@ -760,7 +726,7 @@ public class CfCliClientImpl implements CfCliClient {
     }
   }
 
-  private String getRouteCommand(CfCliCommandType commandType, PcfRequestConfig pcfRequestConfig, PcfRouteInfo info) {
+  private String getRouteCommand(CfCliCommandType commandType, CfRequestConfig pcfRequestConfig, PcfRouteInfo info) {
     if (commandType == CfCliCommandType.UNMAP_ROUTE) {
       return CfCliCommandResolver.getUnmapRouteCommand(pcfRequestConfig.getCfCliPath(),
           pcfRequestConfig.getCfCliVersion(), pcfRequestConfig.getApplicationName(), info.getDomain(),
@@ -776,8 +742,8 @@ public class CfCliClientImpl implements CfCliClient {
   }
 
   @Override
-  public void setEnvVariablesForApplication(Map<String, Object> envVars, PcfRequestConfig pcfRequestConfig,
-      ExecutionLogCallback logCallback) throws PivotalClientApiException {
+  public void setEnvVariablesForApplication(Map<String, Object> envVars, CfRequestConfig pcfRequestConfig,
+      LogCallback logCallback) throws PivotalClientApiException {
     try {
       if (!pcfRequestConfig.isUseCFCLI()) {
         throw new InvalidRequestException("USE_PCF_CLI flag is needed");
@@ -828,8 +794,8 @@ public class CfCliClientImpl implements CfCliClient {
   }
 
   @Override
-  public void unsetEnvVariablesForApplication(List<String> varNames, PcfRequestConfig pcfRequestConfig,
-      ExecutionLogCallback logCallback) throws PivotalClientApiException {
+  public void unsetEnvVariablesForApplication(List<String> varNames, CfRequestConfig pcfRequestConfig,
+      LogCallback logCallback) throws PivotalClientApiException {
     try {
       if (!pcfRequestConfig.isUseCFCLI()) {
         throw new InvalidRequestException("USE_PCF_CLI flag is needed");

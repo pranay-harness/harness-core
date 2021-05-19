@@ -1,30 +1,29 @@
 package io.harness.pcf.cfsdk;
 
-import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
-
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.ExceptionUtils;
-import io.harness.network.Http;
-import io.harness.pcf.PivotalClientApiException;
-import io.harness.pcf.model.PcfRequestConfig;
-
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
 import com.google.inject.Singleton;
-import java.time.Duration;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.ExceptionUtils;
+import io.harness.network.Http;
+import io.harness.pcf.PivotalClientApiException;
+import io.harness.pcf.model.CfRequestConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.cloudfoundry.reactor.ConnectionContext;
 import org.cloudfoundry.reactor.DefaultConnectionContext;
 import org.cloudfoundry.reactor.ProxyConfiguration;
 import org.jetbrains.annotations.NotNull;
+
+import java.time.Duration;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 
 @Singleton
 @Slf4j
@@ -68,7 +67,7 @@ public class ConnectionContextProvider {
                            .build());
   }
 
-  public ConnectionContext getConnectionContext(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
+  public ConnectionContext getConnectionContext(CfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
     try {
       if (pcfRequestConfig.isIgnorePcfConnectionContextCache()) {
         return createNewConnectionContext(pcfRequestConfig);
@@ -79,7 +78,7 @@ public class ConnectionContextProvider {
     }
   }
 
-  private ConnectionContext createNewConnectionContext(PcfRequestConfig pcfRequestConfig) {
+  private ConnectionContext createNewConnectionContext(CfRequestConfig pcfRequestConfig) {
     long timeout = pcfRequestConfig.getTimeOutIntervalInMins() <= 0 ? 5 : pcfRequestConfig.getTimeOutIntervalInMins();
     DefaultConnectionContext.Builder builder =
         DefaultConnectionContext.builder()

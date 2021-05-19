@@ -5,7 +5,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.pcf.model.PcfRequestConfig;
+import io.harness.pcf.model.CfRequestConfig;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.PcfConfig;
@@ -47,7 +47,7 @@ public class PcfValidationCommandTaskHandler extends PcfCommandTaskHandler {
     PcfCommandExecutionResponse pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder().build();
     try {
       pcfDeploymentManager.getOrganizations(
-          PcfRequestConfig.builder()
+          CfRequestConfig.builder()
               .orgName(pcfInfraMappingDataRequest.getOrganization())
               .userName(String.valueOf(pcfConfig.getUsername()))
               .password(String.valueOf(pcfConfig.getPassword()))

@@ -16,7 +16,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.pcf.PivotalClientApiException;
-import io.harness.pcf.model.PcfRequestConfig;
+import io.harness.pcf.model.CfRequestConfig;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.PcfConfig;
@@ -153,9 +153,9 @@ public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
     pcfInfraMappingDataResponse.setOrganizations(orgs);
   }
 
-  private PcfRequestConfig getPcfRequestConfig(
+  private CfRequestConfig getPcfRequestConfig(
       PcfInfraMappingDataRequest pcfInfraMappingDataRequest, PcfConfig pcfConfig) {
-    return PcfRequestConfig.builder()
+    return CfRequestConfig.builder()
         .endpointUrl(pcfConfig.getEndpointUrl())
         .limitPcfThreads(pcfInfraMappingDataRequest.isLimitPcfThreads())
         .ignorePcfConnectionContextCache(pcfInfraMappingDataRequest.isIgnorePcfConnectionContextCache())

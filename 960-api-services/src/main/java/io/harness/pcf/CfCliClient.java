@@ -1,11 +1,10 @@
 package io.harness.pcf;
 
-import io.harness.pcf.model.PcfAppAutoscalarRequestData;
-import io.harness.pcf.model.PcfRequestConfig;
-
-import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
-import software.wings.helpers.ext.pcf.request.PcfRunPluginScriptRequestData;
+import io.harness.logging.LogCallback;
+import io.harness.pcf.model.CfAppAutoscalarRequestData;
+import io.harness.pcf.model.CfCreateApplicationRequestData;
+import io.harness.pcf.model.CfRequestConfig;
+import io.harness.pcf.model.CfRunPluginScriptRequestData;
 
 import java.util.List;
 import java.util.Map;
@@ -19,7 +18,7 @@ public interface CfCliClient {
    * @param executionLogCallback
    * @throws PivotalClientApiException
    */
-  void pushAppByCli(PcfCreateApplicationRequestData requestData, ExecutionLogCallback executionLogCallback)
+  void pushAppByCli(CfCreateApplicationRequestData requestData, LogCallback executionLogCallback)
       throws PivotalClientApiException;
 
   /**
@@ -29,8 +28,8 @@ public interface CfCliClient {
    * @param executionLogCallback
    * @throws PivotalClientApiException
    */
-  void performConfigureAutoscaler(PcfAppAutoscalarRequestData appAutoscalarRequestData,
-      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException;
+  void performConfigureAutoscaler(CfAppAutoscalarRequestData appAutoscalarRequestData, LogCallback executionLogCallback)
+      throws PivotalClientApiException;
 
   /**
    * Change Autoscaler service state.
@@ -40,30 +39,30 @@ public interface CfCliClient {
    * @param enable
    * @throws PivotalClientApiException
    */
-  void changeAutoscalerState(PcfAppAutoscalarRequestData appAutoscalarRequestData,
-      ExecutionLogCallback executionLogCallback, boolean enable) throws PivotalClientApiException;
+  void changeAutoscalerState(CfAppAutoscalarRequestData appAutoscalarRequestData, LogCallback executionLogCallback,
+      boolean enable) throws PivotalClientApiException;
 
   /**
    * Check whether Autoscaler service attached.
    *
    * @param appAutoscalarRequestData
    * @param executionLogCallback
-   * @return
+   * @return boolean
    * @throws PivotalClientApiException
    */
-  boolean checkIfAppHasAutoscalerAttached(PcfAppAutoscalarRequestData appAutoscalarRequestData,
-      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException;
+  boolean checkIfAppHasAutoscalerAttached(CfAppAutoscalarRequestData appAutoscalarRequestData,
+      LogCallback executionLogCallback) throws PivotalClientApiException;
 
   /**
    * Check whether Autoscaler service is in expected state.
    *
    * @param appAutoscalarRequestData
    * @param logCallback
-   * @return
+   * @return boolean
    * @throws PivotalClientApiException
    */
-  boolean checkIfAppHasAutoscalerWithExpectedState(PcfAppAutoscalarRequestData appAutoscalarRequestData,
-      ExecutionLogCallback logCallback) throws PivotalClientApiException;
+  boolean checkIfAppHasAutoscalerWithExpectedState(
+      CfAppAutoscalarRequestData appAutoscalarRequestData, LogCallback logCallback) throws PivotalClientApiException;
 
   /**
    * Unmap application routes.
@@ -74,8 +73,8 @@ public interface CfCliClient {
    * @throws PivotalClientApiException
    * @throws InterruptedException
    */
-  void unmapRoutesForApplicationUsingCli(PcfRequestConfig pcfRequestConfig, List<String> routes,
-      ExecutionLogCallback logCallback) throws PivotalClientApiException, InterruptedException;
+  void unmapRoutesForApplicationUsingCli(CfRequestConfig pcfRequestConfig, List<String> routes, LogCallback logCallback)
+      throws PivotalClientApiException, InterruptedException;
 
   /**
    * Map application routes.
@@ -86,8 +85,8 @@ public interface CfCliClient {
    * @throws PivotalClientApiException
    * @throws InterruptedException
    */
-  void mapRoutesForApplicationUsingCli(PcfRequestConfig pcfRequestConfig, List<String> routes,
-      ExecutionLogCallback logCallback) throws PivotalClientApiException, InterruptedException;
+  void mapRoutesForApplicationUsingCli(CfRequestConfig pcfRequestConfig, List<String> routes, LogCallback logCallback)
+      throws PivotalClientApiException, InterruptedException;
 
   /**
    * Run plugin script.
@@ -96,8 +95,8 @@ public interface CfCliClient {
    * @param executionLogCallback
    * @throws PivotalClientApiException
    */
-  void runPcfPluginScript(PcfRunPluginScriptRequestData pcfRunPluginScriptRequestData,
-      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException;
+  void runPcfPluginScript(CfRunPluginScriptRequestData pcfRunPluginScriptRequestData, LogCallback executionLogCallback)
+      throws PivotalClientApiException;
 
   /**
    * Set application env variables.
@@ -107,8 +106,8 @@ public interface CfCliClient {
    * @param logCallback
    * @throws PivotalClientApiException
    */
-  void setEnvVariablesForApplication(Map<String, Object> envVars, PcfRequestConfig pcfRequestConfig,
-      ExecutionLogCallback logCallback) throws PivotalClientApiException;
+  void setEnvVariablesForApplication(Map<String, Object> envVars, CfRequestConfig pcfRequestConfig,
+      LogCallback logCallback) throws PivotalClientApiException;
 
   /**
    * Unset application env variables.
@@ -118,17 +117,17 @@ public interface CfCliClient {
    * @param logCallback
    * @throws PivotalClientApiException
    */
-  void unsetEnvVariablesForApplication(List<String> varNames, PcfRequestConfig pcfRequestConfig,
-      ExecutionLogCallback logCallback) throws PivotalClientApiException;
+  void unsetEnvVariablesForApplication(List<String> varNames, CfRequestConfig pcfRequestConfig, LogCallback logCallback)
+      throws PivotalClientApiException;
 
   /**
    * Stream application logging information.
    *
    * @param pcfRequestConfig
    * @param executionLogCallback
-   * @return
+   * @return {@link StartedProcess}
    * @throws PivotalClientApiException
    */
-  StartedProcess tailLogsForPcf(PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback)
+  StartedProcess tailLogsForPcf(CfRequestConfig pcfRequestConfig, LogCallback executionLogCallback)
       throws PivotalClientApiException;
 }

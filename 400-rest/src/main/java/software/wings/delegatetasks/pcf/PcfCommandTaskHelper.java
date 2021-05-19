@@ -1,5 +1,4 @@
 package software.wings.delegatetasks.pcf;
-
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -11,6 +10,7 @@ import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.pcf.model.PcfConstants.APPLICATION_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.BIN_BASH;
 import static io.harness.pcf.model.PcfConstants.BUILDPACKS_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.BUILDPACK_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.COMMAND_MANIFEST_YML_ELEMENT;
@@ -50,7 +50,6 @@ import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 import static software.wings.common.TemplateConstants.PATH_DELIMITER;
-import static software.wings.helpers.ext.pcf.PcfClientImpl.BIN_BASH;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static java.lang.String.format;
@@ -73,9 +72,10 @@ import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.pcf.CfCliDelegateResolver;
 import io.harness.pcf.PivotalClientApiException;
+import io.harness.pcf.model.CfAppAutoscalarRequestData;
 import io.harness.pcf.model.CfCliVersion;
-import io.harness.pcf.model.PcfAppAutoscalarRequestData;
-import io.harness.pcf.model.PcfRequestConfig;
+import io.harness.pcf.model.CfCreateApplicationRequestData;
+import io.harness.pcf.model.CfRequestConfig;
 
 import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
@@ -95,7 +95,6 @@ import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
-import software.wings.helpers.ext.pcf.request.PcfCreateApplicationRequestData;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -188,7 +187,7 @@ public class PcfCommandTaskHelper {
 
   public void upsizeListOfInstances(ExecutionLogCallback executionLogCallback,
       PcfDeploymentManager pcfDeploymentManager, List<PcfServiceData> pcfServiceDataUpdated,
-      PcfRequestConfig pcfRequestConfig, List<PcfServiceData> upsizeList, List<PcfInstanceElement> pcfInstanceElements)
+      CfRequestConfig cfRequestConfig, List<PcfServiceData> upsizeList, List<PcfInstanceElement> pcfInstanceElements)
       throws PivotalClientApiException {
     if (isEmpty(upsizeList)) {
       executionLogCallback.saveExecutionLog("No application To Upsize");
@@ -205,17 +204,17 @@ public class PcfCommandTaskHelper {
                                                 .append("\n" + DESIRED_INSTANCE_COUNT)
                                                 .append(pcfServiceData.getDesiredCount())
                                                 .toString());
-      pcfRequestConfig.setApplicationName(pcfServiceData.getName());
-      pcfRequestConfig.setDesiredCount(pcfServiceData.getDesiredCount());
+      cfRequestConfig.setApplicationName(pcfServiceData.getName());
+      cfRequestConfig.setDesiredCount(pcfServiceData.getDesiredCount());
       upsizeInstance(
-          pcfRequestConfig, pcfDeploymentManager, executionLogCallback, pcfServiceDataUpdated, pcfInstanceElements);
+          cfRequestConfig, pcfDeploymentManager, executionLogCallback, pcfServiceDataUpdated, pcfInstanceElements);
       pcfServiceDataUpdated.add(pcfServiceData);
     }
   }
 
   public void downSizeListOfInstances(ExecutionLogCallback executionLogCallback,
-      List<PcfServiceData> pcfServiceDataUpdated, PcfRequestConfig pcfRequestConfig, List<PcfServiceData> downSizeList,
-      PcfCommandRollbackRequest commandRollbackRequest, PcfAppAutoscalarRequestData appAutoscalarRequestData)
+      List<PcfServiceData> pcfServiceDataUpdated, CfRequestConfig cfRequestConfig, List<PcfServiceData> downSizeList,
+      PcfCommandRollbackRequest commandRollbackRequest, CfAppAutoscalarRequestData appAutoscalarRequestData)
       throws PivotalClientApiException {
     executionLogCallback.saveExecutionLog("\n");
     for (PcfServiceData pcfServiceData : downSizeList) {
@@ -229,29 +228,29 @@ public class PcfCommandTaskHelper {
                                                 .append(pcfServiceData.getDesiredCount())
                                                 .toString());
 
-      pcfRequestConfig.setApplicationName(pcfServiceData.getName());
-      pcfRequestConfig.setDesiredCount(pcfServiceData.getDesiredCount());
+      cfRequestConfig.setApplicationName(pcfServiceData.getName());
+      cfRequestConfig.setDesiredCount(pcfServiceData.getDesiredCount());
 
       if (commandRollbackRequest.isUseAppAutoscalar()) {
-        ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
+        ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(cfRequestConfig);
         appAutoscalarRequestData.setApplicationName(applicationDetail.getName());
         appAutoscalarRequestData.setApplicationGuid(applicationDetail.getId());
         appAutoscalarRequestData.setExpectedEnabled(true);
         disableAutoscalar(appAutoscalarRequestData, executionLogCallback);
       }
 
-      downSize(pcfServiceData, executionLogCallback, pcfRequestConfig, pcfDeploymentManager);
+      downSize(pcfServiceData, executionLogCallback, cfRequestConfig, pcfDeploymentManager);
 
       pcfServiceDataUpdated.add(pcfServiceData);
     }
   }
 
-  public ApplicationDetail getNewlyCreatedApplication(PcfRequestConfig pcfRequestConfig,
+  public ApplicationDetail getNewlyCreatedApplication(CfRequestConfig cfRequestConfig,
       PcfCommandDeployRequest pcfCommandDeployRequest, PcfDeploymentManager pcfDeploymentManager)
       throws PivotalClientApiException {
-    pcfRequestConfig.setApplicationName(pcfCommandDeployRequest.getNewReleaseName());
-    pcfRequestConfig.setDesiredCount(pcfCommandDeployRequest.getUpdateCount());
-    return pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
+    cfRequestConfig.setApplicationName(pcfCommandDeployRequest.getNewReleaseName());
+    cfRequestConfig.setDesiredCount(pcfCommandDeployRequest.getUpdateCount());
+    return pcfDeploymentManager.getApplicationByName(cfRequestConfig);
   }
 
   /**
@@ -269,10 +268,10 @@ public class PcfCommandTaskHelper {
    * app_serv_env__3   : 1
    * app_serv_env__2   : 1
    */
-  public void downsizePreviousReleases(PcfCommandDeployRequest pcfCommandDeployRequest,
-      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback,
-      List<PcfServiceData> pcfServiceDataUpdated, Integer updateCount, List<PcfInstanceElement> pcfInstanceElements,
-      PcfAppAutoscalarRequestData appAutoscalarRequestData) throws PivotalClientApiException {
+  public void downsizePreviousReleases(PcfCommandDeployRequest pcfCommandDeployRequest, CfRequestConfig cfRequestConfig,
+      ExecutionLogCallback executionLogCallback, List<PcfServiceData> pcfServiceDataUpdated, Integer updateCount,
+      List<PcfInstanceElement> pcfInstanceElements, CfAppAutoscalarRequestData appAutoscalarRequestData)
+      throws PivotalClientApiException {
     if (pcfCommandDeployRequest.isStandardBlueGreen()) {
       executionLogCallback.saveExecutionLog("# BG Deployment. Old Application will not be downsized.");
       return;
@@ -286,8 +285,8 @@ public class PcfCommandTaskHelper {
       return;
     }
 
-    pcfRequestConfig.setApplicationName(downsizeAppDetails.getApplicationName());
-    ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
+    cfRequestConfig.setApplicationName(downsizeAppDetails.getApplicationName());
+    ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(cfRequestConfig);
     executionLogCallback.saveExecutionLog(new StringBuilder()
                                               .append("APPLICATION-NAME: ")
                                               .append(applicationDetail.getName())
@@ -321,7 +320,7 @@ public class PcfCommandTaskHelper {
     }
 
     ApplicationDetail applicationDetailAfterResize =
-        downSize(pcfServiceData, executionLogCallback, pcfRequestConfig, pcfDeploymentManager);
+        downSize(pcfServiceData, executionLogCallback, cfRequestConfig, pcfDeploymentManager);
 
     // Application that is downsized
     if (EmptyPredicate.isNotEmpty(applicationDetailAfterResize.getInstanceDetails())) {
@@ -516,11 +515,11 @@ public class PcfCommandTaskHelper {
 
   @VisibleForTesting
   ApplicationDetail downSize(PcfServiceData pcfServiceData, ExecutionLogCallback executionLogCallback,
-      PcfRequestConfig pcfRequestConfig, PcfDeploymentManager pcfDeploymentManager) throws PivotalClientApiException {
-    pcfRequestConfig.setApplicationName(pcfServiceData.getName());
-    pcfRequestConfig.setDesiredCount(pcfServiceData.getDesiredCount());
+      CfRequestConfig cfRequestConfig, PcfDeploymentManager pcfDeploymentManager) throws PivotalClientApiException {
+    cfRequestConfig.setApplicationName(pcfServiceData.getName());
+    cfRequestConfig.setDesiredCount(pcfServiceData.getDesiredCount());
 
-    ApplicationDetail applicationDetail = pcfDeploymentManager.resizeApplication(pcfRequestConfig);
+    ApplicationDetail applicationDetail = pcfDeploymentManager.resizeApplication(cfRequestConfig);
 
     executionLogCallback.saveExecutionLog("# Downsizing successful");
     executionLogCallback.saveExecutionLog("\n# App details after downsize:");
@@ -554,7 +553,7 @@ public class PcfCommandTaskHelper {
     return -1;
   }
 
-  public File createManifestYamlFileLocally(PcfCreateApplicationRequestData requestData) throws IOException {
+  public File createManifestYamlFileLocally(CfCreateApplicationRequestData requestData) throws IOException {
     File manifestFile = getManifestFile(requestData);
     return writeToManifestFile(requestData.getFinalManifestYaml(), manifestFile);
   }
@@ -565,7 +564,7 @@ public class PcfCommandTaskHelper {
   }
 
   public File createManifestVarsYamlFileLocally(
-      PcfCreateApplicationRequestData requestData, String varsContent, int index) {
+      CfCreateApplicationRequestData requestData, String varsContent, int index) {
     try {
       if (isBlank(varsContent)) {
         return null;
@@ -589,11 +588,11 @@ public class PcfCommandTaskHelper {
     return manifestFile;
   }
 
-  public File getManifestFile(PcfCreateApplicationRequestData requestData) {
+  public File getManifestFile(CfCreateApplicationRequestData requestData) {
     return new File(requestData.getConfigPathVar() + "/" + requestData.getNewReleaseName() + ".yml");
   }
 
-  public File getManifestVarsFile(PcfCreateApplicationRequestData requestData, int index) {
+  public File getManifestVarsFile(CfCreateApplicationRequestData requestData, int index) {
     return new File(new StringBuilder(128)
                         .append(requestData.getConfigPathVar())
                         .append('/')
@@ -609,7 +608,7 @@ public class PcfCommandTaskHelper {
    */
   public void upsizeNewApplication(ExecutionLogCallback executionLogCallback,
       PcfCommandDeployRequest pcfCommandDeployRequest, List<PcfServiceData> pcfServiceDataUpdated,
-      PcfRequestConfig pcfRequestConfig, ApplicationDetail details, List<PcfInstanceElement> pcfInstanceElements)
+      CfRequestConfig cfRequestConfig, ApplicationDetail details, List<PcfInstanceElement> pcfInstanceElements)
       throws PivotalClientApiException {
     executionLogCallback.saveExecutionLog(color("# Upsizing new application:", White, Bold));
 
@@ -623,32 +622,32 @@ public class PcfCommandTaskHelper {
                                               .toString());
 
     // Upscale new app
-    pcfRequestConfig.setApplicationName(pcfCommandDeployRequest.getNewReleaseName());
-    pcfRequestConfig.setDesiredCount(pcfCommandDeployRequest.getUpdateCount());
+    cfRequestConfig.setApplicationName(pcfCommandDeployRequest.getNewReleaseName());
+    cfRequestConfig.setDesiredCount(pcfCommandDeployRequest.getUpdateCount());
 
     // perform upsize
     upsizeInstance(
-        pcfRequestConfig, pcfDeploymentManager, executionLogCallback, pcfServiceDataUpdated, pcfInstanceElements);
+        cfRequestConfig, pcfDeploymentManager, executionLogCallback, pcfServiceDataUpdated, pcfInstanceElements);
   }
 
-  private void upsizeInstance(PcfRequestConfig pcfRequestConfig, PcfDeploymentManager pcfDeploymentManager,
+  private void upsizeInstance(CfRequestConfig cfRequestConfig, PcfDeploymentManager pcfDeploymentManager,
       ExecutionLogCallback executionLogCallback, List<PcfServiceData> pcfServiceDataUpdated,
       List<PcfInstanceElement> pcfInstanceElements) throws PivotalClientApiException {
     // Get application details before upsize
-    ApplicationDetail detailsBeforeUpsize = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
+    ApplicationDetail detailsBeforeUpsize = pcfDeploymentManager.getApplicationByName(cfRequestConfig);
     StringBuilder sb = new StringBuilder();
 
     // create pcfServiceData having all details of this upsize operation
     pcfServiceDataUpdated.add(PcfServiceData.builder()
                                   .previousCount(detailsBeforeUpsize.getInstances())
-                                  .desiredCount(pcfRequestConfig.getDesiredCount())
-                                  .name(pcfRequestConfig.getApplicationName())
+                                  .desiredCount(cfRequestConfig.getDesiredCount())
+                                  .name(cfRequestConfig.getApplicationName())
                                   .id(detailsBeforeUpsize.getId())
                                   .build());
 
     // upsize application
     ApplicationDetail detailsAfterUpsize =
-        pcfDeploymentManager.upsizeApplicationWithSteadyStateCheck(pcfRequestConfig, executionLogCallback);
+        pcfDeploymentManager.upsizeApplicationWithSteadyStateCheck(cfRequestConfig, executionLogCallback);
     executionLogCallback.saveExecutionLog(sb.append("# Application upsized successfully ").toString());
 
     List<InstanceDetail> newUpsizedInstances = filterNewUpsizedAppInstances(detailsBeforeUpsize, detailsAfterUpsize);
@@ -684,39 +683,39 @@ public class PcfCommandTaskHelper {
         .collect(Collectors.toList());
   }
 
-  public void mapRouteMaps(String applicationName, List<String> routes, PcfRequestConfig pcfRequestConfig,
+  public void mapRouteMaps(String applicationName, List<String> routes, CfRequestConfig cfRequestConfig,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     executionLogCallback.saveExecutionLog(color("\n# Adding Routes", White, Bold));
     executionLogCallback.saveExecutionLog(APPLICATION + applicationName);
     executionLogCallback.saveExecutionLog("ROUTE: \n[" + getRouteString(routes));
     // map
-    pcfRequestConfig.setApplicationName(applicationName);
-    pcfDeploymentManager.mapRouteMapForApplication(pcfRequestConfig, routes, executionLogCallback);
+    cfRequestConfig.setApplicationName(applicationName);
+    pcfDeploymentManager.mapRouteMapForApplication(cfRequestConfig, routes, executionLogCallback);
   }
 
-  public void unmapExistingRouteMaps(ApplicationDetail applicationDetail, PcfRequestConfig pcfRequestConfig,
+  public void unmapExistingRouteMaps(ApplicationDetail applicationDetail, CfRequestConfig cfRequestConfig,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     executionLogCallback.saveExecutionLog(color("\n# Unmapping routes", White, Bold));
     executionLogCallback.saveExecutionLog(APPLICATION + applicationDetail.getName());
     executionLogCallback.saveExecutionLog("ROUTE: \n[" + getRouteString(applicationDetail.getUrls()));
     // map
-    pcfRequestConfig.setApplicationName(applicationDetail.getName());
+    cfRequestConfig.setApplicationName(applicationDetail.getName());
     pcfDeploymentManager.unmapRouteMapForApplication(
-        pcfRequestConfig, applicationDetail.getUrls(), executionLogCallback);
+        cfRequestConfig, applicationDetail.getUrls(), executionLogCallback);
   }
 
-  public void unmapRouteMaps(String applicationName, List<String> routes, PcfRequestConfig pcfRequestConfig,
+  public void unmapRouteMaps(String applicationName, List<String> routes, CfRequestConfig cfRequestConfig,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     executionLogCallback.saveExecutionLog(color("\n# Unmapping Routes", White, Bold));
     executionLogCallback.saveExecutionLog(APPLICATION + applicationName);
     executionLogCallback.saveExecutionLog("ROUTES: \n[" + getRouteString(routes));
     // unmap
-    pcfRequestConfig.setApplicationName(applicationName);
-    pcfDeploymentManager.unmapRouteMapForApplication(pcfRequestConfig, routes, executionLogCallback);
+    cfRequestConfig.setApplicationName(applicationName);
+    pcfDeploymentManager.unmapRouteMapForApplication(cfRequestConfig, routes, executionLogCallback);
     executionLogCallback.saveExecutionLog("# Unmapping Routes was successfully completed");
   }
 
-  public boolean disableAutoscalar(PcfAppAutoscalarRequestData pcfAppAutoscalarRequestData,
+  public boolean disableAutoscalar(CfAppAutoscalarRequestData pcfAppAutoscalarRequestData,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     return pcfDeploymentManager.changeAutoscalarState(pcfAppAutoscalarRequestData, executionLogCallback, false);
   }
@@ -733,9 +732,9 @@ public class PcfCommandTaskHelper {
   }
 
   public String generateManifestYamlForPush(PcfCommandSetupRequest pcfCommandSetupRequest,
-      PcfCreateApplicationRequestData requestData) throws PivotalClientApiException {
+      CfCreateApplicationRequestData requestData) throws PivotalClientApiException {
     // Substitute name,
-    String manifestYaml = requestData.getSetupRequest().getManifestYaml();
+    String manifestYaml = pcfCommandSetupRequest.getManifestYaml();
 
     Map<String, Object> map;
     try {
@@ -765,13 +764,13 @@ public class PcfCommandTaskHelper {
     applicationToBeUpdated.put(INSTANCE_MANIFEST_YML_ELEMENT, 0);
 
     // Update routes.
-    updateConfigWithRoutesIfRequired(requestData, applicationToBeUpdated);
+    updateConfigWithRoutesIfRequired(requestData, applicationToBeUpdated, pcfCommandSetupRequest);
     // We do not want to change order
 
     // remove "create-services" elements as it would have been used by cf cli plugin to create services.
     // This elements is not needed for cf push
     map.remove(CREATE_SERVICE_MANIFEST_ELEMENT);
-    addInactiveIdentifierToManifest(applicationToBeUpdated, requestData);
+    addInactiveIdentifierToManifest(applicationToBeUpdated, requestData, pcfCommandSetupRequest);
     Map<String, Object> applicationMapForYamlDump = generateFinalMapForYamlDump(applicationToBeUpdated);
 
     // replace map for first application that we are deploying
@@ -787,7 +786,7 @@ public class PcfCommandTaskHelper {
     }
   }
 
-  void updateArtifactDetails(PcfCreateApplicationRequestData requestData, PcfCommandSetupRequest pcfCommandSetupRequest,
+  void updateArtifactDetails(CfCreateApplicationRequestData requestData, PcfCommandSetupRequest pcfCommandSetupRequest,
       TreeMap<String, Object> applicationToBeUpdated) {
     if (!pcfCommandSetupRequest.getArtifactStreamAttributes().isDockerBasedDeployment()) {
       applicationToBeUpdated.put(PATH_MANIFEST_YML_ELEMENT, requestData.getArtifactPath());
@@ -827,8 +826,8 @@ public class PcfCommandTaskHelper {
   }
 
   // Add Env Variable marking this deployment version as Inactive
-  void addInactiveIdentifierToManifest(Map<String, Object> map, PcfCreateApplicationRequestData requestData) {
-    PcfCommandSetupRequest setupRequest = requestData.getSetupRequest();
+  void addInactiveIdentifierToManifest(
+      Map<String, Object> map, CfCreateApplicationRequestData requestData, PcfCommandSetupRequest setupRequest) {
     if (!setupRequest.isBlueGreen()) {
       return;
     }
@@ -893,9 +892,7 @@ public class PcfCommandTaskHelper {
   }
 
   private void updateConfigWithRoutesIfRequired(
-      PcfCreateApplicationRequestData requestData, TreeMap applicationToBeUpdated) {
-    PcfCommandSetupRequest setupRequest = requestData.getSetupRequest();
-
+      CfCreateApplicationRequestData requestData, TreeMap applicationToBeUpdated, PcfCommandSetupRequest setupRequest) {
     applicationToBeUpdated.remove(ROUTES_MANIFEST_YML_ELEMENT);
 
     // 1. Check and handle no-route scenario
@@ -946,7 +943,7 @@ public class PcfCommandTaskHelper {
   }
 
   @VisibleForTesting
-  void handleRandomRouteScenario(PcfCreateApplicationRequestData requestData, Map applicationToBeUpdated) {
+  void handleRandomRouteScenario(CfCreateApplicationRequestData requestData, Map applicationToBeUpdated) {
     applicationToBeUpdated.put(RANDOM_ROUTE_MANIFEST_YML_ELEMENT, true);
     if (!applicationToBeUpdated.containsKey(HOST_MANIFEST_YML_ELEMENT)) {
       // Random-routes needs to be generated.  ransom-route uses host mentioned in manifest to generate route.
@@ -955,7 +952,7 @@ public class PcfCommandTaskHelper {
       // multiple spaces.
       String appName = requestData.getNewReleaseName();
       String appPrefix = appName.substring(0, appName.lastIndexOf("__"));
-      appPrefix = appPrefix + '-' + requestData.getPcfRequestConfig().getSpaceName();
+      appPrefix = appPrefix + '-' + requestData.getCfRequestConfig().getSpaceName();
       // '_' in routemap is not allowed, PCF lets us create route but while accessing it, fails
       appPrefix = appPrefix.replace("__", "-");
       appPrefix = appPrefix.replace("_", "-");
@@ -976,7 +973,7 @@ public class PcfCommandTaskHelper {
   }
 
   public ApplicationSummary findCurrentActiveApplication(List<ApplicationSummary> previousReleases,
-      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+      CfRequestConfig cfRequestConfig, ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
     if (isEmpty(previousReleases)) {
       return null;
     }
@@ -986,9 +983,9 @@ public class PcfCommandTaskHelper {
     List<ApplicationSummary> activeVersions = new ArrayList<>();
     for (int i = previousReleases.size() - 1; i >= 0; i--) {
       ApplicationSummary applicationSummary = previousReleases.get(i);
-      pcfRequestConfig.setApplicationName(applicationSummary.getName());
+      cfRequestConfig.setApplicationName(applicationSummary.getName());
 
-      if (pcfDeploymentManager.isActiveApplication(pcfRequestConfig, executionLogCallback)) {
+      if (pcfDeploymentManager.isActiveApplication(cfRequestConfig, executionLogCallback)) {
         activeApplication = applicationSummary;
         activeVersions.add(applicationSummary);
       }
@@ -1027,5 +1024,28 @@ public class PcfCommandTaskHelper {
         ()
             -> new InvalidArgumentsException(
                 format("Unable to find CF CLI version on delegate, requested version: %s", version)));
+  }
+
+  public char[] getPassword(ArtifactStreamAttributes artifactStreamAttributes) {
+    char[] password = null;
+    SettingAttribute serverSetting = artifactStreamAttributes.getServerSetting();
+    if (serverSetting.getValue() instanceof DockerConfig) {
+      DockerConfig dockerConfig = (DockerConfig) serverSetting.getValue();
+      password = dockerConfig.getPassword();
+    } else if (serverSetting.getValue() instanceof AwsConfig) {
+      AwsConfig awsConfig = (AwsConfig) serverSetting.getValue();
+      password = awsConfig.getSecretKey();
+    } else if (serverSetting.getValue() instanceof ArtifactoryConfig) {
+      ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) serverSetting.getValue();
+      password = artifactoryConfig.getPassword();
+    } else if (serverSetting.getValue() instanceof GcpConfig) {
+      GcpConfig gcpConfig = (GcpConfig) serverSetting.getValue();
+      String serviceAccountKeyFileContent = new String(gcpConfig.getServiceAccountKeyFileContent());
+      password = serviceAccountKeyFileContent.replaceAll("\n", "").toCharArray();
+    } else if (serverSetting.getValue() instanceof NexusConfig) {
+      NexusConfig nexusConfig = (NexusConfig) serverSetting.getValue();
+      password = nexusConfig.getPassword();
+    }
+    return password;
   }
 }

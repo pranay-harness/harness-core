@@ -7,7 +7,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.pcf.model.PcfRequestConfig;
+import io.harness.pcf.model.CfRequestConfig;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.PcfConfig;
@@ -53,7 +53,7 @@ public class PcfCreatePcfResourceCommandTaskHandler extends PcfCommandTaskHandle
     try {
       if (PcfCommandType.CREATE_ROUTE == pcfInfraMappingDataRequest.getPcfCommandType()) {
         String routeCreated = pcfDeploymentManager.createRouteMap(
-            PcfRequestConfig.builder()
+            CfRequestConfig.builder()
                 .orgName(pcfInfraMappingDataRequest.getOrganization())
                 .spaceName(pcfInfraMappingDataRequest.getSpace())
                 .userName(String.valueOf(pcfConfig.getUsername()))

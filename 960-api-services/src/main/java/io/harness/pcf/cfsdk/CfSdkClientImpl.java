@@ -14,11 +14,10 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.logging.LogCallback;
 import io.harness.pcf.CfSdkClient;
 import io.harness.pcf.PivotalClientApiException;
-import io.harness.pcf.model.PcfRequestConfig;
-
-import software.wings.beans.command.ExecutionLogCallback;
+import io.harness.pcf.model.CfRequestConfig;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -78,7 +77,7 @@ public class CfSdkClientImpl implements CfSdkClient {
   @Inject private CloudFoundryOperationsProvider cloudFoundryOperationsProvider;
 
   @Override
-  public List<OrganizationSummary> getOrganizations(PcfRequestConfig pcfRequestConfig)
+  public List<OrganizationSummary> getOrganizations(CfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
     log.info(format("%s Fetching Organizations", PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX));
 
@@ -105,7 +104,7 @@ public class CfSdkClientImpl implements CfSdkClient {
   }
 
   @Override
-  public List<String> getSpacesForOrganization(PcfRequestConfig pcfRequestConfig)
+  public List<String> getSpacesForOrganization(CfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
     List<OrganizationDetail> organizationDetails = new ArrayList<>();
     List<String> spaces = new ArrayList<>();
@@ -143,7 +142,7 @@ public class CfSdkClientImpl implements CfSdkClient {
   }
 
   @Override
-  public List<ApplicationSummary> getApplications(PcfRequestConfig pcfRequestConfig)
+  public List<ApplicationSummary> getApplications(CfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
     log.info(format("%s Fetching PCF Applications", PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX));
 
@@ -172,7 +171,7 @@ public class CfSdkClientImpl implements CfSdkClient {
   }
 
   @Override
-  public ApplicationDetail getApplicationByName(PcfRequestConfig pcfRequestConfig)
+  public ApplicationDetail getApplicationByName(CfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
     log.info(
         format("%s Getting application: %s", PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX, pcfRequestConfig.getApplicationName()));
@@ -203,7 +202,7 @@ public class CfSdkClientImpl implements CfSdkClient {
   }
 
   @Override
-  public void startApplication(PcfRequestConfig pcfRequestConfig)
+  public void startApplication(CfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
     log.info(
         format("%s Starting application: %s", PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX, pcfRequestConfig.getApplicationName()));
@@ -232,7 +231,7 @@ public class CfSdkClientImpl implements CfSdkClient {
   }
 
   @Override
-  public void scaleApplications(PcfRequestConfig pcfRequestConfig)
+  public void scaleApplications(CfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
     log.info(format("%s Scaling Applications: %s, to count: %s", PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX,
         pcfRequestConfig.getApplicationName(), pcfRequestConfig.getDesiredCount()));
@@ -265,8 +264,7 @@ public class CfSdkClientImpl implements CfSdkClient {
   }
 
   @Override
-  public void stopApplication(PcfRequestConfig pcfRequestConfig)
-      throws PivotalClientApiException, InterruptedException {
+  public void stopApplication(CfRequestConfig pcfRequestConfig) throws PivotalClientApiException, InterruptedException {
     log.info(
         format("%s Stopping Application: %s", PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX, pcfRequestConfig.getApplicationName()));
 
@@ -293,7 +291,7 @@ public class CfSdkClientImpl implements CfSdkClient {
   }
 
   @Override
-  public void deleteApplication(PcfRequestConfig pcfRequestConfig)
+  public void deleteApplication(CfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
     log.info(
         format("%s Deleting application: %s", PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX, pcfRequestConfig.getApplicationName()));
@@ -324,7 +322,7 @@ public class CfSdkClientImpl implements CfSdkClient {
   }
 
   @Override
-  public void getTasks(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException, InterruptedException {
+  public void getTasks(CfRequestConfig pcfRequestConfig) throws PivotalClientApiException, InterruptedException {
     log.info(new StringBuilder()
                  .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
                  .append("Getting Tasks for Applications: ")
@@ -360,7 +358,7 @@ public class CfSdkClientImpl implements CfSdkClient {
   }
 
   @Override
-  public void pushAppBySdk(PcfRequestConfig pcfRequestConfig, Path path, ExecutionLogCallback executionLogCallback)
+  public void pushAppBySdk(CfRequestConfig pcfRequestConfig, Path path, LogCallback executionLogCallback)
       throws PivotalClientApiException, InterruptedException {
     executionLogCallback.saveExecutionLog(
         "Using SDK to create application, Deprecated... Please enable flag: USE_PCF_CLI");
@@ -397,7 +395,7 @@ public class CfSdkClientImpl implements CfSdkClient {
   }
 
   @Override
-  public List<LogMessage> getRecentLogs(PcfRequestConfig pcfRequestConfig, long logsAfterTsNs)
+  public List<LogMessage> getRecentLogs(CfRequestConfig pcfRequestConfig, long logsAfterTsNs)
       throws PivotalClientApiException {
     try (CloudFoundryOperationsWrapper operationsWrapper =
              cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
@@ -427,7 +425,7 @@ public class CfSdkClientImpl implements CfSdkClient {
   }
 
   private ApplicationManifest initializeApplicationManifest(
-      ApplicationManifest applicationManifest, PcfRequestConfig pcfRequestConfig) {
+      ApplicationManifest applicationManifest, CfRequestConfig pcfRequestConfig) {
     ApplicationManifest.Builder builder = ApplicationManifest.builder();
 
     if (applicationManifest.getDomains() != null) {
@@ -473,7 +471,7 @@ public class CfSdkClientImpl implements CfSdkClient {
         .build();
   }
 
-  private void addRouteMapsToManifest(PcfRequestConfig pcfRequestConfig, ApplicationManifest.Builder builder) {
+  private void addRouteMapsToManifest(CfRequestConfig pcfRequestConfig, ApplicationManifest.Builder builder) {
     // Set routeMaps
     if (isNotEmpty(pcfRequestConfig.getRouteMaps())) {
       List<org.cloudfoundry.operations.applications.Route> routeList =
@@ -497,7 +495,7 @@ public class CfSdkClientImpl implements CfSdkClient {
   }
 
   @Override
-  public ApplicationEnvironments getApplicationEnvironmentsByName(PcfRequestConfig pcfRequestConfig)
+  public ApplicationEnvironments getApplicationEnvironmentsByName(CfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException {
     log.info(new StringBuilder()
                  .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
@@ -541,7 +539,7 @@ public class CfSdkClientImpl implements CfSdkClient {
   }
 
   @Override
-  public List<String> getRoutesForSpace(PcfRequestConfig pcfRequestConfig)
+  public List<String> getRoutesForSpace(CfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
     List<Route> routes = getAllRoutesForSpace(pcfRequestConfig);
     if (!CollectionUtils.isEmpty(routes)) {
@@ -552,7 +550,7 @@ public class CfSdkClientImpl implements CfSdkClient {
   }
 
   @Override
-  public List<Route> getRouteMapsByNames(List<String> paths, PcfRequestConfig pcfRequestConfig)
+  public List<Route> getRouteMapsByNames(List<String> paths, CfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
     if (isEmpty(paths)) {
       return Collections.EMPTY_LIST;
@@ -567,7 +565,7 @@ public class CfSdkClientImpl implements CfSdkClient {
         .collect(toList());
   }
 
-  private List<Route> getAllRoutesForSpace(PcfRequestConfig pcfRequestConfig)
+  private List<Route> getAllRoutesForSpace(CfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
     log.info(new StringBuilder()
                  .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
@@ -603,7 +601,7 @@ public class CfSdkClientImpl implements CfSdkClient {
   }
 
   @Override
-  public void unmapRoutesForApplication(PcfRequestConfig pcfRequestConfig, List<String> routes)
+  public void unmapRoutesForApplication(CfRequestConfig pcfRequestConfig, List<String> routes)
       throws PivotalClientApiException, InterruptedException {
     log.info(new StringBuilder()
                  .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
@@ -620,7 +618,7 @@ public class CfSdkClientImpl implements CfSdkClient {
   }
 
   @Override
-  public void createRouteMap(PcfRequestConfig pcfRequestConfig, String host, String domain, String path,
+  public void createRouteMap(CfRequestConfig pcfRequestConfig, String host, String domain, String path,
       boolean tcpRoute, boolean useRandomPort, Integer port) throws PivotalClientApiException, InterruptedException {
     log.info(new StringBuilder()
                  .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
@@ -685,7 +683,7 @@ public class CfSdkClientImpl implements CfSdkClient {
     }
   }
 
-  public List<Domain> getAllDomainsForSpace(PcfRequestConfig pcfRequestConfig)
+  public List<Domain> getAllDomainsForSpace(CfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
     log.info(new StringBuilder()
                  .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
@@ -718,8 +716,8 @@ public class CfSdkClientImpl implements CfSdkClient {
     }
   }
 
-  private CreateRouteRequest.Builder getCreateRouteRequest(PcfRequestConfig pcfRequestConfig, String host,
-      String domain, String path, boolean tcpRoute, boolean useRandomPort, Integer port) {
+  private CreateRouteRequest.Builder getCreateRouteRequest(CfRequestConfig pcfRequestConfig, String host, String domain,
+      String path, boolean tcpRoute, boolean useRandomPort, Integer port) {
     CreateRouteRequest.Builder createRouteRequestBuilder =
         CreateRouteRequest.builder().domain(domain).space(pcfRequestConfig.getSpaceName());
 
@@ -749,7 +747,7 @@ public class CfSdkClientImpl implements CfSdkClient {
   }
 
   @Override
-  public Optional<Route> getRouteMap(PcfRequestConfig pcfRequestConfig, String route)
+  public Optional<Route> getRouteMap(CfRequestConfig pcfRequestConfig, String route)
       throws PivotalClientApiException, InterruptedException {
     if (StringUtils.isBlank(route)) {
       throw new PivotalClientApiException(
@@ -765,7 +763,7 @@ public class CfSdkClientImpl implements CfSdkClient {
   }
 
   @Override
-  public void mapRoutesForApplication(PcfRequestConfig pcfRequestConfig, List<String> routes)
+  public void mapRoutesForApplication(CfRequestConfig pcfRequestConfig, List<String> routes)
       throws PivotalClientApiException, InterruptedException {
     log.info(new StringBuilder()
                  .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
@@ -790,14 +788,14 @@ public class CfSdkClientImpl implements CfSdkClient {
   }
 
   private void createRoutesThatDoNotExists(List<String> routesNeedToBeCreated, Set<String> domainNames,
-      PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException, InterruptedException {
+      CfRequestConfig pcfRequestConfig) throws PivotalClientApiException, InterruptedException {
     for (String routeToCreate : routesNeedToBeCreated) {
       createRouteFromPath(routeToCreate, pcfRequestConfig, domainNames);
     }
   }
 
   @VisibleForTesting
-  void createRouteFromPath(String routeToCreate, PcfRequestConfig pcfRequestConfig, Set<String> domainNames)
+  void createRouteFromPath(String routeToCreate, CfRequestConfig pcfRequestConfig, Set<String> domainNames)
       throws PivotalClientApiException, InterruptedException {
     boolean validRoute = false;
     String domainNameUsed = EMPTY;
@@ -855,7 +853,7 @@ public class CfSdkClientImpl implements CfSdkClient {
   }
 
   @Override
-  public void unmapRouteMapForApp(PcfRequestConfig pcfRequestConfig, Route route)
+  public void unmapRouteMapForApp(CfRequestConfig pcfRequestConfig, Route route)
       throws PivotalClientApiException, InterruptedException {
     log.info(new StringBuilder()
                  .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
@@ -897,7 +895,7 @@ public class CfSdkClientImpl implements CfSdkClient {
   }
 
   @Override
-  public void mapRouteMapForApp(PcfRequestConfig pcfRequestConfig, Route route)
+  public void mapRouteMapForApp(CfRequestConfig pcfRequestConfig, Route route)
       throws PivotalClientApiException, InterruptedException {
     log.info(new StringBuilder()
                  .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
