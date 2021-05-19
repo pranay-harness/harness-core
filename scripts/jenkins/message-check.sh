@@ -19,8 +19,14 @@ then
     exit 1
 fi
 
-KEY=`echo "${ghprbPullTitle}" | grep -o -iqE "(${PROJECTS})-[0-9]+"`
+KEY=`echo "${ghprbPullTitle}" | grep -o -iE "(${PROJECTS})-[0-9]+"`
+curl -v https://harness.atlassian.net/rest/api/3/issue/${KEY}?fields=id --user $JIRA_USERNAME:$JIRA_PASSWORD -o result.txt > /dev/null 2>&1
 
+if  ! grep -q "Issue does not exist" result.txt; then
+      echo "${KEY}" is not valid JIRA Key.
+      echo Please create a Jira if it does not exist
+      exit 1
+fi
 
 #TODO: enable priorities check
 
