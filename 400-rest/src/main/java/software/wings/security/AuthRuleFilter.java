@@ -329,7 +329,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         }
       } else {
         if (!harnessUserGroupService.isHarnessSupportUser(user.getUuid())
-            || !harnessUserGroupService.isHarnessSupportEnabledForAccount(accountId)) {
+            || !harnessUserGroupService.isHarnessSupportEnabled(accountId, user.getUuid())) {
           throw new AccessDeniedException(USER_NOT_AUTHORIZED, USER);
         }
       }

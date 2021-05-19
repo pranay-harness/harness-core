@@ -9,6 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.rest.RestResponse;
 
+import software.wings.beans.security.HarnessSupportUserDTO;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.beans.security.HarnessUserGroupDTO;
 import software.wings.security.annotations.ApiKeyAuthorized;
@@ -94,5 +95,13 @@ public class HarnessUserGroupResource {
   @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<Boolean> checkIfHarnessSupportEnabledForAccount(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(harnessUserGroupService.isHarnessSupportEnabledForAccount(accountId));
+  }
+
+  @GET
+  @Path("listAllHarnessSupportUsers")
+  public RestResponse<List<HarnessSupportUserDTO>> listAllHarnessSupportUsers(
+      @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(
+        harnessUserGroupService.toHarnessSupportUser(harnessUserGroupService.listAllHarnessSupportUsers()));
   }
 }
