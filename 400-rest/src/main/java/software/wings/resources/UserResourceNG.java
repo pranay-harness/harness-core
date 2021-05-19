@@ -122,6 +122,13 @@ public class UserResourceNG {
     return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(user)));
   }
 
+  @GET
+  @Path("user-password-present")
+  public RestResponse<Boolean> getUserByEmailId(
+      @QueryParam("accountId") String accountId, @QueryParam("emailId") String emailId) {
+    return new RestResponse<>(userService.isUserPasswordPresent(accountId, emailId));
+  }
+
   @POST
   @Path("/batch")
   public RestResponse<List<UserInfo>> listUsers(@QueryParam("accountId") String accountId, UserFilterNG userFilterNG) {
