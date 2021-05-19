@@ -26,7 +26,7 @@ echo $KEY
 echo "Calling Jira API"
 echo "https://harness.atlassian.net/rest/api/3/issue/${KEY}?fields=id"
 
-curl -v https://harness.atlassian.net/rest/api/3/issue/${KEY}?fields=id --user $JIRA_USERNAME:$JIRA_PASSWORD -o result.txt > /dev/null 2>&1
+curl -v https://harness.atlassian.net/rest/api/3/issue/${KEY}?fields=id --header 'Content-Type: application/json' --header 'Authorization: Basic cHJhc2hhbnQucGFsQGhhcm5lc3MuaW86TVJVSExQUXhncEJ3RzFoTXFaSmcwNUU4' -o result.txt > /dev/null 2>&1
 
 echo "Result Received"
 
