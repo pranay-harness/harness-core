@@ -8,7 +8,6 @@ go_library(
     deps = [
         "//953-events-api/src/main/proto/io/harness/eventsframework/schemas/webhookpayloads:go_default_library",
         "//product/ci/scm/proto:go_default_library",
-        "//product/ci/ti-service/config:go_default_library",
         "//product/ci/ti-service/db:go_default_library",
         "//product/ci/ti-service/types:go_default_library",
         "@com_github_golang_protobuf//proto:go_default_library",

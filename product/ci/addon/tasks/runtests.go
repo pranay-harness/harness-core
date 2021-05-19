@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -30,6 +29,13 @@ const (
 	// as it is also used in init container.
 	javaAgentArg = "-javaagent:/addon/bin/java-agent.jar=%s"
 	tiConfigPath = ".ticonfig.yaml"
+)
+
+var (
+	selectTestsFn        = selectTests
+	collectCgFn          = collectCg
+	collectTestReportsFn = collectTestReports
+	runCmdFn             = runCmd
 )
 
 // RunTestsTask represents an interface to run tests intelligently
@@ -66,7 +72,7 @@ type runTestsTask struct {
 }
 
 func NewRunTestsTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogger,
-	w io.Writer, logMetrics bool, addonLogger *zap.SugaredLogger) RunTestsTask {
+	w io.Writer, logMetrics bool, addonLogger *zap.SugaredLogger) *runTestsTask {
 	r := step.GetRunTests()
 	fs := filesystem.NewOSFileSystem(log)
 	timeoutSecs := r.GetContext().GetExecutionTimeoutSecs()
@@ -112,8 +118,8 @@ func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
 			st := time.Now()
 			// even if the collectCg fails, try to collect reports. Both are parallel features and one should
 			// work even if the other one fails.
-			errCg = collectCg(ctx, r.id, cgDir, r.log)
-			err = collectTestReports(ctx, r.reports, r.id, r.log)
+			errCg = collectCgFn(ctx, r.id, cgDir, r.log)
+			err = collectTestReportsFn(ctx, r.reports, r.id, r.log)
 			if errCg != nil {
 				// If there's an error in collecting callgraph, we won't retry but
 				// the step will be marked as an error
@@ -138,8 +144,8 @@ func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
 	if err != nil {
 		// Run step did not execute successfully
 		// Try and collect callgraph and reports, ignore any errors during collection steps itself
-		errCg = collectCg(ctx, r.id, cgDir, r.log)
-		errc := collectTestReports(ctx, r.reports, r.id, r.log)
+		errCg = collectCgFn(ctx, r.id, cgDir, r.log)
+		errc := collectTestReportsFn(ctx, r.reports, r.id, r.log)
 		if errc != nil {
 			r.log.Errorw("error while collecting test reports", zap.Error(errc))
 		}
@@ -157,7 +163,7 @@ func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
 func (r *runTestsTask) createJavaAgentArg() (string, error) {
 	// Create config file
 	dir := fmt.Sprintf(outDir, r.tmpFilePath)
-	err := os.MkdirAll(dir, os.ModePerm)
+	err := r.fs.MkdirAll(dir, os.ModePerm)
 	if err != nil {
 		r.log.Errorw(fmt.Sprintf("could not create nested directory %s", dir), zap.Error(err))
 		return "", err
@@ -173,7 +179,12 @@ instrPackages: %s`, dir, r.packages)
 	}
 	iniFile := fmt.Sprintf("%s/config.ini", r.tmpFilePath)
 	r.log.Infow(fmt.Sprintf("attempting to write %s to %s", data, iniFile))
-	err = ioutil.WriteFile(iniFile, []byte(data), 0644)
+	f, err := r.fs.Open(iniFile)
+	if err != nil {
+		r.log.Errorw(fmt.Sprintf("could not open file %s", iniFile), zap.Error(err))
+		return "", err
+	}
+	_, err = f.Write([]byte(data))
 	if err != nil {
 		r.log.Errorw(fmt.Sprintf("could not write %s to file %s", data, iniFile), zap.Error(err))
 		return "", err
@@ -312,7 +323,7 @@ func (r *runTestsTask) getCmd(ctx context.Context) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		selection, err = selectTests(ctx, files, r.id, r.log, r.fs)
+		selection, err = selectTestsFn(ctx, files, r.id, r.log, r.fs)
 		if err != nil {
 			r.log.Errorw("there was some issue in trying to figure out tests to run. Running all the tests", zap.Error(err))
 			// Set run only selected tests to false if there was some issue in the response
@@ -370,7 +381,7 @@ func (r *runTestsTask) execute(ctx context.Context, retryCount int32) error {
 
 	cmd := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).
 		WithStdout(r.procWriter).WithStderr(r.procWriter).WithEnvVarsMap(nil)
-	err = runCmd(ctx, cmd, r.id, cmdArgs, retryCount, start, r.logMetrics, r.addonLogger)
+	err = runCmdFn(ctx, cmd, r.id, cmdArgs, retryCount, start, r.logMetrics, r.addonLogger)
 	if err != nil {
 		return err
 	}
