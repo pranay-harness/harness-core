@@ -1,5 +1,6 @@
 package io.harness.batch.processing.writer;
 
+import static io.harness.beans.FeatureName.CE_AWS_BILLING_CONNECTOR_DETAIL;
 import static io.harness.rule.OwnerRule.ROHIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,6 +9,8 @@ import static org.mockito.Matchers.any;
 import io.harness.CategoryTest;
 import io.harness.batch.processing.service.impl.AwsS3SyncServiceImpl;
 import io.harness.category.element.UnitTests;
+import io.harness.connector.ConnectorResourceClient;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.beans.AwsCrossAccountAttributes;
@@ -30,11 +33,12 @@ import org.mockito.Mockito;
 import org.mockito.invocation.Invocation;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.batch.core.JobParameters;
-
 @RunWith(MockitoJUnitRunner.class)
 public class S3SyncEventWriterTest extends CategoryTest {
   @InjectMocks S3SyncEventWriter s3SyncEventWriter;
   @Mock private AwsS3SyncServiceImpl awsS3SyncService;
+  @Mock private FeatureFlagService featureFlagService;
+  @Mock private ConnectorResourceClient connectorResourceClient;
   @Mock JobParameters parameters;
   @Mock private CloudToHarnessMappingServiceImpl cloudToHarnessMappingService;
 
@@ -71,6 +75,7 @@ public class S3SyncEventWriterTest extends CategoryTest {
                                             .withCategory(SettingAttribute.SettingCategory.CE_CONNECTOR)
                                             .withValue(settingValue)
                                             .build();
+    Mockito.doReturn(false).when(featureFlagService).isEnabled(CE_AWS_BILLING_CONNECTOR_DETAIL, TEST_ACCOUNT_ID);
     Mockito.doNothing().when(awsS3SyncService).syncBuckets(any());
     Mockito.doReturn(Arrays.asList(settingAttribute))
         .when(cloudToHarnessMappingService)
