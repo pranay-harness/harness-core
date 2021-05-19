@@ -1648,11 +1648,6 @@ plain_artifacts = [
     "org.ow2.asm:asm:5.0.4",
     "org.passay:passay:1.3.1",
     "org.postgresql:postgresql:42.2.14",
-    "org.powermock:powermock-api-mockito-common:1.7.4",
-    "org.powermock:powermock-api-mockito:1.7.4",
-    "org.powermock:powermock-core:1.7.4",
-    "org.powermock:powermock-module-junit4:1.7.4",
-    "org.powermock:powermock-reflect:1.7.4",
     "org.projectlombok:lombok:1.18.6",
     "org.quartz-scheduler:quartz:2.3.2",
     "org.reactivestreams:reactive-streams:1.0.2",
@@ -1747,9 +1742,27 @@ amazon_artifacts = [
     ]
 ]
 
+powermock_artifacts = [
+    maven.artifact(
+        group = "org.powermock",
+        artifact = x,
+        version = "1.7.4",
+        testonly = True,
+    )
+    for x in [
+        "powermock-api-mockito",
+        "powermock-api-mockito-common",
+        "powermock-api-support",
+        "powermock-core",
+        "powermock-module-junit4",
+        "powermock-module-junit4-common",
+        "powermock-reflect",
+    ]
+]
+
 maven_install(
     name = "maven",
-    artifacts = plain_artifacts + amazon_artifacts + [
+    artifacts = plain_artifacts + amazon_artifacts + powermock_artifacts + [
         maven.artifact(
             group = "io.netty",
             artifact = "netty-transport-native-kqueue",
