@@ -23,12 +23,16 @@ import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
+import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
+import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.settings.SettingValue;
 
@@ -97,6 +101,82 @@ public class ArtifactStreamSettingAttributePTaskManagerTest extends CategoryTest
     SettingAttribute newSetting = prepareSettingAttribute();
     SettingAttribute oldSetting =
         prepareSettingAttribute(DockerConfig.builder().dockerRegistryUrl("http://registry.hub.docker.com/v2/").build());
+    ArtifactStream artifactStream = prepareArtifactStream();
+    artifactStream.setPerpetualTaskId(PERPETUAL_TASK_ID);
+    when(artifactStreamService.listAllBySettingId(SETTING_ID)).thenReturn(Collections.singletonList(artifactStream));
+    disableFeatureFlag();
+
+    manager.onUpdated(oldSetting, newSetting);
+    manager.onUpdated(newSetting, newSetting);
+    verify(perpetualTaskService, never()).resetTask(any(), any(), any());
+    verify(artifactStreamService, times(1)).deleteArtifacts(ACCOUNT_ID, artifactStream);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testOnUpdatedForArtifactory() {
+    SettingAttribute newSetting =
+        prepareSettingAttribute(ArtifactoryConfig.builder().artifactoryUrl("https://harness.jfrog.io").build());
+    SettingAttribute oldSetting =
+        prepareSettingAttribute(ArtifactoryConfig.builder().artifactoryUrl("http://harness.jfrog.io").build());
+    ArtifactStream artifactStream = prepareArtifactStream();
+    artifactStream.setPerpetualTaskId(PERPETUAL_TASK_ID);
+    when(artifactStreamService.listAllBySettingId(SETTING_ID)).thenReturn(Collections.singletonList(artifactStream));
+    disableFeatureFlag();
+
+    manager.onUpdated(oldSetting, newSetting);
+    manager.onUpdated(newSetting, newSetting);
+    verify(perpetualTaskService, never()).resetTask(any(), any(), any());
+    verify(artifactStreamService, times(1)).deleteArtifacts(ACCOUNT_ID, artifactStream);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testOnUpdatedForJenkins() {
+    SettingAttribute newSetting =
+        prepareSettingAttribute(JenkinsConfig.builder().jenkinsUrl("https://jenkins.harness.io").build());
+    SettingAttribute oldSetting =
+        prepareSettingAttribute(JenkinsConfig.builder().jenkinsUrl("http://jenkins.dev.harness.io").build());
+    ArtifactStream artifactStream = prepareArtifactStream();
+    artifactStream.setPerpetualTaskId(PERPETUAL_TASK_ID);
+    when(artifactStreamService.listAllBySettingId(SETTING_ID)).thenReturn(Collections.singletonList(artifactStream));
+    disableFeatureFlag();
+
+    manager.onUpdated(oldSetting, newSetting);
+    manager.onUpdated(newSetting, newSetting);
+    verify(perpetualTaskService, never()).resetTask(any(), any(), any());
+    verify(artifactStreamService, times(1)).deleteArtifacts(ACCOUNT_ID, artifactStream);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testOnUpdatedForAzureArtifactsConfig() {
+    SettingAttribute newSetting =
+        prepareSettingAttribute(AzureArtifactsPATConfig.builder().azureDevopsUrl("https://devops.azure.io").build());
+    SettingAttribute oldSetting =
+        prepareSettingAttribute(AzureArtifactsPATConfig.builder().azureDevopsUrl("http://devops.azure.io").build());
+    ArtifactStream artifactStream = prepareArtifactStream();
+    artifactStream.setPerpetualTaskId(PERPETUAL_TASK_ID);
+    when(artifactStreamService.listAllBySettingId(SETTING_ID)).thenReturn(Collections.singletonList(artifactStream));
+    disableFeatureFlag();
+
+    manager.onUpdated(oldSetting, newSetting);
+    manager.onUpdated(newSetting, newSetting);
+    verify(perpetualTaskService, never()).resetTask(any(), any(), any());
+    verify(artifactStreamService, times(1)).deleteArtifacts(ACCOUNT_ID, artifactStream);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testOnUpdatedForBamboo() {
+    SettingAttribute newSetting =
+        prepareSettingAttribute(BambooConfig.builder().bambooUrl("https://harness.bamboo.io").build());
+    SettingAttribute oldSetting =
+        prepareSettingAttribute(BambooConfig.builder().bambooUrl("http://harness.bamboo.io").build());
     ArtifactStream artifactStream = prepareArtifactStream();
     artifactStream.setPerpetualTaskId(PERPETUAL_TASK_ID);
     when(artifactStreamService.listAllBySettingId(SETTING_ID)).thenReturn(Collections.singletonList(artifactStream));
