@@ -98,9 +98,6 @@ java_library(
         "@maven//:org_jooq_joor",
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_mongodb_morphia_morphia",
-        "@maven//:org_powermock_powermock_api_mockito",
-        "@maven//:org_powermock_powermock_core",
-        "@maven//:org_powermock_powermock_module_junit4",
         "@maven//:org_slf4j_slf4j_api",
         "@maven//:org_sonatype_nexus_plugins_nexus_restlet1x_model",
         "@maven//:org_zeroturnaround_zt_exec",
@@ -120,6 +117,7 @@ java_library(
         "//:lombok",
         "//990-commons-test:module",
         "@maven//:com_github_tomakehurst_wiremock_jre8_standalone",
+        "@maven//:org_powermock_powermock_api_mockito",
     ],
 )
 

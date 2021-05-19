@@ -93,28 +93,17 @@ java_binary(
 )
 
 java_library(
-    name = "testsupport",
-    srcs = glob(["src/testsupport/**/*.java"]),
+    name = "supporter-test",
+    testonly = True,
+    srcs = glob(["src/supporter-test/**/*.java"]),
     deps = [
         ":module",
         "//990-commons-test:module",
+        "@maven//:com_slack_api_slack_api_client",
+        "@maven//:com_slack_api_slack_api_model",
         "@maven//:org_springframework_batch_spring_batch_core",
     ],
 )
-
-test_dependencies = shared_dependencies + [
-    ":testsupport",
-    ":module",
-    "//400-rest:supporter-test",
-    "//960-persistence:supporter-test",
-    "//990-commons-test:module",
-    "@maven//:org_powermock_powermock_api_mockito",
-    "@maven//:org_springframework_boot_spring_boot_starter_test",
-    "@maven//:junit_junit",
-    "@maven//:org_assertj_assertj_core",
-    "@maven//:org_mockito_mockito_core",
-    "@maven//:org_powermock_powermock_module_junit4",
-]
 
 filegroup(
     name = "resource",
@@ -133,7 +122,19 @@ java_library(
         "//280-batch-processing/src/main/resources:resource",
     ],
     visibility = ["//visibility:public"],
-    deps = test_dependencies,
+    deps = shared_dependencies + [
+        ":module",
+        ":supporter-test",
+        "//400-rest:supporter-test",
+        "//960-persistence:supporter-test",
+        "//990-commons-test:module",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_powermock_powermock_api_mockito",
+        "@maven//:org_powermock_powermock_module_junit4",
+        "@maven//:org_springframework_boot_spring_boot_starter_test",
+    ],
 )
 
 run_tests()
