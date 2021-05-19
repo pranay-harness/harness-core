@@ -1071,8 +1071,6 @@ plain_artifacts = [
     "com.github.scribejava:scribejava-core:6.2.0",
     "com.github.spullara.mustache.java:compiler:0.9.5",
     "com.github.stephenc.jcip:jcip-annotations:1.0-1",
-    "com.github.tomakehurst:wiremock-jre8-standalone:2.27.0",
-    "com.github.tomakehurst:wiremock-jre8-standalone:2.27.0",
     "com.github.vladimir-bukhtoyarov:bucket4j-core:4.8.0",
     "com.github.zafarkhaja:java-semver:0.9.0",
     "com.google.android:annotations:4.1.1.4",
@@ -1768,38 +1766,6 @@ maven_install(
             ],
         ),
         maven.artifact(
-            group = "com.github.tomakehurst",
-            artifact = "wiremock-standalone",
-            version = "2.7.0",
-            exclusions = [
-                "com.google.guava:guava",
-                "com.fasterxml.jackson.core:jackson-core",
-                "com.fasterxml.jackson.core:jackson-annotations",
-                "com.fasterxml.jackson.core:jackson-databind",
-                "org.apache.httpcomponents:httpclient",
-                "org.skyscreamer:jsonassert",
-                "xmlunit:xmlunit",
-                "com.jayway.jsonpath:json-path",
-                "net.sf.jopt-simple:jopt-simple",
-            ],
-        ),
-        maven.artifact(
-            group = "com.github.tomakehurst",
-            artifact = "wiremock",
-            version = "1.57",
-            exclusions = [
-                "com.google.guava:guava",
-                "com.fasterxml.jackson.core:jackson-core",
-                "com.fasterxml.jackson.core:jackson-annotations",
-                "com.fasterxml.jackson.core:jackson-databind",
-                "org.apache.httpcomponents:httpclient",
-                "org.skyscreamer:jsonassert",
-                "xmlunit:xmlunit",
-                "com.jayway.jsonpath:json-path",
-                "net.sf.jopt-simple:jopt-simple",
-            ],
-        ),
-        maven.artifact(
             group = "com.google.apis",
             artifact = "google-api-services-container",
             version = "v1-rev48-1.23.0",
@@ -1846,6 +1812,12 @@ maven_install(
             exclusions = [
                 "org.clojure:clojure",
             ],
+        ),
+        maven.artifact(
+            group = "com.github.tomakehurst",
+            artifact = "wiremock-jre8-standalone",
+            version = "2.27.2",
+            testonly = True,
         ),
         maven.artifact(
             "org.glassfish.jersey.test-framework.providers",
@@ -1917,7 +1889,6 @@ maven_install(
     name = "delegate",
     artifacts = [
         "org.apache.httpcomponents:httpmime:4.5.1",
-        "com.github.tomakehurst:wiremock-jre8-standalone:2.27.2",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",

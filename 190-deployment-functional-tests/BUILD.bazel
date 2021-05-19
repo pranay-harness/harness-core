@@ -12,7 +12,7 @@ shared_dependencies = [
 ]
 
 test_dependencies = [
-    "@delegate//:com_github_tomakehurst_wiremock_jre8_standalone",
+    "@maven//:com_github_tomakehurst_wiremock_jre8_standalone",
     "@delegate//:org_apache_httpcomponents_httpmime",
 ] + shared_dependencies + [
     "//990-commons-test:module",
