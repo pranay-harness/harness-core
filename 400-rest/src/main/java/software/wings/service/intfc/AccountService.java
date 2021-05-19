@@ -221,4 +221,6 @@ public interface AccountService {
   boolean enableHarnessUserGroupAccess(String accountId);
 
   boolean disableHarnessUserGroupAccess(String accountId);
+
+  boolean isRestrictedAccessEnabled(String accountId);
 }
