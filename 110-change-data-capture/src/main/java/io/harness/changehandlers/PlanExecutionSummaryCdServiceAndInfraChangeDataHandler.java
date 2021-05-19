@@ -342,9 +342,14 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
     updateQueryBuilder.append(" ON CONFLICT (id) Do ");
 
     if (!columnValueMappingForSet.isEmpty()) {
-      for (Map.Entry<String, String> entry : columnValueMappingForSet.entrySet()) {
-        if (entry.getValue() == null || entry.getValue().equals("")) {
-          columnValueMappingForSet.remove(entry.getKey());
+      Set<Map.Entry<String, String>> setOfEntries = columnValueMappingForSet.entrySet();
+      Iterator<Map.Entry<String, String>> iterator = setOfEntries.iterator();
+
+      while (iterator.hasNext()) {
+        Map.Entry<String, String> entry = iterator.next();
+        String value = entry.getValue();
+        if (value == null || value.equals("")) {
+          iterator.remove();
         }
       }
     }
