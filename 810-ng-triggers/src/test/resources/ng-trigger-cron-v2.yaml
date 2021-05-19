@@ -2,26 +2,16 @@ trigger:
   name: first trigger
   identifier: first_trigger
   enabled: true
+  tags: {}
   orgIdentifier: org
   projectIdentifier: proj
   pipelineIdentifier: pipeline
   source:
-    type: Webhook
+    type: Scheduled
     spec:
-      type: Custom
+      type: Cron
       spec:
-        payloadConditions:
-          - key: k1
-            operator: equals
-            value: v1
-          - key: k2
-            operator: in
-            value: v2
-        headerConditions:
-          - key: h1
-            operator: equals
-            value: v1
-        jexlCondition: true
+        expression: 20 4 * * *
   inputYaml: |
     pipeline:
       identifier: secrethttp1

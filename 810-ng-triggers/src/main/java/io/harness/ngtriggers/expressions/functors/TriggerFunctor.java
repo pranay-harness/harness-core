@@ -36,6 +36,7 @@ public class TriggerFunctor implements LateBindingValue {
         jsonObject.put("targetBranch", parsedPayload.getPr().getPr().getTarget());
         jsonObject.put("sourceBranch", parsedPayload.getPr().getPr().getSource());
         jsonObject.put("event", "PR");
+        jsonObject.put("prNumber", Long.toString(parsedPayload.getPr().getPr().getNumber()));
         jsonObject.put("commitSha", parsedPayload.getPr().getPr().getSha());
         jsonObject.put("type", "WEBHOOK");
         break;
