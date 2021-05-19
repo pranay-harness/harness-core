@@ -141,9 +141,9 @@ public class K8sWorkloadRecommendationConfig {
       ComputedRecommendationWriter computedRecommendationWriter) {
     return stepBuilderFactory.get("computeRecommendationStep")
         .<K8sWorkloadRecommendation, K8sWorkloadRecommendation>chunk(BATCH_SIZE)
-        .faultTolerant()
-        .retry(Exception.class)
-        .retryLimit(1)
+        //        .faultTolerant()
+        //        .retry(Exception.class)
+        //        .retryLimit(1)
         .reader(dirtyRecommendationReader)
         .processor(new PassThroughItemProcessor<>())
         .writer(computedRecommendationWriter)
