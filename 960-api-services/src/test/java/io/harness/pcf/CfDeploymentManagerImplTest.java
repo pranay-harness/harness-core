@@ -846,4 +846,36 @@ public class CfDeploymentManagerImplTest extends CategoryTest {
         deploymentManager.upsizeApplicationWithSteadyStateCheck(cfRequestConfig, logCallback);
     assertThat(applicationDetail1).isNotNull();
   }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testPushApplicationUsingManifest() throws Exception {
+    doNothing().when(cliClient).pushAppByCli(any(), any());
+    doNothing().when(sdkClient).pushAppBySdk(any(), any(), any());
+
+    doNothing().when(logCallback).saveExecutionLog(anyString());
+
+    CfRequestConfig cfRequestConfig = CfRequestConfig.builder().useCFCLI(true).build();
+
+    CfCreateApplicationRequestData requestData =
+        CfCreateApplicationRequestData.builder().manifestFilePath("path").cfRequestConfig(cfRequestConfig).build();
+    // actual call
+    deploymentManager.createApplication(requestData, logCallback);
+
+    ArgumentCaptor<CfCreateApplicationRequestData> captor =
+        ArgumentCaptor.forClass(CfCreateApplicationRequestData.class);
+    verify(cliClient).pushAppByCli(captor.capture(), any());
+    CfCreateApplicationRequestData captorValue = captor.getValue();
+    assertThat(captorValue).isEqualTo(requestData);
+
+    cfRequestConfig.setUseCFCLI(false);
+    // actual call
+    deploymentManager.createApplication(requestData, logCallback);
+
+    ArgumentCaptor<CfRequestConfig> cfRequestCaptor = ArgumentCaptor.forClass(CfRequestConfig.class);
+    verify(sdkClient).pushAppBySdk(cfRequestCaptor.capture(), any(), any());
+    CfRequestConfig captorValueConfig = cfRequestCaptor.getValue();
+    assertThat(captorValueConfig).isEqualTo(cfRequestConfig);
+  }
 }

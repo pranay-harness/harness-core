@@ -18,7 +18,7 @@ public interface CfSdkClient {
   /**
    * Get organizations.
    *
-   * @param pcfRequestConfig PcfRequestConfig
+   * @param pcfRequestConfig request config
    * @return List of OrganizationSummary
    * @throws PivotalClientApiException
    * @throws InterruptedException
@@ -29,8 +29,8 @@ public interface CfSdkClient {
   /**
    * Get space for organization.
    *
-   * @param pcfRequestConfig PcfRequestConfig
-   * @return List of String
+   * @param pcfRequestConfig request config
+   * @return list of organization spaces
    * @throws PivotalClientApiException
    * @throws InterruptedException
    */
@@ -40,7 +40,7 @@ public interface CfSdkClient {
   /**
    * Get applications.
    *
-   * @param pcfRequestConfig PcfRequestConfig
+   * @param pcfRequestConfig request config
    * @return List of ApplicationSummary
    * @throws PivotalClientApiException
    * @throws InterruptedException
@@ -51,8 +51,8 @@ public interface CfSdkClient {
   /**
    * Get application by name.
    *
-   * @param pcfRequestConfig PcfRequestConfig
-   * @return ApplicationDetail
+   * @param pcfRequestConfig request config
+   * @return application details
    * @throws PivotalClientApiException
    * @throws InterruptedException
    */
@@ -62,7 +62,7 @@ public interface CfSdkClient {
   /**
    * Start applications.
    *
-   * @param pcfRequestConfig
+   * @param pcfRequestConfig request config
    * @throws PivotalClientApiException
    * @throws InterruptedException
    */
@@ -71,7 +71,7 @@ public interface CfSdkClient {
   /**
    * Scale application.
    *
-   * @param pcfRequestConfig
+   * @param pcfRequestConfig request config
    * @throws PivotalClientApiException
    * @throws InterruptedException
    */
@@ -80,7 +80,7 @@ public interface CfSdkClient {
   /**
    * Stop application.
    *
-   * @param pcfRequestConfig
+   * @param pcfRequestConfig request config
    * @throws PivotalClientApiException
    * @throws InterruptedException
    */
@@ -89,7 +89,7 @@ public interface CfSdkClient {
   /**
    * Delete application.
    *
-   * @param pcfRequestConfig
+   * @param pcfRequestConfig request config
    * @throws PivotalClientApiException
    * @throws InterruptedException
    */
@@ -98,25 +98,25 @@ public interface CfSdkClient {
   /**
    * Push application.
    *
-   * @param pcfRequestConfig
-   * @param path Path
-   * @param executionLogCallback
+   * @param pcfRequestConfig request config
+   * @param path manifest path
+   * @param logCallback log callback
    * @throws PivotalClientApiException
    * @throws InterruptedException
    */
-  void pushAppBySdk(CfRequestConfig pcfRequestConfig, Path path, LogCallback executionLogCallback)
+  void pushAppBySdk(CfRequestConfig pcfRequestConfig, Path path, LogCallback logCallback)
       throws PivotalClientApiException, InterruptedException;
 
   /**
    * Create route.
    *
-   * @param pcfRequestConfig
-   * @param host
-   * @param domain
-   * @param path
-   * @param tcpRoute
-   * @param useRandomPort
-   * @param port
+   * @param pcfRequestConfig request config
+   * @param host host
+   * @param domain domain
+   * @param path path
+   * @param tcpRoute tcp route
+   * @param useRandomPort whether to use random port
+   * @param port port
    * @throws PivotalClientApiException
    * @throws InterruptedException
    */
@@ -126,8 +126,8 @@ public interface CfSdkClient {
   /**
    * Unmap route.
    *
-   * @param pcfRequestConfig
-   * @param route
+   * @param pcfRequestConfig request config
+   * @param route application route
    * @throws PivotalClientApiException
    * @throws InterruptedException
    */
@@ -137,8 +137,8 @@ public interface CfSdkClient {
   /**
    * Map routes.
    *
-   * @param pcfRequestConfig
-   * @param routes
+   * @param pcfRequestConfig request config
+   * @param routes application routes
    * @throws PivotalClientApiException
    * @throws InterruptedException
    */
@@ -148,8 +148,8 @@ public interface CfSdkClient {
   /**
    * Map route.
    *
-   * @param pcfRequestConfig
-   * @param route
+   * @param pcfRequestConfig request config
+   * @param route application route
    * @throws PivotalClientApiException
    * @throws InterruptedException
    */
@@ -157,10 +157,22 @@ public interface CfSdkClient {
       throws PivotalClientApiException, InterruptedException;
 
   /**
+   * Get route.
+   *
+   * @param pcfRequestConfig request config
+   * @param route route
+   * @return Optional of Route
+   * @throws PivotalClientApiException
+   * @throws InterruptedException
+   */
+  Optional<Route> getRouteMap(CfRequestConfig pcfRequestConfig, String route)
+      throws PivotalClientApiException, InterruptedException;
+
+  /**
    * Unmap route.
    *
-   * @param pcfRequestConfig
-   * @param routes
+   * @param pcfRequestConfig request config
+   * @param routes application routes
    * @throws PivotalClientApiException
    * @throws InterruptedException
    */
@@ -170,21 +182,9 @@ public interface CfSdkClient {
   /**
    * Get route.
    *
-   * @param pcfRequestConfig
-   * @param route
-   * @return Optional of Route
-   * @throws PivotalClientApiException
-   * @throws InterruptedException
-   */
-  Optional<Route> getRouteMap(CfRequestConfig pcfRequestConfig, String route)
-      throws PivotalClientApiException, InterruptedException;
-
-  /**
-   * Get route.
-   *
-   * @param paths
-   * @param pcfRequestConfig
-   * @return List of Route
+   * @param paths paths
+   * @param pcfRequestConfig request config
+   * @return list of routs
    * @throws PivotalClientApiException
    * @throws InterruptedException
    */
@@ -194,8 +194,8 @@ public interface CfSdkClient {
   /**
    * Get routes for space.
    *
-   * @param pcfRequestConfig
-   * @return List of String
+   * @param pcfRequestConfig request config
+   * @return list of space routes
    * @throws PivotalClientApiException
    * @throws InterruptedException
    */
@@ -205,9 +205,9 @@ public interface CfSdkClient {
   /**
    *
    *
-   * @param pcfRequestConfig
-   * @param logsAfterTsNs
-   * @return List of LogMessage
+   * @param pcfRequestConfig request config
+   * @param logsAfterTsNs after time in ns
+   * @return logging messages
    * @throws PivotalClientApiException
    */
   List<LogMessage> getRecentLogs(CfRequestConfig pcfRequestConfig, long logsAfterTsNs) throws PivotalClientApiException;
@@ -215,8 +215,8 @@ public interface CfSdkClient {
   /**
    * Get application environments by name.
    *
-   * @param pcfRequestConfig
-   * @return ApplicationEnvironments
+   * @param pcfRequestConfig request config
+   * @return application environments
    * @throws PivotalClientApiException
    */
   ApplicationEnvironments getApplicationEnvironmentsByName(CfRequestConfig pcfRequestConfig)
@@ -225,7 +225,7 @@ public interface CfSdkClient {
   /**
    * Get tasks.
    *
-   * @param pcfRequestConfig
+   * @param pcfRequestConfig request config
    * @throws PivotalClientApiException
    * @throws InterruptedException
    */
@@ -234,8 +234,8 @@ public interface CfSdkClient {
   /**
    * Get all space domains.
    *
-   * @param pcfRequestConfig
-   * @return List of Domain
+   * @param pcfRequestConfig request config
+   * @return List of Domains
    * @throws PivotalClientApiException
    * @throws InterruptedException
    */

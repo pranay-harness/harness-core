@@ -12,6 +12,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.LogCallback;
@@ -25,7 +26,6 @@ import com.google.inject.Singleton;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -70,7 +70,6 @@ import org.cloudfoundry.operations.routes.UnmapRouteRequest;
 @Slf4j
 @OwnedBy(CDP)
 public class CfSdkClientImpl implements CfSdkClient {
-  public static final String BIN_BASH = "/bin/bash";
   public static final String SUCCESS = "SUCCESS";
   public static final String PCF_PROXY_PROPERTY = "https_proxy";
 
@@ -86,11 +85,12 @@ public class CfSdkClientImpl implements CfSdkClient {
     AtomicBoolean exceptionOccurred = new AtomicBoolean(false);
     StringBuilder errorBuilder = new StringBuilder();
     CountDownLatch latch = new CountDownLatch(1);
+
     try (CloudFoundryOperationsWrapper operationsWrapper =
              cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
       operationsWrapper.getCloudFoundryOperations().organizations().list().subscribe(organizations::add, throwable -> {
         exceptionOccurred.set(true);
-        handleExceptionForGetOraganizationsAPI(throwable, "getOrganizations", errorBuilder);
+        handleExceptionForGetOrganizationsAPI(throwable, "getOrganizations", errorBuilder);
         latch.countDown();
       }, latch::countDown);
 
@@ -103,17 +103,24 @@ public class CfSdkClientImpl implements CfSdkClient {
     }
   }
 
+  private void handleExceptionForGetOrganizationsAPI(Throwable t, String apiName, StringBuilder errorBuilder) {
+    log.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception Occurred while executing PCF api: " + apiName
+        + " EXCEPTION: " + t.toString());
+    errorBuilder.append(t.getMessage());
+  }
+
   @Override
   public List<String> getSpacesForOrganization(CfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
-    List<OrganizationDetail> organizationDetails = new ArrayList<>();
-    List<String> spaces = new ArrayList<>();
     log.info(format("%s Fetching Spaces", PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX));
 
-    CountDownLatch latch = new CountDownLatch(1);
+    List<OrganizationDetail> organizationDetails = new ArrayList<>();
+    List<String> spaces = new ArrayList<>();
 
+    CountDownLatch latch = new CountDownLatch(1);
     AtomicBoolean exceptionOccurred = new AtomicBoolean(false);
     StringBuilder errorBuilder = new StringBuilder();
+
     try (CloudFoundryOperationsWrapper operationsWrapper =
              cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
       operationsWrapper.getCloudFoundryOperations()
@@ -146,23 +153,24 @@ public class CfSdkClientImpl implements CfSdkClient {
       throws PivotalClientApiException, InterruptedException {
     log.info(format("%s Fetching PCF Applications", PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX));
 
-    CountDownLatch latch = new CountDownLatch(1);
     List<ApplicationSummary> applicationSummaries = new ArrayList<>();
 
-    AtomicBoolean exceptionOccured = new AtomicBoolean(false);
+    CountDownLatch latch = new CountDownLatch(1);
+    AtomicBoolean exceptionOccurred = new AtomicBoolean(false);
     StringBuilder errorBuilder = new StringBuilder();
+
     try (CloudFoundryOperationsWrapper operationsWrapper =
              cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
       operationsWrapper.getCloudFoundryOperations().applications().list().subscribe(
           applicationSummaries::add, throwable -> {
-            exceptionOccured.set(true);
+            exceptionOccurred.set(true);
             handleException(throwable, "getApplications", errorBuilder);
             latch.countDown();
           }, latch::countDown);
 
       waitTillCompletion(latch, pcfRequestConfig.getTimeOutIntervalInMins());
 
-      if (exceptionOccured.get()) {
+      if (exceptionOccurred.get()) {
         throw new PivotalClientApiException(
             format("Exception occurred while fetching Applications, Error: %s", errorBuilder.toString()));
       }
@@ -176,11 +184,12 @@ public class CfSdkClientImpl implements CfSdkClient {
     log.info(
         format("%s Getting application: %s", PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX, pcfRequestConfig.getApplicationName()));
 
-    CountDownLatch latch = new CountDownLatch(1);
+    List<ApplicationDetail> applicationDetails = new ArrayList<>();
 
+    CountDownLatch latch = new CountDownLatch(1);
     AtomicBoolean exceptionOccurred = new AtomicBoolean(false);
     StringBuilder errorBuilder = new StringBuilder();
-    List<ApplicationDetail> applicationDetails = new ArrayList<>();
+
     try (CloudFoundryOperationsWrapper operationsWrapper =
              cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
       operationsWrapper.getCloudFoundryOperations()
@@ -208,9 +217,9 @@ public class CfSdkClientImpl implements CfSdkClient {
         format("%s Starting application: %s", PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX, pcfRequestConfig.getApplicationName()));
 
     CountDownLatch latch = new CountDownLatch(1);
-
     AtomicBoolean exceptionOccurred = new AtomicBoolean(false);
     StringBuilder errorBuilder = new StringBuilder();
+
     try (CloudFoundryOperationsWrapper operationsWrapper =
              cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
       operationsWrapper.getCloudFoundryOperations()
@@ -237,9 +246,9 @@ public class CfSdkClientImpl implements CfSdkClient {
         pcfRequestConfig.getApplicationName(), pcfRequestConfig.getDesiredCount()));
 
     CountDownLatch latch = new CountDownLatch(1);
-
     AtomicBoolean exceptionOccurred = new AtomicBoolean(false);
     StringBuilder errorBuilder = new StringBuilder();
+
     try (CloudFoundryOperationsWrapper operationsWrapper =
              cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
       operationsWrapper.getCloudFoundryOperations()
@@ -271,6 +280,7 @@ public class CfSdkClientImpl implements CfSdkClient {
     CountDownLatch latch = new CountDownLatch(1);
     AtomicBoolean exceptionOccurred = new AtomicBoolean(false);
     StringBuilder errorBuilder = new StringBuilder();
+
     try (CloudFoundryOperationsWrapper operationsWrapper =
              cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
       operationsWrapper.getCloudFoundryOperations()
@@ -299,6 +309,7 @@ public class CfSdkClientImpl implements CfSdkClient {
     StringBuilder errorBuilder = new StringBuilder();
     CountDownLatch latch = new CountDownLatch(1);
     AtomicBoolean exceptionOccured = new AtomicBoolean(false);
+
     try (CloudFoundryOperationsWrapper operationsWrapper =
              cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
       operationsWrapper.getCloudFoundryOperations()
@@ -322,52 +333,15 @@ public class CfSdkClientImpl implements CfSdkClient {
   }
 
   @Override
-  public void getTasks(CfRequestConfig pcfRequestConfig) throws PivotalClientApiException, InterruptedException {
-    log.info(new StringBuilder()
-                 .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                 .append("Getting Tasks for Applications: ")
-                 .append(pcfRequestConfig.getApplicationName())
-                 .toString());
-
-    CountDownLatch latch = new CountDownLatch(1);
-    List<Task> tasks = new ArrayList<>();
-
-    AtomicBoolean exceptionOccured = new AtomicBoolean(false);
-    StringBuilder errorBuilder = new StringBuilder();
-    try (CloudFoundryOperationsWrapper operationsWrapper =
-             cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
-      operationsWrapper.getCloudFoundryOperations()
-          .applications()
-          .listTasks(ListApplicationTasksRequest.builder().name(pcfRequestConfig.getApplicationName()).build())
-          .subscribe(tasks::add, throwable -> {
-            exceptionOccured.set(true);
-            handleException(throwable, "getTasks", errorBuilder);
-            latch.countDown();
-          }, latch::countDown);
-
-      waitTillCompletion(latch, pcfRequestConfig.getTimeOutIntervalInMins());
-
-      if (exceptionOccured.get()) {
-        throw new PivotalClientApiException(new StringBuilder()
-                                                .append("Exception occurred while getting Tasks for Application: ")
-                                                .append(pcfRequestConfig.getApplicationName())
-                                                .append(", Error: " + errorBuilder.toString())
-                                                .toString());
-      }
-    }
-  }
-
-  @Override
-  public void pushAppBySdk(CfRequestConfig pcfRequestConfig, Path path, LogCallback executionLogCallback)
+  public void pushAppBySdk(CfRequestConfig pcfRequestConfig, Path path, LogCallback logCallback)
       throws PivotalClientApiException, InterruptedException {
-    executionLogCallback.saveExecutionLog(
-        "Using SDK to create application, Deprecated... Please enable flag: USE_PCF_CLI");
+    logCallback.saveExecutionLog("Using SDK to create application, Deprecated... Please enable flag: USE_PCF_CLI");
 
     List<ApplicationManifest> applicationManifests = ApplicationManifestUtils.read(path);
-
     ApplicationManifest applicationManifest = applicationManifests.get(0);
     applicationManifest = initializeApplicationManifest(applicationManifest, pcfRequestConfig);
-    AtomicBoolean exceptionOccured = new AtomicBoolean(false);
+
+    AtomicBoolean exceptionOccurred = new AtomicBoolean(false);
     StringBuilder errorBuilder = new StringBuilder();
     CountDownLatch latch = new CountDownLatch(1);
 
@@ -377,51 +351,18 @@ public class CfSdkClientImpl implements CfSdkClient {
           .applications()
           .pushManifest(PushApplicationManifestRequest.builder().noStart(true).manifest(applicationManifest).build())
           .subscribe(null, throwable -> {
-            exceptionOccured.set(true);
+            exceptionOccurred.set(true);
             handleException(throwable, "pushApplicationUsingManifest", errorBuilder);
             latch.countDown();
           }, latch::countDown);
 
       waitTillCompletion(latch, 10);
 
-      if (exceptionOccured.get()) {
-        throw new PivotalClientApiException(new StringBuilder()
-                                                .append("Exceotion occured while creating Application: ")
-                                                .append(pcfRequestConfig.getApplicationName())
-                                                .append(", Error: " + errorBuilder.toString())
-                                                .toString());
+      if (exceptionOccurred.get()) {
+        throw new PivotalClientApiException(format("Exception occurred while creating Application: %s, Error: %s",
+            pcfRequestConfig.getApplicationName(), errorBuilder.toString()));
       }
     }
-  }
-
-  @Override
-  public List<LogMessage> getRecentLogs(CfRequestConfig pcfRequestConfig, long logsAfterTsNs)
-      throws PivotalClientApiException {
-    try (CloudFoundryOperationsWrapper operationsWrapper =
-             cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
-      return operationsWrapper.getCloudFoundryOperations()
-          .applications()
-          .logs(LogsRequest.builder().name(pcfRequestConfig.getApplicationName()).recent(true).build())
-          .timeout(Duration.ofMinutes(
-              pcfRequestConfig.getTimeOutIntervalInMins() > 0 ? pcfRequestConfig.getTimeOutIntervalInMins() : 10))
-          .skipUntil(log -> log.getTimestamp() > logsAfterTsNs)
-          .toStream()
-          .collect(Collectors.toList());
-    } catch (Exception e) {
-      final StringBuilder errorBuilder = new StringBuilder();
-      handleException(e, "getRecentLogs", errorBuilder);
-      throw new PivotalClientApiException(new StringBuilder()
-                                              .append("Exception occurred while getting recent logs for application: ")
-                                              .append(pcfRequestConfig.getApplicationName())
-                                              .append(", Error: " + errorBuilder.toString())
-                                              .toString());
-    }
-  }
-
-  String handlePwdForSpecialCharsForShell(String password) {
-    // Wrapped around single quotes to by pass '$' characted.
-    // Single quotes cannot be part of the password due to limitations on escaping them.
-    return "'" + password + "'";
   }
 
   private ApplicationManifest initializeApplicationManifest(
@@ -471,7 +412,8 @@ public class CfSdkClientImpl implements CfSdkClient {
         .build();
   }
 
-  private void addRouteMapsToManifest(CfRequestConfig pcfRequestConfig, ApplicationManifest.Builder builder) {
+  @VisibleForTesting
+  void addRouteMapsToManifest(CfRequestConfig pcfRequestConfig, ApplicationManifest.Builder builder) {
     // Set routeMaps
     if (isNotEmpty(pcfRequestConfig.getRouteMaps())) {
       List<org.cloudfoundry.operations.applications.Route> routeList =
@@ -495,224 +437,41 @@ public class CfSdkClientImpl implements CfSdkClient {
   }
 
   @Override
-  public ApplicationEnvironments getApplicationEnvironmentsByName(CfRequestConfig pcfRequestConfig)
-      throws PivotalClientApiException {
-    log.info(new StringBuilder()
-                 .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                 .append("Getting application: ")
-                 .append(pcfRequestConfig.getApplicationName())
-                 .toString());
-    CountDownLatch latch = new CountDownLatch(1);
-
-    AtomicBoolean exceptionOccured = new AtomicBoolean(false);
-    StringBuilder errorBuilder = new StringBuilder();
-    List<ApplicationEnvironments> applicationEnvironments = new ArrayList<>();
-    try (CloudFoundryOperationsWrapper operationsWrapper =
-             cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
-      operationsWrapper.getCloudFoundryOperations()
-          .applications()
-          .getEnvironments(
-              GetApplicationEnvironmentsRequest.builder().name(pcfRequestConfig.getApplicationName()).build())
-          .subscribe(applicationEnvironments::add, throwable -> {
-            exceptionOccured.set(true);
-            handleException(throwable, "getApplicationEnvironmentsByName", errorBuilder);
-            latch.countDown();
-          }, latch::countDown);
-
-      waitTillCompletion(latch, pcfRequestConfig.getTimeOutIntervalInMins());
-      if (exceptionOccured.get()) {
-        throw new PivotalClientApiException(new StringBuilder()
-                                                .append("Exception occurred while  getting application Environments: ")
-                                                .append(pcfRequestConfig.getApplicationName())
-                                                .append(", Error: ")
-                                                .append(errorBuilder.toString())
-                                                .toString());
-      }
-
-      return applicationEnvironments.size() > 0 ? applicationEnvironments.get(0) : null;
-    } catch (InterruptedException ex) {
-      Thread.currentThread().interrupt();
-      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION
-              + "Failed while fetching Env details for application " + pcfRequestConfig.getApplicationName(),
-          ex);
-    }
-  }
-
-  @Override
-  public List<String> getRoutesForSpace(CfRequestConfig pcfRequestConfig)
-      throws PivotalClientApiException, InterruptedException {
-    List<Route> routes = getAllRoutesForSpace(pcfRequestConfig);
-    if (!CollectionUtils.isEmpty(routes)) {
-      return routes.stream().map(this::getPathFromRouteMap).collect(toList());
-    }
-
-    return Collections.EMPTY_LIST;
-  }
-
-  @Override
-  public List<Route> getRouteMapsByNames(List<String> paths, CfRequestConfig pcfRequestConfig)
-      throws PivotalClientApiException, InterruptedException {
-    if (isEmpty(paths)) {
-      return Collections.EMPTY_LIST;
-    }
-
-    List<Route> routes = getAllRoutesForSpace(pcfRequestConfig);
-    paths = paths.stream().map(String::toLowerCase).collect(toList());
-    Set<String> routeSet = new HashSet<>(paths);
-
-    return routes.stream()
-        .filter(route -> routeSet.contains(getPathFromRouteMap(route).toLowerCase()))
-        .collect(toList());
-  }
-
-  private List<Route> getAllRoutesForSpace(CfRequestConfig pcfRequestConfig)
-      throws PivotalClientApiException, InterruptedException {
-    log.info(new StringBuilder()
-                 .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                 .append("Getting routeMaps for Application: ")
-                 .append(pcfRequestConfig.getApplicationName())
-                 .toString());
-
-    CountDownLatch latch = new CountDownLatch(1);
-    AtomicBoolean exceptionOccured = new AtomicBoolean(false);
-    StringBuilder errorBuilder = new StringBuilder();
-    List<Route> routes = new ArrayList<>();
-    try (CloudFoundryOperationsWrapper operationsWrapper =
-             cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
-      operationsWrapper.getCloudFoundryOperations()
-          .routes()
-          .list(ListRoutesRequest.builder().level(Level.SPACE).build())
-          .subscribe(routes::add, throwable -> {
-            exceptionOccured.set(true);
-            handleException(throwable, "getRouteMap", errorBuilder);
-            latch.countDown();
-          }, latch::countDown);
-
-      waitTillCompletion(latch, pcfRequestConfig.getTimeOutIntervalInMins());
-      if (exceptionOccured.get()) {
-        throw new PivotalClientApiException(new StringBuilder()
-                                                .append("Exception occurred while getting routeMaps for Application: ")
-                                                .append(pcfRequestConfig.getApplicationName())
-                                                .append(", Error: " + errorBuilder.toString())
-                                                .toString());
-      }
-      return routes;
-    }
-  }
-
-  @Override
-  public void unmapRoutesForApplication(CfRequestConfig pcfRequestConfig, List<String> routes)
-      throws PivotalClientApiException, InterruptedException {
-    log.info(new StringBuilder()
-                 .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                 .append("Unmapping route maps for : ")
-                 .append(pcfRequestConfig.getApplicationName())
-                 .append(", Paths: ")
-                 .append(routes)
-                 .toString());
-
-    List<Route> routeList = getRouteMapsByNames(routes, pcfRequestConfig);
-    for (Route route : routeList) {
-      unmapRouteMapForApp(pcfRequestConfig, route);
-    }
-  }
-
-  @Override
   public void createRouteMap(CfRequestConfig pcfRequestConfig, String host, String domain, String path,
       boolean tcpRoute, boolean useRandomPort, Integer port) throws PivotalClientApiException, InterruptedException {
-    log.info(new StringBuilder()
-                 .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                 .append("creating routeMap: ")
-                 .append(host + "." + domain)
-                 .append(" for Endpoint: ")
-                 .append(pcfRequestConfig.getEndpointUrl())
-                 .append(", Organization: ")
-                 .append(pcfRequestConfig.getOrgName())
-                 .append(", for Space: ")
-                 .append(pcfRequestConfig.getSpaceName())
-                 .append(", AppName: ")
-                 .append(pcfRequestConfig.getApplicationName())
-                 .toString());
+    log.info(format("%s Creating routeMap: %s for Endpoint: %s, Organization: %s, for Space: %s, App name: %s",
+        PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX, host + "." + domain, pcfRequestConfig.getEndpointUrl(),
+        pcfRequestConfig.getOrgName(), pcfRequestConfig.getSpaceName(), pcfRequestConfig.getApplicationName()));
 
-    // create routeMap
-    final CountDownLatch latch2 = new CountDownLatch(1);
-    AtomicBoolean exceptionOccured = new AtomicBoolean(false);
-    StringBuilder errorBuilder = new StringBuilder();
-
-    path = StringUtils.isBlank(path) ? null : path;
-    errorBuilder.setLength(0);
-
+    path = isBlank(path) ? null : path;
     CreateRouteRequest.Builder createRouteRequestBuilder =
         getCreateRouteRequest(pcfRequestConfig, host, domain, path, tcpRoute, useRandomPort, port);
+
+    final CountDownLatch latch2 = new CountDownLatch(1);
+    AtomicBoolean exceptionOccurred = new AtomicBoolean(false);
+    StringBuilder errorBuilder = new StringBuilder();
+    errorBuilder.setLength(0);
+
     try (CloudFoundryOperationsWrapper operationsWrapper =
              cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
       operationsWrapper.getCloudFoundryOperations()
           .routes()
           .create(createRouteRequestBuilder.build())
           .subscribe(null, throwable -> {
-            exceptionOccured.set(true);
+            exceptionOccurred.set(true);
             handleException(throwable, "createRouteMapIfNotExists", errorBuilder);
             latch2.countDown();
           }, latch2::countDown);
 
       waitTillCompletion(latch2, 5);
 
-      if (exceptionOccured.get()) {
-        throw new PivotalClientApiException(new StringBuilder()
-                                                .append("Exception occured while creating routeMap: ")
-                                                .append(host + "." + domain)
-                                                .append(" for Endpoint: ")
-                                                .append(pcfRequestConfig.getEndpointUrl())
-                                                .append(", Organization: ")
-                                                .append(pcfRequestConfig.getOrgName())
-                                                .append(", for Space: ")
-                                                .append(pcfRequestConfig.getSpaceName())
-                                                .append(", AppName: ")
-                                                .append(pcfRequestConfig.getApplicationName())
-                                                .append(", Host: ")
-                                                .append(host)
-                                                .append(", Domain: ")
-                                                .append(domain)
-                                                .append(", Path: ")
-                                                .append(path)
-                                                .append(", Port")
-                                                .append(port)
-                                                .append(", Error: " + errorBuilder.toString())
-                                                .toString());
+      if (exceptionOccurred.get()) {
+        throw new PivotalClientApiException(format(
+            "Exception occurred while creating routeMap: %s for Endpoint: %s, Organization: %s, for Space: %s, AppName: %s, Host: %s, Domain: %s, Path: %s, Port %s, Error: %s",
+            host + "." + domain, pcfRequestConfig.getEndpointUrl(), pcfRequestConfig.getOrgName(),
+            pcfRequestConfig.getSpaceName(), pcfRequestConfig.getApplicationName(), host, domain, path, port,
+            errorBuilder.toString()));
       }
-    }
-  }
-
-  public List<Domain> getAllDomainsForSpace(CfRequestConfig pcfRequestConfig)
-      throws PivotalClientApiException, InterruptedException {
-    log.info(new StringBuilder()
-                 .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                 .append("Getting Domains for Space: ")
-                 .append(pcfRequestConfig.getSpaceName())
-                 .toString());
-
-    CountDownLatch latch = new CountDownLatch(1);
-    AtomicBoolean exceptionOccured = new AtomicBoolean(false);
-    StringBuilder errorBuilder = new StringBuilder();
-    List<Domain> domains = new ArrayList<>();
-
-    try (CloudFoundryOperationsWrapper operationsWrapper =
-             cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
-      operationsWrapper.getCloudFoundryOperations().domains().list().subscribe(domains::add, throwable -> {
-        exceptionOccured.set(true);
-        handleException(throwable, "getAllDomainsForSpace", errorBuilder);
-        latch.countDown();
-      }, latch::countDown);
-
-      waitTillCompletion(latch, pcfRequestConfig.getTimeOutIntervalInMins());
-      if (exceptionOccured.get()) {
-        throw new PivotalClientApiException(new StringBuilder()
-                                                .append("Exception occurred while getting domains for space: ")
-                                                .append(pcfRequestConfig.getApplicationName())
-                                                .append(", Error: " + errorBuilder.toString())
-                                                .toString());
-      }
-      return domains;
     }
   }
 
@@ -729,9 +488,6 @@ public class CfSdkClientImpl implements CfSdkClient {
     return createRouteRequestBuilder;
   }
 
-  /**
-   * Http Route Needs Domain, host and path is optional
-   */
   private void addHttpRouteDetails(String host, String path, CreateRouteRequest.Builder createRouteRequestBuilder) {
     createRouteRequestBuilder.path(path);
     createRouteRequestBuilder.host(host);
@@ -747,43 +503,59 @@ public class CfSdkClientImpl implements CfSdkClient {
   }
 
   @Override
-  public Optional<Route> getRouteMap(CfRequestConfig pcfRequestConfig, String route)
+  public void unmapRouteMapForApp(CfRequestConfig cfRequestConfig, Route route)
       throws PivotalClientApiException, InterruptedException {
-    if (StringUtils.isBlank(route)) {
-      throw new PivotalClientApiException(
-          PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Route Can Not Be Blank When Fetching RouteMap");
+    log.info(format("%s Unmapping routeMap for Application: %s", PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX,
+        cfRequestConfig.getApplicationName()));
+
+    CountDownLatch latch = new CountDownLatch(1);
+    UnmapRouteRequest.Builder builder = UnmapRouteRequest.builder()
+                                            .applicationName(cfRequestConfig.getApplicationName())
+                                            .domain(route.getDomain())
+                                            .host(route.getHost())
+                                            .path(route.getPath());
+    if (!isBlank(route.getPort())) {
+      builder.port(Integer.valueOf(route.getPort()));
     }
 
-    List<Route> routes = getRouteMapsByNames(Arrays.asList(route), pcfRequestConfig);
-    if (isNotEmpty(routes)) {
-      return Optional.of(routes.get(0));
-    }
+    AtomicBoolean exceptionOccurred = new AtomicBoolean(false);
+    StringBuilder errorBuilder = new StringBuilder();
 
-    return Optional.empty();
+    try (CloudFoundryOperationsWrapper operationsWrapper =
+             cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(cfRequestConfig)) {
+      operationsWrapper.getCloudFoundryOperations().routes().unmap(builder.build()).subscribe(null, throwable -> {
+        exceptionOccurred.set(true);
+        handleException(throwable, "unmapRouteMapForApp", errorBuilder);
+        latch.countDown();
+      }, latch::countDown);
+
+      waitTillCompletion(latch, cfRequestConfig.getTimeOutIntervalInMins());
+
+      if (exceptionOccurred.get()) {
+        throw new PivotalClientApiException(
+            format("Exception occurred while unmapping routeMap for Application: %s, Error: %s",
+                cfRequestConfig.getApplicationName(), errorBuilder.toString()));
+      }
+    }
   }
 
   @Override
-  public void mapRoutesForApplication(CfRequestConfig pcfRequestConfig, List<String> routes)
+  public void mapRoutesForApplication(CfRequestConfig cfRequestConfig, List<String> routes)
       throws PivotalClientApiException, InterruptedException {
-    log.info(new StringBuilder()
-                 .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                 .append("Mapping route maps for Application : ")
-                 .append(pcfRequestConfig.getApplicationName())
-                 .append(", Paths: ")
-                 .append(routes)
-                 .toString());
+    log.info(format("%s Mapping route maps for Application: %s, Paths: %s", PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX,
+        cfRequestConfig.getApplicationName(), routes));
 
-    List<Route> routeList = getRouteMapsByNames(routes, pcfRequestConfig);
+    List<Route> routeList = getRouteMapsByNames(routes, cfRequestConfig);
     List<String> routesNeedToBeCreated = findRoutesNeedToBeCreated(routes, routeList);
 
     if (isNotEmpty(routesNeedToBeCreated)) {
-      List<Domain> allDomainsForSpace = getAllDomainsForSpace(pcfRequestConfig);
+      List<Domain> allDomainsForSpace = getAllDomainsForSpace(cfRequestConfig);
       Set<String> domainNames = allDomainsForSpace.stream().map(Domain::getName).collect(toSet());
-      createRoutesThatDoNotExists(routesNeedToBeCreated, domainNames, pcfRequestConfig);
-      routeList = getRouteMapsByNames(routes, pcfRequestConfig);
+      createRoutesThatDoNotExists(routesNeedToBeCreated, domainNames, cfRequestConfig);
+      routeList = getRouteMapsByNames(routes, cfRequestConfig);
     }
     for (Route route : routeList) {
-      mapRouteMapForApp(pcfRequestConfig, route);
+      mapRouteMapForApp(cfRequestConfig, route);
     }
   }
 
@@ -813,11 +585,8 @@ public class CfSdkClientImpl implements CfSdkClient {
     }
 
     if (!validRoute) {
-      throw new PivotalClientApiException(new StringBuilder(128)
-                                              .append("Invalid Route Name: ")
-                                              .append(routeToCreate)
-                                              .append(", used domain not present in this space")
-                                              .toString());
+      throw new PivotalClientApiException(
+          format("Invalid Route Name: %s, used domain not present in this space", routeToCreate));
     }
 
     int domainStartIndex = routeToCreate.indexOf(domainNameUsed);
@@ -842,112 +611,269 @@ public class CfSdkClientImpl implements CfSdkClient {
     return emptyList();
   }
 
-  @VisibleForTesting
-  String getPathFromRouteMap(Route route) {
-    return new StringBuilder()
-        .append(StringUtils.isBlank(route.getHost()) ? EMPTY : route.getHost() + ".")
-        .append(route.getDomain())
-        .append(StringUtils.isBlank(route.getPath()) ? EMPTY : route.getPath())
-        .append(StringUtils.isBlank(route.getPort()) ? EMPTY : ":" + Integer.parseInt(route.getPort()))
-        .toString();
+  @Override
+  public Optional<Route> getRouteMap(CfRequestConfig pcfRequestConfig, String route)
+      throws PivotalClientApiException, InterruptedException {
+    if (isBlank(route)) {
+      throw new PivotalClientApiException(
+          PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Route Can Not Be Blank When Fetching RouteMap");
+    }
+
+    List<Route> routes = getRouteMapsByNames(Collections.singletonList(route), pcfRequestConfig);
+    if (isNotEmpty(routes)) {
+      return Optional.of(routes.get(0));
+    }
+
+    return Optional.empty();
   }
 
   @Override
-  public void unmapRouteMapForApp(CfRequestConfig pcfRequestConfig, Route route)
+  public void mapRouteMapForApp(CfRequestConfig cfRequestConfig, Route route)
       throws PivotalClientApiException, InterruptedException {
-    log.info(new StringBuilder()
-                 .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                 .append("Unmapping routeMap for Application: ")
-                 .append(pcfRequestConfig.getApplicationName())
-                 .toString());
+    log.info(format("%s Mapping routeMap: %s, AppName:  %s", PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX, route,
+        cfRequestConfig.getApplicationName()));
 
-    CountDownLatch latch = new CountDownLatch(1);
-    AtomicBoolean exceptionOccured = new AtomicBoolean(false);
-    StringBuilder errorBuilder = new StringBuilder();
-    UnmapRouteRequest.Builder builder = UnmapRouteRequest.builder()
-                                            .applicationName(pcfRequestConfig.getApplicationName())
-                                            .domain(route.getDomain())
-                                            .host(route.getHost())
-                                            .path(route.getPath());
-
-    if (!StringUtils.isBlank(route.getPort())) {
-      builder.port(Integer.valueOf(route.getPort()));
-    }
-
-    try (CloudFoundryOperationsWrapper operationsWrapper =
-             cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
-      operationsWrapper.getCloudFoundryOperations().routes().unmap(builder.build()).subscribe(null, throwable -> {
-        exceptionOccured.set(true);
-        handleException(throwable, "unmapRouteMapForApp", errorBuilder);
-        latch.countDown();
-      }, latch::countDown);
-
-      waitTillCompletion(latch, pcfRequestConfig.getTimeOutIntervalInMins());
-
-      if (exceptionOccured.get()) {
-        throw new PivotalClientApiException(new StringBuilder()
-                                                .append("Exception occurred while unmapping routeMap for Application: ")
-                                                .append(pcfRequestConfig.getApplicationName())
-                                                .append(", Error: " + errorBuilder.toString())
-                                                .toString());
-      }
-    }
-  }
-
-  @Override
-  public void mapRouteMapForApp(CfRequestConfig pcfRequestConfig, Route route)
-      throws PivotalClientApiException, InterruptedException {
-    log.info(new StringBuilder()
-                 .append(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX)
-                 .append("Mapping routeMap: ")
-                 .append(route)
-                 .append(", AppName: ")
-                 .append(pcfRequestConfig.getApplicationName())
-                 .toString());
-
-    CountDownLatch latch = new CountDownLatch(1);
     MapRouteRequest.Builder builder = MapRouteRequest.builder()
-                                          .applicationName(pcfRequestConfig.getApplicationName())
+                                          .applicationName(cfRequestConfig.getApplicationName())
                                           .domain(route.getDomain())
                                           .host(route.getHost())
                                           .path(route.getPath());
-
     if (!StringUtils.isEmpty(route.getPort())) {
       builder.port(Integer.valueOf(route.getPort()));
     }
 
-    AtomicBoolean exceptionOccured = new AtomicBoolean(false);
+    CountDownLatch latch = new CountDownLatch(1);
+    AtomicBoolean exceptionOccurred = new AtomicBoolean(false);
     StringBuilder errorBuilder = new StringBuilder();
+
     try (CloudFoundryOperationsWrapper operationsWrapper =
-             cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
+             cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(cfRequestConfig)) {
       operationsWrapper.getCloudFoundryOperations().routes().map(builder.build()).subscribe(null, throwable -> {
-        exceptionOccured.set(true);
+        exceptionOccurred.set(true);
         handleException(throwable, "mapRouteMapForApp", errorBuilder);
         latch.countDown();
       }, latch::countDown);
 
-      waitTillCompletion(latch, pcfRequestConfig.getTimeOutIntervalInMins());
+      waitTillCompletion(latch, cfRequestConfig.getTimeOutIntervalInMins());
 
-      if (exceptionOccured.get()) {
-        throw new PivotalClientApiException(new StringBuilder()
-                                                .append("Exception occurred while mapping routeMap: ")
-                                                .append(route)
-                                                .append(", AppName: ")
-                                                .append(pcfRequestConfig.getApplicationName())
-                                                .append(", Error: " + errorBuilder.toString())
-                                                .toString());
+      if (exceptionOccurred.get()) {
+        throw new PivotalClientApiException(
+            format("Exception occurred while mapping routeMap: %s, AppName: %s, Error: %s ", route,
+                cfRequestConfig.getApplicationName(), errorBuilder.toString()));
       }
     }
   }
 
-  private void handleException(Throwable t, String apiName, StringBuilder errorBuilder) {
-    log.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception Occured while executing PCF api: " + apiName, t);
-    errorBuilder.append(t.getMessage());
+  @Override
+  public void unmapRoutesForApplication(CfRequestConfig cfRequestConfig, List<String> routes)
+      throws PivotalClientApiException, InterruptedException {
+    log.info(format("%s Unmapping route maps for: %s, Paths:  %s", PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX,
+        cfRequestConfig.getApplicationName(), routes));
+
+    List<Route> routeList = getRouteMapsByNames(routes, cfRequestConfig);
+    for (Route route : routeList) {
+      unmapRouteMapForApp(cfRequestConfig, route);
+    }
   }
 
-  private void handleExceptionForGetOraganizationsAPI(Throwable t, String apiName, StringBuilder errorBuilder) {
-    log.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception Occured while executing PCF api: " + apiName
-        + " EXCEPTION: " + t.toString());
+  @Override
+  public List<Route> getRouteMapsByNames(List<String> paths, CfRequestConfig cfRequestConfig)
+      throws PivotalClientApiException, InterruptedException {
+    if (isEmpty(paths)) {
+      return Collections.emptyList();
+    }
+
+    List<Route> routes = getAllRoutesForSpace(cfRequestConfig);
+    paths = paths.stream().map(String::toLowerCase).collect(toList());
+    Set<String> routeSet = new HashSet<>(paths);
+
+    return routes.stream()
+        .filter(route -> routeSet.contains(getPathFromRouteMap(route).toLowerCase()))
+        .collect(toList());
+  }
+
+  @Override
+  public List<String> getRoutesForSpace(CfRequestConfig cfRequestConfig)
+      throws PivotalClientApiException, InterruptedException {
+    List<Route> routes = getAllRoutesForSpace(cfRequestConfig);
+    if (!CollectionUtils.isEmpty(routes)) {
+      return routes.stream().map(this::getPathFromRouteMap).collect(toList());
+    }
+
+    return Collections.emptyList();
+  }
+
+  private List<Route> getAllRoutesForSpace(CfRequestConfig cfRequestConfig)
+      throws PivotalClientApiException, InterruptedException {
+    log.info(format("%s Getting routeMaps for Application: %s", PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX,
+        cfRequestConfig.getApplicationName()));
+
+    List<Route> routes = new ArrayList<>();
+
+    CountDownLatch latch = new CountDownLatch(1);
+    AtomicBoolean exceptionOccurred = new AtomicBoolean(false);
+    StringBuilder errorBuilder = new StringBuilder();
+
+    try (CloudFoundryOperationsWrapper operationsWrapper =
+             cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(cfRequestConfig)) {
+      operationsWrapper.getCloudFoundryOperations()
+          .routes()
+          .list(ListRoutesRequest.builder().level(Level.SPACE).build())
+          .subscribe(routes::add, throwable -> {
+            exceptionOccurred.set(true);
+            handleException(throwable, "getRouteMap", errorBuilder);
+            latch.countDown();
+          }, latch::countDown);
+
+      waitTillCompletion(latch, cfRequestConfig.getTimeOutIntervalInMins());
+      if (exceptionOccurred.get()) {
+        throw new PivotalClientApiException(
+            format("Exception occurred while getting routeMaps for Application: %s, Error: %s",
+                cfRequestConfig.getApplicationName(), errorBuilder.toString()));
+      }
+      return routes;
+    }
+  }
+
+  @VisibleForTesting
+  String getPathFromRouteMap(Route route) {
+    return format("%s%s%s%s", isBlank(route.getHost()) ? EMPTY : route.getHost() + ".", route.getDomain(),
+        isBlank(route.getPath()) ? EMPTY : route.getPath(),
+        isBlank(route.getPort()) ? EMPTY : ":" + Integer.parseInt(route.getPort()));
+  }
+
+  @Override
+  public List<LogMessage> getRecentLogs(CfRequestConfig cfRequestConfig, long logsAfterTsNs)
+      throws PivotalClientApiException {
+    try (CloudFoundryOperationsWrapper operationsWrapper =
+             cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(cfRequestConfig)) {
+      return operationsWrapper.getCloudFoundryOperations()
+          .applications()
+          .logs(LogsRequest.builder().name(cfRequestConfig.getApplicationName()).recent(true).build())
+          .timeout(Duration.ofMinutes(
+              cfRequestConfig.getTimeOutIntervalInMins() > 0 ? cfRequestConfig.getTimeOutIntervalInMins() : 10))
+          .skipUntil(log -> log.getTimestamp() > logsAfterTsNs)
+          .toStream()
+          .collect(Collectors.toList());
+    } catch (Exception e) {
+      final StringBuilder errorBuilder = new StringBuilder();
+      handleException(e, "getRecentLogs", errorBuilder);
+
+      throw new PivotalClientApiException(
+          format("Exception occurred while getting recent logs for application:  %s, Error: %s",
+              cfRequestConfig.getApplicationName(), errorBuilder.toString()));
+    }
+  }
+
+  @Override
+  public ApplicationEnvironments getApplicationEnvironmentsByName(CfRequestConfig cfRequestConfig)
+      throws PivotalClientApiException {
+    log.info(
+        format("%s Getting application: %s", PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX, cfRequestConfig.getApplicationName()));
+
+    List<ApplicationEnvironments> applicationEnvironments = new ArrayList<>();
+
+    CountDownLatch latch = new CountDownLatch(1);
+    AtomicBoolean exceptionOccurred = new AtomicBoolean(false);
+    StringBuilder errorBuilder = new StringBuilder();
+
+    try (CloudFoundryOperationsWrapper operationsWrapper =
+             cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(cfRequestConfig)) {
+      operationsWrapper.getCloudFoundryOperations()
+          .applications()
+          .getEnvironments(
+              GetApplicationEnvironmentsRequest.builder().name(cfRequestConfig.getApplicationName()).build())
+          .subscribe(applicationEnvironments::add, throwable -> {
+            exceptionOccurred.set(true);
+            handleException(throwable, "getApplicationEnvironmentsByName", errorBuilder);
+            latch.countDown();
+          }, latch::countDown);
+
+      waitTillCompletion(latch, cfRequestConfig.getTimeOutIntervalInMins());
+      if (exceptionOccurred.get()) {
+        throw new PivotalClientApiException(
+            format("Exception occurred while getting application Environments:  %s, Error: %s",
+                cfRequestConfig.getApplicationName(), errorBuilder.toString()));
+      }
+
+      return isNotEmpty(applicationEnvironments) ? applicationEnvironments.get(0) : null;
+    } catch (InterruptedException ex) {
+      Thread.currentThread().interrupt();
+      throw new PivotalClientApiException(PIVOTAL_CLOUD_FOUNDRY_CLIENT_EXCEPTION
+              + "Failed while fetching Env details for application " + cfRequestConfig.getApplicationName(),
+          ex);
+    }
+  }
+
+  @Override
+  public void getTasks(CfRequestConfig cfRequestConfig) throws PivotalClientApiException, InterruptedException {
+    log.info(format("%s Getting Tasks for Applications: %s", PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX,
+        cfRequestConfig.getApplicationName()));
+
+    List<Task> tasks = new ArrayList<>();
+
+    CountDownLatch latch = new CountDownLatch(1);
+    AtomicBoolean exceptionOccurred = new AtomicBoolean(false);
+    StringBuilder errorBuilder = new StringBuilder();
+
+    try (CloudFoundryOperationsWrapper operationsWrapper =
+             cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(cfRequestConfig)) {
+      operationsWrapper.getCloudFoundryOperations()
+          .applications()
+          .listTasks(ListApplicationTasksRequest.builder().name(cfRequestConfig.getApplicationName()).build())
+          .subscribe(tasks::add, throwable -> {
+            exceptionOccurred.set(true);
+            handleException(throwable, "getTasks", errorBuilder);
+            latch.countDown();
+          }, latch::countDown);
+
+      waitTillCompletion(latch, cfRequestConfig.getTimeOutIntervalInMins());
+
+      if (exceptionOccurred.get()) {
+        throw new PivotalClientApiException(
+            format("Exception occurred while getting Tasks for Application: %s, Error: %s",
+                cfRequestConfig.getApplicationName(), errorBuilder.toString()));
+      }
+    }
+  }
+
+  @Override
+  public List<Domain> getAllDomainsForSpace(CfRequestConfig cfRequestConfig)
+      throws PivotalClientApiException, InterruptedException {
+    log.info(
+        format("%s Getting Domains for Space: %s", PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX, cfRequestConfig.getSpaceName()));
+
+    List<Domain> domains = new ArrayList<>();
+
+    CountDownLatch latch = new CountDownLatch(1);
+    AtomicBoolean exceptionOccurred = new AtomicBoolean(false);
+    StringBuilder errorBuilder = new StringBuilder();
+
+    try (CloudFoundryOperationsWrapper operationsWrapper =
+             cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(cfRequestConfig)) {
+      operationsWrapper.getCloudFoundryOperations().domains().list().subscribe(domains::add, throwable -> {
+        exceptionOccurred.set(true);
+        handleException(throwable, "getAllDomainsForSpace", errorBuilder);
+        latch.countDown();
+      }, latch::countDown);
+
+      waitTillCompletion(latch, cfRequestConfig.getTimeOutIntervalInMins());
+      if (exceptionOccurred.get()) {
+        throw new PivotalClientApiException(format("Exception occurred while getting domains for space: %s, Error: %s",
+            cfRequestConfig.getSpaceName(), errorBuilder.toString()));
+      }
+      return domains;
+    }
+  }
+
+  public String handlePwdForSpecialCharsForShell(String password) {
+    // Wrapped around single quotes to by pass '$' characted.
+    // Single quotes cannot be part of the password due to limitations on escaping them.
+    return "'" + password + "'";
+  }
+
+  private void handleException(Throwable t, String apiName, StringBuilder errorBuilder) {
+    log.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception occurred while executing PCF api: " + apiName, t);
     errorBuilder.append(t.getMessage());
   }
 
