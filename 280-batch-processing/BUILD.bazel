@@ -32,7 +32,6 @@ shared_dependencies = ["@batch//:com_squareup_okhttp3_okhttp"] + [
     "@maven//:com_slack_api_slack_api_model",
     "@maven//:de_bwaldvogel_mongo_java_server_core",
     "@maven//:de_bwaldvogel_mongo_java_server_memory_backend",
-    "@maven//:de_flapdoodle_embed_de_flapdoodle_embed_mongo",
     "@maven//:io_github_resilience4j_resilience4j_core",
     "@maven//:io_github_resilience4j_resilience4j_retry",
     "@maven//:io_github_resilience4j_resilience4j_retrofit",
