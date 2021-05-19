@@ -1,4 +1,4 @@
-FROM harness/ubuntu:safe-ubuntu18.04-sec1096
+FROM harness/ubuntu:safe-ubuntu18.04-sec1232
 
 # Any future release patches or updated source lists needs to be added here.
 RUN apt-get clean
