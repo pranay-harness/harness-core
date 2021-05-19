@@ -27,7 +27,8 @@ public class TriggerFunctor implements LateBindingValue {
   public Object bind() {
     Map<String, Object> jsonObject = new HashMap<>();
 
-    ParsedPayload parsedPayload = ambiance.getMetadata().getTriggerPayload().getParsedPayload();
+    ParsedPayload parsedPayload = TriggerAmbianceHelper.getParsedPayload(ambiance);
+    String payloadFromEvent = TriggerAmbianceHelper.getEventPayload(ambiance);
     // branchesxv
     switch (parsedPayload.getPayloadCase()) {
       case PR:
@@ -35,16 +36,18 @@ public class TriggerFunctor implements LateBindingValue {
         jsonObject.put("targetBranch", parsedPayload.getPr().getPr().getTarget());
         jsonObject.put("sourceBranch", parsedPayload.getPr().getPr().getSource());
         jsonObject.put("event", "PR");
+        jsonObject.put("commitSha", parsedPayload.getPr().getPr().getSha());
         jsonObject.put("type", "WEBHOOK");
         break;
       case PUSH:
         jsonObject.put("branch", parsedPayload.getPush().getRepo().getBranch());
         jsonObject.put("targetBranch", parsedPayload.getPush().getRepo().getBranch());
+        jsonObject.put("commitSha", parsedPayload.getPush().getAfter());
         jsonObject.put("event", "PUSH");
         jsonObject.put("type", "WEBHOOK");
         break;
       default:
-        if (isEmpty(ambiance.getMetadata().getTriggerPayload().getJsonPayload())) {
+        if (isEmpty(payloadFromEvent)) {
           jsonObject.put("type", "SCHEDULED");
         } else {
           jsonObject.put("type", "CUSTOM");
@@ -53,7 +56,8 @@ public class TriggerFunctor implements LateBindingValue {
     }
 
     // headers
-    jsonObject.put("header", TriggerAmbianceHelper.getEventPayload(ambiance));
+    jsonObject.put("header", TriggerAmbianceHelper.getHeadersMap(ambiance));
+    jsonObject.put("eventPayload", payloadFromEvent);
     // payload
     try {
       jsonObject.put("payload", JsonPipelineUtils.read(TriggerAmbianceHelper.getEventPayload(ambiance), HashMap.class));
