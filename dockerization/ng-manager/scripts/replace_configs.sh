@@ -270,6 +270,10 @@ replace_key_value gitSdkConfiguration.scmConnectionConfig.url "$SCM_SERVICE_URL"
 replace_key_value resourceGroupClientConfig.serviceConfig.baseUrl "$RESOURCE_GROUP_BASE_URL"
 
 replace_key_value baseUrls.currentGenUiUrl "$CURRENT_GEN_UI_URL"
+replace_key_value baseUrls.nextGenUiUrl "$NEXT_GEN_UI_URL"
+replace_key_value baseUrls.nextGenAuthUiUrl "$NG_AUTH_UI_URL"
+
+replace_key_value ngAuthUIEnabled "$HARNESS_ENABLE_NG_AUTH_UI_PLACEHOLDER"
 
 replace_key_value enableDefaultResourceGroupCreation "${ENABLE_DEFAULT_RESOURCE_GROUP_CREATION:-false}"
 

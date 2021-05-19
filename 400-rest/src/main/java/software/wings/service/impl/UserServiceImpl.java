@@ -82,6 +82,7 @@ import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.ng.core.common.beans.Generation;
+import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.persistence.HPersistence;
@@ -681,6 +682,15 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  public boolean isUserPasswordPresent(String accountId, String emailId) {
+    User user = getUserByEmail(emailId);
+
+    Account account = accountService.get(accountId);
+    AuthenticationMechanism authMechanism = account.getAuthenticationMechanism();
+    return !((authMechanism == null || authMechanism == USER_PASSWORD) && isEmpty(user.getPasswordHash()));
+  }
+
+  @Override
   public User registerNewUser(User user, Account account) {
     String accountId = account.getUuid();
 
@@ -979,7 +989,7 @@ public class UserServiceImpl implements UserService {
     return inviteOperationResponses;
   }
 
-  private void limitCheck(String accountId, UserInvite userInvite) {
+  private void limitCheck(String accountId, String email) {
     try {
       Account account = accountService.get(accountId);
       if (null == account) {
@@ -989,8 +999,7 @@ public class UserServiceImpl implements UserService {
       Query<User> query = getListUserQuery(accountId, true);
       query.criteria(UserKeys.disabled).notEqual(true);
       List<User> existingUsersAndInvites = query.asList();
-      userServiceLimitChecker.limitCheck(
-          accountId, existingUsersAndInvites, new HashSet<>(Arrays.asList(userInvite.getEmail())));
+      userServiceLimitChecker.limitCheck(accountId, existingUsersAndInvites, new HashSet<>(Arrays.asList(email)));
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -1005,7 +1014,7 @@ public class UserServiceImpl implements UserService {
     signupService.checkIfEmailIsValid(userInvite.getEmail());
 
     String accountId = userInvite.getAccountId();
-    limitCheck(accountId, userInvite);
+    limitCheck(accountId, userInvite.getEmail());
 
     Account account = accountService.get(accountId);
 
@@ -1406,13 +1415,15 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public User completeInviteAndSignIn(UserInvite userInvite, Generation gen) {
-    if (gen != null && gen.equals(NG)) {
-      completeNGInvite(userInvite);
-    } else {
-      completeInvite(userInvite);
-    }
+  public User completeInviteAndSignIn(UserInvite userInvite) {
+    completeInvite(userInvite);
     return authenticationManager.defaultLogin(userInvite.getEmail(), String.valueOf(userInvite.getPassword()));
+  }
+
+  @Override
+  public User completeNGInviteAndSignIn(UserInviteDTO userInvite) {
+    completeNGInvite(userInvite);
+    return authenticationManager.defaultLogin(userInvite.getEmail(), userInvite.getPassword());
   }
 
   @Override
@@ -1470,9 +1481,9 @@ public class UserServiceImpl implements UserService {
     return authenticationManager.defaultLogin(userInvite.getEmail(), String.valueOf(userInvite.getPassword()));
   }
 
-  private void completeNGInvite(UserInvite userInvite) {
+  private void completeNGInvite(UserInviteDTO userInvite) {
     String accountId = userInvite.getAccountId();
-    limitCheck(accountId, userInvite);
+    limitCheck(accountId, userInvite.getEmail());
     Account account = accountService.get(accountId);
     User user = getUserByEmail(userInvite.getEmail());
     if (user == null) {
@@ -1495,13 +1506,13 @@ public class UserServiceImpl implements UserService {
     Preconditions.checkState(authenticationMechanism == USER_PASSWORD,
         "Invalid request. Complete invite should only be called if Auth Mechanism is UsePass");
     loginSettingsService.verifyPasswordStrength(
-        accountService.get(userInvite.getAccountId()), userInvite.getPassword());
+        accountService.get(userInvite.getAccountId()), userInvite.getPassword().toCharArray());
 
-    user.setPasswordHash(hashpw(new String(userInvite.getPassword()), BCrypt.gensalt()));
+    user.setPasswordHash(hashpw(userInvite.getPassword(), BCrypt.gensalt()));
     user = createUser(user, accountId);
     user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
     eventPublishHelper.publishUserRegistrationCompletionEvent(userInvite.getAccountId(), user);
-    NGRestUtils.getResponse(ngInviteClient.completeInvite(userInvite.getUuid()));
+    NGRestUtils.getResponse(ngInviteClient.completeInvite(userInvite.getToken()));
   }
 
   private void marketPlaceSignup(User user, final UserInvite userInvite, MarketPlaceType marketPlaceType) {
