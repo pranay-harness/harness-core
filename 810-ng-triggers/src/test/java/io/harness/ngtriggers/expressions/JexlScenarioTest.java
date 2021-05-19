@@ -161,6 +161,7 @@ public class JexlScenarioTest extends CategoryTest {
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.event>")).isEqualTo("PR");
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.type>")).isEqualTo("WEBHOOK");
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.commitSha>")).isEqualTo("123");
+    assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.prNumber>")).isEqualTo("1");
 
     triggerExpressionEvaluator = new TriggerExpressionEvaluator(pushEvent, emptyList(), json);
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.commitSha>")).isEqualTo("456");
