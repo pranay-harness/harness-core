@@ -82,7 +82,7 @@ func runCmd(ctx context.Context, cmd exec.Command, stepID string, commands []str
 	return nil
 }
 
-func collectCg(ctx context.Context, stepID, collectcgDir string, log *zap.SugaredLogger) error {
+func collectCg(ctx context.Context, stepID, cgDir string, log *zap.SugaredLogger) error {
 	repo, err := external.GetRepo()
 	if err != nil {
 		return err
