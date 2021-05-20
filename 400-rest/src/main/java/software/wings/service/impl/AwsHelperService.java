@@ -29,9 +29,11 @@ import io.harness.concurrent.HTimeLimiter;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.TimeoutException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
+import io.harness.logging.LogLevel;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -42,6 +44,7 @@ import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.common.InfrastructureConstants;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.amazons3.AWSTemporaryCredentialsRestClient;
@@ -161,6 +164,7 @@ import com.amazonaws.services.ecs.model.UntagResourceRequest;
 import com.amazonaws.services.ecs.model.UntagResourceResult;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import com.amazonaws.services.ecs.model.UpdateServiceResult;
+import com.amazonaws.services.ecs.waiters.AmazonECSWaiters;
 import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClientBuilder;
 import com.amazonaws.services.elasticloadbalancing.model.DeregisterInstancesFromLoadBalancerRequest;
 import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription;
@@ -176,6 +180,11 @@ import com.amazonaws.services.s3.model.ListObjectsV2Request;
 import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.waiters.FixedDelayStrategy;
+import com.amazonaws.waiters.MaxAttemptsRetryStrategy;
+import com.amazonaws.waiters.PollingStrategy;
+import com.amazonaws.waiters.WaiterParameters;
+import com.amazonaws.waiters.WaiterTimedOutException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -756,6 +765,43 @@ public class AwsHelperService {
       awsApiHelperService.handleAmazonClientException(amazonClientException);
     }
     return new DescribeServicesResult();
+  }
+
+  public void waitTillECSServiceIsStable(String region, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, DescribeServicesRequest describeServicesRequest,
+      int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
+    String serviceName = "";
+    List<String> services = describeServicesRequest.getServices();
+    if (services != null && isNotEmpty(services)) {
+      serviceName = services.get(0);
+    }
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
+      tracker.trackECSCall("Wait for Service to be stable");
+      AmazonECSWaiters waiter = new AmazonECSWaiters(getAmazonEcsClient(region, awsConfig));
+
+      // Polling interval of 10 sec with total waiting done till a timeout of <serviceSteadyStateTimeout> min
+      int delayInSeconds = 10;
+      int retryAttempts = (int) TimeUnit.MINUTES.toSeconds(serviceSteadyStateTimeout) / delayInSeconds;
+      waiter.servicesStable().run(
+          new WaiterParameters<>(describeServicesRequest)
+              .withPollingStrategy(new PollingStrategy(
+                  new MaxAttemptsRetryStrategy(retryAttempts), new FixedDelayStrategy(delayInSeconds))));
+
+    } catch (AmazonServiceException amazonServiceException) {
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
+    } catch (WaiterTimedOutException waiterTimedOutException) {
+      String msg = format("Timed out while waiting for service %s to be in stable state", serviceName);
+      executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
+      throw new TimeoutException(msg, "Timeout", waiterTimedOutException, WingsException.EVERYBODY);
+    } catch (Exception e) {
+      if (e instanceof InterruptedException) {
+        String msg = format("Interrupted while waiting for service %s to reach stable state", serviceName);
+        executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
+        throw new InvalidRequestException(msg, e);
+      }
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
   }
 
   public List<Service> getServiceForCluster(
