@@ -24,8 +24,8 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
-import org.assertj.core.util.Sets;
 
 public class NewRelicServiceImpl implements NewRelicService {
   private static final List<String> NEW_RELIC_ENDPOINTS =
@@ -69,7 +69,7 @@ public class NewRelicServiceImpl implements NewRelicService {
                                           .type(DataCollectionRequestType.NEWRELIC_VALIDATION_REQUEST)
                                           .applicationName(appName)
                                           .applicationId(appId)
-                                          .metricPackDTOSet(Sets.newHashSet(metricPacks))
+                                          .metricPackDTOSet(new HashSet(metricPacks))
                                           .build();
       OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
                                                       .dataCollectionRequest(request)

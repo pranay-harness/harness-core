@@ -88,7 +88,6 @@ java_library(
         "@maven//:org_apache_httpcomponents_fluent_hc",
         "@maven//:org_apache_httpcomponents_httpclient",
         "@maven//:org_apache_httpcomponents_httpcore",
-        "@maven//:org_assertj_assertj_core",
         "@maven//:org_eclipse_jgit_org_eclipse_jgit",
         "@maven//:org_eclipse_jgit_org_eclipse_jgit_http_apache",
         "@maven//:org_hibernate_hibernate_validator",
