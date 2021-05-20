@@ -1884,10 +1884,10 @@ maven_install(
     maven_install_json = "//project:main_maven_install.json",
     override_targets = {
         "org.apache.commons:commons-io": "@maven//:commons_io_commons_io",
+        "com.jcraft:jsch": "@maven//:com_jcraft_harness_jsch_0_1_54_harness_patch",
     },
     repositories = [
         "https://repo1.maven.org/maven2",
-        "https://harness.jfrog.io/harness/thirdparty-annonymous",
         "https://dl.bintray.com/michaelklishin/maven",
         "https://repo.spring.io/plugins-release",
         "https://palantir.bintray.com/releases",
@@ -1895,8 +1895,8 @@ maven_install(
         "https://jitpack.io",
         "https://jcenter.bintray.com",
         "https://github.com/bkper/mvn-repo/raw/master/releases",
-        "https://harness.jfrog.io/harness/datacollection-dsl",
         "http://packages.confluent.io/maven",
+        "https://harness.jfrog.io/harness/thirdparty-annonymous",
     ],
     version_conflict_policy = "pinned",
 )
