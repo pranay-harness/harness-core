@@ -37,6 +37,7 @@ import io.harness.user.remote.UserClient;
 import io.harness.utils.CryptoUtils;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.ArrayList;
@@ -127,6 +128,17 @@ public class AccessControlMigrationHandler implements MessageListener {
     return Optional.empty();
   }
 
+  private List<RoleAssignmentResponseDTO> createRoleAssignmentsInternal(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, boolean managed, List<RoleAssignmentDTO> roleAssignments) {
+    List<RoleAssignmentResponseDTO> createdRoleAssignments = new ArrayList<>();
+    List<List<RoleAssignmentDTO>> batchOfRoleAssignments = Lists.partition(roleAssignments, 10);
+    batchOfRoleAssignments.forEach(smallList
+        -> createdRoleAssignments.addAll(getResponse(
+            accessControlAdminClient.createMultiRoleAssignment(accountIdentifier, orgIdentifier, projectIdentifier,
+                managed, RoleAssignmentCreateRequestDTO.builder().roleAssignments(smallList).build()))));
+    return createdRoleAssignments;
+  }
+
   private RoleAssignmentMetadata createRoleAssignments(
       String account, String org, String project, List<UserInfo> users) {
     List<RoleAssignmentDTO> managedRoleAssignments = new ArrayList<>();
@@ -136,31 +148,27 @@ public class AccessControlMigrationHandler implements MessageListener {
       getUserRoleAssignment(user, account, org, project).ifPresent(userRoleAssignments::add);
     }
 
-    List<RoleAssignmentDTO> allRoleAssignments = new ArrayList<>();
-    List<RoleAssignmentResponseDTO> createdRoleAssignmentResponses = new ArrayList<>();
-    allRoleAssignments.addAll(managedRoleAssignments);
-    allRoleAssignments.addAll(userRoleAssignments);
+    List<RoleAssignmentDTO> roleAssignmentsToCreate = new ArrayList<>(managedRoleAssignments);
+    roleAssignmentsToCreate.addAll(userRoleAssignments);
 
-    RoleAssignmentCreateRequestDTO createRequestDTO =
-        RoleAssignmentCreateRequestDTO.builder().roleAssignments(managedRoleAssignments).build();
-    List<RoleAssignmentResponseDTO> response =
-        getResponse(accessControlAdminClient.createMultiRoleAssignment(account, org, project, true, createRequestDTO));
-    createdRoleAssignmentResponses.addAll(response);
+    List<RoleAssignmentResponseDTO> createdManagedRoleAssignments =
+        createRoleAssignmentsInternal(account, org, project, true, managedRoleAssignments);
 
-    createRequestDTO = RoleAssignmentCreateRequestDTO.builder().roleAssignments(userRoleAssignments).build();
-    response =
-        getResponse(accessControlAdminClient.createMultiRoleAssignment(account, org, project, false, createRequestDTO));
-    createdRoleAssignmentResponses.addAll(response);
+    List<RoleAssignmentResponseDTO> createdUserRoleAssignments =
+        createRoleAssignmentsInternal(account, org, project, false, userRoleAssignments);
 
-    Set<RoleAssignmentDTO> createdRoleAssignmentSet = createdRoleAssignmentResponses.stream()
-                                                          .map(RoleAssignmentResponseDTO::getRoleAssignment)
-                                                          .collect(Collectors.toSet());
+    List<RoleAssignmentResponseDTO> createdRoleAssignments = new ArrayList<>(createdManagedRoleAssignments);
+    createdManagedRoleAssignments.addAll(createdUserRoleAssignments);
 
-    List<RoleAssignmentDTO> failedRoleAssignments =
-        allRoleAssignments.stream().filter(x -> !createdRoleAssignmentSet.contains(x)).collect(Collectors.toList());
+    Set<RoleAssignmentDTO> createdRoleAssignmentSet =
+        createdRoleAssignments.stream().map(RoleAssignmentResponseDTO::getRoleAssignment).collect(Collectors.toSet());
+
+    List<RoleAssignmentDTO> failedRoleAssignments = roleAssignmentsToCreate.stream()
+                                                        .filter(x -> !createdRoleAssignmentSet.contains(x))
+                                                        .collect(Collectors.toList());
 
     return RoleAssignmentMetadata.builder()
-        .createdRoleAssignments(createdRoleAssignmentResponses)
+        .createdRoleAssignments(createdRoleAssignments)
         .failedRoleAssignments(failedRoleAssignments)
         .build();
   }

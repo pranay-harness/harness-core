@@ -114,8 +114,10 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     Injector injector =
         Guice.createInjector(AccessControlModule.getInstance(appConfig), new MetricRegistryModule(metricRegistry));
     injector.getInstance(HPersistence.class);
-    AggregatorApplication aggregatorApplication = injector.getInstance(AggregatorApplication.class);
-    aggregatorApplication.run();
+    if (appConfig.getAggregatorConfiguration().isEnabled()) {
+      AggregatorApplication aggregatorApplication = injector.getInstance(AggregatorApplication.class);
+      aggregatorApplication.run();
+    }
     registerCorsFilter(appConfig, environment);
     registerResources(environment, injector);
     registerJerseyProviders(environment);
