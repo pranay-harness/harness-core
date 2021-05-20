@@ -52,7 +52,7 @@ public class VerificationConfiguration extends Configuration {
   @JsonProperty("shouldConfigureWithPMS") private Boolean shouldConfigureWithPMS;
   @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
   @JsonProperty("cfMigrationConfig") private CfMigrationConfig cfMigrationConfig;
-
+  private String pipelineServiceSecret;
   private String portalUrl;
   /**
    * Instantiates a new Main configuration.

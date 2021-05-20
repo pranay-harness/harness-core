@@ -61,6 +61,7 @@ import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
+import io.harness.pms.sdk.PipelineSdkSecretConfig;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkInitHelper;
@@ -94,6 +95,27 @@ import io.harness.yaml.YamlSdkInitHelper;
 import software.wings.app.CharsetResponseFilter;
 import software.wings.jersey.KryoFeature;
 
+import com.codahale.metrics.MetricRegistry;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.util.concurrent.ServiceManager;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
+import com.google.inject.name.Names;
+import io.dropwizard.Application;
+import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
+import io.dropwizard.configuration.SubstitutingSourceProvider;
+import io.dropwizard.setup.Bootstrap;
+import io.dropwizard.setup.Environment;
+import io.federecio.dropwizard.swagger.SwaggerBundle;
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.lang.annotation.Annotation;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -360,6 +382,11 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     return PmsSdkConfiguration.builder()
         .deploymentMode(remote ? DeployMode.REMOTE : DeployMode.LOCAL)
         .serviceName("cd")
+        .pipelineSdkSecretConfig(PipelineSdkSecretConfig.builder()
+                                     .identitySecret(appConfig.getNextGenConfig().getJwtAuthSecret())
+                                     .pipelineServiceSecret(appConfig.getNextGenConfig().getPipelineServiceSecret())
+                                     .jwtIdentitySecret(appConfig.getNextGenConfig().getJwtIdentityServiceSecret())
+                                     .build())
         .mongoConfig(appConfig.getPmsMongoConfig())
         .grpcServerConfig(appConfig.getPmsSdkGrpcServerConfig())
         .pmsGrpcClientConfig(appConfig.getPmsGrpcClientConfig())
@@ -370,7 +397,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
         .engineEventHandlersMap(NGExecutionEventHandlerRegistrar.getEngineEventHandlers(remote))
         .executionSummaryModuleInfoProviderClass(CDNGModuleInfoProvider.class)
-        .pipelineServiceSecret(appConfig.getNextGenConfig().getNgManagerServiceSecret())
         .build();
   }
 

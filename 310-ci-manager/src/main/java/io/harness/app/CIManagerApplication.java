@@ -1,5 +1,12 @@
 package io.harness.app;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static io.harness.pms.listener.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
+
+import static java.util.Collections.singletonList;
+
 import io.harness.AuthorizationServiceHeader;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ci.app.InspectCommand;
@@ -23,8 +30,8 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.Store;
 import io.harness.persistence.UserProvider;
-import io.harness.pms.contracts.plan.SdkModuleInfo;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
+import io.harness.pms.sdk.PipelineSdkSecretConfig;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkInitHelper;
@@ -309,7 +316,11 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         .engineAdvisers(ExecutionAdvisers.getEngineAdvisers())
         .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
         .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(remote))
-        .pipelineServiceSecret(config.getNgManagerServiceSecret())
+        .pipelineSdkSecretConfig(PipelineSdkSecretConfig.builder()
+                                     .identitySecret(config.getJwtAuthSecret())
+                                     .pipelineServiceSecret(config.getPipelineServiceSecret())
+                                     .jwtIdentitySecret(config.getJwtIdentityServiceSecret())
+                                     .build())
         .build();
   }
 

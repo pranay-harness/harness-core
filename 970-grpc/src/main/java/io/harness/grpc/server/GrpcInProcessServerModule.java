@@ -2,7 +2,6 @@ package io.harness.grpc.server;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.grpc.auth.ServiceInfo;
-import io.harness.grpc.auth.ValidateAuthServerInterceptor;
 
 import com.google.common.util.concurrent.Service;
 import com.google.inject.AbstractModule;
@@ -22,20 +21,15 @@ import java.util.Set;
 public class GrpcInProcessServerModule extends AbstractModule {
   private final Provider<Set<ServerInterceptor>> serverInterceptorsProvider;
   private final Provider<Set<BindableService>> bindableServicesProvider;
-  private final String name;
+  private final String serviceBinderName;
+  private final String serverName;
 
   public GrpcInProcessServerModule(Provider<Set<BindableService>> bindableServicesProvider,
-      Provider<Set<ServerInterceptor>> serverInterceptorsProvider) {
+      Provider<Set<ServerInterceptor>> serverInterceptorsProvider, String serviceBinderName, String serverName) {
     this.bindableServicesProvider = bindableServicesProvider;
     this.serverInterceptorsProvider = serverInterceptorsProvider;
-    name = null;
-  }
-
-  public GrpcInProcessServerModule(Provider<Set<BindableService>> bindableServicesProvider,
-      Provider<Set<ServerInterceptor>> serverInterceptorsProvider, String name) {
-    this.bindableServicesProvider = bindableServicesProvider;
-    this.serverInterceptorsProvider = serverInterceptorsProvider;
-    this.name = name;
+    this.serviceBinderName = serviceBinderName;
+    this.serverName = serverName;
   }
 
   @Override
@@ -47,25 +41,20 @@ public class GrpcInProcessServerModule extends AbstractModule {
     Provider<HealthStatusManager> healthStatusManagerProvider = getProvider(HealthStatusManager.class);
     bindableServiceMultibinder.addBinding().toProvider(() -> healthStatusManagerProvider.get().getHealthService());
 
-    Multibinder<ServerInterceptor> serverInterceptorMultibinder =
-        Multibinder.newSetBinder(binder(), ServerInterceptor.class);
-
     Multibinder<String> nonAuthServices =
         Multibinder.newSetBinder(binder(), String.class, Names.named("excludedGrpcAuthValidationServices"));
     nonAuthServices.addBinding().toInstance(HealthGrpc.SERVICE_NAME);
     nonAuthServices.addBinding().toInstance(ServerReflectionGrpc.SERVICE_NAME);
-    serverInterceptorMultibinder.addBinding().to(ValidateAuthServerInterceptor.class);
 
     MapBinder.newMapBinder(binder(), String.class, ServiceInfo.class);
     Multibinder<Service> serviceBinder;
-    if (EmptyPredicate.isEmpty(name)) {
+    if (EmptyPredicate.isEmpty(serviceBinderName)) {
       serviceBinder = Multibinder.newSetBinder(binder(), Service.class);
     } else {
-      serviceBinder = Multibinder.newSetBinder(binder(), Service.class, Names.named(name));
+      serviceBinder = Multibinder.newSetBinder(binder(), Service.class, Names.named(serviceBinderName));
     }
-    serviceBinder.addBinding().toProvider(
-        ()
-            -> new GrpcInProcessServer("pmsSdkInternal", bindableServicesProvider.get(),
-                serverInterceptorsProvider.get(), healthStatusManagerProvider.get()));
+    serviceBinder.addBinding().toProvider(()
+                                              -> new GrpcInProcessServer(serverName, bindableServicesProvider.get(),
+                                                  serverInterceptorsProvider.get(), healthStatusManagerProvider.get()));
   }
 }

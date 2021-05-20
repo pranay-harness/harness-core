@@ -88,6 +88,7 @@ import io.harness.notification.module.NotificationClientModule;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
+import io.harness.pms.sdk.PipelineSdkSecretConfig;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
@@ -399,7 +400,11 @@ public class VerificationApplication extends Application<VerificationConfigurati
         .engineFacilitators(new HashMap<>())
         .filterCreationResponseMerger(new CVNGFilterCreationResponseMerger())
         .executionSummaryModuleInfoProviderClass(CVNGModuleInfoProvider.class)
-        .pipelineServiceSecret(config.getNgManagerServiceConfig().getManagerServiceSecret())
+        .pipelineSdkSecretConfig(PipelineSdkSecretConfig.builder()
+                                     .identitySecret(config.getManagerAuthConfig().getJwtAuthSecret())
+                                     .pipelineServiceSecret(config.getPipelineServiceSecret())
+                                     .jwtIdentitySecret(config.getManagerAuthConfig().getJwtIdentityServiceSecret())
+                                     .build())
         .build();
   }
 

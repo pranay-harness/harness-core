@@ -1,6 +1,9 @@
 package io.harness.pms.sdk;
 
-import io.harness.AuthorizationServiceHeader;
+import static io.harness.AuthorizationServiceHeader.BEARER;
+import static io.harness.AuthorizationServiceHeader.DEFAULT;
+import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
+
 import io.harness.grpc.auth.GrpcAuthServiceInterceptor;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcInProcessServer;
@@ -184,16 +187,19 @@ public class PmsSdkGrpcModule extends AbstractModule {
   @Provides
   @Singleton
   @Named("grpc-services-with-auth")
-  public Set<String> grpcServicesWithAuth() throws SSLException {
+  public Set<String> grpcServicesWithAuth() {
     return Sets.newHashSet("io.harness.pms.contracts.plan.PlanCreationService");
   }
 
   @Provides
   @Singleton
   @Named("serviceAuthTokens")
-  public Map<String, String> serviceIdToServiceToken() throws SSLException {
+  public Map<String, String> serviceIdToServiceToken() {
     Map<String, String> serviceToSecretMapping = new HashMap<>();
-    serviceToSecretMapping.put(AuthorizationServiceHeader.DEFAULT.getServiceId(), config.getPipelineServiceSecret());
+    serviceToSecretMapping.put(BEARER.getServiceId(), config.getPipelineSdkSecretConfig().getIdentitySecret());
+    serviceToSecretMapping.put(
+        IDENTITY_SERVICE.getServiceId(), config.getPipelineSdkSecretConfig().getJwtIdentitySecret());
+    serviceToSecretMapping.put(DEFAULT.getServiceId(), config.getPipelineSdkSecretConfig().getPipelineServiceSecret());
     return serviceToSecretMapping;
   }
 
