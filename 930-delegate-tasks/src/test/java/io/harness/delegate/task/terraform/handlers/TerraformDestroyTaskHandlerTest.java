@@ -13,23 +13,17 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cli.CliResponse;
-import io.harness.delegate.beans.DelegateFileManagerBase;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
-import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
-import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
-import io.harness.delegate.task.shell.SshSessionConfigMapper;
 import io.harness.delegate.task.terraform.TFTaskType;
 import io.harness.delegate.task.terraform.TerraformBaseHelper;
 import io.harness.delegate.task.terraform.TerraformTaskNGParameters;
 import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
 import io.harness.encryption.SecretRefData;
-import io.harness.filesystem.FileIo;
 import io.harness.git.GitClientHelper;
-import io.harness.git.GitClientV2;
 import io.harness.git.model.GitBaseRequest;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
@@ -53,17 +47,12 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
 @OwnedBy(CDP)
-public class TerraformApplyTaskHandlerTest extends CategoryTest {
-  @Inject @Spy @InjectMocks TerraformApplyTaskHandler terraformApplyTaskHandler;
-  @Mock private ILogStreamingTaskClient logStreamingTaskClient;
+public class TerraformDestroyTaskHandlerTest extends CategoryTest {
+  @Inject @Spy @InjectMocks TerraformDestroyTaskHandler terraformDestroyTaskHandler;
   @Mock LogCallback logCallback;
   @Mock SecretDecryptionService secretDecryptionService;
   @Mock TerraformBaseHelper terraformBaseHelper;
-  @Mock GitClientV2 gitClient;
   @Mock GitClientHelper gitClientHelper;
-  @Mock DelegateFileManagerBase delegateFileManager;
-  @Mock private SshSessionConfigMapper sshSessionConfigMapper;
-  @Mock private NGGitService ngGitService;
 
   private final EncryptedRecordData encryptedPlanContent =
       EncryptedRecordData.builder().name("planName").encryptedValue("encryptedPlan".toCharArray()).build();
@@ -78,7 +67,7 @@ public class TerraformApplyTaskHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
-  public void testApply() throws IOException, TimeoutException, InterruptedException {
+  public void testDestroy() throws IOException, TimeoutException, InterruptedException {
     when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
     when(terraformBaseHelper.getGitBaseRequestForConfigFile(
              anyString(), any(GitStoreDelegateConfig.class), any(GitConfigDTO.class)))
@@ -88,13 +77,11 @@ public class TerraformApplyTaskHandlerTest extends CategoryTest {
         .thenReturn("sourceDir");
     doNothing().when(terraformBaseHelper).downloadTfStateFile(null, "accountId", null, "scriptDir");
     when(gitClientHelper.getRepoDirectory(any())).thenReturn("sourceDir");
-    FileIo.createDirectoryIfDoesNotExist("sourceDir");
     File outputFile = new File("sourceDir/terraform-output.tfvars");
     FileUtils.touch(outputFile);
-
-    when(terraformBaseHelper.executeTerraformApplyStep(any()))
+    when(terraformBaseHelper.executeTerraformDestroyStep(any()))
         .thenReturn(CliResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build());
-    TerraformTaskNGResponse response = terraformApplyTaskHandler.executeTaskInternal(
+    TerraformTaskNGResponse response = terraformDestroyTaskHandler.executeTaskInternal(
         getTerraformTaskParameters(), "delegateId", "taskId", logCallback);
     assertThat(response).isNotNull();
     assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
