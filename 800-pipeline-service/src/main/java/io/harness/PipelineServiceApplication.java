@@ -38,7 +38,6 @@ import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.approval.ApprovalInstanceExpirationJob;
 import io.harness.pms.approval.ApprovalInstanceHandler;
-import io.harness.pms.contracts.plan.SdkModuleInfo;
 import io.harness.pms.event.PMSEventConsumerService;
 import io.harness.pms.exception.WingsExceptionMapper;
 import io.harness.pms.inputset.gitsync.InputSetEntityGitSyncHelper;
@@ -56,6 +55,7 @@ import io.harness.pms.plan.creation.PipelineServiceInternalInfoProvider;
 import io.harness.pms.plan.execution.PmsExecutionServiceInfoProvider;
 import io.harness.pms.plan.execution.observers.PipelineExecutionSummaryDeleteObserver;
 import io.harness.pms.plan.execution.registrar.PmsOrchestrationEventRegistrar;
+import io.harness.pms.sdk.PipelineSdkSecretConfig;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkInitHelper;
@@ -333,7 +333,11 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .engineAdvisers(PipelineServiceUtilAdviserRegistrar.getEngineAdvisers())
         .engineEventHandlersMap(PmsOrchestrationEventRegistrar.getEngineEventHandlers())
         .executionSummaryModuleInfoProviderClass(PmsExecutionServiceInfoProvider.class)
-        .pipelineServiceSecret(config.getNgManagerServiceSecret())
+        .pipelineSdkSecretConfig(PipelineSdkSecretConfig.builder()
+                                     .identitySecret(config.getJwtAuthSecret())
+                                     .pipelineServiceSecret(config.getPipelineServiceSecret())
+                                     .jwtIdentitySecret(config.getJwtIdentityServiceSecret())
+                                     .build())
         .build();
   }
 

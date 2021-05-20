@@ -11,7 +11,6 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.grpc.BindableService;
 import io.grpc.ServerInterceptor;

@@ -74,7 +74,8 @@ public class PipelineServiceGrpcModule extends AbstractModule {
     Map<String, PlanCreationServiceBlockingStub> map = new HashMap<>();
     map.put(PmsConstants.INTERNAL_SERVICE_NAME,
         PlanCreationServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName("pmsSdkInternal").build())
-            .withCallCredentials(credentialsMap.get("cd")));
+            .withCallCredentials(new ServiceAuthCallCredentials(
+                configuration.getPipelineServiceSecret(), new ServiceTokenGenerator(), "pipeline-service")));
 
     for (Map.Entry<String, GrpcClientConfig> entry : configuration.getGrpcClientConfigs().entrySet()) {
       map.put(entry.getKey(),

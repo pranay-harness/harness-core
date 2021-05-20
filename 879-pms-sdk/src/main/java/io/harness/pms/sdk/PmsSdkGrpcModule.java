@@ -80,7 +80,7 @@ public class PmsSdkGrpcModule extends AbstractModule {
     if (config.getDeploymentMode() == DeployMode.REMOTE_IN_PROCESS) {
       install(new GrpcInProcessServerModule(
           getProvider(Key.get(new TypeLiteral<Set<BindableService>>() {}, Names.named("sdkServices"))),
-          getProvider(Key.get(new TypeLiteral<Set<ServerInterceptor>>() {})), "pmsServices"));
+          getProvider(Key.get(new TypeLiteral<Set<ServerInterceptor>>() {})), "pmsServices", "pmsSdkInternal"));
     } else {
       install(new GrpcServerModule(config.getGrpcServerConfig().getConnectors(),
           getProvider(Key.get(new TypeLiteral<Set<BindableService>>() {}, Names.named("sdkServices"))),
