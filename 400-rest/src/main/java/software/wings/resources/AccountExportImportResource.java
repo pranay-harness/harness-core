@@ -228,7 +228,8 @@ public class AccountExportImportResource {
       @QueryParam("mode") @DefaultValue("ALL") ExportMode exportMode,
       @QueryParam("entityTypes") List<String> entityTypes,
       @QueryParam("collectionName") String collectionNameToBeExported,
-      @QueryParam("exportConfigs") boolean exportConfigs) throws Exception {
+      @QueryParam("exportConfigs") boolean exportConfigs, @QueryParam("batchSize") int batchSize,
+      @QueryParam("mongoBatchSize") int mongoBatchSize) throws Exception {
     // Only if the user the account administrator or in the Harness user group can perform the export operation.
     if (!userService.isAccountAdmin(accountId)) {
       String errorMessage = "User is not account administrator and can't perform the export operation.";
@@ -250,7 +251,9 @@ public class AccountExportImportResource {
 
     Map<String, Boolean> toBeExported = getToBeExported(exportMode, entityTypes);
     List<String> appIds = appService.getAppIdsByAccountId(accountId);
-    int batchSize = mainConfiguration.getExportAccountDataBatchSize();
+    if (batchSize == 0) {
+      batchSize = mainConfiguration.getExportAccountDataBatchSize();
+    }
 
     // 1. Export harness schema collection.
     String schemaCollectionName = getCollectionName(Schema.class);
@@ -337,8 +340,8 @@ public class AccountExportImportResource {
               exportFilter = accountOrAppIdsFilter;
             }
             String collectionName = getCollectionName(entityClazz);
-            List<String> records = mongoExportImport.exportRecords(exportFilter, collectionName);
-            batchExportToStream(zipOutputStream, fileOutputStream, records, collectionName, batchSize);
+            mongoExportImport.exportRecords(
+                zipOutputStream, fileOutputStream, exportFilter, collectionName, batchSize, mongoBatchSize);
           }
         }
       }
