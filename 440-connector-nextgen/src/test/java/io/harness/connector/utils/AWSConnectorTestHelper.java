@@ -68,10 +68,15 @@ public class AWSConnectorTestHelper {
   }
 
   public CEAwsConnectorDTO createCEAwsConnectorDTO() {
-    AwsCurAttributesDTO awsCurAttributesDTO =
-        AwsCurAttributesDTO.builder().reportName(REPORT_NAME).s3BucketName(S3_BUCKET_NAME).build();
+    AwsCurAttributesDTO awsCurAttributesDTO = AwsCurAttributesDTO.builder()
+                                                  .reportName(REPORT_NAME)
+                                                  .s3BucketName(S3_BUCKET_NAME)
+                                                  .region(DEFAULT_REGION)
+                                                  .s3Prefix(PREFIX_NAME)
+                                                  .build();
     return CEAwsConnectorDTO.builder()
         .curAttributes(awsCurAttributesDTO)
+        .awsAccountId(AWS_ACCOUNT_ID)
         .crossAccountAccess(createCrossAccountAccessDTO())
         .featuresEnabled(CE_AWS_FEATURES_ENABLED)
         .build();

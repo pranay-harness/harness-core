@@ -32,6 +32,7 @@ import com.google.api.services.storage.Storage;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
@@ -39,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import org.apache.commons.io.IOUtils;
 
 /**
  * Created by bzane on 2/22/17
@@ -181,6 +183,12 @@ public class GcpHelperService {
   private void validateServiceAccountKey(char[] serviceAccountKeyFileContent) {
     if (isEmpty(serviceAccountKeyFileContent)) {
       throw new InvalidRequestException("Empty service key found. Unable to validate", USER);
+    }
+    try {
+      GoogleCredential.fromStream(
+          IOUtils.toInputStream(String.valueOf(serviceAccountKeyFileContent), Charset.defaultCharset()));
+    } catch (Exception e) {
+      throw new InvalidRequestException("Invalid Google Cloud Platform credentials: " + e.getMessage(), e, USER);
     }
   }
 

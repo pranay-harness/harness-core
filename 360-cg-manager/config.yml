@@ -218,9 +218,8 @@ logging:
       threshold: TRACE
       currentLogFilename: portal.log
       archive: true
-      archivedFileCount: 7
+      archivedFileCount: 5
       maxFileSize: 150MB
-      totalSizeCap: 900MB
       archivedLogFilenamePattern: portal.%d.%i.log
       logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
 
