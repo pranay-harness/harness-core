@@ -6,10 +6,8 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"github.com/robinjoseph08/redisqueue"
 	"io/ioutil"
-	"strings"
 	"time"
 
 	"github.com/golang/protobuf/proto"
@@ -107,42 +105,51 @@ func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn, db db
 			r.log.Errorw("could not unmarshal webhook response data", "account_id", accountId, zap.Error(err))
 			return errors.New("could not unmarshal webhook response data")
 		}
-		switch x := dto.GetParsedResponse().Hook.(type) {
-		case *scmpb.ParseWebhookResponse_Push:
-			repo := dto.GetParsedResponse().GetPush().GetRepo().GetLink()
-			p := dto.GetParsedResponse().GetPush().GetRef()
-			pList := strings.Split(p, "/")
-			branch := pList[len(pList)-1]
-			if len(p) == 0 || len(branch) == 0 {
+		switch dto.GetParsedResponse().Hook.(type) {
+		case *scmpb.ParseWebhookResponse_Pr:
+			// Check if the PR event payload corresponds to a merge
+			pr := dto.GetParsedResponse().GetPr() // scm.PullRequestHook
+			merged := pr.GetPr().GetMerged()
+			if merged == false {
 				return nil
 			}
-			req := types.MergePartialCgRequest{AccountId: accountId, TargetBranch: branch, Repo: repo}
-			commitList := []string{}
-			for _, c := range dto.GetParsedResponse().GetPush().GetCommits() {
-				commitList = append(commitList, c.GetSha())
+			// We received a merge notification
+			repo := pr.GetRepo().GetLink()   // Link to repo eg: https://github.com/wings-software/jhttp
+			source := pr.GetPr().GetSource() // Source branch
+			target := pr.GetPr().GetTarget() // Target branch for merge
+			sha := pr.GetPr().GetSha()       // Sha of the topmost commit in the commits list
+			if repo == "" || source == "" || target == "" || sha == "" {
+				// These fields should always be populated
+				r.log.Errorw("missing information for merge event", "account_id", accountId,
+					"repo", repo, "source", source, "target", target, "sha", sha)
+				return errors.New("missing information for merge event")
 			}
+			r.log.Infow("got a merge notification", "account_id", accountId,
+				"repo", repo, "source", source, "target", target, "sha", sha)
+			req := types.MergePartialCgRequest{AccountId: accountId,
+				TargetBranch: target, Repo: repo, Diff: types.DiffInfo{Sha: sha}}
 			// Get list of files corresponding to these sha values
-			req.Diff, err = db.GetDiffFiles(ctx, accountId, commitList)
+			// This needs to be added once DB schema of coverage table is modified
+			// to include source branch, target branch, etc.
+			// req.Diff, err = db.GetDiffFiles(ctx, accountId, repo, source, sha)
+			//if err != nil {
+			//	r.log.Errorw("could not get changed files list", "account_id", accountId, "repo", repo,
+			//		"source", source, "target", target, "sha", sha, zap.Error(err))
+			//	return err
+			//}
+			// Add this if statement once we start writing files with updated schema
+			//if len(req.Diff.Files) != 0 {
+			// Found the merge event with changed files
+			r.log.Infow("calling merge CG", "account_id", accountId, "repo", repo,
+				"source", source, "target", target, "sha", sha, "changed_files", req.Diff.Files)
+			err := fn(ctx, req)
 			if err != nil {
-				r.log.Errorw("could not get changed files list", "account_id", accountId, "commitList", commitList, "repo", repo, zap.Error(err))
+				r.log.Errorw("could not merge partial call graph to master", "account_id", accountId,
+					"repo", repo, "source", source, "target", target, "sha", sha, "changed_files", req.Diff.Files,
+					zap.Error(err))
 				return err
 			}
-			if len(req.Diff.Sha) == 0 {
-				r.log.Warnw("commit info is empty, skipping merge", "account_id", accountId, "repo", repo)
-			} else {
-				r.log.Infow("got a push webhook payload", "account_id", accountId,
-					"repo", repo, "commit_file_mapping", req.Diff,
-					"branch", req.TargetBranch)
-				err := fn(ctx, req)
-				if err != nil {
-					r.log.Errorw("could not merge partial call graph to master", "account_id", accountId,
-						"repo", repo, "branch", req.TargetBranch, zap.Error(err))
-					return err
-				}
-			}
-		default:
-			r.log.Errorw("webhook request is not of push type", "type", x)
-			return fmt.Errorf("webhook request is not of push type: %T", x)
+			//}
 		}
 		return nil
 	}
