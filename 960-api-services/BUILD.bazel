@@ -96,7 +96,6 @@ java_library(
         "@maven//:org_jfrog_artifactory_client_artifactory_java_client_httpClient",
         "@maven//:org_jfrog_artifactory_client_artifactory_java_client_services",
         "@maven//:org_jooq_joor",
-        "@maven//:org_mockito_mockito_core",
         "@maven//:org_mongodb_morphia_morphia",
         "@maven//:org_slf4j_slf4j_api",
         "@maven//:org_sonatype_nexus_plugins_nexus_restlet1x_model",
@@ -117,6 +116,7 @@ java_library(
         "//:lombok",
         "//990-commons-test:module",
         "@maven//:com_github_tomakehurst_wiremock_jre8_standalone",
+        "@maven//:org_mockito_mockito_core",
         "@maven//:org_powermock_powermock_api_mockito",
     ],
 )
