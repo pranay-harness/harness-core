@@ -179,9 +179,9 @@ instrPackages: %s`, dir, r.packages)
 	}
 	iniFile := fmt.Sprintf("%s/config.ini", r.tmpFilePath)
 	r.log.Infow(fmt.Sprintf("attempting to write %s to %s", data, iniFile))
-	f, err := r.fs.Open(iniFile)
+	f, err := r.fs.Create(iniFile)
 	if err != nil {
-		r.log.Errorw(fmt.Sprintf("could not open file %s", iniFile), zap.Error(err))
+		r.log.Errorw(fmt.Sprintf("could not create file %s", iniFile), zap.Error(err))
 		return "", err
 	}
 	_, err = f.Write([]byte(data))

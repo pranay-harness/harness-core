@@ -379,8 +379,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   private void registerEventListeners(Injector injector) {
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(SdkResponseEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(PmsNotifyEventListener.class), 5);
+    queueListenerController.register(injector.getInstance(SdkResponseEventListener.class), 3);
+    queueListenerController.register(injector.getInstance(PmsNotifyEventListener.class), 3);
   }
 
   private void registerWaitEnginePublishers(Injector injector) {

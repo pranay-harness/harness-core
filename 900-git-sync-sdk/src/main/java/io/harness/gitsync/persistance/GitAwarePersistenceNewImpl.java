@@ -15,14 +15,15 @@ import io.harness.manage.GlobalContextManager;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.utils.NGYamlUtils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -31,7 +32,6 @@ import org.springframework.data.mongodb.core.query.Query;
 
 @Singleton
 @OwnedBy(DX)
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
   private MongoTemplate mongoTemplate;
@@ -39,6 +39,19 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
   private Map<String, GitSdkEntityHandlerInterface> gitPersistenceHelperServiceMap;
   private SCMGitSyncHelper scmGitSyncHelper;
   private GitSyncMsvcHelper gitSyncMsvcHelper;
+  private ObjectMapper objectMapper;
+
+  @Inject
+  public GitAwarePersistenceNewImpl(MongoTemplate mongoTemplate, GitSyncSdkService gitSyncSdkService,
+      Map<String, GitSdkEntityHandlerInterface> gitPersistenceHelperServiceMap, SCMGitSyncHelper scmGitSyncHelper,
+      GitSyncMsvcHelper gitSyncMsvcHelper, @Named("GitSyncObjectMapper") ObjectMapper objectMapper) {
+    this.mongoTemplate = mongoTemplate;
+    this.gitSyncSdkService = gitSyncSdkService;
+    this.gitPersistenceHelperServiceMap = gitPersistenceHelperServiceMap;
+    this.scmGitSyncHelper = scmGitSyncHelper;
+    this.gitSyncMsvcHelper = gitSyncMsvcHelper;
+    this.objectMapper = objectMapper;
+  }
 
   @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> B save(
@@ -50,7 +63,7 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
         && isGitSyncEnabled(entityDetail.getEntityRef().getProjectIdentifier(),
             entityDetail.getEntityRef().getOrgIdentifier(), entityDetail.getEntityRef().getAccountIdentifier())) {
       final GitEntityInfo gitBranchInfo = getGitEntityInfo();
-      final String yamlString = NGYamlUtils.getYamlString(yaml);
+      final String yamlString = NGYamlUtils.getYamlString(yaml, objectMapper);
       final ScmPushResponse scmPushResponse =
           scmGitSyncHelper.pushToGit(gitBranchInfo, yamlString, changeType, entityDetail);
 

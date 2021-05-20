@@ -76,9 +76,22 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
     }
     Map<String, List<String>> columnValueMapping = new HashMap<>();
     DBObject dbObject = changeEvent.getFullDocument();
+    String accountId = null;
+    String orgIdentifier = null;
+    String projectIdentifier = null;
 
     if (dbObject == null) {
       return columnValueMapping;
+    }
+
+    if (dbObject.get("accountId") != null) {
+      accountId = dbObject.get("accountId").toString();
+    }
+    if (dbObject.get("orgIdentifier") != null) {
+      projectIdentifier = dbObject.get("orgIdentifier").toString();
+    }
+    if (dbObject.get("projectIdentifier") != null) {
+      orgIdentifier = dbObject.get("projectIdentifier").toString();
     }
 
     // if moduleInfo is null, not sure whether needs to be pushed to this table
@@ -176,6 +189,32 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
               List<String> serviceIdList = new ArrayList<>();
               serviceIdList.add(serviceId);
               columnValueMapping.put("service_id", serviceIdList);
+            }
+
+            // accountId
+            if (columnValueMapping.containsKey("accountId")) {
+              columnValueMapping.get("accountId").add(accountId);
+            } else {
+              List<String> accountIdList = new ArrayList<>();
+              accountIdList.add(accountId);
+              columnValueMapping.put("accountId", accountIdList);
+            }
+            // orgIdentifier
+            if (columnValueMapping.containsKey("orgIdentifier")) {
+              columnValueMapping.get("orgIdentifier").add(orgIdentifier);
+            } else {
+              List<String> orgIdList = new ArrayList<>();
+              orgIdList.add(orgIdentifier);
+              columnValueMapping.put("orgIdentifier", orgIdList);
+            }
+
+            // projectIdentifier
+            if (columnValueMapping.containsKey("projectIdentifier")) {
+              columnValueMapping.get("projectIdentifier").add(projectIdentifier);
+            } else {
+              List<String> projectIdList = new ArrayList<>();
+              projectIdList.add(projectIdentifier);
+              columnValueMapping.put("projectIdentifier", projectIdList);
             }
 
             // deploymentType

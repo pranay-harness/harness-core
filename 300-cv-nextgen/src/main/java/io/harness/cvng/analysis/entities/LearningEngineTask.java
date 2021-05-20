@@ -16,6 +16,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -87,5 +88,14 @@ public abstract class LearningEngineTask implements PersistentEntity, UuidAware,
     TIME_SERIES_LOAD_TEST
   }
 
-  public enum ExecutionStatus { QUEUED, RUNNING, FAILED, SUCCESS, TIMEOUT }
+  public enum ExecutionStatus {
+    QUEUED,
+    RUNNING,
+    FAILED,
+    SUCCESS,
+    TIMEOUT;
+    public static List<ExecutionStatus> getNonFinalStatues() {
+      return Arrays.asList(QUEUED, RUNNING);
+    }
+  }
 }
