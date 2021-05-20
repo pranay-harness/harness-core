@@ -59,6 +59,10 @@ public interface EcsContainerService {
 
   void waitForServiceToReachSteadyState(int serviceSteadyStateTimeout, UpdateServiceCountRequestData requestData);
 
+  void waitForServiceToReachStableState(String region, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
+      ExecutionLogCallback executionLogCallback, int serviceSteadyStateTimeout);
+
   List<ContainerInfo> getContainerInfosAfterEcsWait(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
       List<String> originalTaskArns, ExecutionLogCallback executionLogCallback);
