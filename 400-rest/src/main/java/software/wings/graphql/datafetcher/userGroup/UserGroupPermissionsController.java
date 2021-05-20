@@ -42,6 +42,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DEPLOYMENT_FREEZES;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_IP_WHITELIST;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_RESTRICTED_ACCESS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRETS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SSH_AND_WINRM;
@@ -206,6 +207,8 @@ public class UserGroupPermissionsController {
         return CREATE_CUSTOM_DASHBOARDS;
       case MANAGE_CUSTOM_DASHBOARDS:
         return MANAGE_CUSTOM_DASHBOARDS;
+      case MANAGE_RESTRICTED_ACCESS:
+        return MANAGE_RESTRICTED_ACCESS;
 
       default:
         log.error("Invalid Account Permission Type {} given by the user", permissionType.toString());
@@ -513,6 +516,8 @@ public class UserGroupPermissionsController {
         return QLAccountPermissionType.MANAGE_CUSTOM_DASHBOARDS;
       case CREATE_CUSTOM_DASHBOARDS:
         return QLAccountPermissionType.CREATE_CUSTOM_DASHBOARDS;
+      case MANAGE_RESTRICTED_ACCESS:
+        return QLAccountPermissionType.MANAGE_RESTRICTED_ACCESS;
       default:
         log.error("Invalid Account Permission Type {} given by the user", permissionType.toString());
     }

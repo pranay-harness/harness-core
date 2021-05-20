@@ -265,6 +265,10 @@ gitSdkConfiguration:
 
 baseUrls:
   currentGenUiUrl: http://localhost:8181/#/
+  nextGenUiUrl: http://localhost:8181/ng/#/
+  nextGenAuthUiUrl: http://localhost:8181/auth/#/
+
+ngAuthUIEnabled: false
 
 enableDefaultResourceGroupCreation: true
 

@@ -43,4 +43,19 @@ public class InstanceRepositoryCustomImpl implements InstanceRepositoryCustom {
     // TODO
     return null;
   }
+
+  @Override
+  public List<Instance> getActiveInstances(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    Criteria criteria = Criteria.where(InstanceKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .where(InstanceKeys.orgIdentifier)
+                            .is(orgIdentifier)
+                            .where(InstanceKeys.projectIdentifier)
+                            .is(projectIdentifier)
+                            .where(InstanceKeys.isDeleted)
+                            .is(false);
+
+    Query query = new Query().addCriteria(criteria);
+    return mongoTemplate.find(query, Instance.class);
+  }
 }

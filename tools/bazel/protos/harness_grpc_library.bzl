@@ -40,5 +40,4 @@ GRPC_DEPS = [
     "@maven//:io_grpc_grpc_context",
     "@maven//:io_grpc_grpc_grpclb",
     "@maven//:io_grpc_grpc_netty_shaded",
-    "@maven//:io_grpc_grpc_protobuf_lite",
 ]

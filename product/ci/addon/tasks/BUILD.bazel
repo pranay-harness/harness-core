@@ -38,6 +38,7 @@ go_test(
     srcs = [
         "plugin_test.go",
         "run_test.go",
+        "runtests_test.go",
     ],
     embed = [":go_default_library"],
     deps = [

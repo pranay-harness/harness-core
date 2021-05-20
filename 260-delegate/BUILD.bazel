@@ -16,7 +16,6 @@ shared_dependencies = [
     "@maven//:io_grpc_grpc_netty",
     "@maven//:io_grpc_grpc_netty_shaded",
     "@maven//:io_grpc_grpc_protobuf",
-    "@maven//:io_grpc_grpc_protobuf_lite",
     "@maven//:io_grpc_grpc_services",
     "@maven//:io_grpc_grpc_stub",
 ] + [
@@ -137,7 +136,6 @@ shared_dependencies = [
     "@maven//:com_github_scribejava_scribejava_apis",
     "@maven//:com_github_scribejava_scribejava_core",
     "@maven//:com_github_stephenc_jcip_jcip_annotations",
-    "@maven//:com_github_tomakehurst_wiremock",
     "@maven//:com_github_vladimir_bukhtoyarov_bucket4j_core",
     "@maven//:com_github_zafarkhaja_java_semver",
     "@maven//:com_google_android_annotations",
@@ -292,7 +290,6 @@ shared_dependencies = [
     "@maven//:commons_validator_commons_validator",
     "@maven//:de_bwaldvogel_mongo_java_server",
     "@maven//:de_danielbechler_java_object_diff",
-    "@maven//:de_flapdoodle_embed_de_flapdoodle_embed_mongo",
     "@maven//:de_javakaffee_kryo_serializers",
     "@maven//:de_jkeylockmanager_jkeylockmanager",
     "@maven//:dk_brics_automaton_automaton",
@@ -485,7 +482,6 @@ shared_dependencies = [
     "@maven//:org_apache_sshd_sshd_core",
     "@maven//:org_apache_velocity_velocity",
     "@maven//:org_apache_ws_xmlschema_xmlschema_core",
-    "@maven//:org_assertj_assertj_core",
     "@maven//:org_atmosphere_atmosphere_runtime",
     "@maven//:org_atmosphere_wasync",
     "@maven//:org_atteo_evo_inflector",
@@ -595,7 +591,6 @@ shared_dependencies = [
     "@maven//:org_jvnet_staxex_stax_ex",
     "@maven//:org_ldaptive_ldaptive",
     "@maven//:org_mindrot_jbcrypt",
-    "@maven//:org_mockito_mockito_core",
     "@maven//:org_modelmapper_modelmapper",
     "@maven//:org_mongodb_mongo_java_driver",
     "@maven//:org_mongodb_morphia_morphia",
@@ -620,11 +615,6 @@ shared_dependencies = [
     "@maven//:org_ow2_asm_asm_tree",
     "@maven//:org_passay_passay",
     "@maven//:org_postgresql_postgresql",
-    "@maven//:org_powermock_powermock_api_mockito",
-    "@maven//:org_powermock_powermock_api_mockito_common",
-    "@maven//:org_powermock_powermock_core",
-    "@maven//:org_powermock_powermock_module_junit4",
-    "@maven//:org_powermock_powermock_reflect",
     "@maven//:org_projectlombok_lombok",
     "@maven//:org_quartz_scheduler_quartz",
     "@maven//:org_reactivestreams_reactive_streams",
@@ -689,20 +679,6 @@ springboot(
     visibility = ["//visibility:public"],
 )
 
-test_dependencies = [
-    "@maven//:com_squareup_okhttp3_okhttp",
-] + [
-    "//400-rest:supporter-test",
-    "//955-alert-beans:module",
-    "//990-commons-test:module",
-    "@maven//:com_icegreen_greenmail",
-    "@maven//:com_openpojo_openpojo",
-    "@maven//:io_github_benas_random_beans",
-    "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
-    "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
-    "@maven//:pl_pragmatists_JUnitParams",
-]
-
 java_library(
     name = "tests",
     testonly = True,
@@ -728,10 +704,20 @@ java_library(
         "//980-commons/src/test/resources",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
-    deps = test_dependencies +
-           shared_dependencies + [
+    deps = shared_dependencies + [
+        "//400-rest:supporter-test",
+        "//955-alert-beans:module",
+        "//990-commons-test:module",
         ":module",
+        "@maven//:com_icegreen_greenmail",
+        "@maven//:com_openpojo_openpojo",
+        "@maven//:com_squareup_okhttp3_okhttp",
+        "@maven//:io_github_benas_random_beans",
         "@maven//:io_grpc_grpc_testing",
+        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
+        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:pl_pragmatists_JUnitParams",
     ],
 )
 

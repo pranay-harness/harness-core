@@ -7,11 +7,11 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.sm.StateType;
 
 import com.google.api.client.util.Lists;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.assertj.core.util.Sets;
 
 /**
  * Common Log Data Collection Info class containing attributes used by Log Verification providers while
@@ -58,7 +58,7 @@ public abstract class LogDataCollectionInfo
     clone.setStartMinute(this.getStartMinute());
     clone.setCollectionTime(this.getCollectionTime());
     clone.setHostnameField(this.getHostnameField());
-    clone.setHosts(hosts == null ? null : Sets.newHashSet(this.getHosts()));
+    clone.setHosts(hosts == null ? null : new HashSet(this.getHosts()));
     clone.setStateType(this.getStateType());
     clone.setEncryptedDataDetails(
         encryptedDataDetails == null ? null : Lists.newArrayList(this.getEncryptedDataDetails()));

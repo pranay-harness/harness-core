@@ -30,13 +30,13 @@ import io.harness.tasks.ResponseData;
 import io.harness.yaml.core.variables.NGVariable;
 import io.harness.yaml.utils.NGVariablesUtils;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.util.VisibleForTesting;
 
 @OwnedBy(HarnessTeam.CDC)
 @Slf4j

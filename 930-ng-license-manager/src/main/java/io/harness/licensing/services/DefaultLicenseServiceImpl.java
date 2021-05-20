@@ -138,13 +138,15 @@ public class DefaultLicenseServiceImpl implements LicenseService {
       throw new DuplicateFieldException(cause);
     }
 
+    log.info("Trial license for module [{}] is started in account [{}]", startTrialRequestDTO.getModuleType(),
+        accountIdentifier);
     updateDefaultExperienceIfNull(accountIdentifier, startTrialRequestDTO.getModuleType());
     return licenseObjectMapper.toDTO(savedEntity);
   }
 
   private void updateDefaultExperienceIfNull(String accountIdentifier, ModuleType moduleType) {
     if (ModuleType.CI.equals(moduleType)) {
-      accountService.updateDefaultExperienceIfNull(accountIdentifier, DefaultExperience.NG);
+      accountService.updateDefaultExperienceIfApplicable(accountIdentifier, DefaultExperience.NG);
     }
   }
 

@@ -35,13 +35,13 @@ import io.harness.tasks.ErrorResponseData;
 import io.harness.tasks.ResponseData;
 import io.harness.utils.ConnectorUtils;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.time.Duration;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.util.VisibleForTesting;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j

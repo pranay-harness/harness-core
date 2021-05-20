@@ -204,7 +204,7 @@ public class NGTriggerResourceTest extends CategoryTest {
     final Page<NGTriggerEntity> serviceList = new PageImpl<>(Collections.singletonList(ngTriggerEntity), pageable, 1);
     doReturn(serviceList).when(ngTriggerService).list(criteria, pageable);
 
-    when(ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, false))
+    when(ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, true))
         .thenReturn(ngTriggerDetailsResponseDTO);
 
     List<NGTriggerDetailsResponseDTO> content =

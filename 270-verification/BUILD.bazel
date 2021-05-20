@@ -15,7 +15,6 @@ shared_dependencies = [
     "@maven//:com_openpojo_openpojo",
     "@maven//:de_bwaldvogel_mongo_java_server_core",
     "@maven//:de_bwaldvogel_mongo_java_server_memory_backend",
-    "@maven//:de_flapdoodle_embed_de_flapdoodle_embed_mongo",
     "@maven//:io_prometheus_simpleclient_servlet",
 ]
 
