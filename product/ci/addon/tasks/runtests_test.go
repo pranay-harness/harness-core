@@ -54,7 +54,7 @@ testAnnotations: a1, a2, a3`
 	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil)
 	mf := filesystem.NewMockFile(ctrl)
 	mf.EXPECT().Write([]byte(expData)).Return(0, nil)
-	fs.EXPECT().Open("/test/tmp/config.ini").Return(mf, nil)
+	fs.EXPECT().Create("/test/tmp/config.ini").Return(mf, nil)
 
 	arg, err := r.createJavaAgentArg()
 	assert.Nil(t, err)
@@ -90,7 +90,7 @@ instrPackages: p1, p2, p3`
 	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil)
 	mf := filesystem.NewMockFile(ctrl)
 	mf.EXPECT().Write([]byte(expData)).Return(0, errors.New("could not write data"))
-	fs.EXPECT().Open("/test/tmp/config.ini").Return(mf, nil)
+	fs.EXPECT().Create("/test/tmp/config.ini").Return(mf, nil)
 
 	_, err := r.createJavaAgentArg()
 	assert.NotNil(t, err)
@@ -115,7 +115,7 @@ instrPackages: p1, p2, p3`
 	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil).AnyTimes()
 	mf := filesystem.NewMockFile(ctrl)
 	mf.EXPECT().Write([]byte(expData)).Return(0, nil).AnyTimes()
-	fs.EXPECT().Open("/test/tmp/config.ini").Return(mf, nil).AnyTimes()
+	fs.EXPECT().Create("/test/tmp/config.ini").Return(mf, nil).AnyTimes()
 
 	t1 := types.RunnableTest{Pkg: "pkg1", Class: "cls1", Method: "m1"}
 	t2 := types.RunnableTest{Pkg: "pkg2", Class: "cls2", Method: "m2"}
@@ -225,7 +225,7 @@ instrPackages: p1, p2, p3`
 	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil).AnyTimes()
 	mf := filesystem.NewMockFile(ctrl)
 	mf.EXPECT().Write([]byte(expData)).Return(0, nil).AnyTimes()
-	fs.EXPECT().Open("/test/tmp/config.ini").Return(mf, nil).AnyTimes()
+	fs.EXPECT().Create("/test/tmp/config.ini").Return(mf, nil).AnyTimes()
 
 	diffFiles, _ := json.Marshal([]types.File{})
 
@@ -290,7 +290,7 @@ instrPackages: p1, p2, p3`
 	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil).AnyTimes()
 	mf := filesystem.NewMockFile(ctrl)
 	mf.EXPECT().Write([]byte(expData)).Return(0, nil).AnyTimes()
-	fs.EXPECT().Open("/test/tmp/config.ini").Return(mf, nil).AnyTimes()
+	fs.EXPECT().Create("/test/tmp/config.ini").Return(mf, nil).AnyTimes()
 
 	diffFiles, _ := json.Marshal([]types.File{})
 
@@ -352,7 +352,7 @@ instrPackages: p1, p2, p3`
 	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil).AnyTimes()
 	mf := filesystem.NewMockFile(ctrl)
 	mf.EXPECT().Write([]byte(expData)).Return(0, nil).AnyTimes()
-	fs.EXPECT().Open("/test/tmp/config.ini").Return(mf, nil).AnyTimes()
+	fs.EXPECT().Create("/test/tmp/config.ini").Return(mf, nil).AnyTimes()
 
 	diffFiles, _ := json.Marshal([]types.File{})
 
@@ -412,7 +412,7 @@ instrPackages: p1, p2, p3`
 	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil).AnyTimes()
 	mf := filesystem.NewMockFile(ctrl)
 	mf.EXPECT().Write([]byte(expData)).Return(0, nil).AnyTimes()
-	fs.EXPECT().Open("/test/tmp/config.ini").Return(mf, nil).AnyTimes()
+	fs.EXPECT().Create("/test/tmp/config.ini").Return(mf, nil).AnyTimes()
 
 	diffFiles, _ := json.Marshal([]types.File{})
 
@@ -507,7 +507,7 @@ instrPackages: p1, p2, p3`
 	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil).AnyTimes()
 	mf := filesystem.NewMockFile(ctrl)
 	mf.EXPECT().Write([]byte(expData)).Return(0, nil).AnyTimes()
-	fs.EXPECT().Open("/test/tmp/config.ini").Return(mf, nil).AnyTimes()
+	fs.EXPECT().Create("/test/tmp/config.ini").Return(mf, nil).AnyTimes()
 
 	diffFiles, _ := json.Marshal([]types.File{})
 
@@ -608,7 +608,7 @@ instrPackages: p1, p2, p3`
 	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil)
 	mf := filesystem.NewMockFile(ctrl)
 	mf.EXPECT().Write([]byte(expData)).Return(0, nil)
-	fs.EXPECT().Open("/test/tmp/config.ini").Return(mf, nil)
+	fs.EXPECT().Create("/test/tmp/config.ini").Return(mf, nil)
 
 	diffFiles, _ := json.Marshal([]types.File{})
 
@@ -710,7 +710,7 @@ instrPackages: p1, p2, p3`
 	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil)
 	mf := filesystem.NewMockFile(ctrl)
 	mf.EXPECT().Write([]byte(expData)).Return(0, nil)
-	fs.EXPECT().Open("/test/tmp/config.ini").Return(mf, nil)
+	fs.EXPECT().Create("/test/tmp/config.ini").Return(mf, nil)
 
 	diffFiles, _ := json.Marshal([]types.File{})
 
@@ -808,7 +808,7 @@ instrPackages: p1, p2, p3`
 	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil)
 	mf := filesystem.NewMockFile(ctrl)
 	mf.EXPECT().Write([]byte(expData)).Return(0, nil)
-	fs.EXPECT().Open("/test/tmp/config.ini").Return(mf, nil)
+	fs.EXPECT().Create("/test/tmp/config.ini").Return(mf, nil)
 
 	diffFiles, _ := json.Marshal([]types.File{})
 
