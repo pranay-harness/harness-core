@@ -218,3 +218,5 @@ replace_key_value accessControlClient.enableAccessControl "$ACCESS_CONTROL_ENABL
 replace_key_value accessControlClient.accessControlServiceConfig.baseUrl "$ACCESS_CONTROL_BASE_URL"
 
 replace_key_value accessControlClient.accessControlServiceSecret "$ACCESS_CONTROL_SECRET"
+
+replace_key_value pipelineServiceSecret "$PIPELINE_SERVICE_SECRET"

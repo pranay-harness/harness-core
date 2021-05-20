@@ -214,3 +214,9 @@ replace_key_value logStreamingServiceConfig.serviceToken "$LOG_STREAMING_SERVICE
 replace_key_value iteratorsConfig.approvalInstanceIteratorConfig.enabled "$APPROVAL_INSTANCE_ITERATOR_ENABLED"
 replace_key_value iteratorsConfig.approvalInstanceIteratorConfig.targetIntervalInSeconds "$APPROVAL_INSTANCE_ITERATOR_INTERVAL_SEC"
 replace_key_value orchestrationStepConfig.ffServerBaseUrl "$FF_SERVER_BASE_URL"
+
+replace_key_value pipelineServiceSecret "$PIPELINE_SERVICE_SECRET"
+
+replace_key_value grpcClientSecrets.cd.secret  $NG_MANAGER_SERVICE_SECRET
+replace_key_value grpcClientSecrets.ci.secret  $CI_MANAGER_SERVICE_SECRET
+replace_key_value grpcClientSecrets.cvng.secret  $NG_MANAGER_SERVICE_SECRET
