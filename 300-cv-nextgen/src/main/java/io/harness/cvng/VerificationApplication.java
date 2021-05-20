@@ -49,6 +49,7 @@ import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.exception.BadRequestExceptionMapper;
 import io.harness.cvng.exception.ConstraintViolationExceptionMapper;
 import io.harness.cvng.exception.NotFoundExceptionMapper;
+import io.harness.cvng.metrics.services.impl.CVNGMetricsPublisher;
 import io.harness.cvng.migration.CVNGSchemaHandler;
 import io.harness.cvng.migration.beans.CVNGSchema;
 import io.harness.cvng.migration.beans.CVNGSchema.CVNGSchemaKeys;
@@ -403,7 +404,8 @@ public class VerificationApplication extends Application<VerificationConfigurati
   }
 
   private void initMetrics(Injector injector) {
-    injector.getInstance(MetricService.class).initializeMetrics();
+    injector.getInstance(MetricService.class)
+        .initializeMetrics(Arrays.asList(injector.getInstance(CVNGMetricsPublisher.class)));
     injector.getInstance(RecordMetricsJob.class).scheduleMetricsTasks();
   }
 
