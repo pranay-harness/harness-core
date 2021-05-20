@@ -72,7 +72,8 @@ public class IntegrationStageUtils {
       ExecutionMetadata executionMetadata, String identifier, ParameterField<Build> parameterFieldBuild) {
     ExecutionTriggerInfo executionTriggerInfo = executionMetadata.getTriggerInfo();
 
-    if (executionTriggerInfo.getTriggerType() == TriggerType.MANUAL) {
+    if (executionTriggerInfo.getTriggerType() == TriggerType.MANUAL
+        || executionTriggerInfo.getTriggerType() == TriggerType.SCHEDULER_CRON) {
       if (parameterFieldBuild == null) {
         return ManualExecutionSource.builder().build();
       }
