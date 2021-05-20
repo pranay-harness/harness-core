@@ -2370,6 +2370,10 @@
               "type": "number",
               "format": "double"
             },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+            },
             "type": {
               "type": "string",
               "enum": [
@@ -3071,6 +3075,10 @@
             "default": {
               "type": "string"
             },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+            },
             "type": {
               "type": "string",
               "enum": [
@@ -3602,10 +3610,12 @@
           }
         },
         "identifier": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
         },
         "timeout": {
           "type": "string"
@@ -3971,10 +3981,12 @@
           }
         },
         "identifier": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
         },
         "rollbackSteps": {
           "type": "array",
@@ -4187,6 +4199,10 @@
           "properties": {
             "default": {
               "type": "string"
+            },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
             },
             "type": {
               "type": "string",
