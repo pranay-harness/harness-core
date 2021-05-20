@@ -48,7 +48,6 @@ java_library(
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_checkerframework_checker_compat_qual",
         "@maven//:org_checkerframework_checker_qual",
-        "@maven//:org_mockito_mockito_core",
         "@maven//:org_mongodb_mongo_java_driver",
         "@maven//:org_slf4j_slf4j_api",
         "@maven//:org_springframework_data_spring_data_commons",
