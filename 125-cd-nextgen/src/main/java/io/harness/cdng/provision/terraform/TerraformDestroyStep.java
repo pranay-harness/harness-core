@@ -115,6 +115,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
   private TaskRequest obtainInheritedTask(
       Ambiance ambiance, TerraformDestroyStepParameters parameters, StepElementParameters stepElementParameters) {
     TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder().taskType(TFTaskType.DESTROY);
+    builder.terraformCommandUnit(TerraformCommandUnit.Destroy);
     String accountId = AmbianceHelper.getAccountId(ambiance);
     builder.accountId(accountId);
     String provisionerIdentifier = ParameterFieldHelper.getParameterFieldValue(parameters.getProvisionerIdentifier());
@@ -152,6 +153,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
   private TaskRequest obtainLastApplyTask(
       Ambiance ambiance, TerraformDestroyStepParameters parameters, StepElementParameters stepElementParameters) {
     TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder().taskType(TFTaskType.DESTROY);
+    builder.terraformCommandUnit(TerraformCommandUnit.Destroy);
     String accountId = AmbianceHelper.getAccountId(ambiance);
     builder.accountId(accountId);
     String entityId = helper.generateFullIdentifier(

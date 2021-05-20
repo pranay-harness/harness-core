@@ -14,6 +14,7 @@ import static io.harness.provision.TerraformConstants.TERRAFORM_DESTROY_PLAN_FIL
 import static io.harness.provision.TerraformConstants.TERRAFORM_DESTROY_PLAN_FILE_VAR_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_PLAN_FILE_OUTPUT_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_STATE_FILE_NAME;
+import static io.harness.provision.TerraformConstants.TERRAFORM_VARIABLES_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TF_BASE_DIR;
 import static io.harness.provision.TerraformConstants.TF_SCRIPT_DIR;
 import static io.harness.provision.TerraformConstants.USER_DIR_KEY;
@@ -524,7 +525,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
       for (TerraformVarFileInfo varFile : varFileInfo) {
         if (varFile instanceof InlineTerraformVarFileInfo) {
           varFilePaths.add(TerraformHelperUtils.createFileFromStringContent(
-              ((InlineTerraformVarFileInfo) varFile).getVarFileContent(), scriptDir));
+              ((InlineTerraformVarFileInfo) varFile).getVarFileContent(), scriptDir, TERRAFORM_VARIABLES_FILE_NAME));
         } else if (varFile instanceof RemoteTerraformVarFileInfo) {
           GitStoreDelegateConfig gitStoreDelegateConfig =
               ((RemoteTerraformVarFileInfo) varFile).getGitFetchFilesConfig().getGitStoreDelegateConfig();
