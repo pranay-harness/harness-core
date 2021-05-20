@@ -273,6 +273,10 @@ public class EcsDeployCommandTaskHelper {
         ecsCommandTaskHelper.registerScalableTargetForEcsService(awsAppAutoScalingService, resizeParams.getRegion(),
             awsConfig, contextData.getEncryptedDataDetails(), executionLogCallback, scalableTarget);
 
+        ecsContainerService.waitForServiceToReachStableState(resizeParams.getRegion(), awsConfig,
+            contextData.getEncryptedDataDetails(), resizeParams.getClusterName(),
+            resizeParams.getContainerServiceName(), executionLogCallback, resizeParams.getServiceSteadyStateTimeout());
+
         if (isNotEmpty(awsAutoScalarConfig.getScalingPolicyJson())) {
           executionLogCallback.saveExecutionLog(
               "Creating Auto Scaling Policies for Service: " + containerServiceData.getName());
@@ -323,6 +327,10 @@ public class EcsDeployCommandTaskHelper {
         scalableTarget.withResourceId(resourceId);
         ecsCommandTaskHelper.registerScalableTargetForEcsService(awsAppAutoScalingService, resizeParams.getRegion(),
             awsConfig, contextData.getEncryptedDataDetails(), executionLogCallback, scalableTarget);
+
+        ecsContainerService.waitForServiceToReachStableState(resizeParams.getRegion(), awsConfig,
+            contextData.getEncryptedDataDetails(), resizeParams.getClusterName(),
+            resizeParams.getContainerServiceName(), executionLogCallback, resizeParams.getServiceSteadyStateTimeout());
 
         if (isNotEmpty(awsAutoScalarConfig.getScalingPolicyJson())) {
           executionLogCallback.saveExecutionLog(
