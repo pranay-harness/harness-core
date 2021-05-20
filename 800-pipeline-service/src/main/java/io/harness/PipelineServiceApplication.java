@@ -44,6 +44,8 @@ import io.harness.pms.inputset.gitsync.InputSetEntityGitSyncHelper;
 import io.harness.pms.inputset.gitsync.InputSetYamlDTO;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.observers.InputSetsDeleteObserver;
+import io.harness.pms.notification.orchestration.handlers.StageStartNotificationHandler;
+import io.harness.pms.notification.orchestration.handlers.StageStatusUpdateNotificationEventHandler;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntityCrudObserver;
 import io.harness.pms.pipeline.PipelineSetupUsageHelper;
@@ -281,6 +283,10 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         (NodeExecutionServiceImpl) injector.getInstance(Key.get(NodeExecutionService.class));
     nodeExecutionService.getStepStatusUpdateSubject().register(
         injector.getInstance(Key.get(PlanExecutionService.class)));
+    nodeExecutionService.getStepStatusUpdateSubject().register(
+        injector.getInstance(Key.get(StageStatusUpdateNotificationEventHandler.class)));
+    nodeExecutionService.getStepStatusUpdateSubject().register(
+        injector.getInstance(Key.get(StageStartNotificationHandler.class)));
 
     SdkResponseEventListener sdkResponseEventListener = injector.getInstance(SdkResponseEventListener.class);
     sdkResponseEventListener.getQueueListenerObserverSubject().register(

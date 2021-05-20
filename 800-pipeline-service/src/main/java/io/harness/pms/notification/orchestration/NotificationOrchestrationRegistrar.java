@@ -30,9 +30,6 @@ public class NotificationOrchestrationRegistrar {
   public Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> getEngineEventHandlers() {
     Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap =
         new HashMap<>();
-    engineEventHandlersMap.put(NODE_EXECUTION_START, Sets.newHashSet(StageStartNotificationHandler.class));
-    engineEventHandlersMap.put(
-        NODE_EXECUTION_STATUS_UPDATE, Sets.newHashSet(StageStatusUpdateNotificationEventHandler.class));
     engineEventHandlersMap.put(PLAN_EXECUTION_SUCCESS, Sets.newHashSet(PipelineSuccessNotificationHandler.class));
     engineEventHandlersMap.put(PLAN_EXECUTION_PAUSED, Sets.newHashSet(PipelinePausedNotificationHandler.class));
     engineEventHandlersMap.put(PLAN_EXECUTION_FAILED, Sets.newHashSet(PipelineFailedNotificationHandler.class));
