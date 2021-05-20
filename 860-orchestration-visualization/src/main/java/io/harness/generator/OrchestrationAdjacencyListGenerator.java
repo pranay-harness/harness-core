@@ -227,8 +227,8 @@ public class OrchestrationAdjacencyListGenerator {
 
         List<Document> outcomes = new ArrayList<>();
         if (isOutcomePresent) {
-          outcomes = PmsOutcomeMapper.convertJsonToDocument(pmsOutcomeService.findAllByRuntimeId(
-              nodeExecution.getAmbiance().getPlanExecutionId(), currentNodeId, true));
+          outcomes = PmsOutcomeMapper.convertJsonToDocument(
+              pmsOutcomeService.findAllByRuntimeId(nodeExecution.getAmbiance().getPlanExecutionId(), currentNodeId));
         }
 
         GraphVertex graphVertex = GraphVertexConverter.convertFrom(nodeExecution, outcomes);

@@ -16,6 +16,9 @@ public class GeneralExceptionHandler implements ExceptionHandler {
 
   @Override
   public WingsException handleException(Exception exception) {
+    if (exception instanceof NullPointerException) {
+      return new GeneralException("Null Pointer Exception");
+    }
     return new GeneralException(exception.getMessage());
   }
 }

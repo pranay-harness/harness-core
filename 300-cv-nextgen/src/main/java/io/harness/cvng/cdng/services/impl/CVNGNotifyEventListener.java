@@ -15,12 +15,12 @@ import com.google.inject.Singleton;
 
 @Singleton
 public final class CVNGNotifyEventListener extends NotifyEventListener {
-  public static final String NG_ORCHESTRATION = "ng_orchestration";
+  public static final String CVNG_ORCHESTRATION = "cvng_orchestration";
 
   @Inject
   public CVNGNotifyEventListener(
       Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
     super(QueueFactory.createQueueConsumer(injector, NotifyEvent.class, ofSeconds(5),
-        asList(asList(versionInfoManager.getVersionInfo().getVersion()), asList(NG_ORCHESTRATION)), config));
+        asList(asList(versionInfoManager.getVersionInfo().getVersion()), asList(CVNG_ORCHESTRATION)), config));
   }
 }

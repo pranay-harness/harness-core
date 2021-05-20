@@ -42,7 +42,7 @@ public class NodeExecutionEvent extends Queuable implements WithMonitoring {
   NodeExecutionProto nodeExecution;
   NodeExecutionEventType eventType;
   NodeExecutionEventData eventData;
-  @Getter @Setter @NonFinal @CreatedDate long createdAt;
+  @Getter @Setter @NonFinal @CreatedDate Long createdAt;
   @Builder.Default String notifyId = generateUuid();
   @Setter @NonFinal @Version Long version;
 

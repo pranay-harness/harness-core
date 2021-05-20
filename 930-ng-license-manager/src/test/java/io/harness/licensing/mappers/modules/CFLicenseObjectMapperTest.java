@@ -46,15 +46,15 @@ public class CFLicenseObjectMapperTest extends LicenseTestBase {
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
   public void testToDTO() {
-    ModuleLicenseDTO moduleLicenseDTO = objectMapper.toDTO(moduleLicense);
-    assertThat(moduleLicenseDTO).isEqualTo(moduleLicenseDTO);
+    ModuleLicenseDTO result = objectMapper.toDTO(moduleLicense);
+    assertThat(result).isEqualTo(moduleLicenseDTO);
   }
 
   @Test
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
   public void testToEntity() {
-    ModuleLicense moduleLicense = objectMapper.toEntity(moduleLicenseDTO);
-    assertThat(moduleLicense).isEqualTo(moduleLicense);
+    ModuleLicense result = objectMapper.toEntity(moduleLicenseDTO);
+    assertThat(result).isEqualTo(moduleLicense);
   }
 }

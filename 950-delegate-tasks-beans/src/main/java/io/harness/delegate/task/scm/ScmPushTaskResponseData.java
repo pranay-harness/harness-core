@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.git.model.ChangeType;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
+import io.harness.product.ci.scm.proto.CreatePRResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
 import io.harness.product.ci.scm.proto.UpdateFileResponse;
 
@@ -25,4 +26,5 @@ public class ScmPushTaskResponseData implements DelegateResponseData {
   CreateFileResponse createFileResponse;
   UpdateFileResponse updateFileResponse;
   DeleteFileResponse deleteFileResponse;
+  CreatePRResponse createPRResponse;
 }

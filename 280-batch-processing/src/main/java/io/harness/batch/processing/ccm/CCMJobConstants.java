@@ -1,23 +1,38 @@
 package io.harness.batch.processing.ccm;
 
-import java.time.Instant;
-import org.springframework.batch.core.JobParameters;
+import io.harness.ccm.commons.beans.JobConstants;
 
-public class CCMJobConstants {
+import java.time.Instant;
+import java.util.Objects;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.scope.context.ChunkContext;
+
+public class CCMJobConstants extends JobConstants {
   public static final String JOB_ID = "JobID";
   public static final String ACCOUNT_ID = "accountId";
   public static final String JOB_END_DATE = "endDate";
   public static final String JOB_START_DATE = "startDate";
   public static final String BATCH_JOB_TYPE = "batchJobType";
 
-  private CCMJobConstants() {}
+  public CCMJobConstants(final StepExecution stepExecution) {
+    final JobParameters jobParameters = stepExecution.getJobParameters();
+
+    super.accountId = jobParameters.getString(ACCOUNT_ID);
+    super.jobStartTime = getFieldLongValueFromJobParams(jobParameters, JOB_START_DATE);
+    super.jobEndTime = getFieldLongValueFromJobParams(jobParameters, JOB_END_DATE);
+  }
+
+  public CCMJobConstants(final ChunkContext chunkContext) {
+    this(chunkContext.getStepContext().getStepExecution());
+  }
 
   public static Instant getFieldValueFromJobParams(JobParameters parameters, String fieldName) {
-    return Instant.ofEpochMilli(Long.parseLong(parameters.getString(fieldName)));
+    return Instant.ofEpochMilli(Long.parseLong(Objects.requireNonNull(parameters.getString(fieldName))));
   }
 
   public static Long getFieldLongValueFromJobParams(JobParameters parameters, String fieldName) {
-    return Long.valueOf(parameters.getString(fieldName));
+    return Long.valueOf(Objects.requireNonNull(parameters.getString(fieldName)));
   }
 
   public static BatchJobType getBatchJobTypeFromJobParams(JobParameters parameters, String fieldName) {

@@ -1,5 +1,13 @@
 package io.harness.ng.authenticationsettings.resources;
 
+import static io.harness.ng.accesscontrol.PlatformPermissions.DELETE_AUTHSETTING_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformPermissions.EDIT_AUTHSETTING_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_AUTHSETTING_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformResourceTypes.AUTHSETTINGS;
+
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.GeneralException;
@@ -54,12 +62,15 @@ import retrofit2.http.Multipart;
 public class AuthenticationSettingsResource {
   AuthenticationSettingsService authenticationSettingsService;
   private final MainConfiguration mainConfiguration;
+  private final AccessControlClient accessControlClient;
 
   @GET
   @Path("/")
   @ApiOperation(value = "Get authentication settings for an account", nickname = "getAuthenticationSettings")
   public RestResponse<AuthenticationSettingsResponse> getAuthenticationSettings(
       @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier) {
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(accountIdentifier, null, null), Resource.of(AUTHSETTINGS, null), VIEW_AUTHSETTING_PERMISSION);
     AuthenticationSettingsResponse response =
         authenticationSettingsService.getAuthenticationSettings(accountIdentifier);
     return new RestResponse<>(response);
@@ -70,6 +81,8 @@ public class AuthenticationSettingsResource {
   @ApiOperation(value = "Get Password strength settings", nickname = "getPasswordStrengthSettings")
   public RestResponse<PasswordStrengthPolicy> getPasswordStrengthSettings(
       @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier) {
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(accountIdentifier, null, null), Resource.of(AUTHSETTINGS, null), VIEW_AUTHSETTING_PERMISSION);
     PasswordStrengthPolicy response = authenticationSettingsService.getPasswordStrengthSettings(accountIdentifier);
     return new RestResponse<>(response);
   }
@@ -80,6 +93,8 @@ public class AuthenticationSettingsResource {
   public RestResponse<LoginSettings> updateLoginSettings(@PathParam("loginSettingsId") String loginSettingsId,
       @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier,
       @NotNull @Valid LoginSettings loginSettings) {
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(accountIdentifier, null, null), Resource.of(AUTHSETTINGS, null), EDIT_AUTHSETTING_PERMISSION);
     LoginSettings updatedLoginSettings =
         authenticationSettingsService.updateLoginSettings(loginSettingsId, accountIdentifier, loginSettings);
     return new RestResponse<>(updatedLoginSettings);
@@ -90,6 +105,8 @@ public class AuthenticationSettingsResource {
   @ApiOperation(value = "Update Oauth providers for an account", nickname = "updateOauthProviders")
   public RestResponse<Boolean> updateOauthProviders(
       @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier, OAuthSettings oAuthSettings) {
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(accountIdentifier, null, null), Resource.of(AUTHSETTINGS, null), EDIT_AUTHSETTING_PERMISSION);
     authenticationSettingsService.updateOauthProviders(accountIdentifier, oAuthSettings);
     return new RestResponse<>(true);
   }
@@ -99,6 +116,8 @@ public class AuthenticationSettingsResource {
   @ApiOperation(value = "Remove Oauth mechanism for an account", nickname = "removeOauthMechanism")
   public RestResponse<Boolean> removeOauthMechanism(
       @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, null, null),
+        Resource.of(AUTHSETTINGS, null), DELETE_AUTHSETTING_PERMISSION);
     authenticationSettingsService.removeOauthMechanism(accountIdentifier);
     return new RestResponse<>(true);
   }
@@ -108,6 +127,8 @@ public class AuthenticationSettingsResource {
   @ApiOperation(value = "Update Auth mechanism for an account", nickname = "updateAuthMechanism")
   public RestResponse<Boolean> updateAuthMechanism(@QueryParam("accountIdentifier") @NotEmpty String accountIdentifier,
       @QueryParam("authenticationMechanism") AuthenticationMechanism authenticationMechanism) {
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(accountIdentifier, null, null), Resource.of(AUTHSETTINGS, null), EDIT_AUTHSETTING_PERMISSION);
     authenticationSettingsService.updateAuthMechanism(accountIdentifier, authenticationMechanism);
     return new RestResponse<>(true);
   }
@@ -117,9 +138,12 @@ public class AuthenticationSettingsResource {
   @ApiOperation(value = "Update Whitelisted domains for an account", nickname = "updateWhitelistedDomains")
   public RestResponse<Boolean> updateWhitelistedDomins(
       @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier, Set<String> whitelistedDomains) {
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(accountIdentifier, null, null), Resource.of(AUTHSETTINGS, null), EDIT_AUTHSETTING_PERMISSION);
     authenticationSettingsService.updateWhitelistedDomains(accountIdentifier, whitelistedDomains);
     return new RestResponse<>(true);
   }
+
   @Multipart
   @POST
   @Path("/saml-metadata-upload")
@@ -130,6 +154,8 @@ public class AuthenticationSettingsResource {
       @FormDataParam("groupMembershipAttr") String groupMembershipAttr,
       @FormDataParam("authorizationEnabled") Boolean authorizationEnabled,
       @FormDataParam("logoutUrl") String logoutUrl) {
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(accountId, null, null), Resource.of(AUTHSETTINGS, null), EDIT_AUTHSETTING_PERMISSION);
     try {
       byte[] bytes = IOUtils.toByteArray(
           new BoundedInputStream(uploadedInputStream, mainConfiguration.getFileUploadLimits().getCommandUploadLimit()));
@@ -153,6 +179,8 @@ public class AuthenticationSettingsResource {
       @FormDataParam("groupMembershipAttr") String groupMembershipAttr,
       @FormDataParam("authorizationEnabled") Boolean authorizationEnabled,
       @FormDataParam("logoutUrl") String logoutUrl) {
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(accountId, null, null), Resource.of(AUTHSETTINGS, null), EDIT_AUTHSETTING_PERMISSION);
     try {
       MultipartBody.Part formData = null;
       if (uploadedInputStream != null) {
@@ -173,6 +201,8 @@ public class AuthenticationSettingsResource {
   @ApiOperation(value = "Delete SAML Config", nickname = "deleteSamlMetaData")
   public RestResponse<SSOConfig> deleteSamlMetadata(
       @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, null, null),
+        Resource.of(AUTHSETTINGS, null), DELETE_AUTHSETTING_PERMISSION);
     SSOConfig response = authenticationSettingsService.deleteSAMLMetadata(accountIdentifier);
     return new RestResponse<>(response);
   }
@@ -181,6 +211,8 @@ public class AuthenticationSettingsResource {
   @Path("/saml-login-test")
   @ApiOperation(value = "Get SAML Login Test", nickname = "getSamlLoginTest")
   public RestResponse<LoginTypeResponse> getSamlLoginTest(@QueryParam("accountId") @NotEmpty String accountId) {
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(accountId, null, null), Resource.of(AUTHSETTINGS, null), VIEW_AUTHSETTING_PERMISSION);
     LoginTypeResponse response = authenticationSettingsService.getSAMLLoginTest(accountId);
     return new RestResponse<>(response);
   }
@@ -191,6 +223,8 @@ public class AuthenticationSettingsResource {
   public RestResponse<Boolean> setTwoFactorAuthAtAccountLevel(
       @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier,
       TwoFactorAdminOverrideSettings twoFactorAdminOverrideSettings) {
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(accountIdentifier, null, null), Resource.of(AUTHSETTINGS, null), EDIT_AUTHSETTING_PERMISSION);
     boolean response =
         authenticationSettingsService.setTwoFactorAuthAtAccountLevel(accountIdentifier, twoFactorAdminOverrideSettings);
     return new RestResponse<>(response);

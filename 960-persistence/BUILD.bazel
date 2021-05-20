@@ -30,7 +30,6 @@ shared_dependencies = [
     "@maven//:de_bwaldvogel_mongo_java_server",
     "@maven//:de_bwaldvogel_mongo_java_server_core",
     "@maven//:de_bwaldvogel_mongo_java_server_memory_backend",
-    "@maven//:de_flapdoodle_embed_de_flapdoodle_embed_mongo",
     "@maven//:io_dropwizard_dropwizard_lifecycle",
     "@maven//:io_dropwizard_metrics_metrics_core",
     "@maven//:io_swagger_swagger_annotations",
@@ -76,6 +75,7 @@ java_library(
 
 java_library(
     name = "supporter-test",
+    testonly = True,
     srcs = glob(["src/supporter-test/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
@@ -84,6 +84,7 @@ java_library(
         "//990-commons-test:module",
         "@maven//:ch_qos_logback_logback_classic",
         "@maven//:ch_qos_logback_logback_core",
+        "@maven//:de_flapdoodle_embed_de_flapdoodle_embed_mongo",
         "@maven//:de_flapdoodle_embed_de_flapdoodle_embed_process",
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",

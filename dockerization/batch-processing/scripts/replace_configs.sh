@@ -196,3 +196,11 @@ if [[ "" != "$BANZAI_CONFIG_PORT" ]]; then
   yq write -i $CONFIG_FILE banzaiConfig.port "$BANZAI_CONFIG_PORT"
 fi
 
+if [[ "" != "$NG_MANAGER_SERVICE_HTTP_CLIENT_CONFIG_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE ngManagerServiceHttpClientConfig.baseUrl "$NG_MANAGER_SERVICE_HTTP_CLIENT_CONFIG_BASE_URL"
+fi
+
+if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
+  yq write -i $CONFIG_FILE ngManagerServiceSecret "$NEXT_GEN_MANAGER_SECRET"
+fi
+

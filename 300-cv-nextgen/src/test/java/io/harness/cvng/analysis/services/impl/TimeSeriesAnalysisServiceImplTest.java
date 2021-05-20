@@ -714,7 +714,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTestBase {
   }
   private VerificationJobInstance createVerificationJobInstance(VerificationJobType type) {
     VerificationJobDTO verificationJobDTO = newVerificationJobDTO(type);
-    verificationJobService.upsert(accountId, verificationJobDTO);
+    verificationJobService.create(accountId, verificationJobDTO);
     VerificationJob verificationJob = verificationJobService.getVerificationJob(
         accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier());
     VerificationJobInstance verificationJobInstance =

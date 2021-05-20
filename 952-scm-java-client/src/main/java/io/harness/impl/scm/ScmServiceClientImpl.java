@@ -9,9 +9,12 @@ import static java.util.stream.Collectors.toList;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitFileDetails;
 import io.harness.beans.gitsync.GitFilePathDetails;
+import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.product.ci.scm.proto.CreateBranchRequest;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
+import io.harness.product.ci.scm.proto.CreatePRRequest;
+import io.harness.product.ci.scm.proto.CreatePRResponse;
 import io.harness.product.ci.scm.proto.DeleteFileRequest;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
 import io.harness.product.ci.scm.proto.FileBatchContentResponse;
@@ -344,6 +347,21 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
     String latestShaOfBranch = getLatestShaOfBranch(slug, gitProvider, defaultBranchName, scmBlockingStub);
     createNewBranchFromDefault(slug, gitProvider, branch, latestShaOfBranch, scmBlockingStub);
+  }
+
+  @Override
+  public CreatePRResponse createPullRequest(
+      ScmConnector scmConnector, GitPRCreateRequest gitPRCreateRequest, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    String slug = scmGitProviderHelper.getSlug(scmConnector);
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+    CreatePRRequest createPRRequest = CreatePRRequest.newBuilder()
+                                          .setSlug(slug)
+                                          .setTitle(gitPRCreateRequest.getTitle())
+                                          .setProvider(gitProvider)
+                                          .setSource(gitPRCreateRequest.getSourceBranch())
+                                          .setTarget(gitPRCreateRequest.getTargetBranch())
+                                          .build();
+    return scmBlockingStub.createPR(createPRRequest);
   }
 
   private void createNewBranchFromDefault(String slug, Provider gitProvider, String branch, String latestShaOfBranch,

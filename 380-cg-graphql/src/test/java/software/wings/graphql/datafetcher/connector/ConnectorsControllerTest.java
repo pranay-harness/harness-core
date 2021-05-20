@@ -32,6 +32,7 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -89,6 +90,7 @@ public class ConnectorsControllerTest extends CategoryTest {
     String webhookToken = "webhookToken";
     String accountId = "12345";
     String baseApiUrl = "BaseApiUrl/";
+    String delegateSelector = "primary";
     UsageRestrictions usageRestrictions = new UsageRestrictions();
     QLUsageScope qlUsageScope = QLUsageScope.builder().build();
     doReturn(baseApiUrl).when(subdomainUrlHelper).getApiBaseUrl(accountId);
@@ -103,6 +105,7 @@ public class ConnectorsControllerTest extends CategoryTest {
                               .authorEmailId("email")
                               .webhookToken(webhookToken)
                               .urlType(UrlType.REPO)
+                              .delegateSelectors(Collections.singletonList(delegateSelector))
                               .build();
     settingAttribute.setValue(gitConfig);
     QLGitConnectorBuilder qlGitConnectorBuilder =
@@ -117,6 +120,7 @@ public class ConnectorsControllerTest extends CategoryTest {
     assertThat(qlGitConnector.getUrlType()).isEqualTo(UrlType.REPO);
     verify(usageScopeController, times(1)).populateUsageScope(usageRestrictions);
     assertThat(qlGitConnector.getUsageScope()).isEqualTo(qlUsageScope);
+    assertThat(qlGitConnector.getDelegateSelectors()).isEqualTo(Collections.singletonList(delegateSelector));
   }
 
   @Test(expected = InvalidRequestException.class)

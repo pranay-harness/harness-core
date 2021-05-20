@@ -1,5 +1,7 @@
 package io.harness.cdng.pipeline;
 
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
@@ -13,6 +15,7 @@ import io.harness.validation.OneOfField;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
+import io.harness.yaml.YamlSchemaTypes;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -37,7 +40,9 @@ public class PipelineInfrastructure implements StepParameters, Visitable {
   private InfrastructureDef infrastructureDefinition;
   @Wither private InfraUseFromStage useFromStage;
   private EnvironmentYaml environment;
-  private boolean allowSimultaneousDeployments;
+  @YamlSchemaTypes({string})
+  @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH)
+  private ParameterField<Boolean> allowSimultaneousDeployments;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) private ParameterField<String> infrastructureKey;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) private ParameterField<String> environmentRef;
 

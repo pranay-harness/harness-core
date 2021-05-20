@@ -1282,7 +1282,8 @@
               "type": "string"
             },
             "type": {
-              "type": "string"
+              "type": "string",
+              "enum": ["Barrier", "FlagConfiguration", "HarnessApproval", "Http", "JiraApproval", "JiraCreate", "JiraUpdate", "Verify"]
             },
             "when": {
               "$ref": "#/definitions/cvng/StepWhenCondition"

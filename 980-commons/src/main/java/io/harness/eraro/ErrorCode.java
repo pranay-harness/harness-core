@@ -287,6 +287,8 @@ public enum ErrorCode {
 
   SECRET_MANAGEMENT_ERROR,
 
+  SECRET_NOT_FOUND,
+
   KMS_OPERATION_ERROR,
 
   GCP_KMS_OPERATION_ERROR,
@@ -423,6 +425,8 @@ public enum ErrorCode {
 
   INVALID_ROLLBACK,
 
+  DATA_COLLECTION_ERROR,
+
   SUMO_DATA_COLLECTION_ERROR,
 
   DEPLOYMENT_GOVERNANCE_ERROR,
@@ -520,7 +524,8 @@ public enum ErrorCode {
   SCM_UNPROCESSABLE_ENTITY,
   SCM_UNAUTHORIZED,
   DATA,
-  CONTEXT;
+  CONTEXT,
+  PR_CREATION_ERROR;
 
   private Status status = BAD_REQUEST;
   private String description;

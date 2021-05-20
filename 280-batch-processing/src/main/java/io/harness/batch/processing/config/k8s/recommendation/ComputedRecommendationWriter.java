@@ -223,19 +223,12 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
       final String uuid = workloadRecommendationDao.save(recommendation);
       Preconditions.checkNotNullNorEmpty(uuid, "unexpected, uuid can't be null or empty");
 
-      // decision whether to show the recommendation in the Recommendation Overview List page or not.
-      boolean shouldShowRecommendation = checkIfRecommendationIsValid(recommendation);
-
       k8sRecommendationDAO.insertIntoCeRecommendation(uuid, workloadId,
           ofNullable(monthlyCost).map(BigDecimal::doubleValue).orElse(null),
-          ofNullable(monthlySavings).map(BigDecimal::doubleValue).orElse(null), shouldShowRecommendation,
+          ofNullable(monthlySavings).map(BigDecimal::doubleValue).orElse(null),
+          recommendation.shouldShowRecommendation(),
           firstNonNull(recommendation.getLastReceivedUtilDataAt(), Instant.EPOCH));
     }
-  }
-
-  private boolean checkIfRecommendationIsValid(@NotNull K8sWorkloadRecommendation recommendation) {
-    return recommendation.isValidRecommendation() && recommendation.isLastDayCostAvailable()
-        && recommendation.getNumDays() >= 1;
   }
 
   private static Map<String, String> extendedResourcesMap(Map<String, String> resourceMap) {

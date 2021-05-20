@@ -4,6 +4,7 @@ directories:
   .aeriform
   110-change-data-capture
   120-ng-manager
+  121-instance
   125-cd-nextgen
   136-git-sync-manager
   160-model-gen-tool
@@ -47,7 +48,6 @@ directories:
   830-notification-service
   830-resource-group
   835-notification-senders
-  850-execution-plan
   850-ng-pipeline-commons
   860-orchestration-steps
   860-orchestration-visualization

@@ -21,7 +21,6 @@ import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionServiceImpl;
 import io.harness.cdng.yaml.CdYamlSchemaService;
 import io.harness.cdng.yaml.CdYamlSchemaServiceImpl;
-import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.ng.core.NGCoreModule;
 import io.harness.ngpipeline.pipeline.executions.registries.StageTypeToStageExecutionMapperRegistryModule;
 import io.harness.registrars.NGStageTypeToStageExecutionSummaryMapperRegistrar;
@@ -48,7 +47,6 @@ public class NGModule extends AbstractModule {
   protected void configure() {
     install(NGCoreModule.getInstance());
     install(WalkTreeModule.getInstance());
-    install(ExecutionPlanModule.getInstance());
     install(NGPipelineCommonsModule.getInstance());
     install(StageTypeToStageExecutionMapperRegistryModule.getInstance());
 

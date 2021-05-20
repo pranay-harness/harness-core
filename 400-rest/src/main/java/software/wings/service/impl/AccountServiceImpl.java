@@ -1807,4 +1807,14 @@ public class AccountServiceImpl implements AccountService {
     wingsPersistence.save(account);
     return true;
   }
+
+  @Override
+  public boolean isRestrictedAccessEnabled(String accountId) {
+    Account account = get(accountId);
+    notNullCheck("Invalid Account for the given Id: " + accountId, account);
+    if (account.isHarnessSupportAccessAllowed()) {
+      return false;
+    }
+    return true;
+  }
 }

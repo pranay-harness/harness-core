@@ -11,13 +11,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
@@ -43,6 +40,7 @@ import io.harness.perpetualtask.k8s.watch.NodeEvent.EventType;
 import io.harness.perpetualtask.k8s.watch.NodeInfo;
 import io.harness.perpetualtask.k8s.watch.Quantity;
 import io.harness.rule.Owner;
+import io.harness.testsupport.BaseTaskletTest;
 
 import software.wings.security.authentication.BatchQueryConfig;
 
@@ -63,15 +61,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.scope.context.ChunkContext;
-import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.repeat.RepeatStatus;
 
 @OwnedBy(HarnessTeam.CE)
 @RunWith(MockitoJUnitRunner.class)
-public class K8sNodeInfoEventTaskletTest extends CategoryTest {
+public class K8sNodeInfoEventTaskletTest extends BaseTaskletTest {
   @InjectMocks private K8sNodeEventTasklet k8sNodeEventTasklet;
   @InjectMocks private K8sNodeInfoTasklet k8sNodeInfoTasklet;
   @Mock private CloudProviderService cloudProviderService;
@@ -98,12 +92,11 @@ public class K8sNodeInfoEventTaskletTest extends CategoryTest {
   private static final String CLUSTER_NAME = "cluster_name";
   private final Instant NOW = Instant.now();
   private final Timestamp START_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(1, ChronoUnit.DAYS));
-  private final long START_TIME_MILLIS = NOW.minus(1, ChronoUnit.HOURS).toEpochMilli();
-  private final long END_TIME_MILLIS = NOW.toEpochMilli();
 
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
+    mockChunkContext();
     when(config.getBatchQueryConfig()).thenReturn(BatchQueryConfig.builder().queryBatchSize(50).build());
     when(instanceDataBulkWriteService.updateList(any())).thenReturn(true);
     when(featureFlagService.isEnabled(eq(FeatureName.NODE_RECOMMENDATION_1), eq(ACCOUNT_ID))).thenReturn(false);
@@ -113,19 +106,6 @@ public class K8sNodeInfoEventTaskletTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testNodeInfoExecute() {
-    ChunkContext chunkContext = mock(ChunkContext.class);
-    StepContext stepContext = mock(StepContext.class);
-    StepExecution stepExecution = mock(StepExecution.class);
-    JobParameters parameters = mock(JobParameters.class);
-
-    when(chunkContext.getStepContext()).thenReturn(stepContext);
-    when(stepContext.getStepExecution()).thenReturn(stepExecution);
-    when(stepExecution.getJobParameters()).thenReturn(parameters);
-
-    when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
-    when(parameters.getString(CCMJobConstants.ACCOUNT_ID)).thenReturn(ACCOUNT_ID);
-    when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
-
     when(cloudProviderService.getK8SCloudProvider(any(), any())).thenReturn(CloudProvider.GCP);
     when(cloudProviderService.getFirstClassSupportedCloudProviders()).thenReturn(ImmutableList.of(AWS, AZURE, GCP));
 
@@ -152,18 +132,6 @@ public class K8sNodeInfoEventTaskletTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testNodeEventExecute() {
-    ChunkContext chunkContext = mock(ChunkContext.class);
-    StepContext stepContext = mock(StepContext.class);
-    StepExecution stepExecution = mock(StepExecution.class);
-    JobParameters parameters = mock(JobParameters.class);
-
-    when(chunkContext.getStepContext()).thenReturn(stepContext);
-    when(stepContext.getStepExecution()).thenReturn(stepExecution);
-    when(stepExecution.getJobParameters()).thenReturn(parameters);
-
-    when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
-    when(parameters.getString(CCMJobConstants.ACCOUNT_ID)).thenReturn(ACCOUNT_ID);
-    when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
     PublishedMessage k8sNodeEventMessage =
         getK8sNodeEventMessage(NODE_UID, CLOUD_PROVIDER_ID, ACCOUNT_ID, EventType.EVENT_TYPE_STOP, START_TIMESTAMP);
     when(publishedMessageDao.fetchPublishedMessage(any(), any(), any(), any(), anyInt()))
