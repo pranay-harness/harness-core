@@ -20,10 +20,10 @@ import io.harness.serializer.jackson.HarnessJacksonModule;
 import io.harness.utils.RequestField;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import graphql.VisibleForTesting;
 import graphql.schema.DataFetchingEnvironment;
 import java.lang.reflect.Field;
 import java.util.List;

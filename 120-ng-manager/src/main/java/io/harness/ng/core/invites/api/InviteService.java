@@ -11,6 +11,7 @@ import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.invites.dto.InviteDTO;
 import io.harness.ng.core.invites.entities.Invite;
 
+import java.net.URI;
 import java.util.Optional;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -33,5 +34,11 @@ public interface InviteService {
 
   Optional<Invite> deleteInvite(String inviteId);
 
+  Optional<Invite> getInviteFromToken(String jwtToken);
+
   boolean deleteInvite(String accountIdentifier, String orgIdentifier, String projectIdentifier, String emailId);
+
+  boolean isUserPasswordSet(String accountIdentifier, String email);
+
+  URI getRedirectUrl(InviteAcceptResponse inviteAcceptResponse, String accountCreationFragment, String jwtToken);
 }

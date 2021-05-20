@@ -112,7 +112,12 @@ public enum QLAccountPermissionType implements QLEnum {
   /**
    * Create custom dashboard
    */
-  CREATE_CUSTOM_DASHBOARDS;
+  CREATE_CUSTOM_DASHBOARDS,
+
+  /**
+   * Manage Restricted Access
+   */
+  MANAGE_RESTRICTED_ACCESS;
 
   @Override
   public String getStringValue() {

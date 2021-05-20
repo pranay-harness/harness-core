@@ -12,4 +12,6 @@ public interface InstanceRepositoryCustom {
 
   List<Instance> getInstances(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String infrastructureMappingId);
+
+  List<Instance> getActiveInstances(String accountIdentifier, String orgIdentifier, String projectIdentifier);
 }

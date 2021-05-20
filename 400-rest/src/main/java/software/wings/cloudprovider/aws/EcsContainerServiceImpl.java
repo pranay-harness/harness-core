@@ -1477,6 +1477,18 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     }
   }
 
+  @Override
+  public void waitForServiceToReachStableState(String region, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
+      ExecutionLogCallback executionLogCallback, int serviceSteadyStateTimeout) {
+    executionLogCallback.saveExecutionLog(
+        format("Waiting for service %s to be in stable state...", serviceName), LogLevel.INFO);
+    awsHelperService.waitTillECSServiceIsStable(region, awsConfig, encryptedDataDetails,
+        new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName), serviceSteadyStateTimeout,
+        executionLogCallback);
+    executionLogCallback.saveExecutionLog(format("Service %s has reached a stable state", serviceName), LogLevel.INFO);
+  }
+
   private void waitForServiceUpdateToComplete(
       UpdateServiceResult updateServiceResult, UpdateServiceCountRequestData data) {
     long timeout = data.getTimeOut() == null ? 1L : data.getTimeOut();

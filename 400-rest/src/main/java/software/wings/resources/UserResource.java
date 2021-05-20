@@ -36,6 +36,7 @@ import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.ng.core.common.beans.Generation;
+import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 import io.harness.rest.RestResponse;
@@ -1136,9 +1137,29 @@ public class UserResource {
   public RestResponse<User> completeInviteAndSignIn(@QueryParam("accountId") @NotEmpty String accountId,
       @PathParam("inviteId") @NotEmpty String inviteId, @QueryParam("generation") Generation gen,
       @NotNull UserInvite userInvite) {
-    userInvite.setAccountId(accountId);
-    userInvite.setUuid(inviteId);
-    return new RestResponse<>(userService.completeInviteAndSignIn(userInvite, gen));
+    if (gen != null && gen.equals(Generation.NG)) {
+      UserInviteDTO inviteDTO = UserInviteDTO.builder()
+                                    .accountId(accountId)
+                                    .email(userInvite.getEmail())
+                                    .password(String.valueOf(userInvite.getPassword()))
+                                    .name(userInvite.getName())
+                                    .build();
+      return new RestResponse<>(userService.completeNGInviteAndSignIn(inviteDTO));
+    } else {
+      userInvite.setAccountId(accountId);
+      userInvite.setUuid(inviteId);
+      return new RestResponse<>(userService.completeInviteAndSignIn(userInvite));
+    }
+  }
+
+  @PublicApi
+  @PUT
+  @Path("invites/ngsignin")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<User> completeInviteAndSignIn(
+      @QueryParam("accountId") @NotEmpty String accountId, @NotNull UserInviteDTO userInvite) {
+    return new RestResponse<>(userService.completeNGInviteAndSignIn(userInvite));
   }
 
   @PublicApi

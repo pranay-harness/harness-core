@@ -34,8 +34,8 @@ import io.harness.terragrunt.TerragruntDelegateTaskOutput;
 import software.wings.beans.delegation.TerragruntProvisionParameters;
 import software.wings.beans.delegation.TerragruntProvisionParameters.TerragruntCommand;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
-import graphql.VisibleForTesting;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 import lombok.extern.slf4j.Slf4j;

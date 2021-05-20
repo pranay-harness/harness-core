@@ -20,8 +20,12 @@ func TestCreateAndDeleteWebhookBitbucketCloud(t *testing.T) {
 		Name:   "drone",
 		Target: "https://example.com",
 		Secret: "topsecret",
-		Events: &pb.HookEvents{
-			PullRequest: true,
+		NativeEvents: &pb.NativeEvents{
+			NativeEvents: &pb.NativeEvents_BitbucketCloud{
+				BitbucketCloud: &pb.BitbucketCloudWebhookEvents{
+					Events: []pb.BitbucketCloudWebhookEvent{pb.BitbucketCloudWebhookEvent_BITBUCKET_CLOUD_ISSUE, pb.BitbucketCloudWebhookEvent_BITBUCKET_CLOUD_PULL_REQUEST},
+				},
+			},
 		},
 		SkipVerify: true,
 		Provider: &pb.Provider{
@@ -39,6 +43,7 @@ func TestCreateAndDeleteWebhookBitbucketCloud(t *testing.T) {
 
 	assert.Nil(t, err, "no errors")
 	assert.Equal(t, int32(201), got.Status, "Correct http response")
+	assert.Equal(t, 2, len(got.GetWebhook().GetNativeEvents().GetBitbucketCloud().GetEvents()), "created a webhook with 2 events")
 
 	list := &pb.ListWebhooksRequest{
 		Slug: "tphoney/scm-test",
@@ -55,11 +60,11 @@ func TestCreateAndDeleteWebhookBitbucketCloud(t *testing.T) {
 	got2, err2 := ListWebhooks(context.Background(), list, log.Sugar())
 
 	assert.Nil(t, err2, "no errors")
-	assert.Equal(t, 2, len(got2.Webhooks), "there are 2 webhooks")
+	assert.Equal(t, 1, len(got2.Webhooks), "there is 1 webhook")
 
 	del := &pb.DeleteWebhookRequest{
 		Slug: "tphoney/scm-test",
-		Id:   got.Id,
+		Id:   got.Webhook.Id,
 		Provider: &pb.Provider{
 			Hook: &pb.Provider_BitbucketCloud{
 				BitbucketCloud: &pb.BitbucketCloudProvider{

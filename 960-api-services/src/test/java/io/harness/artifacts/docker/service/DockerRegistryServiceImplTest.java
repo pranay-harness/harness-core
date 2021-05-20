@@ -39,6 +39,7 @@ import io.harness.network.Http;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 
+import com.github.tomakehurst.wiremock.core.Options;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -59,8 +60,11 @@ import org.mockito.junit.MockitoRule;
 public class DockerRegistryServiceImplTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Rule
-  public WireMockRule wireMockRule = new WireMockRule(
-      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("960-api-services/src/test/resources").port(0));
+  public WireMockRule wireMockRule =
+      new WireMockRule(WireMockConfiguration.wireMockConfig()
+                           .usingFilesUnderDirectory("960-api-services/src/test/resources")
+                           .port(Options.DYNAMIC_PORT),
+          false);
   @Mock private DockerRestClientFactory dockerRestClientFactory;
   @Mock private DockerRegistryUtils dockerRegistryUtils;
   @InjectMocks DockerRegistryServiceImpl dockerRegistryService;
@@ -357,7 +361,7 @@ public class DockerRegistryServiceImplTest extends CategoryTest {
       dockerRegistryService.getBuilds(dockerConfig, "image_500", 10);
       fail("Should not reach here");
     } catch (Exception ex) {
-      assertThat(getMessage(ex)).isEqualTo("Internal Server Error");
+      assertThat(getMessage(ex)).isEqualTo("Server Error");
     }
   }
 

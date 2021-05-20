@@ -1071,8 +1071,6 @@ plain_artifacts = [
     "com.github.scribejava:scribejava-core:6.2.0",
     "com.github.spullara.mustache.java:compiler:0.9.5",
     "com.github.stephenc.jcip:jcip-annotations:1.0-1",
-    "com.github.tomakehurst:wiremock-jre8-standalone:2.27.0",
-    "com.github.tomakehurst:wiremock-jre8-standalone:2.27.0",
     "com.github.vladimir-bukhtoyarov:bucket4j-core:4.8.0",
     "com.github.zafarkhaja:java-semver:0.9.0",
     "com.google.android:annotations:4.1.1.4",
@@ -1248,7 +1246,6 @@ plain_artifacts = [
     "commons-pool:commons-pool:1.5.4",
     "commons-validator:commons-validator:1.7",
     "de.danielbechler:java-object-diff:0.94",
-    "de.flapdoodle.embed:de.flapdoodle.embed.mongo:2.0.3",
     "de.javakaffee:kryo-serializers:0.41",
     "de.jkeylockmanager:jkeylockmanager:2.1.0",
     "dk.brics.automaton:automaton:1.11-8",
@@ -1497,7 +1494,6 @@ plain_artifacts = [
     "org.apache.sshd:sshd-core:1.7.0",
     "org.apache.velocity:velocity:1.7",
     "org.apache.ws.xmlschema:xmlschema-core:2.2.5",
-    "org.assertj:assertj-core:3.16.1",
     "org.atmosphere:atmosphere-hazelcast:2.4.3",
     "org.atmosphere:atmosphere-runtime:2.4.32",
     "org.atmosphere:wasync:2.1.7",
@@ -1624,7 +1620,6 @@ plain_artifacts = [
     "org.lz4:lz4-java:1.6.0",
     "org.lz4:lz4-java:1.6.0",
     "org.mindrot:jbcrypt:0.3m",
-    "org.mockito:mockito-core:1.10.19",
     "org.modelmapper:modelmapper:0.7.5",
     "org.mongodb.morphia:morphia-logging-slf4j:1.3.2",
     "org.mongodb.morphia:morphia:1.3.2",
@@ -1651,11 +1646,6 @@ plain_artifacts = [
     "org.ow2.asm:asm:5.0.4",
     "org.passay:passay:1.3.1",
     "org.postgresql:postgresql:42.2.14",
-    "org.powermock:powermock-api-mockito-common:1.7.4",
-    "org.powermock:powermock-api-mockito:1.7.4",
-    "org.powermock:powermock-core:1.7.4",
-    "org.powermock:powermock-module-junit4:1.7.4",
-    "org.powermock:powermock-reflect:1.7.4",
     "org.projectlombok:lombok:1.18.6",
     "org.quartz-scheduler:quartz:2.3.2",
     "org.reactivestreams:reactive-streams:1.0.2",
@@ -1671,7 +1661,6 @@ plain_artifacts = [
     "org.springframework.boot:spring-boot-autoconfigure:2.1.6.RELEASE",
     "org.springframework.boot:spring-boot-loader:2.4.5",
     "org.springframework.boot:spring-boot-starter-batch:2.1.6.RELEASE",
-    "org.springframework.boot:spring-boot-starter-test:2.1.6.RELEASE",
     "org.springframework.boot:spring-boot:2.3.2.RELEASE",
     "org.springframework.data:spring-data-commons:2.2.7.RELEASE",
     "org.springframework.data:spring-data-mongodb:2.2.7.RELEASE",
@@ -1750,9 +1739,27 @@ amazon_artifacts = [
     ]
 ]
 
+powermock_artifacts = [
+    maven.artifact(
+        group = "org.powermock",
+        artifact = x,
+        version = "1.7.4",
+        testonly = True,
+    )
+    for x in [
+        "powermock-api-mockito",
+        "powermock-api-mockito-common",
+        "powermock-api-support",
+        "powermock-core",
+        "powermock-module-junit4",
+        "powermock-module-junit4-common",
+        "powermock-reflect",
+    ]
+]
+
 maven_install(
     name = "maven",
-    artifacts = plain_artifacts + amazon_artifacts + [
+    artifacts = plain_artifacts + amazon_artifacts + powermock_artifacts + [
         maven.artifact(
             group = "io.netty",
             artifact = "netty-transport-native-kqueue",
@@ -1765,38 +1772,6 @@ maven_install(
             version = "1.0",
             exclusions = [
                 "javax.ws.rs:jsr311-api",
-            ],
-        ),
-        maven.artifact(
-            group = "com.github.tomakehurst",
-            artifact = "wiremock-standalone",
-            version = "2.7.0",
-            exclusions = [
-                "com.google.guava:guava",
-                "com.fasterxml.jackson.core:jackson-core",
-                "com.fasterxml.jackson.core:jackson-annotations",
-                "com.fasterxml.jackson.core:jackson-databind",
-                "org.apache.httpcomponents:httpclient",
-                "org.skyscreamer:jsonassert",
-                "xmlunit:xmlunit",
-                "com.jayway.jsonpath:json-path",
-                "net.sf.jopt-simple:jopt-simple",
-            ],
-        ),
-        maven.artifact(
-            group = "com.github.tomakehurst",
-            artifact = "wiremock",
-            version = "1.57",
-            exclusions = [
-                "com.google.guava:guava",
-                "com.fasterxml.jackson.core:jackson-core",
-                "com.fasterxml.jackson.core:jackson-annotations",
-                "com.fasterxml.jackson.core:jackson-databind",
-                "org.apache.httpcomponents:httpclient",
-                "org.skyscreamer:jsonassert",
-                "xmlunit:xmlunit",
-                "com.jayway.jsonpath:json-path",
-                "net.sf.jopt-simple:jopt-simple",
             ],
         ),
         maven.artifact(
@@ -1848,21 +1823,57 @@ maven_install(
             ],
         ),
         maven.artifact(
-            "org.glassfish.jersey.test-framework.providers",
-            "jersey-test-framework-provider-grizzly2",
-            "2.23.1",
+            group = "com.github.tomakehurst",
+            artifact = "wiremock-jre8-standalone",
+            version = "2.27.2",
             testonly = True,
         ),
         maven.artifact(
-            "org.glassfish.jersey.test-framework.providers",
-            "jersey-test-framework-provider-inmemory",
-            "2.23.1",
+            group = "org.glassfish.jersey.test-framework.providers",
+            artifact = "jersey-test-framework-provider-grizzly2",
+            version = "2.23.1",
             testonly = True,
         ),
         maven.artifact(
-            "io.dropwizard",
-            "dropwizard-testing",
-            "1.3.24",
+            group = "org.glassfish.jersey.test-framework.providers",
+            artifact = "jersey-test-framework-provider-inmemory",
+            version = "2.23.1",
+            testonly = True,
+        ),
+        maven.artifact(
+            group = "io.dropwizard",
+            artifact = "dropwizard-testing",
+            version = "1.3.24",
+            testonly = True,
+        ),
+        maven.artifact(
+            group = "de.flapdoodle.embed",
+            artifact = "de.flapdoodle.embed.mongo",
+            version = "2.0.3",
+            testonly = True,
+        ),
+        maven.artifact(
+            group = "de.flapdoodle.embed",
+            artifact = "de.flapdoodle.embed.process",
+            version = "2.0.3",
+            testonly = True,
+        ),
+        maven.artifact(
+            group = "org.mockito",
+            artifact = "mockito-core",
+            version = "1.10.19",
+            testonly = True,
+        ),
+        maven.artifact(
+            group = "org.springframework.boot",
+            artifact = "spring-boot-starter-test",
+            version = "2.1.6.RELEASE",
+            testonly = True,
+        ),
+        maven.artifact(
+            group = "org.assertj",
+            artifact = "assertj-core",
+            version = "3.16.1",
             testonly = True,
         ),
     ],
@@ -1917,7 +1928,6 @@ maven_install(
     name = "delegate",
     artifacts = [
         "org.apache.httpcomponents:httpmime:4.5.1",
-        "com.github.tomakehurst:wiremock-jre8-standalone:2.27.2",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",

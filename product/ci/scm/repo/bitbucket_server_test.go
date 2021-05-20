@@ -20,8 +20,12 @@ func TestCreateAndDeleteWebhookBitbucketServer(t *testing.T) {
 		Name:   "drone",
 		Target: "https://example.com",
 		Secret: "topsecret",
-		Events: &pb.HookEvents{
-			PullRequest: true,
+		NativeEvents: &pb.NativeEvents{
+			NativeEvents: &pb.NativeEvents_BitbucketServer{
+				BitbucketServer: &pb.BitbucketServerWebhookEvents{
+					Events: []pb.BitbucketServerWebhookEvent{pb.BitbucketServerWebhookEvent_BITBUCKET_SERVER_BRANCH_PUSH_TAG, pb.BitbucketServerWebhookEvent_BITBUCKET_SERVER_PR_COMMENT},
+				},
+			},
 		},
 		SkipVerify: true,
 		Provider: &pb.Provider{
@@ -37,6 +41,7 @@ func TestCreateAndDeleteWebhookBitbucketServer(t *testing.T) {
 	}
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	got, err := CreateWebhook(context.Background(), in, log.Sugar())
+	assert.Equal(t, 2, len(got.GetWebhook().GetNativeEvents().GetBitbucketServer().GetEvents()), "created a webhook with 2 events")
 
 	assert.Nil(t, err, "no errors")
 	assert.Equal(t, int32(201), got.Status, "Correct http response")
@@ -61,7 +66,7 @@ func TestCreateAndDeleteWebhookBitbucketServer(t *testing.T) {
 
 	del := &pb.DeleteWebhookRequest{
 		Slug: "foo/quux",
-		Id:   got.Id,
+		Id:   got.Webhook.Id,
 		Provider: &pb.Provider{
 			Hook: &pb.Provider_BitbucketServer{
 				BitbucketServer: &pb.BitbucketServerProvider{

@@ -357,10 +357,9 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     }
     Connector existingConnector = existingConnectorOptional.get();
     ConnectorResponseDTO connectorDTO = connectorMapper.writeDTO(existingConnector);
+    checkThatTheConnectorIsNotUsedByOthers(existingConnector);
     connectorEntityReferenceHelper.deleteConnectorEntityReferenceWhenConnectorGetsDeleted(
         connectorDTO.getConnector(), accountIdentifier);
-
-    checkThatTheConnectorIsNotUsedByOthers(existingConnector);
     existingConnector.setDeleted(true);
     connectorRepository.save(existingConnector, null, ChangeType.DELETE);
     return true;
