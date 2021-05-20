@@ -1,7 +1,5 @@
 package software.wings.dl.exportimport;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
 
