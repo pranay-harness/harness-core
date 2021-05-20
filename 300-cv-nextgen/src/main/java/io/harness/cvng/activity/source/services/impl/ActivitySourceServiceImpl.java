@@ -42,35 +42,6 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
   @Inject private CVEventService cvEventService;
 
   @Override
-  public String saveActivitySource(
-      String accountId, String orgIdentifier, String projectIdentifier, ActivitySourceDTO activitySourceDTO) {
-    if (isNotEmpty(activitySourceDTO.getUuid())) {
-      update(activitySourceDTO);
-      return activitySourceDTO.getUuid();
-    } else {
-      ActivitySource activitySource;
-      switch (activitySourceDTO.getType()) {
-        case KUBERNETES:
-          activitySource = KubernetesActivitySource.fromDTO(
-              accountId, orgIdentifier, projectIdentifier, (KubernetesActivitySourceDTO) activitySourceDTO);
-          sendKubernetesActivitySourceCreateEvent((KubernetesActivitySource) activitySource);
-          break;
-        case HARNESS_CD10:
-          validateSingleCD10Activity(accountId, orgIdentifier, projectIdentifier);
-          activitySource = CD10ActivitySource.fromDTO(
-              accountId, orgIdentifier, projectIdentifier, (CD10ActivitySourceDTO) activitySourceDTO);
-          break;
-        case CDNG:
-          throw new IllegalStateException("CDNG activity can not be created using the API.");
-        default:
-          throw new IllegalStateException("Invalid type " + activitySourceDTO.getType());
-      }
-      activitySource.validate();
-      return hPersistence.save(activitySource);
-    }
-  }
-
-  @Override
   public String create(String accountId, ActivitySourceDTO activitySourceDTO) {
     Preconditions.checkNotNull(activitySourceDTO.getOrgIdentifier());
     Preconditions.checkNotNull(activitySourceDTO.getProjectIdentifier());

@@ -142,8 +142,6 @@ public class TriggerExecutionHelper {
         .append(TRIGGER_REF_DELIMITER)
         .append(ngTriggerEntity.getProjectIdentifier())
         .append(TRIGGER_REF_DELIMITER)
-        .append(ngTriggerEntity.getTargetIdentifier())
-        .append(TRIGGER_REF_DELIMITER)
         .append(ngTriggerEntity.getIdentifier())
         .toString();
   }

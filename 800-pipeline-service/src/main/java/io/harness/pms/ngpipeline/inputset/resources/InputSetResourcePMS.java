@@ -298,7 +298,8 @@ public class InputSetResourcePMS {
       pageRequest = PageUtils.getPageRequest(page, size, sort);
     }
     Page<InputSetSummaryResponseDTOPMS> inputSetList =
-        pmsInputSetService.list(criteria, pageRequest).map(PMSInputSetElementMapper::toInputSetSummaryResponseDTOPMS);
+        pmsInputSetService.list(criteria, pageRequest, accountId, orgIdentifier, projectIdentifier)
+            .map(PMSInputSetElementMapper::toInputSetSummaryResponseDTOPMS);
     return ResponseDTO.newResponse(getNGPageResponse(inputSetList));
   }
 

@@ -842,6 +842,8 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
         KubernetesActivitySourceDTO.builder()
             .identifier(generateUuid())
             .name(generateUuid())
+            .orgIdentifier(orgIdentifier)
+            .projectIdentifier(projectIdentifier)
             .connectorIdentifier(generateUuid())
             .activitySourceConfigs(Sets.newHashSet(KubernetesActivitySourceConfig.builder()
                                                        .serviceIdentifier(generateUuid())
@@ -850,8 +852,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
                                                        .workloadName(workLoadName)
                                                        .build()))
             .build();
-    String kubernetesSourceId = activitySourceService.saveActivitySource(
-        accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+    String kubernetesSourceId = activitySourceService.create(accountId, kubernetesActivitySourceDTO);
     int numOfEvents = 10;
     ArrayList<KubernetesEventType> kubernetesEventTypes =
         Lists.newArrayList(KubernetesEventType.Normal, KubernetesEventType.Error);

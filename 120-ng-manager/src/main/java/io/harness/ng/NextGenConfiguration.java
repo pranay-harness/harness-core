@@ -75,7 +75,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;
   @JsonProperty("ceAwsSetupConfig") private CEAwsSetupConfig ceAwsSetupConfig;
   @JsonProperty(value = "enableAudit") private boolean enableAudit;
-
+  @JsonProperty(value = "ngAuthUIEnabled") private boolean isNGAuthUIEnabled;
   @JsonProperty("pmsSdkGrpcServerConfig") private GrpcServerConfig pmsSdkGrpcServerConfig;
   @JsonProperty("pmsGrpcClientConfig") private GrpcClientConfig pmsGrpcClientConfig;
   @JsonProperty("shouldConfigureWithPMS") private Boolean shouldConfigureWithPMS;

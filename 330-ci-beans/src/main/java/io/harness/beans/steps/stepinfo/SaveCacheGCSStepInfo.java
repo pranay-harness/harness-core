@@ -66,9 +66,9 @@ public class SaveCacheGCSStepInfo implements PluginCompatibleStep, WithConnector
   @YamlSchemaTypes(value = {string})
   @ApiModelProperty(dataType = STRING_LIST_CLASSPATH)
   private ParameterField<List<String>> sourcePaths;
-  @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> override;
+  @YamlSchemaTypes({string}) @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> override;
   @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<ArchiveFormat> archiveFormat;
-  @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
+  @YamlSchemaTypes({string}) @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "resources", "key", "bucket", "sourcePaths",

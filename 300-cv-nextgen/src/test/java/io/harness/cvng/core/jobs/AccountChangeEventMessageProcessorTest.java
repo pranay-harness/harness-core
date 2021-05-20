@@ -46,7 +46,7 @@ public class AccountChangeEventMessageProcessorTest extends CvNextGenTestBase {
     CVConfig cvConfig = createCVConfig(accountId);
     cvConfigService.save(cvConfig);
     VerificationJobDTO verificationJobDTO1 = createVerificationJobDTO();
-    verificationJobService.upsert(accountId, verificationJobDTO1);
+    verificationJobService.create(accountId, verificationJobDTO1);
 
     accountChangeEventMessageProcessor.processDeleteAction(
         AccountEntityChangeDTO.newBuilder().setAccountId(accountId).build());

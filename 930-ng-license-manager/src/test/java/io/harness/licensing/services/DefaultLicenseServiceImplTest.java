@@ -66,8 +66,8 @@ public class DefaultLicenseServiceImplTest extends LicenseTestBase {
                                  .moduleType(DEFAULT_MODULE_TYPE)
                                  .startTime(0)
                                  .expiryTime(0)
-                                 .createdAt(0)
-                                 .lastModifiedAt(0)
+                                 .createdAt(0L)
+                                 .lastModifiedAt(0L)
                                  .build();
     defaultModuleLicense = CIModuleLicense.builder().numberOfCommitters(10).build();
     defaultModuleLicense.setId("id");
@@ -152,7 +152,7 @@ public class DefaultLicenseServiceImplTest extends LicenseTestBase {
     when(moduleLicenseInterface.generateTrialLicense(any(), eq(ACCOUNT_IDENTIFIER), any(), eq(DEFAULT_MODULE_TYPE)))
         .thenReturn(defaultModueLicenseDTO);
     ModuleLicenseDTO result = licenseService.startTrialLicense(ACCOUNT_IDENTIFIER, startTrialRequestDTO);
-    verify(accountService, times(1)).updateDefaultExperienceIfNull(ACCOUNT_IDENTIFIER, DefaultExperience.NG);
+    verify(accountService, times(1)).updateDefaultExperienceIfApplicable(ACCOUNT_IDENTIFIER, DefaultExperience.NG);
     verify(telemetryReporter, times(1)).sendGroupEvent(eq(ACCOUNT_IDENTIFIER), any(), any());
     verify(telemetryReporter, times(1))
         .sendTrackEvent(eq(SUCCEED_OPERATION), any(), any(), eq(io.harness.telemetry.Category.SIGN_UP));

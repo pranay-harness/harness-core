@@ -398,10 +398,16 @@
         "s3BucketName"
       ],
       "properties": {
+        "region": {
+          "type": "string"
+        },
         "reportName": {
           "type": "string"
         },
         "s3BucketName": {
+          "type": "string"
+        },
+        "s3Prefix": {
           "type": "string"
         }
       },
@@ -931,6 +937,9 @@
             "crossAccountAccess"
           ],
           "properties": {
+            "awsAccountId": {
+              "type": "string"
+            },
             "crossAccountAccess": {
               "$ref": "#/definitions/CrossAccountAccess"
             },
