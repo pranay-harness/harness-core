@@ -321,3 +321,101 @@ permissions:
     includeInAllRoles: false
     allowedScopeLevels:
       - account
+  - identifier: ff_featureflag_create
+    name: Feature Flag Admin
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_featureflag_delete
+    name: Feature Flag Delete
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_featureflag_edit
+    name: Edit Feature Flag Definition
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_featureflag_view
+    name: Feature Flag Viewer
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_targetgroup_view
+    name: Target Group Viewer
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_targetgroup_create
+    name: Target Group Create
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_targetgroup_edit
+    name: Target Group Edit
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_targetgroup_delete
+    name: Target Group Delete
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_environment_ffTargetGroupEdit
+    name: Target Group Edit
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_target_view
+    name: Target Viewer
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_environment_ffApiKeyView
+    name: FF ApiKey Viewer
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_environment_ffApiKeyCreate
+    name: FF ApiKey Create
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_environment_ffApiKeyDelete
+    name: FF ApiKey Delete
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_environment_ffEdit
+    name: FF Environment Configuration
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
