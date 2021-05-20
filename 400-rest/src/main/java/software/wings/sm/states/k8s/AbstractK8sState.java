@@ -102,6 +102,7 @@ import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.helpers.ext.kustomize.KustomizeHelper;
 import software.wings.helpers.ext.openshift.OpenShiftManagerService;
+import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.impl.HelmChartConfigHelperService;
@@ -863,12 +864,17 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
   }
 
   private HelmValuesFetchTaskParameters fetchHelmValuesFetchTaskParameters(
-      ExecutionContext context, String activityId, long timeoutInMillis) {
+      ExecutionContext context, String activityId, long timeoutInMillis, ContainerInfrastructureMapping infraMapping) {
     ApplicationManifest applicationManifest =
         applicationManifestUtils.getAppManifestByApplyingHelmChartOverride(context);
     if (applicationManifest == null || HelmChartRepo != applicationManifest.getStoreType()) {
       throw new InvalidRequestException(
           "Application Manifest not found while preparing helm values fetch task params", USER);
+    }
+
+    ContainerServiceParams containerServiceParams = null;
+    if (infraMapping != null) {
+      containerServiceParams = containerDeploymentManagerHelper.getContainerServiceParams(infraMapping, "", context);
     }
 
     return HelmValuesFetchTaskParameters.builder()
@@ -877,6 +883,9 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
         .activityId(activityId)
         .helmChartConfigTaskParams(
             helmChartConfigHelperService.getHelmChartConfigTaskParams(context, applicationManifest))
+        .containerServiceParams(containerServiceParams)
+        .isBindTaskFeatureSet(
+            featureFlagService.isEnabled(FeatureName.BIND_FETCH_FILES_TASK_TO_DELEGATE, context.getAccountId()))
         .timeoutInMillis(timeoutInMillis)
         .workflowExecutionId(context.getWorkflowExecutionId())
         .helmCommandFlag(ApplicationManifestUtils.getHelmCommandFlags(applicationManifest.getHelmCommandFlag()))
@@ -923,10 +932,11 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
   public ExecutionResponse executeHelmValuesFetchTask(
       ExecutionContext context, String activityId, String commandName, long timeoutInMillis) {
     Application app = appService.get(context.getAppId());
-    HelmValuesFetchTaskParameters helmValuesFetchTaskParameters =
-        fetchHelmValuesFetchTaskParameters(context, activityId, timeoutInMillis);
 
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.fetchContainerInfrastructureMapping(context);
+    HelmValuesFetchTaskParameters helmValuesFetchTaskParameters =
+        fetchHelmValuesFetchTaskParameters(context, activityId, timeoutInMillis, infraMapping);
+
     String serviceTemplateId = serviceTemplateHelper.fetchServiceTemplateId(infraMapping);
 
     String waitId = generateUuid();
