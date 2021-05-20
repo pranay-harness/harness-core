@@ -12,10 +12,12 @@
         }
       },
       "identifier": {
-        "type": "string"
+        "type": "string",
+        "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
       },
       "name": {
-        "type": "string"
+        "type": "string",
+        "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
       },
       "timeout": {
         "type": "string"
@@ -28,7 +30,7 @@
       }
     },
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "allOf": [{
+    "allOf": [ {
       "if": {
         "properties": {
           "type": {
@@ -148,40 +150,40 @@
           }
         }
       }
-    }],
+    } ],
     "definitions": {
       "cvng": {
         "AbortFailureActionConfig": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/FailureStrategyActionConfig"
           }, {
             "type": "object",
-            "required": ["type"],
+            "required": [ "type" ],
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["Abort"]
+                "enum": [ "Abort" ]
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "AddSegmentToVariationTargetMapYaml": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/PatchInstruction"
           }, {
             "type": "object",
-            "required": ["spec", "type"],
+            "required": [ "spec", "type" ],
             "properties": {
               "spec": {
                 "$ref": "#/definitions/cvng/AddSegmentToVariationTargetMapYamlSpec"
               },
               "type": {
                 "type": "string",
-                "enum": ["SetFeatureFlagState", "AddTargetsToVariationTargetMap", "RemoveTargetsToVariationTargetMap", "AddSegmentsToVariationTargetMap", "RemoveSegmentsToVariationTargetMap"]
+                "enum": [ "SetFeatureFlagState", "AddTargetsToVariationTargetMap", "RemoveTargetsToVariationTargetMap", "AddSegmentsToVariationTargetMap", "RemoveSegmentsToVariationTargetMap" ]
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "AddSegmentToVariationTargetMapYamlSpec": {
@@ -200,21 +202,21 @@
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "AddTargetsToVariationTargetMapYaml": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/PatchInstruction"
           }, {
             "type": "object",
-            "required": ["spec", "type"],
+            "required": [ "spec", "type" ],
             "properties": {
               "spec": {
                 "$ref": "#/definitions/cvng/AddTargetsToVariationTargetMapYamlSpec"
               },
               "type": {
                 "type": "string",
-                "enum": ["SetFeatureFlagState", "AddTargetsToVariationTargetMap", "RemoveTargetsToVariationTargetMap", "AddSegmentsToVariationTargetMap", "RemoveSegmentsToVariationTargetMap"]
+                "enum": [ "SetFeatureFlagState", "AddTargetsToVariationTargetMap", "RemoveTargetsToVariationTargetMap", "AddSegmentsToVariationTargetMap", "RemoveSegmentsToVariationTargetMap" ]
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "AddTargetsToVariationTargetMapYamlSpec": {
@@ -246,56 +248,56 @@
         },
         "Approvers": {
           "type": "object",
-          "required": ["disallowPipelineExecutor", "minimumCount", "userGroups"],
+          "required": [ "disallowPipelineExecutor", "minimumCount", "userGroups" ],
           "properties": {
             "disallowPipelineExecutor": {
-              "oneOf": [{
+              "oneOf": [ {
                 "type": "boolean"
               }, {
                 "type": "string"
-              }]
+              } ]
             },
             "minimumCount": {
-              "oneOf": [{
+              "oneOf": [ {
                 "type": "integer",
                 "format": "int32"
               }, {
                 "type": "string"
-              }]
+              } ]
             },
             "userGroups": {
-              "oneOf": [{
+              "oneOf": [ {
                 "type": "array",
                 "items": {
                   "type": "string"
                 }
               }, {
                 "type": "string"
-              }]
+              } ]
             }
           },
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "BarrierStepInfo": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/StepSpecType"
           }, {
             "type": "object",
-            "required": ["barrierRef"],
+            "required": [ "barrierRef" ],
             "properties": {
               "barrierRef": {
                 "type": "string"
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "BlueGreenVerificationJobSpec": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/VerificationJobSpec"
           }, {
             "type": "object",
-            "required": ["sensitivity"],
+            "required": [ "sensitivity" ],
             "properties": {
               "sensitivity": {
                 "type": "string",
@@ -306,15 +308,15 @@
                 "description": "Example: 50, You can put max upto 50."
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "CVNGStepInfo": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/StepSpecType"
           }, {
             "type": "object",
-            "required": ["type", "verificationJobRef"],
+            "required": [ "type", "verificationJobRef" ],
             "properties": {
               "description": {
                 "$ref": "#/definitions/cvng/ParameterFieldString"
@@ -386,15 +388,15 @@
                 }
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "CanaryVerificationJobSpec": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/VerificationJobSpec"
           }, {
             "type": "object",
-            "required": ["sensitivity"],
+            "required": [ "sensitivity" ],
             "properties": {
               "sensitivity": {
                 "type": "string",
@@ -405,19 +407,19 @@
                 "description": "Example: 50, You can put max upto 50."
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "Condition": {
           "type": "object",
-          "required": ["key", "operator", "value"],
+          "required": [ "key", "operator", "value" ],
           "properties": {
             "key": {
               "type": "string"
             },
             "operator": {
               "type": "string",
-              "enum": ["equals", "not equals", "in", "not in"]
+              "enum": [ "equals", "not equals", "in", "not in" ]
             },
             "value": {
               "type": "string"
@@ -432,15 +434,15 @@
         },
         "CriteriaSpecWrapper": {
           "type": "object",
-          "required": ["spec", "type"],
+          "required": [ "spec", "type" ],
           "properties": {
             "type": {
               "type": "string",
-              "enum": ["Jexl", "KeyValues"]
+              "enum": [ "Jexl", "KeyValues" ]
             }
           },
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "allOf": [{
+          "allOf": [ {
             "if": {
               "properties": {
                 "type": {
@@ -470,23 +472,23 @@
                 }
               }
             }
-          }]
+          } ]
         },
         "FailureStrategyActionConfig": {
           "type": "object",
-          "required": ["type"],
+          "required": [ "type" ],
           "discriminator": "type",
           "properties": {
             "type": {
               "type": "string",
-              "enum": ["Ignore", "Retry", "MarkAsSuccess", "Abort", "StageRollback", "StepGroupRollback", "ManualIntervention"]
+              "enum": [ "Ignore", "Retry", "MarkAsSuccess", "Abort", "StageRollback", "StepGroupRollback", "ManualIntervention" ]
             }
           },
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "FailureStrategyConfig": {
           "type": "object",
-          "required": ["onFailure"],
+          "required": [ "onFailure" ],
           "properties": {
             "onFailure": {
               "$ref": "#/definitions/cvng/OnFailureConfig"
@@ -495,11 +497,11 @@
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "FlagConfigurationStepInfo": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/StepSpecType"
           }, {
             "type": "object",
-            "required": ["environment", "feature", "instructions", "state"],
+            "required": [ "environment", "feature", "instructions", "state" ],
             "properties": {
               "environment": {
                 "type": "string"
@@ -510,7 +512,7 @@
               "instructions": {
                 "type": "array",
                 "items": {
-                  "oneOf": [{
+                  "oneOf": [ {
                     "$ref": "#/definitions/cvng/AddSegmentToVariationTargetMapYaml"
                   }, {
                     "$ref": "#/definitions/cvng/AddTargetsToVariationTargetMapYaml"
@@ -520,22 +522,22 @@
                     "$ref": "#/definitions/cvng/RemoveTargetsToVariationTargetMapYaml"
                   }, {
                     "$ref": "#/definitions/cvng/SetFeatureFlagStateYaml"
-                  }]
+                  } ]
                 }
               },
               "state": {
                 "type": "string"
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "HarnessApprovalStepInfo": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/StepSpecType"
           }, {
             "type": "object",
-            "required": ["approvalMessage", "approvers", "includePipelineExecutionHistory"],
+            "required": [ "approvalMessage", "approvers", "includePipelineExecutionHistory" ],
             "properties": {
               "approvalMessage": {
                 "type": "string"
@@ -550,28 +552,28 @@
                 "$ref": "#/definitions/cvng/Approvers"
               },
               "includePipelineExecutionHistory": {
-                "oneOf": [{
+                "oneOf": [ {
                   "type": "boolean"
                 }, {
                   "type": "string"
-                }]
+                } ]
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "HealthVerificationJobSpec": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/VerificationJobSpec"
           }, {
             "type": "object",
-            "properties": {}
-          }],
+            "properties": { }
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "HoldingScope": {
           "type": "object",
-          "required": ["nodeSetupId", "scope"],
+          "required": [ "nodeSetupId", "scope" ],
           "properties": {
             "nodeSetupId": {
               "type": "string"
@@ -595,11 +597,11 @@
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "HttpStepInfo": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/StepSpecType"
           }, {
             "type": "object",
-            "required": ["method", "url"],
+            "required": [ "method", "url" ],
             "properties": {
               "assertion": {
                 "type": "string"
@@ -619,13 +621,13 @@
               "outputVariables": {
                 "type": "array",
                 "items": {
-                  "oneOf": [{
+                  "oneOf": [ {
                     "$ref": "#/definitions/cvng/NumberNGVariable"
                   }, {
                     "$ref": "#/definitions/cvng/SecretNGVariable"
                   }, {
                     "$ref": "#/definitions/cvng/StringNGVariable"
-                  }]
+                  } ]
                 }
               },
               "requestBody": {
@@ -635,22 +637,22 @@
                 "type": "string"
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "IgnoreFailureActionConfig": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/FailureStrategyActionConfig"
           }, {
             "type": "object",
-            "required": ["type"],
+            "required": [ "type" ],
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["Ignore"]
+                "enum": [ "Ignore" ]
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "InputSetValidator": {
@@ -661,31 +663,31 @@
             },
             "validatorType": {
               "type": "string",
-              "enum": ["ALLOWED_VALUES", "REGEX"]
+              "enum": [ "ALLOWED_VALUES", "REGEX" ]
             }
           },
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "JexlCriteriaSpec": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/CriteriaSpec"
           }, {
             "type": "object",
-            "required": ["expression"],
+            "required": [ "expression" ],
             "properties": {
               "expression": {
                 "type": "string"
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "JiraApprovalStepInfo": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/StepSpecType"
           }, {
             "type": "object",
-            "required": ["approvalCriteria", "connectorRef", "issueKey", "rejectionCriteria"],
+            "required": [ "approvalCriteria", "connectorRef", "issueKey", "rejectionCriteria" ],
             "properties": {
               "approvalCriteria": {
                 "$ref": "#/definitions/cvng/CriteriaSpecWrapper"
@@ -700,11 +702,11 @@
                 "$ref": "#/definitions/cvng/CriteriaSpecWrapper"
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "JiraCreateStepInfo": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/StepSpecType"
           }, {
             "type": "object",
@@ -725,12 +727,12 @@
                 "type": "string"
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "JiraField": {
           "type": "object",
-          "required": ["value"],
+          "required": [ "value" ],
           "properties": {
             "name": {
               "type": "string"
@@ -742,11 +744,11 @@
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "JiraUpdateStepInfo": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/StepSpecType"
           }, {
             "type": "object",
-            "required": ["connectorRef", "issueKey"],
+            "required": [ "connectorRef", "issueKey" ],
             "properties": {
               "connectorRef": {
                 "type": "string"
@@ -764,15 +766,15 @@
                 "$ref": "#/definitions/cvng/TransitionTo"
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "KeyValuesCriteriaSpec": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/CriteriaSpec"
           }, {
             "type": "object",
-            "required": ["conditions"],
+            "required": [ "conditions" ],
             "properties": {
               "conditions": {
                 "type": "array",
@@ -781,19 +783,19 @@
                 }
               },
               "matchAnyCondition": {
-                "oneOf": [{
+                "oneOf": [ {
                   "type": "boolean"
                 }, {
                   "type": "string"
-                }]
+                } ]
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "ManualFailureSpecConfig": {
           "type": "object",
-          "required": ["onTimeout", "timeout"],
+          "required": [ "onTimeout", "timeout" ],
           "properties": {
             "onTimeout": {
               "$ref": "#/definitions/cvng/OnTimeoutConfig"
@@ -805,11 +807,11 @@
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "ManualInterventionFailureActionConfig": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/FailureStrategyActionConfig"
           }, {
             "type": "object",
-            "required": ["spec", "type"],
+            "required": [ "spec", "type" ],
             "properties": {
               "spec": {
                 "readOnly": true,
@@ -817,25 +819,25 @@
               },
               "type": {
                 "type": "string",
-                "enum": ["ManualIntervention"]
+                "enum": [ "ManualIntervention" ]
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "MarkAsSuccessFailureActionConfig": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/FailureStrategyActionConfig"
           }, {
             "type": "object",
-            "required": ["type"],
+            "required": [ "type" ],
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["MarkAsSuccess"]
+                "enum": [ "MarkAsSuccess" ]
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "NGVariable": {
@@ -856,40 +858,44 @@
             },
             "type": {
               "type": "string",
-              "enum": ["String", "Number", "Secret"]
+              "enum": [ "String", "Number", "Secret" ]
             }
           },
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "NumberNGVariable": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/NGVariable"
           }, {
             "type": "object",
-            "required": ["value"],
+            "required": [ "value" ],
             "properties": {
               "default": {
                 "type": "number",
                 "format": "double"
               },
+              "name": {
+                "type": "string",
+                "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+              },
               "type": {
                 "type": "string",
-                "enum": ["Number"]
+                "enum": [ "Number" ]
               },
               "value": {
                 "type": "number",
                 "format": "double"
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "OnFailureConfig": {
           "type": "object",
-          "required": ["action", "errors"],
+          "required": [ "action", "errors" ],
           "properties": {
             "action": {
-              "oneOf": [{
+              "oneOf": [ {
                 "$ref": "#/definitions/cvng/AbortFailureActionConfig"
               }, {
                 "$ref": "#/definitions/cvng/IgnoreFailureActionConfig"
@@ -903,21 +909,13 @@
                 "$ref": "#/definitions/cvng/StageRollbackFailureActionConfig"
               }, {
                 "$ref": "#/definitions/cvng/StepGroupFailureActionConfig"
-              }]
+              } ]
             },
             "errors": {
               "type": "array",
               "items": {
                 "type": "string",
-                "enum": [
-                  "AnyOther",
-                  "Authentication",
-                  "Connectivity",
-                  "Timeout",
-                  "Authorization",
-                  "Verification",
-                  "DelegateProvisioning"
-                ]
+                "enum": [ "AnyOther", "Authentication", "Connectivity", "Timeout", "Authorization", "Verification", "DelegateProvisioning" ]
               }
             }
           },
@@ -927,7 +925,7 @@
           "type": "object",
           "properties": {
             "action": {
-              "oneOf": [{
+              "oneOf": [ {
                 "$ref": "#/definitions/cvng/AbortFailureActionConfig"
               }, {
                 "$ref": "#/definitions/cvng/IgnoreFailureActionConfig"
@@ -941,7 +939,7 @@
                 "$ref": "#/definitions/cvng/StageRollbackFailureActionConfig"
               }, {
                 "$ref": "#/definitions/cvng/StepGroupFailureActionConfig"
-              }]
+              } ]
             }
           },
           "$schema": "http://json-schema.org/draft-07/schema#"
@@ -950,7 +948,7 @@
           "type": "object",
           "properties": {
             "action": {
-              "oneOf": [{
+              "oneOf": [ {
                 "$ref": "#/definitions/cvng/AbortFailureActionConfig"
               }, {
                 "$ref": "#/definitions/cvng/IgnoreFailureActionConfig"
@@ -964,7 +962,7 @@
                 "$ref": "#/definitions/cvng/StageRollbackFailureActionConfig"
               }, {
                 "$ref": "#/definitions/cvng/StepGroupFailureActionConfig"
-              }]
+              } ]
             }
           },
           "$schema": "http://json-schema.org/draft-07/schema#"
@@ -1059,27 +1057,27 @@
           "properties": {
             "type": {
               "type": "string",
-              "enum": ["SetFeatureFlagState", "AddTargetsToVariationTargetMap", "RemoveTargetsToVariationTargetMap", "AddSegmentsToVariationTargetMap", "RemoveSegmentsToVariationTargetMap"]
+              "enum": [ "SetFeatureFlagState", "AddTargetsToVariationTargetMap", "RemoveTargetsToVariationTargetMap", "AddSegmentsToVariationTargetMap", "RemoveSegmentsToVariationTargetMap" ]
             }
           },
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "RemoveSegmentToVariationTargetMapYaml": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/PatchInstruction"
           }, {
             "type": "object",
-            "required": ["spec", "type"],
+            "required": [ "spec", "type" ],
             "properties": {
               "spec": {
                 "$ref": "#/definitions/cvng/RemoveSegmentToVariationTargetMapYamlSpec"
               },
               "type": {
                 "type": "string",
-                "enum": ["SetFeatureFlagState", "AddTargetsToVariationTargetMap", "RemoveTargetsToVariationTargetMap", "AddSegmentsToVariationTargetMap", "RemoveSegmentsToVariationTargetMap"]
+                "enum": [ "SetFeatureFlagState", "AddTargetsToVariationTargetMap", "RemoveTargetsToVariationTargetMap", "AddSegmentsToVariationTargetMap", "RemoveSegmentsToVariationTargetMap" ]
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "RemoveSegmentToVariationTargetMapYamlSpec": {
@@ -1098,21 +1096,21 @@
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "RemoveTargetsToVariationTargetMapYaml": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/PatchInstruction"
           }, {
             "type": "object",
-            "required": ["spec", "type"],
+            "required": [ "spec", "type" ],
             "properties": {
               "spec": {
                 "$ref": "#/definitions/cvng/RemoveTargetsToVariationTargetMapYamlSpec"
               },
               "type": {
                 "type": "string",
-                "enum": ["SetFeatureFlagState", "AddTargetsToVariationTargetMap", "RemoveTargetsToVariationTargetMap", "AddSegmentsToVariationTargetMap", "RemoveSegmentsToVariationTargetMap"]
+                "enum": [ "SetFeatureFlagState", "AddTargetsToVariationTargetMap", "RemoveTargetsToVariationTargetMap", "AddSegmentsToVariationTargetMap", "RemoveSegmentsToVariationTargetMap" ]
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "RemoveTargetsToVariationTargetMapYamlSpec": {
@@ -1131,15 +1129,15 @@
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "ResourceConstraintStepInfo": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/StepSpecType"
           }, {
             "type": "object",
-            "required": ["acquireMode", "holdingScope", "name", "permits", "resourceUnit"],
+            "required": [ "acquireMode", "holdingScope", "name", "permits", "resourceUnit" ],
             "properties": {
               "acquireMode": {
                 "type": "string",
-                "enum": ["ENSURE", "ACCUMULATE"]
+                "enum": [ "ENSURE", "ACCUMULATE" ]
               },
               "holdingScope": {
                 "$ref": "#/definitions/cvng/HoldingScope"
@@ -1155,15 +1153,15 @@
                 "type": "string"
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "RetryFailureActionConfig": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/FailureStrategyActionConfig"
           }, {
             "type": "object",
-            "required": ["spec", "type"],
+            "required": [ "spec", "type" ],
             "properties": {
               "spec": {
                 "readOnly": true,
@@ -1171,15 +1169,15 @@
               },
               "type": {
                 "type": "string",
-                "enum": ["Retry"]
+                "enum": [ "Retry" ]
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "RetryFailureSpecConfig": {
           "type": "object",
-          "required": ["onRetryFailure", "retryCount", "retryIntervals"],
+          "required": [ "onRetryFailure", "retryCount", "retryIntervals" ],
           "properties": {
             "onRetryFailure": {
               "$ref": "#/definitions/cvng/OnRetryFailureConfig"
@@ -1198,42 +1196,46 @@
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "SecretNGVariable": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/NGVariable"
           }, {
             "type": "object",
-            "required": ["value"],
+            "required": [ "value" ],
             "properties": {
               "default": {
                 "type": "string"
               },
+              "name": {
+                "type": "string",
+                "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+              },
               "type": {
                 "type": "string",
-                "enum": ["Secret"]
+                "enum": [ "Secret" ]
               },
               "value": {
                 "type": "string"
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "SetFeatureFlagStateYaml": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/PatchInstruction"
           }, {
             "type": "object",
-            "required": ["spec", "type"],
+            "required": [ "spec", "type" ],
             "properties": {
               "spec": {
                 "$ref": "#/definitions/cvng/SetFeatureFlagStateYamlSpec"
               },
               "type": {
                 "type": "string",
-                "enum": ["SetFeatureFlagState", "AddTargetsToVariationTargetMap", "RemoveTargetsToVariationTargetMap", "AddSegmentsToVariationTargetMap", "RemoveSegmentsToVariationTargetMap"]
+                "enum": [ "SetFeatureFlagState", "AddTargetsToVariationTargetMap", "RemoveTargetsToVariationTargetMap", "AddSegmentsToVariationTargetMap", "RemoveSegmentsToVariationTargetMap" ]
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "SetFeatureFlagStateYamlSpec": {
@@ -1246,18 +1248,18 @@
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "StageRollbackFailureActionConfig": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/FailureStrategyActionConfig"
           }, {
             "type": "object",
-            "required": ["type"],
+            "required": [ "type" ],
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["StageRollback"]
+                "enum": [ "StageRollback" ]
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "StepElementConfig": {
@@ -1273,24 +1275,26 @@
               }
             },
             "identifier": {
-              "type": "string"
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
             },
             "name": {
-              "type": "string"
+              "type": "string",
+              "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
             },
             "timeout": {
               "type": "string"
             },
             "type": {
               "type": "string",
-              "enum": ["Barrier", "FlagConfiguration", "HarnessApproval", "Http", "JiraApproval", "JiraCreate", "JiraUpdate", "Verify"]
+              "enum": [ "Barrier", "FlagConfiguration", "HarnessApproval", "Http", "JiraApproval", "JiraCreate", "JiraUpdate", "Verify" ]
             },
             "when": {
               "$ref": "#/definitions/cvng/StepWhenCondition"
             }
           },
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "allOf": [{
+          "allOf": [ {
             "if": {
               "properties": {
                 "type": {
@@ -1410,21 +1414,21 @@
                 }
               }
             }
-          }]
+          } ]
         },
         "StepGroupFailureActionConfig": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/FailureStrategyActionConfig"
           }, {
             "type": "object",
-            "required": ["type"],
+            "required": [ "type" ],
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["StepGroupRollback"]
+                "enum": [ "StepGroupRollback" ]
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "StepSpecType": {
@@ -1434,37 +1438,41 @@
         },
         "StepWhenCondition": {
           "type": "object",
-          "required": ["stageStatus"],
+          "required": [ "stageStatus" ],
           "properties": {
             "condition": {
               "type": "string"
             },
             "stageStatus": {
               "type": "string",
-              "enum": ["Success", "Failure", "All"]
+              "enum": [ "Success", "Failure", "All" ]
             }
           },
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "StringNGVariable": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/NGVariable"
           }, {
             "type": "object",
-            "required": ["value"],
+            "required": [ "value" ],
             "properties": {
               "default": {
                 "type": "string"
               },
+              "name": {
+                "type": "string",
+                "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+              },
               "type": {
                 "type": "string",
-                "enum": ["String"]
+                "enum": [ "String" ]
               },
               "value": {
                 "type": "string"
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "TaskSelectorYaml": {
@@ -1477,23 +1485,23 @@
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "TestVerificationJobSpec": {
-          "allOf": [{
+          "allOf": [ {
             "$ref": "#/definitions/cvng/VerificationJobSpec"
           }, {
             "type": "object",
-            "required": ["sensitivity"],
+            "required": [ "sensitivity" ],
             "properties": {
               "sensitivity": {
                 "type": "string",
                 "description": "Possible values: [Low, Medium, High]"
               }
             }
-          }],
+          } ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "TransitionTo": {
           "type": "object",
-          "required": ["status"],
+          "required": [ "status" ],
           "properties": {
             "status": {
               "type": "string"
@@ -1506,7 +1514,7 @@
         },
         "VerificationJobSpec": {
           "type": "object",
-          "required": ["deploymentTag", "duration", "envRef", "serviceRef"],
+          "required": [ "deploymentTag", "duration", "envRef", "serviceRef" ],
           "discriminator": "type",
           "properties": {
             "deploymentTag": {
