@@ -4,6 +4,9 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doThrow;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
@@ -51,9 +54,11 @@ public class CloudFoundryOperationsProviderTest extends CategoryTest {
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testGetCFOperationsWrapperForConnectionContextException() {
+  public void testGetCFOperationsWrapperForConnectionContextException() throws PivotalClientApiException {
     CfRequestConfig cfRequestConfig = getCfRequestConfig();
-
+    doThrow(new PivotalClientApiException("NullPointerException"))
+        .when(connectionContextProvider)
+        .getConnectionContext(cfRequestConfig);
     try {
       cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(cfRequestConfig);
       fail("Should not reach here.");
@@ -65,11 +70,14 @@ public class CloudFoundryOperationsProviderTest extends CategoryTest {
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testGetCFOperationsWrapperForTokenProviderException() {
+  public void testGetCFOperationsWrapperForTokenProviderException() throws PivotalClientApiException {
     CfRequestConfig cfRequestConfig = getCfRequestConfig();
     cfRequestConfig.setUserName("username");
     cfRequestConfig.setEndpointUrl("api.run.pivotal.io");
 
+    doThrow(new PivotalClientApiException("NullPointerException: password"))
+        .when(cloudFoundryClientProvider)
+        .getCloudFoundryClient(eq(cfRequestConfig), any());
     try {
       cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(cfRequestConfig);
       fail("Should not reach here.");

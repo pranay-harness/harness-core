@@ -109,7 +109,7 @@ public class CfCliClientImpl implements CfCliClient {
       }
     } catch (Exception e) {
       throw new PivotalClientApiException(
-          format("Exception occurred while creating Application: %s, Error: App creation process Failed",
+          format("Exception occurred while creating Application: %s, Error: App creation process Failed :  ",
               cfRequestConfig.getApplicationName()),
           e);
     }

@@ -65,6 +65,7 @@ import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import org.cloudfoundry.operations.domains.Domain;
 import org.cloudfoundry.operations.domains.Status;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -95,6 +96,15 @@ public class CfCliClientImplTest extends CategoryTest {
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
+  }
+
+  @After
+  public void tearDown() {
+    System.clearProperty("http.proxyHost");
+    System.clearProperty("http.proxyPort");
+    System.clearProperty("http.proxyUser");
+    System.clearProperty("http.proxyPassword");
+    System.clearProperty("http.nonProxyHosts");
   }
 
   @Test
@@ -436,7 +446,6 @@ public class CfCliClientImplTest extends CategoryTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void test_executeRoutesOperationForApplicationUsingCli() throws Exception {
-    CfCliClientImpl cfCliClient = spy(new CfCliClientImpl());
     doNothing().when(logCallback).saveExecutionLog(anyString());
     CfRequestConfig requestConfig = CfRequestConfig.builder()
                                         .useCFCLI(true)
