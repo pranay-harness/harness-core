@@ -151,16 +151,6 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
         updateOperations);
   }
 
-  @Override
-  public void recordMetrics() {
-    List<LearningEngineTask> queuedTasks = hPersistence.createQuery(LearningEngineTask.class, excludeAuthority)
-                                               .filter(LearningEngineTaskKeys.taskStatus, ExecutionStatus.QUEUED)
-                                               .project(LearningEngineTaskKeys.accountId, true)
-                                               .asList();
-    log.info("Recording LE Metrics. Queued Tasks size : {}", queuedTasks.size());
-    metricService.recordMetric(LEARNING_ENGINE_TASK_METRIC, queuedTasks.size());
-  }
-
   private boolean hasTaskTimedOut(LearningEngineTask task) {
     if (task != null && task.getTaskStatus().equals(ExecutionStatus.RUNNING)) {
       Instant tenMinsAgo = Instant.now().minus(10, ChronoUnit.MINUTES);
