@@ -828,15 +828,9 @@ public class K8sStepHelper {
 
   public TaskChainResponse startChainLink(
       K8sStepExecutor k8sStepExecutor, Ambiance ambiance, StepElementParameters stepElementParameters) {
-    ManifestsOutcome manifestsOutcome = (ManifestsOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.MANIFESTS));
-
+    ManifestsOutcome manifestsOutcome = resolveManifestsOutcome(ambiance);
     InfrastructureOutcome infrastructureOutcome = (InfrastructureOutcome) outcomeService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
-
-    if (isEmpty(manifestsOutcome)) {
-      throw new InvalidRequestException("Manifests can't be empty");
-    }
 
     ManifestOutcome k8sManifestOutcome = getK8sSupportedManifestOutcome(new LinkedList<>(manifestsOutcome.values()));
     if (ManifestType.Kustomize.equals(k8sManifestOutcome.getType())) {
@@ -851,6 +845,22 @@ public class K8sStepHelper {
       return prepareOcTemplateWithOcParamManifests(k8sStepExecutor, new LinkedList<>(manifestsOutcome.values()),
           k8sManifestOutcome, ambiance, stepElementParameters, infrastructureOutcome);
     }
+  }
+
+  private ManifestsOutcome resolveManifestsOutcome(Ambiance ambiance) {
+    ManifestsOutcome manifestsOutcome = null;
+    try {
+      manifestsOutcome = (ManifestsOutcome) outcomeService.resolve(
+          ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.MANIFESTS));
+    } catch (Exception exception) {
+      throw new InvalidRequestException("Manifests can't be empty", exception);
+    }
+
+    if (isEmpty(manifestsOutcome)) {
+      throw new InvalidRequestException("Manifests can't be empty");
+    }
+
+    return manifestsOutcome;
   }
 
   private TaskChainResponse prepareOcTemplateWithOcParamManifests(K8sStepExecutor k8sStepExecutor,
