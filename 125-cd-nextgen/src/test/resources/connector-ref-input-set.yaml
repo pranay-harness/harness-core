@@ -7,7 +7,7 @@ inputSet:
     identifier: myPipeline
     stages:
       - stage:
-          identifier: qaa
+          identifier: qa
           type: Deployment
           spec:
             serviceConfig:
