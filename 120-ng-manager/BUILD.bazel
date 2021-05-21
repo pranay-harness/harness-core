@@ -15,7 +15,6 @@ shared_dependencies = [
     "@maven//:io_grpc_grpc_protobuf",
     "@maven//:io_grpc_grpc_services",
     "@maven//:io_grpc_grpc_stub",
-    "@maven//:io_grpc_grpc_testing",
 ] + [
     "//:lombok",
     "//125-cd-nextgen:module",
@@ -365,7 +364,6 @@ shared_dependencies = [
     "@maven//:io_fabric8_kubernetes_api",
     "@maven//:io_fabric8_kubernetes_client",
     "@maven//:io_fabric8_kubernetes_model",
-    "@maven//:io_fabric8_kubernetes_server_mock",
     "@maven//:io_fabric8_openshift_client",
     "@maven//:io_fabric8_zjsonpatch",
     "@maven//:io_github_resilience4j_resilience4j_circuitbreaker",

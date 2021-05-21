@@ -98,7 +98,7 @@ load("@io_grpc_grpc_java//:repositories.bzl", "grpc_java_repositories")
 grpc_java_repositories(
     omit_bazel_skylib = True,
     omit_com_google_protobuf = True,
-    omit_com_google_protobuf_javalite = True,
+    omit_com_google_protobuf_javalite = False,
     omit_net_zlib = True,
 )
 
@@ -1005,6 +1005,7 @@ http_jar(
 
 load("@rules_jvm_external//:defs.bzl", "maven_install")
 load("@rules_jvm_external//:specs.bzl", "maven")
+load("//:macros.bzl", "maven_test_artifact")
 
 plain_artifacts = [
     "aopalliance:aopalliance:1.0",
@@ -1145,7 +1146,6 @@ plain_artifacts = [
     "com.hierynomus:smbj:0.9.0",
     "com.hierynomus:sshj:0.26.0",
     "com.hubspot.jackson:jackson-datatype-protobuf:0.9.11-jackson2.7",
-    "com.icegreen:greenmail:1.5.0",
     "com.intellij:annotations:12.0",
     "com.j256.two-factor-auth:two-factor-auth:1.0",
     "com.jakewharton.retrofit:retrofit1-okhttp3-client:1.1.0",
@@ -1310,7 +1310,6 @@ plain_artifacts = [
     "io.fabric8:kubernetes-api:3.0.11",
     "io.fabric8:kubernetes-client:3.1.12",
     "io.fabric8:kubernetes-model:2.0.8",
-    "io.fabric8:kubernetes-server-mock:3.1.12",
     "io.fabric8:openshift-client:3.0.3",
     "io.fabric8:zjsonpatch:0.3.0",
     "io.github.benas:random-beans:3.7.0",
@@ -1331,7 +1330,6 @@ plain_artifacts = [
     "io.grpc:grpc-protobuf:1.33.1",
     "io.grpc:grpc-services:1.33.1",
     "io.grpc:grpc-stub:1.33.1",
-    "io.grpc:grpc-testing:1.33.1",
     "io.gsonfire:gson-fire:1.8.3",
     "io.harness:ff-java-server-sdk:0.0.7",
     "io.jsonwebtoken:jjwt:0.9.1",
@@ -1398,7 +1396,6 @@ plain_artifacts = [
     "javax.xml.ws:jaxws-api:2.3.1",
     "jaxen:jaxen:1.1.6",
     "joda-time:joda-time:2.10.1",
-    "junit:junit:4.12",
     "me.snowdrop:istio-client-uberjar:1.0.1",
     "me.snowdrop:istio-client:1.0.1",
     "me.snowdrop:istio-common:1.0.1",
@@ -1685,7 +1682,6 @@ plain_artifacts = [
     "org.xmlunit:xmlunit-matchers:2.3.0",
     "org.yaml:snakeyaml:1.26",
     "org.zeroturnaround:zt-exec:1.9",
-    "pl.pragmatists:JUnitParams:1.0.4",
     "ru.vyarus:guice-validator:1.2.0",
     "software.amazon.awssdk:athena:2.10.18",
     "software.amazon.awssdk:auth:2.10.18",
@@ -1822,60 +1818,23 @@ maven_install(
                 "org.clojure:clojure",
             ],
         ),
-        maven.artifact(
-            group = "com.github.tomakehurst",
-            artifact = "wiremock-jre8-standalone",
-            version = "2.27.2",
-            testonly = True,
-        ),
-        maven.artifact(
-            group = "org.glassfish.jersey.test-framework.providers",
-            artifact = "jersey-test-framework-provider-grizzly2",
-            version = "2.23.1",
-            testonly = True,
-        ),
-        maven.artifact(
-            group = "org.glassfish.jersey.test-framework.providers",
-            artifact = "jersey-test-framework-provider-inmemory",
-            version = "2.23.1",
-            testonly = True,
-        ),
-        maven.artifact(
-            group = "io.dropwizard",
-            artifact = "dropwizard-testing",
-            version = "1.3.24",
-            testonly = True,
-        ),
-        maven.artifact(
-            group = "de.flapdoodle.embed",
-            artifact = "de.flapdoodle.embed.mongo",
-            version = "2.0.3",
-            testonly = True,
-        ),
-        maven.artifact(
-            group = "de.flapdoodle.embed",
-            artifact = "de.flapdoodle.embed.process",
-            version = "2.0.3",
-            testonly = True,
-        ),
-        maven.artifact(
-            group = "org.mockito",
-            artifact = "mockito-core",
-            version = "1.10.19",
-            testonly = True,
-        ),
-        maven.artifact(
-            group = "org.springframework.boot",
-            artifact = "spring-boot-starter-test",
-            version = "2.1.6.RELEASE",
-            testonly = True,
-        ),
-        maven.artifact(
-            group = "org.assertj",
-            artifact = "assertj-core",
-            version = "3.16.1",
-            testonly = True,
-        ),
+        maven_test_artifact("com.github.tomakehurst:wiremock-jre8-standalone:2.27.2"),
+        maven_test_artifact("com.icegreen:greenmail:1.5.0"),
+        maven_test_artifact("com.squareup.okhttp3:mockwebxxxxxxxx3.6.0"),
+        maven_test_artifact("de.flapdoodle.embed:de.flapdoodle.embed.mongo:2.0.3"),
+        maven_test_artifact("de.flapdoodle.embed:de.flapdoodle.embed.process:2.0.3"),
+        maven_test_artifact("io.dropwizard:dropwizard-testing:1.3.24"),
+        maven_test_artifact("io.fabric8:kubernetes-server-mock:3.1.12"),
+        maven_test_artifact("io.fabric8:mockwebxxxxxxxx0.1.0"),
+        maven_test_artifact("io.grpc:grpc-testing:1.33.1"),
+        maven_test_artifact("junit:junit:4.12"),
+        maven_test_artifact("org.assertj:assertj-core:3.16.1"),
+        maven_test_artifact("org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-grizzly2:2.23.1"),
+        maven_test_artifact("org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-inmemory:2.23.1"),
+        maven_test_artifact("org.glassfish.jersey.test-framework:jersey-test-framework-core:2.23.1"),
+        maven_test_artifact("org.mockito:mockito-core:1.10.19"),
+        maven_test_artifact("org.springframework.boot:spring-boot-starter-test:2.1.6.RELEASE"),
+        maven_test_artifact("pl.pragmatists:JUnitParams:1.0.4"),
     ],
     excluded_artifacts = [
         "org.clojure:clojure",
