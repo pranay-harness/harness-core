@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @Slf4j
 @OwnedBy(CDP)
@@ -70,8 +71,18 @@ public class SshHelperUtils {
                                             .command(commandList)
                                             .directory(new File(System.getProperty("user.home")))
                                             .readOutput(true)
-                                            .redirectOutput(byteArrayOutputStream)
-                                            .redirectError(byteArrayErrorStream);
+                                            .redirectOutput(new LogOutputStream() {
+                                              @Override
+                                              protected void processLine(String line) {
+                                                logCallback.saveExecutionLog(line, LogLevel.INFO);
+                                              }
+                                            })
+                                            .redirectError(new LogOutputStream() {
+                                              @Override
+                                              protected void processLine(String line) {
+                                                logCallback.saveExecutionLog(line, ERROR);
+                                              }
+                                            });
 
       ProcessResult processResult = null;
       try {
