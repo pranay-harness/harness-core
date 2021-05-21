@@ -3,6 +3,8 @@ package software.wings.delegatetasks.azure.arm.taskhandler;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.blueprint.assignment.Assignment;
@@ -35,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @NoArgsConstructor
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(HarnessTeam.CDP)
 public class AzureBlueprintDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
   @Inject private AzureBlueprintDeploymentService azureBlueprintDeploymentService;
 
@@ -59,6 +62,7 @@ public class AzureBlueprintDeploymentTaskHandler extends AbstractAzureARMTaskHan
     String assignmentJson = deploymentTaskParameters.getAssignmentJson();
     String blueprintJson = deploymentTaskParameters.getBlueprintJson();
     Map<String, String> artifacts = AzureResourceUtility.fixArtifactNames(deploymentTaskParameters.getArtifacts());
+    String assignmentName = deploymentTaskParameters.getAssignmentName();
 
     Validators.validate(assignmentJson, new AssignmentJsonValidator());
     Validators.validate(blueprintJson, new BlueprintJsonValidator());
@@ -69,7 +73,7 @@ public class AzureBlueprintDeploymentTaskHandler extends AbstractAzureARMTaskHan
     String definitionResourceScope = AzureResourceUtility.getDefinitionResourceScope(blueprintId);
     String versionId = AzureResourceUtility.getVersionId(blueprintId);
     String blueprintName = AzureResourceUtility.getBlueprintName(blueprintId);
-    assignment.setName(AzureResourceUtility.generateAssignmentName(blueprintName));
+    assignment.setName(AzureResourceUtility.generateAssignmentNameIfBlank(assignmentName, blueprintName));
     String assignmentSubscriptionId = AzureResourceUtility.getAssignmentSubscriptionId(assignment);
     String assignmentResourceScope = AzureResourceUtility.getAssignmentResourceScope(assignment);
 

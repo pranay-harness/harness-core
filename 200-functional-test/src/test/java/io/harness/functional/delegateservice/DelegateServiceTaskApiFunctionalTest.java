@@ -107,7 +107,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
                                                 .header("")
                                                 .method("GET")
                                                 .body("")
-                                                .url("https://google.com")
+                                                .url("https://app.harness.io/api/version")
                                                 .socketTimeoutMillis(9000)
                                                 .useProxy(false)
                                                 .build();
@@ -216,7 +216,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
                                                 .header("")
                                                 .method("GET")
                                                 .body("")
-                                                .url("https://google.com")
+                                                .url("https://app.harness.io/api/version")
                                                 .socketTimeoutMillis(9000)
                                                 .useProxy(false)
                                                 .build();
@@ -265,7 +265,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
                                                 .header("")
                                                 .method("GET")
                                                 .body("")
-                                                .url("https://google.com")
+                                                .url("https://app.harness.io/api/version")
                                                 .socketTimeoutMillis(9000)
                                                 .useProxy(false)
                                                 .build();
@@ -284,7 +284,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
                 httpTaskParameters.fetchRequiredExecutionCapabilities(null), null, Duration.ZERO, false)
             .getTaskId();
 
-    Poller.pollFor(Duration.ofMinutes(4), Duration.ofSeconds(5), () -> {
+    Poller.pollFor(Duration.ofMinutes(5), Duration.ofSeconds(5), () -> {
       NotifyResponse notifyResponse = wingsPersistence.get(NotifyResponse.class, taskId.getId());
       return notifyResponse != null;
     });
@@ -322,7 +322,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
                                                 .header("")
                                                 .method("GET")
                                                 .body("")
-                                                .url("https://google.com")
+                                                .url("https://app.harness.io/api/version")
                                                 .socketTimeoutMillis(9000)
                                                 .useProxy(false)
                                                 .build();
@@ -341,7 +341,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
                 emptyList(), Arrays.asList(NON_EXISTING_SELECTOR), Duration.ZERO, false)
             .getTaskId();
 
-    Poller.pollFor(Duration.ofMinutes(3), Duration.ofSeconds(5), () -> {
+    Poller.pollFor(Duration.ofMinutes(5), Duration.ofSeconds(5), () -> {
       NotifyResponse notifyResponse = wingsPersistence.get(NotifyResponse.class, taskId.getId());
       return notifyResponse != null;
     });
@@ -397,7 +397,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
     delegateServiceGrpcAgentClient.sendTaskProgressUpdate(
         AccountId.newBuilder().setId(getAccount().getUuid()).build(), taskId, callbackToken, testDataBytes2);
 
-    Poller.pollFor(Duration.ofMinutes(4), Duration.ofSeconds(5), () -> { return progressCallCount.get() == 2; });
+    Poller.pollFor(Duration.ofMinutes(5), Duration.ofSeconds(5), () -> { return progressCallCount.get() == 2; });
 
     assertThat(progressCallCount.get()).isEqualTo(2);
     assertThat(progressDataList.size()).isEqualTo(2);

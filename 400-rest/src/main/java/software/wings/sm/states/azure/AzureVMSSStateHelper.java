@@ -326,6 +326,10 @@ public class AzureVMSSStateHelper {
 
   public AzureConfig getAzureConfig(final String computeProviderSettingId) {
     SettingAttribute settingAttribute = settingsService.get(computeProviderSettingId);
+    if (settingAttribute == null) {
+      throw new InvalidRequestException(format("Cloud provider not found with id: %s", computeProviderSettingId));
+    }
+
     return (AzureConfig) settingAttribute.getValue();
   }
 
