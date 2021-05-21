@@ -47,14 +47,18 @@ public class ScmGitRefTask extends AbstractDelegateRunnableTask {
       case BRANCH:
         ListBranchesResponse listBranchesResponse = scmDelegateClient.processScmRequest(
             c -> scmServiceClient.listBranches(scmGitRefTaskParams.getScmConnector(), SCMGrpc.newBlockingStub(c)));
-        return ScmGitRefTaskResponseData.builder().listBranchesResponse(listBranchesResponse).build();
+        return ScmGitRefTaskResponseData.builder()
+            .gitRefType(scmGitRefTaskParams.getGitRefType())
+            .listBranchesResponse(listBranchesResponse.toByteArray())
+            .build();
       case COMMIT:
         ListCommitsResponse listCommitsResponse = scmDelegateClient.processScmRequest(c
             -> scmServiceClient.listCommits(
                 scmGitRefTaskParams.getScmConnector(), scmGitRefTaskParams.getBranch(), SCMGrpc.newBlockingStub(c)));
         return ScmGitRefTaskResponseData.builder()
+            .gitRefType(scmGitRefTaskParams.getGitRefType())
             .branch(scmGitRefTaskParams.getBranch())
-            .listCommitsResponse(listCommitsResponse)
+            .listCommitsResponse(listCommitsResponse.toByteArray())
             .build();
       default:
         throw new UnknownEnumTypeException("GitRefType", scmGitRefTaskParams.getGitRefType().toString());
