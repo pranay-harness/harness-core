@@ -1,6 +1,5 @@
 package io.harness.batch.processing.tasklet;
 
-import static io.harness.batch.processing.ccm.CCMJobConstants.ACCOUNT_ID;
 import static io.harness.batch.processing.service.impl.BillingDataPipelineServiceImpl.preAggQueryKey;
 import static io.harness.batch.processing.service.impl.BillingDataPipelineServiceImpl.scheduledQueryKey;
 import static io.harness.rule.OwnerRule.ROHIT;
@@ -10,8 +9,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CategoryTest;
-import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.config.BillingDataPipelineConfig;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
@@ -20,6 +17,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord.BillingDataPipelineRecordKeys;
 import io.harness.rule.Owner;
+import io.harness.testsupport.BaseTaskletTest;
 
 import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
@@ -29,10 +27,8 @@ import software.wings.settings.SettingVariableTypes;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -42,15 +38,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobParameter;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.scope.context.ChunkContext;
-import org.springframework.batch.core.scope.context.StepContext;
 
 @RunWith(MockitoJUnitRunner.class)
-public class AwsBillingDataPipelineTaskletTest extends CategoryTest {
+public class AwsBillingDataPipelineTaskletTest extends BaseTaskletTest {
   @Mock BillingDataPipelineRecordDao billingDataPipelineRecordDao;
   @Mock BillingDataPipelineServiceImpl billingDataPipelineService;
   @Mock CloudToHarnessMappingService cloudToHarnessMappingService;
@@ -58,7 +48,6 @@ public class AwsBillingDataPipelineTaskletTest extends CategoryTest {
 
   @InjectMocks AwsBillingDataPipelineTasklet awsBillingDataPipelineTasklet;
 
-  private static final String accountId = "accountId";
   private static final String accountName = "accountName";
   private static final String settingId = "settingId";
   private static final String masterAccountId = "masterAccountId";
@@ -66,22 +55,13 @@ public class AwsBillingDataPipelineTaskletTest extends CategoryTest {
   private static final String dataSetId = "datasetId";
   private static final String transferJobName = "transferJobName";
   private static final Instant instant = Instant.now();
-  private static final long startTime = instant.toEpochMilli();
-  private static final long endTime = instant.plus(1, ChronoUnit.DAYS).toEpochMilli();
   private static final String scheduledQueryName = "scheduledQueryName";
   private static final String preAggQueryName = "preAggQueryName";
-  private ChunkContext chunkContext;
 
   @Before
   public void setup() throws IOException {
     MockitoAnnotations.initMocks(this);
-    Map<String, JobParameter> parameters = new HashMap<>();
-    parameters.put(CCMJobConstants.JOB_START_DATE, new JobParameter(String.valueOf(startTime), true));
-    parameters.put(CCMJobConstants.JOB_END_DATE, new JobParameter(String.valueOf(endTime), true));
-    parameters.put(ACCOUNT_ID, new JobParameter(ACCOUNT_ID, true));
-    JobParameters jobParameters = new JobParameters(parameters);
-    StepExecution stepExecution = new StepExecution("awsBillingDataPipelineStep", new JobExecution(0L, jobParameters));
-    chunkContext = new ChunkContext(new StepContext(stepExecution));
+    mockChunkContext();
 
     SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute()
@@ -91,22 +71,23 @@ public class AwsBillingDataPipelineTaskletTest extends CategoryTest {
     when(mainConfig.getBillingDataPipelineConfig())
         .thenReturn(BillingDataPipelineConfig.builder().awsUseNewPipeline(false).build());
 
-    when(cloudToHarnessMappingService.getAccountInfoFromId(accountId))
+    when(cloudToHarnessMappingService.getAccountInfoFromId(ACCOUNT_ID))
         .thenReturn(Account.Builder.anAccount().withAccountName(accountName).build());
-    when(cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(
-             accountId, SettingAttribute.SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AWS, startTime, endTime))
+    when(cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(ACCOUNT_ID,
+             SettingAttribute.SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AWS, START_TIME_MILLIS,
+             END_TIME_MILLIS))
         .thenReturn(Collections.singletonList(settingAttribute));
     when(billingDataPipelineService.createDataSet(any())).thenReturn(dataSetId);
     when(billingDataPipelineService.createDataTransferJobFromGCS(
-             dataSetId, settingId, accountId, accountName, curReportName, false))
+             dataSetId, settingId, ACCOUNT_ID, accountName, curReportName, false))
         .thenReturn(transferJobName);
     when(billingDataPipelineService.createDataTransferJobFromGCS(
-             dataSetId, settingId, accountId, accountName, curReportName, true))
+             dataSetId, settingId, ACCOUNT_ID, accountName, curReportName, true))
         .thenReturn(transferJobName);
     HashMap<String, String> scheduledQueryJobsMap = new HashMap<>();
     scheduledQueryJobsMap.put(scheduledQueryKey, scheduledQueryName);
     scheduledQueryJobsMap.put(preAggQueryKey, preAggQueryName);
-    when(billingDataPipelineService.createScheduledQueriesForAWS(dataSetId, accountId, accountName))
+    when(billingDataPipelineService.createScheduledQueriesForAWS(dataSetId, ACCOUNT_ID, accountName))
         .thenReturn(scheduledQueryJobsMap);
   }
 
@@ -120,7 +101,7 @@ public class AwsBillingDataPipelineTaskletTest extends CategoryTest {
     verify(billingDataPipelineRecordDao).create(billingDataPipelineRecordArgumentCaptor.capture());
     BillingDataPipelineRecord value = billingDataPipelineRecordArgumentCaptor.getValue();
     BillingDataPipelineRecord expectedRecord = BillingDataPipelineRecord.builder()
-                                                   .accountId(accountId)
+                                                   .accountId(ACCOUNT_ID)
                                                    .accountName(accountName)
                                                    .settingId(settingId)
                                                    .cloudProvider("AWS")

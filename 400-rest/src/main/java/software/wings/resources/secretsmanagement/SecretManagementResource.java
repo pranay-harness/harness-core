@@ -331,8 +331,6 @@ public class SecretManagementResource {
       @QueryParam("currentEnvId") String currentEnvId, @DefaultValue("true") @QueryParam("details") boolean details,
       @BeanParam PageRequest<EncryptedData> pageRequest) {
     try {
-      pageRequest.addFilter("type", Operator.EQ, type);
-      pageRequest.addFilter("accountId", Operator.EQ, accountId);
       return new RestResponse<>(
           secretManager.listSecrets(accountId, pageRequest, currentAppId, currentEnvId, details, false));
     } catch (IllegalAccessException e) {

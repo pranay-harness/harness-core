@@ -10,7 +10,7 @@ import io.harness.licensing.interfaces.clients.ModuleLicenseClient;
 public class UnsupportedClient implements ModuleLicenseClient {
   @Override
   public ModuleLicenseDTO createTrialLicense(Edition edition, String accountId, LicenseType licenseType) {
-    throw new UnsupportedOperationException(String.format("Licensetype [%s] hasn't been supported", licenseType));
+    throw new UnsupportedOperationException("Requested module type hasn't been supported");
   }
 
   @Override

@@ -27,6 +27,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DEPLOYMENT_FREEZES;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_IP_WHITELIST;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_RESTRICTED_ACCESS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRETS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SSH_AND_WINRM;
@@ -145,7 +146,7 @@ public class AuthRuleFilterTest extends WingsBaseTest {
             MANAGE_CLOUD_PROVIDERS, MANAGE_CONNECTORS, MANAGE_APPLICATION_STACKS, MANAGE_DELEGATES,
             MANAGE_ALERT_NOTIFICATION_RULES, MANAGE_DELEGATE_PROFILES, MANAGE_CONFIG_AS_CODE, MANAGE_SECRETS,
             MANAGE_SECRET_MANAGERS, MANAGE_AUTHENTICATION_SETTINGS, MANAGE_IP_WHITELIST, MANAGE_DEPLOYMENT_FREEZES,
-            MANAGE_PIPELINE_GOVERNANCE_STANDARDS, MANAGE_SSH_AND_WINRM));
+            MANAGE_PIPELINE_GOVERNANCE_STANDARDS, MANAGE_SSH_AND_WINRM, MANAGE_RESTRICTED_ACCESS));
   }
 
   @Test
@@ -173,7 +174,7 @@ public class AuthRuleFilterTest extends WingsBaseTest {
     when(requestContext.getMethod()).thenReturn("GET");
     mockUriInfo(PATH, uriInfo);
     when(harnessUserGroupService.isHarnessSupportUser(USER_ID)).thenReturn(true);
-    when(harnessUserGroupService.isHarnessSupportEnabledForAccount(ACCOUNT_ID)).thenReturn(true);
+    when(harnessUserGroupService.isHarnessSupportEnabled(ACCOUNT_ID, USER_ID)).thenReturn(true);
     when(whitelistService.isValidIPAddress(anyString(), anyString())).thenReturn(true);
     when(authService.getUserPermissionInfo(anyString(), any(), anyBoolean())).thenReturn(mockUserPermissionInfo());
     authRuleFilter.filter(requestContext);
@@ -283,7 +284,7 @@ public class AuthRuleFilterTest extends WingsBaseTest {
     when(requestContext.getMethod()).thenReturn("GET");
     mockUriInfo(PATH, uriInfo);
     when(harnessUserGroupService.isHarnessSupportUser(USER_ID)).thenReturn(true);
-    when(harnessUserGroupService.isHarnessSupportEnabledForAccount(ACCOUNT_ID)).thenReturn(true);
+    when(harnessUserGroupService.isHarnessSupportEnabled(ACCOUNT_ID, USER_ID)).thenReturn(true);
     when(whitelistService.isValidIPAddress(anyString(), anyString())).thenReturn(true);
     when(authService.getUserPermissionInfo(anyString(), any(), anyBoolean())).thenReturn(mockUserPermissionInfo());
 
@@ -385,7 +386,7 @@ public class AuthRuleFilterTest extends WingsBaseTest {
     when(requestContext.getMethod()).thenReturn("GET");
     mockUriInfo(PATH, uriInfo);
     when(harnessUserGroupService.isHarnessSupportUser(USER_ID)).thenReturn(true);
-    when(harnessUserGroupService.isHarnessSupportEnabledForAccount(ACCOUNT_ID)).thenReturn(true);
+    when(harnessUserGroupService.isHarnessSupportEnabled(ACCOUNT_ID, USER_ID)).thenReturn(true);
     when(whitelistService.isValidIPAddress(anyString(), anyString())).thenReturn(true);
     when(whitelistService.checkIfFeatureIsEnabledAndWhitelisting(anyString(), anyString(), any(FeatureName.class)))
         .thenReturn(true);
@@ -453,7 +454,7 @@ public class AuthRuleFilterTest extends WingsBaseTest {
     when(requestContext.getMethod()).thenReturn(method);
     mockUriInfo(url, uriInfo);
     when(harnessUserGroupService.isHarnessSupportUser(USER_ID)).thenReturn(true);
-    when(harnessUserGroupService.isHarnessSupportEnabledForAccount(ACCOUNT_ID)).thenReturn(true);
+    when(harnessUserGroupService.isHarnessSupportEnabled(ACCOUNT_ID, USER_ID)).thenReturn(true);
     when(whitelistService.isValidIPAddress(anyString(), anyString())).thenReturn(true);
     when(whitelistService.checkIfFeatureIsEnabledAndWhitelisting(anyString(), anyString(), any(FeatureName.class)))
         .thenReturn(true);

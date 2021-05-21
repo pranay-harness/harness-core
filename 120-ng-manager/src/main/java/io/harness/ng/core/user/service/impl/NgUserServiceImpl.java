@@ -531,6 +531,11 @@ public class NgUserServiceImpl implements NgUserService {
     }
   }
 
+  @Override
+  public boolean isUserPasswordSet(String accountIdentifier, String email) {
+    return RestClientUtils.getResponse(userClient.isUserPasswordSet(accountIdentifier, email));
+  }
+
   private Optional<String> getUserIdentifierFromSecurityContext() {
     Optional<String> userId = Optional.empty();
     if (SourcePrincipalContextBuilder.getSourcePrincipal() != null

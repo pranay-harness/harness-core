@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
@@ -36,15 +35,13 @@ public class K8sPVUtilizationAggregationTasklet implements Tasklet {
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
-    JobParameters parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
-    Long startTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE);
-    Long endTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE);
-    String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
+    final CCMJobConstants jobConstants = new CCMJobConstants(chunkContext);
 
     Map<String, InstanceUtilizationData> instanceUtilizationDataMap =
-        k8sUtilizationGranularDataService.getAggregatedUtilizationDataOfType(accountId, K8S_PVC, startTime, endTime);
-    List<InstanceData> instanceDataList =
-        instanceDataDao.fetchActivePVList(accountId, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime));
+        k8sUtilizationGranularDataService.getAggregatedUtilizationDataOfType(
+            jobConstants.getAccountId(), K8S_PVC, jobConstants.getJobStartTime(), jobConstants.getJobEndTime());
+    List<InstanceData> instanceDataList = instanceDataDao.fetchActivePVList(jobConstants.getAccountId(),
+        Instant.ofEpochMilli(jobConstants.getJobStartTime()), Instant.ofEpochMilli(jobConstants.getJobEndTime()));
 
     List<InstanceUtilizationData> instanceUtilizationDataList =
         instanceDataList.stream()
@@ -65,7 +62,7 @@ public class K8sPVUtilizationAggregationTasklet implements Tasklet {
                                    .orElse(0D);
 
               return InstanceUtilizationData.builder()
-                  .accountId(accountId)
+                  .accountId(jobConstants.getAccountId())
                   .clusterId(clusterId)
                   .settingId(settingId)
                   .instanceType(K8S_PV.name())
@@ -73,8 +70,8 @@ public class K8sPVUtilizationAggregationTasklet implements Tasklet {
                   .storageCapacityAvgValue(storageCapacity)
                   .storageRequestAvgValue(request)
                   .storageUsageAvgValue(usage)
-                  .startTimestamp(startTime)
-                  .endTimestamp(endTime)
+                  .startTimestamp(jobConstants.getJobStartTime())
+                  .endTimestamp(jobConstants.getJobEndTime())
                   .build();
             })
             .collect(Collectors.toList());

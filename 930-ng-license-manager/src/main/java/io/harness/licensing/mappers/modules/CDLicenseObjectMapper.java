@@ -13,12 +13,18 @@ public class CDLicenseObjectMapper implements LicenseObjectMapper {
   @Override
   public ModuleLicenseDTO toDTO(ModuleLicense moduleLicense) {
     CDModuleLicense entity = (CDModuleLicense) moduleLicense;
-    return CDModuleLicenseDTO.builder().deploymentUnits(entity.getDeploymentUnits()).build();
+    return CDModuleLicenseDTO.builder()
+        .maxWorkLoads(entity.getMaxWorkLoads())
+        .deploymentsPerDay(entity.getDeploymentsPerDay())
+        .build();
   }
 
   @Override
   public ModuleLicense toEntity(ModuleLicenseDTO moduleLicenseDTO) {
     CDModuleLicenseDTO dto = (CDModuleLicenseDTO) moduleLicenseDTO;
-    return CDModuleLicense.builder().deploymentUnits(dto.getDeploymentUnits()).build();
+    return CDModuleLicense.builder()
+        .maxWorkLoads(dto.getMaxWorkLoads())
+        .deploymentsPerDay(dto.getDeploymentsPerDay())
+        .build();
   }
 }

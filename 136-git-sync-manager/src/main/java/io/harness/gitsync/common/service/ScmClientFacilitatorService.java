@@ -3,6 +3,7 @@ package io.harness.gitsync.common.service;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.ng.beans.PageRequest;
 
@@ -19,4 +20,7 @@ public interface ScmClientFacilitatorService {
 
   GitFileContent getFileContent(String yamlGitConfigIdentifier, String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String filePath, String branch, String commitId);
+
+  Boolean createPullRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String yamlGitConfigRef, GitPRCreateRequest gitCreatePRRequest);
 }

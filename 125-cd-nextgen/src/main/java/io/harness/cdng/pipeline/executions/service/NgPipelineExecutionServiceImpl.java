@@ -37,8 +37,8 @@ import io.harness.pms.contracts.advisers.ManualIssuer;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.execution.ExecutionStatus;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.repositories.pipeline.PipelineExecutionRepository;
-import io.harness.steps.StepOutcomeGroup;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

@@ -70,7 +70,7 @@ public class DockerResourceServiceImpl implements DockerResourceService {
                                                       .dockerConnectorDTO(connector)
                                                       .encryptedDataDetails(encryptionDetails)
                                                       .imagePath(imagePath)
-                                                      .sourceType(ArtifactSourceType.DOCKER_HUB)
+                                                      .sourceType(ArtifactSourceType.DOCKER_REGISTRY)
                                                       .build();
     ArtifactTaskExecutionResponse artifactTaskExecutionResponse = executeSyncTask(
         dockerRequest, ArtifactTaskType.GET_BUILDS, baseNGAccess, "Docker Get Builds task failure due to error");
@@ -89,7 +89,7 @@ public class DockerResourceServiceImpl implements DockerResourceService {
                                                       .encryptedDataDetails(encryptionDetails)
                                                       .tagsList(dockerRequestDTO.getTagsList())
                                                       .imagePath(imagePath)
-                                                      .sourceType(ArtifactSourceType.DOCKER_HUB)
+                                                      .sourceType(ArtifactSourceType.DOCKER_REGISTRY)
                                                       .build();
     ArtifactTaskExecutionResponse artifactTaskExecutionResponse = executeSyncTask(
         dockerRequest, ArtifactTaskType.GET_LABELS, baseNGAccess, "Docker Get labels task failure due to error");
@@ -109,7 +109,7 @@ public class DockerResourceServiceImpl implements DockerResourceService {
                                                       .tag(dockerRequestDTO.getTag())
                                                       .tagRegex(dockerRequestDTO.getTagRegex())
                                                       .imagePath(imagePath)
-                                                      .sourceType(ArtifactSourceType.DOCKER_HUB)
+                                                      .sourceType(ArtifactSourceType.DOCKER_REGISTRY)
                                                       .build();
     ArtifactTaskExecutionResponse artifactTaskExecutionResponse =
         executeSyncTask(dockerRequest, ArtifactTaskType.GET_LAST_SUCCESSFUL_BUILD, baseNGAccess,
@@ -131,7 +131,7 @@ public class DockerResourceServiceImpl implements DockerResourceService {
     DockerArtifactDelegateRequest dockerRequest = DockerArtifactDelegateRequest.builder()
                                                       .dockerConnectorDTO(connector)
                                                       .encryptedDataDetails(encryptionDetails)
-                                                      .sourceType(ArtifactSourceType.DOCKER_HUB)
+                                                      .sourceType(ArtifactSourceType.DOCKER_REGISTRY)
                                                       .build();
     ArtifactTaskExecutionResponse artifactTaskExecutionResponse =
         executeSyncTask(dockerRequest, ArtifactTaskType.VALIDATE_ARTIFACT_SERVER, baseNGAccess,
@@ -150,7 +150,7 @@ public class DockerResourceServiceImpl implements DockerResourceService {
                                                       .dockerConnectorDTO(connector)
                                                       .encryptedDataDetails(encryptionDetails)
                                                       .imagePath(imagePath)
-                                                      .sourceType(ArtifactSourceType.DOCKER_HUB)
+                                                      .sourceType(ArtifactSourceType.DOCKER_REGISTRY)
                                                       .build();
     ArtifactTaskExecutionResponse artifactTaskExecutionResponse =
         executeSyncTask(dockerRequest, ArtifactTaskType.VALIDATE_ARTIFACT_SOURCE, baseNGAccess,

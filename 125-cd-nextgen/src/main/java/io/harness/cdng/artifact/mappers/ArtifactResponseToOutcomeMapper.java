@@ -29,7 +29,7 @@ public class ArtifactResponseToOutcomeMapper {
   public ArtifactOutcome toArtifactOutcome(
       ArtifactConfig artifactConfig, ArtifactDelegateResponse artifactDelegateResponse, boolean useDelegateResponse) {
     switch (artifactConfig.getSourceType()) {
-      case DOCKER_HUB:
+      case DOCKER_REGISTRY:
         DockerHubArtifactConfig dockerConfig = (DockerHubArtifactConfig) artifactConfig;
         DockerArtifactDelegateResponse dockerDelegateResponse =
             (DockerArtifactDelegateResponse) artifactDelegateResponse;
@@ -60,7 +60,7 @@ public class ArtifactResponseToOutcomeMapper {
                                  : (dockerConfig.getTag() != null ? dockerConfig.getTag().getValue() : null))
         .tagRegex(dockerConfig.getTagRegex() != null ? dockerConfig.getTagRegex().getValue() : null)
         .identifier(dockerConfig.getIdentifier())
-        .type(ArtifactSourceType.DOCKER_HUB.getDisplayName())
+        .type(ArtifactSourceType.DOCKER_REGISTRY.getDisplayName())
         .primaryArtifact(dockerConfig.isPrimaryArtifact())
         .imagePullSecret(IMAGE_PULL_SECRET + ArtifactUtils.getArtifactKey(dockerConfig) + ">")
         .build();

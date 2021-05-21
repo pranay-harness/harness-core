@@ -44,10 +44,6 @@ public class StoragePricingData {
     boolean isRegional = REGIONAL_PD.equals(getValueForKeyFromInstanceMetaData(REPLICATION_TYPE, metaData));
     String region = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.REGION, metaData);
     String type = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.GCE_STORAGE_CLASS, metaData);
-    // Supporting old instanceData or depricated metaData key
-    if (type == null) {
-      type = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.STORAGE_CLASS, metaData);
-    }
     if (type == null) {
       type = GoogleStoragePricingData.Type.PD_STANDARD.getFieldName();
     }

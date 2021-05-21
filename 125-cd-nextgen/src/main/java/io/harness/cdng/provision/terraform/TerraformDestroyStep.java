@@ -115,6 +115,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
   private TaskRequest obtainInheritedTask(
       Ambiance ambiance, TerraformDestroyStepParameters parameters, StepElementParameters stepElementParameters) {
     TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder().taskType(TFTaskType.DESTROY);
+    builder.terraformCommandUnit(TerraformCommandUnit.Destroy);
     String accountId = AmbianceHelper.getAccountId(ambiance);
     builder.accountId(accountId);
     String provisionerIdentifier = ParameterFieldHelper.getParameterFieldValue(parameters.getProvisionerIdentifier());
@@ -125,7 +126,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
     builder.workspace(inheritOutput.getWorkspace())
         .configFile(helper.getGitFetchFilesConfig(
             inheritOutput.getConfigFiles(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
-        .varFileInfos(helper.toDelegateTask(inheritOutput.getVarFileConfigs(), ambiance))
+        .varFileInfos(helper.prepareTerraformVarFileInfo(inheritOutput.getVarFileConfigs(), ambiance))
         .backendConfig(inheritOutput.getBackendConfig())
         .targets(inheritOutput.getTargets())
         .saveTerraformStateJson(cdFeatureFlagHelper.isEnabled(accountId, FeatureName.EXPORT_TF_PLAN))
@@ -152,6 +153,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
   private TaskRequest obtainLastApplyTask(
       Ambiance ambiance, TerraformDestroyStepParameters parameters, StepElementParameters stepElementParameters) {
     TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder().taskType(TFTaskType.DESTROY);
+    builder.terraformCommandUnit(TerraformCommandUnit.Destroy);
     String accountId = AmbianceHelper.getAccountId(ambiance);
     builder.accountId(accountId);
     String entityId = helper.generateFullIdentifier(
@@ -162,7 +164,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
     builder.workspace(terraformConfig.getWorkspace())
         .configFile(helper.getGitFetchFilesConfig(
             terraformConfig.getConfigFiles().toGitStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
-        .varFileInfos(helper.toDelegateTask(terraformConfig.getVarFileConfigs(), ambiance))
+        .varFileInfos(helper.prepareTerraformVarFileInfo(terraformConfig.getVarFileConfigs(), ambiance))
         .backendConfig(terraformConfig.getBackendConfig())
         .targets(terraformConfig.getTargets())
         .saveTerraformStateJson(cdFeatureFlagHelper.isEnabled(accountId, FeatureName.EXPORT_TF_PLAN))

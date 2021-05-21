@@ -50,7 +50,7 @@ public class TestStepInfo implements CIStepInfo {
 
   @NotEmpty private String numParallel;
   private List<ScriptInfo> scriptInfos;
-  @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
+  @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "numParallel", "scriptInfos", "runAsUser"})

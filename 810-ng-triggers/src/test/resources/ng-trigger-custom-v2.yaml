@@ -10,19 +10,26 @@ trigger:
     spec:
       type: Custom
       spec:
-          payloadConditions:
-            - key: sourceBranch
-              operator: equals
-              value: dev
-            - key: targetBranch
-              operator: in
-              value: master, on-prem
-            - key: <+trigger.payload.pull_request.number>
-              operator: regex
-              value: ^pr-[0-9a-f]{7}$
-          headerConditions:
-            - key: header
-              operator: equals
-              value: val
-          jexlCondition: true
-  inputYaml: input
+        payloadConditions:
+          - key: k1
+            operator: equals
+            value: v1
+          - key: k2
+            operator: in
+            value: v2
+        headerConditions:
+          - key: h1
+            operator: equals
+            value: v1
+        jexlCondition: true
+  inputYaml: |
+    pipeline:
+      identifier: secrethttp1
+      stages:
+        - stage:
+            identifier: qaStage
+            spec:
+              infrastructure:
+                infrastructureDefinition:
+                  spec:
+                    releaseName: releaseName1

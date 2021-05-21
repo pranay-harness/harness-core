@@ -1,20 +1,21 @@
 package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.integer;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 @OwnedBy(CDP)
 @Data
 @JsonTypeName("Count")
 public class CountInstanceSelection implements InstanceSelectionBase {
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<Integer> count;
+  @YamlSchemaTypes({string, integer}) ParameterField<Integer> count;
   @Override
   public K8sInstanceUnitType getType() {
     return K8sInstanceUnitType.Count;

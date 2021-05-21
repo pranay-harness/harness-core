@@ -20,7 +20,6 @@ import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
-import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
@@ -174,7 +173,6 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
     modules.add(OrchestrationModule.getInstance(getOrchestrationConfig()));
-    modules.add(ExecutionPlanModule.getInstance());
     modules.add(mongoTypeModule(annotations));
     modules.add(new EntitySetupUsageModule());
 

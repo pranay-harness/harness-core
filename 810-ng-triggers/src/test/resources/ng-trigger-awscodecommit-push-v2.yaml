@@ -8,21 +8,28 @@ trigger:
   source:
     type: Webhook
     spec:
-      type: Aws CodeCommit
+      type: AWS CodeCommit
       spec:
         type: Push
         spec:
           connectorRef: conn
           repoName: myrepo
           payloadConditions:
-            - key: sourceBranch
+            - key: k1
               operator: equals
-              value: dev
-            - key: targetBranch
+              value: v1
+            - key: k2
               operator: in
-              value: master, on-prem
-            - key: <+trigger.payload.pull_request.number>
-              operator: regex
-              value: ^pr-[0-9a-f]{7}$
+              value: v2
           jexlCondition: true
-  inputYaml: input
+  inputYaml: |
+    pipeline:
+      identifier: secrethttp1
+      stages:
+        - stage:
+            identifier: qaStage
+            spec:
+              infrastructure:
+                infrastructureDefinition:
+                  spec:
+                    releaseName: releaseName1

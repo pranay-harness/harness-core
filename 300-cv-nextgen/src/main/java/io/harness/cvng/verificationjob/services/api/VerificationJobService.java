@@ -15,7 +15,6 @@ public interface VerificationJobService {
       String accountId, String orgIdentifier, String projectIdentifier, String identifier);
   VerificationJob getVerificationJob(
       String accountId, String orgIdentifier, String projectIdentifier, String identifier);
-  void upsert(String accountId, VerificationJobDTO verificationJobDTO);
   void create(String accountId, VerificationJobDTO verificationJobDTO);
   void update(String accountId, String identifier, VerificationJobDTO verificationJobDTO);
   void save(VerificationJob verificationJob);

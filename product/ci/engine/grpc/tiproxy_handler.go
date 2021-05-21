@@ -142,12 +142,6 @@ func (h *tiProxyHandler) WriteTests(stream pb.TiProxy_WriteTestsServer) error {
 	if stepId == "" {
 		return errors.New("step ID not present in response")
 	}
-	if sha == "" {
-		return errors.New("sha not present in response")
-	}
-	if repo == "" {
-		return errors.New("repo not present in response")
-	}
 	org, err := getOrgId()
 	if err != nil {
 		return err

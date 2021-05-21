@@ -10,6 +10,7 @@ import io.harness.plancreator.flowcontrol.FlowControlConfig;
 import io.harness.plancreator.stages.StageElementWrapperConfig;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlNode;
+import io.harness.validator.NGRegexValidatorConstants;
 import io.harness.yaml.core.properties.NGProperties;
 import io.harness.yaml.core.variables.NGVariable;
 
@@ -19,6 +20,7 @@ import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,8 +46,8 @@ public class PipelineInfoConfig {
   @ApiModelProperty(hidden = true)
   String uuid;
 
-  @NotNull @EntityName String name;
-  @NotNull @EntityIdentifier String identifier;
+  @NotNull @EntityName @Pattern(regexp = NGRegexValidatorConstants.NAME_PATTERN) String name;
+  @NotNull @EntityIdentifier @Pattern(regexp = NGRegexValidatorConstants.IDENTIFIER_PATTERN) String identifier;
 
   FlowControlConfig flowControl;
 

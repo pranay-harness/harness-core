@@ -8,13 +8,13 @@ import io.harness.notification.channeldetails.SlackChannel;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.assertj.core.util.Lists;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Data

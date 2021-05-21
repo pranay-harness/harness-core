@@ -1,10 +1,11 @@
 package io.harness.queue;
 
 import io.harness.metrics.ThreadAutoLogContext;
-import io.harness.persistence.CreatedAtAware;
 
-public interface WithMonitoring extends CreatedAtAware {
+public interface WithMonitoring {
   ThreadAutoLogContext metricContext();
 
   String getMetricPrefix();
+
+  Long getCreatedAt();
 }

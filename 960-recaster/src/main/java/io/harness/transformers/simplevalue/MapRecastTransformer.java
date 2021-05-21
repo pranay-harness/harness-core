@@ -3,7 +3,6 @@ package io.harness.transformers.simplevalue;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CastedField;
-import io.harness.core.Recaster;
 import io.harness.exceptions.MapKeyContainsDotException;
 import io.harness.transformers.RecastTransformer;
 import io.harness.utils.IterationHelper;
@@ -27,7 +26,7 @@ public class MapRecastTransformer extends RecastTransformer implements SimpleVal
           castedField == null ? k.getClass() : castedField.getMapKeyClass(), k, castedField);
       if (val == null) {
         values.put(objKey, null);
-      } else if (val instanceof Document && ((Document) val).containsKey(Recaster.RECAST_CLASS_KEY)) {
+      } else if (val instanceof Document && RecastReflectionUtils.containsIdentifier((Document) val)) {
         values.put(objKey,
             getRecaster().fromDocument(
                 (Document) val, (Object) getRecaster().getObjectFactory().createInstance(null, (Document) val)));

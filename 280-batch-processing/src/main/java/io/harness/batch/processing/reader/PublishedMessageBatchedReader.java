@@ -5,6 +5,8 @@ import static com.google.common.base.MoreObjects.firstNonNull;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
 import io.harness.event.grpc.PublishedMessage;
 
+import java.util.List;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -30,13 +32,12 @@ public class PublishedMessageBatchedReader extends BatchedItemReader<PublishedMe
   }
 
   @Override
-  protected boolean readNextBatch() {
-    items = publishedMessageDao.fetchPublishedMessage(accountId, messageType, startTime, endTime, readerBatchSize);
-    itemIndex = 0;
-    boolean hasItems = false;
+  @NonNull
+  protected List<PublishedMessage> getMore() {
+    final List<PublishedMessage> items =
+        publishedMessageDao.fetchPublishedMessage(accountId, messageType, startTime, endTime, readerBatchSize);
 
     if (!items.isEmpty()) {
-      hasItems = true;
       Long firstStartTime = items.get(0).getCreatedAt();
       startTime = items.get(items.size() - 1).getCreatedAt();
       if (firstStartTime.equals(startTime)) {
@@ -46,6 +47,6 @@ public class PublishedMessageBatchedReader extends BatchedItemReader<PublishedMe
       }
     }
 
-    return hasItems;
+    return items;
   }
 }

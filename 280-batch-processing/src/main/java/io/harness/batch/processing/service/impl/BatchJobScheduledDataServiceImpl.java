@@ -107,6 +107,12 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
       Instant startInstant = Instant.now().minus(2, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
       instant = startInstant.isAfter(instant) ? startInstant : instant;
     }
+
+    // We can reduce the last days (to 2-3 days) data to generate, before GA if required.
+    if (null != instant && batchJobType == BatchJobType.K8S_NODE_RECOMMENDATION) {
+      Instant startInstant = Instant.now().minus(30, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
+      instant = startInstant.isAfter(instant) ? startInstant : instant;
+    }
     return instant;
   }
 
