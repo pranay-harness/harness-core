@@ -24,7 +24,6 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.context.GlobalContext;
-import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.logging.AccountLogContext;
@@ -157,10 +156,6 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         if (allowEmptyApiKey()) {
           return;
         }
-        if (checkIfBearerTokenAndValidate(authorization, containerRequestContext)) {
-          return;
-        }
-        throw new AccessDeniedException("Api Key cannot be empty", USER);
       }
       if (checkIfBearerTokenAndValidate(authorization, containerRequestContext)) {
         return;
