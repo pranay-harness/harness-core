@@ -1640,6 +1640,11 @@
         },
         {
           "type": "object",
+          "required": [
+            "connectorRef",
+            "namespace",
+            "releaseName"
+          ],
           "properties": {
             "connectorRef": {
               "type": "string"
@@ -1829,6 +1834,12 @@
         },
         {
           "type": "object",
+          "required": [
+            "cluster",
+            "connectorRef",
+            "namespace",
+            "releaseName"
+          ],
           "properties": {
             "cluster": {
               "type": "string"
