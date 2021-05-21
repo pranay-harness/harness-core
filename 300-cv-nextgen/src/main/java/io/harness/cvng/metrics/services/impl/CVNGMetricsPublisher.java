@@ -5,6 +5,7 @@ import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Group.id;
 
 import io.harness.cvng.analysis.entities.LearningEngineTask;
+import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskKeys;
 import io.harness.cvng.beans.DataCollectionExecutionStatus;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskKeys;
@@ -13,6 +14,7 @@ import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
 import io.harness.cvng.metrics.beans.CVNGMetricContext;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
+import io.harness.cvng.statemachine.entities.AnalysisStateMachine.AnalysisStateMachineKeys;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceKeys;
@@ -65,13 +67,13 @@ public class CVNGMetricsPublisher implements MetricsPublisher, MetricDefinitionI
     TASKS_INFO.put(LearningEngineTask.class,
         QueryParams.builder()
             .nonFinalStatuses(LearningEngineTask.ExecutionStatus.getNonFinalStatues())
-            .statusField(LearningEngineTask.LearningEngineTaskKeys.taskStatus)
+            .statusField(LearningEngineTaskKeys.taskStatus)
             .name("learning_engine_task")
             .build());
     TASKS_INFO.put(AnalysisStateMachine.class,
         QueryParams.builder()
             .nonFinalStatuses(AnalysisStatus.getNonFinalStatuses())
-            .statusField(AnalysisStateMachine.AnalysisStateMachineKeys.status)
+            .statusField(AnalysisStateMachineKeys.status)
             .name("analysis_state_machine")
             .build());
   }
@@ -114,7 +116,7 @@ public class CVNGMetricsPublisher implements MetricsPublisher, MetricDefinitionI
             });
       });
       log.info("Total time taken to collect metrics for class {} {} (ms)", clazz.getSimpleName(),
-          (Instant.now().toEpochMilli() - startTime));
+          Instant.now().toEpochMilli() - startTime);
     });
   }
 
@@ -155,8 +157,8 @@ public class CVNGMetricsPublisher implements MetricsPublisher, MetricDefinitionI
     return queryParams.getName() + "_" + s.toLowerCase() + "_count";
   }
 
-  @Builder
   @Value
+  @Builder
   private static class QueryParams {
     List<?> nonFinalStatuses;
     String statusField;

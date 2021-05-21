@@ -1,7 +1,6 @@
 package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
-import static io.harness.cvng.analysis.CVAnalysisConstants.LEARNING_ENGINE_TASK_METRIC;
 import static io.harness.cvng.analysis.CVAnalysisConstants.LEARNING_RESOURCE;
 import static io.harness.cvng.analysis.CVAnalysisConstants.MARK_FAILURE_PATH;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
