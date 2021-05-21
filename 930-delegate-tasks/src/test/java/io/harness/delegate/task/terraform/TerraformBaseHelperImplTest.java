@@ -7,8 +7,6 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -20,7 +18,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.cli.CliResponse;
-import io.harness.delegate.beans.DelegateFileManagerBase;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.git.NGGitService;
