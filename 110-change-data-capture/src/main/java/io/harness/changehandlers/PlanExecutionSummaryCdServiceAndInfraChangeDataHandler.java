@@ -88,10 +88,10 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
       accountId = dbObject.get("accountId").toString();
     }
     if (dbObject.get("orgIdentifier") != null) {
-      projectIdentifier = dbObject.get("orgIdentifier").toString();
+      orgIdentifier = dbObject.get("orgIdentifier").toString();
     }
     if (dbObject.get("projectIdentifier") != null) {
-      orgIdentifier = dbObject.get("projectIdentifier").toString();
+      projectIdentifier = dbObject.get("projectIdentifier").toString();
     }
 
     // if moduleInfo is null, not sure whether needs to be pushed to this table
