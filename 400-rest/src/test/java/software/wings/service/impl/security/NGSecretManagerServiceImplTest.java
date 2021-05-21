@@ -45,6 +45,7 @@ import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.security.AzureSecretsManagerService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalSecretManagerService;
@@ -63,6 +64,7 @@ import org.mockito.Mock;
 @Slf4j
 public class NGSecretManagerServiceImplTest extends CategoryTest {
   private VaultService vaultService;
+  @Mock private AzureSecretsManagerService azureSecretsManagerService;
   @Mock private LocalSecretManagerService localSecretManagerService;
   @Mock private GcpSecretsManagerService gcpSecretsManagerService;
   @Mock private KmsService kmsService;
@@ -74,12 +76,13 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
   @Before
   public void doSetup() {
     vaultService = mock(VaultService.class);
+    azureSecretsManagerService = mock(AzureSecretsManagerService.class);
     localSecretManagerService = mock(LocalSecretManagerService.class);
     gcpSecretsManagerService = mock(GcpSecretsManagerService.class);
     secretManagerConfigService = mock(SecretManagerConfigService.class);
     wingsPersistence = mock(WingsPersistence.class);
-    ngSecretManagerServiceTest = new NGSecretManagerServiceImpl(vaultService, localSecretManagerService,
-        gcpSecretsManagerService, kmsService, secretManagerConfigService, wingsPersistence);
+    ngSecretManagerServiceTest = new NGSecretManagerServiceImpl(vaultService, azureSecretsManagerService,
+        localSecretManagerService, gcpSecretsManagerService, kmsService, secretManagerConfigService, wingsPersistence);
     ngSecretManagerService = spy(ngSecretManagerServiceTest);
   }
 

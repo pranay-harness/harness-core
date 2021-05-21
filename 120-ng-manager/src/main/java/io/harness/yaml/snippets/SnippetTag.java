@@ -24,6 +24,7 @@ public enum SnippetTag implements YamlSnippetTags {
   splunk,
   appdynamics,
   vault,
+  azurekeyvault,
   local,
   gcpkms,
   gcp,

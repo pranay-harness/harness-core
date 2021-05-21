@@ -632,6 +632,50 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "AzureKeyVaultConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "clientId",
+            "subscription",
+            "tenantId",
+            "vaultName"
+          ],
+          "properties": {
+            "azureEnvironmentType": {
+              "type": "string",
+              "enum": [
+                "AZURE",
+                "AZURE_US_GOVERNMENT"
+              ]
+            },
+            "clientId": {
+              "type": "string"
+            },
+            "default": {
+              "type": "boolean"
+            },
+            "secretKey": {
+              "type": "string"
+            },
+            "subscription": {
+              "type": "string"
+            },
+            "tenantId": {
+              "type": "string"
+            },
+            "vaultName": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "BillingExportSpec": {
       "type": "object",
       "required": [
@@ -1069,6 +1113,7 @@
             "AppDynamics",
             "Prometheus",
             "Vault",
+            "AzureKeyVault",
             "DockerRegistry",
             "Local",
             "AwsKms",
@@ -1154,6 +1199,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/AwsKmsConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AzureKeyVault"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AzureKeyVaultConnectorDTO"
               }
             }
           }
