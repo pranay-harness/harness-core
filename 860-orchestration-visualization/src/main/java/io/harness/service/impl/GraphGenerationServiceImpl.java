@@ -69,15 +69,15 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
       log.info("Found [{}] unprocessed events", unprocessedEventLogs.size());
       for (OrchestrationEventLog orchestrationEventLog : unprocessedEventLogs) {
         // Todo: Remove the event in next release
-        String nodeExecutionId = orchestrationEventLog.getEvent() != null
-            ? orchestrationEventLog.getEvent().getNodeExecutionProto().getUuid()
-            : orchestrationEventLog.getNodeExecutionId();
         OrchestrationEventType orchestrationEventType = orchestrationEventLog.getEvent() != null
             ? orchestrationEventLog.getEvent().getEventType()
             : orchestrationEventLog.getOrchestrationEventType();
         if (orchestrationEventType == OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE) {
           orchestrationGraph = planExecutionStatusUpdateEventHandler.handleEvent(planExecutionId, orchestrationGraph);
         } else {
+          String nodeExecutionId = orchestrationEventLog.getEvent() != null
+              ? orchestrationEventLog.getEvent().getNodeExecutionProto().getUuid()
+              : orchestrationEventLog.getNodeExecutionId();
           orchestrationGraph = graphStatusUpdateHelper.handleEvent(
               planExecutionId, nodeExecutionId, orchestrationEventType, orchestrationGraph);
         }

@@ -71,7 +71,7 @@ public class OrchestrationEventEmitter {
       OrchestrationEventLog orchestrationEventLog = orchestrationEventLogRepository.save(
           OrchestrationEventLog.builder()
               .createdAt(System.currentTimeMillis())
-              .nodeExecutionId(event.getNodeExecutionProto().getUuid())
+              .nodeExecutionId(event.getNodeExecutionProto() == null ? null : event.getNodeExecutionProto().getUuid())
               .orchestrationEventType(event.getEventType())
               .planExecutionId(event.getAmbiance().getPlanExecutionId())
               .validUntil(Date.from(OffsetDateTime.now().plus(Duration.ofDays(14)).toInstant()))
