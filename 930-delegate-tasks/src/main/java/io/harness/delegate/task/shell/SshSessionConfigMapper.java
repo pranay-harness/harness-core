@@ -30,6 +30,9 @@ public class SshSessionConfigMapper {
 
   public SshSessionConfig getSSHSessionConfig(
       SSHKeySpecDTO sshKeySpecDTO, List<EncryptedDataDetail> encryptionDetails) {
+    if (sshKeySpecDTO == null) {
+      return null;
+    }
     SshSessionConfig.Builder builder = aSshSessionConfig().withPort(sshKeySpecDTO.getPort());
     SSHAuthDTO authDTO = sshKeySpecDTO.getAuth();
     switch (authDTO.getAuthScheme()) {

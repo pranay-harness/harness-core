@@ -438,6 +438,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
                 .authRequest(ngGitService.getAuthRequest(
                     (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO(), sshSessionConfig))
                 .accountId(accountId)
+                .repoType(GitRepositoryType.TERRAFORM)
                 .build();
         commitIdForConfigFilesMap.putIfAbsent(
             gitFetchFilesConfig.getIdentifier(), getLatestCommitSHAFromLocalRepo(gitBaseRequest));
