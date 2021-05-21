@@ -18,6 +18,7 @@ import io.harness.connector.entities.embedded.awskmsconnector.AwsKmsConnector;
 import io.harness.connector.entities.embedded.awskmsconnector.AwsKmsIamCredential;
 import io.harness.connector.entities.embedded.awskmsconnector.AwsKmsManualCredential;
 import io.harness.connector.entities.embedded.awskmsconnector.AwsKmsStsCredential;
+import io.harness.connector.entities.embedded.azurekeyvaultconnector.AzureKeyVaultConnector;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketConnector;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketHttpAuthentication;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketSshAuthentication;
@@ -85,6 +86,7 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(GitConfig.class);
     set.add(VaultConnector.class);
     set.add(AwsKmsConnector.class);
+    set.add(AzureKeyVaultConnector.class);
     set.add(GcpKmsConnector.class);
     set.add(LocalConnector.class);
     set.add(AppDynamicsConnector.class);

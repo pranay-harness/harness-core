@@ -14,6 +14,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EncryptedDataParent;
+import io.harness.encryptors.VaultEncryptorsRegistry;
 import io.harness.exception.AzureKeyVaultOperationException;
 import io.harness.exception.SecretManagementException;
 import io.harness.security.encryption.EncryptionType;
@@ -43,6 +44,7 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AzureHelperService azureHelperService;
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private VaultEncryptorsRegistry vaultEncryptorsRegistry;
   private static final String SECRET_KEY_NAME_SUFFIX = "_secretKey";
 
   @Override
@@ -59,7 +61,8 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
       savedAzureVaultConfig = wingsPersistence.get(AzureVaultConfig.class, azureVautConfig.getUuid());
       oldConfigForAudit = kryoSerializer.clone(savedAzureVaultConfig);
 
-      updateCallWithMaskedSecretKey = SECRET_MASK.equals(azureVautConfig.getSecretKey());
+      updateCallWithMaskedSecretKey = SECRET_MASK.equals(azureVautConfig.getSecretKey())
+          || (isEmpty(azureVautConfig.getSecretKey()) && azureVautConfig.getNgMetadata() != null);
     }
 
     if (updateCallWithMaskedSecretKey) {
@@ -106,6 +109,7 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
       EncryptedData secretFieldEncryptedData, String secretNameSuffix, String fieldName) {
     String secretFieldEncryptedDataId = null;
     if (secretFieldEncryptedData != null) {
+      secretFieldEncryptedData.setNgMetadata(getNgEncryptedDataMetadata(secretsManagerConfig));
       secretFieldEncryptedData.setAccountId(secretsManagerConfig.getAccountId());
       secretFieldEncryptedData.addParent(
           EncryptedDataParent.createParentRef(configId, AzureVaultConfig.class, fieldName, AZURE_VAULT));
@@ -139,7 +143,8 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
   @Override
   public List<String> listAzureVaults(String accountId, AzureVaultConfig secretsManagerConfig) {
     secretsManagerConfig.setAccountId(accountId);
-    if (SECRET_MASK.equals(secretsManagerConfig.getSecretKey())) {
+    if (SECRET_MASK.equals(secretsManagerConfig.getSecretKey())
+        || (isEmpty(secretsManagerConfig.getSecretKey()) && secretsManagerConfig.getNgMetadata() != null)) {
       decryptAzureConfigSecrets(secretsManagerConfig, false);
     }
     List<Vault> vaultList = azureHelperService.listVaults(accountId, secretsManagerConfig);
@@ -171,6 +176,13 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
         secretsManagerConfig, String.format("Azure vault config not found for id: %s in account: %s", id, accountId));
     decryptAzureConfigSecrets(secretsManagerConfig, false);
     return secretsManagerConfig;
+  }
+
+  @Override
+  public void validateAzureSecretsManagerConfig(String accountId, AzureVaultConfig secretsManagerConfig) {
+    vaultEncryptorsRegistry.getVaultEncryptor(EncryptionType.AZURE_VAULT)
+        .createSecret(
+            accountId, AzureVaultConfig.AZURE_VAULT_VALIDATION_URL, Boolean.TRUE.toString(), secretsManagerConfig);
   }
 
   @Override

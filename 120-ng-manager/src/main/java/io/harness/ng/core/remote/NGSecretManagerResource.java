@@ -19,6 +19,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -50,7 +51,7 @@ public class NGSecretManagerResource {
   @ApiOperation(value = "Get metadata of secret manager", nickname = "getMetadata")
   public ResponseDTO<SecretManagerMetadataDTO> getSecretEngines(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      SecretManagerMetadataRequestDTO requestDTO) {
+      @NotNull @Valid SecretManagerMetadataRequestDTO requestDTO) {
     return ResponseDTO.newResponse(ngSecretManagerService.getMetadata(accountIdentifier, requestDTO));
   }
 

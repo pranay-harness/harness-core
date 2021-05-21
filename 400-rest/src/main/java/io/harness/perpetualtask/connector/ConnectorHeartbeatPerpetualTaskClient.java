@@ -27,6 +27,8 @@ import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecA
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecAssumeSTSDTO;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecManualConfigDTO;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsValidationParams;
+import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultConnectorDTO;
+import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultValidationParams;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsValidationParams;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
@@ -42,6 +44,7 @@ import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigDTO;
 import io.harness.secretmanagerclient.dto.awskms.AwsKmsConfigDTO;
+import io.harness.secretmanagerclient.dto.azurekeyvault.AzureKeyVaultConfigDTO;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.KryoSerializer;
 import io.harness.utils.RestCallToNGManagerClientUtils;
@@ -111,6 +114,12 @@ public class ConnectorHeartbeatPerpetualTaskClient implements PerpetualTaskServi
           vaultConnectorDTO.setAuthToken(vaultConfig.getAuthToken());
           vaultConnectorDTO.setAppRoleId(vaultConfig.getAppRoleId());
           vaultConnectorDTO.setSecretId(vaultConfig.getSecretId());
+          return;
+        case AZURE_KEY_VAULT:
+          AzureKeyVaultConfigDTO azureKeyVaultConfig = (AzureKeyVaultConfigDTO) secretManagerConfig;
+          AzureKeyVaultConnectorDTO azureKeyVaultConnectorDTO =
+              ((AzureKeyVaultValidationParams) connectorValidationParams).getAzurekeyvaultConnectorDTO();
+          azureKeyVaultConnectorDTO.setSecretKey(azureKeyVaultConfig.getSecretKey());
           return;
         case GCP_KMS:
           GcpKmsConfigDTO gcpKmsConfig = (GcpKmsConfigDTO) secretManagerConfig;
