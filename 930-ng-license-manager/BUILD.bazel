@@ -1,6 +1,5 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//:macros.bzl", "test_targets_list")
 load("//:macros.bzl", "run_analysis")
 
 HarnessTeam = "GTM"
