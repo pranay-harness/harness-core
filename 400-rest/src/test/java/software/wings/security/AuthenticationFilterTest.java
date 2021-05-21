@@ -33,7 +33,7 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.AccessDeniedException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 
@@ -312,9 +312,7 @@ public class AuthenticationFilterTest extends CategoryTest {
     when(resourceInfo.getResourceMethod()).thenReturn(getCgMockResourceMethod());
     when(resourceInfo.getResourceClass()).thenReturn(getCgMockResourceClass());
 
-    assertThatThrownBy(() -> authenticationFilter.filter(context))
-        .isInstanceOf(AccessDeniedException.class)
-        .hasMessage("Api Key cannot be empty");
+    assertThatThrownBy(() -> authenticationFilter.filter(context)).isInstanceOf(InvalidRequestException.class);
   }
 
   @Test
