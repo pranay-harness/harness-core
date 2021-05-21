@@ -6,6 +6,7 @@ import static io.harness.cdng.k8s.K8sStepHelper.MISSING_INFRASTRUCTURE_ERROR;
 import static io.harness.delegate.beans.connector.ConnectorType.AWS;
 import static io.harness.delegate.beans.connector.ConnectorType.GCP;
 import static io.harness.delegate.beans.connector.ConnectorType.HTTP_HELM_REPO;
+import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ABOSII;
@@ -21,6 +22,9 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -32,6 +36,7 @@ import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome.K8sDirectInfrastructureOutcomeBuilder;
 import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;
 import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
 import io.harness.cdng.manifest.steps.ManifestsOutcome;
 import io.harness.cdng.manifest.yaml.GcsStoreConfig;
 import io.harness.cdng.manifest.yaml.GitStore;
@@ -65,6 +70,7 @@ import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
+import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
@@ -72,6 +78,8 @@ import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchRequest;
+import io.harness.delegate.task.git.GitFetchResponse;
+import io.harness.delegate.task.git.TaskStatus;
 import io.harness.delegate.task.helm.HelmValuesFetchRequest;
 import io.harness.delegate.task.helm.HelmValuesFetchResponse;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
@@ -80,13 +88,21 @@ import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestType;
 import io.harness.delegate.task.k8s.OpenshiftManifestDelegateConfig;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.helm.HelmSubCommandType;
 import io.harness.k8s.model.HelmVersion;
+import io.harness.logging.LogCallback;
+import io.harness.logging.LogLevel;
+import io.harness.logging.UnitProgress;
+import io.harness.logging.UnitStatus;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.failure.FailureData;
+import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.contracts.refobjects.RefType;
 import io.harness.pms.data.OrchestrationRefType;
@@ -96,6 +112,7 @@ import io.harness.pms.sdk.core.execution.invokers.StrategyHelper;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
@@ -1168,5 +1185,77 @@ public class K8sStepHelperTest extends CategoryTest {
     HelmValuesFetchResponsePassThroughData helmPassThroughData =
         (HelmValuesFetchResponsePassThroughData) response.getPassThroughData();
     assertThat(helmPassThroughData.getErrorMsg()).isEqualTo("Something went wrong");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testExecuteNextLinkInternalStepException() throws Exception {
+    LogCallback mockLogCallback = mock(LogCallback.class);
+    K8sStepHelper spyK8sStepHelper = spy(k8sStepHelper);
+
+    StepElementParameters rollingStepElementParams =
+        StepElementParameters.builder().spec(K8sRollingStepParameters.infoBuilder().build()).build();
+    UnitProgressData unitProgressData =
+        UnitProgressData.builder()
+            .unitProgresses(Arrays.asList(
+                UnitProgress.newBuilder().setUnitName("Fetch Files").setStatus(UnitStatus.RUNNING).build(),
+                UnitProgress.newBuilder().setUnitName("Some Unit").setStatus(UnitStatus.SUCCESS).build()))
+            .build();
+
+    K8sStepPassThroughData passThroughData = K8sStepPassThroughData.builder()
+                                                 .k8sManifestOutcome(K8sManifestOutcome.builder().build())
+                                                 .infrastructure(K8sDirectInfrastructureOutcome.builder().build())
+                                                 .build();
+
+    GitFetchResponse gitFetchResponse = GitFetchResponse.builder()
+                                            .filesFromMultipleRepo(Collections.emptyMap())
+                                            .taskStatus(TaskStatus.SUCCESS)
+                                            .unitProgressData(unitProgressData)
+                                            .build();
+    Map<String, ResponseData> responseDataMap = ImmutableMap.of("git-fetch-response", gitFetchResponse);
+    ThrowingSupplier responseDataSuplier = StrategyHelper.buildResponseDataSupplier(responseDataMap);
+    RuntimeException thrownException = new RuntimeException("Failed to do something");
+
+    doThrow(thrownException)
+        .when(k8sStepExecutor)
+        .executeK8sTask(passThroughData.getK8sManifestOutcome(), ambiance, rollingStepElementParams,
+            Collections.emptyList(), passThroughData.getInfrastructure(), false);
+    doReturn(mockLogCallback).when(spyK8sStepHelper).getLogCallback("Fetch Files", ambiance, false);
+
+    TaskChainResponse response = spyK8sStepHelper.executeNextLink(
+        k8sStepExecutor, ambiance, rollingStepElementParams, passThroughData, responseDataSuplier);
+
+    assertThat(response.getPassThroughData()).isInstanceOf(StepExceptionPassThroughData.class);
+    StepExceptionPassThroughData stepExceptionData = (StepExceptionPassThroughData) response.getPassThroughData();
+    assertThat(stepExceptionData.getErrorMessage()).isEqualTo(ExceptionUtils.getMessage(thrownException));
+    List<UnitProgress> unitProgresses = stepExceptionData.getUnitProgressData().getUnitProgresses();
+    assertThat(unitProgresses).hasSize(2);
+    assertThat(unitProgresses.get(0).getEndTime()).isNotZero();
+    assertThat(unitProgresses.get(0).getStatus()).isEqualTo(UnitStatus.FAILURE);
+
+    verify(mockLogCallback, times(1)).saveExecutionLog(thrownException.getMessage(), LogLevel.ERROR, FAILURE);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testHandleStepExceptionFailure() {
+    List<UnitProgress> progressList = Collections.singletonList(UnitProgress.newBuilder().build());
+    StepExceptionPassThroughData data =
+        StepExceptionPassThroughData.builder()
+            .unitProgressData(UnitProgressData.builder().unitProgresses(progressList).build())
+            .errorMessage("Something went wrong")
+            .build();
+
+    StepResponse result = k8sStepHelper.handleStepExceptionFailure(data);
+
+    assertThat(result.getUnitProgressList()).isEqualTo(progressList);
+    assertThat(result.getStatus()).isEqualTo(Status.FAILED);
+    assertThat(result.getFailureInfo().getFailureDataList()).hasSize(1);
+    FailureData failureData = result.getFailureInfo().getFailureData(0);
+    assertThat(failureData.getFailureTypesList()).contains(FailureType.APPLICATION_FAILURE);
+    assertThat(failureData.getCode()).isEqualTo(GENERAL_ERROR.name());
+    assertThat(failureData.getMessage()).isEqualTo("Something went wrong");
   }
 }
