@@ -7,6 +7,7 @@ import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.HarnessStringUtils.emptyIfNull;
+import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.manifest.ManifestHelper.getValuesYamlGitFilePath;
@@ -18,6 +19,7 @@ import static io.harness.steps.StepUtils.prepareTaskRequest;
 import static io.harness.validation.Validator.notEmptyCheck;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.trim;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -388,9 +390,9 @@ public class K8sStepHelper {
         .sshKeySpecDTO(sshKeySpecDTO)
         .encryptedDataDetails(encryptedDataDetailList)
         .fetchType(gitstoreConfig.getGitFetchType())
-        .branch(getParameterFieldValue(gitstoreConfig.getBranch()))
-        .commitId(getParameterFieldValue(gitstoreConfig.getCommitId()))
-        .paths(paths)
+        .branch(trim(getParameterFieldValue(gitstoreConfig.getBranch())))
+        .commitId(trim(getParameterFieldValue(gitstoreConfig.getCommitId())))
+        .paths(trimStrings(paths))
         .connectorName(connectorDTO.getName())
         .build();
   }
