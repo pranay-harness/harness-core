@@ -21,4 +21,13 @@ public class FactoryMethodTest extends CategoryTest {
     String email = "name@harness.io";
     assertThat(triggeredBy(name, email)).isEqualTo(new TriggeredBy(name, email));
   }
+
+  @Test
+  @Owner(developers = VGLIJIN)
+  @Category(UnitTests.class)
+  public void triggeredByTest2() {
+    String name = "name";
+    String email = "name@harness.io";
+    assertThat(triggeredBy(name, email)).isEqualTo(new TriggeredBy(name, email));
+  }
 }
