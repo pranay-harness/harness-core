@@ -10,6 +10,7 @@ import org.springframework.data.domain.Sort;
 @UtilityClass
 public class PageTestUtils {
   public static Page getPage(List list, int total) {
+    int i;
     return new PageImpl(list, new Pageable() {
       @Override
       public int getPageNumber() {
