@@ -57,6 +57,8 @@ import io.harness.ccm.license.CeLicenseType;
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
+import io.harness.event.handler.impl.segment.SegmentHandler.Keys;
+import io.harness.event.handler.impl.segment.SegmentHelper;
 import io.harness.event.model.EventType;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
@@ -269,6 +271,8 @@ public class UserServiceImpl implements UserService {
   private static final String LOGIN_URL_FORMAT = "/login?company=%s&account=%s&email=%s";
   private static final String HARNESS_ISSUER = "Harness Inc";
   private static final int MINIMAL_ORDER_QUANTITY = 1;
+  private static final String SYSTEM = "system";
+  private static final String SETUP_ACCOUNT_FROM_MARKETPLACE = "Account Setup from Marketplace";
 
   /**
    * The Executor service.
@@ -308,6 +312,7 @@ public class UserServiceImpl implements UserService {
   @Inject private NgInviteClient ngInviteClient;
   @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
   @Inject private AccessRequestService accessRequestService;
+  @Inject private SegmentHelper segmentHelper;
 
   private Cache<String, User> getUserCache() {
     if (configurationController.isPrimary()) {
@@ -3418,6 +3423,7 @@ public class UserServiceImpl implements UserService {
   }
 
   private String setupAccountBasedOnProduct(User user, UserInvite userInvite, MarketPlace marketPlace) {
+    String accountId;
     LicenseInfo licenseInfo = LicenseInfo.builder()
                                   .accountType(AccountType.PAID)
                                   .licenseUnits(marketPlace.getOrderQuantity())
@@ -3425,7 +3431,10 @@ public class UserServiceImpl implements UserService {
                                   .accountStatus(AccountStatus.ACTIVE)
                                   .build();
     if (marketPlace.getProductCode().equals(configuration.getMarketPlaceConfig().getAwsMarketPlaceProductCode())) {
-      return setupAccountForUser(user, userInvite, licenseInfo);
+      if (null != marketPlace.getLicenseType() && marketPlace.getLicenseType().equals("TRIAL")) {
+        licenseInfo.setAccountType(AccountType.TRIAL);
+      }
+      accountId = setupAccountForUser(user, userInvite, licenseInfo);
     } else if (marketPlace.getProductCode().equals(
                    configuration.getMarketPlaceConfig().getAwsMarketPlaceCeProductCode())) {
       CeLicenseType ceLicenseType = CeLicenseType.PAID;
@@ -3434,15 +3443,31 @@ public class UserServiceImpl implements UserService {
       }
       licenseInfo.setAccountType(AccountType.TRIAL);
       licenseInfo.setLicenseUnits(MINIMAL_ORDER_QUANTITY);
-      String accountId = setupAccountForUser(user, userInvite, licenseInfo);
+      accountId = setupAccountForUser(user, userInvite, licenseInfo);
       licenseService.updateCeLicense(accountId,
           CeLicenseInfo.builder()
               .expiryTime(marketPlace.getExpirationDate().getTime())
               .licenseType(ceLicenseType)
               .build());
-      return accountId;
     } else {
       throw new InvalidRequestException("Cannot resolve AWS marketplace order");
     }
+
+    Map<String, String> properties = new HashMap<String, String>() {
+      {
+        put("marketPlaceId", marketPlace.getUuid());
+        put("licenseType", marketPlace.getLicenseType());
+        put("productCode", marketPlace.getProductCode());
+      }
+    };
+    Map<String, Boolean> integrations = new HashMap<String, Boolean>() {
+      { put(Keys.SALESFORCE, Boolean.TRUE); }
+    };
+
+    log.info("Setting up account {} for Product: {} and licenseType: {}", accountId, marketPlace.getProductCode(),
+        marketPlace.getLicenseType());
+    segmentHelper.reportTrackEvent(SYSTEM, SETUP_ACCOUNT_FROM_MARKETPLACE, properties, integrations);
+
+    return accountId;
   }
 }

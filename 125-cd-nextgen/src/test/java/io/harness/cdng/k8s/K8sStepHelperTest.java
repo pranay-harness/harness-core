@@ -559,6 +559,31 @@ public class K8sStepHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void shouldTrimFieldsForGetGitStoreDelegateConfig() {
+    List<String> paths = Arrays.asList("test/path1", "test/path2 ", " test/path3", " test/path4 ", "te st/path5 ");
+    GitStoreConfig gitStoreConfig = GithubStore.builder()
+                                        .paths(ParameterField.createValueField(paths))
+                                        .commitId(ParameterField.createValueField(" commitId "))
+                                        .branch(ParameterField.createValueField(" branch "))
+                                        .build();
+    ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder().build();
+    SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
+    GitConfigDTO gitConfigDTO =
+        GitConfigDTO.builder().gitConnectionType(GitConnectionType.REPO).url("http://localhost").build();
+
+    GitStoreDelegateConfig gitStoreDelegateConfig =
+        k8sStepHelper.getGitStoreDelegateConfig(gitStoreConfig, connectorInfoDTO, Collections.emptyList(),
+            sshKeySpecDTO, gitConfigDTO, ManifestType.K8S_MANIFEST.name(), paths);
+
+    assertThat(gitStoreDelegateConfig.getBranch()).isEqualTo("branch");
+    assertThat(gitStoreDelegateConfig.getCommitId()).isEqualTo("commitId");
+    assertThat(gitStoreDelegateConfig.getPaths())
+        .containsExactlyInAnyOrder("test/path1", "test/path2", "test/path3", "test/path4", "te st/path5");
+  }
+
+  @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void testGetManifestDelegateConfigForOpenshift() {

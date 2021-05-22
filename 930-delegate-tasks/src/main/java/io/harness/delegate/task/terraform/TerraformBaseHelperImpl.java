@@ -386,10 +386,9 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
 
   public GitBaseRequest getGitBaseRequestForConfigFile(
       String accountId, GitStoreDelegateConfig confileFileGitStore, GitConfigDTO configFileGitConfigDTO) {
-    SshSessionConfig sshSessionConfig = null;
-
     secretDecryptionService.decrypt(configFileGitConfigDTO.getGitAuth(), confileFileGitStore.getEncryptedDataDetails());
 
+    SshSessionConfig sshSessionConfig = null;
     if (configFileGitConfigDTO.getGitAuthType() == SSH) {
       sshSessionConfig = getSshSessionConfig(confileFileGitStore);
     }
@@ -426,8 +425,10 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
         GitStoreDelegateConfig gitStoreDelegateConfig = gitFetchFilesConfig.getGitStoreDelegateConfig();
         GitConfigDTO gitConfigDTO = (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO();
 
-        SshSessionConfig sshSessionConfig = sshSessionConfigMapper.getSSHSessionConfig(
-            gitStoreDelegateConfig.getSshKeySpecDTO(), gitStoreDelegateConfig.getEncryptedDataDetails());
+        SshSessionConfig sshSessionConfig = null;
+        if (gitConfigDTO.getGitAuthType() == SSH) {
+          sshSessionConfig = getSshSessionConfig(gitStoreDelegateConfig);
+        }
 
         GitBaseRequest gitBaseRequest =
             GitBaseRequest.builder()
@@ -438,6 +439,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
                 .authRequest(ngGitService.getAuthRequest(
                     (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO(), sshSessionConfig))
                 .accountId(accountId)
+                .repoType(GitRepositoryType.TERRAFORM)
                 .build();
         commitIdForConfigFilesMap.putIfAbsent(
             gitFetchFilesConfig.getIdentifier(), getLatestCommitSHAFromLocalRepo(gitBaseRequest));
@@ -531,9 +533,8 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
               ((RemoteTerraformVarFileInfo) varFile).getGitFetchFilesConfig().getGitStoreDelegateConfig();
           GitConfigDTO gitConfigDTO = (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO();
           if (EmptyPredicate.isNotEmpty(gitStoreDelegateConfig.getPaths())) {
-            logCallback.saveExecutionLog(
-                format("Fetching TfVar files from Git repository: [%s]", gitConfigDTO.getUrl()), INFO,
-                CommandExecutionStatus.RUNNING);
+            logCallback.saveExecutionLog(format("Fetching Var files from Git repository: [%s]", gitConfigDTO.getUrl()),
+                INFO, CommandExecutionStatus.RUNNING);
 
             secretDecryptionService.decrypt(
                 gitConfigDTO.getGitAuth(), gitStoreDelegateConfig.getEncryptedDataDetails());
@@ -565,7 +566,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
         }
       }
       logCallback.saveExecutionLog(
-          format("TfVar Git directory: [%s]", tfVarDirAbsPath, INFO, CommandExecutionStatus.RUNNING));
+          format("Var File directory: [%s]", tfVarDirAbsPath, INFO, CommandExecutionStatus.RUNNING));
       return varFilePaths;
     }
     return Collections.emptyList();

@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.delegate.task.k8s.K8sDeleteRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
@@ -18,6 +19,7 @@ import io.harness.plancreator.steps.common.rollback.TaskChainExecutableWithRollb
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
@@ -28,6 +30,7 @@ import io.harness.supplier.ThrowingSupplier;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
+import java.util.Collections;
 import java.util.List;
 
 @OwnedBy(HarnessTeam.CDP)
@@ -44,7 +47,15 @@ public class K8sDeleteStep extends TaskChainExecutableWithRollback implements K8
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     K8sDeleteStepParameters k8sDeleteStepParameters = (K8sDeleteStepParameters) stepElementParameters.getSpec();
     validate(k8sDeleteStepParameters);
-    return k8sStepHelper.startChainLink(this, ambiance, stepElementParameters);
+    K8sDeleteStepParameters deleteStepParameters = (K8sDeleteStepParameters) stepElementParameters.getSpec();
+    if (DeleteResourcesType.ManifestPath == deleteStepParameters.getDeleteResources().getType()) {
+      return k8sStepHelper.startChainLink(this, ambiance, stepElementParameters);
+    } else {
+      InfrastructureOutcome infrastructureOutcome = (InfrastructureOutcome) outcomeService.resolve(
+          ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
+      return executeK8sTask(
+          null, ambiance, stepElementParameters, Collections.emptyList(), infrastructureOutcome, false);
+    }
   }
 
   private void validate(K8sDeleteStepParameters stepParameters) {
@@ -84,11 +95,15 @@ public class K8sDeleteStep extends TaskChainExecutableWithRollback implements K8
             .deleteNamespacesForRelease(deleteStepParameters.deleteResources.getSpec().getDeleteNamespaceValue())
             .filePaths(
                 isManifestFiles ? deleteStepParameters.getDeleteResources().getSpec().getManifestPathsValue() : "")
-            .valuesYamlList(k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents))
+            .valuesYamlList(k8sManifestOutcome != null
+                    ? k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents)
+                    : Collections.emptyList())
             .taskType(K8sTaskType.DELETE)
             .timeoutIntervalInMin(K8sStepHelper.getTimeoutInMin(stepParameters))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
-            .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance))
+            .manifestDelegateConfig(k8sManifestOutcome != null
+                    ? k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance)
+                    : null)
             .shouldOpenFetchFilesLogStream(shouldOpenFetchFilesLogStream)
             .build();
 

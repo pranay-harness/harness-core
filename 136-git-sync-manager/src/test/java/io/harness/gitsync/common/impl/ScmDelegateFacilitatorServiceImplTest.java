@@ -90,7 +90,8 @@ public class ScmDelegateFacilitatorServiceImplTest extends GitSyncTestBase {
   @Category(UnitTests.class)
   public void listBranchesForRepoByConnectorTest() {
     when(delegateGrpcClientWrapper.executeSyncTask(any()))
-        .thenReturn(ScmGitRefTaskResponseData.builder().listBranchesResponse(listBranchesResponse).build());
+        .thenReturn(
+            ScmGitRefTaskResponseData.builder().listBranchesResponse(listBranchesResponse.toByteArray()).build());
     final List<String> branches = scmDelegateFacilitatorService.listBranchesForRepoByConnector(accountIdentifier,
         orgIdentifier, projectIdentifier, connectorIdentifierRef, repoURL,
         PageRequest.builder().pageIndex(0).pageSize(10).build(), "");
