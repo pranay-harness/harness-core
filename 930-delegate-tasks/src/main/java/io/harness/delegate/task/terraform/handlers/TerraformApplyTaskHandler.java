@@ -95,6 +95,7 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
               .isSaveTerraformJson(taskParameters.isSaveTerraformStateJson())
               .logCallback(logCallback)
               .planJsonLogOutputStream(planJsonLogOutputStream)
+              .timeoutInMillis(taskParameters.getTimeoutInMillis())
               .build();
 
       CliResponse response = terraformBaseHelper.executeTerraformApplyStep(terraformExecuteStepRequest);
