@@ -1,5 +1,6 @@
 package software.wings.dl.exportimport;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
 
@@ -115,6 +116,46 @@ public class WingsMongoExportImport {
     zipOutputStream.write(jsonString.getBytes(Charset.defaultCharset()));
     zipOutputStream.flush();
     fileOutputStream.flush();
+  }
+
+  public boolean exportRecords(ZipOutputStream zipOutputStream, FileOutputStream fileOutputStream, DBObject filter,
+      String collectionName, int batchNumber, int batchSize, int mongoBatchSize) throws Exception {
+    if (mongoBatchSize == 0) {
+      mongoBatchSize = BATCH_SIZE;
+    }
+    DBCollection collection =
+        wingsPersistence.getDatastore(HPersistence.DEFAULT_STORE).getDB().getCollection(collectionName);
+
+    DBCursor cursor = collection.find(filter, new DBCollectionFindOptions().batchSize(mongoBatchSize));
+    int i = 0;
+    List<String> records = new ArrayList<>();
+
+    while (cursor.hasNext()) {
+      BasicDBObject basicDBObject = (BasicDBObject) cursor.next();
+      if (i >= batchSize * batchNumber) {
+        records.add(basicDBObject.toJson());
+      }
+      if (EmptyPredicate.isNotEmpty(records) && records.size() >= batchSize) {
+        try {
+          String zipEntryName = collectionName + JSON_FILE_SUFFIX;
+          exportToStream(zipOutputStream, fileOutputStream, records, zipEntryName);
+          log.info("{} number of records of batch {} and collection {} have been exported.", records.size(),
+              batchNumber, collectionName);
+          records = new ArrayList<>();
+          break;
+        } catch (IOException ioe) {
+          log.error(
+              "Migration: Getting error while batch exporting for collection {} at batch {}", collectionName, i, ioe);
+          throw new Exception("Migration: Issue while batch exporting for collection " + collectionName);
+        }
+      }
+      i++;
+    }
+    if (records.size() > 0) {
+      String zipEntryName = collectionName + JSON_FILE_SUFFIX;
+      exportToStream(zipOutputStream, fileOutputStream, records, zipEntryName);
+    }
+    return true;
   }
 
   /**
