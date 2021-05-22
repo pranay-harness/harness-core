@@ -35,4 +35,5 @@ public class TerraformExecuteStepRequest {
   boolean isSaveTerraformJson;
   @Nonnull LogCallback logCallback;
   @Nonnull PlanJsonLogOutputStream planJsonLogOutputStream;
+  long timeoutInMillis;
 }
