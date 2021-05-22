@@ -28,6 +28,7 @@ public class CategoryTest {
   @Rule public TestName testName = new TestName();
   @Rule public DistributeRule distributeRule = new DistributeRule();
 
+  private int var = 9;
   private RepeatRule repeatRule = new RepeatRule();
 
   @Rule
