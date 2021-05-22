@@ -10,7 +10,7 @@ Plan creation converts pipeline YAML into an execution plan.
 
 ## Plan creation
 
-PMS receives a request to execute a pipeline YAML. Adding dummy message to test TI
+PMS receives a request to execute a pipeline YAML.
 
 ### PMS
 
