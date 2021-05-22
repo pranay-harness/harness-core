@@ -6,6 +6,6 @@ import io.harness.ccm.commons.entities.InstanceData;
 import java.time.Instant;
 
 public interface InstancePricingStrategy {
-  PricingData getPricePerHour(
-      InstanceData instanceData, Instant startTime, Instant endTime, double instanceActiveSeconds);
+  PricingData getPricePerHour(InstanceData instanceData, Instant startTime, Instant endTime,
+      double instanceActiveSeconds, double parentInstanceActiveSecond);
 }
