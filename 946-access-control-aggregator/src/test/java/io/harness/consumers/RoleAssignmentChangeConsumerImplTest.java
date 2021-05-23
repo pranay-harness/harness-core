@@ -33,7 +33,6 @@ public class RoleAssignmentChangeConsumerImplTest extends CategoryTest {
   private ACLService aclService;
   private ResourceGroupService resourceGroupService;
   private RoleService roleService;
-  private ScopeService scopeService;
   private UserGroupService userGroupService;
   private RoleAssignmentService roleAssignmentService;
 
@@ -42,11 +41,10 @@ public class RoleAssignmentChangeConsumerImplTest extends CategoryTest {
     aclService = mock(ACLService.class);
     resourceGroupService = mock(ResourceGroupService.class);
     roleService = mock(RoleService.class);
-    scopeService = mock(ScopeService.class);
     userGroupService = mock(UserGroupService.class);
     roleAssignmentService = mock(RoleAssignmentService.class);
     roleAssignmentChangeConsumer = new RoleAssignmentChangeConsumerImpl(
-        aclService, roleService, userGroupService, resourceGroupService, scopeService, roleAssignmentService);
+        aclService, roleService, userGroupService, resourceGroupService, roleAssignmentService);
   }
 
   private List<ACL> getAlreadyExistingACLS() {
