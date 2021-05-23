@@ -1,20 +1,27 @@
 package io.harness.engine.utils;
 
-import io.harness.utils.RetryUtils;
-
-import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
+import org.springframework.data.mongodb.MongoTransactionException;
+import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
 public class TransactionUtils {
-  private final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
-      "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
+  private final RetryPolicy<Object> transactionRetryPolicy =
+      new RetryPolicy<>()
+          .withDelay(Duration.ofSeconds(1))
+          .withMaxAttempts(3)
+          .onFailedAttempt(event
+              -> log.info("Retrying Transaction. Attempt No. {}", event.getAttemptCount(), event.getLastFailure()))
+          .onFailure(event -> log.error("Transaction Failed", event.getFailure()))
+          .handle(TransactionException.class)
+          .handle(MongoTransactionException.class)
+          .handle(UncategorizedMongoDbException.class);
 
   @Inject private TransactionTemplate transactionTemplate;
 
