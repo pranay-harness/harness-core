@@ -5,7 +5,7 @@ import static io.harness.gitsync.common.beans.YamlChangeSet.MAX_QUEUE_DURATION_E
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.common.beans.YamlChangeSet;
-import io.harness.gitsync.common.beans.YamlChangeSet.Status;
+import io.harness.gitsync.common.beans.YamlChangeSetStatus;
 import io.harness.gitsync.core.service.YamlChangeSetService;
 
 import com.google.inject.Singleton;
@@ -18,25 +18,27 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(DX)
 public class GitChangeSetRunnableHelper {
-  private static final long TIMEOUT_FOR_RUNNING_CHANGESET = 90;
+  private static final long TIMEOUT_FOR_RUNNING_CHANGESET = 30;
   private static final long TIMEOUT_FOR_MARKING_SKIPPED = 3 /*days*/;
 
-  public List<YamlChangeSet> getStuckYamlChangeSets(
-      YamlChangeSetService yamlChangeSetService, List<String> runningAccountIdList) {
+  public List<YamlChangeSet> getStuckYamlChangeSets(YamlChangeSetService yamlChangeSetService,
+      List<String> runningAccountIdList, List<YamlChangeSetStatus> runningStatusList) {
     return yamlChangeSetService.findByAccountIdsStatusLastUpdatedAtLessThan(
-        runningAccountIdList, TIMEOUT_FOR_RUNNING_CHANGESET);
+        runningAccountIdList, runningStatusList, TIMEOUT_FOR_RUNNING_CHANGESET);
   }
 
-  public List<String> getRunningAccountIdList(YamlChangeSetService yamlChangeSetService) {
-    return yamlChangeSetService.findDistinctAccountIdsByStatus(Status.RUNNING);
+  public List<String> getRunningAccountIdList(
+      YamlChangeSetService yamlChangeSetService, List<YamlChangeSetStatus> yamlChangeSetStatuses) {
+    return yamlChangeSetService.findDistinctAccountIdsByStatus(yamlChangeSetStatuses);
   }
 
   public void handleOldQueuedChangeSets(YamlChangeSetService yamlChangeSetService) {
     log.info("Marking obsolete queued changesets as skipped");
     try {
       final UpdateResult update =
-          yamlChangeSetService.updateYamlChangeSetsToNewStatusWithMessageCodeAndCreatedAtLessThan(Status.QUEUED,
-              Status.SKIPPED, System.currentTimeMillis() - Duration.ofDays(TIMEOUT_FOR_MARKING_SKIPPED).toMillis(),
+          yamlChangeSetService.updateYamlChangeSetsToNewStatusWithMessageCodeAndCreatedAtLessThan(
+              YamlChangeSetStatus.QUEUED, YamlChangeSetStatus.SKIPPED,
+              System.currentTimeMillis() - Duration.ofDays(TIMEOUT_FOR_MARKING_SKIPPED).toMillis(),
               MAX_QUEUE_DURATION_EXCEEDED_CODE);
       log.info("Successfully marked obsolete queued changesets with update results = [{}]", update);
     } catch (Exception e) {

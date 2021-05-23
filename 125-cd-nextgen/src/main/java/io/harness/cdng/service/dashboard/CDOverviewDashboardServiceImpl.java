@@ -90,7 +90,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     }
 
     if (startInterval > 0 && endInterval > 0) {
-      totalBuildSqlBuilder.append(String.format("startts>=%s and startts<%s;", startInterval, endInterval));
+      totalBuildSqlBuilder.append(
+          String.format("startts is not null and startts>=%s and startts<%s;", startInterval, endInterval));
     }
 
     return totalBuildSqlBuilder.toString();
@@ -115,7 +116,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     }
 
     if (startInterval > 0 && endInterval > 0) {
-      totalBuildSqlBuilder.append(String.format("startts>=%s and startts<%s;", startInterval, endInterval));
+      totalBuildSqlBuilder.append(
+          String.format("startts is not null and startts>=%s and startts<%s;", startInterval, endInterval));
     }
 
     return totalBuildSqlBuilder.toString();
@@ -146,33 +148,22 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
     totalBuildSqlBuilder.deleteCharAt(totalBuildSqlBuilder.length() - 1);
 
-    totalBuildSqlBuilder.append(String.format(") ORDER BY startts DESC LIMIT %s", days));
+    totalBuildSqlBuilder.append(String.format(") and startts is not null ORDER BY startts DESC LIMIT %s", days));
 
     return totalBuildSqlBuilder.toString();
   }
 
   public String queryBuilderEnvironmentType(
       String accountId, String orgId, String projectId, long startInterval, long endInterval) {
-    String selectStatusQuery = "select env_type from " + tableNameCD + ", " + tableNameServiceAndInfra + " where ";
+    String selectStatusQuery = "select env_type from " + tableNameServiceAndInfra + " where ";
     StringBuilder totalBuildSqlBuilder = new StringBuilder();
     totalBuildSqlBuilder.append(selectStatusQuery);
 
-    if (accountId != null) {
-      totalBuildSqlBuilder.append(String.format("accountid='%s' and ", accountId));
-    }
-
-    if (orgId != null) {
-      totalBuildSqlBuilder.append(String.format("orgidentifier='%s' and ", orgId));
-    }
-
-    if (projectId != null) {
-      totalBuildSqlBuilder.append(String.format("projectidentifier='%s' and ", projectId));
-    }
-
     if (startInterval > 0 && endInterval > 0) {
+      String idQuery = queryBuilderSelectIdCdTable(accountId, orgId, projectId, startInterval, endInterval);
+      idQuery = idQuery.replace(';', ' ');
       totalBuildSqlBuilder.append(
-          "pipeline_execution_summary_cd.id=pipeline_execution_summary_cd_id and env_type is not null and ");
-      totalBuildSqlBuilder.append(String.format("startts>=%s and startts<%s;", startInterval, endInterval));
+          String.format("pipeline_execution_summary_cd_id in (%s) and env_type is not null;", idQuery));
     }
 
     return totalBuildSqlBuilder.toString();
@@ -211,7 +202,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
     totalBuildSqlBuilder.deleteCharAt(totalBuildSqlBuilder.length() - 1);
 
-    totalBuildSqlBuilder.append(String.format(") ORDER BY startts DESC LIMIT %s;", days));
+    totalBuildSqlBuilder.append(String.format(") and startts is not null ORDER BY startts DESC LIMIT %s;", days));
 
     return totalBuildSqlBuilder.toString();
   }
@@ -865,8 +856,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
               if (lastExecutedStartTs < startTs.get(i)) {
                 lastExecutedStartTs = startTs.get(i);
                 lastExecutedEndTs = endTs.get(i);
-                lastStatus = status.get(i);
                 deploymentType = deploymentTypeList.get(i);
+                lastStatus = status.get(i);
               }
             }
           } else {
@@ -934,7 +925,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
           if (resultSet.getString("endTs") != null) {
             endTs.add(Long.valueOf(resultSet.getString("endTs")));
           } else {
-            endTs.add(null);
+            endTs.add(-1L);
           }
           deploymentTypeList.add(resultSet.getString("deployment_type"));
 

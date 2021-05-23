@@ -104,8 +104,9 @@ public class TerraformBaseHelperImplTest extends CategoryTest {
 
     doReturn(Arrays.asList("w1")).when(spyTerraformBaseHelper).parseOutput("* w1\n");
 
-    when(terraformClient.getWorkspaceList(terraformExecuteStepRequest.getEnvVars(),
-             terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback()))
+    when(terraformClient.getWorkspaceList(terraformExecuteStepRequest.getTimeoutInMillis(),
+             terraformExecuteStepRequest.getEnvVars(), terraformExecuteStepRequest.getScriptDirectory(),
+             terraformExecuteStepRequest.getLogCallback()))
         .thenReturn(CliResponse.builder().output("workspace").build());
 
     spyTerraformBaseHelper.executeTerraformApplyStep(terraformExecuteStepRequest);
@@ -114,21 +115,23 @@ public class TerraformBaseHelperImplTest extends CategoryTest {
         .init(TerraformInitCommandRequest.builder()
                   .tfBackendConfigsFilePath(terraformExecuteStepRequest.getTfBackendConfigsFile())
                   .build(),
+            terraformExecuteStepRequest.getTimeoutInMillis(), terraformExecuteStepRequest.getEnvVars(),
+            terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback());
+    Mockito.verify(terraformClient, times(1))
+        .getWorkspaceList(terraformExecuteStepRequest.getTimeoutInMillis(), terraformExecuteStepRequest.getEnvVars(),
+            terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback());
+    Mockito.verify(terraformClient, times(1))
+        .workspace(terraformExecuteStepRequest.getWorkspace(), true, terraformExecuteStepRequest.getTimeoutInMillis(),
             terraformExecuteStepRequest.getEnvVars(), terraformExecuteStepRequest.getScriptDirectory(),
             terraformExecuteStepRequest.getLogCallback());
-    Mockito.verify(terraformClient, times(1))
-        .getWorkspaceList(terraformExecuteStepRequest.getEnvVars(), terraformExecuteStepRequest.getScriptDirectory(),
-            terraformExecuteStepRequest.getLogCallback());
-    Mockito.verify(terraformClient, times(1))
-        .workspace(terraformExecuteStepRequest.getWorkspace(), true, terraformExecuteStepRequest.getEnvVars(),
-            terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback());
     Mockito.verify(terraformClient, times(1))
         .apply(TerraformApplyCommandRequest.builder().planName("tfplan").build(),
+            terraformExecuteStepRequest.getTimeoutInMillis(), terraformExecuteStepRequest.getEnvVars(),
+            terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback());
+    Mockito.verify(terraformClient, times(1))
+        .plan(TerraformPlanCommandRequest.builder().build(), terraformExecuteStepRequest.getTimeoutInMillis(),
             terraformExecuteStepRequest.getEnvVars(), terraformExecuteStepRequest.getScriptDirectory(),
             terraformExecuteStepRequest.getLogCallback());
-    Mockito.verify(terraformClient, times(1))
-        .plan(TerraformPlanCommandRequest.builder().build(), terraformExecuteStepRequest.getEnvVars(),
-            terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback());
   }
 
   @Test
@@ -139,8 +142,9 @@ public class TerraformBaseHelperImplTest extends CategoryTest {
 
     doReturn(Arrays.asList("w1")).when(spyTerraformBaseHelper).parseOutput("* w1\n");
 
-    when(terraformClient.getWorkspaceList(terraformExecuteStepRequest.getEnvVars(),
-             terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback()))
+    when(terraformClient.getWorkspaceList(terraformExecuteStepRequest.getTimeoutInMillis(),
+             terraformExecuteStepRequest.getEnvVars(), terraformExecuteStepRequest.getScriptDirectory(),
+             terraformExecuteStepRequest.getLogCallback()))
         .thenReturn(CliResponse.builder().output("workspace").build());
 
     terraformBaseHelper.executeTerraformPlanStep(terraformExecuteStepRequest);
@@ -149,24 +153,27 @@ public class TerraformBaseHelperImplTest extends CategoryTest {
         .init(TerraformInitCommandRequest.builder()
                   .tfBackendConfigsFilePath(terraformExecuteStepRequest.getTfBackendConfigsFile())
                   .build(),
+            terraformExecuteStepRequest.getTimeoutInMillis(), terraformExecuteStepRequest.getEnvVars(),
+            terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback());
+
+    Mockito.verify(terraformClient, times(1))
+        .getWorkspaceList(terraformExecuteStepRequest.getTimeoutInMillis(), terraformExecuteStepRequest.getEnvVars(),
+            terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback());
+
+    Mockito.verify(terraformClient, times(1))
+        .workspace(terraformExecuteStepRequest.getWorkspace(), true, terraformExecuteStepRequest.getTimeoutInMillis(),
             terraformExecuteStepRequest.getEnvVars(), terraformExecuteStepRequest.getScriptDirectory(),
             terraformExecuteStepRequest.getLogCallback());
 
     Mockito.verify(terraformClient, times(1))
-        .getWorkspaceList(terraformExecuteStepRequest.getEnvVars(), terraformExecuteStepRequest.getScriptDirectory(),
+        .refresh(TerraformRefreshCommandRequest.builder().build(), terraformExecuteStepRequest.getTimeoutInMillis(),
+            terraformExecuteStepRequest.getEnvVars(), terraformExecuteStepRequest.getScriptDirectory(),
             terraformExecuteStepRequest.getLogCallback());
 
     Mockito.verify(terraformClient, times(1))
-        .workspace(terraformExecuteStepRequest.getWorkspace(), true, terraformExecuteStepRequest.getEnvVars(),
-            terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback());
-
-    Mockito.verify(terraformClient, times(1))
-        .refresh(TerraformRefreshCommandRequest.builder().build(), terraformExecuteStepRequest.getEnvVars(),
-            terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback());
-
-    Mockito.verify(terraformClient, times(1))
-        .plan(TerraformPlanCommandRequest.builder().build(), terraformExecuteStepRequest.getEnvVars(),
-            terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback());
+        .plan(TerraformPlanCommandRequest.builder().build(), terraformExecuteStepRequest.getTimeoutInMillis(),
+            terraformExecuteStepRequest.getEnvVars(), terraformExecuteStepRequest.getScriptDirectory(),
+            terraformExecuteStepRequest.getLogCallback());
   }
 
   @Test
@@ -176,8 +183,9 @@ public class TerraformBaseHelperImplTest extends CategoryTest {
     TerraformExecuteStepRequest terraformExecuteStepRequest = getTerraformExecuteStepRequest().build();
     doReturn(Arrays.asList("w1")).when(spyTerraformBaseHelper).parseOutput("* w1\n");
 
-    when(terraformClient.getWorkspaceList(terraformExecuteStepRequest.getEnvVars(),
-             terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback()))
+    when(terraformClient.getWorkspaceList(terraformExecuteStepRequest.getTimeoutInMillis(),
+             terraformExecuteStepRequest.getEnvVars(), terraformExecuteStepRequest.getScriptDirectory(),
+             terraformExecuteStepRequest.getLogCallback()))
         .thenReturn(CliResponse.builder().output("workspace").build());
 
     terraformBaseHelper.executeTerraformDestroyStep(terraformExecuteStepRequest);
@@ -186,18 +194,19 @@ public class TerraformBaseHelperImplTest extends CategoryTest {
         .init(TerraformInitCommandRequest.builder()
                   .tfBackendConfigsFilePath(terraformExecuteStepRequest.getTfBackendConfigsFile())
                   .build(),
-            terraformExecuteStepRequest.getEnvVars(), terraformExecuteStepRequest.getScriptDirectory(),
-            terraformExecuteStepRequest.getLogCallback());
-    Mockito.verify(terraformClient, times(1))
-        .getWorkspaceList(terraformExecuteStepRequest.getEnvVars(), terraformExecuteStepRequest.getScriptDirectory(),
-            terraformExecuteStepRequest.getLogCallback());
-    Mockito.verify(terraformClient, times(1))
-        .workspace(terraformExecuteStepRequest.getWorkspace(), true, terraformExecuteStepRequest.getEnvVars(),
+            terraformExecuteStepRequest.getTimeoutInMillis(), terraformExecuteStepRequest.getEnvVars(),
             terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback());
     Mockito.verify(terraformClient, times(1))
-        .destroy(TerraformDestroyCommandRequest.builder().targets(terraformExecuteStepRequest.getTargets()).build(),
+        .getWorkspaceList(terraformExecuteStepRequest.getTimeoutInMillis(), terraformExecuteStepRequest.getEnvVars(),
+            terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback());
+    Mockito.verify(terraformClient, times(1))
+        .workspace(terraformExecuteStepRequest.getWorkspace(), true, terraformExecuteStepRequest.getTimeoutInMillis(),
             terraformExecuteStepRequest.getEnvVars(), terraformExecuteStepRequest.getScriptDirectory(),
             terraformExecuteStepRequest.getLogCallback());
+    Mockito.verify(terraformClient, times(1))
+        .destroy(TerraformDestroyCommandRequest.builder().targets(terraformExecuteStepRequest.getTargets()).build(),
+            terraformExecuteStepRequest.getTimeoutInMillis(), terraformExecuteStepRequest.getEnvVars(),
+            terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback());
   }
 
   @Test

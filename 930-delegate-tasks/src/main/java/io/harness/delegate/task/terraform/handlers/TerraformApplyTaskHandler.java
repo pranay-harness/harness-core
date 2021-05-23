@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.Charsets;
 
@@ -94,6 +95,7 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
               .isSaveTerraformJson(taskParameters.isSaveTerraformStateJson())
               .logCallback(logCallback)
               .planJsonLogOutputStream(planJsonLogOutputStream)
+              .timeoutInMillis(taskParameters.getTimeoutInMillis())
               .build();
 
       CliResponse response = terraformBaseHelper.executeTerraformApplyStep(terraformExecuteStepRequest);
@@ -104,7 +106,11 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
       sleep(ofSeconds(RESOURCE_READY_WAIT_TIME_SECONDS));
 
       logCallback.saveExecutionLog("Script execution finished with status: " + response.getCommandExecutionStatus(),
-          INFO, response.getCommandExecutionStatus());
+          INFO, CommandExecutionStatus.RUNNING);
+
+      Map<String, String> commitIdToFetchedFilesMap = terraformBaseHelper.buildcommitIdToFetchedFilesMap(
+          taskParameters.getAccountId(), taskParameters.getConfigFile().getIdentifier(), gitBaseRequestForConfigFile,
+          taskParameters.getVarFileInfos());
 
       File tfStateFile = TerraformHelperUtils.getTerraformStateFile(scriptDirectory, taskParameters.getWorkspace());
 
@@ -113,9 +119,7 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
 
       return TerraformTaskNGResponse.builder()
           .outputs(new String(Files.readAllBytes(tfOutputsFile.toPath()), Charsets.UTF_8))
-          .commitIdForConfigFilesMap(terraformBaseHelper.buildcommitIdToFetchedFilesMap(taskParameters.getAccountId(),
-              taskParameters.getConfigFile().getIdentifier(), gitBaseRequestForConfigFile,
-              taskParameters.getVarFileInfos()))
+          .commitIdForConfigFilesMap(commitIdToFetchedFilesMap)
           .encryptedTfPlan(taskParameters.getEncryptedTfPlan())
           .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
           .stateFileId(stateFileId)
