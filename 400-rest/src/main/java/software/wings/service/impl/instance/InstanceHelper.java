@@ -61,6 +61,7 @@ import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -752,10 +753,26 @@ public class InstanceHelper {
     } finally {
       Status status = handler.getStatus(infrastructureMapping, response);
       if (status.isSuccess()) {
-        instanceService.updateSyncSuccess(infrastructureMapping.getAppId(), infrastructureMapping.getServiceId(),
-            infrastructureMapping.getEnvId(), infrastructureMapping.getUuid(), infrastructureMapping.getDisplayName(),
-            System.currentTimeMillis());
+        if (response instanceof ContainerSyncResponse && ((ContainerSyncResponse) response).isEcs()
+            && isEmpty(((ContainerSyncResponse) response).getContainerInfoList())) {
+          boolean stopSync = instanceService.handleSyncFailure(infrastructureMapping.getAppId(),
+              infrastructureMapping.getServiceId(), infrastructureMapping.getEnvId(), infrastructureMapping.getUuid(),
+              infrastructureMapping.getDisplayName(), System.currentTimeMillis(),
+              ((ContainerSyncResponse) response).getErrorMessage());
+
+          if (stopSync) {
+            log.info("Sync Failure, Ecs Service has 0 instances for more than 7 days. "
+                    + "Deleting Perpetual Tasks. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
+                infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
+            instanceSyncPerpetualTaskService.deletePerpetualTasks(infrastructureMapping);
+          }
+        } else {
+          instanceService.updateSyncSuccess(infrastructureMapping.getAppId(), infrastructureMapping.getServiceId(),
+              infrastructureMapping.getEnvId(), infrastructureMapping.getUuid(), infrastructureMapping.getDisplayName(),
+              System.currentTimeMillis());
+        }
       }
+
       if (!status.isRetryable()) {
         log.info("Task Not Retryable. Deleting Perpetual Task. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
             infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
