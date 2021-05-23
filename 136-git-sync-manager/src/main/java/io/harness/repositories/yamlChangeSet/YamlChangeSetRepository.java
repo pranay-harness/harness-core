@@ -4,7 +4,6 @@ import io.harness.annotation.HarnessRepo;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.common.beans.YamlChangeSet;
-import io.harness.gitsync.common.beans.YamlChangeSet.Status;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,13 +13,15 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 @OwnedBy(HarnessTeam.DX)
 public interface YamlChangeSetRepository
     extends PagingAndSortingRepository<YamlChangeSet, String>, YamlChangeSetRepositoryCustom {
-  int countByAccountIdAndStatus(String accountId, Status status);
+  int countByAccountIdAndStatusIn(String accountId, List<String> status);
 
-  int countByAccountIdAndStatusAndQueueKey(String accountId, Status status, String queueKey);
+  int countByAccountIdAndStatusInAndQueueKey(String accountId, List<String> status, String queueKey);
 
   Optional<YamlChangeSet> findFirstByAccountIdAndQueueKeyAndStatusOrderByCreatedAt(
-      String accountId, String queueKey, Status status);
+      String accountId, String queueKey, String status);
 
-  List<YamlChangeSet> findByAccountIdAndStatusAndLastUpdatedAtLessThan(
-      List<String> accountIds, Status status, Long lastUpdatedCutOff);
+  List<YamlChangeSet> findByAccountIdAndStatusInAndLastUpdatedAtLessThan(
+      List<String> accountIds, List<String> status, Long lastUpdatedCutOff);
+
+  List<YamlChangeSet> findByAccountIdAndQueueKeyAndStatus(String accountId, String queueKey, String status);
 }
