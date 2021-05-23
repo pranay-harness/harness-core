@@ -132,10 +132,10 @@ public class AccessControlMigrationHandler implements MessageListener {
       String projectIdentifier, boolean managed, List<RoleAssignmentDTO> roleAssignments) {
     List<RoleAssignmentResponseDTO> createdRoleAssignments = new ArrayList<>();
     List<List<RoleAssignmentDTO>> batchOfRoleAssignments = Lists.partition(roleAssignments, 10);
-    batchOfRoleAssignments.forEach(smallList
-        -> createdRoleAssignments.addAll(getResponse(
-            accessControlAdminClient.createMultiRoleAssignment(accountIdentifier, orgIdentifier, projectIdentifier,
-                managed, RoleAssignmentCreateRequestDTO.builder().roleAssignments(smallList).build()))));
+    batchOfRoleAssignments.forEach(batch
+        -> createdRoleAssignments.addAll(
+            getResponse(accessControlAdminClient.createMultiRoleAssignment(accountIdentifier, orgIdentifier,
+                projectIdentifier, managed, RoleAssignmentCreateRequestDTO.builder().roleAssignments(batch).build()))));
     return createdRoleAssignments;
   }
 
@@ -158,7 +158,7 @@ public class AccessControlMigrationHandler implements MessageListener {
         createRoleAssignmentsInternal(account, org, project, false, userRoleAssignments);
 
     List<RoleAssignmentResponseDTO> createdRoleAssignments = new ArrayList<>(createdManagedRoleAssignments);
-    createdManagedRoleAssignments.addAll(createdUserRoleAssignments);
+    createdRoleAssignments.addAll(createdUserRoleAssignments);
 
     Set<RoleAssignmentDTO> createdRoleAssignmentSet =
         createdRoleAssignments.stream().map(RoleAssignmentResponseDTO::getRoleAssignment).collect(Collectors.toSet());
