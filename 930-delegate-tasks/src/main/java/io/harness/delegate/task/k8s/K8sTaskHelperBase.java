@@ -2074,7 +2074,7 @@ public class K8sTaskHelperBase {
     ConnectivityStatus connectivityStatus = ConnectivityStatus.FAILURE;
     KubernetesConfig kubernetesConfig = getKubernetesConfig(connector, encryptionDetailList);
     try {
-      kubernetesContainerService.validate(kubernetesConfig);
+      kubernetesContainerService.validateMasterUrl(kubernetesConfig);
       connectivityStatus = ConnectivityStatus.SUCCESS;
     } catch (Exception ex) {
       log.info("Exception while validating kubernetes credentials", ex);
