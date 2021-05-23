@@ -25,7 +25,9 @@ import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.pms.EngineAdviseCallback;
 import io.harness.engine.pms.EngineFacilitationCallback;
 import io.harness.engine.resume.EngineWaitResumeCallback;
-import io.harness.exception.ExceptionUtils;
+import io.harness.engine.utils.TransactionUtils;
+import io.harness.eraro.ResponseMessage;
+import io.harness.exception.exceptionmanager.ExceptionManager;
 import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -38,7 +40,6 @@ import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
-import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.plan.PlanNodeProto;
@@ -68,6 +69,7 @@ import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 import io.harness.waiter.WaitNotifyEngine;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -107,6 +109,8 @@ public class OrchestrationEngine {
   @Inject private EndNodeExecutionHelper endNodeExecutionHelper;
   @Inject private InterruptService interruptService;
   @Inject private InvocationHelper invocationHelper;
+  @Inject private TransactionUtils transactionUtils;
+  @Inject private ExceptionManager exceptionManager;
 
   public void startNodeExecution(String nodeExecutionId) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
@@ -174,10 +178,15 @@ public class OrchestrationEngine {
                                      .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(updatedNodeExecution))
                                      .eventType(NodeExecutionEventType.FACILITATE)
                                      .build();
-      nodeExecutionEventQueuePublisher.send(event);
-      waitNotifyEngine.waitForAllOn(publisherName,
-          EngineFacilitationCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build(), event.getNotifyId());
+      transactionUtils.performTransaction(() -> {
+        nodeExecutionEventQueuePublisher.send(event);
+        waitNotifyEngine.waitForAllOn(publisherName,
+            EngineFacilitationCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build(), event.getNotifyId());
+        return null;
+      });
+
     } catch (Exception exception) {
+      log.error("Exception Occurred in facilitateAndStartStep", exception);
       handleError(ambiance, exception);
     }
   }
@@ -278,6 +287,7 @@ public class OrchestrationEngine {
     try {
       handleStepResponseInternal(nodeExecution, stepResponse);
     } catch (Exception ex) {
+      log.error("Exception Occurred in handleStepResponse", ex);
       handleError(nodeExecution.getAmbiance(), ex);
     }
   }
@@ -312,13 +322,16 @@ public class OrchestrationEngine {
                                                         .build())
                                          .build();
 
-    nodeExecutionEventQueuePublisher.send(adviseEvent);
-    waitNotifyEngine.waitForAllOn(publisherName,
-        EngineAdviseCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build(), adviseEvent.getNotifyId());
+    transactionUtils.performTransaction(() -> {
+      nodeExecutionEventQueuePublisher.send(adviseEvent);
+      waitNotifyEngine.waitForAllOn(publisherName,
+          EngineAdviseCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build(), adviseEvent.getNotifyId());
+      return null;
+    });
   }
 
-  private void handleStepResponseInternal(
-      @NonNull NodeExecution nodeExecution, @NonNull StepResponseProto stepResponse) {
+  @VisibleForTesting
+  void handleStepResponseInternal(@NonNull NodeExecution nodeExecution, @NonNull StepResponseProto stepResponse) {
     PlanNodeProto node = nodeExecution.getNode();
     if (isEmpty(node.getAdviserObtainmentsList())) {
       endNodeExecutionHelper.endNodeExecutionWithNoAdvisers(nodeExecution, stepResponse);
@@ -393,24 +406,8 @@ public class OrchestrationEngine {
                                            .build();
       nodeExecutionEventQueuePublisher.send(resumeEvent);
     } catch (Exception exception) {
+      log.error("Exception Occurred in resume", exception);
       handleError(ambiance, exception);
-    }
-  }
-
-  public void handleError(Ambiance ambiance, Exception exception) {
-    try {
-      StepResponseProto response =
-          StepResponseProto.newBuilder()
-              .setStatus(Status.FAILED)
-              .setFailureInfo(FailureInfo.newBuilder()
-                                  .setErrorMessage(ExceptionUtils.getMessage(exception))
-                                  .addAllFailureTypes(EngineExceptionUtils.getOrchestrationFailureTypes(exception))
-                                  .build())
-              .build();
-      NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-      handleStepResponseInternal(nodeExecution, response);
-    } catch (RuntimeException ex) {
-      log.error("Error when trying to obtain the advice ", ex);
     }
   }
 
@@ -424,5 +421,21 @@ public class OrchestrationEngine {
         nodeExecutionId, ops -> ops.set(NodeExecutionKeys.adviserResponse, adviserResponse));
     AdviserResponseHandler adviserResponseHandler = adviseHandlerFactory.obtainHandler(adviserResponse.getType());
     adviserResponseHandler.handleAdvise(nodeExecution, adviserResponse);
+  }
+
+  void handleError(Ambiance ambiance, Exception exception) {
+    try {
+      List<ResponseMessage> responseMessages = exceptionManager.buildResponseFromException(exception);
+      StepResponseProto response =
+          StepResponseProto.newBuilder()
+              .setStatus(Status.FAILED)
+              .setFailureInfo(EngineExceptionUtils.transformResponseMessagesToFailureInfo(responseMessages))
+              .build();
+      NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+      handleStepResponseInternal(nodeExecution, response);
+    } catch (RuntimeException ex) {
+      // Smile if you see irony in this
+      log.error("Exception Occurred while handling Exception", ex);
+    }
   }
 }
