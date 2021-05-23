@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.heartbeat.ArtifactoryValidationParamsProvider;
 import io.harness.connector.heartbeat.AwsKmsConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.AwsValidationParamsProvider;
+import io.harness.connector.heartbeat.AzureKeyVaultConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.CEK8sConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.ConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.DockerConnectorValidationParamsProvider;
@@ -63,6 +64,8 @@ import io.harness.connector.mappers.prometheusmapper.PrometheusDTOToEntity;
 import io.harness.connector.mappers.prometheusmapper.PrometheusEntityToDTO;
 import io.harness.connector.mappers.secretmanagermapper.AwsKmsDTOToEntity;
 import io.harness.connector.mappers.secretmanagermapper.AwsKmsEntityToDTO;
+import io.harness.connector.mappers.secretmanagermapper.AzureKeyVaultDTOToEntity;
+import io.harness.connector.mappers.secretmanagermapper.AzureKeyVaultEntityToDTO;
 import io.harness.connector.mappers.secretmanagermapper.GcpKmsDTOToEntity;
 import io.harness.connector.mappers.secretmanagermapper.GcpKmsEntityToDTO;
 import io.harness.connector.mappers.secretmanagermapper.LocalDTOToEntity;
@@ -129,6 +132,10 @@ public class ConnectorRegistryFactory {
     registrar.put(ConnectorType.VAULT,
         new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, SecretManagerConnectorValidator.class,
             VaultConnectorValidationParamsProvider.class, VaultDTOToEntity.class, VaultEntityToDTO.class));
+    registrar.put(ConnectorType.AZURE_KEY_VAULT,
+        new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, SecretManagerConnectorValidator.class,
+            AzureKeyVaultConnectorValidationParamsProvider.class, AzureKeyVaultDTOToEntity.class,
+            AzureKeyVaultEntityToDTO.class));
     registrar.put(ConnectorType.GCP_KMS,
         new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, SecretManagerConnectorValidator.class,
             GcpKmsConnectorValidationParamsProvider.class, GcpKmsDTOToEntity.class, GcpKmsEntityToDTO.class));

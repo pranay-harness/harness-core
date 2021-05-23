@@ -98,6 +98,7 @@ public class NGSecretServiceImpl implements NGSecretService {
     EncryptedRecord encryptedRecord;
     switch (encryptedData.getEncryptionType()) {
       case VAULT:
+      case AZURE_VAULT:
         VaultEncryptor vaultEncryptor = vaultRegistry.getVaultEncryptor(secretManagerConfig.getEncryptionType());
         encryptedRecord = vaultEncryptor.createSecret(
             encryptedData.getAccountId(), encryptedData.getName(), secretValue, secretManagerConfig);
@@ -330,6 +331,7 @@ public class NGSecretServiceImpl implements NGSecretService {
       String accountIdentifier, EncryptedData encryptedData, SecretManagerConfig secretManagerConfig) {
     switch (secretManagerConfig.getEncryptionType()) {
       case VAULT:
+      case AZURE_VAULT:
         vaultRegistry.getVaultEncryptor(secretManagerConfig.getEncryptionType())
             .deleteSecret(accountIdentifier, encryptedData, secretManagerConfig);
         return;

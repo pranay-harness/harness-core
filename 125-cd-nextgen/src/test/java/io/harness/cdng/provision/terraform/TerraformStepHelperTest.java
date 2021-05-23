@@ -44,6 +44,7 @@ import io.harness.security.encryption.EncryptionType;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.Rule;
@@ -95,6 +96,9 @@ public class TerraformStepHelperTest extends CategoryTest {
     inlineTerraformBackendConfigSpec.setContent(ParameterField.createValueField("back-content"));
     TerraformBackendConfig terraformBackendConfig = new TerraformBackendConfig();
     terraformBackendConfig.setTerraformBackendConfigSpec(inlineTerraformBackendConfigSpec);
+    LinkedHashMap<String, TerraformVarFile> varFilesMap = new LinkedHashMap<>();
+    varFilesMap.put("var-file-1",
+        TerraformVarFile.builder().identifier("var-file-1").type("Inline").spec(inlineTerraformVarFileSpec).build());
     TerraformPlanStepParameters planStepParameters =
         TerraformPlanStepParameters.infoBuilder()
             .provisionerIdentifier(ParameterField.createValueField("provId"))
@@ -102,12 +106,7 @@ public class TerraformStepHelperTest extends CategoryTest {
                                .configFiles(configFilesWrapper)
                                .command(TerraformPlanCommand.APPLY)
                                .secretManagerRef(ParameterField.createValueField("secret"))
-                               .varFiles(ImmutableMap.of("var-file-1",
-                                   TerraformVarFile.builder()
-                                       .identifier("var-file-1")
-                                       .type("Inline")
-                                       .spec(inlineTerraformVarFileSpec)
-                                       .build()))
+                               .varFiles(varFilesMap)
                                .environmentVariables(ImmutableMap.of("KEY", ParameterField.createValueField("VAL")))
                                .backendConfig(terraformBackendConfig)
                                .build())
@@ -164,17 +163,15 @@ public class TerraformStepHelperTest extends CategoryTest {
                       .build())
             .type("GitLab")
             .build());
+    LinkedHashMap<String, TerraformVarFile> varFilesMap = new LinkedHashMap<>();
+    varFilesMap.put("var-file-1",
+        TerraformVarFile.builder().identifier("var-file-1").type("Inline").spec(remoteTerraformVarFileSpec).build());
     TerraformApplyStepParameters parameters = TerraformApplyStepParameters.infoBuilder()
                                                   .configuration(TerrformStepConfigurationParameters.builder()
                                                                      .type(TerraformStepConfigurationType.INLINE)
                                                                      .spec(TerraformExecutionDataParameters.builder()
                                                                                .configFiles(configFilesWrapper)
-                                                                               .varFiles(ImmutableMap.of("var-file-1",
-                                                                                   TerraformVarFile.builder()
-                                                                                       .identifier("var-file-1")
-                                                                                       .type("Inline")
-                                                                                       .spec(remoteTerraformVarFileSpec)
-                                                                                       .build()))
+                                                                               .varFiles(varFilesMap)
                                                                                .build())
                                                                      .build())
                                                   .build();

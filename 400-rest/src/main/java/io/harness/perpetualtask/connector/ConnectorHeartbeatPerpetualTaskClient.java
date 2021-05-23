@@ -27,12 +27,15 @@ import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecA
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecAssumeSTSDTO;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecManualConfigDTO;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsValidationParams;
+import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultConnectorDTO;
+import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultValidationParams;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsValidationParams;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultValidationParams;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.exception.UnexpectedException;
 import io.harness.mappers.SecretManagerConfigMapper;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
@@ -41,6 +44,7 @@ import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigDTO;
 import io.harness.secretmanagerclient.dto.awskms.AwsKmsConfigDTO;
+import io.harness.secretmanagerclient.dto.azurekeyvault.AzureKeyVaultConfigDTO;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.KryoSerializer;
 import io.harness.utils.RestCallToNGManagerClientUtils;
@@ -57,6 +61,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -110,6 +115,12 @@ public class ConnectorHeartbeatPerpetualTaskClient implements PerpetualTaskServi
           vaultConnectorDTO.setAppRoleId(vaultConfig.getAppRoleId());
           vaultConnectorDTO.setSecretId(vaultConfig.getSecretId());
           return;
+        case AZURE_KEY_VAULT:
+          AzureKeyVaultConfigDTO azureKeyVaultConfig = (AzureKeyVaultConfigDTO) secretManagerConfig;
+          AzureKeyVaultConnectorDTO azureKeyVaultConnectorDTO =
+              ((AzureKeyVaultValidationParams) connectorValidationParams).getAzurekeyvaultConnectorDTO();
+          azureKeyVaultConnectorDTO.setSecretKey(azureKeyVaultConfig.getSecretKey());
+          return;
         case GCP_KMS:
           GcpKmsConfigDTO gcpKmsConfig = (GcpKmsConfigDTO) secretManagerConfig;
           GcpKmsConnectorDTO gcpKmsConnectorDTO =
@@ -137,12 +148,17 @@ public class ConnectorHeartbeatPerpetualTaskClient implements PerpetualTaskServi
       executionCapabilities =
           ((ExecutionCapabilityDemander) connectorValidationParams).fetchRequiredExecutionCapabilities(null);
     }
+    final List<ExecutionCapability> nonSelectorExecutionCapabilities =
+        executionCapabilities.stream()
+            .filter(executionCapability -> !(executionCapability instanceof SelectorCapability))
+            .collect(Collectors.toList());
     return DelegateTask.builder()
         .accountId(accountId)
+        .executionCapabilities(executionCapabilities)
         .data(TaskData.builder()
                   .async(false)
                   .taskType(TaskType.CAPABILITY_VALIDATION.name())
-                  .parameters(executionCapabilities.toArray())
+                  .parameters(nonSelectorExecutionCapabilities.toArray())
                   .timeout(TimeUnit.MINUTES.toMillis(1))
                   .build())
         .build();

@@ -551,6 +551,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             .isSaveTerraformJson(parameters.isSaveTerraformJson())
             .logCallback(logCallback)
             .planJsonLogOutputStream(planJsonLogOutputStream)
+            .timeoutInMillis(parameters.getTimeoutInMillis())
             .build();
     switch (parameters.getCommand()) {
       case APPLY: {

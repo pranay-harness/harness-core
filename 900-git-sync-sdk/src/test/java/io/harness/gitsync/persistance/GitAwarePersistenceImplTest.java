@@ -1,6 +1,7 @@
 package io.harness.gitsync.persistance;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.remote.NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
 import static io.harness.rule.OwnerRule.ABHINAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -73,8 +74,9 @@ public class GitAwarePersistenceImplTest extends GitSdkTestBase {
   @Before
   public void setup() {
     initMocks(this);
-    gitAwarePersistence = new GitAwarePersistenceImpl(mongoTemplate, entityKeySource,
-        new GitBranchingHelper(mongoTemplate), gitPersistenceHelperServiceMap, scmGitSyncHelper, gitSyncMsvcHelper);
+    gitAwarePersistence =
+        new GitAwarePersistenceImpl(mongoTemplate, entityKeySource, new GitBranchingHelper(mongoTemplate),
+            gitPersistenceHelperServiceMap, scmGitSyncHelper, gitSyncMsvcHelper, NG_DEFAULT_OBJECT_MAPPER);
     doNothing().when(gitSyncMsvcHelper).postPushInformationToGitMsvc(any(), any(), any());
   }
 

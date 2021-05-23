@@ -1,6 +1,7 @@
 package io.harness.ng.core.utils;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.remote.NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
@@ -9,6 +10,7 @@ import io.harness.gitsync.beans.YamlDTO;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -29,18 +31,27 @@ public class NGYamlUtils {
           .configure(DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT, true)
           .enable(SerializationFeature.INDENT_OUTPUT);
 
-  public static String getYamlString(YamlDTO yamlObject) {
+  public static String getYamlString(YamlDTO yamlObject, ObjectMapper objectMapper) {
     if (yamlObject == null) {
       return null;
     }
     String yamlString;
     try {
-      yamlString = yamlMapper.writerWithDefaultPrettyPrinter().writeValueAsString(yamlObject);
+      objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+      objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+      objectMapper.configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false);
+      objectMapper.configure(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS, false);
+      final JsonNode jsonNode = objectMapper.valueToTree(yamlObject);
+      yamlString = yamlMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonNode);
     } catch (JsonProcessingException e) {
       throw new InvalidRequestException(
           String.format("Cannot create yaml from YamlObject %s", yamlObject.toString()), e);
     }
     yamlString = yamlString.replaceFirst("---\n", "");
     return yamlString;
+  }
+
+  public static String getYamlString(YamlDTO yamlObject) {
+    return getYamlString(yamlObject, NG_DEFAULT_OBJECT_MAPPER);
   }
 }

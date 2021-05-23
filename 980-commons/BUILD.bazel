@@ -1,7 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:macros.bzl", "run_analysis")
-load("//:macros.bzl", "test_targets_list")
 load("//:tools/bazel/protos/harness_grpc_library.bzl", "harness_grpc_library")
 
 harness_grpc_library(

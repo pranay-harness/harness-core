@@ -6,6 +6,8 @@ aeriform("//120-ng-manager:module")
 
 aeriform("//120-ng-manager:tests")
 
+aeriform("//121-instance:module")
+
 aeriform("//125-cd-nextgen:module")
 
 aeriform("//125-cd-nextgen:tests")
@@ -42,11 +44,17 @@ aeriform("//260-delegate:module")
 
 aeriform("//260-delegate:tests")
 
+aeriform("//270-delegate-service-app:module")
+
+aeriform("//270-delegate-service-app:tests")
+
 aeriform("//270-verification:module")
 
 aeriform("//270-verification:tests")
 
 aeriform("//280-batch-processing:module")
+
+aeriform("//280-batch-processing:supporter-test")
 
 aeriform("//280-batch-processing:tests")
 
@@ -158,8 +166,6 @@ aeriform("//830-resource-group:tests")
 
 aeriform("//835-notification-senders:module")
 
-aeriform("//850-execution-plan:tests")
-
 aeriform("//850-ng-pipeline-commons:module")
 
 aeriform("//850-ng-pipeline-commons:tests")
@@ -250,6 +256,10 @@ aeriform("//930-delegate-tasks:tests")
 
 aeriform("//930-ng-core-clients:module")
 
+aeriform("//930-ng-license-manager:module")
+
+aeriform("//930-ng-license-manager:tests")
+
 aeriform("//940-cg-audit-service:module")
 
 aeriform("//940-cg-audit-service:tests")
@@ -324,10 +334,6 @@ aeriform("//950-ng-core:module")
 
 aeriform("//950-ng-core:tests")
 
-aeriform("//950-ng-license-manager:module")
-
-aeriform("//950-ng-license-manager:tests")
-
 aeriform("//950-ng-project-n-orgs:module")
 
 aeriform("//950-ng-project-n-orgs:tests")
@@ -391,6 +397,8 @@ aeriform("//958-ng-file-service-sdk:module")
 aeriform("//959-file-service-commons:module")
 
 aeriform("//959-psql-database-models:module")
+
+aeriform("//959-psql-database-models:tests")
 
 aeriform("//960-api-services:module")
 

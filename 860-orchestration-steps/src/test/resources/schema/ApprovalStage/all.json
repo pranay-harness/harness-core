@@ -416,10 +416,12 @@
           }
         },
         "identifier": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
         },
         "spec": {
           "$ref": "#/definitions/StepSpecType"
@@ -450,10 +452,12 @@
           }
         },
         "identifier": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
         },
         "rollbackSteps": {
           "type": "array",

@@ -8,6 +8,7 @@ import static io.harness.metrics.MetricConstants.METRIC_LABEL_PREFIX;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.beans.MetricConfiguration;
 import io.harness.metrics.beans.MetricGroup;
+import io.harness.metrics.service.api.MetricDefinitionInitializer;
 import io.harness.metrics.service.api.MetricService;
 import io.harness.serializer.YamlUtils;
 
@@ -20,7 +21,6 @@ import io.opencensus.common.Scope;
 import io.opencensus.exporter.stats.stackdriver.StackdriverStatsConfiguration;
 import io.opencensus.exporter.stats.stackdriver.StackdriverStatsExporter;
 import io.opencensus.stats.Measure.MeasureDouble;
-import io.opencensus.stats.Measure.MeasureLong;
 import io.opencensus.stats.Stats;
 import io.opencensus.stats.StatsRecorder;
 import io.opencensus.stats.View;
@@ -32,9 +32,6 @@ import io.opencensus.tags.TagValue;
 import io.opencensus.tags.Tagger;
 import io.opencensus.tags.Tags;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -44,7 +41,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.ThreadContext;
 import org.reflections.Reflections;
@@ -55,31 +51,11 @@ public class MetricServiceImpl implements MetricService {
   @Inject private HarnessMetricRegistry harnessMetricRegistry;
   private static boolean WILL_PUBLISH_METRICS;
 
-  static Map<String, MetricGroup> metricGroupMap;
-  static List<MetricConfiguration> metricConfigDefinitions;
-
-  public static Set<String> listFilesUsingFileWalk(String dir, int depth) throws IOException {
-    try (Stream<Path> stream = Files.walk(Paths.get(dir), depth)) {
-      return stream.filter(file -> !Files.isDirectory(file))
-          .map(Path::getFileName)
-          .map(Path::toString)
-          .collect(Collectors.toSet());
-    }
-  }
+  private static Map<String, MetricGroup> metricGroupMap = new HashMap<>();
+  private static List<MetricConfiguration> metricConfigDefinitions = new ArrayList<>();
 
   private static final Tagger tagger = Tags.getTagger();
   private static final StatsRecorder statsRecorder = Stats.getStatsRecorder();
-
-  private static void recordStat(MeasureLong ml, Long n) {
-    statsRecorder.newMeasureMap().put(ml, n);
-  }
-
-  private static void recordTaggedStat(TagKey key, String value, MeasureLong ml, Long n) {
-    TagContext tctx = tagger.emptyBuilder().put(key, TagValue.create(value)).build();
-    try (Scope ss = tagger.withTagContext(tctx)) {
-      statsRecorder.newMeasureMap().put(ml, n).record();
-    }
-  }
 
   private static void recordTaggedStat(Map<TagKey, String> tags, MeasureDouble md, Double d) {
     TagContextBuilder contextBuilder = tagger.emptyBuilder();
@@ -92,49 +68,46 @@ public class MetricServiceImpl implements MetricService {
     }
   }
 
-  private void fetchAndInitMetricDefinitions() {
-    if (metricConfigDefinitions == null) {
-      Reflections reflections = new Reflections("metrics.metricDefinitions", new ResourcesScanner());
-      Set<String> metricDefinitionFileNames = reflections.getResources(Pattern.compile(".*\\.yaml"));
-      metricConfigDefinitions = new ArrayList<>();
-      // TODO: Come up with a cleaner way to automatically identify files.
-
-      metricDefinitionFileNames.forEach(metricDefinition -> {
-        try {
-          String path = "/" + metricDefinition;
-          final String yaml = Resources.toString(MetricServiceImpl.class.getResource(path), Charsets.UTF_8);
-          YamlUtils yamlUtils = new YamlUtils();
-          final MetricConfiguration metricConfiguration =
-              yamlUtils.read(yaml, new TypeReference<MetricConfiguration>() {});
-          metricConfigDefinitions.add(metricConfiguration);
-        } catch (IOException e) {
-          throw new IllegalStateException("Error reading metric definition files", e);
-        } catch (Exception ex) {
-          throw new RuntimeException("Exception occured while reading metric definition files", ex);
-        }
-      });
-    }
-
-    if (metricGroupMap == null) {
-      metricGroupMap = new HashMap<>();
-      Reflections reflections = new Reflections("metrics.metricGroups", new ResourcesScanner());
-      Set<String> metricGroupFileNames = reflections.getResources(Pattern.compile(".*\\.yaml"));
-      metricGroupFileNames.forEach(name -> {
-        try {
-          String path = "/" + name;
-          final String yaml = Resources.toString(MetricServiceImpl.class.getResource(path), Charsets.UTF_8);
-          YamlUtils yamlUtils = new YamlUtils();
-          final MetricGroup metricGroup = yamlUtils.read(yaml, new TypeReference<MetricGroup>() {});
-          metricGroupMap.put(metricGroup.getIdentifier(), metricGroup);
-        } catch (IOException e) {
-          throw new IllegalStateException("Error reading metric group file", e);
-        }
-      });
-    }
+  private void fetchAndInitMetricDefinitions(List<MetricDefinitionInitializer> metricDefinitionInitializers) {
+    Reflections reflections = new Reflections("metrics.metricDefinitions", new ResourcesScanner());
+    Set<String> metricDefinitionFileNames = reflections.getResources(Pattern.compile(".*\\.yaml"));
+    metricDefinitionInitializers.forEach(metricDefinitionInitializer -> {
+      metricConfigDefinitions.addAll(metricDefinitionInitializer.getMetricConfiguration());
+    });
+    metricDefinitionFileNames.forEach(metricDefinition -> {
+      try {
+        String path = "/" + metricDefinition;
+        final String yaml = Resources.toString(MetricServiceImpl.class.getResource(path), Charsets.UTF_8);
+        YamlUtils yamlUtils = new YamlUtils();
+        final MetricConfiguration metricConfiguration =
+            yamlUtils.read(yaml, new TypeReference<MetricConfiguration>() {});
+        metricConfigDefinitions.add(metricConfiguration);
+      } catch (IOException e) {
+        throw new IllegalStateException("Error reading metric definition files", e);
+      } catch (Exception ex) {
+        throw new RuntimeException("Exception occured while reading metric definition files", ex);
+      }
+    });
+    reflections = new Reflections("metrics.metricGroups", new ResourcesScanner());
+    Set<String> metricGroupFileNames = reflections.getResources(Pattern.compile(".*\\.yaml"));
+    metricGroupFileNames.forEach(name -> {
+      try {
+        String path = "/" + name;
+        final String yaml = Resources.toString(MetricServiceImpl.class.getResource(path), Charsets.UTF_8);
+        YamlUtils yamlUtils = new YamlUtils();
+        final MetricGroup metricGroup = yamlUtils.read(yaml, new TypeReference<MetricGroup>() {});
+        metricGroupMap.put(metricGroup.getIdentifier(), metricGroup);
+      } catch (IOException e) {
+        throw new IllegalStateException("Error reading metric group file", e);
+      }
+    });
   }
-
   @Override
   public void initializeMetrics() {
+    initializeMetrics(new ArrayList<>());
+  }
+  @Override
+  public void initializeMetrics(List<MetricDefinitionInitializer> metricDefinitionInitializes) {
     if (isNotEmpty(System.getenv("GOOGLE_APPLICATION_CREDENTIALS"))) {
       WILL_PUBLISH_METRICS = true;
     }
@@ -143,7 +116,7 @@ public class MetricServiceImpl implements MetricService {
       log.warn("Google credentials have not been set. No metrics will be published.");
       return;
     }
-    fetchAndInitMetricDefinitions();
+    fetchAndInitMetricDefinitions(metricDefinitionInitializes);
     metricConfigDefinitions.forEach(metricConfigDefinition -> {
       List<String> labels = metricGroupMap.get(metricConfigDefinition.getMetricGroup()) == null
           ? new ArrayList<>()

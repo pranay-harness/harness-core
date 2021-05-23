@@ -622,6 +622,10 @@
               "type": "number",
               "format": "double"
             },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+            },
             "type": {
               "type": "string",
               "enum": [
@@ -820,6 +824,10 @@
             "default": {
               "type": "string"
             },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+            },
             "type": {
               "type": "string",
               "enum": [
@@ -886,6 +894,10 @@
           "properties": {
             "default": {
               "type": "string"
+            },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
             },
             "type": {
               "type": "string",

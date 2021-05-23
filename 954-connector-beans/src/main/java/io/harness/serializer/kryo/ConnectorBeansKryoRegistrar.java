@@ -29,6 +29,7 @@ import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecA
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecDTO;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecManualConfigDTO;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialType;
+import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultConnectorDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.AwsCurAttributesDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsFeatures;
@@ -273,5 +274,6 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(BitbucketSshCredentialsDTO.class, 19667);
     kryo.register(PrometheusConnectorDTO.class, 19668);
     kryo.register(DatadogConnectorDTO.class, 19669);
+    kryo.register(AzureKeyVaultConnectorDTO.class, 19670);
   }
 }

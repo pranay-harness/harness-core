@@ -8,6 +8,10 @@ import static software.wings.beans.TaskType.AZURE_ARM_TASK;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.ARMResourceType;
 import io.harness.azure.model.ARMScopeType;
 import io.harness.azure.model.AzureDeploymentMode;
@@ -35,6 +39,8 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
 public class ARMRollbackState extends ARMProvisionState {
   public ARMRollbackState(String name) {
     super(name);
@@ -70,6 +76,7 @@ public class ARMRollbackState extends ARMProvisionState {
             .rollback(true)
             .build();
 
+    cloudProviderId = context.renderExpression(cloudProviderId);
     AzureConfig azureConfig = azureVMSSStateHelper.getAzureConfig(cloudProviderId);
     List<EncryptedDataDetail> azureEncryptionDetails =
         azureVMSSStateHelper.getEncryptedDataDetails(context, cloudProviderId);

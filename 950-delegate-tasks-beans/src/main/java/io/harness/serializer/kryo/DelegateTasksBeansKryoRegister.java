@@ -97,6 +97,7 @@ import io.harness.delegate.beans.connector.awsconnector.AwsValidateTaskResponse;
 import io.harness.delegate.beans.connector.awsconnector.AwsValidationParams;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsValidationParams;
 import io.harness.delegate.beans.connector.azureconnector.AzureContainerRegistryConnectorDTO;
+import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultValidationParams;
 import io.harness.delegate.beans.connector.cvconnector.CVConnectorTaskParams;
 import io.harness.delegate.beans.connector.cvconnector.CVConnectorTaskResponse;
 import io.harness.delegate.beans.connector.docker.DockerTestConnectionTaskParams;
@@ -294,7 +295,10 @@ import io.harness.delegate.task.manifests.request.CustomManifestValuesFetchParam
 import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.delegate.task.scm.GitPRTaskType;
+import io.harness.delegate.task.scm.GitRefType;
 import io.harness.delegate.task.scm.PushTaskType;
+import io.harness.delegate.task.scm.ScmGitRefTaskParams;
+import io.harness.delegate.task.scm.ScmGitRefTaskResponseData;
 import io.harness.delegate.task.scm.ScmPRTaskParams;
 import io.harness.delegate.task.scm.ScmPRTaskResponseData;
 import io.harness.delegate.task.scm.ScmPushTaskParams;
@@ -624,6 +628,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(VaultValidationParams.class, 19534);
     kryo.register(GcpKmsValidationParams.class, 19535);
     kryo.register(AwsKmsValidationParams.class, 643285);
+    kryo.register(AzureKeyVaultValidationParams.class, 643286);
     kryo.register(NoOpConnectorValidationParams.class, 19536);
     kryo.register(ConnectorValidationParams.class, 19537);
     kryo.register(NexusValidationParams.class, 19538);
@@ -747,5 +752,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(GitPRTaskType.class, 543313);
     kryo.register(ScmPRTaskParams.class, 543314);
     kryo.register(ScmPRTaskResponseData.class, 543315);
+    kryo.register(ScmGitRefTaskParams.class, 543316);
+    kryo.register(ScmGitRefTaskResponseData.class, 543317);
+    kryo.register(GitRefType.class, 543318);
   }
 }
