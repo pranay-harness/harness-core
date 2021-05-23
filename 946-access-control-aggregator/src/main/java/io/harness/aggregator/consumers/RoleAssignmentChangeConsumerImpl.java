@@ -57,7 +57,7 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
   @Override
   public long consumeDeleteEvent(String id) {
     long count = aclService.deleteByRoleAssignment(id);
-    log.info("{} ACLs deleted", count);
+    log.info("ACLs deleted: {}", count);
     return count;
   }
 
