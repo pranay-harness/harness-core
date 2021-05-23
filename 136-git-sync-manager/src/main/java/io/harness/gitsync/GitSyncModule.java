@@ -27,11 +27,9 @@ import io.harness.gitsync.common.service.gittoharness.GitToHarnessProcessorServi
 import io.harness.gitsync.core.impl.GitCommitServiceImpl;
 import io.harness.gitsync.core.impl.GitSyncTriggerServiceImpl;
 import io.harness.gitsync.core.impl.YamlChangeSetServiceImpl;
-import io.harness.gitsync.core.impl.YamlGitServiceImpl;
 import io.harness.gitsync.core.service.GitCommitService;
 import io.harness.gitsync.core.service.GitSyncTriggerService;
 import io.harness.gitsync.core.service.YamlChangeSetService;
-import io.harness.gitsync.core.service.YamlGitService;
 import io.harness.gitsync.gitfileactivity.impl.GitSyncServiceImpl;
 import io.harness.gitsync.gitfileactivity.service.GitSyncService;
 import io.harness.gitsync.gitsyncerror.impl.GitSyncErrorServiceImpl;
@@ -76,7 +74,6 @@ public class GitSyncModule extends AbstractModule {
     registerRequiredBindings();
     install(SCMJavaClientModule.getInstance());
     install(GitSyncSdkGrpcClientModule.getInstance());
-    bind(YamlGitService.class).to(YamlGitServiceImpl.class);
     bind(YamlGitConfigService.class).to(YamlGitConfigServiceImpl.class);
     bind(YamlChangeSetService.class).to(YamlChangeSetServiceImpl.class);
     bind(GitCommitService.class).to(GitCommitServiceImpl.class);
