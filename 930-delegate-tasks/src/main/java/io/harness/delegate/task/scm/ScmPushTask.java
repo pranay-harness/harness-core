@@ -54,7 +54,7 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
         ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
             createFileResponse.getStatus(), createFileResponse.getError());
         return ScmPushTaskResponseData.builder()
-            .createFileResponse(createFileResponse)
+            .createFileResponse(createFileResponse.toByteArray())
             .changeType(scmPushTaskParams.getChangeType())
             .build();
       }
@@ -69,7 +69,7 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
         ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
             deleteFileResponse.getStatus(), deleteFileResponse.getError());
         return ScmPushTaskResponseData.builder()
-            .deleteFileResponse(deleteFileResponse)
+            .deleteFileResponse(deleteFileResponse.toByteArray())
             .changeType(scmPushTaskParams.getChangeType())
             .build();
       }
@@ -80,7 +80,7 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
         ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
             updateFileResponse.getStatus(), updateFileResponse.getError());
         return ScmPushTaskResponseData.builder()
-            .updateFileResponse(updateFileResponse)
+            .updateFileResponse(updateFileResponse.toByteArray())
             .changeType(scmPushTaskParams.getChangeType())
             .build();
       }
