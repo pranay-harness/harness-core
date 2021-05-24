@@ -1,13 +1,14 @@
 package io.harness.steps.approval.step.jira.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 
 import io.swagger.annotations.ApiModel;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -24,7 +25,13 @@ public class KeyValuesCriteriaSpecDTO implements CriteriaSpecDTO {
   boolean matchAnyCondition;
   @NotNull List<ConditionDTO> conditions;
 
-  public static KeyValuesCriteriaSpecDTO fromKeyValueCriteria(KeyValuesCriteriaSpec keyValuesCriteriaSpec) {
+  @Override
+  public boolean isEmpty() {
+    return EmptyPredicate.isEmpty(conditions);
+  }
+
+  public static KeyValuesCriteriaSpecDTO fromKeyValueCriteria(
+      KeyValuesCriteriaSpec keyValuesCriteriaSpec, boolean skipEmpty) {
     boolean matchCondition = false;
     Object matchConditionValue = keyValuesCriteriaSpec.getMatchAnyCondition().fetchFinalValue();
     if (matchConditionValue != null) {
@@ -32,7 +39,13 @@ public class KeyValuesCriteriaSpecDTO implements CriteriaSpecDTO {
     }
 
     List<Condition> conditions = keyValuesCriteriaSpec.getConditions();
-    if (isEmpty(conditions)) {
+    if (EmptyPredicate.isEmpty(conditions)) {
+      if (skipEmpty) {
+        return KeyValuesCriteriaSpecDTO.builder()
+            .matchAnyCondition(matchCondition)
+            .conditions(Collections.emptyList())
+            .build();
+      }
       throw new InvalidRequestException("At least 1 condition is required in KeyValues criteria");
     }
 

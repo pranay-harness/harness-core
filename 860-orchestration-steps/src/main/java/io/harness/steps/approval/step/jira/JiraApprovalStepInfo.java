@@ -35,7 +35,7 @@ public class JiraApprovalStepInfo implements PMSStepInfo, WithConnectorRef {
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> connectorRef;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> issueKey;
   @NotNull CriteriaSpecWrapper approvalCriteria;
-  @NotNull CriteriaSpecWrapper rejectionCriteria;
+  CriteriaSpecWrapper rejectionCriteria;
 
   @Override
   public StepType getStepType() {
