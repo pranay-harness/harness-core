@@ -16,11 +16,13 @@ import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
 import io.harness.ccm.commons.beans.recommendation.ResourceId;
 import io.harness.ccm.commons.dao.recommendation.K8sRecommendationDAO;
 import io.harness.ccm.graphql.dto.recommendation.ContainerHistogramDTO.HistogramExp;
+import io.harness.ccm.graphql.dto.recommendation.FilterStatsDTO;
 import io.harness.ccm.graphql.dto.recommendation.RecommendationItemDTO;
 import io.harness.ccm.graphql.dto.recommendation.ResourceType;
 import io.harness.ccm.graphql.dto.recommendation.WorkloadRecommendationDTO;
 import io.harness.histogram.HistogramCheckpoint;
 import io.harness.rule.Owner;
+import io.harness.timescaledb.Tables;
 import io.harness.timescaledb.tables.pojos.CeRecommendations;
 
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerCheckpoint;
@@ -140,11 +142,10 @@ public class RecommendationServiceTest extends CategoryTest {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testListAllReturnsNoItem() {
-    when(k8sRecommendationDAO.fetchRecommendationsOverview(eq(ACCOUNT_ID), any(), any(), any()))
+    when(k8sRecommendationDAO.fetchRecommendationsOverview(eq(ACCOUNT_ID), any(), eq(0L), eq(10L)))
         .thenReturn(Collections.emptyList());
 
-    final List<RecommendationItemDTO> allRecommendations =
-        recommendationService.listAll(eq(ACCOUNT_ID), any(), any(), any());
+    final List<RecommendationItemDTO> allRecommendations = recommendationService.listAll(ACCOUNT_ID, null, 0L, 10L);
 
     assertThat(allRecommendations).isNotNull();
     assertThat(allRecommendations).isEmpty();
@@ -154,10 +155,10 @@ public class RecommendationServiceTest extends CategoryTest {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testListAllReturnsOneItem() {
-    when(k8sRecommendationDAO.fetchRecommendationsOverview(eq(ACCOUNT_ID), any(), any(), any()))
+    when(k8sRecommendationDAO.fetchRecommendationsOverview(eq(ACCOUNT_ID), any(), eq(0L), eq(10L)))
         .thenReturn(ImmutableList.of(ceRecommendation));
 
-    final List<RecommendationItemDTO> allRecommendations = recommendationService.listAll(ACCOUNT_ID, null, null, null);
+    final List<RecommendationItemDTO> allRecommendations = recommendationService.listAll(ACCOUNT_ID, null, 0L, 10L);
 
     assertThat(allRecommendations).isNotNull().hasSize(1);
     assertThat(allRecommendations.get(0).getId()).isEqualTo(ID);
@@ -184,6 +185,26 @@ public class RecommendationServiceTest extends CategoryTest {
     assertThat(workloadRecommendationDTO.getContainerRecommendations()).isNull();
     assertThat(workloadRecommendationDTO.getItems()).isNotNull().isEmpty();
     assertThat(workloadRecommendationDTO.getLastDayCost()).isNull();
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testGetFilterStats() {
+    when(k8sRecommendationDAO.getDistinctStringValues(
+             eq(ACCOUNT_ID), any(), eq(Tables.CE_RECOMMENDATIONS.RESOURCETYPE), eq(Tables.CE_RECOMMENDATIONS)))
+        .thenReturn(ImmutableList.of("v1", "v2"));
+
+    List<FilterStatsDTO> result = recommendationService.getFilterStats(
+        ACCOUNT_ID, null, Collections.singletonList("resourceType"), Tables.CE_RECOMMENDATIONS);
+
+    verify(k8sRecommendationDAO, times(1))
+        .getDistinctStringValues(
+            eq(ACCOUNT_ID), any(), eq(Tables.CE_RECOMMENDATIONS.RESOURCETYPE), eq(Tables.CE_RECOMMENDATIONS));
+
+    assertThat(result).isNotEmpty();
+    assertThat(result.get(0).getKey()).isEqualTo("resourceType");
+    assertThat(result.get(0).getValues()).containsExactlyInAnyOrder("v1", "v2");
   }
 
   @Test

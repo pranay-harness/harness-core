@@ -10,6 +10,7 @@ import static com.google.common.base.MoreObjects.firstNonNull;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
 import io.harness.ccm.graphql.core.recommendation.RecommendationService;
+import io.harness.ccm.graphql.dto.recommendation.FilterStatsDTO;
 import io.harness.ccm.graphql.dto.recommendation.RecommendationDetailsDTO;
 import io.harness.ccm.graphql.dto.recommendation.RecommendationItemDTO;
 import io.harness.ccm.graphql.dto.recommendation.RecommendationsDTO;
@@ -17,6 +18,7 @@ import io.harness.ccm.graphql.dto.recommendation.ResourceType;
 import io.harness.ccm.graphql.utils.GraphQLUtils;
 import io.harness.ccm.graphql.utils.annotations.GraphQLApi;
 import io.harness.exception.InvalidRequestException;
+import io.harness.timescaledb.tables.records.CeRecommendationsRecord;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -33,6 +35,7 @@ import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.Condition;
+import org.jooq.TableField;
 
 @Slf4j
 @Singleton
@@ -116,14 +119,26 @@ public class RecommendationsOverviewQuery {
     return recommendationService.getStats(accountId, condition);
   }
 
+  @GraphQLQuery(description = "possible filter values for each column")
+  public List<FilterStatsDTO> recommendationFilterStats(
+      @GraphQLArgument(name = "keys", defaultValue = "[]") List<String> columns,
+      @GraphQLArgument(name = "name") String name, @GraphQLArgument(name = "namespace") String namespace,
+      @GraphQLArgument(name = "clusterName") String clusterName,
+      @GraphQLArgument(name = "resourceType") ResourceType resourceType,
+      @GraphQLArgument(name = "minSaving") Double monthlySaving, @GraphQLArgument(name = "minCost") Double monthlyCost,
+      @GraphQLEnvironment final ResolutionEnvironment env) {
+    final String accountId = graphQLUtils.getAccountIdentifier(env);
+
+    Condition condition =
+        applyCommonFilters(null, name, namespace, clusterName, resourceType, monthlySaving, monthlyCost);
+
+    return recommendationService.getFilterStats(accountId, condition, columns, CE_RECOMMENDATIONS);
+  }
+
   @NotNull
   private Condition applyCommonFilters(String id, String name, String namespace, String clusterName,
       ResourceType resourceType, Double monthlySaving, Double monthlyCost) {
-    Condition condition = CE_RECOMMENDATIONS.ISVALID
-                              .eq(true)
-                              // based on current-gen workload recommendation dataFetcher
-                              .and(CE_RECOMMENDATIONS.LASTPROCESSEDAT.greaterOrEqual(
-                                  OffsetDateTime.now(ZONE_OFFSET).truncatedTo(ChronoUnit.DAYS).minusDays(2)));
+    Condition condition = getValidRecommendationFilter();
 
     if (!isEmpty(id)) {
       condition = condition.and(CE_RECOMMENDATIONS.ID.eq(id));
@@ -131,23 +146,38 @@ public class RecommendationsOverviewQuery {
       if (resourceType != null) {
         condition = condition.and(CE_RECOMMENDATIONS.RESOURCETYPE.eq(resourceType.name()));
       }
-      if (!isEmpty(clusterName)) {
-        condition = condition.and(CE_RECOMMENDATIONS.CLUSTERNAME.eq(clusterName));
-      }
-      if (!isEmpty(namespace)) {
-        condition = condition.and(CE_RECOMMENDATIONS.NAMESPACE.eq(namespace));
-      }
-      if (!isEmpty(name)) {
-        condition = condition.and(CE_RECOMMENDATIONS.NAME.eq(name));
-      }
-      if (monthlySaving != null) {
-        condition = condition.and(CE_RECOMMENDATIONS.MONTHLYSAVING.greaterOrEqual(monthlySaving));
-      }
-      if (monthlyCost != null) {
-        condition = condition.and(CE_RECOMMENDATIONS.MONTHLYCOST.greaterOrEqual(monthlyCost));
-      }
+
+      condition = appendStringFilter(condition, CE_RECOMMENDATIONS.CLUSTERNAME, clusterName);
+      condition = appendStringFilter(condition, CE_RECOMMENDATIONS.NAMESPACE, namespace);
+      condition = appendStringFilter(condition, CE_RECOMMENDATIONS.NAME, name);
+      condition = appendGreaterOrEqualFilter(condition, CE_RECOMMENDATIONS.MONTHLYSAVING, monthlySaving);
+      condition = appendGreaterOrEqualFilter(condition, CE_RECOMMENDATIONS.MONTHLYCOST, monthlyCost);
     }
 
     return condition;
+  }
+
+  private static Condition appendStringFilter(
+      Condition condition, TableField<CeRecommendationsRecord, String> field, String value) {
+    if (!isEmpty(value)) {
+      return condition.and(field.eq(value));
+    }
+    return condition;
+  }
+
+  private static Condition appendGreaterOrEqualFilter(
+      Condition condition, TableField<CeRecommendationsRecord, Double> field, Double value) {
+    if (value != null) {
+      return condition.and(field.greaterOrEqual(value));
+    }
+    return condition;
+  }
+
+  private static Condition getValidRecommendationFilter() {
+    return CE_RECOMMENDATIONS.ISVALID
+        .eq(true)
+        // based on current-gen workload recommendation dataFetcher
+        .and(CE_RECOMMENDATIONS.LASTPROCESSEDAT.greaterOrEqual(
+            OffsetDateTime.now(ZONE_OFFSET).truncatedTo(ChronoUnit.DAYS).minusDays(2)));
   }
 }

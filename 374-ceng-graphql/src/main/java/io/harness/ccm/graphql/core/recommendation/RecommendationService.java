@@ -9,11 +9,13 @@ import io.harness.ccm.commons.beans.recommendation.ResourceId;
 import io.harness.ccm.commons.dao.recommendation.K8sRecommendationDAO;
 import io.harness.ccm.graphql.dto.recommendation.ContainerHistogramDTO;
 import io.harness.ccm.graphql.dto.recommendation.ContainerHistogramDTO.HistogramExp;
+import io.harness.ccm.graphql.dto.recommendation.FilterStatsDTO;
 import io.harness.ccm.graphql.dto.recommendation.RecommendationItemDTO;
 import io.harness.ccm.graphql.dto.recommendation.ResourceType;
 import io.harness.ccm.graphql.dto.recommendation.WorkloadRecommendationDTO;
 import io.harness.histogram.Histogram;
 import io.harness.histogram.HistogramCheckpoint;
+import io.harness.queryconverter.SQLConverter;
 import io.harness.timescaledb.tables.pojos.CeRecommendations;
 
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
@@ -25,6 +27,7 @@ import software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUt
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,23 +38,25 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.Value;
 import org.jooq.Condition;
+import org.jooq.Field;
+import org.jooq.Table;
 
 @Singleton
 public class RecommendationService {
   @Inject private K8sRecommendationDAO k8sRecommendationDAO;
 
-  @NotNull
-  public RecommendationOverviewStats getStats(@NotNull final String accountId, Condition condition) {
+  @NonNull
+  public RecommendationOverviewStats getStats(@NonNull final String accountId, Condition condition) {
     return k8sRecommendationDAO.fetchRecommendationsOverviewStats(accountId, condition);
   }
 
-  @NotNull
+  @NonNull
   public List<RecommendationItemDTO> listAll(
-      @NotNull final String accountId, Condition condition, @NotNull Long offset, @NotNull Long limit) {
+      @NonNull final String accountId, Condition condition, @NonNull Long offset, @NonNull Long limit) {
     final List<CeRecommendations> ceRecommendationsList =
         k8sRecommendationDAO.fetchRecommendationsOverview(accountId, condition, offset, limit);
 
@@ -69,8 +74,8 @@ public class RecommendationService {
   }
 
   @Nullable
-  public WorkloadRecommendationDTO getWorkloadRecommendationById(@NotNull final String accountIdentifier, String id,
-      @NotNull OffsetDateTime startTime, @NotNull OffsetDateTime endTime) {
+  public WorkloadRecommendationDTO getWorkloadRecommendationById(@NonNull final String accountIdentifier, String id,
+      @NonNull OffsetDateTime startTime, @NonNull OffsetDateTime endTime) {
     final Optional<K8sWorkloadRecommendation> workloadRecommendation =
         k8sRecommendationDAO.fetchK8sWorkloadRecommendationById(accountIdentifier, id);
 
@@ -91,6 +96,20 @@ public class RecommendationService {
         .build();
   }
 
+  public List<FilterStatsDTO> getFilterStats(
+      String accountId, Condition preCondition, @NonNull List<String> columns, @NonNull Table<?> table) {
+    List<FilterStatsDTO> result = new ArrayList<>();
+
+    for (String column : columns) {
+      Field<?> field = SQLConverter.getField(column, table);
+      List<String> columnValues = k8sRecommendationDAO.getDistinctStringValues(accountId, preCondition, field, table);
+
+      result.add(FilterStatsDTO.builder().key(column).values(columnValues).build());
+    }
+
+    return result;
+  }
+
   private static ResourceId constructResourceId(K8sWorkloadRecommendation workloadRecommendation) {
     return ResourceId.builder()
         .accountId(workloadRecommendation.getAccountId())
@@ -101,7 +120,7 @@ public class RecommendationService {
         .build();
   }
 
-  @NotNull
+  @NonNull
   private List<ContainerHistogramDTO> mergeHistogram(final List<PartialRecommendationHistogram> histogramList,
       final Map<String, ContainerRecommendation> containerRecommendationMap) {
     // find all partial histograms that match this query and merge them
