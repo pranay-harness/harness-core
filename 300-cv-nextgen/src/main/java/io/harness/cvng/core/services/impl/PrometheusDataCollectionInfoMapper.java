@@ -20,6 +20,7 @@ public class PrometheusDataCollectionInfoMapper
                                        .metricName(metricInfo.getMetricName())
                                        .query(metricInfo.getQuery())
                                        .filters(metricInfo.getFilters())
+                                       .serviceInstanceField(metricInfo.getServiceInstanceFieldName())
                                        .build());
     });
     PrometheusDataCollectionInfo dataCollectionInfo = PrometheusDataCollectionInfo.builder()

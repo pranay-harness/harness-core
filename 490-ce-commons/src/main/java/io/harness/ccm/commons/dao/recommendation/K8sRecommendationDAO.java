@@ -51,6 +51,8 @@ import org.jooq.Record;
 import org.jooq.SelectFinalStep;
 import org.jooq.SelectSelectStep;
 import org.jooq.Table;
+import org.jooq.TableField;
+import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.jooq.types.YearToSecond;
 
@@ -65,6 +67,7 @@ public class K8sRecommendationDAO {
   private static final String SUMCPU = "sumcpu";
   private static final String SUMMEMORY = "summemory";
   private static final String TIME = "time";
+  private static final String ACCOUNT_ID = "accountid";
 
   @Inject private HPersistence hPersistence;
   @Inject private DSLContext dslContext;
@@ -261,5 +264,14 @@ public class K8sRecommendationDAO {
   @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
   private static void insertOne(@NonNull InsertFinalStep<? extends Record> finalStep) {
     finalStep.execute();
+  }
+
+  @RetryOnException(
+      retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION, retryOn = {DataAccessException.class})
+  public List<String>
+  getDistinctStringValues(String accountId, Condition condition, Field<?> tableField, Table<?> jooqTable) {
+    condition = ((TableField<? extends Record, String>) jooqTable.field(ACCOUNT_ID)).eq(accountId).and(condition);
+
+    return dslContext.selectDistinct(tableField).from(jooqTable).where(condition).fetchInto(String.class);
   }
 }
