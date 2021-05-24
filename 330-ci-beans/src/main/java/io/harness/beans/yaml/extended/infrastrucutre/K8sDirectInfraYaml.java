@@ -1,8 +1,14 @@
 package io.harness.beans.yaml.extended.infrastrucutre;
 
+import static io.harness.beans.common.SwaggerConstants.INTEGER_CLASSPATH;
+import static io.harness.beans.common.SwaggerConstants.STRING_MAP_CLASSPATH;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
+
 import io.harness.pms.yaml.ParameterField;
+import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.annotations.ApiModelProperty;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -28,7 +34,14 @@ public class K8sDirectInfraYaml implements Infrastructure {
   public static class K8sDirectInfraYamlSpec {
     private String connectorRef;
     private String namespace;
+    @YamlSchemaTypes(value = {string})
+    @ApiModelProperty(dataType = STRING_MAP_CLASSPATH)
     private ParameterField<Map<String, String>> annotations;
+    @YamlSchemaTypes(value = {string})
+    @ApiModelProperty(dataType = STRING_MAP_CLASSPATH)
     private ParameterField<Map<String, String>> labels;
+    @YamlSchemaTypes({string})
+    @ApiModelProperty(dataType = INTEGER_CLASSPATH)
+    private ParameterField<Integer> runAsUser;
   }
 }

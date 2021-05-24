@@ -90,12 +90,12 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
 
   private void validate(CVNGStepParameter stepParameters) {
     Preconditions.checkNotNull(stepParameters.getVerificationJobIdentifier(), "verificationJobRef can not be null");
-    Preconditions.checkNotNull(
-        stepParameters.getServiceIdentifier().getValue(), "serviceIdentifier is null. Please check your expression.");
-    Preconditions.checkNotNull(
-        stepParameters.getEnvIdentifier().getValue(), "envIdentifier is null. Please check your expression.");
-    Preconditions.checkNotNull(
-        stepParameters.getDeploymentTag().getValue(), "deployment tag is null. Please check your expression.");
+    Preconditions.checkNotNull(stepParameters.getServiceIdentifier().getValue(),
+        "Could not resolve expression for serviceRef. Please check your expression.");
+    Preconditions.checkNotNull(stepParameters.getEnvIdentifier().getValue(),
+        "Could not resolve expression for envRef. Please check your expression.");
+    Preconditions.checkNotNull(stepParameters.getDeploymentTag().getValue(),
+        "Could not resolve expression for deployment tag. Please check your expression.");
   }
 
   private String getActivityName(CVNGStepParameter stepParameters) {
@@ -121,13 +121,10 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
   @Builder
   @JsonTypeName("verifyStepOutcome")
   @TypeAlias("verifyStepOutcome")
-  public static class VerifyStepOutcome implements Outcome {
+  public static class VerifyStepOutcome implements ProgressData, Outcome {
     int progressPercentage;
     String estimatedRemainingTime;
-    @Override
-    public String getType() {
-      return "verifyStepOutcome";
-    }
+    String activityId;
   }
 
   @Override
@@ -151,10 +148,6 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
       case IGNORED:
         status = Status.ERRORED;
         break;
-      case NOT_STARTED:
-      case IN_PROGRESS:
-        status = Status.RUNNING;
-        break;
       default:
         throw new IllegalStateException("Invalid status value: " + cvngResponseData.getActivityStatusDTO().getStatus());
     }
@@ -167,6 +160,7 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
                          .estimatedRemainingTime(TimeUnit.MILLISECONDS.toMinutes(
                                                      cvngResponseData.getActivityStatusDTO().getRemainingTimeMs())
                              + " minutes")
+                         .activityId(cvngResponseData.getActivityId())
                          .build())
             .build());
     if (status == Status.FAILED) {
@@ -191,6 +185,17 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
               .build());
     }
     return stepResponseBuilder.build();
+  }
+
+  @Override
+  public ProgressData handleProgress(Ambiance ambiance, CVNGStepParameter stepParameters, ProgressData progressData) {
+    CVNGResponseData cvngResponseData = (CVNGResponseData) progressData;
+    return VerifyStepOutcome.builder()
+        .progressPercentage(cvngResponseData.getActivityStatusDTO().getProgressPercentage())
+        .estimatedRemainingTime(
+            TimeUnit.MILLISECONDS.toMinutes(cvngResponseData.getActivityStatusDTO().getRemainingTimeMs()) + " minutes")
+        .activityId(cvngResponseData.getActivityId())
+        .build();
   }
 
   @Override

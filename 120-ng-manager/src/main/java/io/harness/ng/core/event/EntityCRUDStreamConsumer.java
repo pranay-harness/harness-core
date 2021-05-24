@@ -12,7 +12,6 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.USER_E
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
-import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
@@ -67,7 +66,7 @@ public class EntityCRUDStreamConsumer implements Runnable {
     SecurityContextBuilder.unsetCompleteContext();
   }
 
-  private void pollAndProcessMessages() throws ConsumerShutdownException {
+  private void pollAndProcessMessages() {
     List<Message> messages;
     String messageId;
     boolean messageProcessed;

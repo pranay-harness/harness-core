@@ -3,13 +3,15 @@ package io.harness.expression;
 import static io.harness.rule.OwnerRule.GARVIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -18,11 +20,10 @@ import io.harness.exception.CriticalExpressionEvaluationException;
 import io.harness.exception.UnresolvedExpressionsException;
 import io.harness.expression.field.dummy.DummyOrchestrationField;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.pms.yaml.ParameterFieldProcessor;
+import io.harness.pms.yaml.validation.InputSetValidatorFactory;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableList;
@@ -40,15 +41,14 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
   @Mock private PlanExecutionService planExecutionService;
-  @Mock private EngineExpressionService engineExpressionService;
-  @Inject private ParameterFieldProcessor parameterFieldProcessor;
+  @Inject private InputSetValidatorFactory inputSetValidatorFactory;
 
   @Before
   public void setup() {
     when(planExecutionService.get(anyString())).thenReturn(null);
-    on(parameterFieldProcessor).set("engineExpressionService", engineExpressionService);
   }
 
   @Test
@@ -155,31 +155,39 @@ public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
   }
 
   private void validateExpression(
-      EngineExpressionEvaluator evaluator, String expression, Object expected, boolean skipEvaluate) {
-    validateExpression(evaluator, expression, expected, skipEvaluate, false);
+      EngineExpressionEvaluator evaluator, String expression, Object expected, boolean shouldThrow) {
+    validateExpression(evaluator, expression, expected, shouldThrow, false);
   }
 
   private void validateExpression(EngineExpressionEvaluator evaluator, String expression, Object expected,
-      boolean skipEvaluate, boolean evaluateThrows) {
-    validateSingleExpression(evaluator, expression, expected, skipEvaluate, evaluateThrows);
-    validateSingleExpression(evaluator, "obj." + expression, expected, skipEvaluate, evaluateThrows);
+      boolean skipEvaluate, boolean shouldThrow) {
+    validateSingleExpression(evaluator, expression, expected, skipEvaluate, shouldThrow);
+    validateSingleExpression(evaluator, "obj." + expression, expected, skipEvaluate, shouldThrow);
   }
 
   private void validateSingleExpression(EngineExpressionEvaluator evaluator, String expression, Object expected,
-      boolean skipEvaluate, boolean evaluateThrows) {
+      boolean skipEvaluate, boolean shouldThrow) {
     expression = "<+" + expression + ">";
-    assertThat(evaluator.renderExpression(expression)).isEqualTo(String.valueOf(expected));
+    if (shouldThrow) {
+      String finalExpression = expression;
+      assertThatThrownBy(() -> evaluator.renderExpression(finalExpression))
+          .isInstanceOfAny(UnresolvedExpressionsException.class, CriticalExpressionEvaluationException.class);
+      assertThatCode(() -> evaluator.renderExpression(finalExpression, true)).doesNotThrowAnyException();
+    } else {
+      assertThat(evaluator.renderExpression(expression)).isEqualTo(String.valueOf(expected));
+    }
+
     if (skipEvaluate) {
       return;
     }
 
-    if (evaluateThrows) {
+    if (shouldThrow) {
       String finalExpression = expression;
       assertThatThrownBy(() -> evaluator.evaluateExpression(finalExpression))
           .isInstanceOfAny(UnresolvedExpressionsException.class, CriticalExpressionEvaluationException.class);
-      return;
+    } else {
+      assertThat(evaluator.evaluateExpression(expression)).isEqualTo(expected);
     }
-    assertThat(evaluator.evaluateExpression(expression)).isEqualTo(expected);
   }
 
   @Test
@@ -228,7 +236,7 @@ public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
 
   private Pair<Document, Object> executeResolve(EngineExpressionEvaluator evaluator, Object o) {
     Document docOriginal = RecastOrchestrationUtils.toDocument(o);
-    evaluator.resolve(docOriginal);
+    evaluator.resolve(docOriginal, false);
     Document docCopy = copyDocument(docOriginal);
     return Pair.of(docOriginal, NodeExecutionUtils.resolveObject(docCopy));
   }
@@ -276,7 +284,7 @@ public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
   private EngineExpressionEvaluator prepareEngineExpressionEvaluator(Map<String, Object> contextMap) {
     SampleEngineExpressionEvaluator evaluator = new SampleEngineExpressionEvaluator();
     on(evaluator).set("planExecutionService", planExecutionService);
-    on(evaluator).set("parameterFieldProcessor", parameterFieldProcessor);
+    on(evaluator).set("inputSetValidatorFactory", inputSetValidatorFactory);
     if (EmptyPredicate.isEmpty(contextMap)) {
       return evaluator;
     }
@@ -284,13 +292,6 @@ public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
     for (Map.Entry<String, Object> entry : contextMap.entrySet()) {
       evaluator.addToContext(entry.getKey(), entry.getValue());
     }
-
-    when(engineExpressionService.evaluateExpression(any(), anyString()))
-        .thenAnswer(invocation -> evaluator.evaluateExpression((String) invocation.getArguments()[1]));
-    when(engineExpressionService.renderExpression(any(), anyString()))
-        .thenAnswer(invocation -> evaluator.renderExpression((String) invocation.getArguments()[1]));
-    when(engineExpressionService.resolve(any(), any()))
-        .thenAnswer(invocation -> evaluator.resolve(invocation.getArguments()[1]));
     return evaluator;
   }
 

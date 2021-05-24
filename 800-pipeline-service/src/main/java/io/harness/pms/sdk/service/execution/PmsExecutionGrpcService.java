@@ -14,9 +14,9 @@ import io.harness.pms.contracts.service.PmsExecutionServiceGrpc.PmsExecutionServ
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
-import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.StepSpecTypeConstants;
 
 import com.google.inject.Inject;

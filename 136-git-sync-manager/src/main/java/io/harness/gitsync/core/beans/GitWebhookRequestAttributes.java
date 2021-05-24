@@ -27,7 +27,7 @@ public class GitWebhookRequestAttributes {
   private String webhookBody;
   private String webhookHeaders;
   @NotEmpty private String branchName;
-  @NotEmpty private String gitConnectorId;
+  private String gitConnectorId;
   @NotEmpty private String repo;
   String headCommitId;
 }

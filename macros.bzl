@@ -1,6 +1,7 @@
 load("//tools/bazel/sonarqube:defs.bzl", "sq_project")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("@rules_jvm_external//:specs.bzl", "maven")
 
 def resources(name = "resources", runtime_deps = [], testonly = 0, visibility = None):
     native.java_library(
@@ -9,15 +10,6 @@ def resources(name = "resources", runtime_deps = [], testonly = 0, visibility = 
         resource_strip_prefix = "%s/" % native.package_name(),
         runtime_deps = runtime_deps,
         testonly = testonly,
-        visibility = visibility,
-    )
-
-def sources(visibility = None):
-    if visibility == None:
-        visibility = ["//" + native.package_name() + ":__pkg__", "//:__pkg__"]
-    native.filegroup(
-        name = "sources",
-        srcs = native.glob(["src/main/**/*.java"]),
         visibility = visibility,
     )
 
@@ -86,3 +78,12 @@ def run_analysis(
 
     if run_sonar:
         sonarqube_test()
+
+def maven_test_artifact(artifact):
+    entities = artifact.split(":")
+    return maven.artifact(
+        group = entities[0],
+        artifact = entities[1],
+        version = entities[2],
+        testonly = True,
+    )

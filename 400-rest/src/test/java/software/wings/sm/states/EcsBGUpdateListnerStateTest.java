@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -36,6 +37,9 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -64,6 +68,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
@@ -77,6 +82,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class EcsBGUpdateListnerStateTest extends WingsBaseTest {
   @Mock private AppService mockAppService;
   @Mock private InfrastructureMappingService mockInfrastructureMappingService;
@@ -187,8 +194,9 @@ public class EcsBGUpdateListnerStateTest extends WingsBaseTest {
                 EcsBGSetupData.builder().downsizedServiceName(SERVICE_NAME).downsizedServiceCount(100).build())
             .targetGroupForNewService("TARGET_GROUP")
             .build();
-
-    EcsListenerUpdateRequestConfigData configData = rollbackState.getEcsListenerUpdateRequestConfigData(element);
+    ExecutionContext context = mock(ExecutionContextImpl.class);
+    EcsListenerUpdateRequestConfigData configData =
+        rollbackState.getEcsListenerUpdateRequestConfigData(element, context);
     assertThat(configData.isRollback()).isTrue();
     assertThat(configData.getServiceNameDownsized()).isEqualTo(SERVICE_NAME);
     assertThat(configData.getServiceCountDownsized()).isEqualTo(100);

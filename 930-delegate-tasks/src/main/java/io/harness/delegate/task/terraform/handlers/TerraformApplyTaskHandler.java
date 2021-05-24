@@ -5,7 +5,10 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.provision.TerraformConstants.RESOURCE_READY_WAIT_TIME_SECONDS;
+import static io.harness.provision.TerraformConstants.TERRAFORM_BACKEND_CONFIGS_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_VARIABLES_FILE_NAME;
+import static io.harness.provision.TerraformConstants.TF_VAR_FILES_DIR;
+import static io.harness.provision.TerraformConstants.TF_WORKING_DIR;
 import static io.harness.threading.Morpheus.sleep;
 
 import static java.lang.String.format;
@@ -29,8 +32,11 @@ import io.harness.terraform.request.TerraformExecuteStepRequest;
 
 import com.google.inject.Inject;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.Charsets;
 
@@ -40,40 +46,46 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
   @Inject TerraformBaseHelper terraformBaseHelper;
 
   @Override
-  public TerraformTaskNGResponse executeTaskInternal(
-      TerraformTaskNGParameters taskParameters, String delegateId, String taskId, LogCallback logCallback) {
+  public TerraformTaskNGResponse executeTaskInternal(TerraformTaskNGParameters taskParameters, String delegateId,
+      String taskId, LogCallback logCallback) throws IOException {
     GitStoreDelegateConfig confileFileGitStore = taskParameters.getConfigFile().getGitStoreDelegateConfig();
+    String scriptPath = confileFileGitStore.getPaths().get(0);
 
     if (isNotEmpty(confileFileGitStore.getBranch())) {
       logCallback.saveExecutionLog("Branch: " + confileFileGitStore.getBranch(), INFO, CommandExecutionStatus.RUNNING);
     }
 
-    logCallback.saveExecutionLog(
-        "Normalized Path: " + confileFileGitStore.getPaths().get(0), INFO, CommandExecutionStatus.RUNNING);
+    logCallback.saveExecutionLog("Normalized Path: " + scriptPath, INFO, CommandExecutionStatus.RUNNING);
 
     if (isNotEmpty(confileFileGitStore.getCommitId())) {
       logCallback.saveExecutionLog(
           format("%nInheriting git state at commit id: [%s]", confileFileGitStore.getCommitId()), INFO,
           CommandExecutionStatus.RUNNING);
     }
-
     GitBaseRequest gitBaseRequestForConfigFile = terraformBaseHelper.getGitBaseRequestForConfigFile(
         taskParameters.getAccountId(), confileFileGitStore, (GitConfigDTO) confileFileGitStore.getGitConfigDTO());
 
-    String scriptDirectory = terraformBaseHelper.initializeScriptAndWorkDirectories(
-        taskParameters, gitBaseRequestForConfigFile, logCallback);
+    String baseDir = TF_WORKING_DIR + taskParameters.getEntityId();
+
+    String scriptDirectory = terraformBaseHelper.fetchConfigFileAndPrepareScriptDir(gitBaseRequestForConfigFile,
+        taskParameters.getAccountId(), taskParameters.getWorkspace(), taskParameters.getCurrentStateFileId(),
+        confileFileGitStore, logCallback, scriptPath, baseDir);
+
+    String tfVarDirectory = Paths.get(baseDir, TF_VAR_FILES_DIR).toString();
+    List<String> varFilePaths = terraformBaseHelper.checkoutRemoteVarFileAndConvertToVarFilePaths(
+        taskParameters.getVarFileInfos(), scriptDirectory, logCallback, taskParameters.getAccountId(), tfVarDirectory);
 
     File tfOutputsFile = Paths.get(scriptDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, "output")).toFile();
 
     try (PlanJsonLogOutputStream planJsonLogOutputStream = new PlanJsonLogOutputStream()) {
       TerraformExecuteStepRequest terraformExecuteStepRequest =
           TerraformExecuteStepRequest.builder()
-              .tfBackendConfigsFile(taskParameters.getBackendConfig())
-              .tfOutputsFile(tfOutputsFile.getAbsolutePath())
-              .tfVarFilePaths(taskParameters.getInlineVarFiles() != null
+              .tfBackendConfigsFile(taskParameters.getBackendConfig() != null
                       ? TerraformHelperUtils.createFileFromStringContent(
-                          taskParameters.getInlineVarFiles(), scriptDirectory)
-                      : taskParameters.getInlineVarFiles())
+                          taskParameters.getBackendConfig(), scriptDirectory, TERRAFORM_BACKEND_CONFIGS_FILE_NAME)
+                      : taskParameters.getBackendConfig())
+              .tfOutputsFile(tfOutputsFile.getAbsolutePath())
+              .tfVarFilePaths(varFilePaths)
               .workspace(taskParameters.getWorkspace())
               .targets(taskParameters.getTargets())
               .scriptDirectory(scriptDirectory)
@@ -83,6 +95,7 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
               .isSaveTerraformJson(taskParameters.isSaveTerraformStateJson())
               .logCallback(logCallback)
               .planJsonLogOutputStream(planJsonLogOutputStream)
+              .timeoutInMillis(taskParameters.getTimeoutInMillis())
               .build();
 
       CliResponse response = terraformBaseHelper.executeTerraformApplyStep(terraformExecuteStepRequest);
@@ -93,7 +106,11 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
       sleep(ofSeconds(RESOURCE_READY_WAIT_TIME_SECONDS));
 
       logCallback.saveExecutionLog("Script execution finished with status: " + response.getCommandExecutionStatus(),
-          INFO, response.getCommandExecutionStatus());
+          INFO, CommandExecutionStatus.RUNNING);
+
+      Map<String, String> commitIdToFetchedFilesMap = terraformBaseHelper.buildcommitIdToFetchedFilesMap(
+          taskParameters.getAccountId(), taskParameters.getConfigFile().getIdentifier(), gitBaseRequestForConfigFile,
+          taskParameters.getVarFileInfos());
 
       File tfStateFile = TerraformHelperUtils.getTerraformStateFile(scriptDirectory, taskParameters.getWorkspace());
 
@@ -102,9 +119,7 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
 
       return TerraformTaskNGResponse.builder()
           .outputs(new String(Files.readAllBytes(tfOutputsFile.toPath()), Charsets.UTF_8))
-          .commitIdForConfigFilesMap(terraformBaseHelper.buildcommitIdToFetchedFilesMap(taskParameters.getAccountId(),
-              taskParameters.getConfigFile().getIdentifier(), gitBaseRequestForConfigFile,
-              taskParameters.getRemoteVarfiles()))
+          .commitIdForConfigFilesMap(commitIdToFetchedFilesMap)
           .encryptedTfPlan(taskParameters.getEncryptedTfPlan())
           .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
           .stateFileId(stateFileId)

@@ -4,18 +4,18 @@ import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.plancreator.beans.VariablesSweepingOutput;
+import io.harness.beans.common.VariablesSweepingOutput;
 import io.harness.plancreator.steps.common.StageElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.steps.OrchestrationStepTypes;
-import io.harness.steps.StepOutcomeGroup;
 import io.harness.tasks.ResponseData;
 import io.harness.yaml.utils.NGVariablesUtils;
 
@@ -40,7 +40,7 @@ public class ApprovalStageStep implements ChildExecutable<StageElementParameters
   public ChildExecutableResponse obtainChild(
       Ambiance ambiance, StageElementParameters stepParameters, StepInputPackage inputPackage) {
     log.info("Executing approval stage with params [{}]", stepParameters);
-    ApprovalStageSpecParameters specParameters = (ApprovalStageSpecParameters) stepParameters.getSpec();
+    ApprovalStageSpecParameters specParameters = (ApprovalStageSpecParameters) stepParameters.getSpecConfig();
     String executionNodeId = specParameters.getChildNodeID();
     VariablesSweepingOutput variablesSweepingOutput = getVariablesSweepingOutput(ambiance, stepParameters);
     executionSweepingOutputResolver.consume(

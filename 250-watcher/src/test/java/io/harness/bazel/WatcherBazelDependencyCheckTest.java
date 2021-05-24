@@ -65,14 +65,14 @@ public class WatcherBazelDependencyCheckTest extends CategoryTest {
       }
     }
 
-    assertThat(mismatchedVersions.stream().sorted()).hasSize(15);
+    assertThat(mismatchedVersions.stream().sorted()).hasSize(12);
   }
 
   List<String> getDepsInMavenInstallJson() throws IOException {
     String rootDirectory = Project.rootDirectory(WatcherBazelDependencyCheckTest.class);
     ObjectMapper mapper = new ObjectMapper();
     Map<String, HashMap<String, ?>> mavenInstallJson =
-        mapper.readValue(Paths.get(rootDirectory + "/maven_install.json").toFile(), HashMap.class);
+        mapper.readValue(Paths.get(rootDirectory + "/project/main_maven_install.json").toFile(), HashMap.class);
     List dependenciesInMavenInstallJson =
         (ArrayList<HashMap<String, ?>>) mavenInstallJson.get("dependency_tree").get("dependencies");
     Set<String> dependencySetInMavenInstallJson = new HashSet<>();

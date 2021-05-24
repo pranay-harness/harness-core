@@ -11,7 +11,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.eventsframework.api.ProducerShutdownException;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.observer.Subject;
@@ -30,7 +30,6 @@ import io.harness.repositories.pipeline.PMSPipelineRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.mongodb.client.result.UpdateResult;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -65,14 +64,14 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
           pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier(),
           pipelineEntity.getIdentifier());
 
-      pmsPipelineServiceHelper.updatePipelineInfo(pipelineEntity);
+      PipelineEntity entityWithUpdatedInfo = pmsPipelineServiceHelper.updatePipelineInfo(pipelineEntity);
 
-      return pmsPipelineRepository.save(pipelineEntity, PipelineYamlDtoMapper.toDto(pipelineEntity));
+      return pmsPipelineRepository.save(entityWithUpdatedInfo, PipelineYamlDtoMapper.toDto(entityWithUpdatedInfo));
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(format(DUP_KEY_EXP_FORMAT_STRING, pipelineEntity.getIdentifier(),
                                             pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()),
           USER_SRE, ex);
-    } catch (IOException | ProducerShutdownException exception) {
+    } catch (IOException | EventsFrameworkDownException exception) {
       throw new InvalidRequestException(String.format(
           "Unknown exception occurred while updating pipeline with id: [%s]. Please contact Harness Support",
           pipelineEntity.getIdentifier()));
@@ -87,28 +86,45 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
-  public PipelineEntity update(PipelineEntity pipelineEntity) {
+  public PipelineEntity updatePipelineYaml(PipelineEntity pipelineEntity) {
+    PMSPipelineServiceHelper.validatePresenceOfRequiredFields(pipelineEntity.getAccountId(),
+        pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier());
+
+    Optional<PipelineEntity> optionalOriginalEntity =
+        pmsPipelineRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
+            pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(),
+            pipelineEntity.getIdentifier(), true);
+    if (!optionalOriginalEntity.isPresent()) {
+      throw new InvalidRequestException(format("Pipeline [%s] under Project[%s], Organization [%s] doesn't exist.",
+          pipelineEntity.getIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()));
+    }
+    PipelineEntity entityToUpdate = optionalOriginalEntity.get();
+    PipelineEntity tempEntity = entityToUpdate.withYaml(pipelineEntity.getYaml())
+                                    .withName(pipelineEntity.getName())
+                                    .withDescription(pipelineEntity.getDescription())
+                                    .withTags(pipelineEntity.getTags());
+
     try {
-      PMSPipelineServiceHelper.validatePresenceOfRequiredFields(pipelineEntity.getAccountId(),
-          pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier());
+      PipelineEntity entityWithUpdatedInfo = pmsPipelineServiceHelper.updatePipelineInfo(tempEntity);
+      PipelineEntity updatedResult = pmsPipelineRepository.updatePipelineYaml(
+          entityWithUpdatedInfo, PipelineYamlDtoMapper.toDto(entityWithUpdatedInfo));
 
-      pmsPipelineServiceHelper.updatePipelineInfo(pipelineEntity);
-
-      Criteria criteria =
-          PMSPipelineServiceHelper.getPipelineEqualityCriteria(pipelineEntity, pipelineEntity.getDeleted());
-      PipelineEntity updateResult = pmsPipelineRepository.update(criteria, pipelineEntity);
-      if (updateResult == null) {
+      if (updatedResult == null) {
         throw new InvalidRequestException(format(
             "Pipeline [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
             pipelineEntity.getIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()));
       }
-
-      return updateResult;
-    } catch (IOException | ProducerShutdownException exception) {
+      return updatedResult;
+    } catch (IOException | EventsFrameworkDownException exception) {
       throw new InvalidRequestException(String.format(
           "Unknown exception occurred while updating pipeline with id: [%s]. Please contact Harness Support",
           pipelineEntity.getIdentifier()));
     }
+  }
+
+  @Override
+  public PipelineEntity updatePipelineMetadata(Criteria criteria, Update updateOperations) {
+    return pmsPipelineRepository.updatePipelineMetadata(criteria, updateOperations);
   }
 
   @Override
@@ -119,39 +135,48 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
 
     Update update = new Update();
     update.set(PipelineEntityKeys.executionSummaryInfo, executionSummaryInfo);
-    pmsPipelineRepository.update(criteria, update);
+    updatePipelineMetadata(criteria, update);
   }
 
   @Override
   public Optional<PipelineEntity> incrementRunSequence(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean deleted) {
-    return pmsPipelineRepository.incrementRunSequence(
-        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, deleted);
+    Criteria criteria = PMSPipelineServiceHelper.getPipelineEqualityCriteria(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false, null);
+    Update update = new Update();
+    update.inc(PipelineEntityKeys.runSequence);
+    return Optional.ofNullable(updatePipelineMetadata(criteria, update));
   }
 
   @Override
   public boolean delete(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, Long version) {
-    Criteria criteria = PMSPipelineServiceHelper.getPipelineEqualityCriteria(
-        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false, version);
-
-    UpdateResult updateResult = pmsPipelineRepository.delete(criteria);
-    if (!updateResult.wasAcknowledged() || updateResult.getModifiedCount() != 1) {
-      throw new InvalidRequestException(
-          format("Pipeline [%s] under Project[%s], Organization [%s] couldn't be deleted.", pipelineIdentifier,
-              projectIdentifier, orgIdentifier));
+    Optional<PipelineEntity> optionalPipelineEntity =
+        get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
+    if (!optionalPipelineEntity.isPresent()) {
+      throw new InvalidRequestException(format("Pipeline [%s] under Project[%s], Organization [%s] does not exist.",
+          pipelineIdentifier, projectIdentifier, orgIdentifier));
     }
 
-    Optional<PipelineEntity> pipelineEntity =
-        pmsPipelineRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
-            accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
-    pipelineEntity.ifPresent(entity -> pipelineSubject.fireInform(PipelineActionObxxxxxxxx:onDelete, entity));
-    return true;
+    PipelineEntity existingEntity = optionalPipelineEntity.get();
+    PipelineEntity withDeleted = existingEntity.withDeleted(true);
+    PipelineEntity deletedEntity =
+        pmsPipelineRepository.deletePipeline(withDeleted, PipelineYamlDtoMapper.toDto(withDeleted));
+
+    if (deletedEntity.getDeleted()) {
+      pipelineSubject.fireInform(PipelineActionObxxxxxxxx:onDelete, deletedEntity);
+      return true;
+    } else {
+      throw new InvalidRequestException(
+          format("Pipeline [%s] under Project[%s], Organization [%s] could not be deleted.", pipelineIdentifier,
+              projectIdentifier, orgIdentifier));
+    }
   }
 
   @Override
-  public Page<PipelineEntity> list(Criteria criteria, Pageable pageable) {
-    return pmsPipelineRepository.findAll(criteria, pageable);
+  public Page<PipelineEntity> list(
+      Criteria criteria, Pageable pageable, String accountId, String orgIdentifier, String projectIdentifier) {
+    return pmsPipelineRepository.findAll(criteria, pageable, accountId, orgIdentifier, projectIdentifier);
   }
 
   @Override

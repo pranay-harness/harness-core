@@ -5,12 +5,10 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.service.beans.ServiceConfig;
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.deploymentstage.DeploymentStageVisitorHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.pipeline.executions.NGStageType;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -63,9 +61,5 @@ public class DeploymentStage implements CDStage, Visitable {
   @Override
   public NGStageType getStageType() {
     return DEPLOYMENT_STAGE_TYPE;
-  }
-
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.SPEC).isPartOfFQN(false).build();
   }
 }

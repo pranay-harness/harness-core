@@ -105,7 +105,17 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
       DelegateEntityOwner owner = DelegateEntityOwnerMapper.buildOwner(orgId, projectId);
 
       if (owner != null) {
-        pageRequest.addFilter(DelegateProfileKeys.owner, SearchFilter.Operator.EQ, owner);
+        pageRequest.addFilter("", SearchFilter.Operator.OR,
+            SearchFilter.builder()
+                .fieldName(DelegateProfileKeys.owner)
+                .op(SearchFilter.Operator.EQ)
+                .fieldValues(new DelegateEntityOwner[] {owner})
+                .build(),
+            SearchFilter.builder()
+                .fieldName(DelegateProfileKeys.primary)
+                .op(SearchFilter.Operator.EQ)
+                .fieldValues(new Boolean[] {true})
+                .build());
       } else {
         // Account level delegates
         pageRequest.addFilter(DelegateProfileKeys.owner, SearchFilter.Operator.NOT_EXISTS);
@@ -146,7 +156,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
 
   @Override
   public void addProfile(AddProfileRequest request, StreamObserver<AddProfileResponse> responseObserver) {
-    try {
+    try (GlobalContextGuard guard = initGlobalContextGuard(kryoSerializer, request.getVirtualStack())) {
       DelegateProfile delegateProfile = delegateProfileService.add(convert(request.getProfile()));
 
       responseObserver.onNext(AddProfileResponse.newBuilder().setProfile(convert(delegateProfile)).build());
@@ -178,7 +188,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
 
   @Override
   public void deleteProfile(DeleteProfileRequest request, StreamObserver<DeleteProfileResponse> responseObserver) {
-    try {
+    try (GlobalContextGuard guard = initGlobalContextGuard(kryoSerializer, request.getVirtualStack())) {
       delegateProfileService.delete(request.getAccountId().getId(), request.getProfileId().getId());
       responseObserver.onNext(DeleteProfileResponse.newBuilder().build());
       responseObserver.onCompleted();
@@ -191,7 +201,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
   @Override
   public void updateProfileSelectors(
       UpdateProfileSelectorsRequest request, StreamObserver<UpdateProfileSelectorsResponse> responseObserver) {
-    try {
+    try (GlobalContextGuard guard = initGlobalContextGuard(kryoSerializer, request.getVirtualStack())) {
       List<String> selectors = null;
       if (isNotEmpty(request.getSelectorsList())) {
         selectors = request.getSelectorsList().stream().map(ProfileSelector::getSelector).collect(Collectors.toList());

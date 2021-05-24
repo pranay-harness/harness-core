@@ -54,29 +54,12 @@ public class DSConfigServiceImpl implements DSConfigService {
   }
 
   @Override
-  public void upsert(DSConfig dsConfig) {
-    List<CVConfig> existingMapping =
-        cvConfigService.getExistingMappedConfigs(dsConfig.getAccountId(), dsConfig.getOrgIdentifier(),
-            dsConfig.getProjectIdentifier(), dsConfig.getConnectorIdentifier(), dsConfig.getIdentifier());
-    dsConfig.validate(existingMapping);
-    List<CVConfig> saved = cvConfigService.list(dsConfig.getAccountId(), dsConfig.getConnectorIdentifier(),
-        dsConfig.getProductName(), dsConfig.getIdentifier());
-    CVConfigUpdateResult cvConfigUpdateResult = dsConfig.getCVConfigUpdateResult(saved);
-    cvConfigUpdateResult.getDeleted().forEach(cvConfig -> cvConfigService.delete(cvConfig.getUuid()));
-    cvConfigService.update(cvConfigUpdateResult.getUpdated());
-
-    cvConfigService.save(cvConfigUpdateResult.getAdded());
-    monitoringSourcePerpetualTaskService.createTask(dsConfig.getAccountId(), dsConfig.getOrgIdentifier(),
-        dsConfig.getProjectIdentifier(), dsConfig.getConnectorIdentifier(), dsConfig.getIdentifier());
-  }
-
-  @Override
   public void create(DSConfig dsConfig) {
     List<CVConfig> existingMapping = cvConfigService.getExistingMappedConfigs(dsConfig.getAccountId(),
         dsConfig.getOrgIdentifier(), dsConfig.getProjectIdentifier(), dsConfig.getIdentifier(), dsConfig.getType());
     dsConfig.validate(existingMapping);
-    List<CVConfig> saved = cvConfigService.list(dsConfig.getAccountId(), dsConfig.getConnectorIdentifier(),
-        dsConfig.getProductName(), dsConfig.getIdentifier());
+    List<CVConfig> saved = cvConfigService.list(dsConfig.getAccountId(), dsConfig.getOrgIdentifier(),
+        dsConfig.getProjectIdentifier(), dsConfig.getIdentifier());
     if (saved != null && saved.size() > 0) {
       throw new DuplicateFieldException(
           String.format("DSConfig  with identifier %s and orgIdentifier %s and projectIdentifier %s is already present",
@@ -94,7 +77,7 @@ public class DSConfigServiceImpl implements DSConfigService {
         dsConfig.getOrgIdentifier(), dsConfig.getProjectIdentifier(), identifier, dsConfig.getType());
     dsConfig.validate(existingMapping);
     List<CVConfig> saved = cvConfigService.list(
-        dsConfig.getAccountId(), dsConfig.getConnectorIdentifier(), dsConfig.getProductName(), identifier);
+        dsConfig.getAccountId(), dsConfig.getOrgIdentifier(), dsConfig.getProjectIdentifier(), identifier);
     CVConfigUpdateResult cvConfigUpdateResult = dsConfig.getCVConfigUpdateResult(saved);
     cvConfigUpdateResult.getDeleted().forEach(cvConfig -> cvConfigService.delete(cvConfig.getUuid()));
     cvConfigService.update(cvConfigUpdateResult.getUpdated());

@@ -14,7 +14,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -48,7 +47,7 @@ public class TerraformPlanExecutionData {
             .environmentVariables(NGVariablesUtils.getMapOfVariables(environmentVariables, 0L))
             .command(command)
             .secretManagerRef(secretManagerRef);
-    Map<String, TerraformVarFile> varFiles = new LinkedHashMap<>();
+    LinkedHashMap<String, TerraformVarFile> varFiles = new LinkedHashMap<>();
     if (EmptyPredicate.isNotEmpty(terraformVarFiles)) {
       terraformVarFiles.forEach(terraformVarFile -> {
         if (terraformVarFile != null) {

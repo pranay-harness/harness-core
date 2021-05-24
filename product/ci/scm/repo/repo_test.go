@@ -46,7 +46,7 @@ func TestCreateWebhook(t *testing.T) {
 
 	assert.Nil(t, err, "no errors")
 	assert.Equal(t, int32(201), got.Status, "Correct http response")
-	assert.Equal(t, "1", got.Id, "ID matches")
+	assert.Equal(t, "1", got.Webhook.Id, "ID matches")
 }
 
 func TestDeleteWebhook(t *testing.T) {

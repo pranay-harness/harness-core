@@ -1,9 +1,12 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.container.ContainerInfo;
+import io.harness.delegate.task.helm.HelmChartInfo;
 
 import software.wings.beans.container.Label;
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
@@ -19,6 +22,7 @@ import lombok.EqualsAndHashCode;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
+@OwnedBy(CDP)
 public class ContainerDeploymentInfoWithLabels extends BaseContainerDeploymentInfo {
   private List<Label> labels;
   private String newVersion;

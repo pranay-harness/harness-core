@@ -26,6 +26,7 @@ public class GitFetchRequest implements ActivityAccess, TaskParameters, Executio
   private String executionLogName;
   private String activityId;
   private String accountId;
+  @Builder.Default private boolean shouldOpenLogStream = true;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

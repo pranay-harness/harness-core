@@ -1,0 +1,43 @@
+trigger:
+  name: first trigger
+  identifier: first_trigger
+  enabled: true
+  orgIdentifier: org
+  projectIdentifier: proj
+  pipelineIdentifier: pipeline
+  source:
+    type: Webhook
+    spec:
+      type: Github
+      spec:
+        type: Pull Request
+        spec:
+          connectorRef: conn
+          repoName: myrepo
+          actions:
+            - Open
+            - Edit
+          payloadConditions:
+            - key: k1
+              operator: equals
+              value: v1
+            - key: k2
+              operator: in
+              value: v2
+          headerConditions:
+            - key: h1
+              operator: equals
+              value: v1
+          jexlCondition: true
+          autoAbortPreviousExecutions: true
+  inputYaml: |
+    pipeline:
+      identifier: secrethttp1
+      stages:
+        - stage:
+            identifier: qaStage
+            spec:
+              infrastructure:
+                infrastructureDefinition:
+                  spec:
+                    releaseName: releaseName1

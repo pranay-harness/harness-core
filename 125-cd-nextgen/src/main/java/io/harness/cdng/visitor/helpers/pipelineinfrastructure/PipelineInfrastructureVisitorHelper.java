@@ -1,6 +1,6 @@
 package io.harness.cdng.visitor.helpers.pipelineinfrastructure;
 
-import static io.harness.yaml.core.LevelNodeQualifierName.PATH_CONNECTOR;
+import static io.harness.walktree.visitor.utilities.VisitorParentPathUtils.PATH_CONNECTOR;
 
 import io.harness.IdentifierRefProtoUtils;
 import io.harness.annotations.dev.HarnessTeam;
@@ -79,8 +79,8 @@ public class PipelineInfrastructureVisitorHelper implements ConfigValidator, Ent
     Set<EntityDetailProtoDTO> result = new HashSet<>();
     if (pipelineInfrastructure.getEnvironment() != null) {
       EnvironmentYaml environmentYaml = pipelineInfrastructure.getEnvironment();
-      String fullQualifiedDomainName =
-          VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR + YamlTypes.ENVIRONMENT_REF;
+      String fullQualifiedDomainName = VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR
+          + YamlTypes.ENVIRONMENT_YAML + PATH_CONNECTOR + "identifier";
       Map<String, String> metadata =
           new HashMap<>(Collections.singletonMap(PreFlightCheckMetadata.FQN, fullQualifiedDomainName));
       metadata.put("new", "true");

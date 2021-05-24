@@ -6,14 +6,20 @@ import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_GCP;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.ListUtils.oneAndOnlyOne;
+import static io.harness.data.structure.HarnessStringUtils.emptyIfNull;
+import static io.harness.data.structure.ListUtils.trimStrings;
+import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.manifest.ManifestHelper.getValuesYamlGitFilePath;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.UnitStatus.RUNNING;
 import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
 import static io.harness.steps.StepUtils.prepareTaskRequest;
 import static io.harness.validation.Validator.notEmptyCheck;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.trim;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -23,8 +29,11 @@ import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.ManifestType;
+import io.harness.cdng.manifest.steps.ManifestsOutcome;
 import io.harness.cdng.manifest.yaml.GcsStoreConfig;
 import io.harness.cdng.manifest.yaml.GitStoreConfig;
 import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
@@ -38,7 +47,6 @@ import io.harness.cdng.manifest.yaml.OpenshiftParamManifestOutcome;
 import io.harness.cdng.manifest.yaml.S3StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
-import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.connector.ConnectorInfoDTO;
@@ -46,7 +54,6 @@ import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.helper.EncryptionHelper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoHelper;
-import io.harness.data.structure.ListUtils.OneAndOnlyOne;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
@@ -73,6 +80,8 @@ import io.harness.delegate.task.git.GitFetchRequest;
 import io.harness.delegate.task.git.GitFetchResponse;
 import io.harness.delegate.task.git.TaskStatus;
 import io.harness.delegate.task.helm.HelmCommandFlag;
+import io.harness.delegate.task.helm.HelmValuesFetchRequest;
+import io.harness.delegate.task.helm.HelmValuesFetchResponse;
 import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.GcpK8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
@@ -83,19 +92,29 @@ import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.delegate.task.k8s.OpenshiftManifestDelegateConfig;
+import io.harness.eraro.Level;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.StepConstants;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
 import io.harness.helm.HelmSubCommandType;
 import io.harness.k8s.KubernetesHelperService;
+import io.harness.logging.LogCallback;
+import io.harness.logging.LogLevel;
+import io.harness.logging.UnitProgress;
+import io.harness.logging.UnitStatus;
+import io.harness.logstreaming.LogStreamingStepClientFactory;
+import io.harness.logstreaming.NGLogCallback;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.failure.FailureData;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
@@ -138,7 +157,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @OwnedBy(CDP)
 @Singleton
 public class K8sStepHelper {
-  private static final Set<String> K8S_SUPPORTED_MANIFEST_TYPES = ImmutableSet.of(
+  public static final Set<String> K8S_SUPPORTED_MANIFEST_TYPES = ImmutableSet.of(
       ManifestType.K8Manifest, ManifestType.HelmChart, ManifestType.Kustomize, ManifestType.OpenshiftTemplate);
 
   private static final Set<String> VALUES_YAML_SUPPORTED_MANIFEST_TYPES =
@@ -155,6 +174,7 @@ public class K8sStepHelper {
   @Inject private OutcomeService outcomeService;
   @Inject GitConfigAuthenticationInfoHelper gitConfigAuthenticationInfoHelper;
   @Inject private EncryptionHelper encryptionHelper;
+  @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
 
   String getReleaseName(InfrastructureOutcome infrastructure) {
     String releaseName;
@@ -370,9 +390,9 @@ public class K8sStepHelper {
         .sshKeySpecDTO(sshKeySpecDTO)
         .encryptedDataDetails(encryptedDataDetailList)
         .fetchType(gitstoreConfig.getGitFetchType())
-        .branch(getParameterFieldValue(gitstoreConfig.getBranch()))
-        .commitId(getParameterFieldValue(gitstoreConfig.getCommitId()))
-        .paths(paths)
+        .branch(trim(getParameterFieldValue(gitstoreConfig.getBranch())))
+        .commitId(trim(getParameterFieldValue(gitstoreConfig.getCommitId())))
+        .paths(trimStrings(paths))
         .connectorName(connectorDTO.getName())
         .build();
   }
@@ -553,7 +573,7 @@ public class K8sStepHelper {
             .map(valuesFileContent -> engineExpressionService.renderExpression(ambiance, valuesFileContent))
             .collect(Collectors.toList());
 
-    if (manifestOutcome.getType() == ManifestType.OpenshiftTemplate) {
+    if (ManifestType.OpenshiftTemplate.equals(manifestOutcome.getType())) {
       Collections.reverse(renderedValuesFileContents);
     }
 
@@ -562,19 +582,25 @@ public class K8sStepHelper {
 
   public TaskChainResponse executeValuesFetchTask(Ambiance ambiance, StepElementParameters stepElementParameters,
       InfrastructureOutcome infrastructure, ManifestOutcome k8sManifestOutcome,
-      List<ValuesManifestOutcome> aggregatedValuesManifests,
-      List<OpenshiftParamManifestOutcome> openshiftParamManifests) {
+      List<ValuesManifestOutcome> aggregatedValuesManifests, String helmValuesYamlContent) {
+    List<GitFetchFilesConfig> gitFetchFilesConfigs =
+        mapValuesManifestToGitFetchFileConfig(aggregatedValuesManifests, ambiance);
+    K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
+                                                        .k8sManifestOutcome(k8sManifestOutcome)
+                                                        .valuesManifestOutcomes(aggregatedValuesManifests)
+                                                        .openshiftParamManifestOutcomes(Collections.emptyList())
+                                                        .infrastructure(infrastructure)
+                                                        .helmValuesFileContent(helmValuesYamlContent)
+                                                        .build();
+
+    return getGitFetchFileTaskChainResponse(
+        ambiance, gitFetchFilesConfigs, stepElementParameters, k8sStepPassThroughData, false);
+  }
+
+  public TaskChainResponse prepareOpenshiftParamFetchTask(Ambiance ambiance,
+      StepElementParameters stepElementParameters, InfrastructureOutcome infrastructure,
+      ManifestOutcome k8sManifestOutcome, List<OpenshiftParamManifestOutcome> openshiftParamManifests) {
     List<GitFetchFilesConfig> gitFetchFilesConfigs = new ArrayList<>();
-
-    for (ValuesManifestOutcome valuesManifest : aggregatedValuesManifests) {
-      if (ManifestStoreType.isInGitSubset(valuesManifest.getStore().getKind())) {
-        String validationMessage = format("Values YAML with Id [%s]", valuesManifest.getIdentifier());
-        GitFetchFilesConfig gitFetchFilesConfig = getGitFetchFilesConfig(ambiance, valuesManifest.getIdentifier(),
-            valuesManifest.getStore(), validationMessage, ManifestType.VALUES);
-        gitFetchFilesConfigs.add(gitFetchFilesConfig);
-      }
-    }
-
     for (OpenshiftParamManifestOutcome openshiftParamManifest : openshiftParamManifests) {
       if (ManifestStoreType.isInGitSubset(openshiftParamManifest.getStore().getKind())) {
         String validationMessage = format("Openshift Param file with Id [%s]", openshiftParamManifest.getIdentifier());
@@ -585,46 +611,133 @@ public class K8sStepHelper {
       }
     }
 
-    return getGitFetchFileTaskChainResponse(ambiance, gitFetchFilesConfigs, stepElementParameters, infrastructure,
-        k8sManifestOutcome, aggregatedValuesManifests, openshiftParamManifests);
+    K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
+                                                        .k8sManifestOutcome(k8sManifestOutcome)
+                                                        .valuesManifestOutcomes(Collections.emptyList())
+                                                        .openshiftParamManifestOutcomes(openshiftParamManifests)
+                                                        .infrastructure(infrastructure)
+                                                        .build();
+
+    return getGitFetchFileTaskChainResponse(
+        ambiance, gitFetchFilesConfigs, stepElementParameters, k8sStepPassThroughData, true);
   }
 
-  public TaskChainResponse executeAutomaticValuesFetchTask(K8sStepExecutor k8sStepExecutor, Ambiance ambiance,
+  public TaskChainResponse prepareValuesFetchTask(K8sStepExecutor k8sStepExecutor, Ambiance ambiance,
       StepElementParameters stepElementParameters, InfrastructureOutcome infrastructure,
-      ManifestOutcome k8sManifestOutcome) {
+      ManifestOutcome k8sManifestOutcome, List<ValuesManifestOutcome> aggregatedValuesManifests) {
     StoreConfig storeConfig = extractStoreConfigFromK8sOrHelmChartManifestOutcome(k8sManifestOutcome);
     if (ManifestStoreType.isInGitSubset(storeConfig.getKind())) {
-      GitStoreConfig gitStoreConfig = (GitStoreConfig) storeConfig;
-      if (ManifestType.K8Manifest.equals(k8sManifestOutcome.getType())
-          && hasZeroOrMultiplePaths(gitStoreConfig.getPaths())) {
-        return k8sStepExecutor.executeK8sTask(
-            k8sManifestOutcome, ambiance, stepElementParameters, Collections.emptyList(), infrastructure);
-      }
-
       ValuesManifestOutcome valuesManifestOutcome =
           ValuesManifestOutcome.builder().identifier(k8sManifestOutcome.getIdentifier()).store(storeConfig).build();
+      return prepareGitFetchValuesTaskChainResponse(storeConfig, ambiance, stepElementParameters, infrastructure,
+          k8sManifestOutcome, valuesManifestOutcome, aggregatedValuesManifests);
+    }
 
-      String validationMessage = format("Values YAML with Id [%s]", valuesManifestOutcome.getIdentifier());
-      GitFetchFilesConfig gitFetchFilesConfig =
-          getAutomaticValuesGitFetchFilesConfig(ambiance, valuesManifestOutcome.getIdentifier(),
-              valuesManifestOutcome.getStore(), validationMessage, k8sManifestOutcome.getType());
-
-      return getGitFetchFileTaskChainResponse(ambiance, ImmutableList.of(gitFetchFilesConfig), stepElementParameters,
-          infrastructure, k8sManifestOutcome, ImmutableList.of(valuesManifestOutcome), Collections.emptyList());
+    if (ManifestType.HelmChart.equals(k8sManifestOutcome.getType())) {
+      return prepareHelmFetchValuesTaskChainResponse(
+          ambiance, stepElementParameters, infrastructure, k8sManifestOutcome, aggregatedValuesManifests);
     }
 
     return k8sStepExecutor.executeK8sTask(
-        k8sManifestOutcome, ambiance, stepElementParameters, Collections.emptyList(), infrastructure);
+        k8sManifestOutcome, ambiance, stepElementParameters, Collections.emptyList(), infrastructure, true);
+  }
+
+  private TaskChainResponse prepareGitFetchValuesTaskChainResponse(StoreConfig storeConfig, Ambiance ambiance,
+      StepElementParameters stepElementParameters, InfrastructureOutcome infrastructure,
+      ManifestOutcome k8sManifestOutcome, ValuesManifestOutcome valuesManifestOutcome,
+      List<ValuesManifestOutcome> aggregatedValuesManifests) {
+    LinkedList<ValuesManifestOutcome> orderedValuesManifests = new LinkedList<>(aggregatedValuesManifests);
+    List<GitFetchFilesConfig> gitFetchFilesConfigs =
+        mapValuesManifestToGitFetchFileConfig(aggregatedValuesManifests, ambiance);
+
+    GitStoreConfig gitStoreConfig = (GitStoreConfig) storeConfig;
+    if (ManifestType.K8Manifest.equals(k8sManifestOutcome.getType()) && hasOnlyOne(gitStoreConfig.getPaths())) {
+      gitFetchFilesConfigs.add(mapK8sOrHelmValuesManifestToGitFetchFileConfig(
+          valuesManifestOutcome, ambiance, k8sManifestOutcome.getType()));
+      orderedValuesManifests.addFirst(valuesManifestOutcome);
+    }
+
+    if (ManifestType.HelmChart.equals(k8sManifestOutcome.getType())) {
+      gitFetchFilesConfigs.add(mapK8sOrHelmValuesManifestToGitFetchFileConfig(
+          valuesManifestOutcome, ambiance, k8sManifestOutcome.getType()));
+      orderedValuesManifests.addFirst(valuesManifestOutcome);
+    }
+
+    K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
+                                                        .k8sManifestOutcome(k8sManifestOutcome)
+                                                        .valuesManifestOutcomes(orderedValuesManifests)
+                                                        .openshiftParamManifestOutcomes(Collections.emptyList())
+                                                        .infrastructure(infrastructure)
+                                                        .build();
+
+    return getGitFetchFileTaskChainResponse(
+        ambiance, gitFetchFilesConfigs, stepElementParameters, k8sStepPassThroughData, true);
+  }
+
+  private GitFetchFilesConfig mapK8sOrHelmValuesManifestToGitFetchFileConfig(
+      ValuesManifestOutcome valuesManifestOutcome, Ambiance ambiance, String k8sManifestType) {
+    String validationMessage = format("Values YAML with Id [%s]", valuesManifestOutcome.getIdentifier());
+    return getValuesGitFetchFilesConfig(ambiance, valuesManifestOutcome.getIdentifier(),
+        valuesManifestOutcome.getStore(), validationMessage, k8sManifestType);
+  }
+
+  private List<GitFetchFilesConfig> mapValuesManifestToGitFetchFileConfig(
+      List<ValuesManifestOutcome> aggregatedValuesManifests, Ambiance ambiance) {
+    return aggregatedValuesManifests.stream()
+        .filter(valuesManifestOutcome -> ManifestStoreType.isInGitSubset(valuesManifestOutcome.getStore().getKind()))
+        .map(valuesManifestOutcome
+            -> getGitFetchFilesConfig(ambiance, valuesManifestOutcome.getIdentifier(), valuesManifestOutcome.getStore(),
+                format("Values YAML with Id [%s]", valuesManifestOutcome.getIdentifier()), ManifestType.VALUES))
+        .collect(Collectors.toList());
+  }
+
+  private TaskChainResponse prepareHelmFetchValuesTaskChainResponse(Ambiance ambiance,
+      StepElementParameters stepElementParameters, InfrastructureOutcome infrastructure,
+      ManifestOutcome k8sManifestOutcome, List<ValuesManifestOutcome> aggregatedValuesManifests) {
+    String accountId = AmbianceHelper.getAccountId(ambiance);
+    HelmChartManifestDelegateConfig helmManifest =
+        (HelmChartManifestDelegateConfig) getManifestDelegateConfig(k8sManifestOutcome, ambiance);
+    HelmValuesFetchRequest helmValuesFetchRequest = HelmValuesFetchRequest.builder()
+                                                        .accountId(accountId)
+                                                        .helmChartManifestDelegateConfig(helmManifest)
+                                                        .timeout(getTimeoutInMillis(stepElementParameters))
+                                                        .build();
+
+    final TaskData taskData = TaskData.builder()
+                                  .async(true)
+                                  .timeout(getTimeoutInMillis(stepElementParameters))
+                                  .taskType(TaskType.HELM_VALUES_FETCH_NG.name())
+                                  .parameters(new Object[] {helmValuesFetchRequest})
+                                  .build();
+
+    String taskName = TaskType.HELM_VALUES_FETCH_NG.getDisplayName();
+    K8sSpecParameters k8SSpecParameters = (K8sSpecParameters) stepElementParameters.getSpec();
+    final TaskRequest taskRequest =
+        prepareTaskRequest(ambiance, taskData, kryoSerializer, k8SSpecParameters.getCommandUnits(), taskName);
+
+    K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
+                                                        .k8sManifestOutcome(k8sManifestOutcome)
+                                                        .valuesManifestOutcomes(aggregatedValuesManifests)
+                                                        .openshiftParamManifestOutcomes(Collections.emptyList())
+                                                        .infrastructure(infrastructure)
+                                                        .build();
+
+    return TaskChainResponse.builder()
+        .chainEnd(false)
+        .taskRequest(taskRequest)
+        .passThroughData(k8sStepPassThroughData)
+        .build();
   }
 
   private TaskChainResponse getGitFetchFileTaskChainResponse(Ambiance ambiance,
       List<GitFetchFilesConfig> gitFetchFilesConfigs, StepElementParameters stepElementParameters,
-      InfrastructureOutcome infrastructure, ManifestOutcome k8sManifestOutcome,
-      List<ValuesManifestOutcome> aggregatedValuesManifests,
-      List<OpenshiftParamManifestOutcome> openshiftParamManifests) {
+      K8sStepPassThroughData k8sStepPassThroughData, boolean shouldOpenLogStream) {
     String accountId = AmbianceHelper.getAccountId(ambiance);
-    GitFetchRequest gitFetchRequest =
-        GitFetchRequest.builder().gitFetchFilesConfigs(gitFetchFilesConfigs).accountId(accountId).build();
+    GitFetchRequest gitFetchRequest = GitFetchRequest.builder()
+                                          .gitFetchFilesConfigs(gitFetchFilesConfigs)
+                                          .shouldOpenLogStream(shouldOpenLogStream)
+                                          .accountId(accountId)
+                                          .build();
 
     final TaskData taskData = TaskData.builder()
                                   .async(true)
@@ -638,12 +751,6 @@ public class K8sStepHelper {
     final TaskRequest taskRequest =
         prepareTaskRequest(ambiance, taskData, kryoSerializer, k8SSpecParameters.getCommandUnits(), taskName);
 
-    K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
-                                                        .k8sManifestOutcome(k8sManifestOutcome)
-                                                        .valuesManifestOutcomes(aggregatedValuesManifests)
-                                                        .openshiftParamManifestOutcomes(openshiftParamManifests)
-                                                        .infrastructure(infrastructure)
-                                                        .build();
     return TaskChainResponse.builder()
         .chainEnd(false)
         .taskRequest(taskRequest)
@@ -651,9 +758,9 @@ public class K8sStepHelper {
         .build();
   }
 
-  private boolean hasZeroOrMultiplePaths(ParameterField<List<String>> pathsParameter) {
+  private boolean hasOnlyOne(ParameterField<List<String>> pathsParameter) {
     List<String> paths = getParameterFieldValue(pathsParameter);
-    return isEmpty(paths) || !oneAndOnlyOne(paths).equals(OneAndOnlyOne.ONE);
+    return isNotEmpty(paths) && paths.size() == 1;
   }
 
   private StoreConfig extractStoreConfigFromK8sOrHelmChartManifestOutcome(ManifestOutcome manifestOutcome) {
@@ -694,7 +801,7 @@ public class K8sStepHelper {
         .build();
   }
 
-  private GitFetchFilesConfig getAutomaticValuesGitFetchFilesConfig(
+  private GitFetchFilesConfig getValuesGitFetchFilesConfig(
       Ambiance ambiance, String identifier, StoreConfig store, String validationMessage, String manifestType) {
     GitStoreConfig gitStoreConfig = (GitStoreConfig) store;
     String connectorId = gitStoreConfig.getConnectorRef().getValue();
@@ -721,53 +828,72 @@ public class K8sStepHelper {
 
   public TaskChainResponse startChainLink(
       K8sStepExecutor k8sStepExecutor, Ambiance ambiance, StepElementParameters stepElementParameters) {
-    ServiceOutcome serviceOutcome = (ServiceOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.SERVICE));
-
+    ManifestsOutcome manifestsOutcome = resolveManifestsOutcome(ambiance);
     InfrastructureOutcome infrastructureOutcome = (InfrastructureOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
 
-    Map<String, ManifestOutcome> manifestOutcomeMap = serviceOutcome.getManifestResults();
-    if (isEmpty(manifestOutcomeMap) || isEmpty(manifestOutcomeMap.keySet())) {
+    ManifestOutcome k8sManifestOutcome = getK8sSupportedManifestOutcome(new LinkedList<>(manifestsOutcome.values()));
+    if (ManifestType.Kustomize.equals(k8sManifestOutcome.getType())) {
+      return k8sStepExecutor.executeK8sTask(
+          k8sManifestOutcome, ambiance, stepElementParameters, Collections.emptyList(), infrastructureOutcome, true);
+    }
+
+    if (VALUES_YAML_SUPPORTED_MANIFEST_TYPES.contains(k8sManifestOutcome.getType())) {
+      return prepareK8sOrHelmWithValuesManifests(k8sStepExecutor, new LinkedList<>(manifestsOutcome.values()),
+          k8sManifestOutcome, ambiance, stepElementParameters, infrastructureOutcome);
+    } else {
+      return prepareOcTemplateWithOcParamManifests(k8sStepExecutor, new LinkedList<>(manifestsOutcome.values()),
+          k8sManifestOutcome, ambiance, stepElementParameters, infrastructureOutcome);
+    }
+  }
+
+  private ManifestsOutcome resolveManifestsOutcome(Ambiance ambiance) {
+    ManifestsOutcome manifestsOutcome = null;
+    try {
+      manifestsOutcome = (ManifestsOutcome) outcomeService.resolve(
+          ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.MANIFESTS));
+    } catch (Exception exception) {
+      throw new InvalidRequestException("Manifests can't be empty", exception);
+    }
+
+    if (isEmpty(manifestsOutcome)) {
       throw new InvalidRequestException("Manifests can't be empty");
     }
 
-    ManifestOutcome k8sManifestOutcome = getK8sSupportedManifestOutcome(new LinkedList<>(manifestOutcomeMap.values()));
-    if (ManifestType.Kustomize.equals(k8sManifestOutcome.getType())) {
+    return manifestsOutcome;
+  }
+
+  private TaskChainResponse prepareOcTemplateWithOcParamManifests(K8sStepExecutor k8sStepExecutor,
+      List<ManifestOutcome> manifestOutcomes, ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
+      StepElementParameters stepElementParameters, InfrastructureOutcome infrastructureOutcome) {
+    List<OpenshiftParamManifestOutcome> openshiftParamManifests = getOpenshiftParamManifests(manifestOutcomes);
+    if (isEmpty(openshiftParamManifests)) {
       return k8sStepExecutor.executeK8sTask(
-          k8sManifestOutcome, ambiance, stepElementParameters, Collections.emptyList(), infrastructureOutcome);
+          k8sManifestOutcome, ambiance, stepElementParameters, Collections.emptyList(), infrastructureOutcome, true);
+    }
+    if (!isAnyOcParamRemoteStore(openshiftParamManifests)) {
+      List<String> openshiftParamContentsForLocalStore = Collections.emptyList();
+      return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters,
+          openshiftParamContentsForLocalStore, infrastructureOutcome, true);
     }
 
-    List<ValuesManifestOutcome> aggregatedValuesManifests =
-        !ManifestType.OpenshiftTemplate.equals(k8sManifestOutcome.getType())
-        ? getAggregatedValuesManifests(new LinkedList<>(manifestOutcomeMap.values()))
-        : Collections.emptyList();
+    return prepareOpenshiftParamFetchTask(
+        ambiance, stepElementParameters, infrastructureOutcome, k8sManifestOutcome, openshiftParamManifests);
+  }
 
-    List<OpenshiftParamManifestOutcome> openshiftParamManifests =
-        ManifestType.OpenshiftTemplate.equals(k8sManifestOutcome.getType())
-        ? getOpenshiftParamManifests(new LinkedList<>(manifestOutcomeMap.values()))
-        : Collections.emptyList();
+  private TaskChainResponse prepareK8sOrHelmWithValuesManifests(K8sStepExecutor k8sStepExecutor,
+      List<ManifestOutcome> manifestOutcomes, ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
+      StepElementParameters stepElementParameters, InfrastructureOutcome infrastructureOutcome) {
+    List<ValuesManifestOutcome> aggregatedValuesManifests = getAggregatedValuesManifests(manifestOutcomes);
 
-    if (VALUES_YAML_SUPPORTED_MANIFEST_TYPES.contains(k8sManifestOutcome.getType())
-        && aggregatedValuesManifests.isEmpty()) {
-      return executeAutomaticValuesFetchTask(
-          k8sStepExecutor, ambiance, stepElementParameters, infrastructureOutcome, k8sManifestOutcome);
+    if (isNotEmpty(aggregatedValuesManifests) && !isAnyRemoteStore(aggregatedValuesManifests)) {
+      List<String> valuesFileContentsForLocalStore = getValuesFileContentsForLocalStore(aggregatedValuesManifests);
+      return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters,
+          valuesFileContentsForLocalStore, infrastructureOutcome, true);
     }
 
-    if (isEmpty(aggregatedValuesManifests) && isEmpty(openshiftParamManifests)) {
-      return k8sStepExecutor.executeK8sTask(
-          k8sManifestOutcome, ambiance, stepElementParameters, Collections.emptyList(), infrastructureOutcome);
-    }
-
-    if (!isAnyRemoteStore(aggregatedValuesManifests, openshiftParamManifests)) {
-      List<String> valuesFileContentsForLocalStore =
-          getValuesFileContentsForLocalStore(aggregatedValuesManifests, openshiftParamManifests);
-      return k8sStepExecutor.executeK8sTask(
-          k8sManifestOutcome, ambiance, stepElementParameters, valuesFileContentsForLocalStore, infrastructureOutcome);
-    }
-
-    return executeValuesFetchTask(ambiance, stepElementParameters, infrastructureOutcome, k8sManifestOutcome,
-        aggregatedValuesManifests, openshiftParamManifests);
+    return prepareValuesFetchTask(k8sStepExecutor, ambiance, stepElementParameters, infrastructureOutcome,
+        k8sManifestOutcome, aggregatedValuesManifests);
   }
 
   @VisibleForTesting
@@ -777,11 +903,15 @@ public class K8sStepHelper {
             .filter(manifestOutcome -> K8S_SUPPORTED_MANIFEST_TYPES.contains(manifestOutcome.getType()))
             .collect(Collectors.toList());
     if (isEmpty(k8sManifests)) {
-      throw new InvalidRequestException("K8s Manifests are mandatory for k8s Rolling step", USER);
+      throw new InvalidRequestException(
+          "Manifests are mandatory for K8s step. Select one from " + String.join(", ", K8S_SUPPORTED_MANIFEST_TYPES),
+          USER);
     }
 
     if (k8sManifests.size() > 1) {
-      throw new InvalidRequestException("There can be only a single K8s manifest", USER);
+      throw new InvalidRequestException(
+          "There can be only a single manifest. Select one from " + String.join(", ", K8S_SUPPORTED_MANIFEST_TYPES),
+          USER);
     }
     return k8sManifests.get(0);
   }
@@ -819,28 +949,85 @@ public class K8sStepHelper {
     return openshiftParamManifests;
   }
 
-  private List<String> getValuesFileContentsForLocalStore(List<ValuesManifestOutcome> aggregatedValuesManifests,
-      List<OpenshiftParamManifestOutcome> openshiftParamManifests) {
+  private List<String> getValuesFileContentsForLocalStore(List<ValuesManifestOutcome> aggregatedValuesManifests) {
     // TODO: implement when local store is available
     return Collections.emptyList();
   }
 
-  private boolean isAnyRemoteStore(@NotEmpty List<ValuesManifestOutcome> aggregatedValuesManifests,
-      List<OpenshiftParamManifestOutcome> openshiftParamManifests) {
-    if (isNotEmpty(aggregatedValuesManifests)) {
-      return aggregatedValuesManifests.stream().anyMatch(
-          valuesManifest -> ManifestStoreType.isInGitSubset(valuesManifest.getStore().getKind()));
-    } else {
-      return openshiftParamManifests.stream().anyMatch(
-          openshiftParamManifest -> ManifestStoreType.isInGitSubset(openshiftParamManifest.getStore().getKind()));
-    }
+  private boolean isAnyOcParamRemoteStore(@NotEmpty List<OpenshiftParamManifestOutcome> openshiftParamManifests) {
+    return openshiftParamManifests.stream().anyMatch(
+        openshiftParamManifest -> ManifestStoreType.isInGitSubset(openshiftParamManifest.getStore().getKind()));
+  }
+
+  private boolean isAnyRemoteStore(@NotEmpty List<ValuesManifestOutcome> aggregatedValuesManifests) {
+    return aggregatedValuesManifests.stream().anyMatch(
+        valuesManifest -> ManifestStoreType.isInGitSubset(valuesManifest.getStore().getKind()));
   }
 
   public TaskChainResponse executeNextLink(K8sStepExecutor k8sStepExecutor, Ambiance ambiance,
       StepElementParameters stepElementParameters, PassThroughData passThroughData,
       ThrowingSupplier<ResponseData> responseDataSupplier) throws Exception {
-    GitFetchResponse gitFetchResponse = (GitFetchResponse) responseDataSupplier.get();
+    K8sStepPassThroughData k8sStepPassThroughData = (K8sStepPassThroughData) passThroughData;
+    ManifestOutcome k8sManifest = k8sStepPassThroughData.getK8sManifestOutcome();
+    ResponseData responseData = responseDataSupplier.get();
+    UnitProgressData unitProgressData = null;
 
+    try {
+      if (responseData instanceof GitFetchResponse) {
+        unitProgressData = ((GitFetchResponse) responseData).getUnitProgressData();
+        return handleGitFetchFilesResponse(
+            responseData, k8sStepExecutor, ambiance, stepElementParameters, k8sStepPassThroughData, k8sManifest);
+      }
+
+      if (responseData instanceof HelmValuesFetchResponse) {
+        unitProgressData = ((HelmValuesFetchResponse) responseData).getUnitProgressData();
+        return handleHelmValuesFetchResponse(
+            responseData, k8sStepExecutor, ambiance, stepElementParameters, k8sStepPassThroughData, k8sManifest);
+      }
+    } catch (Exception e) {
+      return TaskChainResponse.builder()
+          .chainEnd(true)
+          .passThroughData(StepExceptionPassThroughData.builder()
+                               .errorMessage(ExceptionUtils.getMessage(e))
+                               .unitProgressData(completeUnitProgressData(unitProgressData, ambiance, e))
+                               .build())
+          .build();
+    }
+
+    return k8sStepExecutor.executeK8sTask(k8sManifest, ambiance, stepElementParameters, Collections.emptyList(),
+        k8sStepPassThroughData.getInfrastructure(), true);
+  }
+
+  private UnitProgressData completeUnitProgressData(
+      UnitProgressData currentProgressData, Ambiance ambiance, Exception exception) {
+    if (currentProgressData == null) {
+      return UnitProgressData.builder().unitProgresses(new ArrayList<>()).build();
+    }
+
+    List<UnitProgress> finalUnitProgressList =
+        currentProgressData.getUnitProgresses()
+            .stream()
+            .map(unitProgress -> {
+              if (unitProgress.getStatus() == RUNNING) {
+                LogCallback logCallback = getLogCallback(unitProgress.getUnitName(), ambiance, false);
+                logCallback.saveExecutionLog(exception.getMessage(), LogLevel.ERROR, FAILURE);
+                return UnitProgress.newBuilder(unitProgress)
+                    .setStatus(UnitStatus.FAILURE)
+                    .setEndTime(System.currentTimeMillis())
+                    .build();
+              }
+
+              return unitProgress;
+            })
+            .collect(Collectors.toList());
+
+    return UnitProgressData.builder().unitProgresses(finalUnitProgressList).build();
+  }
+
+  private TaskChainResponse handleGitFetchFilesResponse(ResponseData responseData, K8sStepExecutor k8sStepExecutor,
+      Ambiance ambiance, StepElementParameters stepElementParameters, K8sStepPassThroughData k8sStepPassThroughData,
+      ManifestOutcome k8sManifest) {
+    GitFetchResponse gitFetchResponse = (GitFetchResponse) responseData;
     if (gitFetchResponse.getTaskStatus() != TaskStatus.SUCCESS) {
       GitFetchResponsePassThroughData gitFetchResponsePassThroughData =
           GitFetchResponsePassThroughData.builder()
@@ -850,16 +1037,44 @@ public class K8sStepHelper {
       return TaskChainResponse.builder().chainEnd(true).passThroughData(gitFetchResponsePassThroughData).build();
     }
     Map<String, FetchFilesResult> gitFetchFilesResultMap = gitFetchResponse.getFilesFromMultipleRepo();
+    List<String> valuesFileContents = new ArrayList<>();
+    String helmValuesYamlContent = k8sStepPassThroughData.getHelmValuesFileContent();
+    if (isNotEmpty(helmValuesYamlContent)) {
+      valuesFileContents.add(helmValuesYamlContent);
+    }
 
-    K8sStepPassThroughData k8sStepPassThroughData = (K8sStepPassThroughData) passThroughData;
+    if (!gitFetchFilesResultMap.isEmpty()) {
+      valuesFileContents.addAll(getFileContents(gitFetchFilesResultMap, k8sStepPassThroughData));
+    }
 
-    ManifestOutcome k8sManifest = k8sStepPassThroughData.getK8sManifestOutcome();
-    List<String> valuesFileContents = !gitFetchFilesResultMap.isEmpty()
-        ? getFileContents(gitFetchFilesResultMap, k8sStepPassThroughData)
-        : Collections.emptyList();
+    return k8sStepExecutor.executeK8sTask(k8sManifest, ambiance, stepElementParameters, valuesFileContents,
+        k8sStepPassThroughData.getInfrastructure(), false);
+  }
 
-    return k8sStepExecutor.executeK8sTask(
-        k8sManifest, ambiance, stepElementParameters, valuesFileContents, k8sStepPassThroughData.getInfrastructure());
+  private TaskChainResponse handleHelmValuesFetchResponse(ResponseData responseData, K8sStepExecutor k8sStepExecutor,
+      Ambiance ambiance, StepElementParameters stepElementParameters, K8sStepPassThroughData k8sStepPassThroughData,
+      ManifestOutcome k8sManifest) {
+    HelmValuesFetchResponse helmValuesFetchResponse = (HelmValuesFetchResponse) responseData;
+    if (helmValuesFetchResponse.getCommandExecutionStatus() != SUCCESS) {
+      HelmValuesFetchResponsePassThroughData helmValuesFetchPassTroughData =
+          HelmValuesFetchResponsePassThroughData.builder()
+              .errorMsg(helmValuesFetchResponse.getErrorMessage())
+              .unitProgressData(helmValuesFetchResponse.getUnitProgressData())
+              .build();
+      return TaskChainResponse.builder().chainEnd(true).passThroughData(helmValuesFetchPassTroughData).build();
+    }
+
+    String valuesFileContent = helmValuesFetchResponse.getValuesFileContent();
+    List<ValuesManifestOutcome> aggregatedValuesManifest = k8sStepPassThroughData.getValuesManifestOutcomes();
+    if (isNotEmpty(aggregatedValuesManifest)) {
+      return executeValuesFetchTask(ambiance, stepElementParameters, k8sStepPassThroughData.getInfrastructure(),
+          k8sStepPassThroughData.getK8sManifestOutcome(), aggregatedValuesManifest, valuesFileContent);
+    } else {
+      List<String> valuesFileContents =
+          (isNotEmpty(valuesFileContent)) ? ImmutableList.of(valuesFileContent) : Collections.emptyList();
+      return k8sStepExecutor.executeK8sTask(k8sManifest, ambiance, stepElementParameters, valuesFileContents,
+          k8sStepPassThroughData.getInfrastructure(), false);
+    }
   }
 
   private List<String> getFileContents(
@@ -883,8 +1098,10 @@ public class K8sStepHelper {
       StoreConfig store = extractStoreConfigFromManifestOutcome(valuesManifest);
       if (ManifestStoreType.isInGitSubset(store.getKind())) {
         FetchFilesResult gitFetchFilesResult = gitFetchFilesResultMap.get(valuesManifest.getIdentifier());
-        valuesFileContents.addAll(
-            gitFetchFilesResult.getFiles().stream().map(GitFile::getFileContent).collect(Collectors.toList()));
+        if (gitFetchFilesResult != null) {
+          valuesFileContents.addAll(
+              gitFetchFilesResult.getFiles().stream().map(GitFile::getFileContent).collect(Collectors.toList()));
+        }
       }
       // TODO: for local store, add files directly
     }
@@ -948,6 +1165,33 @@ public class K8sStepHelper {
         .build();
   }
 
+  StepResponse handleHelmValuesFetchFailure(HelmValuesFetchResponsePassThroughData helmValuesFetchResponse) {
+    UnitProgressData unitProgressData = helmValuesFetchResponse.getUnitProgressData();
+    return StepResponse.builder()
+        .unitProgressList(unitProgressData.getUnitProgresses())
+        .status(Status.FAILED)
+        .failureInfo(FailureInfo.newBuilder().setErrorMessage(helmValuesFetchResponse.getErrorMsg()).build())
+        .build();
+  }
+
+  public StepResponse handleStepExceptionFailure(StepExceptionPassThroughData stepException) {
+    FailureData failureData = FailureData.newBuilder()
+                                  .addFailureTypes(FailureType.APPLICATION_FAILURE)
+                                  .setLevel(Level.ERROR.name())
+                                  .setCode(GENERAL_ERROR.name())
+                                  .setMessage(emptyIfNull(stepException.getErrorMessage()))
+                                  .build();
+    return StepResponse.builder()
+        .unitProgressList(stepException.getUnitProgressData().getUnitProgresses())
+        .status(Status.FAILED)
+        .failureInfo(FailureInfo.newBuilder()
+                         .addAllFailureTypes(failureData.getFailureTypesList())
+                         .setErrorMessage(failureData.getMessage())
+                         .addFailureData(failureData)
+                         .build())
+        .build();
+  }
+
   public static StepResponseBuilder getFailureResponseBuilder(
       K8sDeployResponse k8sDeployResponse, StepResponseBuilder stepResponseBuilder) {
     stepResponseBuilder.status(Status.FAILED)
@@ -981,11 +1225,15 @@ public class K8sStepHelper {
 
   public InfrastructureOutcome getInfrastructureOutcome(Ambiance ambiance) {
     OptionalOutcome optionalOutcome = outcomeService.resolveOptional(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
     if (!optionalOutcome.isFound()) {
       throw new InvalidRequestException(MISSING_INFRASTRUCTURE_ERROR, USER);
     }
 
     return (InfrastructureOutcome) optionalOutcome.getOutcome();
+  }
+
+  public LogCallback getLogCallback(String commandUnitName, Ambiance ambiance, boolean shouldOpenStream) {
+    return new NGLogCallback(logStreamingStepClientFactory, ambiance, commandUnitName, shouldOpenStream);
   }
 }

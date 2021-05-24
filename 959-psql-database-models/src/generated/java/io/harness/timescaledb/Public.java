@@ -3,9 +3,11 @@
  */
 package io.harness.timescaledb;
 
+import io.harness.timescaledb.tables.BillingData;
 import io.harness.timescaledb.tables.CeRecommendations;
 import io.harness.timescaledb.tables.KubernetesUtilizationData;
 import io.harness.timescaledb.tables.NodeInfo;
+import io.harness.timescaledb.tables.NodePoolAggregated;
 import io.harness.timescaledb.tables.PodInfo;
 import io.harness.timescaledb.tables.WorkloadInfo;
 
@@ -28,6 +30,11 @@ public class Public extends SchemaImpl {
   public static final Public PUBLIC = new Public();
 
   /**
+   * The table <code>public.billing_data</code>.
+   */
+  public final BillingData BILLING_DATA = BillingData.BILLING_DATA;
+
+  /**
    * The table <code>public.ce_recommendations</code>.
    */
   public final CeRecommendations CE_RECOMMENDATIONS = CeRecommendations.CE_RECOMMENDATIONS;
@@ -42,6 +49,11 @@ public class Public extends SchemaImpl {
    * The table <code>public.node_info</code>.
    */
   public final NodeInfo NODE_INFO = NodeInfo.NODE_INFO;
+
+  /**
+   * The table <code>public.node_pool_aggregated</code>.
+   */
+  public final NodePoolAggregated NODE_POOL_AGGREGATED = NodePoolAggregated.NODE_POOL_AGGREGATED;
 
   /**
    * The table <code>public.pod_info</code>.
@@ -67,8 +79,8 @@ public class Public extends SchemaImpl {
 
   @Override
   public final List<Table<?>> getTables() {
-    return Arrays.<Table<?>>asList(CeRecommendations.CE_RECOMMENDATIONS,
-        KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA, NodeInfo.NODE_INFO, PodInfo.POD_INFO,
-        WorkloadInfo.WORKLOAD_INFO);
+    return Arrays.<Table<?>>asList(BillingData.BILLING_DATA, CeRecommendations.CE_RECOMMENDATIONS,
+        KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA, NodeInfo.NODE_INFO,
+        NodePoolAggregated.NODE_POOL_AGGREGATED, PodInfo.POD_INFO, WorkloadInfo.WORKLOAD_INFO);
   }
 }

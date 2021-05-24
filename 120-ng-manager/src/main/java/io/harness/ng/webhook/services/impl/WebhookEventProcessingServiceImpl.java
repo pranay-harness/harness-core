@@ -8,7 +8,7 @@ import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.AbstractProducer;
-import io.harness.eventsframework.api.ProducerShutdownException;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.webhookpayloads.webhookdata.SourceRepoType;
 import io.harness.eventsframework.webhookpayloads.webhookdata.WebhookDTO;
@@ -123,7 +123,7 @@ public class WebhookEventProcessingServiceImpl
     webhookHelper.getProducerListForEvent(webhookDTO).forEach(producer -> {
       try {
         producer.send(Message.newBuilder().setData(webhookDTO.toByteString()).build());
-      } catch (ProducerShutdownException e) {
+      } catch (EventsFrameworkDownException e) {
         String topicName =
             producer instanceof AbstractProducer ? ((AbstractProducer) producer).getTopicName() : StringUtils.EMPTY;
 

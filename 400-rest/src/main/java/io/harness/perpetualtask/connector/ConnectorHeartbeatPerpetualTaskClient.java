@@ -17,7 +17,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
-import io.harness.beans.SecretManagerConfig;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
@@ -28,23 +27,30 @@ import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecA
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecAssumeSTSDTO;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecManualConfigDTO;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsValidationParams;
+import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultConnectorDTO;
+import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultValidationParams;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsValidationParams;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultValidationParams;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.exception.UnexpectedException;
+import io.harness.mappers.SecretManagerConfigMapper;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
+import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
+import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
+import io.harness.secretmanagerclient.dto.VaultConfigDTO;
+import io.harness.secretmanagerclient.dto.awskms.AwsKmsConfigDTO;
+import io.harness.secretmanagerclient.dto.azurekeyvault.AzureKeyVaultConfigDTO;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.KryoSerializer;
 import io.harness.utils.RestCallToNGManagerClientUtils;
 
-import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.TaskType;
-import software.wings.beans.VaultConfig;
-import software.wings.service.intfc.security.NGSecretManagerService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -54,8 +60,8 @@ import com.google.protobuf.StringValue;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -67,7 +73,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ConnectorHeartbeatPerpetualTaskClient implements PerpetualTaskServiceClient {
   private KryoSerializer kryoSerializer;
   private ConnectorResourceClient connectorResourceClient;
-  private NGSecretManagerService ngSecretManagerService;
+  private SecretManagerClientService ngSecretManagerService;
 
   @Override
   public Message getTaskParams(PerpetualTaskClientContext clientContext) {
@@ -96,29 +102,37 @@ public class ConnectorHeartbeatPerpetualTaskClient implements PerpetualTaskServi
 
   private void populateSecretManagerFields(ConnectorValidationParams connectorValidationParams,
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
-    Optional<SecretManagerConfig> secretManagerConfig =
-        ngSecretManagerService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier, false);
-    if (secretManagerConfig.isPresent()) {
+    SecretManagerConfigDTO secretManagerConfig =
+        ngSecretManagerService.getSecretManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier, false);
+
+    if (secretManagerConfig != null) {
       switch (connectorValidationParams.getConnectorType()) {
         case VAULT:
-          VaultConfig vaultConfig = (VaultConfig) secretManagerConfig.get();
+          VaultConfigDTO vaultConfig = (VaultConfigDTO) secretManagerConfig;
           VaultConnectorDTO vaultConnectorDTO =
               ((VaultValidationParams) connectorValidationParams).getVaultConnectorDTO();
           vaultConnectorDTO.setAuthToken(vaultConfig.getAuthToken());
           vaultConnectorDTO.setAppRoleId(vaultConfig.getAppRoleId());
           vaultConnectorDTO.setSecretId(vaultConfig.getSecretId());
           return;
+        case AZURE_KEY_VAULT:
+          AzureKeyVaultConfigDTO azureKeyVaultConfig = (AzureKeyVaultConfigDTO) secretManagerConfig;
+          AzureKeyVaultConnectorDTO azureKeyVaultConnectorDTO =
+              ((AzureKeyVaultValidationParams) connectorValidationParams).getAzurekeyvaultConnectorDTO();
+          azureKeyVaultConnectorDTO.setSecretKey(azureKeyVaultConfig.getSecretKey());
+          return;
         case GCP_KMS:
-          GcpKmsConfig gcpKmsConfig = (GcpKmsConfig) secretManagerConfig.get();
+          GcpKmsConfigDTO gcpKmsConfig = (GcpKmsConfigDTO) secretManagerConfig;
           GcpKmsConnectorDTO gcpKmsConnectorDTO =
               ((GcpKmsValidationParams) connectorValidationParams).getGcpKmsConnectorDTO();
           gcpKmsConnectorDTO.setCredentials(gcpKmsConfig.getCredentials());
           return;
         case AWS_KMS:
-          KmsConfig kmsConfig = (KmsConfig) secretManagerConfig.get();
+          AwsKmsConfigDTO kmsConfig = (AwsKmsConfigDTO) secretManagerConfig;
           AwsKmsConnectorDTO kmsConnectorDTO =
               ((AwsKmsValidationParams) connectorValidationParams).getAwsKmsConnectorDTO();
-          kmsConnectorDTO.setCredential(populateKmsCredential(kmsConfig));
+          kmsConnectorDTO.setCredential(
+              populateKmsCredential((KmsConfig) SecretManagerConfigMapper.fromDTO(kmsConfig)));
           return;
         default:
       }
@@ -134,12 +148,17 @@ public class ConnectorHeartbeatPerpetualTaskClient implements PerpetualTaskServi
       executionCapabilities =
           ((ExecutionCapabilityDemander) connectorValidationParams).fetchRequiredExecutionCapabilities(null);
     }
+    final List<ExecutionCapability> nonSelectorExecutionCapabilities =
+        executionCapabilities.stream()
+            .filter(executionCapability -> !(executionCapability instanceof SelectorCapability))
+            .collect(Collectors.toList());
     return DelegateTask.builder()
         .accountId(accountId)
+        .executionCapabilities(executionCapabilities)
         .data(TaskData.builder()
                   .async(false)
                   .taskType(TaskType.CAPABILITY_VALIDATION.name())
-                  .parameters(new Object[] {executionCapabilities})
+                  .parameters(nonSelectorExecutionCapabilities.toArray())
                   .timeout(TimeUnit.MINUTES.toMillis(1))
                   .build())
         .build();

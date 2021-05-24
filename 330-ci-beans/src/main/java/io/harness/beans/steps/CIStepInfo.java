@@ -18,7 +18,6 @@ import io.harness.beans.steps.stepinfo.UploadToGCSStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToS3StepInfo;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.plancreator.steps.common.WithStepElementParameters;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.StepSpecType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -40,7 +39,6 @@ public interface CIStepInfo extends StepSpecType, WithStepElementParameters, Spe
   @JsonIgnore int getRetry();
   @JsonIgnore String getName();
   @JsonIgnore String getIdentifier();
-  @JsonIgnore ParameterField<Integer> getRunAsUser();
   @JsonIgnore
   default long getDefaultTimeout() {
     return DEFAULT_TIMEOUT;

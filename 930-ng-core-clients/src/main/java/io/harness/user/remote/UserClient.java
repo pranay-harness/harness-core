@@ -49,7 +49,7 @@ public interface UserClient {
   Call<RestResponse<Optional<UserInfo>>> getUserByEmailId(@Path("emailId") String emailId);
 
   @POST(USER_BATCH_LIST_API)
-  Call<RestResponse<List<UserInfo>>> listUsers(@Body UserFilterNG userFilterNG, @Query("accountId") String accountId);
+  Call<RestResponse<List<UserInfo>>> listUsers(@Query("accountId") String accountId, @Body UserFilterNG userFilterNG);
 
   @PUT(UPDATE_USER_API) Call<RestResponse<Optional<UserInfo>>> updateUser(@Body UserInfo userInfo);
 
@@ -76,4 +76,11 @@ public interface UserClient {
 
   @PUT(USER_DISABLE_TWO_FACTOR_AUTH)
   Call<RestResponse<Optional<UserInfo>>> disableUserTwoFactorAuth(@Query(value = "emailId") String emailId);
+
+  @POST(USERS_API + "/{urlType}/url")
+  Call<RestResponse<Optional<String>>> generateSignupNotificationUrl(
+      @Path("urlType") String urlType, @Body UserInfo userInfo);
+
+  @GET(USERS_API + "/user-password-present")
+  Call<RestResponse<Boolean>> isUserPasswordSet(@Query("accountId") String accountId, @Query("emailId") String emailId);
 }

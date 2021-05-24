@@ -4,7 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.expression.ExpressionFunctor;
-import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
+import io.harness.ngpipeline.artifact.bean.ArtifactsOutcome;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.expressions.utils.ImagePullSecretUtils;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
@@ -25,20 +25,27 @@ public class ImagePullSecretFunctor implements ExpressionFunctor {
   ImagePullSecretUtils imagePullSecretUtils;
   PmsOutcomeService pmsOutcomeService;
   Ambiance ambiance;
-  SidecarImagePullSecretFunctor sidecarImagePullSecretFunctor;
 
   public Object get(String artifactIdentifier) {
     if (artifactIdentifier.equals(PRIMARY_ARTIFACT)) {
-      ArtifactOutcome artifact = (ArtifactOutcome) PmsOutcomeMapper.convertJsonToOutcome(
-          pmsOutcomeService.resolve(ambiance, RefObjectUtils.getOutcomeRefObject("service.artifactsResult.primary")));
-      if (artifact == null) {
+      ArtifactsOutcome artifactsOutcome = fetchArtifactsOutcome();
+      if (artifactsOutcome == null || artifactsOutcome.getPrimary() == null) {
         return null;
       }
-      return imagePullSecretUtils.getImagePullSecret(artifact, ambiance);
+      return imagePullSecretUtils.getImagePullSecret(artifactsOutcome.getPrimary(), ambiance);
     } else if (artifactIdentifier.equals(SIDECAR_ARTIFACTS)) {
-      return sidecarImagePullSecretFunctor;
+      return SidecarImagePullSecretFunctor.builder()
+          .imagePullSecretUtils(imagePullSecretUtils)
+          .ambiance(ambiance)
+          .artifactsOutcome(fetchArtifactsOutcome())
+          .build();
     } else {
       return null;
     }
+  }
+
+  private ArtifactsOutcome fetchArtifactsOutcome() {
+    return (ArtifactsOutcome) PmsOutcomeMapper.convertJsonToOutcome(
+        pmsOutcomeService.resolve(ambiance, RefObjectUtils.getOutcomeRefObject("artifacts")));
   }
 }

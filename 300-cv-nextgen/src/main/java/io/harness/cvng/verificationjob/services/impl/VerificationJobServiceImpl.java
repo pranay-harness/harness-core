@@ -66,24 +66,6 @@ public class VerificationJobServiceImpl implements VerificationJobService {
   }
 
   @Override
-  public void upsert(String accountId, VerificationJobDTO verificationJobDTO) {
-    VerificationJob verificationJob = fromDto(verificationJobDTO);
-    verificationJob.setAccountId(accountId);
-    VerificationJob stored = getVerificationJob(accountId, verificationJobDTO.getOrgIdentifier(),
-        verificationJobDTO.getProjectIdentifier(), verificationJobDTO.getIdentifier());
-    if (stored != null) {
-      Preconditions.checkState(stored.getProjectIdentifier().equals(verificationJob.getProjectIdentifier()));
-      Preconditions.checkState(stored.getOrgIdentifier().equals(verificationJob.getOrgIdentifier()));
-
-      verificationJob.setUuid(stored.getUuid());
-    }
-    verificationJob.validate();
-    // TODO: Keeping it simple for now. find a better way to save if more fields are added to verification Job. This can
-    // potentially override them.
-    save(verificationJob);
-  }
-
-  @Override
   public void create(String accountId, VerificationJobDTO verificationJobDTO) {
     VerificationJob verificationJob = fromDto(verificationJobDTO);
     verificationJob.setAccountId(accountId);

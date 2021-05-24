@@ -116,7 +116,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
             .build()));
 
     cvConfig = new AppDynamicsCVConfig();
-    dsConfigService.upsert(dsConfig);
+    dsConfigService.create(dsConfig);
     clock = Clock.fixed(Instant.parse("2020-04-22T10:02:06Z"), ZoneOffset.UTC);
     MockitoAnnotations.initMocks(this);
     FieldUtils.writeField(heatMapService, "cvConfigService", cvConfigService, true);

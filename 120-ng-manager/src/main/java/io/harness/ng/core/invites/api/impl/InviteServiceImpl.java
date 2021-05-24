@@ -3,6 +3,7 @@ package io.harness.ng.core.invites.api.impl;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.ng.accesscontrol.PlatformPermissions.INVITE_PERMISSION_IDENTIFIER;
 import static io.harness.ng.core.invites.InviteOperationResponse.FAIL;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.ADMIN_INITIATED_INVITE;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.USER_INITIATED_INVITE;
@@ -16,17 +17,18 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.Team;
-import io.harness.accesscontrol.AccessControlAdminClient;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.accesscontrol.principals.PrincipalDTO;
 import io.harness.accesscontrol.principals.PrincipalType;
-import io.harness.accesscontrol.roleassignments.api.RoleAssignmentCreateRequestDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
-import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.account.AccountClient;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.invites.remote.InviteAcceptResponse;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.accesscontrol.user.ACLAggregateFilter;
@@ -55,9 +57,9 @@ import io.harness.notification.channeldetails.EmailChannel;
 import io.harness.notification.channeldetails.EmailChannel.EmailChannelBuilder;
 import io.harness.notification.notificationclient.NotificationClient;
 import io.harness.outbox.api.OutboxService;
-import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.repositories.invites.spring.InviteRepository;
+import io.harness.user.remote.UserFilterNG;
 import io.harness.utils.PageUtils;
 import io.harness.utils.RetryUtils;
 
@@ -69,10 +71,14 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.mongodb.MongoClientURI;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -87,7 +93,9 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.message.BasicNameValuePair;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -107,6 +115,7 @@ public class InviteServiceImpl implements InviteService {
   private static final String DEFAULT_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
   private static final String INVITE_URL =
       "/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s&generation=NG";
+  private static final String ACCEPT_INVITE_PATH = "/ng/api/invites/verify";
   private final String jwtPasswordSecret;
   private final JWTGeneratorUtils jwtGeneratorUtils;
   private final NgUserService ngUserService;
@@ -114,12 +123,15 @@ public class InviteServiceImpl implements InviteService {
   private final boolean useMongoTransactions;
   private final TransactionTemplate transactionTemplate;
   private final NotificationClient notificationClient;
-  private final AccessControlAdminClient accessControlAdminClient;
   private final AccountClient accountClient;
   private final OutboxService outboxService;
   private final OrganizationService organizationService;
   private final ProjectService projectService;
+  private final AccessControlClient accessControlClient;
   private final String currentGenUiUrl;
+  private final String nextGenUiUrl;
+  private final String nextGenAuthUiUrl;
+  private final boolean isNgAuthUIEnabled;
 
   private final RetryPolicy<Object> transactionRetryPolicy =
       RetryUtils.getRetryPolicy("[Retrying]: Failed to mark previous invites as stale; attempt: {}",
@@ -129,22 +141,26 @@ public class InviteServiceImpl implements InviteService {
   @Inject
   public InviteServiceImpl(@Named("userVerificationSecret") String jwtPasswordSecret, MongoConfig mongoConfig,
       JWTGeneratorUtils jwtGeneratorUtils, NgUserService ngUserService, TransactionTemplate transactionTemplate,
-      InviteRepository inviteRepository, NotificationClient notificationClient,
-      AccessControlAdminClient accessControlAdminClient, AccountClient accountClient, OutboxService outboxService,
-      OrganizationService organizationService, ProjectService projectService,
-      @Named("currentGenUiUrl") String currentGenUiUrl) {
+      InviteRepository inviteRepository, NotificationClient notificationClient, AccountClient accountClient,
+      OutboxService outboxService, OrganizationService organizationService, ProjectService projectService,
+      AccessControlClient accessControlClient, @Named("currentGenUiUrl") String currentGenUiUrl,
+      @Named("nextGenUiUrl") String nextGenUiUrl, @Named("nextGenAuthUiUrl") String nextGenAuthUiUrl,
+      @Named("isNgAuthUIEnabled") boolean isNgAuthUIEnabled) {
     this.jwtPasswordSecret = jwtPasswordSecret;
     this.jwtGeneratorUtils = jwtGeneratorUtils;
     this.ngUserService = ngUserService;
     this.inviteRepository = inviteRepository;
     this.transactionTemplate = transactionTemplate;
     this.notificationClient = notificationClient;
-    this.accessControlAdminClient = accessControlAdminClient;
     this.accountClient = accountClient;
     this.outboxService = outboxService;
     this.organizationService = organizationService;
     this.projectService = projectService;
     this.currentGenUiUrl = currentGenUiUrl;
+    this.nextGenUiUrl = nextGenUiUrl;
+    this.nextGenAuthUiUrl = nextGenAuthUiUrl;
+    this.isNgAuthUIEnabled = isNgAuthUIEnabled;
+    this.accessControlClient = accessControlClient;
     MongoClientURI uri = new MongoClientURI(mongoConfig.getUri());
     useMongoTransactions = uri.getHosts().size() > 2;
   }
@@ -154,6 +170,7 @@ public class InviteServiceImpl implements InviteService {
     if (invite == null) {
       return FAIL;
     }
+    checkPermissions(invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier());
     preCreateInvite(invite);
     if (checkIfUserAlreadyAdded(invite)) {
       return InviteOperationResponse.USER_ALREADY_ADDED;
@@ -225,12 +242,10 @@ public class InviteServiceImpl implements InviteService {
 
   @Override
   public Optional<Invite> deleteInvite(String inviteId) {
-    return wrapperForTransactions(this::deleteInviteInternal, inviteId);
-  }
-
-  private Optional<Invite> deleteInviteInternal(String inviteId) {
     Optional<Invite> inviteOptional = getInvite(inviteId);
     if (inviteOptional.isPresent()) {
+      Invite invite = inviteOptional.get();
+      checkPermissions(invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier());
       Update update = new Update().set(InviteKeys.deleted, TRUE);
       Invite updatedInvite = inviteRepository.updateInvite(inviteId, update);
       if (updatedInvite != null) {
@@ -255,7 +270,83 @@ public class InviteServiceImpl implements InviteService {
     return true;
   }
 
+  @Override
+  public boolean isUserPasswordSet(String accountIdentifier, String email) {
+    return ngUserService.isUserPasswordSet(accountIdentifier, email);
+  }
+
+  @Override
+  public URI getRedirectUrl(
+      InviteAcceptResponse inviteAcceptResponse, String accountCreationFragment, String jwtToken) {
+    String accountIdentifier = inviteAcceptResponse.getAccountIdentifier();
+    if (inviteAcceptResponse.getResponse().equals(FAIL)) {
+      return getLoginPageUrl(accountIdentifier);
+    }
+
+    UserInfo userInfo = inviteAcceptResponse.getUserInfo();
+    if (userInfo == null) {
+      return getUserInfoSubmitUrl(accountIdentifier, accountCreationFragment);
+    }
+
+    boolean isUserPasswordSet = isUserPasswordSet(inviteAcceptResponse.getAccountIdentifier(), userInfo.getEmail());
+    if (!isUserPasswordSet) {
+      return getUserInfoSubmitUrl(accountIdentifier, accountCreationFragment);
+    }
+
+    completeInvite(jwtToken);
+    return getResourceUrl(
+        accountIdentifier, inviteAcceptResponse.getOrgIdentifier(), inviteAcceptResponse.getProjectIdentifier());
+  }
+
+  private URI getResourceUrl(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    String baseUrl = getBaseUrl(accountIdentifier, nextGenUiUrl);
+    String resourceUrl = String.format("%saccount/%s/projects", baseUrl, accountIdentifier);
+    if (isNotEmpty(projectIdentifier)) {
+      resourceUrl = String.format(
+          "%saccount/%s/projects/%s/orgs/%s/details", baseUrl, accountIdentifier, projectIdentifier, orgIdentifier);
+    } else if (isNotEmpty(orgIdentifier)) {
+      resourceUrl = String.format("%saccount/%s/admin/organizations/%s", baseUrl, accountIdentifier, orgIdentifier);
+    }
+
+    try {
+      return new URI(resourceUrl);
+    } catch (URISyntaxException e) {
+      throw new WingsException(e);
+    }
+  }
+
+  private URI getUserInfoSubmitUrl(String accountIdentifier, String accountCreationFragment) {
+    try {
+      String baseUrl = getBaseUrl(accountIdentifier, nextGenAuthUiUrl);
+      URIBuilder uriBuilder = new URIBuilder(baseUrl);
+      uriBuilder.setFragment("/accept-invite?" + accountCreationFragment);
+      return uriBuilder.build();
+    } catch (URISyntaxException e) {
+      throw new WingsException(e);
+    }
+  }
+
+  private URI getLoginPageUrl(String accountIdentifier) {
+    try {
+      String baseUrl = getBaseUrl(accountIdentifier, nextGenAuthUiUrl);
+      URIBuilder uriBuilder = new URIBuilder(baseUrl);
+      uriBuilder.setFragment("/signin");
+      return uriBuilder.build();
+    } catch (URISyntaxException e) {
+      throw new WingsException(e);
+    }
+  }
+
+  private String getBaseUrl(String accountIdentifier, String defaultEnvUrl) {
+    String accountBaseUrl = RestClientUtils.getResponse(accountClient.getBaseUrl(accountIdentifier));
+    if (Objects.isNull(accountBaseUrl)) {
+      accountBaseUrl = defaultEnvUrl;
+    }
+    return accountBaseUrl;
+  }
+
   private Invite resendInvite(Invite existingInvite, Invite newInvite) {
+    checkPermissions(newInvite.getAccountIdentifier(), newInvite.getOrgIdentifier(), newInvite.getProjectIdentifier());
     Update update = new Update()
                         .set(InviteKeys.createdAt, new Date())
                         .set(InviteKeys.validUntil,
@@ -268,7 +359,9 @@ public class InviteServiceImpl implements InviteService {
     try {
       sendInvitationMail(existingInvite);
     } catch (URISyntaxException e) {
-      log.error("Mail embed url incorrect. can't sent email", e);
+      log.error("Mail embed url incorrect. can't sent email. InviteId: " + existingInvite.getId(), e);
+    } catch (UnsupportedEncodingException e) {
+      log.error("Invite Email sending failed due to encoding exception. InviteId: " + existingInvite.getId(), e);
     }
     return existingInvite;
   }
@@ -286,10 +379,15 @@ public class InviteServiceImpl implements InviteService {
     return InviteAcceptResponse.builder()
         .response(InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED)
         .userInfo(ngUserOpt.orElse(null))
+        .accountIdentifier(invite.getAccountIdentifier())
+        .orgIdentifier(invite.getOrgIdentifier())
+        .projectIdentifier(invite.getProjectIdentifier())
+        .inviteId(invite.getId())
         .build();
   }
 
-  private Optional<Invite> getInviteFromToken(String jwtToken) {
+  @Override
+  public Optional<Invite> getInviteFromToken(String jwtToken) {
     if (isBlank(jwtToken)) {
       return Optional.empty();
     }
@@ -353,34 +451,24 @@ public class InviteServiceImpl implements InviteService {
     try {
       sendInvitationMail(savedInvite);
     } catch (URISyntaxException e) {
-      log.error("Mail embed url incorrect. can't sent email", e);
+      log.error("Mail embed url incorrect. can't sent email. InviteId: " + savedInvite.getId(), e);
+    } catch (UnsupportedEncodingException e) {
+      log.error("Invite Email sending failed due to encoding exception. InviteId: " + savedInvite.getId(), e);
     }
+
     return InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
   }
 
-  private List<RoleAssignmentDTO> createRoleAssignments(Invite invite, String userId) {
+  private List<RoleAssignmentDTO> createRoleAssignmentDTOs(Invite invite, String userId) {
     List<RoleBinding> roleBindings = invite.getRoleBindings();
-    List<RoleAssignmentDTO> newRoleAssignments =
-        roleBindings.stream()
-            .map(roleBinding
-                -> RoleAssignmentDTO.builder()
-                       .roleIdentifier(roleBinding.getRoleIdentifier())
-                       .resourceGroupIdentifier(roleBinding.getResourceGroupIdentifier())
-                       .principal(PrincipalDTO.builder().type(PrincipalType.USER).identifier(userId).build())
-                       .disabled(false)
-                       .build())
-            .collect(Collectors.toList());
-    List<RoleAssignmentResponseDTO> createdRoleAssignmentResponseDTOs;
-    try {
-      createdRoleAssignmentResponseDTOs = NGRestUtils.getResponse(accessControlAdminClient.createMultiRoleAssignment(
-          invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier(),
-          RoleAssignmentCreateRequestDTO.builder().roleAssignments(newRoleAssignments).build()));
-    } catch (Exception e) {
-      log.error("Can't create roleassignments while inviting {}", invite.getEmail());
-      return Collections.emptyList();
-    }
-    return createdRoleAssignmentResponseDTOs.stream()
-        .map(RoleAssignmentResponseDTO::getRoleAssignment)
+    return roleBindings.stream()
+        .map(roleBinding
+            -> RoleAssignmentDTO.builder()
+                   .roleIdentifier(roleBinding.getRoleIdentifier())
+                   .resourceGroupIdentifier(roleBinding.getResourceGroupIdentifier())
+                   .principal(PrincipalDTO.builder().type(PrincipalType.USER).identifier(userId).build())
+                   .disabled(false)
+                   .build())
         .collect(Collectors.toList());
   }
 
@@ -392,9 +480,9 @@ public class InviteServiceImpl implements InviteService {
     inviteRepository.updateInvite(invite.getId(), update);
   }
 
-  private void sendInvitationMail(Invite invite) throws URISyntaxException {
+  private void sendInvitationMail(Invite invite) throws URISyntaxException, UnsupportedEncodingException {
     updateJWTTokenInInvite(invite);
-    String url = getInvitationMailEmbedUrl(invite);
+    String url = isNgAuthUIEnabled ? getAcceptInviteUrl(invite) : getInvitationMailEmbedUrl(invite);
     EmailChannelBuilder emailChannelBuilder = EmailChannel.builder()
                                                   .accountId(invite.getAccountIdentifier())
                                                   .recipients(Collections.singletonList(invite.getEmail()))
@@ -440,16 +528,33 @@ public class InviteServiceImpl implements InviteService {
   }
 
   private String getInvitationMailEmbedUrl(Invite invite) throws URISyntaxException {
-    String accountBaseUrl = RestClientUtils.getResponse(accountClient.getBaseUrl(invite.getAccountIdentifier()));
     AccountDTO account = RestClientUtils.getResponse(accountClient.getAccountDTO(invite.getAccountIdentifier()));
     String fragment = String.format(INVITE_URL, invite.getAccountIdentifier(), account.getName(),
         account.getCompanyName(), invite.getEmail(), invite.getInviteToken());
-    if (Objects.isNull(accountBaseUrl)) {
-      accountBaseUrl = currentGenUiUrl;
-    }
-    URIBuilder uriBuilder = new URIBuilder(accountBaseUrl);
+
+    String baseUrl = getBaseUrl(invite.getAccountIdentifier(), currentGenUiUrl);
+    URIBuilder uriBuilder = new URIBuilder(baseUrl);
     uriBuilder.setFragment(fragment);
     return uriBuilder.toString();
+  }
+
+  private String getAcceptInviteUrl(Invite invite) throws URISyntaxException, UnsupportedEncodingException {
+    String baseUrl = getBaseUrl(invite.getAccountIdentifier(), currentGenUiUrl);
+    URIBuilder uriBuilder = new URIBuilder(baseUrl);
+    uriBuilder.setPath(ACCEPT_INVITE_PATH);
+    uriBuilder.setParameters(getParameterList(invite));
+    uriBuilder.setFragment(null);
+    log.info("Accept invite url: {}", uriBuilder.toString());
+    return uriBuilder.toString();
+  }
+
+  private List<NameValuePair> getParameterList(Invite invite) throws UnsupportedEncodingException {
+    AccountDTO account = RestClientUtils.getResponse(accountClient.getAccountDTO(invite.getAccountIdentifier()));
+    return Arrays.asList(new BasicNameValuePair("accountIdentifier", invite.getAccountIdentifier()),
+        new BasicNameValuePair("accountName", account.getName()),
+        new BasicNameValuePair("company", account.getCompanyName()),
+        new BasicNameValuePair("email", URLEncoder.encode(invite.getEmail(), "UTF-8")),
+        new BasicNameValuePair("token", invite.getInviteToken()));
   }
 
   @Override
@@ -461,7 +566,7 @@ public class InviteServiceImpl implements InviteService {
     Invite invite = inviteOpt.get();
     String email = invite.getEmail();
     Optional<UserInfo> userOpt = ngUserService.getUserFromEmail(email);
-    Preconditions.checkState(userOpt.isPresent(), "Illegal state: user doesn't exits");
+    Preconditions.checkState(userOpt.isPresent(), "Illegal state: user doesn't exists");
     UserInfo user = userOpt.get();
     Scope scope = Scope.builder()
                       .accountIdentifier(invite.getAccountIdentifier())
@@ -469,8 +574,8 @@ public class InviteServiceImpl implements InviteService {
                       .projectIdentifier(invite.getProjectIdentifier())
                       .build();
 
-    ngUserService.addUserToScope(user, scope, ACCEPTED_INVITE);
-    createRoleAssignments(invite, user.getUuid());
+    List<RoleAssignmentDTO> roleAssignmentDTOs = createRoleAssignmentDTOs(invite, user.getUuid());
+    ngUserService.addUserToScope(user.getUuid(), scope, roleAssignmentDTOs, ACCEPTED_INVITE);
     markInviteApprovedAndDeleted(invite);
     return true;
   }
@@ -537,15 +642,16 @@ public class InviteServiceImpl implements InviteService {
   }
 
   private Map<String, UserMetadataDTO> getPendingUserMap(List<String> userEmails, String accountIdentifier) {
-    List<UserInfo> users = ngUserService.getUsersFromEmail(userEmails, accountIdentifier);
-    Map<String, UserMetadataDTO> userSearchMap = new HashMap<>();
+    List<UserInfo> users =
+        ngUserService.listCurrentGenUsers(accountIdentifier, UserFilterNG.builder().emailIds(userEmails).build());
+    Map<String, UserMetadataDTO> userMetadataMap = new HashMap<>();
     users.forEach(user
-        -> userSearchMap.put(user.getEmail(),
+        -> userMetadataMap.put(user.getEmail(),
             UserMetadataDTO.builder().email(user.getEmail()).name(user.getName()).uuid(user.getUuid()).build()));
     for (String email : userEmails) {
-      userSearchMap.computeIfAbsent(email, email1 -> UserMetadataDTO.builder().email(email1).build());
+      userMetadataMap.computeIfAbsent(email, email1 -> UserMetadataDTO.builder().email(email1).build());
     }
-    return userSearchMap;
+    return userMetadataMap;
   }
 
   private List<InviteDTO> aggregatePendingUsers(List<Invite> invites, Map<String, UserMetadataDTO> userMap) {
@@ -563,6 +669,11 @@ public class InviteServiceImpl implements InviteService {
                          .build());
     }
     return inviteDTOs;
+  }
+
+  private void checkPermissions(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of("USER", null), INVITE_PERMISSION_IDENTIFIER);
   }
 
   private <T, S> S wrapperForTransactions(Function<T, S> function, T arg) {

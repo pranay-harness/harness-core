@@ -29,6 +29,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
 /**
@@ -91,6 +92,15 @@ public class ArtifactoryConfig extends SettingValue implements EncryptableSettin
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Collections.singletonList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
         getArtifactoryUrl(), maskingEvaluator));
+  }
+
+  @Override
+  public boolean shouldDeleteArtifact(SettingValue prev) {
+    if (!(prev instanceof ArtifactoryConfig)) {
+      return true;
+    }
+    ArtifactoryConfig prevConfig = (ArtifactoryConfig) prev;
+    return !StringUtils.equals(prevConfig.getArtifactoryUrl(), artifactoryUrl);
   }
 
   @Override

@@ -127,14 +127,24 @@ public class AccountResourceNG {
 
   @PUT
   @Path("/{accountId}/default-experience")
-  public RestResponse<Boolean> updateDefaultExperienceIfNull(
+  public RestResponse<Boolean> updateDefaultExperienceIfApplicable(
       @PathParam("accountId") @AccountIdentifier String accountId,
       @QueryParam("defaultExperience") DefaultExperience defaultExperience) {
     Account account = accountService.get(accountId);
-    if (account.getDefaultExperience() == null) {
+    if (canUpdateDefaultExperience(defaultExperience, account)) {
       account.setDefaultExperience(defaultExperience);
       accountService.update(account);
+      log.info("Updated default experience to {} for Account {}", defaultExperience, accountId);
     }
     return new RestResponse(true);
+  }
+
+  private boolean canUpdateDefaultExperience(DefaultExperience defaultExperience, Account account) {
+    // due to CD trial started by default, new NG user with CD trial can be updated
+    return DefaultExperience.isNGExperience(defaultExperience) // accept changing defaultExperience to NG only
+        && account.getDefaultExperience() == null // don't overwrite current defaultExperience
+        && account.isCreatedFromNG() // new NG account only
+        && account.getCeLicenseInfo() == null // Verify account doesn't work on CG
+        && (account.getLicenseInfo() == null || AccountType.TRIAL.equals(account.getLicenseInfo().getAccountType()));
   }
 }

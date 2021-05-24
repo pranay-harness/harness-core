@@ -1,0 +1,60 @@
+package io.harness.encryptors.managerproxy;
+
+import static io.harness.beans.shared.tasks.NgSetupFields.OWNER;
+import static io.harness.rule.OwnerRule.ARVIND;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doReturn;
+
+import io.harness.CategoryTest;
+import io.harness.beans.DelegateTask;
+import io.harness.category.element.UnitTests;
+import io.harness.delegatetasks.DeleteSecretTaskResponse;
+import io.harness.rule.Owner;
+import io.harness.secretmanagerclient.NGSecretManagerMetadata;
+
+import software.wings.beans.VaultConfig;
+import software.wings.service.intfc.DelegateService;
+
+import com.google.inject.Inject;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
+
+public class ManagerVaultEncryptorTest extends CategoryTest {
+  @Mock private DelegateService delegateService;
+  @Mock private ManagerEncryptorHelper managerEncryptorHelper;
+  @Inject @InjectMocks private ManagerVaultEncryptor managerVaultEncryptor;
+
+  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
+
+  private static final String projectIdentifier = "PROJECT_IDENTIFIER";
+  private static final String orgIdentifier = "ORG_IDENTIFIER";
+  private static final String accountId = "ACCOUNT_ID";
+  private static final String ownerValue = "PROJECT_IDENTIFIER/ORG_IDENTIFIER";
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void deleteSecretTest() throws Exception {
+    NGSecretManagerMetadata metadata =
+        NGSecretManagerMetadata.builder().orgIdentifier(orgIdentifier).projectIdentifier(projectIdentifier).build();
+    VaultConfig vaultConfig = VaultConfig.builder().ngMetadata(metadata).build();
+
+    ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    doReturn(DeleteSecretTaskResponse.builder().build())
+        .when(delegateService)
+        .executeTask(delegateTaskArgumentCaptor.capture());
+
+    doReturn(ownerValue).when(managerEncryptorHelper).getOwner(any());
+    managerVaultEncryptor.deleteSecret(accountId, null, vaultConfig);
+    DelegateTask task = delegateTaskArgumentCaptor.getValue();
+    assertThat(task.getSetupAbstractions().get(OWNER)).isEqualTo(ownerValue);
+  }
+}

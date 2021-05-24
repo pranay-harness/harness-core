@@ -1,20 +1,27 @@
 package io.harness.delegate.task.artifacts.docker;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.context.MdcGlobalContextData;
 import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.ExceptionUtils;
+import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionMetadataKeys;
+import io.harness.exception.runtime.DockerHubServerRuntimeException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
+import io.harness.manage.GlobalContextManager;
 import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.HashMap;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
@@ -24,11 +31,11 @@ public class DockerArtifactTaskHelper {
 
   public ArtifactTaskResponse getArtifactCollectResponse(
       ArtifactTaskParameters artifactTaskParameters, LogCallback executionLogCallback) {
+    DockerArtifactDelegateRequest attributes = (DockerArtifactDelegateRequest) artifactTaskParameters.getAttributes();
+    String registryUrl = attributes.getDockerConnectorDTO().getDockerRegistryUrl();
+    decryptRequestDTOs(attributes);
+    ArtifactTaskResponse artifactTaskResponse;
     try {
-      DockerArtifactDelegateRequest attributes = (DockerArtifactDelegateRequest) artifactTaskParameters.getAttributes();
-      String registryUrl = attributes.getDockerConnectorDTO().getDockerRegistryUrl();
-      decryptRequestDTOs(attributes);
-      ArtifactTaskResponse artifactTaskResponse;
       switch (artifactTaskParameters.getArtifactTaskType()) {
         case GET_LAST_SUCCESSFUL_BUILD:
           saveLogs(executionLogCallback, "Fetching Artifact details");
@@ -82,15 +89,17 @@ public class DockerArtifactTaskHelper {
               .errorCode(ErrorCode.INVALID_ARGUMENT)
               .build();
       }
-      return artifactTaskResponse;
-    } catch (Exception ex) {
-      log.error("Exception in processing Docker artifact task [{}]", artifactTaskParameters.toString(), ex);
-      return ArtifactTaskResponse.builder()
-          .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .errorMessage(ExceptionUtils.getMessage(ex))
-          .errorCode(ErrorCode.INVALID_ARGUMENT)
-          .build();
+    } catch (DockerHubServerRuntimeException ex) {
+      if (GlobalContextManager.get(MdcGlobalContextData.MDC_ID) == null) {
+        MdcGlobalContextData mdcGlobalContextData = MdcGlobalContextData.builder().map(new HashMap<>()).build();
+        GlobalContextManager.upsertGlobalContextRecord(mdcGlobalContextData);
+      }
+      ((MdcGlobalContextData) GlobalContextManager.get(MdcGlobalContextData.MDC_ID))
+          .getMap()
+          .put(ExceptionMetadataKeys.CONNECTOR.name(), attributes.getConnectorRef());
+      throw ex;
     }
+    return artifactTaskResponse;
   }
 
   private ArtifactTaskResponse getSuccessTaskResponse(ArtifactTaskExecutionResponse taskExecutionResponse) {

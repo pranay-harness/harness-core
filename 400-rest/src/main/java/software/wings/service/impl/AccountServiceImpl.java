@@ -461,6 +461,8 @@ public class AccountServiceImpl implements AccountService {
       featureFlagService.enableAccount(FeatureName.CFNG_ENABLED, account.getUuid());
       featureFlagService.enableAccount(FeatureName.CING_ENABLED, account.getUuid());
       featureFlagService.enableAccount(FeatureName.CVNG_ENABLED, account.getUuid());
+    } else if (account.isCreatedFromNG()) {
+      featureFlagService.enableAccount(FeatureName.NEXT_GEN_ENABLED, account.getUuid());
     }
   }
 
@@ -1803,6 +1805,16 @@ public class AccountServiceImpl implements AccountService {
     notNullCheck("Invalid Account for the given Id: " + accountId, account);
     account.setHarnessSupportAccessAllowed(false);
     wingsPersistence.save(account);
+    return true;
+  }
+
+  @Override
+  public boolean isRestrictedAccessEnabled(String accountId) {
+    Account account = get(accountId);
+    notNullCheck("Invalid Account for the given Id: " + accountId, account);
+    if (account.isHarnessSupportAccessAllowed()) {
+      return false;
+    }
     return true;
   }
 }

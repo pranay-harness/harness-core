@@ -1,11 +1,12 @@
 package io.harness.ng.executions.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.executions.beans.CDPipelineModuleInfo;
 import io.harness.cdng.pipeline.executions.beans.CDStageModuleInfo;
-import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionServiceImpl;
 import io.harness.cdng.pipeline.mappers.ExecutionToDtoMapper;
 import io.harness.ng.beans.PageResponse;
@@ -18,6 +19,7 @@ import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummaryFilter;
 import io.harness.ngpipeline.pipeline.executions.beans.dto.PipelineExecutionInterruptDTO;
 import io.harness.ngpipeline.pipeline.executions.beans.dto.PipelineExecutionSummaryDTO;
+import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.pms.execution.ExecutionStatus;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -44,6 +46,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 
+@OwnedBy(CDC)
 @Api("executions")
 @Path("executions")
 @Produces({"application/json", "text/yaml", "text/html"})
@@ -96,19 +99,6 @@ public class CDNGExecutionResource {
   @GET
   @Timed
   @ExceptionMetered
-  @ApiOperation(value = "Gets Execution Detail", nickname = "getPipelineExecutionDetail")
-  @Path("/{planExecutionId}")
-  public ResponseDTO<PipelineExecutionDetail> getPipelineExecutionDetail(
-      @NotNull @QueryParam("accountIdentifier") String accountId, @NotNull @QueryParam("orgIdentifier") String orgId,
-      @NotNull @QueryParam("projectIdentifier") String projectId,
-      @NotNull @PathParam("planExecutionId") String planExecutionId,
-      @QueryParam("stageIdentifier") String stageIdentifier) {
-    return ResponseDTO.newResponse(executionService.getPipelineExecutionDetail(planExecutionId, stageIdentifier));
-  }
-
-  @GET
-  @Timed
-  @ExceptionMetered
   @ApiOperation(value = "Gets Execution Status list", nickname = "getExecutionStatuses")
   @Path("/executionStatus")
   public ResponseDTO<List<ExecutionStatus>> getExecutionStatuses() {
@@ -135,6 +125,15 @@ public class CDNGExecutionResource {
   @Path("/dummyCDStageModuleInfo")
   public ResponseDTO<CDStageModuleInfo> getDummyCDStageModuleInfo() {
     return ResponseDTO.newResponse(CDStageModuleInfo.builder().nodeExecutionId("node1").build());
+  }
+
+  @GET
+  @ApiOperation(value = "dummy api for checking pms schema", nickname = "dummyApiForSwaggerSchemaCheck")
+  @Path("/dummyApiForSwaggerSchemaCheck")
+  // DO NOT DELETE THIS WITHOUT CONFIRMING WITH UI
+  public ResponseDTO<PipelineConfig> dummyApiForSwaggerSchemaCheck() {
+    log.info("Get pipeline");
+    return ResponseDTO.newResponse(PipelineConfig.builder().build());
   }
 
   @GET

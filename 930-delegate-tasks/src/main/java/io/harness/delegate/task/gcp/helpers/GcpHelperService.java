@@ -4,12 +4,16 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_CLOUD_PROVIDER;
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.task.artifacts.gcr.exceptions.GcbClientException;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.gcp.helpers.GcpCredentialsHelperService;
 import io.harness.gcp.helpers.GcpHttpTransportHelperService;
+import io.harness.globalcontex.ErrorHandlingGlobalContextData;
+import io.harness.manage.GlobalContextManager;
 import io.harness.network.Http;
 import io.harness.serializer.JsonUtils;
 
@@ -28,6 +32,7 @@ import com.google.api.services.storage.Storage;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
@@ -35,10 +40,12 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import org.apache.commons.io.IOUtils;
 
 /**
  * Created by bzane on 2/22/17
  */
+@OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 @Slf4j
 public class GcpHelperService {
@@ -177,6 +184,12 @@ public class GcpHelperService {
     if (isEmpty(serviceAccountKeyFileContent)) {
       throw new InvalidRequestException("Empty service key found. Unable to validate", USER);
     }
+    try {
+      GoogleCredential.fromStream(
+          IOUtils.toInputStream(String.valueOf(serviceAccountKeyFileContent), Charset.defaultCharset()));
+    } catch (Exception e) {
+      throw new InvalidRequestException("Invalid Google Cloud Platform credentials: " + e.getMessage(), e, USER);
+    }
   }
 
   @SuppressWarnings("PMD")
@@ -238,6 +251,11 @@ public class GcpHelperService {
         throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER).addParam("message", msg);
       }
     } catch (TokenResponseException e) {
+      ErrorHandlingGlobalContextData globalContextData =
+          GlobalContextManager.get(ErrorHandlingGlobalContextData.IS_SUPPORTED_ERROR_FRAMEWORK);
+      if (globalContextData != null && globalContextData.isSupportedErrorFramework()) {
+        throw e;
+      }
       throw new InvalidRequestException("407 Proxy Authentication Required");
     }
   }

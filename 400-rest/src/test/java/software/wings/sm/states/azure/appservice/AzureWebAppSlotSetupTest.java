@@ -36,6 +36,7 @@ import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentDat
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotSetupResponse;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -95,6 +96,7 @@ import org.mockito.Spy;
 public class AzureWebAppSlotSetupTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
   @Mock private SecretManager secretManager;
+  @Mock private FeatureFlagService featureFlagService;
   @Mock private AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
   @Mock private StateExecutionService stateExecutionService;
   @Spy @InjectMocks private AzureAppServiceManifestUtils azureAppServiceManifestUtils;

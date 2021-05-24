@@ -123,7 +123,7 @@ public class FilepathTriggerFilter implements TriggerFilter {
       ScmFilterQueryTaskParams params = paramsBuilder.build();
       DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                     .accountId(filterRequestData.getAccountId())
-                                                    .taskType(TaskType.SCM_FILTER_QUERY_TASK.toString())
+                                                    .taskType(TaskType.SCM_PATH_FILTER_EVALUATION_TASK.toString())
                                                     .taskParameters(params)
                                                     .executionTimeout(Duration.ofMinutes(1L))
                                                     .build();

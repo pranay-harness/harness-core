@@ -3,7 +3,7 @@ load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:macros.bzl", "run_analysis")
 
 shared_dependencies = [
-    "//850-execution-plan:module",
+    "//860-orchestration-steps:module",
     "//850-ng-pipeline-commons:module",
     "//930-delegate-tasks:module",
     "//960-persistence:module",
@@ -222,7 +222,6 @@ shared_dependencies = [
     "@maven//:io_grpc_grpc_grpclb",
     "@maven//:io_grpc_grpc_netty_shaded",
     "@maven//:io_grpc_grpc_protobuf",
-    "@maven//:io_grpc_grpc_protobuf_lite",
     "@maven//:io_grpc_grpc_services",
     "@maven//:io_grpc_grpc_stub",
     "@maven//:io_gsonfire_gson_fire",

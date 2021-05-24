@@ -18,7 +18,6 @@ import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -27,6 +26,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsElbListener.AwsElbListenerBuilder;
@@ -86,6 +86,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -345,7 +346,7 @@ public class AwsElbHelperServiceDelegateImpl
       List<EncryptedDataDetail> encryptionDetails, String region, String classicLB, String asgName, int timeout,
       ExecutionLogCallback logCallback) {
     try {
-      timeLimiter.callWithTimeout(() -> {
+      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeout), () -> {
         com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
             getClassicElbClient(Regions.fromName(region), awsConfig);
         List<String> instanceIds = awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(
@@ -357,7 +358,7 @@ public class AwsElbHelperServiceDelegateImpl
           }
           sleep(ofSeconds(15));
         }
-      }, timeout, MINUTES, true);
+      });
     } catch (UncheckedTimeoutException e) {
       String errorMessage = format("Registration timed out for Asg: [%s]", asgName);
       logCallback.saveExecutionLog(errorMessage, ERROR);
@@ -395,7 +396,7 @@ public class AwsElbHelperServiceDelegateImpl
       List<EncryptedDataDetail> encryptionDetails, String region, String classicLB, String asgName, int timeout,
       ExecutionLogCallback logCallback) {
     try {
-      timeLimiter.callWithTimeout(() -> {
+      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeout), () -> {
         com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
             getClassicElbClient(Regions.fromName(region), awsConfig);
         List<String> instanceIds = awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(
@@ -407,7 +408,7 @@ public class AwsElbHelperServiceDelegateImpl
           }
           sleep(ofSeconds(15));
         }
-      }, timeout, MINUTES, true);
+      });
     } catch (UncheckedTimeoutException e) {
       String errorMessage = format("Registration timed out for Asg: [%s]", asgName);
       logCallback.saveExecutionLog(errorMessage, ERROR);
@@ -448,7 +449,7 @@ public class AwsElbHelperServiceDelegateImpl
       List<EncryptedDataDetail> encryptionDetails, String region, String targetGroupArn, String asgName, int timeout,
       ExecutionLogCallback logCallback) {
     try {
-      timeLimiter.callWithTimeout(() -> {
+      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeout), () -> {
         AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
             getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
         List<String> instanceIds = awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(
@@ -460,7 +461,7 @@ public class AwsElbHelperServiceDelegateImpl
           }
           sleep(ofSeconds(15));
         }
-      }, timeout, MINUTES, true);
+      });
     } catch (UncheckedTimeoutException e) {
       String errorMessage = format("Deregistration timed out for Asg: [%s]", asgName);
       logCallback.saveExecutionLog(errorMessage, ERROR);
@@ -499,7 +500,7 @@ public class AwsElbHelperServiceDelegateImpl
       List<EncryptedDataDetail> encryptionDetails, String region, String targetGroupArn, String asgName, int timeout,
       ExecutionLogCallback logCallback) {
     try {
-      timeLimiter.callWithTimeout(() -> {
+      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeout), () -> {
         AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
             getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
         while (true) {
@@ -511,7 +512,7 @@ public class AwsElbHelperServiceDelegateImpl
           }
           sleep(ofSeconds(15));
         }
-      }, timeout, MINUTES, true);
+      });
     } catch (UncheckedTimeoutException e) {
       String errorMessage = format("Registration timed out for Asg: [%s]", asgName);
       logCallback.saveExecutionLog(errorMessage, ERROR);

@@ -340,7 +340,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
                 config -> !config.getRootFolder().endsWith(PATH_DELIMITER + HARNESS_FOLDER_EXTENSION + PATH_DELIMITER))
             .findFirst();
     if (rootFolder.isPresent()) {
-      throw new InvalidRequestException("The folder should end with .harness/");
+      throw new InvalidRequestException("The folder should end with /.harness/");
     }
   }
 

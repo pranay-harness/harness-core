@@ -4,7 +4,13 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.aws.beans.AwsInternalConfig;
+import io.harness.context.MdcGlobalContextData;
+import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionMetadataKeys;
+import io.harness.globalcontex.ErrorHandlingGlobalContextData;
+import io.harness.manage.GlobalContextManager;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -16,23 +22,43 @@ import com.amazonaws.services.ecr.model.GetAuthorizationTokenRequest;
 import com.amazonaws.services.ecr.model.Repository;
 import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Singleton
+@OwnedBy(HarnessTeam.PIPELINE)
 public class AwsEcrApiHelperServiceDelegate extends AwsEcrApiHelperServiceDelegateBase {
   public AmazonECRClient getAmazonEcrClient(AwsInternalConfig awsConfig, String region) {
     AmazonECRClientBuilder builder = AmazonECRClientBuilder.standard().withRegion(region);
     attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonECRClient) builder.build();
   }
+
   private DescribeRepositoriesResult listRepositories(
       AwsInternalConfig awsConfig, DescribeRepositoriesRequest describeRepositoriesRequest, String region) {
     try {
       tracker.trackECRCall("List Repositories");
       return getAmazonEcrClient(awsConfig, region).describeRepositories(describeRepositoriesRequest);
     } catch (AmazonServiceException amazonServiceException) {
+      ErrorHandlingGlobalContextData globalContextData =
+          GlobalContextManager.get(ErrorHandlingGlobalContextData.IS_SUPPORTED_ERROR_FRAMEWORK);
+      if (globalContextData != null && globalContextData.isSupportedErrorFramework()) {
+        Map<String, String> imageDataMap = new HashMap<>();
+        imageDataMap.put(
+            ExceptionMetadataKeys.IMAGE_NAME.name(), describeRepositoriesRequest.getRepositoryNames().get(0));
+        imageDataMap.put(ExceptionMetadataKeys.REGION.name(), region);
+        MdcGlobalContextData mdcGlobalContextData = MdcGlobalContextData.builder().map(imageDataMap).build();
+        GlobalContextManager.upsertGlobalContextRecord(mdcGlobalContextData);
+        throw amazonServiceException;
+      }
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
+      ErrorHandlingGlobalContextData globalContextData =
+          GlobalContextManager.get(ErrorHandlingGlobalContextData.IS_SUPPORTED_ERROR_FRAMEWORK);
+      if (globalContextData != null && globalContextData.isSupportedErrorFramework()) {
+        throw amazonClientException;
+      }
       handleAmazonClientException(amazonClientException);
     }
     return new DescribeRepositoriesResult();

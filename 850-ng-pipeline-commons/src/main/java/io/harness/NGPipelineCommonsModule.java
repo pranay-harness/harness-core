@@ -18,23 +18,16 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class NGPipelineCommonsModule extends AbstractModule {
   private static final AtomicReference<NGPipelineCommonsModule> instanceRef = new AtomicReference<>();
-  private final OrchestrationModuleConfig config;
 
-  public static NGPipelineCommonsModule getInstance(OrchestrationModuleConfig config) {
+  public static NGPipelineCommonsModule getInstance() {
     if (instanceRef.get() == null) {
-      instanceRef.compareAndSet(null, new NGPipelineCommonsModule(config));
+      instanceRef.compareAndSet(null, new NGPipelineCommonsModule());
     }
     return instanceRef.get();
   }
 
-  public NGPipelineCommonsModule(OrchestrationModuleConfig config) {
-    this.config = config;
-  }
-
   @Override
   protected void configure() {
-    install(OrchestrationModule.getInstance(config));
-
     MapBinder<String, VisitableFieldRegistrar> visitableFieldRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, VisitableFieldRegistrar.class);
     visitableFieldRegistrarMapBinder.addBinding(NGPipelineVisitorFieldRegistrar.class.getName())

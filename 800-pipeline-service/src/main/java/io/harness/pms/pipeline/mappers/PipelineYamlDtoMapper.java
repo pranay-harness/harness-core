@@ -25,6 +25,7 @@ public class PipelineYamlDtoMapper {
   }
 
   public PipelineEntity toEntity(PipelineConfig dto, String accountIdentifier) {
+    // todo(naman): look how to not use getYamlstring
     PipelineInfoConfig infoDto = dto.getPipelineInfoConfig();
     return PMSPipelineDtoMapper.toPipelineEntity(
         accountIdentifier, infoDto.getOrgIdentifier(), infoDto.getProjectIdentifier(), NGYamlUtils.getYamlString(dto));

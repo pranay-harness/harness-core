@@ -1,5 +1,6 @@
 package io.harness.registrars;
 
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.ngpipeline.inputset.ParameterVisitorFieldProcessor;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.registries.registrars.VisitableFieldRegistrar;
@@ -12,6 +13,8 @@ import com.google.inject.Injector;
 import java.util.Set;
 import org.apache.commons.lang3.tuple.Pair;
 
+@ToBeDeleted
+@Deprecated
 public class NGPipelineVisitorFieldRegistrar implements VisitableFieldRegistrar {
   @Inject private Injector injector;
 

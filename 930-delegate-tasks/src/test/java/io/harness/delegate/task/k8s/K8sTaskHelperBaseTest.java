@@ -28,7 +28,6 @@ import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -42,6 +41,7 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
+import io.harness.concurent.HTimeLimiterMocker;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
@@ -109,7 +109,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import me.snowdrop.istio.api.networking.v1alpha3.Subset;
@@ -154,9 +153,8 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
 
   @Before
   public void setup() throws Exception {
-    doAnswer(invocation -> invocation.getArgumentAt(0, Callable.class).call())
-        .when(mockTimeLimiter)
-        .callWithTimeout(any(Callable.class), anyLong(), any(TimeUnit.class), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(mockTimeLimiter)
+        .thenAnswer(invocation -> invocation.getArgumentAt(0, Callable.class).call());
   }
 
   @Test
@@ -422,9 +420,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   public void testGetLoadBalancerEndpointServiceNotReady() throws Exception {
     List<KubernetesResource> resources = singletonList(getServiceResource("LoadBalancer"));
 
-    doThrow(new UncheckedTimeoutException())
-        .when(mockTimeLimiter)
-        .callWithTimeout(any(Callable.class), anyLong(), any(TimeUnit.class), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(mockTimeLimiter).thenThrow(new UncheckedTimeoutException());
 
     String endpoint = k8sTaskHelperBase.getLoadBalancerEndpoint(KUBERNETES_CONFIG, resources);
     assertThat(endpoint).isNull();

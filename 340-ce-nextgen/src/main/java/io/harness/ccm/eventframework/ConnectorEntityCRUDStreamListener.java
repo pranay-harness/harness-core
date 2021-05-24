@@ -26,10 +26,7 @@ public class ConnectorEntityCRUDStreamListener implements MessageListener {
   public boolean handleMessage(Message message) {
     if (message != null && message.hasMessage()) {
       Map<String, String> metadataMap = message.getMessage().getMetadataMap();
-      if (metadataMap != null && metadataMap.get(ENTITY_TYPE) != null
-          && CONNECTOR_ENTITY.equals(metadataMap.get(ENTITY_TYPE))
-          && (metadataMap.get(CONNECTOR_ENTITY_TYPE).equals(ConnectorType.KUBERNETES_CLUSTER.getDisplayName())
-              || metadataMap.get(CONNECTOR_ENTITY_TYPE).equals(ConnectorType.CE_KUBERNETES_CLUSTER.getDisplayName()))) {
+      if (hasRequiredMetadata(metadataMap)) {
         EntityChangeDTO entityChangeDTO;
         try {
           entityChangeDTO = EntityChangeDTO.parseFrom(message.getMessage().getData());
@@ -44,6 +41,12 @@ public class ConnectorEntityCRUDStreamListener implements MessageListener {
       }
     }
     return true;
+  }
+
+  private static boolean hasRequiredMetadata(Map<String, String> metadataMap) {
+    return metadataMap != null && CONNECTOR_ENTITY.equals(metadataMap.get(ENTITY_TYPE))
+        && (ConnectorType.KUBERNETES_CLUSTER.getDisplayName().equals(metadataMap.get(CONNECTOR_ENTITY_TYPE))
+            || ConnectorType.CE_KUBERNETES_CLUSTER.getDisplayName().equals(metadataMap.get(CONNECTOR_ENTITY_TYPE)));
   }
 
   private boolean processEntityChangeEvent(EntityChangeDTO entityChangeDTO, String action) {

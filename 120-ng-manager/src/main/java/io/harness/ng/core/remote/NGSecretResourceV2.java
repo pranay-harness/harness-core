@@ -2,10 +2,12 @@ package io.harness.ng.core.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.secretmanagerclient.SecretManagementClientModule.SECRET_MANAGER_CLIENT_SERVICE;
 import static io.harness.secrets.SecretPermissions.SECRET_ACCESS_PERMISSION;
 import static io.harness.secrets.SecretPermissions.SECRET_DELETE_PERMISSION;
 import static io.harness.secrets.SecretPermissions.SECRET_EDIT_PERMISSION;
 import static io.harness.secrets.SecretPermissions.SECRET_RESOURCE_TYPE;
+import static io.harness.secrets.SecretPermissions.SECRET_VIEW_PERMISSION;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
@@ -34,6 +36,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -43,6 +46,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
@@ -82,7 +86,7 @@ public class NGSecretResourceV2 {
   private static final String INCLUDE_SECRETS_FROM_EVERY_SUB_SCOPE = "includeSecretsFromEverySubScope";
   private final SecretCrudService ngSecretService;
   private final Validator validator;
-  private final SecretManagerClientService secretManagerClientService;
+  @Inject @Named(SECRET_MANAGER_CLIENT_SERVICE) private final SecretManagerClientService secretManagerClientService;
   private final AccessControlClient accessControlClient;
 
   @GET
@@ -161,9 +165,8 @@ public class NGSecretResourceV2 {
       @QueryParam(INCLUDE_SECRETS_FROM_EVERY_SUB_SCOPE) @DefaultValue("false") boolean includeSecretsFromEverySubScope,
       @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
       @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size) {
-    //    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier,
-    //    projectIdentifier),
-    //        Resource.of(SECRET_RESOURCE_TYPE, null), SECRET_VIEW_PERMISSION);
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(SECRET_RESOURCE_TYPE, null), SECRET_VIEW_PERMISSION);
 
     if (secretType != null) {
       secretTypes.add(secretType);
@@ -180,9 +183,8 @@ public class NGSecretResourceV2 {
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
-    //        accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier,
-    //        projectIdentifier),
-    //            Resource.of(SECRET_RESOURCE_TYPE, identifier), SECRET_VIEW_PERMISSION);
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(SECRET_RESOURCE_TYPE, identifier), SECRET_VIEW_PERMISSION);
     return ResponseDTO.newResponse(
         ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier).orElse(null));
   }
@@ -283,6 +285,8 @@ public class NGSecretResourceV2 {
 
   @POST
   @Path("encryption-details")
+  @Consumes("application/x-kryo")
+  @Produces("application/x-kryo")
   @ApiOperation(hidden = true, value = "Get Encryption Details", nickname = "postEncryptionDetails")
   @InternalApi
   public ResponseDTO<List<EncryptedDataDetail>> getEncryptionDetails(
@@ -294,7 +298,11 @@ public class NGSecretResourceV2 {
     }
     for (Field field : decryptableEntity.getSecretReferenceFields()) {
       try {
+        field.setAccessible(true);
         SecretRefData secretRefData = (SecretRefData) field.get(decryptableEntity);
+        if (!Optional.ofNullable(secretRefData).isPresent()) {
+          continue;
+        }
         accessControlClient.checkForAccessOrThrow(ResourceScope.of(ngAccess.getAccountIdentifier(),
                                                       ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier()),
             Resource.of(SECRET_RESOURCE_TYPE, secretRefData.getIdentifier()), SECRET_ACCESS_PERMISSION);

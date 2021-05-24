@@ -3,19 +3,18 @@ package io.harness.cdng.provision.terraform;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
-import io.harness.cdng.provision.terraform.TerraformDestroyStepParameters.TerraformDestroyStepParametersBuilder;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.validation.Validator;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.Visitable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -35,9 +34,9 @@ public class TerraformDestroyStepInfo extends TerraformDestroyBaseStepInfo imple
   @JsonProperty("configuration") TerrformStepConfiguration terrformStepConfiguration;
 
   @Builder(builderMethodName = "infoBuilder")
-  public TerraformDestroyStepInfo(
-      ParameterField<String> provisionerIdentifier, TerrformStepConfiguration terrformStepConfiguration) {
-    super(provisionerIdentifier);
+  public TerraformDestroyStepInfo(ParameterField<String> provisionerIdentifier,
+      ParameterField<List<String>> delegateSelectors, TerrformStepConfiguration terrformStepConfiguration) {
+    super(provisionerIdentifier, delegateSelectors);
     this.terrformStepConfiguration = terrformStepConfiguration;
   }
 
@@ -54,20 +53,12 @@ public class TerraformDestroyStepInfo extends TerraformDestroyBaseStepInfo imple
   }
 
   @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(StepSpecTypeConstants.TERRAFORM_DESTROY).isPartOfFQN(false).build();
-  }
-
-  @Override
   public SpecParameters getSpecParameters() {
-    TerraformDestroyStepParametersBuilder builder =
-        TerraformDestroyStepParameters.infoBuilder().provisionerIdentifier(provisionerIdentifier);
     Validator.notNullCheck("Terraform Step configuration is null", terrformStepConfiguration);
-    TerraformStepConfigurationType stepConfigurationType =
-        terrformStepConfiguration.getTerraformStepConfigurationType();
-    if (TerraformStepConfigurationType.INLINE == stepConfigurationType) {
-      builder.configuration(terrformStepConfiguration.toStepParameters());
-    }
-    return builder.build();
+    return TerraformDestroyStepParameters.infoBuilder()
+        .provisionerIdentifier(provisionerIdentifier)
+        .delegateSelectors(delegateSelectors)
+        .configuration(terrformStepConfiguration.toStepParameters())
+        .build();
   }
 }

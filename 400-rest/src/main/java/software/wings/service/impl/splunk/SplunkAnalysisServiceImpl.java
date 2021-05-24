@@ -1,17 +1,20 @@
 package software.wings.service.impl.splunk;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.annotation.EncryptableSetting;
@@ -24,7 +27,6 @@ import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
 import software.wings.service.impl.apm.MLServiceUtils;
-import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.splunk.SplunkAnalysisService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.sm.StateType;
@@ -38,11 +40,12 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Created by Pranjal on 08/31/2018
  */
+@OwnedBy(CV)
 @Singleton
 @Slf4j
 public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements SplunkAnalysisService {
   @Inject private MLServiceUtils mlServiceUtils;
-  @Inject private NGSecretService ngSecretService;
+  @Inject private SecretManagerClientService ngSecretService;
   @Override
   public VerificationNodeDataSetupResponse getLogDataByHost(
       String accountId, SplunkSetupTestNodeData setupTestNodeData) {

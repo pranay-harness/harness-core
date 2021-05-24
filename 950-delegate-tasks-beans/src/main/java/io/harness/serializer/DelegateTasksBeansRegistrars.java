@@ -1,5 +1,8 @@
 package io.harness.serializer;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.DelegateTasksBeansKryoRegister;
 import io.harness.serializer.kryo.RbacCoreKryoRegistrar;
@@ -11,6 +14,7 @@ import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.converters.TypeConverter;
 
+@OwnedBy(DEL)
 @UtilityClass
 public class DelegateTasksBeansRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
@@ -20,6 +24,7 @@ public class DelegateTasksBeansRegistrars {
           .addAll(NGCoreBeansRegistrars.kryoRegistrars)
           .addAll(ScmJavaClientRegistrars.kryoRegistrars)
           .addAll(PersistenceRegistrars.kryoRegistrars)
+          .addAll(FileServiceCommonsRegistrars.kryoRegistrars)
           .add(RbacCoreKryoRegistrar.class)
           .add(DelegateTasksBeansKryoRegister.class)
           .build();
@@ -30,6 +35,7 @@ public class DelegateTasksBeansRegistrars {
           .addAll(PersistenceRegistrars.morphiaRegistrars)
           .add(DelegateTasksBeansMorphiaRegistrar.class)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
+          .addAll(FileServiceCommonsRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

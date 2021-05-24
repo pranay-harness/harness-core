@@ -27,7 +27,7 @@ public interface CVConfigService extends DeleteEntityByHandler<CVConfig> {
   List<CVConfig> list(String accountId, String connectorIdentifier);
   List<CVConfig> list(String accountId, String connectorIdentifier, String productName);
   List<CVConfig> list(
-      String accountId, String connectorIdentifier, String productName, String monitoringSourceIdentifier);
+      String accountId, String orgIdentifier, String projectIdentifier, String monitoringSourceIdentifier);
   List<CVConfig> list(String accountId, String orgIdentifier, String projectIdentifier, String environmentIdentifier,
       String serviceIdentifier, CVMonitoringCategory monitoringCategory);
   List<CVConfig> listByMonitoringSources(String accountId, String orgIdentifier, String projectIdentifier,
@@ -53,8 +53,6 @@ public interface CVConfigService extends DeleteEntityByHandler<CVConfig> {
   boolean doesAnyCVConfigExistsInProject(String accountId, String orgIdentifier, String projectIdentifier);
   int getNumberOfServicesSetup(String accountId, String orgIdentifier, String projectIdentifier);
 
-  List<CVConfig> getExistingMappedConfigs(
-      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String identifier);
   List<CVConfig> getExistingMappedConfigs(String accountId, String orgIdentifier, String projectIdentifier,
       String identifier, DataSourceType dataSourceType);
   Set<DatasourceTypeDTO> getDataSourcetypes(String accountId, String projectIdentifier, String orgIdentifier,

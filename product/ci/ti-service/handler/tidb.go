@@ -8,7 +8,6 @@ import (
 
 	"github.com/wings-software/portal/product/ci/addon/ti"
 	"github.com/wings-software/portal/product/ci/common/avro"
-	"github.com/wings-software/portal/product/ci/ti-service/config"
 	"github.com/wings-software/portal/product/ci/ti-service/db"
 	"github.com/wings-software/portal/product/ci/ti-service/tidb"
 	"github.com/wings-software/portal/product/ci/ti-service/tidb/mongodb"
@@ -22,7 +21,7 @@ const (
 
 // HandleSelect returns an http.HandlerFunc that figures out which tests to run
 // based on the files provided.
-func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleSelect(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
 		ctx := r.Context()
@@ -69,8 +68,8 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.Sugar
 		}
 
 		// Write changed file information to timescaleDB
-		err = db.WriteDiffFiles(ctx, config.TimeScaleDb.CoverageTable, accountId, orgId,
-			projectId, pipelineId, buildId, stageId, stepId, types.DiffInfo{Sha: sha, Files: req.Files})
+		err = db.WriteDiffFiles(ctx, accountId, orgId, projectId, pipelineId, buildId,
+			stageId, stepId, types.DiffInfo{Sha: sha, Files: req.Files})
 		if err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: could not write changed file information", "account_id", accountId,
@@ -78,8 +77,7 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.Sugar
 		}
 
 		// Classify and write the test selection stats to timescaleDB
-		err = db.WriteSelectedTests(ctx, config.TimeScaleDb.SelectionTable, accountId, orgId,
-			projectId, pipelineId, buildId, stageId, stepId, selected)
+		err = db.WriteSelectedTests(ctx, accountId, orgId, projectId, pipelineId, buildId, stageId, stepId, selected, false)
 		if err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: could not write selected tests", "account_id", accountId,
@@ -96,7 +94,7 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.Sugar
 	}
 }
 
-func HandleOverview(db db.Db, config config.Config, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleOverview(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
 		ctx := r.Context()
@@ -113,8 +111,7 @@ func HandleOverview(db db.Db, config config.Config, log *zap.SugaredLogger) http
 		pipelineId := r.FormValue(pipelineIdParam)
 		buildId := r.FormValue(buildIdParam)
 
-		overview, err := db.GetSelectionOverview(ctx, config.TimeScaleDb.SelectionTable, config.TimeScaleDb.HyperTableName,
-			accountId, orgId, projectId, pipelineId, buildId)
+		overview, err := db.GetSelectionOverview(ctx, accountId, orgId, projectId, pipelineId, buildId)
 		if err != nil {
 			log.Errorw("could not get TI overview from DB", zap.Error(err))
 			WriteInternalError(w, err)
@@ -128,9 +125,9 @@ func HandleOverview(db db.Db, config config.Config, log *zap.SugaredLogger) http
 	}
 }
 
-func HandleUploadCg(tidb tidb.TiDB, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := validate(r, accountIDParam, orgIdParam, projectIdParam, repoParam, sourceBranchParam, shaParam)
+		err := validate(r, accountIDParam, orgIdParam, projectIdParam, repoParam, sourceBranchParam, targetBranchParam, shaParam)
 		if err != nil {
 			WriteBadRequest(w, err)
 			return
@@ -138,6 +135,11 @@ func HandleUploadCg(tidb tidb.TiDB, log *zap.SugaredLogger) http.HandlerFunc {
 		acc := r.FormValue(accountIDParam)
 		org := r.FormValue(orgIdParam)
 		proj := r.FormValue(projectIdParam)
+		target := r.FormValue(targetBranchParam)
+		pipelineId := r.FormValue(pipelineIdParam)
+		buildId := r.FormValue(buildIdParam)
+		stageId := r.FormValue(stageIdParam)
+		stepId := r.FormValue(stepIdParam)
 		info := mongodb.VCSInfo{
 			Repo:     r.FormValue(repoParam),
 			Branch:   r.FormValue(sourceBranchParam),
@@ -170,12 +172,19 @@ func HandleUploadCg(tidb tidb.TiDB, log *zap.SugaredLogger) http.HandlerFunc {
 			return
 		}
 		log.Infow(fmt.Sprintf("received %d nodes and %d relations", len(cg.Nodes), len(cg.Relations)),
-			accountIDParam, acc, repoParam, info.Repo, sourceBranchParam, info.Branch)
-		err = tidb.UploadPartialCg(r.Context(), cg, info, acc, org, proj)
+			accountIDParam, acc, repoParam, info.Repo, sourceBranchParam, info.Branch, targetBranchParam, target)
+		resp, err := tidb.UploadPartialCg(r.Context(), cg, info, acc, org, proj, target)
+		// Try to update counts even if uploading partial CG failed
+		werr := db.WriteSelectedTests(r.Context(), acc, org, proj, pipelineId, buildId, stageId, stepId, resp, true)
 		if err != nil {
 			log.Errorw("failed to write callgraph to db", accountIDParam, acc, repoParam, info.Repo,
 				sourceBranchParam, info.Branch, zap.Error(err))
 			WriteBadRequest(w, err)
+			return
+		} else if werr != nil {
+			log.Errorw("failed to update test counts in stats DB", accountIDParam, acc, orgIdParam, org, repoParam, info.Repo,
+				buildIdParam, buildId, zap.Error(werr))
+			WriteBadRequest(w, werr)
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)

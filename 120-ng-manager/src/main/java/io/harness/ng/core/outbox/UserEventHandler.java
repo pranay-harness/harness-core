@@ -23,8 +23,8 @@ import io.harness.beans.Scope;
 import io.harness.context.GlobalContext;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.schemas.usermembership.UserMembershipDTO;
 import io.harness.exception.InvalidArgumentsException;
@@ -277,7 +277,7 @@ public class UserEventHandler implements OutboxEventHandler {
                                      .toByteString())
                         .build());
       return true;
-    } catch (ProducerShutdownException e) {
+    } catch (EventsFrameworkDownException e) {
       log.error("Failed to send event to events framework for {} on user {} and scope {}: ", action, userId,
           ScopeUtils.toString(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier()), e);
       return false;

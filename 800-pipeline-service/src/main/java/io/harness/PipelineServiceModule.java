@@ -80,7 +80,7 @@ import io.harness.pms.triggers.webhook.service.impl.TriggerWebhookExecutionServi
 import io.harness.pms.triggers.webhook.service.impl.TriggerWebhookExecutionServiceImplV2;
 import io.harness.project.ProjectClientModule;
 import io.harness.redis.RedisConfig;
-import io.harness.secretmanagerclient.SecretManagementClientModule;
+import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NGTriggerRegistrars;
 import io.harness.serializer.OrchestrationStepsModuleRegistrars;
@@ -167,9 +167,9 @@ public class PipelineServiceModule extends AbstractModule {
         configuration.getManagerTarget(), configuration.getManagerAuthority()));
     install(new ConnectorResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), MANAGER.getServiceId()));
-    install(new SecretManagementClientModule(
-        configuration.getManagerClientConfig(), configuration.getManagerServiceSecret(), MANAGER.getServiceId()));
-    install(NGTriggersModule.getInstance());
+    install(new SecretNGManagerClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
+    install(NGTriggersModule.getInstance(configuration.getPmsApiBaseUrl()));
     install(PersistentLockModule.getInstance());
     install(TimeModule.getInstance());
     install(FiltersModule.getInstance());

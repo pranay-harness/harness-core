@@ -3,12 +3,19 @@ package io.harness.ng.core.entitysetupusage.impl;
 import static io.harness.EntityType.CONNECTORS;
 import static io.harness.EntityType.PIPELINES;
 import static io.harness.EntityType.SECRETS;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.IdentifierRef;
 import io.harness.category.element.UnitTests;
 import io.harness.common.EntityReference;
+import io.harness.encryption.Scope;
+import io.harness.gitsync.interceptor.GitEntityInfo;
+import io.harness.gitsync.interceptor.GitSyncBranchContext;
+import io.harness.manage.GlobalContextManager;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitysetupusage.EntitySetupUsageTestBase;
 import io.harness.ng.core.entitysetupusage.dto.EntityReferencesDTO;
@@ -30,6 +37,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.springframework.data.domain.Page;
 
+@OwnedBy(DX)
 public class EntitySetupUsageServiceImplTest extends EntitySetupUsageTestBase {
   @Inject @InjectMocks EntitySetupUsageService entitySetupUsageService;
   String accountIdentifier = "accountIdentifier";
@@ -58,6 +66,21 @@ public class EntitySetupUsageServiceImplTest extends EntitySetupUsageTestBase {
     return EntityDetail.builder().entityRef(referredByEntityRef).name(name).type(type).build();
   }
 
+  private EntityDetail getEntityDetailsWithRepoBranch(String identifier, String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String name, EntityType type, String repo, String branch, Boolean isDefault) {
+    IdentifierRef ref = IdentifierRef.builder()
+                            .scope(Scope.PROJECT)
+                            .accountIdentifier(accountIdentifier)
+                            .orgIdentifier(orgIdentifier)
+                            .projectIdentifier(projectIdentifier)
+                            .identifier(identifier)
+                            .repoIdentifier(repo)
+                            .branch(branch)
+                            .isDefault(isDefault)
+                            .build();
+    return EntityDetail.builder().entityRef(ref).name(name).type(type).build();
+  }
+
   @Test
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
@@ -77,11 +100,55 @@ public class EntitySetupUsageServiceImplTest extends EntitySetupUsageTestBase {
   @Test
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
-  public void listTest() {
-    List<EntitySetupUsageDTO> setupUsages = new ArrayList<>();
-    String referredIdentifier = "referredIdentifier";
+  public void isEntityReferencedForBranch() {
+    String repo = "repo";
+    String branch = "branch";
+    String referredEntityFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, referredIdentifier);
+    createSetupUsageRecordsWithBranches(new ArrayList<>(), repo, branch, false, false, 1, referredIdentifier);
+    final GitEntityInfo newBranch = GitEntityInfo.builder().branch(branch).yamlGitConfigId(repo).build();
+    try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+      GlobalContextManager.upsertGlobalContextRecord(GitSyncBranchContext.builder().gitBranchInfo(newBranch).build());
+      boolean entityReferenceExists =
+          entitySetupUsageService.isEntityReferenced(accountIdentifier, referredEntityFQN, CONNECTORS);
+      assertThat(entityReferenceExists).isTrue();
+    }
+
+    final GitEntityInfo newContext = GitEntityInfo.builder().branch("branch1").yamlGitConfigId(repo).build();
+    try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+      GlobalContextManager.upsertGlobalContextRecord(GitSyncBranchContext.builder().gitBranchInfo(newContext).build());
+      boolean entityReferenceExists =
+          entitySetupUsageService.isEntityReferenced(accountIdentifier, referredEntityFQN, CONNECTORS);
+      assertThat(entityReferenceExists).isFalse();
+    }
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void isEntityReferencedForDefault() {
+    String repo = "repo";
+    String branch = "branch";
+    String referredEntityFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, referredIdentifier);
+    createSetupUsageRecordsWithBranches(new ArrayList<>(), repo, branch, true, false, 1, referredIdentifier);
+    boolean entityReferenceExists =
+        entitySetupUsageService.isEntityReferenced(accountIdentifier, referredEntityFQN, CONNECTORS);
+    assertThat(entityReferenceExists).isTrue();
+
+    String newReferredIdentifier = "newReferredIdentifier";
+    String newReferredEntityFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, newReferredIdentifier);
+    createSetupUsageRecordsWithBranches(new ArrayList<>(), repo, branch, false, false, 1, newReferredIdentifier);
+    boolean doesEntityReferenceExists =
+        entitySetupUsageService.isEntityReferenced(accountIdentifier, newReferredEntityFQN, CONNECTORS);
+    assertThat(doesEntityReferenceExists).isFalse();
+  }
+
+  private void createSetupUsageRecords(
+      List<EntitySetupUsageDTO> setupUsages, int numberOfRecords, String referredIdentifier) {
     String referredEntityName = "Connector";
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < numberOfRecords; i++) {
       String referredByIdentifier = "referredByIdentifier" + i;
       String referredByEntityName = "Pipeline" + i;
       EntityDetail referredByEntity = getEntityDetails(
@@ -93,26 +160,301 @@ public class EntitySetupUsageServiceImplTest extends EntitySetupUsageTestBase {
       setupUsages.add(entitySetupUsageDTO);
       entitySetupUsageService.save(entitySetupUsageDTO);
     }
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void listTest() {
+    List<EntitySetupUsageDTO> setupUsages = new ArrayList<>();
+    String referredIdentifier = "referredIdentifier";
+
+    createSetupUsageRecords(setupUsages, 3, referredIdentifier);
 
     // Adding one extra setup usage for different entity
-    String referredByIdentifier = "referredByIdentifier";
-    String referredIdentifier1 = "referredIdentifier1";
-    EntityDetail referredByEntity = getEntityDetails(
-        referredByIdentifier, accountIdentifier, orgIdentifier, projectIdentifier, referredByEntityName, PIPELINES);
-    EntityDetail referredEntity = getEntityDetails(
-        referredIdentifier1, accountIdentifier, orgIdentifier, projectIdentifier, referredEntityName, CONNECTORS);
-    EntitySetupUsageDTO entitySetupUsageDTO =
-        createEntityReference(accountIdentifier, referredEntity, referredByEntity);
-    setupUsages.add(entitySetupUsageDTO);
-    entitySetupUsageService.save(entitySetupUsageDTO);
+    createSetupUsageRecords(setupUsages, 2, referredIdentifier + "1");
 
     String referredEntityFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, referredIdentifier);
     Page<EntitySetupUsageDTO> entityReferenceDTOPage =
         entitySetupUsageService.listAllEntityUsage(0, 10, accountIdentifier, referredEntityFQN, CONNECTORS, null);
-    assertThat(entityReferenceDTOPage.getTotalElements()).isEqualTo(2);
+    assertThat(entityReferenceDTOPage.getTotalElements()).isEqualTo(3);
     verifyTheValuesAreCorrect(entityReferenceDTOPage.getContent().get(0), setupUsages.get(0));
     verifyTheValuesAreCorrect(entityReferenceDTOPage.getContent().get(1), setupUsages.get(1));
+  }
+
+  private void createSetupUsageRecordsGivenRefferedBy(
+      List<EntitySetupUsageDTO> setupUsages, int numberOfRecords, String referredByIdentifier) {
+    for (int i = 0; i < numberOfRecords; i++) {
+      String referredIdentifier = "referredIdentifier" + i;
+      String referredEntityName = "Connector" + i;
+      EntityDetail referredByEntity = getEntityDetails(
+          referredByIdentifier, accountIdentifier, orgIdentifier, projectIdentifier, referredByEntityName, PIPELINES);
+      EntityDetail referredEntity = getEntityDetails(
+          referredIdentifier, accountIdentifier, orgIdentifier, projectIdentifier, referredEntityName, CONNECTORS);
+      EntitySetupUsageDTO entitySetupUsageDTO =
+          createEntityReference(accountIdentifier, referredEntity, referredByEntity);
+      setupUsages.add(entitySetupUsageDTO);
+      entitySetupUsageService.save(entitySetupUsageDTO);
+    }
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void testListAllReferredUsages() {
+    List<EntitySetupUsageDTO> setupUsages = new ArrayList<>();
+
+    createSetupUsageRecordsGivenRefferedBy(setupUsages, 5, referredByIdentifier);
+
+    // Adding one extra setup usage for different entity
+    createSetupUsageRecordsGivenRefferedBy(setupUsages, 2, referredByIdentifier + "1");
+
+    String referredByEntityFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, referredByIdentifier);
+    List<EntitySetupUsageDTO> entityReferenceDTOPage =
+        entitySetupUsageService.listAllReferredUsages(0, 10, accountIdentifier, referredByEntityFQN, CONNECTORS, null);
+    assertThat(entityReferenceDTOPage.size()).isEqualTo(5);
+    verifyTheValuesAreCorrect(entityReferenceDTOPage.get(0), setupUsages.get(0));
+    verifyTheValuesAreCorrect(entityReferenceDTOPage.get(1), setupUsages.get(1));
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void listTestWithSearchTerm() {
+    List<EntitySetupUsageDTO> setupUsages = new ArrayList<>();
+    String referredIdentifier = "referredIdentifier";
+
+    createSetupUsageRecords(setupUsages, 3, referredIdentifier);
+
+    // Adding one extra setup usage for different entity
+    createSetupUsageRecords(setupUsages, 2, referredIdentifier + "1");
+
+    // Create more records with different name, so that it doesn't comes in searchterm
+    for (int i = 0; i < 3; i++) {
+      String referredByIdentifier = "referredByIdentifier" + i;
+      String referredByEntityName = "refferedByName" + i;
+      EntityDetail referredByEntity = getEntityDetails(
+          referredByIdentifier, accountIdentifier, orgIdentifier, projectIdentifier, referredByEntityName, PIPELINES);
+      EntityDetail referredEntity = getEntityDetails(
+          referredIdentifier, accountIdentifier, orgIdentifier, projectIdentifier, referredEntityName, CONNECTORS);
+      EntitySetupUsageDTO entitySetupUsageDTO =
+          createEntityReference(accountIdentifier, referredEntity, referredByEntity);
+      setupUsages.add(entitySetupUsageDTO);
+      entitySetupUsageService.save(entitySetupUsageDTO);
+    }
+
+    String referredEntityFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, referredIdentifier);
+    Page<EntitySetupUsageDTO> entityReferenceDTOPage =
+        entitySetupUsageService.listAllEntityUsage(0, 10, accountIdentifier, referredEntityFQN, CONNECTORS, "Pipeline");
+    assertThat(entityReferenceDTOPage.getTotalElements()).isEqualTo(3);
+    verifyTheValuesAreCorrect(entityReferenceDTOPage.getContent().get(0), setupUsages.get(0));
+    verifyTheValuesAreCorrect(entityReferenceDTOPage.getContent().get(1), setupUsages.get(1));
+  }
+
+  private void createSetupUsageRecordsWithBranches(List<EntitySetupUsageDTO> setupUsages, String repo, String branch,
+      Boolean isDefaultReferredEntity, Boolean isDefaultReferredByEntity, int numberOfRecords,
+      String referredIdentifier) {
+    String referredEntityName = "Connector";
+    for (int i = 0; i < numberOfRecords; i++) {
+      String referredByIdentifier = "referredByIdentifier" + i;
+      String referredByEntityName = "Pipeline" + i;
+      EntityDetail referredByEntity = getEntityDetailsWithRepoBranch(referredByIdentifier, accountIdentifier,
+          orgIdentifier, projectIdentifier, referredByEntityName, PIPELINES, repo, branch, isDefaultReferredByEntity);
+      EntityDetail referredEntity = getEntityDetailsWithRepoBranch(referredIdentifier, accountIdentifier, orgIdentifier,
+          projectIdentifier, referredEntityName, CONNECTORS, repo, branch, isDefaultReferredEntity);
+      EntitySetupUsageDTO entitySetupUsageDTO =
+          createEntityReference(accountIdentifier, referredEntity, referredByEntity);
+      setupUsages.add(entitySetupUsageDTO);
+      entitySetupUsageService.save(entitySetupUsageDTO);
+    }
+  }
+
+  private void createSetupUsageRecordsForReferredBy(List<EntitySetupUsageDTO> setupUsages, String repo, String branch,
+      Boolean isDefaultReferredEntity, Boolean isDefaultReferredByEntity, int numberOfRecords,
+      String referredByIdentifier) {
+    for (int i = 0; i < numberOfRecords; i++) {
+      String referredIdentifier = "referredByIdentifier" + i;
+      String referredEntityName = "Pipeline" + i;
+      EntityDetail referredByEntity = getEntityDetailsWithRepoBranch(referredByIdentifier, accountIdentifier,
+          orgIdentifier, projectIdentifier, referredByEntityName, PIPELINES, repo, branch, isDefaultReferredByEntity);
+      EntityDetail referredEntity = getEntityDetailsWithRepoBranch(referredIdentifier, accountIdentifier, orgIdentifier,
+          projectIdentifier, referredEntityName, CONNECTORS, repo, branch, isDefaultReferredEntity);
+      EntitySetupUsageDTO entitySetupUsageDTO =
+          createEntityReference(accountIdentifier, referredEntity, referredByEntity);
+      setupUsages.add(entitySetupUsageDTO);
+      entitySetupUsageService.save(entitySetupUsageDTO);
+    }
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void testListEntityUsageWithBranch() {
+    String repo = "repo";
+    String branch = "branch";
+    List<EntitySetupUsageDTO> setupUsages = new ArrayList<>();
+    String referredIdentifier = "referredIdentifier";
+
+    // Adding records which belong to this repo and branch
+    createSetupUsageRecordsWithBranches(setupUsages, repo, branch, false, false, 5, referredIdentifier);
+
+    // Adding one extra setup usage for different entity
+    createSetupUsageRecordsWithBranches(setupUsages, repo, branch, false, false, 5, referredIdentifier + "1");
+
+    // Adding some extra setup usage for a different branch
+    createSetupUsageRecordsWithBranches(setupUsages, repo, "branch1", false, false, 2, referredIdentifier);
+
+    String referredEntityFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, referredIdentifier);
+    final GitEntityInfo newBranch = GitEntityInfo.builder().branch(branch).yamlGitConfigId(repo).build();
+    try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+      GlobalContextManager.upsertGlobalContextRecord(GitSyncBranchContext.builder().gitBranchInfo(newBranch).build());
+      Page<EntitySetupUsageDTO> entityReferenceDTOPage =
+          entitySetupUsageService.listAllEntityUsage(0, 10, accountIdentifier, referredEntityFQN, CONNECTORS, null);
+      assertThat(entityReferenceDTOPage.getTotalElements()).isEqualTo(5);
+      verifyTheValuesAreCorrect(entityReferenceDTOPage.getContent().get(0), setupUsages.get(0));
+      verifyTheValuesAreCorrect(entityReferenceDTOPage.getContent().get(1), setupUsages.get(1));
+
+      Page<EntitySetupUsageDTO> listAPIResponse = entitySetupUsageService.list(
+          0, 10, accountIdentifier, orgIdentifier, projectIdentifier, referredIdentifier, CONNECTORS, null);
+      assertThat(listAPIResponse.getTotalElements()).isEqualTo(5);
+    }
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void testListAllReferredEntityWithBranch() {
+    String repo = "repo";
+    String branch = "branch";
+    List<EntitySetupUsageDTO> setupUsages = new ArrayList<>();
+
+    // Adding records which belong to this repo and branch
+    createSetupUsageRecordsForReferredBy(setupUsages, repo, branch, false, false, 5, referredByIdentifier);
+
+    // Adding one extra setup usage for different entity
+    createSetupUsageRecordsForReferredBy(setupUsages, repo, branch, false, false, 5, referredByIdentifier + "1");
+
+    // Adding some extra setup usage for a different branch
+    createSetupUsageRecordsForReferredBy(setupUsages, repo, "branch1", false, false, 2, referredByIdentifier);
+
+    String referredByEntityFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, referredByIdentifier);
+    final GitEntityInfo newBranch = GitEntityInfo.builder().branch(branch).yamlGitConfigId(repo).build();
+    try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+      GlobalContextManager.upsertGlobalContextRecord(GitSyncBranchContext.builder().gitBranchInfo(newBranch).build());
+      List<EntitySetupUsageDTO> entityReferenceDTOPage = entitySetupUsageService.listAllReferredUsages(
+          0, 10, accountIdentifier, referredByEntityFQN, CONNECTORS, null);
+      assertThat(entityReferenceDTOPage.size()).isEqualTo(5);
+      verifyTheValuesAreCorrect(entityReferenceDTOPage.get(0), setupUsages.get(0));
+      verifyTheValuesAreCorrect(entityReferenceDTOPage.get(1), setupUsages.get(1));
+    }
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void testListEntityUsageForDefault() {
+    String repo = "repo";
+    String branch = "branch";
+    List<EntitySetupUsageDTO> setupUsages = new ArrayList<>();
+    String referredIdentifier = "referredIdentifier";
+
+    // Adding records which belong to this repo and branch
+    createSetupUsageRecordsWithBranches(setupUsages, repo, branch, true, false, 5, referredIdentifier);
+
+    // Adding one extra setup usage for different entity
+    createSetupUsageRecordsWithBranches(setupUsages, repo, branch, true, false, 5, referredIdentifier + "1");
+
+    // Adding some extra setup usage for entities which are not git syncable
+    createSetupUsageRecords(setupUsages, 2, referredIdentifier);
+
+    String referredEntityFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, referredIdentifier);
+    Page<EntitySetupUsageDTO> entityReferenceDTOPage =
+        entitySetupUsageService.listAllEntityUsage(0, 10, accountIdentifier, referredEntityFQN, CONNECTORS, null);
+    assertThat(entityReferenceDTOPage.getTotalElements()).isEqualTo(7);
+    verifyTheValuesAreCorrect(entityReferenceDTOPage.getContent().get(0), setupUsages.get(0));
+    verifyTheValuesAreCorrect(entityReferenceDTOPage.getContent().get(1), setupUsages.get(1));
+
+    Page<EntitySetupUsageDTO> listAPIResponse = entitySetupUsageService.list(
+        0, 10, accountIdentifier, orgIdentifier, projectIdentifier, referredIdentifier, CONNECTORS, null);
+    assertThat(listAPIResponse.getTotalElements()).isEqualTo(7);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void testListAllReferredUsagesForDefault() {
+    String repo = "repo";
+    String branch = "branch";
+    List<EntitySetupUsageDTO> setupUsages = new ArrayList<>();
+
+    // Adding records which belong to this repo and branch
+    createSetupUsageRecordsWithBranches(setupUsages, repo, branch, true, false, 5, referredIdentifier);
+
+    // Adding one extra setup usage for different entity
+    createSetupUsageRecordsWithBranches(setupUsages, repo, branch, true, false, 5, referredIdentifier + "1");
+
+    // Adding some extra setup usage for entities which are not git syncable
+    createSetupUsageRecords(setupUsages, 2, referredIdentifier);
+
+    String referredEntityFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, referredIdentifier);
+    Page<EntitySetupUsageDTO> entityReferenceDTOPage =
+        entitySetupUsageService.listAllEntityUsage(0, 10, accountIdentifier, referredEntityFQN, CONNECTORS, null);
+    assertThat(entityReferenceDTOPage.getTotalElements()).isEqualTo(7);
+    verifyTheValuesAreCorrect(entityReferenceDTOPage.getContent().get(0), setupUsages.get(0));
+    verifyTheValuesAreCorrect(entityReferenceDTOPage.getContent().get(1), setupUsages.get(1));
+
+    Page<EntitySetupUsageDTO> listAPIResponse = entitySetupUsageService.list(
+        0, 10, accountIdentifier, orgIdentifier, projectIdentifier, referredIdentifier, CONNECTORS, null);
+    assertThat(listAPIResponse.getTotalElements()).isEqualTo(7);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void testListEntityUsageForDefaultWithSearchTerm() {
+    String repo = "repo";
+    String branch = "branch";
+    List<EntitySetupUsageDTO> setupUsages = new ArrayList<>();
+    String referredIdentifier = "referredIdentifier";
+
+    // Adding records which belong to this repo and branch
+    createSetupUsageRecordsWithBranches(setupUsages, repo, branch, true, false, 5, referredIdentifier);
+
+    // Adding some extra setup usage for entities which are not git syncable
+    createSetupUsageRecords(setupUsages, 2, referredIdentifier);
+
+    // Adding some extra records for different name, so that it is not covered in search term filter
+    for (int i = 0; i < 3; i++) {
+      String referredByIdentifier = "referredByIdentifier" + i;
+      String referredByEntityName = "refferedByName" + i;
+      EntityDetail referredByEntity = getEntityDetails(
+          referredByIdentifier, accountIdentifier, orgIdentifier, projectIdentifier, referredByEntityName, PIPELINES);
+      EntityDetail referredEntity = getEntityDetails(
+          referredIdentifier, accountIdentifier, orgIdentifier, projectIdentifier, referredEntityName, CONNECTORS);
+      EntitySetupUsageDTO entitySetupUsageDTO =
+          createEntityReference(accountIdentifier, referredEntity, referredByEntity);
+      setupUsages.add(entitySetupUsageDTO);
+      entitySetupUsageService.save(entitySetupUsageDTO);
+    }
+
+    String referredEntityFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, referredIdentifier);
+    Page<EntitySetupUsageDTO> entityReferenceDTOPage =
+        entitySetupUsageService.listAllEntityUsage(0, 10, accountIdentifier, referredEntityFQN, CONNECTORS, "Pipeline");
+    assertThat(entityReferenceDTOPage.getTotalElements()).isEqualTo(7);
+    verifyTheValuesAreCorrect(entityReferenceDTOPage.getContent().get(0), setupUsages.get(0));
+    verifyTheValuesAreCorrect(entityReferenceDTOPage.getContent().get(1), setupUsages.get(1));
+
+    Page<EntitySetupUsageDTO> listAPIResponse = entitySetupUsageService.list(
+        0, 10, accountIdentifier, orgIdentifier, projectIdentifier, referredIdentifier, CONNECTORS, "Pipeline");
+    assertThat(listAPIResponse.getTotalElements()).isEqualTo(7);
   }
 
   @Test
@@ -296,7 +638,6 @@ public class EntitySetupUsageServiceImplTest extends EntitySetupUsageTestBase {
         createEntityReference(accountIdentifier, referredEntity, referredByEntity);
     setupUsages.add(entitySetupUsageDTO);
     entitySetupUsageService.save(entitySetupUsageDTO);
-
     String referredByEntityFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, referredByIdentifier);
     String referredByEntityFQN1 = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(

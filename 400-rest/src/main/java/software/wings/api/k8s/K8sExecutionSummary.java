@@ -5,8 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.delegate.task.helm.HelmChartInfo;
 
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.sm.StepExecutionSummary;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

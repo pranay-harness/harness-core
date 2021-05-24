@@ -18,6 +18,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Event.Type;
 import software.wings.beans.User;
 import software.wings.beans.security.AccessRequest;
+import software.wings.beans.security.AccessRequest.AccessRequestKeys;
 import software.wings.beans.security.AccessRequestDTO;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.dl.WingsPersistence;
@@ -36,6 +37,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
@@ -79,6 +81,9 @@ public class AccessRequestServiceImpl implements AccessRequestService {
                                       .accessActive(true)
                                       .build();
     if (isEmpty(accessRequestDTO.getEmailIds()) && isNotEmpty(accessRequestDTO.getHarnessUserGroupId())) {
+      HarnessUserGroup harnessUserGroup = harnessUserGroupService.get(accessRequestDTO.getHarnessUserGroupId());
+      notNullCheck("Invalid HarnessUserGroup with harnessUserGroupId: " + accessRequestDTO.getHarnessUserGroupId(),
+          harnessUserGroup);
       accessRequest.setHarnessUserGroupId(accessRequestDTO.getHarnessUserGroupId());
       accessRequest.setAccessType(AccessRequest.AccessType.GROUP_ACCESS);
     } else {
@@ -93,6 +98,33 @@ public class AccessRequestServiceImpl implements AccessRequestService {
   @Override
   public AccessRequest get(String accessRequestId) {
     return wingsPersistence.get(AccessRequest.class, accessRequestId);
+  }
+
+  public AccessRequestDTO toAccessRequestDTO(AccessRequest accessRequest) {
+    notNullCheck("Invalid AccessRequest", accessRequest);
+    AccessRequestDTO accessRequestDTO = AccessRequestDTO.builder()
+                                            .accessRequestId(accessRequest.getUuid())
+                                            .accessType(accessRequest.getAccessType())
+                                            .accountId(accessRequest.getAccountId())
+                                            .accessStartAt(accessRequest.getAccessStartAt())
+                                            .accessEndAt(accessRequest.getAccessEndAt())
+                                            .accessActive(accessRequest.isAccessActive())
+                                            .build();
+    if (AccessRequest.AccessType.MEMBER_ACCESS.equals(accessRequest.getAccessType())) {
+      accessRequestDTO.setEmailIds(getEmailIds(accessRequest));
+    } else {
+      accessRequestDTO.setHarnessUserGroupName(
+          harnessUserGroupService.get(accessRequest.getHarnessUserGroupId()).getName());
+    }
+    return accessRequestDTO;
+  }
+
+  public List<AccessRequestDTO> toAccessRequestDTO(List<AccessRequest> accessRequestList) {
+    List<AccessRequestDTO> accessRequestDTOList = new ArrayList<>();
+    if (isNotEmpty(accessRequestList)) {
+      accessRequestList.forEach(accessRequest -> accessRequestDTOList.add(toAccessRequestDTO(accessRequest)));
+    }
+    return accessRequestDTOList;
   }
 
   @Override
@@ -113,6 +145,17 @@ public class AccessRequestServiceImpl implements AccessRequestService {
     Query<AccessRequest> query = wingsPersistence.createQuery(AccessRequest.class, excludeAuthority);
     query.filter("accountId", accountId);
     query.filter("accessActive", true);
+    query.order(Sort.descending(AccessRequestKeys.accessEndAt));
+    return query.asList();
+  }
+
+  @Override
+  public List<AccessRequest> getAllAccessRequestForAccount(String accountId) {
+    Account account = accountService.get(accountId);
+    notNullCheck("Invalid account with id: " + accountId, account);
+    Query<AccessRequest> query = wingsPersistence.createQuery(AccessRequest.class, excludeAuthority);
+    query.filter("accountId", accountId);
+    query.order(Sort.descending(AccessRequestKeys.accessEndAt));
     return query.asList();
   }
 
@@ -127,6 +170,7 @@ public class AccessRequestServiceImpl implements AccessRequestService {
     query.filter("memberIds", userId);
     query.filter("accessActive", true);
     query.filter("accessType", AccessRequest.AccessType.MEMBER_ACCESS);
+    query.order(Sort.descending(AccessRequestKeys.accessEndAt));
     return query.asList();
   }
 
@@ -182,5 +226,23 @@ public class AccessRequestServiceImpl implements AccessRequestService {
       output.add(tokenizer.nextToken().replaceAll(" ", ""));
     }
     return output;
+  }
+
+  private Set<String> getEmailIds(AccessRequest accessRequest) {
+    notNullCheck("Invalid AccessRequest", accessRequest);
+    Set<String> emailIds = new HashSet<>();
+    accessRequest.getMemberIds().forEach(memberId -> {
+      User user = userService.get(memberId);
+      if (user != null) {
+        if (isNotEmpty(user.getEmail())) {
+          emailIds.add(user.getEmail());
+        } else {
+          log.info("User userId {} doesn't have emailId", memberId);
+        }
+      } else {
+        log.info("Invalid userId {}", memberId);
+      }
+    });
+    return emailIds;
   }
 }

@@ -1,5 +1,6 @@
 package io.harness.ngpipeline.inputset.beans.resource;
 
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.ngpipeline.overlayinputset.beans.InputSetEntityType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -15,6 +16,8 @@ import lombok.Value;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @ApiModel("InputSetSummaryResponse")
+@ToBeDeleted
+@Deprecated
 public class InputSetSummaryResponseDTO {
   String identifier;
   String name;

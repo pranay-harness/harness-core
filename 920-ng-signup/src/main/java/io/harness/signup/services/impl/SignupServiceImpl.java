@@ -1,6 +1,7 @@
 package io.harness.signup.services.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.GTM;
+import static io.harness.remote.client.RestClientUtils.getResponse;
 
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 
@@ -12,14 +13,17 @@ import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.WeakPasswordException;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.dto.AccountDTO;
-import io.harness.ng.core.dto.OrganizationDTO;
-import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
-import io.harness.remote.client.RestClientUtils;
+import io.harness.notification.templates.PredefinedTemplate;
+import io.harness.security.SourcePrincipalContextBuilder;
+import io.harness.security.dto.PrincipalType;
+import io.harness.security.dto.UserPrincipal;
 import io.harness.signup.data.UtmInfo;
 import io.harness.signup.dto.OAuthSignupDTO;
 import io.harness.signup.dto.SignupDTO;
+import io.harness.signup.notification.EmailType;
+import io.harness.signup.notification.SignupNotificationHelper;
 import io.harness.signup.services.SignupService;
 import io.harness.signup.validator.SignupValidator;
 import io.harness.telemetry.Category;
@@ -29,10 +33,13 @@ import io.harness.user.remote.UserClient;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
@@ -43,9 +50,10 @@ public class SignupServiceImpl implements SignupService {
   private AccountService accountService;
   private UserClient userClient;
   private SignupValidator signupValidator;
-  private OrganizationService organizationService;
   private ReCaptchaVerifier reCaptchaVerifier;
   private final TelemetryReporter telemetryReporter;
+  private final SignupNotificationHelper signupNotificationHelper;
+  @Named("NGSignupNotification") private final ExecutorService executorService;
 
   public static final String FAILED_EVENT_NAME = "Signup attempt failed";
   public static final String SUCCEED_EVENT_NAME = "Signup succeed";
@@ -56,9 +64,11 @@ public class SignupServiceImpl implements SignupService {
     verifyEmailAndPassword(dto);
 
     AccountDTO account = createAccount(dto);
-    createOrganization(account, dto);
     UserInfo user = createUser(dto, account);
     sendSucceedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), account, user);
+    executorService.submit(()
+                               -> signupNotificationHelper.sendSignupNotification(
+                                   user, EmailType.VERIFY, PredefinedTemplate.EMAIL_VERIFY.getIdentifier()));
     return user;
   }
 
@@ -103,22 +113,42 @@ public class SignupServiceImpl implements SignupService {
 
     SignupDTO signupDTO = SignupDTO.builder().email(dto.getEmail()).utmInfo(dto.getUtmInfo()).build();
     AccountDTO account = createAccount(signupDTO);
-    createOrganization(account, signupDTO);
     UserInfo oAuthUser = createOAuthUser(dto, account);
     sendSucceedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), account, oAuthUser);
+
+    executorService.submit(()
+                               -> signupNotificationHelper.sendSignupNotification(oAuthUser, EmailType.CONFIRM,
+                                   PredefinedTemplate.SIGNUP_CONFIRMATION.getIdentifier()));
     return oAuthUser;
   }
 
-  private void createOrganization(AccountDTO account, SignupDTO signupDTO) {
-    try {
-      OrganizationDTO dto =
-          OrganizationDTO.builder().name("Default").identifier("default").description("Default Organization").build();
-      organizationService.create(account.getIdentifier(), dto);
-    } catch (Exception e) {
-      sendFailedTelemetryEvent(
-          signupDTO.getEmail(), signupDTO.getUtmInfo(), e, account, "Default Organization creation");
-      throw e;
+  @Override
+  public void resendVerificationEmail(String userId) {
+    Optional<UserInfo> response = getResponse(userClient.getUserById(userId));
+    if (!response.isPresent()) {
+      throw new WingsException(String.format("UserId [%s] doesn't exist", userId));
     }
+    UserInfo userInfo = response.get();
+    if (userInfo.isEmailVerified()) {
+      throw new WingsException(String.format("Email has been verified for userId [%s]", userId));
+    }
+
+    // Verify the request userId is current user
+    if (!verifyCurrentUserEmail(userInfo.getEmail())) {
+      throw new WingsException(String.format("Invalid resend request for userId [%s]", userId));
+    }
+
+    signupNotificationHelper.sendSignupNotification(
+        userInfo, EmailType.VERIFY, PredefinedTemplate.EMAIL_VERIFY.getIdentifier());
+  }
+
+  private boolean verifyCurrentUserEmail(String email) {
+    if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
+        && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
+      String userEmail = ((UserPrincipal) (SourcePrincipalContextBuilder.getSourcePrincipal())).getEmail();
+      return email.equals(userEmail);
+    }
+    return false;
   }
 
   private UserInfo createUser(SignupDTO signupDTO, AccountDTO account) {
@@ -139,7 +169,7 @@ public class SignupServiceImpl implements SignupService {
                                        .emailVerified(false)
                                        .defaultAccountId(account.getIdentifier())
                                        .build();
-      return RestClientUtils.getResponse(userClient.createNewUser(userRequest));
+      return getResponse(userClient.createNewUser(userRequest));
     } catch (Exception e) {
       sendFailedTelemetryEvent(signupDTO.getEmail(), signupDTO.getUtmInfo(), e, account, "User creation");
       throw e;
@@ -199,7 +229,7 @@ public class SignupServiceImpl implements SignupService {
                                        .defaultAccountId(account.getIdentifier())
                                        .build();
 
-      return RestClientUtils.getResponse(userClient.createNewOAuthUser(userRequest));
+      return getResponse(userClient.createNewOAuthUser(userRequest));
     } catch (Exception e) {
       sendFailedTelemetryEvent(
           oAuthSignupDTO.getEmail(), oAuthSignupDTO.getUtmInfo(), e, account, "OAuth user creation");

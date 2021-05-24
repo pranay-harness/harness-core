@@ -201,8 +201,9 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
 
   private void setupForApply() throws IOException {
     FileIo.createDirectoryIfDoesNotExist(GIT_REPO_DIRECTORY.concat("/scriptPath"));
-    FileIo.writeFile(GIT_REPO_DIRECTORY.concat("/scriptPath/backend_configs-ENTITY_ID"), new byte[] {});
-    FileIo.writeFile(GIT_REPO_DIRECTORY.concat("/scriptPath/terraform-ENTITY_ID.tfvars"), new byte[] {});
+    FileIo.writeFile(GIT_REPO_DIRECTORY.concat("/scriptPath/backend_configs-" + ENTITY_ID.hashCode()), new byte[] {});
+    FileIo.writeFile(
+        GIT_REPO_DIRECTORY.concat("/scriptPath/terraform-" + ENTITY_ID.hashCode() + ".tfvars"), new byte[] {});
   }
 
   @Test

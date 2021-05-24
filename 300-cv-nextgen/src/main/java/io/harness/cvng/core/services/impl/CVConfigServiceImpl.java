@@ -179,11 +179,11 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
   @Override
   public List<CVConfig> list(
-      String accountId, String connectorIdentifier, String productName, String monitoringSourceIdentifier) {
+      String accountId, String orgIdentifier, String projectIdentifier, String monitoringSourceIdentifier) {
     Query<CVConfig> query = hPersistence.createQuery(CVConfig.class, excludeAuthority)
                                 .filter(CVConfigKeys.accountId, accountId)
-                                .filter(CVConfigKeys.connectorIdentifier, connectorIdentifier)
-                                .filter(CVConfigKeys.productName, productName)
+                                .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
+                                .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
                                 .filter(CVConfigKeys.identifier, monitoringSourceIdentifier);
     return query.asList();
   }
@@ -444,19 +444,6 @@ public class CVConfigServiceImpl implements CVConfigService {
   public void deleteByAccountIdentifier(Class<CVConfig> clazz, String accountId) {
     Preconditions.checkState(clazz.equals(CVConfig.class), "Class should be of type CVConfig");
     this.deleteConfigsForEntity(accountId, null, null);
-  }
-
-  @Override
-  public List<CVConfig> getExistingMappedConfigs(
-      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String identifier) {
-    return hPersistence.createQuery(CVConfig.class, excludeAuthority)
-        .filter(CVConfigKeys.accountId, accountId)
-        .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
-        .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
-        .filter(CVConfigKeys.connectorIdentifier, connectorIdentifier)
-        .field(CVConfigKeys.identifier)
-        .notEqual(identifier)
-        .asList();
   }
 
   @Override

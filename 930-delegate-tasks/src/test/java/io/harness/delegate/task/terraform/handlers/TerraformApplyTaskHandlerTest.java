@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ROHITKARELIA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
@@ -16,7 +17,6 @@ import io.harness.delegate.beans.DelegateFileManagerBase;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
-import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.git.NGGitService;
@@ -30,6 +30,7 @@ import io.harness.encryption.SecretRefData;
 import io.harness.filesystem.FileIo;
 import io.harness.git.GitClientHelper;
 import io.harness.git.GitClientV2;
+import io.harness.git.model.GitBaseRequest;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
@@ -41,7 +42,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
@@ -65,7 +65,6 @@ public class TerraformApplyTaskHandlerTest extends CategoryTest {
   @Mock private SshSessionConfigMapper sshSessionConfigMapper;
   @Mock private NGGitService ngGitService;
 
-  final CommandUnitsProgress commandUnitsProgress = CommandUnitsProgress.builder().build();
   private final EncryptedRecordData encryptedPlanContent =
       EncryptedRecordData.builder().name("planName").encryptedValue("encryptedPlan".toCharArray()).build();
   private static final String gitUsername = "username";
@@ -81,20 +80,25 @@ public class TerraformApplyTaskHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testApply() throws IOException, TimeoutException, InterruptedException {
     when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
-    when(terraformBaseHelper.resolveBaseDir("accountId", "provisionerIdentifier")).thenReturn("baseDir");
-    when(terraformBaseHelper.resolveScriptDirectory("baseDir/script-repository", "main.tf")).thenReturn("sourceDir");
+    when(terraformBaseHelper.getGitBaseRequestForConfigFile(
+             anyString(), any(GitStoreDelegateConfig.class), any(GitConfigDTO.class)))
+        .thenReturn(any(GitBaseRequest.class));
+    when(terraformBaseHelper.fetchConfigFileAndPrepareScriptDir(
+             any(), anyString(), anyString(), anyString(), any(), logCallback, anyString(), anyString()))
+        .thenReturn("sourceDir");
     doNothing().when(terraformBaseHelper).downloadTfStateFile(null, "accountId", null, "scriptDir");
     when(gitClientHelper.getRepoDirectory(any())).thenReturn("sourceDir");
     FileIo.createDirectoryIfDoesNotExist("sourceDir");
-    File putputFile = new File("sourceDir/terraform-provisionerIdentifier.tfvars");
-    FileUtils.touch(putputFile);
+    File outputFile = new File("sourceDir/terraform-output.tfvars");
+    FileUtils.touch(outputFile);
 
     when(terraformBaseHelper.executeTerraformApplyStep(any()))
         .thenReturn(CliResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build());
     TerraformTaskNGResponse response = terraformApplyTaskHandler.executeTaskInternal(
         getTerraformTaskParameters(), "delegateId", "taskId", logCallback);
     assertThat(response).isNotNull();
-    Files.deleteIfExists(Paths.get(putputFile.getPath()));
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    Files.deleteIfExists(Paths.get(outputFile.getPath()));
     Files.deleteIfExists(Paths.get("sourceDir"));
   }
 
@@ -104,7 +108,6 @@ public class TerraformApplyTaskHandlerTest extends CategoryTest {
         .taskType(TFTaskType.APPLY)
         .entityId("provisionerIdentifier")
         .encryptedTfPlan(encryptedPlanContent)
-        .remoteVarfiles(new ArrayList<>())
         .configFile(
             GitFetchFilesConfig.builder()
                 .gitStoreDelegateConfig(

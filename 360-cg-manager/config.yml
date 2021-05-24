@@ -218,7 +218,7 @@ logging:
       threshold: TRACE
       currentLogFilename: portal.log
       archive: true
-      archivedFileCount: 15
+      archivedFileCount: 5
       maxFileSize: 150MB
       archivedLogFilenamePattern: portal.%d.%i.log
       logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
@@ -265,6 +265,10 @@ mongo:
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
   indexManagerMode: AUTO
+  mongoSSLConfig:
+    mongoSSLEnabled: false
+    mongoTrustStorePath:
+    mongoTrustStorePassword:
 
 events-mongo:
   uri: mongodb://localhost:27017/events
@@ -291,6 +295,7 @@ deployMode: KUBERNETES
 envPath: ""
 
 kubectlVersion: v1.13.2
+scmVersion: 444bed53
 
 portal:
   url: https://localhost:8000
@@ -583,3 +588,5 @@ delegateGrpcServicePort: 8080
 logStreamingServiceConfig:
   baseUrl: http://localhost:8079
   serviceToken: token
+
+exportAccountDataBatchSize: 1000

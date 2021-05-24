@@ -38,17 +38,21 @@ public class HeaderTriggerFilter implements TriggerFilter {
     List<TriggerDetails> matchedTriggers = new ArrayList<>();
 
     for (TriggerDetails trigger : filterRequestData.getDetails()) {
-      NGTriggerConfig ngTriggerConfig = trigger.getNgTriggerConfig();
-      if (ngTriggerConfig == null) {
-        ngTriggerConfig = ngTriggerElementMapper.toTriggerConfig(trigger.getNgTriggerEntity().getYaml());
-      }
+      try {
+        NGTriggerConfig ngTriggerConfig = trigger.getNgTriggerConfig();
+        if (ngTriggerConfig == null) {
+          ngTriggerConfig = ngTriggerElementMapper.toTriggerConfig(trigger.getNgTriggerEntity().getYaml());
+        }
 
-      TriggerDetails triggerDetails = TriggerDetails.builder()
-                                          .ngTriggerConfig(ngTriggerConfig)
-                                          .ngTriggerEntity(trigger.getNgTriggerEntity())
-                                          .build();
-      if (checkTriggerEligibility(filterRequestData, triggerDetails)) {
-        matchedTriggers.add(triggerDetails);
+        TriggerDetails triggerDetails = TriggerDetails.builder()
+                                            .ngTriggerConfig(ngTriggerConfig)
+                                            .ngTriggerEntity(trigger.getNgTriggerEntity())
+                                            .build();
+        if (checkTriggerEligibility(filterRequestData, triggerDetails)) {
+          matchedTriggers.add(triggerDetails);
+        }
+      } catch (Exception e) {
+        log.error(getTriggerSkipMessage(trigger.getNgTriggerEntity()), e);
       }
     }
 

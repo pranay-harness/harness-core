@@ -19,7 +19,6 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.repositories.gitBranches.GitBranchesRepository;
 import io.harness.repositories.repositories.yamlGitConfig.YamlGitConfigRepository;
 import io.harness.rule.Owner;
-import io.harness.testlib.RealMongo;
 
 import com.google.inject.Inject;
 import java.util.Arrays;
@@ -41,7 +40,6 @@ public class GitBranchServiceImplTest extends GitSyncTestBase {
 
   @Test
   @Owner(developers = HARI)
-  @RealMongo
   @Category(UnitTests.class)
   public void listBranchesWithStatusTest() {
     final String projectIdentifier = "projectId";
@@ -62,7 +60,7 @@ public class GitBranchServiceImplTest extends GitSyncTestBase {
     final GitBranch gitBranch4 = buildGitBranch(accountIdentifier, "repoURL", "B", BranchSyncStatus.UNSYNCED);
     gitBranchesRepository.saveAll(Arrays.asList(gitBranch1, gitBranch2, gitBranch3, gitBranch4));
     GitBranchListDTO gitBranchListDTO = gitBranchServiceImpl.listBranchesWithStatus(accountIdentifier, orgIdentifier,
-        projectIdentifier, yamlGitConfigIdentifier, PageRequest.builder().pageIndex(0).pageSize(2).build(), "");
+        projectIdentifier, yamlGitConfigIdentifier, PageRequest.builder().pageIndex(0).pageSize(2).build(), "", null);
     PageResponse<GitBranchDTO> gitBranchPageResponse = gitBranchListDTO.getBranches();
     assertThat(!gitBranchPageResponse.isEmpty());
     assertThat(gitBranchPageResponse.getTotalItems() == 4 && gitBranchPageResponse.getTotalPages() == 2
@@ -79,5 +77,35 @@ public class GitBranchServiceImplTest extends GitSyncTestBase {
         .branchName(branchName)
         .branchSyncStatus(branchSyncStatus)
         .build();
+  }
+
+  @Test
+  @Owner(developers = HARI)
+  @Category(UnitTests.class)
+  public void listBranchesWithStatusTestWithFilter() {
+    final String projectIdentifier = "projectId";
+    final String orgIdentifier = "orgId";
+    final String accountIdentifier = "accountId";
+    final String yamlGitConfigIdentifier = "yamlGitConfigId";
+    yamlGitConfigRepository.save(YamlGitConfig.builder()
+                                     .accountId(accountIdentifier)
+                                     .orgIdentifier(orgIdentifier)
+                                     .projectIdentifier(projectIdentifier)
+                                     .identifier(yamlGitConfigIdentifier)
+                                     .repo("repoURL")
+                                     .branch("A")
+                                     .build());
+    final GitBranch gitBranch1 = buildGitBranch(accountIdentifier, "repoURL", "Z", BranchSyncStatus.SYNCED);
+    final GitBranch gitBranch2 = buildGitBranch(accountIdentifier, "repoURL", "C", BranchSyncStatus.SYNCING);
+    final GitBranch gitBranch3 = buildGitBranch(accountIdentifier, "repoURL", "A", BranchSyncStatus.UNSYNCED);
+    final GitBranch gitBranch4 = buildGitBranch(accountIdentifier, "repoURL", "B", BranchSyncStatus.UNSYNCED);
+    gitBranchesRepository.saveAll(Arrays.asList(gitBranch1, gitBranch2, gitBranch3, gitBranch4));
+    GitBranchListDTO gitBranchListDTO = gitBranchServiceImpl.listBranchesWithStatus(accountIdentifier, orgIdentifier,
+        projectIdentifier, yamlGitConfigIdentifier, PageRequest.builder().pageIndex(0).pageSize(2).build(), "",
+        BranchSyncStatus.SYNCED);
+    PageResponse<GitBranchDTO> gitBranchPageResponse = gitBranchListDTO.getBranches();
+    assertThat(!gitBranchPageResponse.isEmpty());
+    assertThat(gitBranchPageResponse.getTotalItems() == 1
+        && gitBranchPageResponse.getContent().get(0).getBranchSyncStatus() == BranchSyncStatus.SYNCED);
   }
 }

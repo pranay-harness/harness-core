@@ -63,6 +63,13 @@ public interface AccessControlAdminClient {
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO);
 
+  @POST(ROLE_ASSIGNMENTS_API + "/multi/internal")
+  Call<ResponseDTO<List<RoleAssignmentResponseDTO>>> createMultiRoleAssignment(
+      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @Query("managed") Boolean managed,
+      @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO);
+
   @PUT(ROLE_ASSIGNMENTS_API + "/{identifier}")
   Call<ResponseDTO<RoleAssignmentResponseDTO>> updateRoleAssignment(
       @Path(value = NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,

@@ -3,7 +3,6 @@ package io.harness.pms.pipeline.service;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineFilterPropertiesDto;
@@ -14,6 +13,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(PIPELINE)
 public interface PMSPipelineService {
@@ -22,7 +22,9 @@ public interface PMSPipelineService {
   Optional<PipelineEntity> get(
       String accountId, String orgIdentifier, String projectIdentifier, String identifier, boolean deleted);
 
-  PipelineEntity update(PipelineEntity pipelineEntity);
+  PipelineEntity updatePipelineYaml(PipelineEntity pipelineEntity);
+
+  PipelineEntity updatePipelineMetadata(Criteria criteria, Update updateOperations);
 
   void saveExecutionInfo(
       String accountId, String orgId, String projectId, String pipelineId, ExecutionSummaryInfo executionSummaryInfo);
@@ -30,10 +32,11 @@ public interface PMSPipelineService {
   Optional<PipelineEntity> incrementRunSequence(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean b);
 
-  boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier,
-      Long version) throws ProducerShutdownException;
+  boolean delete(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, Long version);
 
-  Page<PipelineEntity> list(Criteria criteria, Pageable pageable);
+  Page<PipelineEntity> list(
+      Criteria criteria, Pageable pageable, String accountId, String orgIdentifier, String projectIdentifier);
 
   StepCategory getSteps(String module, String category, String accountId);
 

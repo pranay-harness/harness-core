@@ -16,6 +16,7 @@ import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.tasks.ProgressData;
 import io.harness.tasks.ResponseData;
 
 import java.util.List;
@@ -48,4 +49,6 @@ public interface SdkNodeExecutionService {
   void queueTaskRequest(QueueTaskRequest queueTaskRequest);
 
   void spawnChildren(SpawnChildrenRequest spawnChildrenRequest);
+
+  void handleProgressResponse(NodeExecutionProto nodeExecutionProto, ProgressData progressData);
 }

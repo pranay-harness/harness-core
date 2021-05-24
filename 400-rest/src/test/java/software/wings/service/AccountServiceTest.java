@@ -1004,6 +1004,25 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void test_isRestrictedAccessEnabled() {
+    String accountId = UUIDGenerator.generateUuid();
+    Account account = anAccount()
+                          .withUuid(accountId)
+                          .withCompanyName("CompanyName")
+                          .withAccountName("Account Name 1")
+                          .withAccountKey("ACCOUNT_KEY")
+                          .withLicenseInfo(getLicenseInfo())
+                          .withWhitelistedDomains(new HashSet<>())
+                          .build();
+    account.setHarnessSupportAccessAllowed(false);
+    Account savedAccount = accountService.save(account, false);
+
+    assertThat(accountService.isRestrictedAccessEnabled(savedAccount.getUuid())).isTrue();
+  }
+
+  @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testAccountIteration() throws IllegalAccessException {

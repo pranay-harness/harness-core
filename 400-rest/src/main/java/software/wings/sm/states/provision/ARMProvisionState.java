@@ -5,6 +5,7 @@ import static io.harness.azure.model.AzureConstants.ASSIGN_JSON_FILE_NAME;
 import static io.harness.azure.model.AzureConstants.BLUEPRINT_JSON_FILE_NAME;
 import static io.harness.azure.model.AzureConstants.UNIX_SEPARATOR;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
+import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.ExceptionUtils.getMessage;
@@ -18,6 +19,10 @@ import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TAS
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.ARMResourceType;
 import io.harness.azure.model.ARMScopeType;
 import io.harness.azure.model.AzureConstants;
@@ -38,6 +43,7 @@ import io.harness.delegate.task.azure.arm.response.AzureARMDeploymentResponse;
 import io.harness.delegate.task.azure.arm.response.AzureBlueprintDeploymentResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.ResponseData;
@@ -77,6 +83,8 @@ import org.apache.commons.io.FilenameUtils;
 
 @Slf4j
 @FieldNameConstants(innerTypeName = "ARMProvisionStateKeys")
+@OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
 public class ARMProvisionState extends State {
   private static final String TEMPLATE_KEY = "TEMPLATE";
   private static final String VARIABLES_KEY = "VARIABLES";
@@ -92,6 +100,7 @@ public class ARMProvisionState extends State {
   @Getter @Setter protected String subscriptionExpression;
   @Getter @Setter protected String resourceGroupExpression;
   @Getter @Setter private String managementGroupExpression;
+  @Getter @Setter private String assignmentNameExpression;
 
   @Getter @Setter private String inlineParametersExpression;
   @Getter @Setter private GitFileConfig parametersGitFileConfig;
@@ -100,6 +109,7 @@ public class ARMProvisionState extends State {
   @Inject protected DelegateService delegateService;
   @Inject private ActivityService activityService;
   @Inject protected AzureVMSSStateHelper azureVMSSStateHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   public ARMProvisionState(String name) {
     super(name, StateType.ARM_CREATE_RESOURCE.name());
@@ -163,17 +173,19 @@ public class ARMProvisionState extends State {
       ExecutionContext context, Activity activity, Map<String, GitFetchFilesConfig> filesConfigMap) {
     ARMStateExecutionDataBuilder builder = ARMStateExecutionData.builder();
     builder.taskType(GIT_FETCH_FILES_TASK);
-    GitFetchFilesTaskParams taskParams = GitFetchFilesTaskParams.builder()
-                                             .activityId(activity.getUuid())
-                                             .accountId(context.getAccountId())
-                                             .appId(context.getAppId())
-                                             .executionLogName(AzureConstants.FETCH_FILES)
-                                             .isFinalState(true)
-                                             .appManifestKind(K8S_MANIFEST)
-                                             .gitFetchFilesConfigMap(filesConfigMap)
-                                             .containerServiceParams(null)
-                                             .isBindTaskFeatureSet(false)
-                                             .build();
+    GitFetchFilesTaskParams taskParams =
+        GitFetchFilesTaskParams.builder()
+            .activityId(activity.getUuid())
+            .accountId(context.getAccountId())
+            .appId(context.getAppId())
+            .executionLogName(AzureConstants.FETCH_FILES)
+            .isFinalState(true)
+            .appManifestKind(K8S_MANIFEST)
+            .gitFetchFilesConfigMap(filesConfigMap)
+            .containerServiceParams(null)
+            .isBindTaskFeatureSet(false)
+            .isGitHostConnectivityCheck(featureFlagService.isEnabled(GIT_HOST_CONNECTIVITY, context.getAccountId()))
+            .build();
 
     DelegateTask delegateTask =
         DelegateTask.builder()
@@ -280,6 +292,7 @@ public class ARMProvisionState extends State {
             .accountId(context.getAccountId())
             .activityId(activityId)
             .assignmentJson(assignmentJson)
+            .assignmentName(context.renderExpression(assignmentNameExpression))
             .blueprintJson(blueprintJson)
             .artifacts(artifacts)
             .commandName(ARMStateHelper.AZURE_BLUEPRINT_COMMAND_UNIT_TYPE)
@@ -299,6 +312,7 @@ public class ARMProvisionState extends State {
       builder.fetchFilesResult(stateExecutionData.getFetchFilesResult());
     }
 
+    cloudProviderId = context.renderExpression(cloudProviderId);
     AzureConfig azureConfig = azureVMSSStateHelper.getAzureConfig(cloudProviderId);
     List<EncryptedDataDetail> azureEncryptionDetails =
         azureVMSSStateHelper.getEncryptedDataDetails(context, cloudProviderId);

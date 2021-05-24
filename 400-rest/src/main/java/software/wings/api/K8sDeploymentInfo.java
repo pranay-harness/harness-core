@@ -1,6 +1,9 @@
 package software.wings.api;
 
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.task.helm.HelmChartInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.HashSet;
@@ -12,6 +15,7 @@ import lombok.EqualsAndHashCode;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
+@OwnedBy(CDP)
 public class K8sDeploymentInfo extends DeploymentInfo {
   private String namespace;
   private String releaseName;

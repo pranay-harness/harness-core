@@ -1,5 +1,7 @@
 # Add properties that are shared between developers and ci build system
 
+import bazelrc.gcp
+
 build --java_language_version=8
 
 build --enable_platform_specific_config

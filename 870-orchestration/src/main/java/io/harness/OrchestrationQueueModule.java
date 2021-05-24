@@ -26,17 +26,12 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class OrchestrationQueueModule extends AbstractModule {
   private static OrchestrationQueueModule instance;
-  private final OrchestrationModuleConfig config;
 
-  public static synchronized OrchestrationQueueModule getInstance(OrchestrationModuleConfig config) {
+  public static synchronized OrchestrationQueueModule getInstance() {
     if (instance == null) {
-      instance = new OrchestrationQueueModule(config);
+      instance = new OrchestrationQueueModule();
     }
     return instance;
-  }
-
-  public OrchestrationQueueModule(OrchestrationModuleConfig config) {
-    this.config = config;
   }
 
   @Override
@@ -48,11 +43,8 @@ public class OrchestrationQueueModule extends AbstractModule {
   @Singleton
   QueueConsumer<SdkResponseEvent> sdkResponseEventQueueConsumer(
       Injector injector, PublisherConfiguration config, MongoTemplate mongoTemplate) {
-    if (this.config.isPipelineService()) {
-      return QueueFactory.createNgQueueConsumer(
-          injector, SdkResponseEvent.class, ofSeconds(5), emptyList(), config, mongoTemplate);
-    }
-    return null;
+    return QueueFactory.createNgQueueConsumer(
+        injector, SdkResponseEvent.class, ofSeconds(5), emptyList(), config, mongoTemplate);
   }
 
   @Provides

@@ -4,6 +4,11 @@
 
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.context.ContextElementType;
 import io.harness.ff.FeatureFlagService;
@@ -33,6 +38,8 @@ import org.mongodb.morphia.annotations.Transient;
 
 @Data
 @Builder
+@OwnedBy(CDC)
+@TargetModule(_871_CG_BEANS)
 public class PhaseElement implements ContextElement {
   public static final String PHASE_PARAM = "PHASE_PARAM";
 

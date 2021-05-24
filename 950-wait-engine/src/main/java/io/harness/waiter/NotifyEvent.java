@@ -10,11 +10,13 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "notifyQueue", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@Document("notifyQueue")
 @FieldNameConstants(innerTypeName = "NotifyEventKeys")
 public class NotifyEvent extends Queuable {
   @FdUniqueIndex private String waitInstanceId;

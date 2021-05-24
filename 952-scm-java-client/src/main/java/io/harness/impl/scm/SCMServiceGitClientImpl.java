@@ -5,8 +5,10 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitFileDetails;
 import io.harness.beans.gitsync.GitFilePathDetails;
+import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
+import io.harness.product.ci.scm.proto.CreatePRResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
 import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
@@ -98,12 +100,17 @@ public class SCMServiceGitClientImpl implements ScmClient {
   }
 
   @Override
-  public FileBatchContentResponse listFiles(ScmConnector connector, List<String> filePaths, String branch) {
-    return scmServiceClient.listFiles(connector, filePaths, branch, scmBlockingStub);
+  public FileBatchContentResponse listFiles(ScmConnector connector, List<String> foldersList, String branch) {
+    return scmServiceClient.listFiles(connector, foldersList, branch, scmBlockingStub);
   }
 
   @Override
   public void createNewBranch(ScmConnector scmConnector, String branch, String defaultBranchName) {
     scmServiceClient.createNewBranch(scmConnector, branch, defaultBranchName, scmBlockingStub);
+  }
+
+  @Override
+  public CreatePRResponse createPullRequest(ScmConnector scmConnector, GitPRCreateRequest gitPRCreateRequest) {
+    return scmServiceClient.createPullRequest(scmConnector, gitPRCreateRequest, scmBlockingStub);
   }
 }

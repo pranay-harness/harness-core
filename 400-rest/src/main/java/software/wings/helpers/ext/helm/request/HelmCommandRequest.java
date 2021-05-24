@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.helm.request;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 import static io.harness.k8s.model.HelmVersion.V2;
 
@@ -10,6 +11,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.helm.HelmCommandFlag;
@@ -22,6 +24,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.container.HelmChartSpecification;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
@@ -29,6 +32,7 @@ import software.wings.service.impl.ContainerServiceParams;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -66,6 +70,7 @@ public class HelmCommandRequest implements TaskParameters, ActivityAccess, Execu
   private GitFileConfig gitFileConfig;
   private boolean k8SteadyStateCheckEnabled;
   private boolean mergeCapabilities; // HELM_MERGE_CAPABILITIES
+  private boolean isGitHostConnectivityCheck;
 
   public HelmCommandRequest(HelmCommandType helmCommandType, boolean mergeCapabilities) {
     this.helmCommandType = helmCommandType;
@@ -82,11 +87,19 @@ public class HelmCommandRequest implements TaskParameters, ActivityAccess, Execu
       executionCapabilities.add(HelmCommandCapability.builder().commandRequest(this).build());
     }
     if (gitConfig != null) {
-      executionCapabilities.add(GitConnectionCapability.builder()
-                                    .gitConfig(gitConfig)
-                                    .settingAttribute(gitConfig.getSshSettingAttribute())
-                                    .encryptedDataDetails(getEncryptedDataDetails())
-                                    .build());
+      if (isGitHostConnectivityCheck) {
+        executionCapabilities.addAll(CapabilityHelper.generateExecutionCapabilitiesForGit(gitConfig));
+      } else {
+        executionCapabilities.add(GitConnectionCapability.builder()
+                                      .gitConfig(gitConfig)
+                                      .settingAttribute(gitConfig.getSshSettingAttribute())
+                                      .encryptedDataDetails(getEncryptedDataDetails())
+                                      .build());
+      }
+      if (isNotEmpty(gitConfig.getDelegateSelectors())) {
+        executionCapabilities.add(
+            SelectorCapability.builder().selectors(new HashSet<>(gitConfig.getDelegateSelectors())).build());
+      }
     }
     if (containerServiceParams != null) {
       executionCapabilities.addAll(containerServiceParams.fetchRequiredExecutionCapabilities(maskingEvaluator));

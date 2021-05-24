@@ -1,17 +1,15 @@
 package io.harness.cdng.provision.terraform.steps.rolllback;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
 import static java.lang.String.format;
 
-import io.harness.cdng.manifest.yaml.GitStoreConfigDTO;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.provision.terraform.TerraformConfig;
-import io.harness.cdng.provision.terraform.TerraformConfig.TerraformConfigKeys;
+import io.harness.cdng.provision.terraform.TerraformConfigHelper;
 import io.harness.cdng.provision.terraform.TerraformStepHelper;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.TaskSelector;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.terraform.TFTaskType;
 import io.harness.delegate.task.terraform.TerraformCommandUnit;
 import io.harness.delegate.task.terraform.TerraformTaskNGParameters;
@@ -22,7 +20,6 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.UnitProgress;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.persistence.HIterator;
-import io.harness.persistence.HPersistence;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollback;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -30,6 +27,7 @@ import io.harness.pms.contracts.execution.tasks.SkipTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -38,24 +36,22 @@ import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.provision.TerraformConstants;
 import io.harness.serializer.KryoSerializer;
-import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.StepUtils;
 import io.harness.supplier.ThrowingSupplier;
 
 import software.wings.beans.TaskType;
 
 import com.google.inject.Inject;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.mongodb.morphia.query.Sort;
 
+@OwnedBy(HarnessTeam.CDP)
 public class TerraformRollbackStep extends TaskExecutableWithRollback<TerraformTaskNGResponse> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.TERRAFORM_ROLLBACK.getYamlType()).build();
 
   @Inject private KryoSerializer kryoSerializer;
-  @Inject private HPersistence persistence;
+  @Inject private TerraformConfigHelper terraformConfigHelper;
   @Inject private TerraformStepHelper terraformStepHelper;
   @Inject ExecutionSweepingOutputService executionSweepingOutputService;
 
@@ -67,14 +63,7 @@ public class TerraformRollbackStep extends TaskExecutableWithRollback<TerraformT
     String provisionerIdentifier = stepParametersSpec.getProvisionerIdentifier();
     String entityId =
         terraformStepHelper.generateFullIdentifier(stepParametersSpec.getProvisionerIdentifier(), ambiance);
-    try (HIterator<TerraformConfig> configIterator =
-             new HIterator(persistence.createQuery(TerraformConfig.class)
-                               .filter(TerraformConfigKeys.accountId, AmbianceHelper.getAccountId(ambiance))
-                               .filter(TerraformConfigKeys.orgId, AmbianceHelper.getOrgIdentifier(ambiance))
-                               .filter(TerraformConfigKeys.projectId, AmbianceHelper.getProjectIdentifier(ambiance))
-                               .filter(TerraformConfigKeys.entityId, entityId)
-                               .order(Sort.descending(TerraformConfigKeys.createdAt))
-                               .fetch())) {
+    try (HIterator<TerraformConfig> configIterator = terraformConfigHelper.getIterator(ambiance, entityId)) {
       if (!configIterator.hasNext()) {
         return TaskRequest.newBuilder()
             .setSkipTaskRequest(
@@ -127,20 +116,13 @@ public class TerraformRollbackStep extends TaskExecutableWithRollback<TerraformT
               .workspace(rollbackConfig.getWorkspace())
               .configFile(terraformStepHelper.getGitFetchFilesConfig(
                   rollbackConfig.getConfigFiles().toGitStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
-              .inlineVarFiles(rollbackConfig.getInlineVarFiles());
-      if (isNotEmpty(rollbackConfig.getRemoteVarFiles())) {
-        List<GitFetchFilesConfig> varFilesConfig = new ArrayList<>();
-        int i = 1;
-        for (GitStoreConfigDTO remoteVarFileConfig : rollbackConfig.getRemoteVarFiles()) {
-          varFilesConfig.add(terraformStepHelper.getGitFetchFilesConfig(
-              remoteVarFileConfig.toGitStoreConfig(), ambiance, String.format(TerraformStepHelper.TF_VAR_FILES, i)));
-          i++;
-        }
-        builder.remoteVarfiles(varFilesConfig);
-      }
+              .varFileInfos(
+                  terraformStepHelper.prepareTerraformVarFileInfo(rollbackConfig.getVarFileConfigs(), ambiance));
+
       builder.backendConfig(rollbackConfig.getBackendConfig())
           .targets(rollbackConfig.getTargets())
-          .environmentVariables(rollbackConfig.getEnvironmentVariables());
+          .environmentVariables(rollbackConfig.getEnvironmentVariables())
+          .timeoutInMillis(StepUtils.getTimeoutMillis(stepParameters.getTimeout(), TerraformConstants.DEFAULT_TIMEOUT));
 
       TaskData taskData =
           TaskData.builder()
@@ -150,7 +132,7 @@ public class TerraformRollbackStep extends TaskExecutableWithRollback<TerraformT
               .parameters(new Object[] {builder.build()})
               .build();
 
-      ParameterField<List<String>> delegateSelectors = stepParameters.getDelegateSelectors();
+      ParameterField<List<String>> delegateSelectors = stepParametersSpec.getDelegateSelectors();
 
       List<TaskSelector> taskSelectors = StepUtils.getTaskSelectors(delegateSelectors);
 

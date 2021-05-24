@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.common.beans.GitBranch;
 import io.harness.gitsync.common.beans.GitFileLocation;
+import io.harness.gitsync.common.beans.GitSyncSettings;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.beans.YamlGitConfig;
 import io.harness.gitsync.core.beans.GitCommit;
@@ -28,6 +29,7 @@ public class GitSyncMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(GitFileActivity.class);
     set.add(GitFileLocation.class);
     set.add(GitBranch.class);
+    set.add(GitSyncSettings.class);
   }
 
   @Override

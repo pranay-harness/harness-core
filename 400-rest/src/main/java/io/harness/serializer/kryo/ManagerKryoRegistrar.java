@@ -154,6 +154,7 @@ import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.ApprovalDetails.Action;
+import software.wings.beans.ArtifactStreamMetadata;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AuthToken;
 import software.wings.beans.AwsConfig;
@@ -187,7 +188,6 @@ import software.wings.beans.GcpKubernetesCluster;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
-import software.wings.beans.GitFileConfig;
 import software.wings.beans.GitValidationParameters;
 import software.wings.beans.Graph;
 import software.wings.beans.GraphGroup;
@@ -252,6 +252,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamSummary;
+import software.wings.beans.artifact.ArtifactSummary;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.CleanupPowerShellCommandUnit;
 import software.wings.beans.command.CleanupSshCommandUnit;
@@ -467,7 +468,6 @@ import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
@@ -1048,7 +1048,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(GitConfig.class, 5191);
     kryo.register(GitFetchFilesConfig.class, 5616);
     kryo.register(GitFetchFilesTaskParams.class, 5575);
-    kryo.register(GitFileConfig.class, 5472);
     kryo.register(Graph.class, 5060);
     kryo.register(GraphGroup.class, 5063);
     kryo.register(GraphLink.class, 5062);
@@ -1524,7 +1523,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SpotinstDeployExecutionSummary.class, 7242);
     kryo.register(AppManifestKind.class, 7243);
     kryo.register(SpotinstAllPhaseRollbackData.class, 7245);
-    kryo.register(HelmChartInfo.class, 7246);
     kryo.register(NewRelicDataCollectionInfoV2.class, 7247);
     kryo.register(CCMConfig.class, 7248);
     kryo.register(StackDriverMetricDefinition.class, 7249);
@@ -1771,7 +1769,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(TerragruntExecutionData.class, 8507);
     kryo.register(TerragruntOutputVariables.class, 8508);
     kryo.register(ApiException.class, 8125);
-
+    kryo.register(ArtifactStreamMetadata.class, 8126);
+    kryo.register(ArtifactSummary.class, 8127);
     kryo.register(CommandParameters.class, 8509);
 
     kryo.register(StateMachineResumeCallback.class, 40001);

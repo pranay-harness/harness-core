@@ -98,7 +98,7 @@ public class ShellScriptStep extends TaskExecutableWithRollback<ShellScriptTaskR
 
     if (shellScript.contains(K8sConstants.HARNESS_KUBE_CONFIG_PATH)) {
       InfrastructureOutcome infrastructureOutcome = (InfrastructureOutcome) outcomeService.resolve(
-          ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+          ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
       if (infrastructureOutcome == null) {
         throw new InvalidRequestException("Infrastructure not available");
       }

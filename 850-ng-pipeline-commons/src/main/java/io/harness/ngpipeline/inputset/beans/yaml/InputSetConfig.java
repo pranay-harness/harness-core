@@ -1,5 +1,6 @@
 package io.harness.ngpipeline.inputset.beans.yaml;
 
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.ngpipeline.inputset.beans.yaml.serializer.InputSetConfigSerializer;
 import io.harness.ngpipeline.inputset.deserialiser.InputSetDeserializer;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
@@ -16,6 +17,8 @@ import lombok.Data;
 @Builder
 @JsonSerialize(using = InputSetConfigSerializer.class)
 @JsonDeserialize(using = InputSetDeserializer.class)
+@ToBeDeleted
+@Deprecated
 public class InputSetConfig implements BaseInputSetConfig {
   @NotNull String identifier;
   String name;

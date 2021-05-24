@@ -1,7 +1,8 @@
 package io.harness.transformers.simplevalue;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CastedField;
-import io.harness.core.Recaster;
 import io.harness.exceptions.MapKeyContainsDotException;
 import io.harness.transformers.RecastTransformer;
 import io.harness.utils.IterationHelper;
@@ -11,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.bson.Document;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class MapRecastTransformer extends RecastTransformer implements SimpleValueTransformer {
   @Override
   public Object decode(Class<?> targetClass, Object fromObject, CastedField castedField) {
@@ -20,10 +22,11 @@ public class MapRecastTransformer extends RecastTransformer implements SimpleVal
 
     final Map<Object, Object> values = getRecaster().getObjectFactory().createMap(castedField);
     new IterationHelper<>().loopMap(fromObject, (k, val) -> {
-      final Object objKey = getRecaster().getTransformer().decode(castedField.getMapKeyClass(), k, castedField);
+      final Object objKey = getRecaster().getTransformer().decode(
+          castedField == null ? k.getClass() : castedField.getMapKeyClass(), k, castedField);
       if (val == null) {
         values.put(objKey, null);
-      } else if (val instanceof Document && ((Document) val).containsKey(Recaster.RECAST_CLASS_KEY)) {
+      } else if (val instanceof Document && RecastReflectionUtils.containsIdentifier((Document) val)) {
         values.put(objKey,
             getRecaster().fromDocument(
                 (Document) val, (Object) getRecaster().getObjectFactory().createInstance(null, (Document) val)));

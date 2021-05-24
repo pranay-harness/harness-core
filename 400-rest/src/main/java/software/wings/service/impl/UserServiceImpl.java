@@ -57,11 +57,13 @@ import io.harness.ccm.license.CeLicenseType;
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
+import io.harness.event.handler.impl.segment.SegmentHandler.Keys;
+import io.harness.event.handler.impl.segment.SegmentHelper;
 import io.harness.event.model.EventType;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.schemas.user.UserDTO;
 import io.harness.exception.ExceptionUtils;
@@ -82,6 +84,7 @@ import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.ng.core.common.beans.Generation;
+import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.persistence.HPersistence;
@@ -184,6 +187,7 @@ import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.interfaces.Claim;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
@@ -202,7 +206,6 @@ import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
-import graphql.VisibleForTesting;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -268,6 +271,8 @@ public class UserServiceImpl implements UserService {
   private static final String LOGIN_URL_FORMAT = "/login?company=%s&account=%s&email=%s";
   private static final String HARNESS_ISSUER = "Harness Inc";
   private static final int MINIMAL_ORDER_QUANTITY = 1;
+  private static final String SYSTEM = "system";
+  private static final String SETUP_ACCOUNT_FROM_MARKETPLACE = "Account Setup from Marketplace";
 
   /**
    * The Executor service.
@@ -307,6 +312,7 @@ public class UserServiceImpl implements UserService {
   @Inject private NgInviteClient ngInviteClient;
   @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
   @Inject private AccessRequestService accessRequestService;
+  @Inject private SegmentHelper segmentHelper;
 
   private Cache<String, User> getUserCache() {
     if (configurationController.isPrimary()) {
@@ -668,6 +674,28 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  public String generateVerificationUrl(String userId, String accountId) throws URISyntaxException {
+    EmailVerificationToken emailVerificationToken =
+        wingsPersistence.saveAndGet(EmailVerificationToken.class, new EmailVerificationToken(userId));
+    return buildAbsoluteUrl(
+        configuration.getPortal().getVerificationUrl() + "/" + emailVerificationToken.getToken(), accountId);
+  }
+
+  @Override
+  public String generateLoginUrl(String accountId) throws URISyntaxException {
+    return buildAbsoluteUrl("/login", accountId);
+  }
+
+  @Override
+  public boolean isUserPasswordPresent(String accountId, String emailId) {
+    User user = getUserByEmail(emailId);
+
+    Account account = accountService.get(accountId);
+    AuthenticationMechanism authMechanism = account.getAuthenticationMechanism();
+    return !((authMechanism == null || authMechanism == USER_PASSWORD) && isEmpty(user.getPasswordHash()));
+  }
+
+  @Override
   public User registerNewUser(User user, Account account) {
     String accountId = account.getUuid();
 
@@ -827,12 +855,8 @@ public class UserServiceImpl implements UserService {
   }
 
   private void sendVerificationEmail(User user) {
-    EmailVerificationToken emailVerificationToken =
-        wingsPersistence.saveAndGet(EmailVerificationToken.class, new EmailVerificationToken(user.getUuid()));
     try {
-      String verificationUrl =
-          buildAbsoluteUrl(configuration.getPortal().getVerificationUrl() + "/" + emailVerificationToken.getToken(),
-              user.getDefaultAccountId());
+      String verificationUrl = generateVerificationUrl(user.getUuid(), user.getDefaultAccountId());
       Map<String, String> templateModel = getTemplateModel(user.getName(), verificationUrl);
       List<String> toList = new ArrayList<>();
       toList.add(user.getEmail());
@@ -970,7 +994,7 @@ public class UserServiceImpl implements UserService {
     return inviteOperationResponses;
   }
 
-  private void limitCheck(String accountId, UserInvite userInvite) {
+  private void limitCheck(String accountId, String email) {
     try {
       Account account = accountService.get(accountId);
       if (null == account) {
@@ -980,8 +1004,7 @@ public class UserServiceImpl implements UserService {
       Query<User> query = getListUserQuery(accountId, true);
       query.criteria(UserKeys.disabled).notEqual(true);
       List<User> existingUsersAndInvites = query.asList();
-      userServiceLimitChecker.limitCheck(
-          accountId, existingUsersAndInvites, new HashSet<>(Arrays.asList(userInvite.getEmail())));
+      userServiceLimitChecker.limitCheck(accountId, existingUsersAndInvites, new HashSet<>(Arrays.asList(email)));
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -996,7 +1019,7 @@ public class UserServiceImpl implements UserService {
     signupService.checkIfEmailIsValid(userInvite.getEmail());
 
     String accountId = userInvite.getAccountId();
-    limitCheck(accountId, userInvite);
+    limitCheck(accountId, userInvite.getEmail());
 
     Account account = accountService.get(accountId);
 
@@ -1397,13 +1420,15 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public User completeInviteAndSignIn(UserInvite userInvite, Generation gen) {
-    if (gen != null && gen.equals(NG)) {
-      completeNGInvite(userInvite);
-    } else {
-      completeInvite(userInvite);
-    }
+  public User completeInviteAndSignIn(UserInvite userInvite) {
+    completeInvite(userInvite);
     return authenticationManager.defaultLogin(userInvite.getEmail(), String.valueOf(userInvite.getPassword()));
+  }
+
+  @Override
+  public User completeNGInviteAndSignIn(UserInviteDTO userInvite) {
+    completeNGInvite(userInvite);
+    return authenticationManager.defaultLogin(userInvite.getEmail(), userInvite.getPassword());
   }
 
   @Override
@@ -1461,9 +1486,9 @@ public class UserServiceImpl implements UserService {
     return authenticationManager.defaultLogin(userInvite.getEmail(), String.valueOf(userInvite.getPassword()));
   }
 
-  private void completeNGInvite(UserInvite userInvite) {
+  private void completeNGInvite(UserInviteDTO userInvite) {
     String accountId = userInvite.getAccountId();
-    limitCheck(accountId, userInvite);
+    limitCheck(accountId, userInvite.getEmail());
     Account account = accountService.get(accountId);
     User user = getUserByEmail(userInvite.getEmail());
     if (user == null) {
@@ -1486,13 +1511,13 @@ public class UserServiceImpl implements UserService {
     Preconditions.checkState(authenticationMechanism == USER_PASSWORD,
         "Invalid request. Complete invite should only be called if Auth Mechanism is UsePass");
     loginSettingsService.verifyPasswordStrength(
-        accountService.get(userInvite.getAccountId()), userInvite.getPassword());
+        accountService.get(userInvite.getAccountId()), userInvite.getPassword().toCharArray());
 
-    user.setPasswordHash(hashpw(new String(userInvite.getPassword()), BCrypt.gensalt()));
+    user.setPasswordHash(hashpw(userInvite.getPassword(), BCrypt.gensalt()));
     user = createUser(user, accountId);
     user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
     eventPublishHelper.publishUserRegistrationCompletionEvent(userInvite.getAccountId(), user);
-    NGRestUtils.getResponse(ngInviteClient.completeInvite(userInvite.getUuid()));
+    NGRestUtils.getResponse(ngInviteClient.completeInvite(userInvite.getToken()));
   }
 
   private void marketPlaceSignup(User user, final UserInvite userInvite, MarketPlaceType marketPlaceType) {
@@ -2346,8 +2371,10 @@ public class UserServiceImpl implements UserService {
       UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class)
                                             .set(UserKeys.roles, updatedRolesForUser)
                                             .set(UserKeys.accounts, updatedActiveAccounts)
-                                            .set(UserKeys.pendingAccounts, updatedPendingAccounts)
-                                            .set(UserKeys.defaultAccountId, defaultAccountId);
+                                            .set(UserKeys.pendingAccounts, updatedPendingAccounts);
+      if (defaultAccountId != null) {
+        updateOp.set(UserKeys.defaultAccountId, defaultAccountId);
+      }
       updateUser(user, updateOp);
     });
     auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, user);
@@ -2411,7 +2438,7 @@ public class UserServiceImpl implements UserService {
                   EventsFrameworkMetadataConstants.USER_ENTITY, EventsFrameworkMetadataConstants.ACTION, action))
               .setData(userDTO.toByteString())
               .build());
-    } catch (ProducerShutdownException e) {
+    } catch (EventsFrameworkDownException e) {
       log.error("Failed to send event to events framework for user [userId: {}", userDTO.getUserId(), e);
     }
   }
@@ -2499,27 +2526,45 @@ public class UserServiceImpl implements UserService {
       Set<String> excludeAccounts = user.getAccounts().stream().map(Account::getUuid).collect(Collectors.toSet());
       List<Account> accountList = harnessUserGroupService.listAllowedSupportAccounts(excludeAccounts);
 
-      Set<String> restrictedAcccountsIds = accountService.getAccountsWithDisabledHarnessUserGroupAccess();
-      restrictedAcccountsIds.forEach(restrictedAccountId -> {
-        List<AccessRequest> accessRequestList =
-            accessRequestService.getActiveAccessRequestForAccount(restrictedAccountId);
+      Set<String> restrictedAccountsIds = accountService.getAccountsWithDisabledHarnessUserGroupAccess();
+      restrictedAccountsIds.removeAll(excludeAccounts);
+
+      List<Account> supportAccountList = new ArrayList<>();
+      supportAccountList.addAll(accountList);
+      if (isNotEmpty(restrictedAccountsIds)) {
+        Set<Account> restrictedAccountsWithActiveAccessRequest =
+            getRestrictedAccountsWithActiveAccessRequest(restrictedAccountsIds, user);
+        if (isNotEmpty(restrictedAccountsWithActiveAccessRequest)) {
+          restrictedAccountsWithActiveAccessRequest.forEach(account -> supportAccountList.add(account));
+        }
+      }
+      user.setSupportAccounts(supportAccountList);
+    }
+  }
+
+  private Set<Account> getRestrictedAccountsWithActiveAccessRequest(Set<String> restrictedAccountIds, User user) {
+    Set<Account> accountSet = new HashSet<>();
+    restrictedAccountIds.forEach(restrictedAccountId -> {
+      List<AccessRequest> accessRequestList =
+          accessRequestService.getActiveAccessRequestForAccount(restrictedAccountId);
+      if (isNotEmpty(accessRequestList)) {
         accessRequestList.forEach(accessRequest -> {
-          if (accessRequest.getAccessType().equals(AccessRequest.AccessType.MEMBER_ACCESS)) {
-            if (accessRequest.getMemberIds().contains(user.getUuid())) {
-              accountList.add(accountService.get(restrictedAccountId));
+          if (AccessRequest.AccessType.MEMBER_ACCESS.equals(accessRequest.getAccessType())) {
+            if (isNotEmpty(accessRequest.getMemberIds()) && accessRequest.getMemberIds().contains(user.getUuid())) {
+              accountSet.add(accountService.get(restrictedAccountId));
             }
           } else {
             HarnessUserGroup harnessUserGroup = harnessUserGroupService.get(accessRequest.getHarnessUserGroupId());
-            if (harnessUserGroup.getMemberIds().contains(user.getUuid())) {
-              accountList.add(accountService.get(restrictedAccountId));
+            if (harnessUserGroup != null && isNotEmpty(harnessUserGroup.getMemberIds())
+                && harnessUserGroup.getMemberIds().contains(user.getUuid())) {
+              accountSet.add(accountService.get(restrictedAccountId));
             }
           }
         });
-      });
+      }
+    });
 
-      List<Account> finalAccountList = new ArrayList<>(Sets.newHashSet(accountList));
-      user.setSupportAccounts(finalAccountList);
-    }
+    return accountSet;
   }
 
   /* (non-Javadoc)
@@ -3378,6 +3423,7 @@ public class UserServiceImpl implements UserService {
   }
 
   private String setupAccountBasedOnProduct(User user, UserInvite userInvite, MarketPlace marketPlace) {
+    String accountId;
     LicenseInfo licenseInfo = LicenseInfo.builder()
                                   .accountType(AccountType.PAID)
                                   .licenseUnits(marketPlace.getOrderQuantity())
@@ -3385,7 +3431,10 @@ public class UserServiceImpl implements UserService {
                                   .accountStatus(AccountStatus.ACTIVE)
                                   .build();
     if (marketPlace.getProductCode().equals(configuration.getMarketPlaceConfig().getAwsMarketPlaceProductCode())) {
-      return setupAccountForUser(user, userInvite, licenseInfo);
+      if (null != marketPlace.getLicenseType() && marketPlace.getLicenseType().equals("TRIAL")) {
+        licenseInfo.setAccountType(AccountType.TRIAL);
+      }
+      accountId = setupAccountForUser(user, userInvite, licenseInfo);
     } else if (marketPlace.getProductCode().equals(
                    configuration.getMarketPlaceConfig().getAwsMarketPlaceCeProductCode())) {
       CeLicenseType ceLicenseType = CeLicenseType.PAID;
@@ -3394,15 +3443,31 @@ public class UserServiceImpl implements UserService {
       }
       licenseInfo.setAccountType(AccountType.TRIAL);
       licenseInfo.setLicenseUnits(MINIMAL_ORDER_QUANTITY);
-      String accountId = setupAccountForUser(user, userInvite, licenseInfo);
+      accountId = setupAccountForUser(user, userInvite, licenseInfo);
       licenseService.updateCeLicense(accountId,
           CeLicenseInfo.builder()
               .expiryTime(marketPlace.getExpirationDate().getTime())
               .licenseType(ceLicenseType)
               .build());
-      return accountId;
     } else {
       throw new InvalidRequestException("Cannot resolve AWS marketplace order");
     }
+
+    Map<String, String> properties = new HashMap<String, String>() {
+      {
+        put("marketPlaceId", marketPlace.getUuid());
+        put("licenseType", marketPlace.getLicenseType());
+        put("productCode", marketPlace.getProductCode());
+      }
+    };
+    Map<String, Boolean> integrations = new HashMap<String, Boolean>() {
+      { put(Keys.SALESFORCE, Boolean.TRUE); }
+    };
+
+    log.info("Setting up account {} for Product: {} and licenseType: {}", accountId, marketPlace.getProductCode(),
+        marketPlace.getLicenseType());
+    segmentHelper.reportTrackEvent(SYSTEM, SETUP_ACCOUNT_FROM_MARKETPLACE, properties, integrations);
+
+    return accountId;
   }
 }

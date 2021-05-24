@@ -26,13 +26,13 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
-import io.harness.steps.StepOutcomeGroup;
 
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
@@ -52,7 +52,7 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
   @Category(UnitTests.class)
   public void testExecuteTask() {
     CountInstanceSelection instanceSelection = new CountInstanceSelection();
-    instanceSelection.setCount(ParameterField.createValueField(10));
+    instanceSelection.setCount(ParameterField.createValueField("10"));
     K8sCanaryStepParameters stepParameters = new K8sCanaryStepParameters();
     stepParameters.setSkipDryRun(ParameterField.createValueField(true));
     stepParameters.setInstanceSelection(
@@ -77,7 +77,7 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
   @Category(UnitTests.class)
   public void testExecuteTaskNullParameterFields() {
     PercentageInstanceSelection instanceSelection = new PercentageInstanceSelection();
-    instanceSelection.setPercentage(ParameterField.createValueField(90));
+    instanceSelection.setPercentage(ParameterField.createValueField("90"));
     K8sCanaryStepParameters stepParameters = new K8sCanaryStepParameters();
     stepParameters.setSkipDryRun(ParameterField.ofNull());
     stepParameters.setInstanceSelection(
@@ -144,8 +144,8 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     CountInstanceSelection countSpec = new CountInstanceSelection();
     PercentageInstanceSelection percentageSpec = new PercentageInstanceSelection();
-    countSpec.setCount(ParameterField.createValueField(0));
-    percentageSpec.setPercentage(ParameterField.createValueField(0));
+    countSpec.setCount(ParameterField.createValueField("0"));
+    percentageSpec.setPercentage(ParameterField.createValueField("0"));
     InstanceSelectionWrapper instanceSelection =
         InstanceSelectionWrapper.builder().type(K8sInstanceUnitType.Count).spec(countSpec).build();
     K8sCanaryStepParameters canaryStepParameters =

@@ -31,7 +31,8 @@ public class CanaryVerificationJob extends CanaryBlueGreenVerificationJob {
     CanaryVerificationJobDTO canaryVerificationJobDTO = (CanaryVerificationJobDTO) verificationJobDTO;
     this.setSensitivity(canaryVerificationJobDTO.getSensitivity(),
         VerificationJobDTO.isRuntimeParam(canaryVerificationJobDTO.getSensitivity()));
-    this.setTrafficSplitPercentage(canaryVerificationJobDTO.getTrafficSplitPercentage());
+    this.setTrafficSplitPercentageV2(canaryVerificationJobDTO.getTrafficSplitPercentage(),
+        VerificationJobDTO.isRuntimeParam(canaryVerificationJobDTO.getTrafficSplitPercentage()));
     addCommonFileds(verificationJobDTO);
   }
 
@@ -40,7 +41,9 @@ public class CanaryVerificationJob extends CanaryBlueGreenVerificationJob {
     CanaryVerificationJobDTO canaryVerificationJobDTO = new CanaryVerificationJobDTO();
     canaryVerificationJobDTO.setSensitivity(
         getSensitivity() == null ? CVVerificationJobConstants.RUNTIME_STRING : getSensitivity().name());
-    canaryVerificationJobDTO.setTrafficSplitPercentage(this.getTrafficSplitPercentage());
+    canaryVerificationJobDTO.setTrafficSplitPercentage(getTrafficSplitPercentage() == null
+            ? CVVerificationJobConstants.RUNTIME_STRING
+            : String.valueOf(getTrafficSplitPercentage()));
     populateCommonFields(canaryVerificationJobDTO);
     return canaryVerificationJobDTO;
   }
@@ -51,9 +54,8 @@ public class CanaryVerificationJob extends CanaryBlueGreenVerificationJob {
     @Override
     public void setUpdateOperations(UpdateOperations<T> updateOperations, D dto) {
       setCommonOperations(updateOperations, dto);
-      updateOperations.set(CanaryVerificationJob.DeploymentVerificationJobKeys.sensitivity, dto.getSensitivity())
-          .set(CanaryVerificationJob.DeploymentVerificationJobKeys.trafficSplitPercentage,
-              dto.getTrafficSplitPercentage());
+      updateOperations.set(CanaryBlueGreenVerificationJobKeys.sensitivity, dto.getSensitivity())
+          .set(CanaryBlueGreenVerificationJobKeys.trafficSplitPercentage, dto.getTrafficSplitPercentage());
     }
   }
 

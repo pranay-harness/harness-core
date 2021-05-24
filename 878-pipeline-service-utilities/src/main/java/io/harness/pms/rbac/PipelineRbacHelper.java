@@ -1,5 +1,8 @@
 package io.harness.pms.rbac;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.lang.String.format;
 
 import io.harness.accesscontrol.Principal;
@@ -12,6 +15,7 @@ import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.AccessDeniedException;
@@ -60,15 +64,26 @@ public class PipelineRbacHelper {
 
   public void checkRuntimePermissions(
       Ambiance ambiance, List<EntityDetail> entityDetails, boolean shouldExtractInternalEntities) {
+    if (isEmpty(entityDetails)) {
+      return;
+    }
+    ExecutionPrincipalInfo executionPrincipalInfo = ambiance.getMetadata().getPrincipalInfo();
+
+    // NOTE: rbac should not be validated for triggers so this field is set to false for trigger based execution.
+    if (!executionPrincipalInfo.getShouldValidateRbac()) {
+      return;
+    }
+    String principal = executionPrincipalInfo.getPrincipal();
+    if (EmptyPredicate.isEmpty(principal)) {
+      throw new AccessDeniedException("Execution with empty principal found. Please contact harness customer care.",
+          ErrorCode.NG_ACCESS_DENIED, WingsException.USER);
+    }
+
     String accountId = AmbianceUtils.getAccountId(ambiance);
     if (shouldExtractInternalEntities) {
       entityDetails.addAll(internalReferredEntityExtractor.extractInternalEntities(accountId, entityDetails));
     }
-    ExecutionPrincipalInfo executionPrincipalInfo = ambiance.getMetadata().getPrincipalInfo();
-    String principal = executionPrincipalInfo.getPrincipal();
-    if (principal == null) {
-      return;
-    }
+
     PrincipalType principalType = PrincipalTypeProtoToPrincipalTypeMapper.convertToAccessControlPrincipalType(
         executionPrincipalInfo.getPrincipalType());
     List<PermissionCheckDTO> permissionCheckDTOS =
@@ -78,24 +93,26 @@ public class PipelineRbacHelper {
     RetryPolicy<Object> retryPolicy = getRetryPolicy(format("[Retrying failed call to check permissions attempt: {}"),
         format("Failed to check permissions after retrying {} times"));
 
-    accessCheckResponseDTO =
-        Failsafe.with(retryPolicy)
-            .get(()
-                     -> Optional.of(accessControlClient.checkForAccess(
-                         Principal.builder().principalIdentifier(principal).principalType(principalType).build(),
-                         permissionCheckDTOS)));
+    if (isNotEmpty(permissionCheckDTOS)) {
+      accessCheckResponseDTO =
+          Failsafe.with(retryPolicy)
+              .get(()
+                       -> Optional.of(accessControlClient.checkForAccess(
+                           Principal.builder().principalIdentifier(principal).principalType(principalType).build(),
+                           permissionCheckDTOS)));
 
-    if (!accessCheckResponseDTO.isPresent()) {
-      return;
-    }
+      if (!accessCheckResponseDTO.isPresent()) {
+        return;
+      }
 
-    List<AccessControlDTO> nonPermittedResources = accessCheckResponseDTO.get()
-                                                       .getAccessControlList()
-                                                       .stream()
-                                                       .filter(accessControlDTO -> !accessControlDTO.isPermitted())
-                                                       .collect(Collectors.toList());
-    if (nonPermittedResources.size() != 0) {
-      throwAccessDeniedError(nonPermittedResources);
+      List<AccessControlDTO> nonPermittedResources = accessCheckResponseDTO.get()
+                                                         .getAccessControlList()
+                                                         .stream()
+                                                         .filter(accessControlDTO -> !accessControlDTO.isPermitted())
+                                                         .collect(Collectors.toList());
+      if (nonPermittedResources.size() != 0) {
+        throwAccessDeniedError(nonPermittedResources);
+      }
     }
   }
 
@@ -127,8 +144,13 @@ public class PipelineRbacHelper {
     StringBuilder errors = new StringBuilder();
     for (String resourceType : allErrors.keySet()) {
       for (String resourceIdentifier : allErrors.get(resourceType).keySet()) {
-        errors.append(String.format("For %s with identifier %s, these permissions are not there: %s.\n", resourceType,
-            resourceIdentifier, allErrors.get(resourceType).get(resourceIdentifier).toString()));
+        if (EmptyPredicate.isEmpty(resourceIdentifier)) {
+          errors.append(String.format("For %s, these permissions are not there: %s.\n", resourceType,
+              allErrors.get(resourceType).get(resourceIdentifier).toString()));
+        } else {
+          errors.append(String.format("For %s with identifier %s, these permissions are not there: %s.\n", resourceType,
+              resourceIdentifier, allErrors.get(resourceType).get(resourceIdentifier).toString()));
+        }
       }
     }
 

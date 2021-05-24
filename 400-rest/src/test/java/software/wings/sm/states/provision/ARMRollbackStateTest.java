@@ -22,6 +22,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.azure.AzureConfigDTO;
 import io.harness.delegate.task.azure.arm.AzureARMPreDeploymentData;
 import io.harness.delegate.task.azure.arm.request.AzureARMDeploymentParameters;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -51,6 +52,8 @@ public class ARMRollbackStateTest extends WingsBaseTest {
   @Mock private ExecutionContextImpl mockContext;
   @Mock private AzureVMSSStateHelper azureVMSSStateHelper;
   @Mock private StateExecutionService stateExecutionService;
+  @Mock private FeatureFlagService featureFlagService;
+
   @InjectMocks private final ARMRollbackState armRollbackState = new ARMRollbackState("ARM Rollback");
 
   private static final String PROVISIONER_ID = "arm-id";

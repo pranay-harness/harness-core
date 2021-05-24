@@ -32,7 +32,6 @@ import io.harness.ngpipeline.pipeline.service.NGPipelineService;
 import io.harness.ngpipeline.pipeline.service.NGPipelineServiceImpl;
 import io.harness.persistence.HPersistence;
 import io.harness.remote.client.ClientMode;
-import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.threading.ThreadPool;
@@ -179,8 +178,6 @@ public class CIManagerServiceModule extends AbstractModule {
 
     install(AccessControlClientModule.getInstance(
         ciManagerConfiguration.getAccessControlClientConfiguration(), CI_MANAGER.getServiceId()));
-    install(new SecretManagementClientModule(ciManagerConfiguration.getManagerClientConfig(),
-        ciManagerConfiguration.getNgManagerServiceSecret(), "NextGenManager"));
     install(new EntitySetupUsageClientModule(ciManagerConfiguration.getNgManagerClientConfig(),
         ciManagerConfiguration.getNgManagerServiceSecret(), "CIManager"));
     install(new ConnectorResourceClientModule(ciManagerConfiguration.getNgManagerClientConfig(),

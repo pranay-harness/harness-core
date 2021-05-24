@@ -15,6 +15,7 @@ import io.harness.ngtriggers.utils.WebhookTriggerFilterUtils;
 import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 import io.harness.product.ci.scm.proto.PullRequest;
 import io.harness.product.ci.scm.proto.PullRequestHook;
+import io.harness.product.ci.scm.proto.PushHook;
 import io.harness.rule.Owner;
 
 import java.util.Arrays;
@@ -60,19 +61,26 @@ public class JexlScenarioTest extends CategoryTest {
       + " \"UnsubscribeURL\" : \"https://sns.eu-central-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:eu-central-1:448640225317:aws_cc_push_trigger:bf6ca40a-eb7c-43a8-b452-ec5869813da4\"\n"
       + "}";
 
-  ParseWebhookResponse prEvent =
-      ParseWebhookResponse.newBuilder()
-          .setPr(PullRequestHook.newBuilder()
-                     .setPr(PullRequest.newBuilder().setNumber(1).setTarget("target").setSource("source").build())
-                     .build())
-          .build();
+  ParseWebhookResponse prEvent = ParseWebhookResponse.newBuilder()
+                                     .setPr(PullRequestHook.newBuilder()
+                                                .setPr(PullRequest.newBuilder()
+                                                           .setNumber(1)
+                                                           .setTarget("target")
+                                                           .setSource("source")
+                                                           .setSha("123")
+                                                           .build())
+                                                .build())
+                                     .build();
+
+  ParseWebhookResponse pushEvent =
+      ParseWebhookResponse.newBuilder().setPush(PushHook.newBuilder().setAfter("456").build()).build();
 
   @Test
   @Owner(developers = MATT)
   @Category(UnitTests.class)
   public void testSimplePayload() {
     assertThat(WebhookTriggerFilterUtils.checkIfJexlConditionsMatch(
-                   null, emptyList(), smallPayload, "<+trigger.payload.arr.contains(\"abc\")>"))
+                   null, emptyList(), smallPayload, "<+trigger.payload.arr>.contains(\"abc\")"))
         .isTrue();
   }
 
@@ -89,7 +97,7 @@ public class JexlScenarioTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testJexlAnd() {
     assertThat(WebhookTriggerFilterUtils.checkIfJexlConditionsMatch(null, emptyList(), bigPayload,
-                   "trigger.payload.Type == \"Notification\" && trigger.payload.SignatureVersion == 1"))
+                   "<+trigger.payload.Type> == \"Notification\" && <+trigger.payload.SignatureVersion> == 1"))
         .isTrue();
   }
 
@@ -98,7 +106,7 @@ public class JexlScenarioTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testJexlOr() {
     assertThat(WebhookTriggerFilterUtils.checkIfJexlConditionsMatch(null, emptyList(), bigPayload,
-                   "trigger.payload.Subject.contains(\"GIT\") || trigger.payload.SignatureVersion == 1"))
+                   "<+trigger.payload.Subject>.contains(\"GIT\") || <+trigger.payload.SignatureVersion> == 1"))
         .isTrue();
   }
 
@@ -107,7 +115,7 @@ public class JexlScenarioTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testJexlArithmetic() {
     assertThat(WebhookTriggerFilterUtils.checkIfJexlConditionsMatch(null, emptyList(), bigPayload,
-                   "size(trigger.payload.Signature) + size(trigger.payload.MessageId) > 300"))
+                   "size(<+trigger.payload.Signature>) + size(<+trigger.payload.MessageId>) > 300"))
         .isTrue();
   }
 
@@ -117,7 +125,7 @@ public class JexlScenarioTest extends CategoryTest {
   public void testJexlParens() {
     assertThat(
         WebhookTriggerFilterUtils.checkIfJexlConditionsMatch(null, emptyList(), bigPayload,
-            "(size(trigger.payload.Signature) + size(trigger.payload.MessageId) > 300) && (trigger.payload.Subject.contains(\"GIT\") || trigger.payload.SignatureVersion == 1)"))
+            "(size(<+trigger.payload.Signature>) + size(<+trigger.payload.MessageId>) > 300) && (<+trigger.payload.Subject>.contains(\"GIT\") || <+trigger.payload.SignatureVersion> == 1)"))
         .isTrue();
   }
 
@@ -129,11 +137,10 @@ public class JexlScenarioTest extends CategoryTest {
     assertThat(triggerExpressionEvaluator.renderExpression("<+trigger.payload.pull_request.assignees[0].name>"))
         .isEqualTo("wings");
     Object o =
-        triggerExpressionEvaluator.evaluateExpression("<+trigger.payload.pull_request.assignee.contains('test')>");
+        triggerExpressionEvaluator.evaluateExpression("<+trigger.payload.pull_request.assignee>.contains('test')");
     assertThat((Boolean) o).isTrue();
     assertThat(triggerExpressionEvaluator.renderExpression("<+trigger.payload.pull_request.assignees[1].name>"))
         .isEqualTo("harness");
-    int i = 0;
   }
 
   @Test
@@ -154,6 +161,11 @@ public class JexlScenarioTest extends CategoryTest {
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.targetBranch>")).isEqualTo("target");
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.event>")).isEqualTo("PR");
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.type>")).isEqualTo("WEBHOOK");
+    assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.commitSha>")).isEqualTo("123");
+    assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.prNumber>")).isEqualTo("1");
+
+    triggerExpressionEvaluator = new TriggerExpressionEvaluator(pushEvent, emptyList(), json);
+    assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.commitSha>")).isEqualTo("456");
   }
 
   @Test

@@ -3,6 +3,12 @@ package io.harness.ng.core.remote;
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_ORGANIZATION_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_PROJECT_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_USERGROUP_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformResourceTypes.ORGANIZATION;
+import static io.harness.ng.accesscontrol.PlatformResourceTypes.PROJECT;
+import static io.harness.ng.accesscontrol.PlatformResourceTypes.USERGROUP;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
@@ -10,9 +16,15 @@ import io.harness.ModuleType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.accesscontrol.AccountIdentifier;
+import io.harness.accesscontrol.NGAccessControlCheck;
 import io.harness.accesscontrol.OrgIdentifier;
 import io.harness.accesscontrol.ResourceIdentifier;
+import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
 import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.AccessControlDTO;
+import io.harness.accesscontrol.clients.PermissionCheckDTO;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
 import io.harness.ng.beans.PageRequest;
@@ -82,7 +94,7 @@ public class NGAggregateResource {
 
   @GET
   @Path("projects/{identifier}")
-  //  @NGAccessControlCheck(resourceType = PROJECT, permission = VIEW_PROJECT_PERMISSION)
+  @NGAccessControlCheck(resourceType = PROJECT, permission = VIEW_PROJECT_PERMISSION)
   @ApiOperation(value = "Gets a ProjectAggregateDTO by identifier", nickname = "getProjectAggregateDTO")
   public ResponseDTO<ProjectAggregateDTO> get(
       @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier,
@@ -125,7 +137,7 @@ public class NGAggregateResource {
 
   @GET
   @Path("organizations/{identifier}")
-  //  @NGAccessControlCheck(resourceType = ORGANIZATION, permission = VIEW_ORGANIZATION_PERMISSION)
+  @NGAccessControlCheck(resourceType = ORGANIZATION, permission = VIEW_ORGANIZATION_PERMISSION)
   @ApiOperation(value = "Gets an OrganizationAggregateDTO by identifier", nickname = "getOrganizationAggregateDTO")
   public ResponseDTO<OrganizationAggregateDTO> get(
       @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier,
@@ -136,7 +148,7 @@ public class NGAggregateResource {
 
   @GET
   @Path("organizations")
-  //  @NGAccessControlCheck(resourceType = ORGANIZATION, permission = VIEW_ORGANIZATION_PERMISSION)
+  @NGAccessControlCheck(resourceType = ORGANIZATION, permission = VIEW_ORGANIZATION_PERMISSION)
   @ApiOperation(value = "Get OrganizationAggregateDTO list", nickname = "getOrganizationAggregateDTOList")
   public ResponseDTO<PageResponse<OrganizationAggregateDTO>> list(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
@@ -163,6 +175,8 @@ public class NGAggregateResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @BeanParam PageRequest pageRequest,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @QueryParam("userSize") @DefaultValue("6") @Max(20) int userSize) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USERGROUP, null), VIEW_USERGROUP_PERMISSION);
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order =
           SortOrder.Builder.aSortOrder().withField(ProjectKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
@@ -180,6 +194,8 @@ public class NGAggregateResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Body AggregateACLRequest aggregateACLRequest) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USERGROUP, null), VIEW_USERGROUP_PERMISSION);
     return ResponseDTO.newResponse(aggregateUserGroupService.listAggregateUserGroups(
         accountIdentifier, orgIdentifier, projectIdentifier, aggregateACLRequest));
   }
@@ -192,6 +208,8 @@ public class NGAggregateResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USERGROUP, identifier), VIEW_USERGROUP_PERMISSION);
     return ResponseDTO.newResponse(aggregateUserGroupService.getAggregatedUserGroup(
         accountIdentifier, orgIdentifier, projectIdentifier, identifier));
   }
@@ -209,23 +227,21 @@ public class NGAggregateResource {
       orgIdentifiers = Collections.singleton(orgIdentifier);
     }
 
-    return orgIdentifiers;
-    //
-    //    ResourceScope resourceScope = ResourceScope.builder().accountIdentifier(accountIdentifier).build();
-    //    List<PermissionCheckDTO> permissionChecks = orgIdentifiers.stream()
-    //                                                    .map(oi
-    //                                                        -> PermissionCheckDTO.builder()
-    //                                                               .permission(VIEW_PROJECT_PERMISSION)
-    //                                                               .resourceIdentifier(oi)
-    //                                                               .resourceScope(resourceScope)
-    //                                                               .resourceType(ORGANIZATION)
-    //                                                               .build())
-    //                                                    .collect(Collectors.toList());
-    //    AccessCheckResponseDTO accessCheckResponse = accessControlClient.checkForAccess(permissionChecks);
-    //    return accessCheckResponse.getAccessControlList()
-    //        .stream()
-    //        .filter(AccessControlDTO::isPermitted)
-    //        .map(AccessControlDTO::getResourceIdentifier)
-    //        .collect(Collectors.toSet());
+    ResourceScope resourceScope = ResourceScope.builder().accountIdentifier(accountIdentifier).build();
+    List<PermissionCheckDTO> permissionChecks = orgIdentifiers.stream()
+                                                    .map(oi
+                                                        -> PermissionCheckDTO.builder()
+                                                               .permission(VIEW_PROJECT_PERMISSION)
+                                                               .resourceIdentifier(oi)
+                                                               .resourceScope(resourceScope)
+                                                               .resourceType(ORGANIZATION)
+                                                               .build())
+                                                    .collect(Collectors.toList());
+    AccessCheckResponseDTO accessCheckResponse = accessControlClient.checkForAccess(permissionChecks);
+    return accessCheckResponse.getAccessControlList()
+        .stream()
+        .filter(AccessControlDTO::isPermitted)
+        .map(AccessControlDTO::getResourceIdentifier)
+        .collect(Collectors.toSet());
   }
 }

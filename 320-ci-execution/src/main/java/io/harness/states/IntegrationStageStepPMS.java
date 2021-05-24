@@ -1,12 +1,12 @@
 package io.harness.states;
 
-import static io.harness.beans.steps.outcome.CIOutcomeNames.CI_STEP_ARTIFACT_OUTCOME;
 import static io.harness.beans.steps.outcome.CIOutcomeNames.INTEGRATION_STAGE_OUTCOME;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.VariablesSweepingOutput;
 import io.harness.beans.stages.IntegrationStageStepParametersPMS;
 import io.harness.beans.steps.outcome.CIStepArtifactOutcome;
 import io.harness.beans.steps.outcome.IntegrationStageOutcome;
@@ -16,13 +16,13 @@ import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.ngpipeline.common.AmbianceHelper;
-import io.harness.plancreator.beans.VariablesSweepingOutput;
 import io.harness.plancreator.steps.common.StageElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
 import io.harness.pms.sdk.core.data.Outcome;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
@@ -31,7 +31,6 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
-import io.harness.steps.StepOutcomeGroup;
 import io.harness.tasks.ResponseData;
 import io.harness.yaml.utils.NGVariablesUtils;
 
@@ -61,7 +60,7 @@ public class IntegrationStageStepPMS implements ChildExecutable<StageElementPara
     log.info("Executing integration stage with params [{}]", stepParameters);
 
     IntegrationStageStepParametersPMS integrationStageStepParametersPMS =
-        (IntegrationStageStepParametersPMS) stepParameters.getSpec();
+        (IntegrationStageStepParametersPMS) stepParameters.getSpecConfig();
 
     Infrastructure infrastructure = integrationStageStepParametersPMS.getInfrastructure();
 
@@ -88,7 +87,7 @@ public class IntegrationStageStepPMS implements ChildExecutable<StageElementPara
       Ambiance ambiance, StageElementParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     log.info("executed integration stage =[{}]", stepParameters);
     IntegrationStageStepParametersPMS integrationStageStepParametersPMS =
-        (IntegrationStageStepParametersPMS) stepParameters.getSpec();
+        (IntegrationStageStepParametersPMS) stepParameters.getSpecConfig();
     StepResponseBuilder stepResponseBuilder = createStepResponseFromChildResponse(responseDataMap).toBuilder();
     List<String> stepIdentifiers = integrationStageStepParametersPMS.getStepIdentifiers();
     if (isNotEmpty(stepIdentifiers)) {
@@ -99,22 +98,25 @@ public class IntegrationStageStepPMS implements ChildExecutable<StageElementPara
                                    .filter(OptionalOutcome::isFound)
                                    .map(OptionalOutcome::getOutcome)
                                    .collect(Collectors.toList());
-      IntegrationStageOutcomeBuilder integrationStageOutcomeBuilder = IntegrationStageOutcome.builder();
-      for (Outcome outcome : outcomes) {
-        if (CI_STEP_ARTIFACT_OUTCOME.equals(outcome.getType())) {
-          CIStepArtifactOutcome ciStepArtifactOutcome = (CIStepArtifactOutcome) outcome;
+      if (isNotEmpty(outcomes)) {
+        IntegrationStageOutcomeBuilder integrationStageOutcomeBuilder = IntegrationStageOutcome.builder();
+        for (Outcome outcome : outcomes) {
+          if (outcome instanceof CIStepArtifactOutcome) {
+            CIStepArtifactOutcome ciStepArtifactOutcome = (CIStepArtifactOutcome) outcome;
 
-          if (ciStepArtifactOutcome.getStepArtifacts() != null) {
-            if (isNotEmpty(ciStepArtifactOutcome.getStepArtifacts().getPublishedFileArtifacts())) {
-              ciStepArtifactOutcome.getStepArtifacts().getPublishedFileArtifacts().forEach(
-                  integrationStageOutcomeBuilder::fileArtifact);
-            }
-            if (isNotEmpty(ciStepArtifactOutcome.getStepArtifacts().getPublishedImageArtifacts())) {
-              ciStepArtifactOutcome.getStepArtifacts().getPublishedImageArtifacts().forEach(
-                  integrationStageOutcomeBuilder::imageArtifact);
+            if (ciStepArtifactOutcome.getStepArtifacts() != null) {
+              if (isNotEmpty(ciStepArtifactOutcome.getStepArtifacts().getPublishedFileArtifacts())) {
+                ciStepArtifactOutcome.getStepArtifacts().getPublishedFileArtifacts().forEach(
+                    integrationStageOutcomeBuilder::fileArtifact);
+              }
+              if (isNotEmpty(ciStepArtifactOutcome.getStepArtifacts().getPublishedImageArtifacts())) {
+                ciStepArtifactOutcome.getStepArtifacts().getPublishedImageArtifacts().forEach(
+                    integrationStageOutcomeBuilder::imageArtifact);
+              }
             }
           }
         }
+
         stepResponseBuilder.stepOutcome(StepResponse.StepOutcome.builder()
                                             .name(INTEGRATION_STAGE_OUTCOME)
                                             .outcome(integrationStageOutcomeBuilder.build())

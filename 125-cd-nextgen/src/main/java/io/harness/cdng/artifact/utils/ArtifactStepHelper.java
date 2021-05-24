@@ -2,6 +2,8 @@ package io.harness.cdng.artifact.utils;
 
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
@@ -12,6 +14,7 @@ import io.harness.cdng.artifact.mappers.ArtifactConfigToDelegateReqMapper;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
+import io.harness.delegate.TaskSelector;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
@@ -20,6 +23,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
+import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -33,7 +37,9 @@ import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 public class ArtifactStepHelper {
   @Named(DEFAULT_CONNECTOR_SERVICE) @Inject private ConnectorService connectorService;
@@ -44,7 +50,7 @@ public class ArtifactStepHelper {
     ConnectorInfoDTO connectorDTO;
     NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
     switch (artifactConfig.getSourceType()) {
-      case DOCKER_HUB:
+      case DOCKER_REGISTRY:
         DockerHubArtifactConfig dockerConfig = (DockerHubArtifactConfig) artifactConfig;
         connectorDTO = getConnector(dockerConfig.getConnectorRef().getValue(), ambiance);
         DockerConnectorDTO connectorConfig = (DockerConnectorDTO) connectorDTO.getConnectorConfig();
@@ -53,17 +59,17 @@ public class ArtifactStepHelper {
               secretManagerClientService.getEncryptionDetails(ngAccess, connectorConfig.getAuth().getCredentials());
         }
         return ArtifactConfigToDelegateReqMapper.getDockerDelegateRequest(
-            dockerConfig, connectorConfig, encryptedDataDetails);
+            dockerConfig, connectorConfig, encryptedDataDetails, dockerConfig.getConnectorRef().getValue());
       case GCR:
         GcrArtifactConfig gcrArtifactConfig = (GcrArtifactConfig) artifactConfig;
         connectorDTO = getConnector(gcrArtifactConfig.getConnectorRef().getValue(), ambiance);
         GcpConnectorDTO gcpConnectorDTO = (GcpConnectorDTO) connectorDTO.getConnectorConfig();
-        if (gcpConnectorDTO.getCredential() != null) {
+        if (gcpConnectorDTO.getCredential() != null && gcpConnectorDTO.getCredential().getConfig() != null) {
           encryptedDataDetails =
               secretManagerClientService.getEncryptionDetails(ngAccess, gcpConnectorDTO.getCredential().getConfig());
         }
         return ArtifactConfigToDelegateReqMapper.getGcrDelegateRequest(
-            gcrArtifactConfig, gcpConnectorDTO, encryptedDataDetails);
+            gcrArtifactConfig, gcpConnectorDTO, encryptedDataDetails, gcrArtifactConfig.getConnectorRef().getValue());
       case ECR:
         EcrArtifactConfig ecrArtifactConfig = (EcrArtifactConfig) artifactConfig;
         connectorDTO = getConnector(ecrArtifactConfig.getConnectorRef().getValue(), ambiance);
@@ -74,7 +80,7 @@ public class ArtifactStepHelper {
               ngAccess, (DecryptableEntity) awsConnectorDTO.getCredential().getConfig());
         }
         return ArtifactConfigToDelegateReqMapper.getEcrDelegateRequest(
-            ecrArtifactConfig, awsConnectorDTO, encryptedDataDetails);
+            ecrArtifactConfig, awsConnectorDTO, encryptedDataDetails, ecrArtifactConfig.getConnectorRef().getValue());
       default:
         throw new UnsupportedOperationException(
             String.format("Unknown Artifact Config type: [%s]", artifactConfig.getSourceType()));
@@ -96,12 +102,45 @@ public class ArtifactStepHelper {
 
   public TaskType getArtifactStepTaskType(ArtifactConfig artifactConfig) {
     switch (artifactConfig.getSourceType()) {
-      case DOCKER_HUB:
+      case DOCKER_REGISTRY:
         return TaskType.DOCKER_ARTIFACT_TASK_NG;
       case GCR:
         return TaskType.GCR_ARTIFACT_TASK_NG;
       case ECR:
         return TaskType.ECR_ARTIFACT_TASK_NG;
+      default:
+        throw new UnsupportedOperationException(
+            String.format("Unknown Artifact Config type: [%s]", artifactConfig.getSourceType()));
+    }
+  }
+
+  public List<TaskSelector> getDelegateSelectors(ArtifactConfig artifactConfig, Ambiance ambiance) {
+    ConnectorInfoDTO connectorDTO;
+    switch (artifactConfig.getSourceType()) {
+      case DOCKER_REGISTRY:
+        DockerHubArtifactConfig dockerConfig = (DockerHubArtifactConfig) artifactConfig;
+        connectorDTO = getConnector(dockerConfig.getConnectorRef().getValue(), ambiance);
+        return TaskSelectorYaml.toTaskSelector(((DockerConnectorDTO) connectorDTO.getConnectorConfig())
+                                                   .getDelegateSelectors()
+                                                   .stream()
+                                                   .map(TaskSelectorYaml::new)
+                                                   .collect(Collectors.toList()));
+      case GCR:
+        GcrArtifactConfig gcrArtifactConfig = (GcrArtifactConfig) artifactConfig;
+        connectorDTO = getConnector(gcrArtifactConfig.getConnectorRef().getValue(), ambiance);
+        return TaskSelectorYaml.toTaskSelector(((GcpConnectorDTO) connectorDTO.getConnectorConfig())
+                                                   .getDelegateSelectors()
+                                                   .stream()
+                                                   .map(TaskSelectorYaml::new)
+                                                   .collect(Collectors.toList()));
+      case ECR:
+        EcrArtifactConfig ecrArtifactConfig = (EcrArtifactConfig) artifactConfig;
+        connectorDTO = getConnector(ecrArtifactConfig.getConnectorRef().getValue(), ambiance);
+        return TaskSelectorYaml.toTaskSelector(((AwsConnectorDTO) connectorDTO.getConnectorConfig())
+                                                   .getDelegateSelectors()
+                                                   .stream()
+                                                   .map(TaskSelectorYaml::new)
+                                                   .collect(Collectors.toList()));
       default:
         throw new UnsupportedOperationException(
             String.format("Unknown Artifact Config type: [%s]", artifactConfig.getSourceType()));

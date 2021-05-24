@@ -8,9 +8,11 @@ import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConne
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsConnectorDTO;
+import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultConnectorDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
 import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
 import io.harness.delegate.beans.connector.cek8s.CEKubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.datadog.DatadogConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.gcpccm.GcpCloudCostConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
@@ -43,11 +45,13 @@ import java.util.List;
       @JsonSubTypes.Type(value = AppDynamicsConnectorDTO.class, name = "AppDynamics"),
       @JsonSubTypes.Type(value = NewRelicConnectorDTO.class, name = "NewRelic"),
       @JsonSubTypes.Type(value = PrometheusConnectorDTO.class, name = "Prometheus"),
+      @JsonSubTypes.Type(value = DatadogConnectorDTO.class, name = "Datadog"),
       @JsonSubTypes.Type(value = VaultConnectorDTO.class, name = "Vault"),
       @JsonSubTypes.Type(value = DockerConnectorDTO.class, name = "DockerRegistry"),
       @JsonSubTypes.Type(value = LocalConnectorDTO.class, name = "Local"),
       @JsonSubTypes.Type(value = GcpKmsConnectorDTO.class, name = "GcpKms"),
       @JsonSubTypes.Type(value = AwsKmsConnectorDTO.class, name = "AwsKms"),
+      @JsonSubTypes.Type(value = AzureKeyVaultConnectorDTO.class, name = "AzureKeyVault"),
       @JsonSubTypes.Type(value = GcpConnectorDTO.class, name = "Gcp"),
       @JsonSubTypes.Type(value = AwsConnectorDTO.class, name = "Aws"),
       @JsonSubTypes.Type(value = CEAwsConnectorDTO.class, name = "CEAws"),

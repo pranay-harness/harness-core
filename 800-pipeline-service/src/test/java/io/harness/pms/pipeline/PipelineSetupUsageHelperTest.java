@@ -23,7 +23,6 @@ import io.harness.encryption.Scope;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
@@ -172,7 +171,7 @@ public class PipelineSetupUsageHelperTest extends PipelineServiceTestBase {
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
-  public void testPublishSetupUsageEvent() throws ProducerShutdownException {
+  public void testPublishSetupUsageEvent() {
     List<EntityDetailProtoDTO> referredEntities = new ArrayList<>();
     EntityDetailProtoDTO connectorManagerDetails = EntityDetailProtoDTO.newBuilder()
                                                        .setIdentifierRef(IdentifierRefProtoDTO.newBuilder().build())

@@ -10,8 +10,4 @@ build --experimental_inmemory_dotd_files
 build --experimental_inmemory_jdeps_files
 build --nobuild_runfile_links
 
-# This value is to reset the cache if we suspect that the cache got poisoned
-build --action_env=CACHE_RESET=1
-
-build --javacopt="-Xlint:deprecation"
-build --experimental_replay_action_out_err
+test --flaky_test_attempts=3

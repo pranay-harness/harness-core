@@ -18,9 +18,4 @@ import org.springframework.data.annotation.TypeAlias;
 @OwnedBy(HarnessTeam.CI)
 public class CIStepArtifactOutcome implements Outcome {
   StepArtifacts stepArtifacts;
-
-  @Override
-  public String getType() {
-    return CI_STEP_ARTIFACT_OUTCOME;
-  }
 }

@@ -30,6 +30,7 @@ import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.monitoring.MonitoringQueueObserver;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.notification.module.NotificationClientModule;
@@ -39,6 +40,9 @@ import io.harness.pms.approval.ApprovalInstanceExpirationJob;
 import io.harness.pms.approval.ApprovalInstanceHandler;
 import io.harness.pms.event.PMSEventConsumerService;
 import io.harness.pms.exception.WingsExceptionMapper;
+import io.harness.pms.inputset.gitsync.InputSetEntityGitSyncHelper;
+import io.harness.pms.inputset.gitsync.InputSetYamlDTO;
+import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.observers.InputSetsDeleteObserver;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntityCrudObserver;
@@ -63,6 +67,7 @@ import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.registrars.PipelineServiceFacilitatorRegistrar;
 import io.harness.registrars.PipelineServiceStepRegistrar;
+import io.harness.resource.VersionInfoResource;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.serializer.PipelineServiceUtilAdviserRegistrar;
 import io.harness.serializer.jackson.PipelineServiceJacksonModule;
@@ -87,6 +92,7 @@ import io.harness.yaml.YamlSdkInitHelper;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
@@ -108,7 +114,6 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -276,6 +281,10 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         (NodeExecutionServiceImpl) injector.getInstance(Key.get(NodeExecutionService.class));
     nodeExecutionService.getStepStatusUpdateSubject().register(
         injector.getInstance(Key.get(PlanExecutionService.class)));
+
+    SdkResponseEventListener sdkResponseEventListener = injector.getInstance(SdkResponseEventListener.class);
+    sdkResponseEventListener.getQueueListenerObserverSubject().register(
+        injector.getInstance(Key.get(MonitoringQueueObserver.class)));
   }
 
   private void registerCorrelationFilter(Environment environment, Injector injector) {
@@ -336,14 +345,21 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   }
 
   private GitSyncSdkConfiguration getGitSyncConfiguration(PipelineServiceConfiguration config) {
-    final Supplier<List<EntityType>> sortOrder = () -> Collections.singletonList(EntityType.PIPELINES);
+    final Supplier<List<EntityType>> sortOrder = () -> Lists.newArrayList(EntityType.PIPELINES, EntityType.INPUT_SETS);
     ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
     configureObjectMapper(objectMapper);
     Set<GitSyncEntitiesConfiguration> gitSyncEntitiesConfigurations = new HashSet<>();
     gitSyncEntitiesConfigurations.add(GitSyncEntitiesConfiguration.builder()
                                           .yamlClass(PipelineConfig.class)
                                           .entityClass(PipelineEntity.class)
+                                          .entityType(EntityType.PIPELINES)
                                           .entityHelperClass(PipelineEntityGitSyncHelper.class)
+                                          .build());
+    gitSyncEntitiesConfigurations.add(GitSyncEntitiesConfiguration.builder()
+                                          .yamlClass(InputSetYamlDTO.class)
+                                          .entityClass(InputSetEntity.class)
+                                          .entityType(EntityType.INPUT_SETS)
+                                          .entityHelperClass(InputSetEntityGitSyncHelper.class)
                                           .build());
     final GitSdkConfiguration gitSdkConfiguration = config.getGitSdkConfiguration();
     return GitSyncSdkConfiguration.builder()
@@ -363,8 +379,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   private void registerEventListeners(Injector injector) {
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(SdkResponseEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(PmsNotifyEventListener.class), 5);
+    queueListenerController.register(injector.getInstance(SdkResponseEventListener.class), 3);
+    queueListenerController.register(injector.getInstance(PmsNotifyEventListener.class), 3);
   }
 
   private void registerWaitEnginePublishers(Injector injector) {
@@ -411,6 +427,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
   }
 
   private void registerJerseyProviders(Environment environment, Injector injector) {

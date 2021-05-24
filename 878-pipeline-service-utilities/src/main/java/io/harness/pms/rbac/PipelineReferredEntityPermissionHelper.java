@@ -1,11 +1,8 @@
 package io.harness.pms.rbac;
 
 import io.harness.EntityType;
-import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.IdentifierRef;
-import io.harness.data.structure.EmptyPredicate;
 
 import java.util.Map;
 import lombok.experimental.UtilityClass;
@@ -30,60 +27,6 @@ public class PipelineReferredEntityPermissionHelper {
           PERMISSION_PLACE_HOLDER, coreEntityTypeToPermissionEntityName.get(entityType).toLowerCase(), permission);
     }
     throw new UnsupportedOperationException();
-  }
-
-  /**
-   * For create since the identifier does not exist in DB, special handling is required.
-   * @param identifierRef
-   * @return
-   */
-  public String getParentResourceIdentifierForCreate(IdentifierRef identifierRef) {
-    if (EmptyPredicate.isNotEmpty(identifierRef.getProjectIdentifier())) {
-      return identifierRef.getProjectIdentifier();
-    }
-    if (EmptyPredicate.isNotEmpty(identifierRef.getOrgIdentifier())) {
-      return identifierRef.getOrgIdentifier();
-    }
-    if (EmptyPredicate.isNotEmpty(identifierRef.getAccountIdentifier())) {
-      return identifierRef.getAccountIdentifier();
-    }
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * For create since the identifier does not exist in DB, special handling is required.
-   * @param identifierRef
-   * @return
-   */
-  public String getEntityTypeForCreate(IdentifierRef identifierRef) {
-    if (EmptyPredicate.isNotEmpty(identifierRef.getProjectIdentifier())) {
-      return "PROJECT";
-    }
-    if (EmptyPredicate.isNotEmpty(identifierRef.getOrgIdentifier())) {
-      return "ORGANIZATION";
-    }
-    if (EmptyPredicate.isNotEmpty(identifierRef.getAccountIdentifier())) {
-      return "ACCOUNT";
-    }
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * For create since the identifier does not exist in DB, special handling is required.
-   * @param identifierRef
-   * @return
-   */
-  public ResourceScope getResourceScopeForCreate(IdentifierRef identifierRef) {
-    if (EmptyPredicate.isNotEmpty(identifierRef.getProjectIdentifier())) {
-      return ResourceScope.builder()
-          .accountIdentifier(identifierRef.getAccountIdentifier())
-          .orgIdentifier(identifierRef.getOrgIdentifier())
-          .build();
-    }
-    if (EmptyPredicate.isNotEmpty(identifierRef.getOrgIdentifier())) {
-      return ResourceScope.builder().accountIdentifier(identifierRef.getAccountIdentifier()).build();
-    }
-    return ResourceScope.builder().build();
   }
 
   public String getEntityName(EntityType entityType) {

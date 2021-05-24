@@ -341,7 +341,6 @@ public abstract class VerificationJob
               getRunTimeParameter(dto.getServiceIdentifier(), dto.isRuntimeParam(dto.getEnvIdentifier())))
           .set(VerificationJobKeys.duration,
               getRunTimeParameter(dto.getDuration(), dto.isRuntimeParam(dto.getEnvIdentifier())))
-          .set(VerificationJobKeys.dataSources, dto.getDataSources())
           .set(VerificationJobKeys.monitoringSources, dto.getMonitoringSources())
           .set(VerificationJobKeys.isDefaultJob, dto.isDefaultJob())
           .set(VerificationJobKeys.activitySourceIdentifier, dto.getActivitySourceIdentifier());

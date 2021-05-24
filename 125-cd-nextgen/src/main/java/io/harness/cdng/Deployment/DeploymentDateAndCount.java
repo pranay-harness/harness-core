@@ -10,6 +10,6 @@ import lombok.Value;
 @Value
 @Builder
 public class DeploymentDateAndCount {
-  private String time;
+  private long time;
   private Deployment deployments;
 }

@@ -9,7 +9,8 @@ public enum DataSourceType {
   SPLUNK("Splunk"),
   STACKDRIVER("Stackdriver"),
   KUBERNETES("Kubernetes"),
-  NEW_RELIC("New Relic");
+  NEW_RELIC("New Relic"),
+  PROMETHEUS("Prometheus");
 
   private String displayName;
 
@@ -22,6 +23,6 @@ public enum DataSourceType {
   }
 
   public static List<DataSourceType> getTimeSeriesTypes() {
-    return new ArrayList<>(EnumSet.of(APP_DYNAMICS, STACKDRIVER, NEW_RELIC));
+    return new ArrayList<>(EnumSet.of(APP_DYNAMICS, STACKDRIVER, NEW_RELIC, PROMETHEUS));
   }
 }

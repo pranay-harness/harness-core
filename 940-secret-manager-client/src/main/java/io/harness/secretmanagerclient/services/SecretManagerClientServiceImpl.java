@@ -8,6 +8,7 @@ import io.harness.beans.DecryptableEntity;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
+import io.harness.remote.client.RestClientExecutor;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
@@ -22,8 +23,10 @@ import lombok.AllArgsConstructor;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class SecretManagerClientServiceImpl implements SecretManagerClientService {
+  private final RestClientExecutor restClientExecutor;
   private final SecretManagerClient secretManagerClient;
 
+  // TODO: improve the error messages(https://harness.atlassian.net/browse/CDNG-5674)
   @Override
   public List<EncryptedDataDetail> getEncryptionDetails(NGAccess ngAccess, DecryptableEntity consumer) {
     BaseNGAccess baseNGAccess = BaseNGAccess.builder()
@@ -32,7 +35,7 @@ public class SecretManagerClientServiceImpl implements SecretManagerClientServic
                                     .projectIdentifier(ngAccess.getProjectIdentifier())
                                     .identifier(ngAccess.getIdentifier())
                                     .build();
-    return getResponse(secretManagerClient.getEncryptionDetails(
+    return restClientExecutor.getResponse(secretManagerClient.getEncryptionDetails(
         NGAccessWithEncryptionConsumer.builder().ngAccess(baseNGAccess).decryptableEntity(consumer).build()));
   }
 

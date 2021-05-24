@@ -3,10 +3,10 @@ package io.harness.cvng;
 import static io.harness.AuthorizationServiceHeader.BEARER;
 import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
+import static io.harness.cvng.cdng.services.impl.CVNGNotifyEventListener.CVNG_ORCHESTRATION;
 import static io.harness.cvng.migration.beans.CVNGSchema.CVNGMigrationStatus.RUNNING;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
-import static io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET;
 
 import static com.google.inject.matcher.Matchers.not;
@@ -30,6 +30,7 @@ import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.cdng.jobs.CVNGStepTaskHandler;
 import io.harness.cvng.cdng.services.impl.CVNGFilterCreationResponseMerger;
 import io.harness.cvng.cdng.services.impl.CVNGModuleInfoProvider;
+import io.harness.cvng.cdng.services.impl.CVNGNotifyEventListener;
 import io.harness.cvng.cdng.services.impl.CVNGPipelineServiceInfoProvider;
 import io.harness.cvng.client.NextGenClientModule;
 import io.harness.cvng.client.VerificationManagerClientModule;
@@ -48,6 +49,7 @@ import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.exception.BadRequestExceptionMapper;
 import io.harness.cvng.exception.ConstraintViolationExceptionMapper;
 import io.harness.cvng.exception.NotFoundExceptionMapper;
+import io.harness.cvng.metrics.services.impl.CVNGMetricsPublisher;
 import io.harness.cvng.migration.CVNGSchemaHandler;
 import io.harness.cvng.migration.beans.CVNGSchema;
 import io.harness.cvng.migration.beans.CVNGSchema.CVNGSchemaKeys;
@@ -71,7 +73,6 @@ import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.metrics.jobs.RecordMetricsJob;
-import io.harness.metrics.modules.MetricsModule;
 import io.harness.metrics.service.api.MetricService;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
@@ -91,13 +92,11 @@ import io.harness.persistence.UserProvider;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
-import io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventListener;
-import io.harness.pms.sdk.core.execution.listeners.NodeExecutionEventListener;
-import io.harness.pms.sdk.core.interrupt.InterruptEventListener;
-import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
-import io.harness.secretmanagerclient.SecretManagementClientModule;
+import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.resource.VersionInfoResource;
+import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.serializer.CVNGStepRegistrar;
@@ -108,11 +107,12 @@ import io.harness.serializer.PipelineServiceUtilAdviserRegistrar;
 import io.harness.serializer.PrimaryVersionManagerRegistrars;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
-import io.harness.yaml.schema.beans.YamlSchemaRootClass;
+import io.harness.waiter.ProgressUpdateService;
+import io.harness.yaml.YamlSdkConfiguration;
+import io.harness.yaml.YamlSdkInitHelper;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -167,6 +167,10 @@ public class VerificationApplication extends Application<VerificationConfigurati
   private HPersistence hPersistence;
 
   public static void main(String[] args) throws Exception {
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      log.info("Shutdown hook, entering maintenance...");
+      MaintenanceController.forceMaintenance(true);
+    }));
     new VerificationApplication().run(args);
   }
 
@@ -237,12 +241,8 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .addAll(CvNextGenRegistrars.morphiaConverters)
             .build();
       }
-      @Provides
-      @Singleton
-      List<YamlSchemaRootClass> yamlSchemaRootClasses() {
-        return ImmutableList.<YamlSchemaRootClass>builder().addAll(CvNextGenRegistrars.yamlSchemaRegistrars).build();
-      }
     });
+
     modules.add(new AbstractCfModule() {
       @Override
       public CfClientConfig cfClientConfig() {
@@ -296,17 +296,25 @@ public class VerificationApplication extends Application<VerificationConfigurati
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(new VerificationManagerClientModule(configuration.getManagerClientConfig().getBaseUrl()));
     modules.add(new NextGenClientModule(configuration.getNgManagerServiceConfig()));
-    modules.add(new SecretManagementClientModule(configuration.getManagerClientConfig(),
+    modules.add(new SecretNGManagerClientModule(
+        ServiceHttpClientConfig.builder().baseUrl(configuration.getNgManagerServiceConfig().getNgManagerUrl()).build(),
         configuration.getNgManagerServiceConfig().getManagerServiceSecret(), "NextGenManager"));
     modules.add(new CVNextGenCommonsServiceModule());
     modules.add(new NotificationClientModule(configuration.getNotificationClientConfiguration()));
     modules.add(new CvPersistenceModule());
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(configuration)));
-    modules.add(new MetricsModule());
+    YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder()
+                                                    .requireSchemaInit(true)
+                                                    .requireSnippetInit(false)
+                                                    .requireValidatorInit(false)
+                                                    .build();
     Injector injector = Guice.createInjector(modules);
+    YamlSdkInitHelper.initialize(injector, yamlSdkConfiguration);
     initializeServiceSecretKeys();
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
-    initMetrics(injector);
+    if (!configuration.getShouldConfigureWithPMS()) {
+      initMetrics(injector);
+    }
     autoCreateCollectionsAndIndexes(injector);
     registerCorrelationFilter(environment, injector);
     registerAuthFilters(environment, injector, configuration);
@@ -329,21 +337,24 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerWaitEnginePublishers(injector);
     log.info("Leaving startup maintenance mode");
     MaintenanceController.forceMaintenance(false);
-
+    registerUpdateProgressScheduler(injector);
     runMigrations(injector);
 
     log.info("Starting app done");
   }
 
-  private void registerPMSQueueListeners(VerificationConfiguration appConfig, Injector injector) {
+  private void registerUpdateProgressScheduler(Injector injector) {
+    // This is need for wait notify update progress for CVNG step.
+    ScheduledThreadPoolExecutor waitNotifyUpdateProgressExecutor =
+        new ScheduledThreadPoolExecutor(2, new ThreadFactoryBuilder().setNameFormat("wait-notify-update").build());
+    waitNotifyUpdateProgressExecutor.scheduleWithFixedDelay(
+        injector.getInstance(ProgressUpdateService.class), 0L, 5L, TimeUnit.SECONDS);
+  }
+
+  private void registerQueueListeners(Injector injector) {
     log.info("Initializing queue listeners...");
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(InterruptEventListener.class), 1);
-    if (appConfig.getShouldConfigureWithPMS()) {
-      queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
-    }
-    queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 5);
+    queueListenerController.register(injector.getInstance(CVNGNotifyEventListener.class), 1);
   }
 
   private void registerWaitEnginePublishers(Injector injector) {
@@ -352,7 +363,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
         injector.getInstance(NotifyQueuePublisherRegister.class);
     notifyQueuePublisherRegister.register(
-        NG_ORCHESTRATION, payload -> publisher.send(Arrays.asList(NG_ORCHESTRATION), payload));
+        CVNG_ORCHESTRATION, payload -> publisher.send(Arrays.asList(CVNG_ORCHESTRATION), payload));
   }
 
   public void registerPipelineSDK(VerificationConfiguration configuration, Injector injector) {
@@ -361,12 +372,12 @@ public class VerificationApplication extends Application<VerificationConfigurati
       try {
         PmsSdkInitHelper.initializeSDKInstance(injector, sdkConfig);
         if (configuration.getShouldConfigureWithPMS()) {
-          registerPMSQueueListeners(configuration, injector);
+          registerQueueListeners(injector);
         }
       } catch (Exception e) {
         log.error("Failed To register pipeline sdk", e);
         // Don't fail for now. We have to find out retry strategy
-        // System.exit(1);
+        System.exit(1);
       }
     }
   }
@@ -391,8 +402,10 @@ public class VerificationApplication extends Application<VerificationConfigurati
         .executionSummaryModuleInfoProviderClass(CVNGModuleInfoProvider.class)
         .build();
   }
+
   private void initMetrics(Injector injector) {
-    injector.getInstance(MetricService.class).initializeMetrics();
+    injector.getInstance(MetricService.class)
+        .initializeMetrics(Arrays.asList(injector.getInstance(CVNGMetricsPublisher.class)));
     injector.getInstance(RecordMetricsJob.class).scheduleMetricsTasks();
   }
 
@@ -689,6 +702,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
         environment.jersey().register(injector.getInstance(resource));
       }
     });
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
     log.info("Registered all the resources. Time taken(ms): {}", System.currentTimeMillis() - startTimeMs);
   }
 

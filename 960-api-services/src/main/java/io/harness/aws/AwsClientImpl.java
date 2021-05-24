@@ -6,7 +6,10 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 
+import io.harness.exception.ExplanationException;
+import io.harness.exception.HintException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.NestedExceptionUtils;
 
 import com.amazonaws.arn.Arn;
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -82,8 +85,14 @@ public class AwsClientImpl implements AwsClient {
       tracker.trackEC2Call("Get Ec2 client");
       getAmazonEc2Client(awsConfig).describeRegions();
     } catch (AmazonEC2Exception amazonEC2Exception) {
-      if (amazonEC2Exception.getStatusCode() == 401) {
-        checkCredentials(awsConfig);
+      if (amazonEC2Exception.getStatusCode() == 401 && !awsConfig.isEc2IamCredentials()) {
+        if (isEmpty(awsConfig.getAwsAccessKeyCredential().getAccessKey())) {
+          throw NestedExceptionUtils.hintWithExplanationException(HintException.HINT_EMPTY_ACCESS_KEY,
+              ExplanationException.EXPLANATION_EMPTY_ACCESS_KEY, amazonEC2Exception);
+        } else if (isEmpty(awsConfig.getAwsAccessKeyCredential().getSecretKey())) {
+          throw NestedExceptionUtils.hintWithExplanationException(HintException.HINT_EMPTY_SECRET_KEY,
+              ExplanationException.EXPLANATION_EMPTY_SECRET_KEY, amazonEC2Exception);
+        }
       }
       throw amazonEC2Exception;
     }

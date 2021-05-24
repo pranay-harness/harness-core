@@ -15,12 +15,13 @@ import io.harness.accesscontrol.OrgIdentifier;
 import io.harness.accesscontrol.ProjectIdentifier;
 import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionNode;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
 import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.gitsync.interceptor.GitEntityCreateInfoDTO;
@@ -114,6 +115,8 @@ public class PipelineResource implements YamlSchemaResource {
       @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo, @NotNull @ApiParam(hidden = true) String yaml) {
     log.info("Creating pipeline");
 
+    pmsYamlSchemaService.validateYamlSchema(orgId, projectId, yaml);
+
     PipelineEntity pipelineEntity = PMSPipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
     PipelineEntity createdEntity = pmsPipelineService.create(pipelineEntity);
 
@@ -139,7 +142,7 @@ public class PipelineResource implements YamlSchemaResource {
   @GET
   @Path("/{pipelineIdentifier}")
   @ApiOperation(value = "Gets a pipeline by identifier", nickname = "getPipeline")
-  //  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
   public ResponseDTO<PMSPipelineResponseDTO> getPipelineByIdentifier(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
@@ -174,13 +177,16 @@ public class PipelineResource implements YamlSchemaResource {
       @BeanParam GitEntityUpdateInfoDTO gitEntityInfo, @NotNull @ApiParam(hidden = true) String yaml) {
     log.info("Updating pipeline");
 
+    pmsYamlSchemaService.validateYamlSchema(orgId, projectId, yaml);
+
     PipelineEntity pipelineEntity = PMSPipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
     if (!pipelineEntity.getIdentifier().equals(pipelineId)) {
       throw new InvalidRequestException("Pipeline identifier in URL does not match pipeline identifier in yaml");
     }
 
-    pipelineEntity.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
-    PipelineEntity updatedEntity = pmsPipelineService.update(pipelineEntity);
+    PipelineEntity withVersion = pipelineEntity.withVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
+
+    PipelineEntity updatedEntity = pmsPipelineService.updatePipelineYaml(withVersion);
 
     return ResponseDTO.newResponse(updatedEntity.getVersion().toString(), updatedEntity.getIdentifier());
   }
@@ -194,7 +200,7 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId,
-      @BeanParam GitEntityDeleteInfoDTO entityDeleteInfo) throws ProducerShutdownException {
+      @BeanParam GitEntityDeleteInfoDTO entityDeleteInfo) {
     log.info("Deleting pipeline");
 
     return ResponseDTO.newResponse(pmsPipelineService.delete(
@@ -204,7 +210,7 @@ public class PipelineResource implements YamlSchemaResource {
   @POST
   @Path("/list")
   @ApiOperation(value = "Gets Pipeline list", nickname = "getPipelineList")
-  //  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
   public ResponseDTO<Page<PMSPipelineSummaryResponseDTO>> getListOfPipelines(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
@@ -225,7 +231,8 @@ public class PipelineResource implements YamlSchemaResource {
     }
 
     Page<PMSPipelineSummaryResponseDTO> pipelines =
-        pmsPipelineService.list(criteria, pageRequest).map(PMSPipelineDtoMapper::preparePipelineSummary);
+        pmsPipelineService.list(criteria, pageRequest, accountId, orgId, projectId)
+            .map(PMSPipelineDtoMapper::preparePipelineSummary);
 
     return ResponseDTO.newResponse(pipelines);
   }
@@ -233,12 +240,13 @@ public class PipelineResource implements YamlSchemaResource {
   @GET
   @Path("/summary/{pipelineIdentifier}")
   @ApiOperation(value = "Gets Pipeline Summary of a pipeline", nickname = "getPipelineSummary")
-  //  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
   public ResponseDTO<PMSPipelineSummaryResponseDTO> getPipelineSummary(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId) {
+      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     log.info("Get pipeline Summary");
 
     PMSPipelineSummaryResponseDTO pipelineSummary = PMSPipelineDtoMapper.preparePipelineSummary(
@@ -263,12 +271,12 @@ public class PipelineResource implements YamlSchemaResource {
   @POST
   @Path("/execution/summary")
   @ApiOperation(value = "Gets Executions list", nickname = "getListOfExecutions")
-  //  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
   public ResponseDTO<Page<PipelineExecutionSummaryDTO>> getListOfExecutions(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @QueryParam("searchTerm") String searchTerm,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo, @QueryParam("searchTerm") String searchTerm,
       @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size,
       @QueryParam("sort") List<String> sort, @QueryParam("filterIdentifier") String filterIdentifier,
@@ -286,8 +294,14 @@ public class PipelineResource implements YamlSchemaResource {
     }
 
     Page<PipelineExecutionSummaryDTO> planExecutionSummaryDTOS =
-        pmsExecutionService.getPipelineExecutionSummaryEntity(criteria, pageRequest)
-            .map(PipelineExecutionSummaryDtoMapper::toDto);
+        pmsExecutionService.getPipelineExecutionSummaryEntity(criteria, pageRequest).map(e -> {
+          Optional<PipelineEntity> optionalPipelineEntity =
+              pmsPipelineService.get(accountId, orgId, projectId, e.getPipelineIdentifier(), false);
+          if (!optionalPipelineEntity.isPresent()) {
+            throw new InvalidRequestException("Pipeline with identifier " + e.getPipelineIdentifier() + " not found");
+          }
+          return PipelineExecutionSummaryDtoMapper.toDto(e, optionalPipelineEntity.get());
+        });
 
     return ResponseDTO.newResponse(planExecutionSummaryDTOS);
   }
@@ -300,19 +314,27 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @QueryParam("filter") String filter, @QueryParam("stageNodeId") String stageNodeId,
-      @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
+      @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     log.info("Get Execution Detail");
 
     PipelineExecutionSummaryEntity executionSummaryEntity =
         pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId, false);
 
-    //    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
-    //        Resource.of("PIPELINE", executionSummaryEntity.getPipelineIdentifier()),
-    //        PipelineRbacPermissions.PIPELINE_VIEW);
+    Optional<PipelineEntity> optionalPipelineEntity =
+        pmsPipelineService.get(accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier(), false);
+    if (!optionalPipelineEntity.isPresent()) {
+      throw new InvalidRequestException(
+          "Pipeline with identifier " + executionSummaryEntity.getPipelineIdentifier() + " not found");
+    }
+
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
+        Resource.of("PIPELINE", executionSummaryEntity.getPipelineIdentifier()), PipelineRbacPermissions.PIPELINE_VIEW);
 
     PipelineExecutionDetailDTO pipelineExecutionDetailDTO =
         PipelineExecutionDetailDTO.builder()
-            .pipelineExecutionSummary(PipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntity))
+            .pipelineExecutionSummary(
+                PipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntity, optionalPipelineEntity.get()))
             .executionGraph(ExecutionGraphMapper.toExecutionGraph(
                 pmsExecutionService.getOrchestrationGraph(stageNodeId, planExecutionId)))
             .build();
@@ -324,7 +346,7 @@ public class PipelineResource implements YamlSchemaResource {
   @Produces({"application/yaml"})
   @Path("/execution/{planExecutionId}/inputset")
   @ApiOperation(value = "Gets  inputsetYaml", nickname = "getInputsetYaml")
-  //  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
   public String getInputsetYaml(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
@@ -342,7 +364,7 @@ public class PipelineResource implements YamlSchemaResource {
     if (entityType != EntityType.PIPELINES) {
       throw new NotSupportedException(String.format("Entity type %s is not supported", entityType.getYamlName()));
     }
-    JsonNode schema = pmsYamlSchemaService.getPipelineYamlSchema(orgIdentifier, projectIdentifier, scope);
+    JsonNode schema = pmsYamlSchemaService.getPipelineYamlSchema(projectIdentifier, orgIdentifier, scope);
     if (schema == null) {
       throw new NotFoundException(String.format("No schema found for entity type %s ", entityType.getYamlName()));
     }
@@ -359,7 +381,7 @@ public class PipelineResource implements YamlSchemaResource {
   @GET
   @Path("/getExecutionNode")
   @ApiOperation(value = "get execution node", nickname = "getExecutionNode")
-  //  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
   public ResponseDTO<ExecutionNode> getExecutionNode(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
