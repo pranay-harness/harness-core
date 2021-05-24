@@ -40,7 +40,7 @@ com.google.api:gax-grpc:jar:1.60.1
 com.google.api:gax:jar:1.60.1
 com.google.auth:google-auth-library-credentials:jar:0.22.2
 com.google.auth:google-auth-library-oauth2-http:jar:0.22.2
-com.google.auto.value:auto-value-annotations:jar:1.7.2
+com.google.auto.value:auto-value-annotations:jar:1.7.4
 com.google.cloud:google-cloud-core-grpc:jar:1.93.7
 com.google.cloud:google-cloud-core:jar:1.93.7
 com.google.cloud:google-cloud-logging:jar:1.93.0
@@ -102,6 +102,7 @@ io.grpc:grpc-context:jar:1.33.1
 io.grpc:grpc-core:jar:1.33.1
 io.grpc:grpc-grpclb:jar:1.33.1
 io.grpc:grpc-netty-shaded:jar:1.33.1
+io.grpc:grpc-protobuf-lite:jar:1.33.1
 io.grpc:grpc-protobuf:jar:1.33.1
 io.grpc:grpc-services:jar:1.33.1
 io.grpc:grpc-stub:jar:1.33.1

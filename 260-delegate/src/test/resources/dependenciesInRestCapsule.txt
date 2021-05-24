@@ -119,7 +119,7 @@ com.google.apis:google-api-services-servicecontrol:jar:v1-rev142-1.25.0
 com.google.apis:google-api-services-storage:jar:v1-rev131-1.22.0
 com.google.auth:google-auth-library-credentials:jar:0.22.2
 com.google.auth:google-auth-library-oauth2-http:jar:0.22.2
-com.google.auto.value:auto-value-annotations:jar:1.7
+com.google.auto.value:auto-value-annotations:jar:1.7.4
 com.google.cloud.datastore:datastore-v1-proto-client:jar:1.6.0
 com.google.cloud:google-cloud-bigquery:jar:1.106.0
 com.google.cloud:google-cloud-core-grpc:jar:1.93.7
