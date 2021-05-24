@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.AVMOHAN;
 import static io.harness.rule.OwnerRule.UTSAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.data.Offset.offset;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
@@ -42,6 +43,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.assertj.core.data.Offset;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -488,6 +490,96 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
         .insertIntoCeRecommendation(stringCaptor.capture(), any(), any(), any(), anyBoolean(), any());
     assertThat(stringCaptor.getAllValues()).hasSize(1);
     assertThat(stringCaptor.getValue()).isEqualTo(UUID);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testSetContainerLevelCost() {
+    Map<String, ContainerRecommendation> containerRecommendationMap = ImmutableMap.of("c1",
+        ContainerRecommendation.builder()
+            .current(ResourceRequirement.builder().request("cpu", "15m").request("memory", "20M").build())
+            .build(),
+        "c2",
+        ContainerRecommendation.builder()
+            .current(ResourceRequirement.builder().request("cpu", "30m").request("memory", "80M").build())
+            .build());
+
+    Cost lastDayCost = Cost.builder().cpu(BigDecimal.valueOf(100)).memory(BigDecimal.valueOf(100)).build();
+    computedRecommendationWriter.setContainerLevelCost(containerRecommendationMap, lastDayCost);
+
+    final Offset<BigDecimal> costOffset = offset(BigDecimal.valueOf(0.09D));
+
+    assertThat(containerRecommendationMap.get("c1").getLastDayCost().getCpu())
+        // (15 / (15 + 30)) * 100 = 0.33 * 100
+        .isCloseTo(BigDecimal.valueOf(33.3333D), costOffset);
+    assertThat(containerRecommendationMap.get("c1").getLastDayCost().getMemory())
+        // (20 / (20 + 80)) * 100 = 0.20 * 100
+        .isCloseTo(BigDecimal.valueOf(20), costOffset);
+
+    assertThat(containerRecommendationMap.get("c2").getLastDayCost().getCpu())
+        .isCloseTo(BigDecimal.valueOf(66.6667D), costOffset);
+    assertThat(containerRecommendationMap.get("c2").getLastDayCost().getMemory())
+        .isCloseTo(BigDecimal.valueOf(80), costOffset);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testSetContainerLevelCostWithNullCurrentResource() {
+    Map<String, ContainerRecommendation> containerRecommendationMap =
+        ImmutableMap.of("c1", ContainerRecommendation.builder().build(), "c2",
+            ContainerRecommendation.builder()
+                .current(ResourceRequirement.builder().request("cpu", "30m").request("memory", "80M").build())
+                .build());
+
+    Cost lastDayCost = Cost.builder().cpu(BigDecimal.valueOf(100)).memory(BigDecimal.valueOf(100)).build();
+    computedRecommendationWriter.setContainerLevelCost(containerRecommendationMap, lastDayCost);
+
+    final Offset<BigDecimal> costOffset = offset(BigDecimal.valueOf(0.09D));
+
+    assertThat(containerRecommendationMap.get("c1").getLastDayCost().getCpu())
+        // (0 / 30) * 100 = 0 * 100
+        .isCloseTo(BigDecimal.valueOf(0), costOffset);
+    assertThat(containerRecommendationMap.get("c1").getLastDayCost().getMemory())
+        // (0 / 80) * 100 = 0 * 100
+        .isCloseTo(BigDecimal.valueOf(0), costOffset);
+
+    assertThat(containerRecommendationMap.get("c2").getLastDayCost().getCpu())
+        .isCloseTo(BigDecimal.valueOf(100), costOffset);
+    assertThat(containerRecommendationMap.get("c2").getLastDayCost().getMemory())
+        .isCloseTo(BigDecimal.valueOf(100), costOffset);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testSetContainerLevelCostWithZeroLastDayCost() {
+    Map<String, ContainerRecommendation> containerRecommendationMap = ImmutableMap.of("c1",
+        ContainerRecommendation.builder()
+            .current(ResourceRequirement.builder().request("cpu", "15m").request("memory", "20M").build())
+            .build(),
+        "c2",
+        ContainerRecommendation.builder()
+            .current(ResourceRequirement.builder().request("cpu", "30m").request("memory", "80M").build())
+            .build());
+
+    Cost lastDayCost = Cost.builder().cpu(BigDecimal.valueOf(0)).memory(BigDecimal.valueOf(0)).build();
+    computedRecommendationWriter.setContainerLevelCost(containerRecommendationMap, lastDayCost);
+
+    final Offset<BigDecimal> costOffset = offset(BigDecimal.valueOf(0.09D));
+
+    assertThat(containerRecommendationMap.get("c1").getLastDayCost().getCpu())
+        // (15 / (15 + 30)) * 0 = 0.33 * 0
+        .isCloseTo(BigDecimal.valueOf(0), costOffset);
+    assertThat(containerRecommendationMap.get("c1").getLastDayCost().getMemory())
+        // (20 / (20 + 80)) * 0 = 0.20 * 0
+        .isCloseTo(BigDecimal.valueOf(0), costOffset);
+
+    assertThat(containerRecommendationMap.get("c2").getLastDayCost().getCpu())
+        .isCloseTo(BigDecimal.valueOf(0), costOffset);
+    assertThat(containerRecommendationMap.get("c2").getLastDayCost().getMemory())
+        .isCloseTo(BigDecimal.valueOf(0), costOffset);
   }
 
   @Test

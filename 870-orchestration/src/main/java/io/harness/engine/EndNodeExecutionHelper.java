@@ -17,25 +17,17 @@ import io.harness.pms.contracts.data.StepOutcomeRef;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.io.StepOutcomeProto;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
-import io.harness.utils.RetryUtils;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import net.jodah.failsafe.RetryPolicy;
-import org.springframework.transaction.TransactionException;
 
 @Slf4j
 @OwnedBy(HarnessTeam.PIPELINE)
 public class EndNodeExecutionHelper {
-  private final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
-      "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
-
   @Inject private PmsOutcomeService pmsOutcomeService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private TransactionUtils transactionUtils;

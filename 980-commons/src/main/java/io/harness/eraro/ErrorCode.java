@@ -525,7 +525,9 @@ public enum ErrorCode {
   SCM_UNAUTHORIZED,
   DATA,
   CONTEXT,
-  PR_CREATION_ERROR;
+  PR_CREATION_ERROR,
+  URL_NOT_REACHABLE,
+  URL_NOT_PROVIDED;
 
   private Status status = BAD_REQUEST;
   private String description;

@@ -8,7 +8,6 @@ import io.harness.queryconverter.dto.FieldFilter;
 import io.harness.queryconverter.dto.GridRequest;
 import io.harness.queryconverter.dto.SortCriteria;
 import io.harness.queryconverter.dto.SortOrder;
-import io.harness.timescaledb.Tables;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -26,11 +25,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
-import org.jooq.Record;
 import org.jooq.SelectField;
 import org.jooq.SortField;
+import org.jooq.Table;
 import org.jooq.impl.DSL;
-import org.jooq.impl.TableImpl;
 
 @Slf4j
 @Singleton
@@ -49,15 +47,14 @@ public class SQLConverterImpl implements SQLConverter {
 
   @Override
   public List<? extends Serializable> convert(@NonNull String tableName, GridRequest request) throws Exception {
-    TableImpl<? extends Record> jooqTable = getJooqTable(tableName);
+    Table<?> jooqTable = SQLConverter.getTable(tableName);
     Class<? extends Serializable> pojoClass = RecordToPojo.valueOf(jooqTable.getName().toUpperCase()).getPojoClazz();
 
     return convert(jooqTable, request, pojoClass);
   }
 
   @Override
-  public List<? extends Serializable> convert(TableImpl<? extends Record> jooqTable, GridRequest request)
-      throws Exception {
+  public List<? extends Serializable> convert(Table<?> jooqTable, GridRequest request) throws Exception {
     Class<? extends Serializable> pojoClass = RecordToPojo.valueOf(jooqTable.getName().toUpperCase()).getPojoClazz();
 
     return convert(jooqTable, request, pojoClass);
@@ -66,14 +63,14 @@ public class SQLConverterImpl implements SQLConverter {
   @Override
   public List<? extends Serializable> convert(
       String tableName, GridRequest request, Class<? extends Serializable> fetchInto) throws Exception {
-    TableImpl<? extends Record> jooqTable = getJooqTable(tableName);
+    Table<?> jooqTable = SQLConverter.getTable(tableName);
 
     return convert(jooqTable, request, fetchInto);
   }
 
   @Override
-  public List<? extends Serializable> convert(TableImpl<? extends Record> jooqTable, GridRequest request,
-      Class<? extends Serializable> fetchInto) throws Exception {
+  public List<? extends Serializable> convert(
+      Table<?> jooqTable, GridRequest request, Class<? extends Serializable> fetchInto) throws Exception {
     Integer offset = firstNonNull(request.getOffset(), 0);
     Integer limit = request.getLimit();
 
@@ -119,12 +116,12 @@ public class SQLConverterImpl implements SQLConverter {
         .fetchInto(fetchInto);
   }
 
-  private List<SortField<?>> getSortFields(List<SortCriteria> sortCriteriaList, TableImpl<? extends Record> tableName)
+  private List<SortField<?>> getSortFields(List<SortCriteria> sortCriteriaList, Table<?> tableName)
       throws InvalidPropertiesFormatException {
     List<SortField<?>> result = new ArrayList<>();
     for (SortCriteria sortCriteria : sortCriteriaList) {
       if (sortCriteria != null) {
-        Field<?> tableFieldName = getTableFieldName(sortCriteria.getField(), tableName);
+        Field<?> tableFieldName = SQLConverter.getField(sortCriteria.getField(), tableName);
         if (sortCriteria.getOrder() == SortOrder.DESCENDING || sortCriteria.getOrder() == SortOrder.DESC) {
           result.add(tableFieldName.as(tableFieldName.getUnqualifiedName()).desc());
         } else if (sortCriteria.getOrder() == SortOrder.ASCENDING || sortCriteria.getOrder() == SortOrder.ASC) {
@@ -138,13 +135,14 @@ public class SQLConverterImpl implements SQLConverter {
     return result;
   }
 
-  private List<Field<?>> getGroupBy(List<String> groupBy, TableImpl<? extends Record> tableName) {
-    return groupBy.stream().map(columnName -> getTableFieldName(columnName, tableName)).collect(Collectors.toList());
+  private List<Field<?>> getGroupBy(List<String> groupBy, Table<?> tableName) {
+    return groupBy.stream()
+        .map(columnName -> SQLConverter.getField(columnName, tableName))
+        .collect(Collectors.toList());
   }
 
   @SneakyThrows
-  private List<SelectField<?>> getAggregation(
-      List<FieldAggregation> aggregationFunctionList, TableImpl<? extends Record> tableName) {
+  private List<SelectField<?>> getAggregation(List<FieldAggregation> aggregationFunctionList, Table<?> tableName) {
     List<SelectField<?>> result = new ArrayList<>();
 
     for (FieldAggregation fieldAggregation : aggregationFunctionList) {
@@ -157,7 +155,7 @@ public class SQLConverterImpl implements SQLConverter {
         continue;
       }
 
-      Field<?> tableFieldName = getTableFieldName(fieldAggregation.getField(), tableName);
+      Field<?> tableFieldName = SQLConverter.getField(fieldAggregation.getField(), tableName);
       switch (fieldAggregation.getOperation()) {
         case SUM:
           result.add(DSL.sum((Field<Number>) tableFieldName).as(tableFieldName));
@@ -185,11 +183,11 @@ public class SQLConverterImpl implements SQLConverter {
   }
 
   @SneakyThrows
-  private Condition getFilters(List<FieldFilter> filters, TableImpl<? extends Record> jooqTable) {
+  private Condition getFilters(List<FieldFilter> filters, Table<?> jooqTable) {
     Condition condition = DSL.noCondition();
 
     for (FieldFilter filter : filters) {
-      Field<?> tableFieldName = getTableFieldName(filter.getField(), jooqTable);
+      Field<?> tableFieldName = SQLConverter.getField(filter.getField(), jooqTable);
       switch (filter.getOperator()) {
         case IN:
         case EQUALS:
@@ -228,23 +226,5 @@ public class SQLConverterImpl implements SQLConverter {
       }
     }
     return condition;
-  }
-
-  @SneakyThrows
-  private Field<?> getTableFieldName(@NonNull String columnName, TableImpl<? extends Record> jooqTable) {
-    java.lang.reflect.Field field = jooqTable.getClass().getDeclaredField(columnName.toUpperCase());
-
-    if (org.jooq.TableField.class.equals(field.getType())) {
-      // fields are already public
-      return (Field<?>) field.get(jooqTable);
-    }
-    throw new NoSuchFieldException(columnName + " doesnt exist in table " + jooqTable);
-  }
-
-  @SneakyThrows
-  private TableImpl<? extends Record> getJooqTable(@NonNull String tableName) {
-    java.lang.reflect.Field field = Tables.class.getDeclaredField(tableName.toUpperCase());
-    // fields are already public
-    return (TableImpl<? extends Record>) field.get(tableName);
   }
 }

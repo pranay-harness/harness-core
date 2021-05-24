@@ -11,10 +11,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.helper.GitFileLocationHelper;
-import io.harness.gitsync.common.service.YamlGitConfigService;
-import io.harness.gitsync.core.service.YamlGitService;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
-import io.harness.gitsync.gitfileactivity.service.GitSyncService;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
 import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails;
 import io.harness.gitsync.gitsyncerror.beans.HarnessToGitErrorDetails;
@@ -40,10 +37,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
   private static final EnumSet<GitFileActivity.Status> TERMINATING_STATUSES =
       EnumSet.of(GitFileActivity.Status.EXPIRED, GitFileActivity.Status.DISCARDED);
-  private YamlGitService yamlGitService;
-  private GitSyncService gitSyncService;
   private GitSyncErrorRepository gitSyncErrorRepository;
-  private YamlGitConfigService yamlGitConfigService;
 
   @Override
   public void deleteByAccountIdOrgIdProjectIdAndFilePath(
