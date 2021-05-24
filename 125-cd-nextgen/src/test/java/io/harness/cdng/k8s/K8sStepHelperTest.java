@@ -452,7 +452,6 @@ public class K8sStepHelperTest extends CategoryTest {
     assertThat(kustomizeManifestDelegateConfig.getStoreDelegateConfig()).isInstanceOf(GitStoreDelegateConfig.class);
     GitStoreDelegateConfig gitStoreDelegateConfig =
         (GitStoreDelegateConfig) kustomizeManifestDelegateConfig.getStoreDelegateConfig();
-    assertThat(gitStoreDelegateConfig.getPaths().get(0)).isEmpty();
   }
 
   @Test
