@@ -170,7 +170,7 @@ public class K8sDelete extends AbstractK8sState {
   }
 
   @Override
-  public List<CommandUnit> commandUnitList(boolean remoteStoreType) {
+  public List<CommandUnit> commandUnitList(boolean remoteStoreType, String accountId) {
     List<CommandUnit> applyCommandUnits = new ArrayList<>();
 
     if (remoteStoreType) {

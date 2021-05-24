@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.task.helm.HelmChartInfo;
+import io.harness.k8s.model.KubernetesResourceId;
 
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.TaskType;
@@ -53,6 +54,7 @@ public class K8sStateExecutionData extends StateExecutionData implements Delegat
   private HelmChartInfo helmChartInfo;
   private String blueGreenStageColor;
   private Set<String> delegateSelectors;
+  private List<KubernetesResourceId> prunedResourcesIds;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
@@ -99,6 +101,7 @@ public class K8sStateExecutionData extends StateExecutionData implements Delegat
         .helmChartInfo(helmChartInfo)
         .blueGreenStageColor(blueGreenStageColor)
         .delegateSelectors(delegateSelectors)
+        .prunedResourcesIds(prunedResourcesIds)
         .build();
   }
 }

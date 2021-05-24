@@ -185,6 +185,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.jetbrains.annotations.NotNull;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.StartedProcess;
@@ -853,6 +854,25 @@ public class K8sTaskHelperBase {
     if (denoteOverallSuccess) {
       executionLogCallback.saveExecutionLog("Done", INFO, CommandExecutionStatus.SUCCESS);
     }
+  }
+
+  public List<KubernetesResourceId> executeDeleteHandlingPartialExecution(Kubectl client,
+      K8sDelegateTaskParams k8sDelegateTaskParams, List<KubernetesResourceId> kubernetesResourceIds,
+      LogCallback executionLogCallback, boolean denoteOverallSuccess) throws Exception {
+    List<KubernetesResourceId> deletedResources = new ArrayList<>();
+    for (KubernetesResourceId resourceId : kubernetesResourceIds) {
+      ProcessResult result = executeDeleteCommand(client, k8sDelegateTaskParams, executionLogCallback, resourceId);
+      if (result.getExitValue() == 0) {
+        deletedResources.add(resourceId);
+      } else {
+        log.warn("Failed to delete resource {}. Error {}", resourceId.kindNameRef(), result.getOutput());
+      }
+    }
+
+    if (denoteOverallSuccess) {
+      executionLogCallback.saveExecutionLog("Done", INFO, CommandExecutionStatus.SUCCESS);
+    }
+    return deletedResources;
   }
 
   public boolean executeDelete(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams,
@@ -2285,5 +2305,26 @@ public class K8sTaskHelperBase {
     }
 
     return baseManifestDirectory;
+  }
+
+  @NotNull
+  private List<KubernetesResourceId> getResourcesToBePruned(
+      List<KubernetesResource> previousSuccessfulReleaseResources, List<KubernetesResourceId> currentResources) {
+    return previousSuccessfulReleaseResources.stream()
+        .filter(resource -> !resource.isSkipPruning())
+        .map(KubernetesResource::getResourceId)
+        .filter(resourceId -> !resourceId.isVersioned())
+        .filter(resource -> !currentResources.contains(resource))
+        .collect(toList());
+  }
+
+  public List<KubernetesResourceId> getResourcesToBePrunedInOrder(
+      List<KubernetesResource> resourcesFromLastSuccessfulRelease, List<KubernetesResource> resources) {
+    List<KubernetesResourceId> currentResources =
+        resources.stream().map(KubernetesResource::getResourceId).collect(toList());
+
+    List<KubernetesResourceId> resourceIdsToBeDeleted =
+        getResourcesToBePruned(resourcesFromLastSuccessfulRelease, currentResources);
+    return arrangeResourceIdsInDeletionOrder(resourceIdsToBeDeleted);
   }
 }

@@ -66,6 +66,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
+import io.harness.deployment.InstanceDetails;
 import io.harness.ecs.EcsContainerDetails;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
@@ -84,6 +85,7 @@ import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ecs.EcsBGRoute53SetupStateExecutionData;
 import software.wings.api.ecs.EcsSetupStateExecutionData;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
@@ -557,19 +559,31 @@ public class EcsStateHelperTest extends CategoryTest {
                     .build())
             .build();
     ContainerDeploymentManagerHelper mockHelper = mock(ContainerDeploymentManagerHelper.class);
-    doReturn(singletonList(anInstanceStatusSummary()
-                               .withInstanceElement(anInstanceElement()
-                                                        .dockerId("DockerId")
-                                                        .hostName("HostName")
-                                                        .host(HostElement.builder().build())
-                                                        .ecsContainerDetails(EcsContainerDetails.builder().build())
-                                                        .build())
-                               .build()))
+    doReturn(singletonList(
+                 anInstanceStatusSummary()
+                     .withInstanceElement(anInstanceElement()
+                                              .dockerId("DockerId")
+                                              .hostName("HostName")
+                                              .host(HostElement.builder().build())
+                                              .ecsContainerDetails(EcsContainerDetails.builder()
+                                                                       .taskId("TASK_ID")
+                                                                       .taskArn("TASK_ARN")
+                                                                       .completeDockerId("COMPLETE_DOCKER_ID")
+                                                                       .containerInstanceId("CONTAINER_INSTANCE_ID")
+                                                                       .containerInstanceArn("CONTAINER_INSTANCE_ARN")
+                                                                       .containerId("CONTAINER_ID")
+                                                                       .ecsServiceName("ECS_SERVICE_NAME")
+                                                                       .dockerId("DOCKER_ID")
+                                                                       .build())
+                                              .build())
+                     .build()))
         .doReturn(emptyList())
         .when(mockHelper)
         .getInstanceStatusSummaries(any(), anyList());
     ActivityService mockService = mock(ActivityService.class);
-    doReturn(null).when(sweepingOutputService).save(any());
+    ArgumentCaptor<SweepingOutputInstance> sweepingOutputInstanceCaptor =
+        ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    doReturn(null).when(sweepingOutputService).save(sweepingOutputInstanceCaptor.capture());
     doReturn("").when(mockContext).appendStateExecutionId(anyString());
     doReturn(SweepingOutputInstance.builder())
         .doReturn(SweepingOutputInstance.builder())
@@ -596,6 +610,19 @@ public class EcsStateHelperTest extends CategoryTest {
     assertThat(listParam.getInstanceElements().get(0).getHostName()).isEqualTo("HostName");
     assertThat(listParam.getInstanceElements().get(0).getDockerId()).isEqualTo("DockerId");
     assertThat(response.getFailureTypes()).isNull();
+
+    InstanceDetails.AWS aws = ((InstanceInfoVariables) sweepingOutputInstanceCaptor.getValue().getValue())
+                                  .getInstanceDetails()
+                                  .get(0)
+                                  .getAws();
+    assertThat(aws.getTaskId()).isEqualTo("TASK_ID");
+    assertThat(aws.getTaskArn()).isEqualTo("TASK_ARN");
+    assertThat(aws.getCompleteDockerId()).isEqualTo("COMPLETE_DOCKER_ID");
+    assertThat(aws.getContainerInstanceId()).isEqualTo("CONTAINER_INSTANCE_ID");
+    assertThat(aws.getContainerInstanceArn()).isEqualTo("CONTAINER_INSTANCE_ARN");
+    assertThat(aws.getContainerId()).isEqualTo("CONTAINER_ID");
+    assertThat(aws.getEcsServiceName()).isEqualTo("ECS_SERVICE_NAME");
+    assertThat(aws.getDockerId()).isEqualTo("DOCKER_ID");
 
     delegateResponse.getEcsCommandResponse().setTimeoutFailure(true);
     response = helper.handleDelegateResponseForEcsDeploy(

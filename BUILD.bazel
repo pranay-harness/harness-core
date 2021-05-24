@@ -182,7 +182,7 @@ modules = [
     "//970-rbac-core",
     "//970-telemetry-beans",
     "//980-commons",
-    "//990-commons-test",
+    #"//990-commons-test",
 ]
 
 filegroup(

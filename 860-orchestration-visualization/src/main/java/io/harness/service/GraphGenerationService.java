@@ -4,7 +4,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.dto.OrchestrationGraphDTO;
-import io.harness.execution.PlanExecution;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public interface GraphGenerationService {
@@ -23,5 +22,5 @@ public interface GraphGenerationService {
 
   OrchestrationGraph buildOrchestrationGraph(String planExecutionId);
 
-  void updateGraph(PlanExecution planExecution);
+  void updateGraph(String planExecutionId);
 }

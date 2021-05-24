@@ -8,6 +8,7 @@ import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ArtifactoryServerException;
 import io.harness.exception.ContextException;
 import io.harness.exception.DelegateErrorHandlerException;
+import io.harness.exception.DelegateNotAvailableException;
 import io.harness.exception.ExceptionHandlerNotFoundException;
 import io.harness.exception.GcpServerException;
 import io.harness.exception.GeneralException;
@@ -66,6 +67,7 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(ContextException.class, 31019);
     kryo.register(InvalidTagException.class, 31020);
     kryo.register(SecretNotFoundException.class, 31021);
+    kryo.register(DelegateNotAvailableException.class, 31022);
 
     kryo.register(PrincipalContextData.class, 980001);
     kryo.register(UserPrincipal.class, 980002);

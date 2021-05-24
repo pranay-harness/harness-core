@@ -18,11 +18,11 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.expression.ExpressionEvaluatorUtils;
-import io.harness.expression.JsonFunctor;
 import io.harness.expression.RegexFunctor;
 import io.harness.expression.ResolveObjectResponse;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.expression.XmlFunctor;
+import io.harness.expression.functors.NGJsonFunctor;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.expression.ProcessorResult;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
@@ -90,7 +90,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
     if (!refObjectSpecific) {
       // Add basic functors.
       addToContext("regex", new RegexFunctor());
-      addToContext("json", new JsonFunctor());
+      addToContext("json", new NGJsonFunctor());
       addToContext("xml", new XmlFunctor());
       addToContext("secrets", new SecretFunctor(ambiance.getExpressionFunctorToken()));
     }

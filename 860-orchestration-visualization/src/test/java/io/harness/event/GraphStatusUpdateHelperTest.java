@@ -80,7 +80,8 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
                                    .nodeExecutionProto(NodeExecutionProto.newBuilder().build())
                                    .eventType(NODE_EXECUTION_STATUS_UPDATE)
                                    .build();
-    eventHandlerV2.handleEvent(event, OrchestrationGraph.builder().build());
+    eventHandlerV2.handleEvent(event.getAmbiance().getPlanExecutionId(), event.getNodeExecutionProto().getUuid(),
+        event.getEventType(), OrchestrationGraph.builder().build());
 
     verify(graphGenerationService, never()).getCachedOrchestrationGraph(planExecutionId);
   }
@@ -138,7 +139,8 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
                                    .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(dummyStart))
                                    .eventType(NODE_EXECUTION_STATUS_UPDATE)
                                    .build();
-    OrchestrationGraph updatedGraph = eventHandlerV2.handleEvent(event, cachedGraph);
+    OrchestrationGraph updatedGraph = eventHandlerV2.handleEvent(event.getAmbiance().getPlanExecutionId(),
+        event.getNodeExecutionProto().getUuid(), event.getEventType(), cachedGraph);
 
     Awaitility.await().atMost(2, TimeUnit.SECONDS).pollInterval(500, TimeUnit.MILLISECONDS).until(() -> {
       OrchestrationGraph graphInternal = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
@@ -223,7 +225,8 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
                                    .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(dummyStart))
                                    .eventType(NODE_EXECUTION_STATUS_UPDATE)
                                    .build();
-    OrchestrationGraph updatedGraph = eventHandlerV2.handleEvent(event, cachedGraph);
+    OrchestrationGraph updatedGraph = eventHandlerV2.handleEvent(event.getAmbiance().getPlanExecutionId(),
+        event.getNodeExecutionProto().getUuid(), event.getEventType(), cachedGraph);
 
     assertThat(updatedGraph).isNotNull();
     assertThat(updatedGraph.getPlanExecutionId()).isEqualTo(planExecution.getUuid());

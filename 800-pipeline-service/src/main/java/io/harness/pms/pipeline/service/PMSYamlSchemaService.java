@@ -11,4 +11,6 @@ public interface PMSYamlSchemaService {
   JsonNode getPipelineYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope);
 
   void validateYamlSchema(String orgId, String projectId, String yaml);
+
+  void validateYamlSchema(String accountId, String orgId, String projectId, String yaml);
 }
