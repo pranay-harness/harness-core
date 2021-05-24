@@ -856,6 +856,10 @@ public class K8BuildSetupUtils {
   }
 
   private String getScmDomain(String scmUrl) {
+    if (scmUrl == null) {
+      return null;
+    }
+
     String[] urlParts = scmUrl.split(":");
     return urlParts[0];
   }
