@@ -5,8 +5,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
-import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.service.GraphGenerationService;
 
 import com.google.inject.Inject;
@@ -20,10 +18,9 @@ public class PlanExecutionStatusUpdateEventHandler {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private GraphGenerationService graphGenerationService;
 
-  public OrchestrationGraph handleEvent(OrchestrationEvent event, OrchestrationGraph orchestrationGraph) {
+  public OrchestrationGraph handleEvent(String planExecutionId, OrchestrationGraph orchestrationGraph) {
     try {
-      Ambiance ambiance = event.getAmbiance();
-      PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
+      PlanExecution planExecution = planExecutionService.get(planExecutionId);
       log.info("Updating Plan Execution with uuid [{}] with status [{}].", planExecution.getUuid(),
           planExecution.getStatus());
       if (planExecution.getEndTs() != null) {
@@ -31,8 +28,7 @@ public class PlanExecutionStatusUpdateEventHandler {
       }
       return orchestrationGraph.withStatus(planExecution.getStatus());
     } catch (Exception e) {
-      log.error("Graph update for PLAN_EXECUTION_UPDATE event failed for plan [{}]",
-          event.getAmbiance().getPlanExecutionId(), e);
+      log.error("Graph update for PLAN_EXECUTION_UPDATE event failed for plan [{}]", planExecutionId, e);
       throw e;
     }
   }
