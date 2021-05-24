@@ -21,7 +21,7 @@ public class BitbucketTriggerSpec implements WebhookTriggerSpec {
   List<WebhookCondition> payloadConditions;
   List<WebhookCondition> headerConditions;
   String jexlCondition;
-  List<WebhookCondition> pathFilters;
+  WebhookCondition pathFilters;
 
   @Override
   public WebhookSourceRepo getType() {

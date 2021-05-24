@@ -8,8 +8,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.task.scm.ScmFilterQueryTaskParams;
-import io.harness.delegate.task.scm.ScmFilterQueryTaskResponseData;
+import io.harness.delegate.task.scm.ScmPathFilterEvaluationTaskParams;
+import io.harness.delegate.task.scm.ScmPathFilterEvaluationTaskResponseData;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
@@ -86,13 +86,8 @@ public class FilepathTriggerFilter implements TriggerFilter {
   }
 
   boolean checkTriggerEligibility(FilterRequestData filterRequestData, TriggerDetails triggerDetails) {
-    Set<Pair<String, String>> conditions = new HashSet<>();
-    for (WebhookCondition webhookCondition :
-        ((WebhookTriggerConfig) (triggerDetails.getNgTriggerConfig().getSource().getSpec()))
-            .getSpec()
-            .getPathFilters()) {
-      conditions.add(Pair.of(webhookCondition.getOperator(), webhookCondition.getValue()));
-    }
+    WebhookTriggerConfig webhookTriggerSpec =
+        (WebhookTriggerConfig) (triggerDetails.getNgTriggerConfig().getSource().getSpec());
     ScmConnector connector;
     try {
       connector = (ScmConnector) NGRestUtils
@@ -108,8 +103,11 @@ public class FilepathTriggerFilter implements TriggerFilter {
       return false;
     }
     if (shouldEvaluateOnDelegate(filterRequestData)) {
-      ScmFilterQueryTaskParams.ScmFilterQueryTaskParamsBuilder paramsBuilder =
-          ScmFilterQueryTaskParams.builder().scmConnector(connector).conditions(conditions);
+      ScmPathFilterEvaluationTaskParams.ScmPathFilterEvaluationTaskParamsBuilder paramsBuilder =
+          ScmPathFilterEvaluationTaskParams.builder()
+              .scmConnector(connector)
+              .operator(webhookTriggerSpec.getSpec().getPathFilters().getOperator())
+              .standard(webhookTriggerSpec.getSpec().getPathFilters().getValue());
       ParseWebhookResponse parseWebhookResponse = filterRequestData.getWebhookPayloadData().getParseWebhookResponse();
       switch (parseWebhookResponse.getHookCase()) {
         case PR:
@@ -120,26 +118,22 @@ public class FilepathTriggerFilter implements TriggerFilter {
               .latestCommit(parseWebhookResponse.getPush().getAfter())
               .previousCommit(parseWebhookResponse.getPush().getBefore());
       }
-      ScmFilterQueryTaskParams params = paramsBuilder.build();
+      ScmPathFilterEvaluationTaskParams params = paramsBuilder.build();
       DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                     .accountId(filterRequestData.getAccountId())
                                                     .taskType(TaskType.SCM_PATH_FILTER_EVALUATION_TASK.toString())
                                                     .taskParameters(params)
                                                     .executionTimeout(Duration.ofMinutes(1L))
                                                     .build();
-      ScmFilterQueryTaskResponseData delegateResponseData =
-          (ScmFilterQueryTaskResponseData) delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+      ScmPathFilterEvaluationTaskResponseData delegateResponseData =
+          (ScmPathFilterEvaluationTaskResponseData) delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
       return delegateResponseData.isMatched();
     } else {
       Set<String> payloadFiles = getFilesFromPushPayload(filterRequestData);
 
       for (String filepath : payloadFiles) {
-        for (Pair<String, String> condition : conditions) {
-          if (ConditionEvaluator.evaluate(filepath, condition.getLeft(), condition.getRight())) {
-            conditions.remove(condition);
-          }
-        }
-        if (conditions.isEmpty()) {
+        if (ConditionEvaluator.evaluate(filepath, webhookTriggerSpec.getSpec().getPathFilters().getOperator(),
+                webhookTriggerSpec.getSpec().getPathFilters().getValue())) {
           return true;
         }
       }

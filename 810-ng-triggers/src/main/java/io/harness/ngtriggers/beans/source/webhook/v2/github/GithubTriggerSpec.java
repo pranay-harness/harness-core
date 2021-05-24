@@ -28,7 +28,7 @@ public class GithubTriggerSpec implements WebhookTriggerSpec {
   List<WebhookCondition> headerConditions;
   List<WebhookCondition> payloadConditions;
   String jexlCondition;
-  List<WebhookCondition> pathFilters;
+  WebhookCondition pathFilters;
 
   @Override
   public WebhookSourceRepo getType() {

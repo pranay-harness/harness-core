@@ -24,7 +24,7 @@ public class CustomWebhookTriggerSpec implements WebhookTriggerSpec {
 
   public void setActions(List<WebhookAction> webhookActions) {}
 
-  public void setPathFilters(List<WebhookCondition> pathFilters) {}
+  public void setPathFilters(WebhookCondition pathFilters) {}
 
   @Override
   public RepoSpec getRepoSpec() {
@@ -42,7 +42,7 @@ public class CustomWebhookTriggerSpec implements WebhookTriggerSpec {
   }
 
   @Override
-  public List<WebhookCondition> getPathFilters() {
+  public WebhookCondition getPathFilters() {
     return null;
   }
 
