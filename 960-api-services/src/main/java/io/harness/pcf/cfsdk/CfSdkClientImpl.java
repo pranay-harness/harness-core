@@ -630,7 +630,7 @@ public class CfSdkClientImpl implements CfSdkClient {
   @Override
   public void mapRouteMapForApp(CfRequestConfig cfRequestConfig, Route route)
       throws PivotalClientApiException, InterruptedException {
-    log.info(format("%s Mapping routeMap: %s, AppName:  %s", PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX, route,
+    log.info(format("%s Mapping routeMap: %s, AppName: %s", PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX, route,
         cfRequestConfig.getApplicationName()));
 
     MapRouteRequest.Builder builder = MapRouteRequest.builder()
@@ -658,7 +658,7 @@ public class CfSdkClientImpl implements CfSdkClient {
 
       if (exceptionOccurred.get()) {
         throw new PivotalClientApiException(
-            format("Exception occurred while mapping routeMap: %s, AppName: %s, Error: %s ", route,
+            format("Exception occurred while mapping routeMap: %s, AppName: %s, Error: %s", route,
                 cfRequestConfig.getApplicationName(), errorBuilder.toString()));
       }
     }
@@ -792,7 +792,7 @@ public class CfSdkClientImpl implements CfSdkClient {
       waitTillCompletion(latch, cfRequestConfig.getTimeOutIntervalInMins());
       if (exceptionOccurred.get()) {
         throw new PivotalClientApiException(
-            format("Exception occurred while getting application Environments:  %s, Error: %s",
+            format("Exception occurred while getting application Environments: %s, Error: %s",
                 cfRequestConfig.getApplicationName(), errorBuilder.toString()));
       }
 

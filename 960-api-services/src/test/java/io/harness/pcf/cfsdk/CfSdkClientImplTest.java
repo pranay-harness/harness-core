@@ -12,6 +12,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.fail;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
@@ -64,7 +65,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
@@ -75,24 +75,38 @@ import reactor.core.publisher.Mono;
 
 @OwnedBy(HarnessTeam.CDP)
 public class CfSdkClientImplTest extends CategoryTest {
+  // cfSdkClient
   @Mock private CloudFoundryOperationsWrapper wrapper;
   @Mock private CloudFoundryOperations operations;
   @Mock private Organizations organizations;
   @Mock private Applications applications;
   @Mock private Routes routes;
   @Mock private Domains domains;
-  @Mock private CloudFoundryOperationsProvider cloudFoundryOperationsProvider;
+  @Mock private CloudFoundryOperationsProvider cloudFoundryOperationsProviderMock;
   @Mock private LogCallback logCallback;
+  @Spy private CfSdkClientImpl cfSdkClient;
 
-  @InjectMocks @Spy private CfSdkClientImpl cfSdkClient;
+  // mockedSdkClient
+  private final CloudFoundryOperationsProvider cloudFoundryOperationsProvider = new CloudFoundryOperationsProvider();
+  private final ConnectionContextProvider connectionContextProvider = new ConnectionContextProvider();
+  private final CloudFoundryClientProvider cloudFoundryClientProvider = new CloudFoundryClientProvider();
+  @Spy private CfSdkClientImpl mockedSdkClient;
 
   @Before
   public void setupMocks() throws Exception {
     MockitoAnnotations.initMocks(this);
+    // cfSdkClient
     when(wrapper.getCloudFoundryOperations()).thenReturn(operations);
     when(operations.applications()).thenReturn(applications);
     when(operations.routes()).thenReturn(routes);
-    doReturn(wrapper).when(cloudFoundryOperationsProvider).getCloudFoundryOperationsWrapper(any());
+    doReturn(wrapper).when(cloudFoundryOperationsProviderMock).getCloudFoundryOperationsWrapper(any());
+    on(cfSdkClient).set("cloudFoundryOperationsProvider", cloudFoundryOperationsProviderMock);
+
+    // mockedSdkClient
+    on(cloudFoundryOperationsProvider).set("connectionContextProvider", connectionContextProvider);
+    on(cloudFoundryOperationsProvider).set("cloudFoundryClientProvider", cloudFoundryClientProvider);
+    on(mockedSdkClient).set("cloudFoundryOperationsProvider", cloudFoundryOperationsProvider);
+
     clearProperties();
   }
 
@@ -317,11 +331,11 @@ public class CfSdkClientImplTest extends CategoryTest {
     cfRequestConfig.setEndpointUrl("api.run.pivotal.io");
 
     try {
-      cfSdkClient.getOrganizations(cfRequestConfig);
+      mockedSdkClient.getOrganizations(cfRequestConfig);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
-          .isEqualTo("Exception occurred while fetching Organizations, Error:unauthorized: Bad credentials");
+          .isEqualTo("Exception occurred while fetching Organizations, Error: unauthorized: Bad credentials");
     }
   }
 
@@ -335,11 +349,11 @@ public class CfSdkClientImplTest extends CategoryTest {
     cfRequestConfig.setEndpointUrl("api.run.pivotal.io");
 
     try {
-      cfSdkClient.getApplicationByName(cfRequestConfig);
+      mockedSdkClient.getApplicationByName(cfRequestConfig);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
-          .isEqualTo("Exception occurred while  getting application: app, Error: No space targeted");
+          .isEqualTo("Exception occurred while getting application: app, Error: No space targeted");
     }
   }
 
@@ -354,11 +368,11 @@ public class CfSdkClientImplTest extends CategoryTest {
     cfRequestConfig.setApplicationName("app");
 
     try {
-      cfSdkClient.getApplicationEnvironmentsByName(cfRequestConfig);
+      mockedSdkClient.getApplicationEnvironmentsByName(cfRequestConfig);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e instanceof PivotalClientApiException).isTrue();
-      assertThat(e.getMessage()).contains("Exception occurred while  getting application Environments: app");
+      assertThat(e.getMessage()).contains("Exception occurred while getting application Environments: app");
     }
   }
 
@@ -372,7 +386,7 @@ public class CfSdkClientImplTest extends CategoryTest {
     cfRequestConfig.setEndpointUrl("api.run.pivotal.io");
 
     try {
-      cfSdkClient.getRouteMap(cfRequestConfig, "qa.harness.io/api");
+      mockedSdkClient.getRouteMap(cfRequestConfig, "qa.harness.io/api");
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
@@ -391,10 +405,10 @@ public class CfSdkClientImplTest extends CategoryTest {
     cfRequestConfig.setEndpointUrl("api.run.pivotal.io");
 
     try {
-      cfSdkClient.getApplications(cfRequestConfig);
+      mockedSdkClient.getApplications(cfRequestConfig);
       fail("Should not reach here.");
     } catch (Exception e) {
-      assertThat(e.getMessage()).isEqualTo("Exception occurred while fetching Applications , Error: No space targeted");
+      assertThat(e.getMessage()).isEqualTo("Exception occurred while fetching Applications, Error: No space targeted");
     }
   }
 
@@ -408,7 +422,7 @@ public class CfSdkClientImplTest extends CategoryTest {
     cfRequestConfig.setEndpointUrl("api.run.pivotal.io");
 
     try {
-      cfSdkClient.getSpacesForOrganization(cfRequestConfig);
+      mockedSdkClient.getSpacesForOrganization(cfRequestConfig);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
@@ -426,7 +440,7 @@ public class CfSdkClientImplTest extends CategoryTest {
     cfRequestConfig.setEndpointUrl("api.run.pivotal.io");
 
     try {
-      cfSdkClient.deleteApplication(cfRequestConfig);
+      mockedSdkClient.deleteApplication(cfRequestConfig);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
@@ -444,7 +458,7 @@ public class CfSdkClientImplTest extends CategoryTest {
     cfRequestConfig.setEndpointUrl("api.run.pivotal.io");
 
     try {
-      cfSdkClient.stopApplication(cfRequestConfig);
+      mockedSdkClient.stopApplication(cfRequestConfig);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
@@ -462,7 +476,7 @@ public class CfSdkClientImplTest extends CategoryTest {
     cfRequestConfig.setEndpointUrl("api.run.pivotal.io");
 
     try {
-      cfSdkClient.getTasks(cfRequestConfig);
+      mockedSdkClient.getTasks(cfRequestConfig);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
@@ -480,11 +494,11 @@ public class CfSdkClientImplTest extends CategoryTest {
     cfRequestConfig.setEndpointUrl("api.run.pivotal.io");
 
     try {
-      cfSdkClient.scaleApplications(cfRequestConfig);
+      mockedSdkClient.scaleApplications(cfRequestConfig);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
-          .isEqualTo("Exception occurred Scaling Applications: app, to count: 0, Error:No space targeted");
+          .isEqualTo("Exception occurred Scaling Applications: app, to count: 0, Error: No space targeted");
     }
   }
 
@@ -498,7 +512,7 @@ public class CfSdkClientImplTest extends CategoryTest {
     cfRequestConfig.setEndpointUrl("api.run.pivotal.io");
 
     try {
-      cfSdkClient.startApplication(cfRequestConfig);
+      mockedSdkClient.startApplication(cfRequestConfig);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
@@ -518,7 +532,7 @@ public class CfSdkClientImplTest extends CategoryTest {
     Route route = Route.builder().application("app").host("stage").domain("harness.io").id("1").space("space").build();
 
     try {
-      cfSdkClient.unmapRouteMapForApp(cfRequestConfig, route);
+      mockedSdkClient.unmapRouteMapForApp(cfRequestConfig, route);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
@@ -538,7 +552,7 @@ public class CfSdkClientImplTest extends CategoryTest {
     Route route = Route.builder().application("app").host("stage").domain("harness.io").id("1").space("space").build();
 
     try {
-      cfSdkClient.mapRouteMapForApp(cfRequestConfig, route);
+      mockedSdkClient.mapRouteMapForApp(cfRequestConfig, route);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
@@ -590,7 +604,6 @@ public class CfSdkClientImplTest extends CategoryTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testMapRoutesForApplication() throws Exception {
-    // PcfClientImpl pcfClient1 = spy(PcfClientImpl.class);
     String space = "space1";
     Route route = Route.builder().id("id").host("myapp").domain("cfapps.io").space(space).build();
     Route route1 = Route.builder().id("id").host("myapp").domain("cfapps.io").path("/path").space(space).build();
@@ -680,7 +693,6 @@ public class CfSdkClientImplTest extends CategoryTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCreateRouteFromPath() throws Exception {
-    // PcfClientImpl clientImpl = spy(PcfClientImpl.class);
     doNothing().when(logCallback).saveExecutionLog(anyString());
 
     CfRequestConfig cfRequestConfig = CfRequestConfig.builder().build();
@@ -748,7 +760,7 @@ public class CfSdkClientImplTest extends CategoryTest {
   @Owner(developers = TATHAGAT)
   @Category(UnitTests.class)
   public void testGetAllDomainsForSpace() throws Exception {
-    when(cloudFoundryOperationsProvider.getCloudFoundryOperationsWrapper(getCfRequestConfig())
+    when(cloudFoundryOperationsProviderMock.getCloudFoundryOperationsWrapper(getCfRequestConfig())
              .getCloudFoundryOperations()
              .domains())
         .thenReturn(domains);
@@ -785,10 +797,10 @@ public class CfSdkClientImplTest extends CategoryTest {
     Route route = Route.builder().application("app").host("stage").domain("harness.io").id("1").space("space").build();
     List<String> routes = new ArrayList<>();
     String path1 = "stage.harness.io";
-    doReturn(asList(route)).when(cfSdkClient).getRouteMapsByNames(anyList(), any());
+    doReturn(asList(route)).when(mockedSdkClient).getRouteMapsByNames(anyList(), any());
 
     try {
-      cfSdkClient.unmapRoutesForApplication(cfRequestConfig, routes);
+      mockedSdkClient.unmapRoutesForApplication(cfRequestConfig, routes);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
@@ -831,7 +843,6 @@ public class CfSdkClientImplTest extends CategoryTest {
   @Owner(developers = TATHAGAT)
   @Category(UnitTests.class)
   public void testaddRouteMapsToManifestRoutesArePresent() throws Exception {
-    // PcfClientImpl client = spy(new PcfClientImpl());
     List<String> routes = Arrays.asList("qa.harness.io/api", "app.harness.io");
     List<org.cloudfoundry.operations.applications.Route> routesList =
         routes.stream()

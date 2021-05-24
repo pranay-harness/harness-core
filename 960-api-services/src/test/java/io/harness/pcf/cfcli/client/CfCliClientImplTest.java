@@ -19,6 +19,7 @@ import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.fail;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyLong;
@@ -41,11 +42,14 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.filesystem.FileIo;
 import io.harness.logging.LogCallback;
-import io.harness.pcf.CfSdkClient;
 import io.harness.pcf.PcfUtils;
 import io.harness.pcf.PivotalClientApiException;
 import io.harness.pcf.cfcli.CfCliCommandResolver;
 import io.harness.pcf.cfcli.CfCliCommandType;
+import io.harness.pcf.cfsdk.CfSdkClientImpl;
+import io.harness.pcf.cfsdk.CloudFoundryClientProvider;
+import io.harness.pcf.cfsdk.CloudFoundryOperationsProvider;
+import io.harness.pcf.cfsdk.ConnectionContextProvider;
 import io.harness.pcf.model.CfAppAutoscalarRequestData;
 import io.harness.pcf.model.CfCliVersion;
 import io.harness.pcf.model.CfCreateApplicationRequestData;
@@ -69,7 +73,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
@@ -85,16 +88,28 @@ public class CfCliClientImplTest extends CategoryTest {
   public static final String CF_COMMAND_FOR_CHECKING_AUTOSCALAR = "cf plugins | grep autoscaling-apps";
   public static final String APP_NAME = "APP_NAME";
   public static final String PATH = "path";
-  private static final String ADMIN = "admin";
 
-  @Mock private CfSdkClient cfSdkClient;
+  /// mockedSdkClient
+  private final CloudFoundryOperationsProvider cloudFoundryOperationsProvider = new CloudFoundryOperationsProvider();
+  private final ConnectionContextProvider connectionContextProvider = new ConnectionContextProvider();
+  private final CloudFoundryClientProvider cloudFoundryClientProvider = new CloudFoundryClientProvider();
+  @Mock private CfSdkClientImpl mockedSdkClient;
+
+  // cfCliClient
   @Mock private LogCallback logCallback;
-
-  @InjectMocks @Spy private CfCliClientImpl cfCliClient;
+  @Spy private CfCliClientImpl cfCliClient;
 
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
+
+    // mockedSdkClient
+    on(cloudFoundryOperationsProvider).set("connectionContextProvider", connectionContextProvider);
+    on(cloudFoundryOperationsProvider).set("cloudFoundryClientProvider", cloudFoundryClientProvider);
+    on(mockedSdkClient).set("cloudFoundryOperationsProvider", cloudFoundryOperationsProvider);
+    on(cfCliClient).set("cfSdkClient", mockedSdkClient);
+
+    clearProperties();
   }
 
   @Test
@@ -149,7 +164,6 @@ public class CfCliClientImplTest extends CategoryTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCheckIfAppHasAutoscalarAttached() throws Exception {
-    CfCliClientImpl cfCliClient = spy(new CfCliClientImpl());
     doNothing().when(logCallback).saveExecutionLog(anyString());
     doAnswer((Answer<Boolean>) invocation -> { return true; }).when(cfCliClient).doLogin(any(), any(), anyString());
 
@@ -240,7 +254,6 @@ public class CfCliClientImplTest extends CategoryTest {
             .build());
     doNothing().when(logCallback).saveExecutionLog(anyString());
 
-    CfCliClientImpl cfCliClient = spy(new CfCliClientImpl());
     ProcessExecutor processExecutor = cfCliClient.createProcessExecutorForCfTask(
         1, CF_COMMAND_FOR_CHECKING_AUTOSCALAR, appAutoscalarEnvMapForCustomPlugin, logCallback);
 
@@ -272,7 +285,6 @@ public class CfCliClientImplTest extends CategoryTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGenerateChangeAutoscalarStateCommand() throws Exception {
-    CfCliClientImpl cfCliClient = spy(new CfCliClientImpl());
     CfAppAutoscalarRequestData autoscalarRequestData =
         CfAppAutoscalarRequestData.builder()
             .applicationName(APP_NAME)
@@ -288,7 +300,6 @@ public class CfCliClientImplTest extends CategoryTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testLogInForAppAutoscalarCliCommand() throws Exception {
-    CfCliClientImpl cfCliClient = spy(new CfCliClientImpl());
     doNothing().when(logCallback).saveExecutionLog(anyString());
 
     CfAppAutoscalarRequestData autoscalarRequestData =
@@ -368,7 +379,6 @@ public class CfCliClientImplTest extends CategoryTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void test_doLogin() throws Exception {
-    CfCliClientImpl cfCliClient = spy(new CfCliClientImpl());
     doNothing().when(logCallback).saveExecutionLog(anyString());
     doReturn(0).when(cfCliClient).executeCommand(anyString(), any(), any());
     Map<String, String> env = new HashMap<>();
@@ -391,7 +401,6 @@ public class CfCliClientImplTest extends CategoryTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void test_extractRouteInfoFromPath() throws Exception {
-    CfCliClientImpl cfCliClient = spy(new CfCliClientImpl());
     Set<String> domains = new HashSet<>(asList("example.com", "z.example.com"));
 
     PcfRouteInfo info = cfCliClient.extractRouteInfoFromPath(domains, "example.com:5000");
@@ -436,7 +445,6 @@ public class CfCliClientImplTest extends CategoryTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void test_executeRoutesOperationForApplicationUsingCli() throws Exception {
-    CfCliClientImpl cfCliClient = spy(new CfCliClientImpl());
     doNothing().when(logCallback).saveExecutionLog(anyString());
     CfRequestConfig requestConfig = CfRequestConfig.builder()
                                         .useCFCLI(true)
@@ -448,7 +456,7 @@ public class CfCliClientImplTest extends CategoryTest {
                                         .build();
     doReturn(true).when(cfCliClient).doLogin(any(), any(), anyString());
     List<Domain> domains = singletonList(Domain.builder().name("example.com").id("id").status(Status.OWNED).build());
-    doReturn(domains).when(cfSdkClient).getAllDomainsForSpace(any());
+    doReturn(domains).when(mockedSdkClient).getAllDomainsForSpace(any());
     Map<String, String> envMap = new HashMap<>();
     envMap.put("CF_HOME", "/cf/home");
     PcfRouteInfo info = PcfRouteInfo.builder()
@@ -553,7 +561,6 @@ public class CfCliClientImplTest extends CategoryTest {
   @Owner(developers = TATHAGAT)
   @Category(UnitTests.class)
   public void testcheckIfAppHasAutoscalarWithExpectedState() throws Exception {
-    CfCliClientImpl cfCliClient = spy(new CfCliClientImpl());
     doNothing().when(logCallback).saveExecutionLog(anyString());
     doAnswer((Answer<Boolean>) invocation -> { return true; }).when(cfCliClient).doLogin(any(), any(), anyString());
 
@@ -628,12 +635,6 @@ public class CfCliClientImplTest extends CategoryTest {
     doReturn("path").when(requestData).getManifestFilePath();
     doReturn(true).when(cfCliClient).doLogin(any(), any(), anyString());
 
-    //        PcfCommandSetupRequest setupRequest = mock(PcfCommandSetupRequest.class);
-    //        doReturn(setupRequest).when(requestData).getSetupRequest();
-    //
-    //        ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder().build();
-    //        doReturn(artifactStreamAttributes).when(setupRequest).getArtifactStreamAttributes();
-
     try {
       cfCliClient.pushAppByCli(requestData, logCallback);
     } catch (Exception e) {
@@ -645,7 +646,7 @@ public class CfCliClientImplTest extends CategoryTest {
 
       assertThat(e instanceof PivotalClientApiException).isTrue();
       assertThat(e.getMessage())
-          .isEqualTo("Exception occurred while creating Application: app, Error: App creation process Failed :  ");
+          .isEqualTo("Exception occurred while creating Application: app, Error: App creation process Failed");
     }
   }
 
@@ -653,7 +654,6 @@ public class CfCliClientImplTest extends CategoryTest {
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
   public void testGetEnvironmentMapForPcfExecutorWithNoProxyPort() {
-    CfCliClientImpl cfCliClient = spy(new CfCliClientImpl());
     System.setProperty("http.proxyHost", "testProxyHost");
     System.setProperty("http.proxyPort", "80");
     Map<String, String> environmentProperties = cfCliClient.getEnvironmentMapForCfExecutor("app.host.io", "test");
@@ -665,7 +665,6 @@ public class CfCliClientImplTest extends CategoryTest {
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
   public void testGetEnvironmentMapForPcfExecutorWithProxyPort() {
-    CfCliClientImpl cfCliClient = spy(new CfCliClientImpl());
     System.setProperty("http.proxyHost", "testProxyHost");
     System.setProperty("http.proxyPort", "8080");
     Map<String, String> environmentProperties = cfCliClient.getEnvironmentMapForCfExecutor("app.host.io", "test");
@@ -677,7 +676,6 @@ public class CfCliClientImplTest extends CategoryTest {
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
   public void testGetEnvironmentMapForPcfExecutorWithAuthDetail() {
-    CfCliClientImpl cfCliClient = spy(new CfCliClientImpl());
     System.setProperty("http.proxyHost", "testProxyHost");
     System.setProperty("http.proxyPort", "8080");
     System.setProperty("http.proxyUser", "username");
@@ -691,7 +689,6 @@ public class CfCliClientImplTest extends CategoryTest {
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
   public void testGetEnvironmentMapForNoProxyHost() {
-    CfCliClientImpl cfCliClient = spy(new CfCliClientImpl());
     System.setProperty("http.proxyHost", "testProxyHost");
     System.setProperty("http.proxyPort", "8080");
     System.setProperty("http.proxyUser", "username");
@@ -710,5 +707,13 @@ public class CfCliClientImplTest extends CategoryTest {
         .loggedin(false)
         .applicationName("app")
         .build();
+  }
+
+  private void clearProperties() {
+    System.clearProperty("http.proxyHost");
+    System.clearProperty("http.proxyPort");
+    System.clearProperty("http.proxyUser");
+    System.clearProperty("http.proxyPassword");
+    System.clearProperty("http.nonProxyHosts");
   }
 }
