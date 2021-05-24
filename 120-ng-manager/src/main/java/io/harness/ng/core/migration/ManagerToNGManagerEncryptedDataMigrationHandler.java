@@ -4,6 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.remote.client.RestClientUtils.getResponse;
 import static io.harness.secretmanagerclient.SecretType.SSHKey;
+import static io.harness.secretmanagerclient.SecretType.SecretFile;
+import static io.harness.secretmanagerclient.SecretType.SecretText;
 import static io.harness.security.encryption.EncryptionType.GCP_KMS;
 import static io.harness.security.encryption.EncryptionType.KMS;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
@@ -20,8 +22,11 @@ import io.harness.ng.core.dao.NGEncryptedDataDao;
 import io.harness.ng.core.entities.NGEncryptedData;
 import io.harness.ng.core.models.Secret;
 import io.harness.ng.core.models.Secret.SecretKeys;
+import io.harness.ng.core.models.SecretFileSpec;
+import io.harness.ng.core.models.SecretTextSpec;
 import io.harness.repositories.ng.core.spring.SecretRepository;
 import io.harness.secretmanagerclient.dto.EncryptedDataMigrationDTO;
+import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import io.harness.secrets.SecretsFileService;
 import io.harness.security.encryption.EncryptionType;
@@ -109,6 +114,9 @@ public class ManagerToNGManagerEncryptedDataMigrationHandler implements Handler<
             getResponse(secretManagerClient.getEncryptedDataMigrationDTO(secret.getIdentifier(),
                 secret.getAccountIdentifier(), secret.getOrgIdentifier(), secret.getProjectIdentifier())));
         if (encryptedData == null) {
+          encryptedData = getDummyEncryptedData(secret);
+        }
+        if (encryptedData == null) {
           log.info(String.format(
               "Secret with accountIdentifier: %s, orgIdentifier: %s, projectIdentifier: %s and identifier: %s could not be migrated because Encrypted Data entry not found in manager",
               secret.getAccountIdentifier(), secret.getOrgIdentifier(), secret.getProjectIdentifier(),
@@ -134,6 +142,40 @@ public class ManagerToNGManagerEncryptedDataMigrationHandler implements Handler<
         "Secret with accountIdentifier: %s, orgIdentifier: %s, projectIdentifier: %s and identifier: %s successfully migrated from manager",
         secret.getAccountIdentifier(), secret.getOrgIdentifier(), secret.getProjectIdentifier(),
         secret.getIdentifier()));
+  }
+
+  private NGEncryptedData getDummyEncryptedData(Secret secret) {
+    SecretManagerConfigDTO secretManagerConfigDTO =
+        getResponse(secretManagerClient.getSecretManager(getSecretManagerIdentifier(secret),
+            secret.getAccountIdentifier(), secret.getOrgIdentifier(), secret.getProjectIdentifier(), true));
+    if (secretManagerConfigDTO == null) {
+      return null;
+    }
+    NGEncryptedData encryptedData = NGEncryptedData.builder()
+                                        .accountIdentifier(secret.getAccountIdentifier())
+                                        .orgIdentifier(secret.getOrgIdentifier())
+                                        .projectIdentifier(secret.getProjectIdentifier())
+                                        .identifier(secret.getIdentifier())
+                                        .name(secret.getName())
+                                        .encryptionType(secretManagerConfigDTO.getEncryptionType())
+                                        .secretManagerIdentifier(getSecretManagerIdentifier(secret))
+                                        .build();
+    if (SecretFile.equals(secret.getType())) {
+      encryptedData.setBase64Encoded(true);
+      encryptedData.setType(SettingVariableTypes.CONFIG_FILE);
+    } else {
+      encryptedData.setType(SettingVariableTypes.SECRET_TEXT);
+    }
+    return encryptedData;
+  }
+
+  private String getSecretManagerIdentifier(Secret secret) {
+    if (SecretText.equals(secret.getType())) {
+      return ((SecretTextSpec) secret.getSecretSpec()).getSecretManagerIdentifier();
+    } else if (SecretFile.equals(secret.getType())) {
+      return ((SecretFileSpec) secret.getSecretSpec()).getSecretManagerIdentifier();
+    }
+    return null;
   }
 
   public static NGEncryptedData fromEncryptedDataMigrationDTO(EncryptedDataMigrationDTO encryptedDataMigrationDTO) {
