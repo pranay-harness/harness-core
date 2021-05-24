@@ -43,12 +43,14 @@ import io.harness.ccm.commons.beans.StorageResource;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.rule.Owner;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -388,7 +390,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
         INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.ECS_TASK_EC2);
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
-        instanceData, utilizationData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
+        instanceData, utilizationData, 86400.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
     assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("9.60"));
     assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(new BigDecimal("4.8"));
     assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(new BigDecimal("2.4"));
@@ -396,6 +398,34 @@ public class BillingCalculationServiceTest extends CategoryTest {
     assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(HALF_DAY_SECONDS.doubleValue());
     assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(18432 * HALF_DAY_SECONDS);
     assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(30720 * HALF_DAY_SECONDS);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetInstanceActiveDuration() throws IOException {
+    InstanceData instanceDataNode = getInstance("node_id", "node_cluster_id", INSTANCE_START_TIMESTAMP,
+        INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.K8S_NODE);
+    InstanceData instanceDataNode2 = getInstance("node_id", "cluster_id", INSTANCE_START_TIMESTAMP,
+        INSTANCE_STOP_TIMESTAMP.minus(18, ChronoUnit.HOURS), InstanceType.K8S_POD);
+    InstanceData instanceDataPod = getInstance(
+        "pod_id", "node_cluster_id", INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP, InstanceType.K8S_POD);
+    List<InstanceData> instanceDataList =
+        ImmutableList.of(instanceDataNode, instanceDataPod, instanceDataNode2, instanceDataPod);
+    Map<String, Double> instanceActiveSeconds = billingCalculationService.getInstanceActiveSeconds(
+        instanceDataList, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
+    assertThat(instanceActiveSeconds)
+        .containsExactlyInAnyOrderEntriesOf(ImmutableMap.of(
+            "pod_id:node_cluster_id", 86400.0, "node_id:node_cluster_id", 43200.0, "node_id:cluster_id", 21600.0));
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetInstanceActiveDurationOfEmptyList() throws IOException {
+    Map<String, Double> instanceActiveSeconds = billingCalculationService.getInstanceActiveSeconds(
+        Collections.emptyList(), INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
+    assertThat(instanceActiveSeconds).hasSize(0);
   }
 
   @Test
@@ -423,11 +453,47 @@ public class BillingCalculationServiceTest extends CategoryTest {
         .thenReturn(
             VMInstanceBillingData.builder().resourceId("resourceId").networkCost(10.0).computeCost(40.0).build());
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
-        instanceData, utilizationData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
-    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("40.0"));
-    assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(new BigDecimal("20.0"));
-    assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(new BigDecimal("10.0"));
-    assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(new BigDecimal("10.0"));
+        instanceData, utilizationData, 86400.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
+    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("20.0"));
+    assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(new BigDecimal("10.0"));
+    assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(new BigDecimal("5.0"));
+    assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(new BigDecimal("5.0"));
+    assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(HALF_DAY_SECONDS.doubleValue());
+    assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(18432 * HALF_DAY_SECONDS);
+    assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(30720 * HALF_DAY_SECONDS);
+    assertThat(billingAmount.getNetworkCost()).isEqualTo(10.0);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetInstanceBillingAmountForComputeFromCurReport2() throws IOException {
+    when(instanceResourceService.getComputeVMResource(DEFAULT_INSTANCE_FAMILY, REGION, CloudProvider.AWS))
+        .thenReturn(getResource());
+    when(customBillingMetaDataService.getAwsDataSetId(ACCOUNT_ID)).thenReturn("AWSDataSet");
+    when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.K8S_NODE))
+        .thenReturn(getComputeInstancePricingStrategy());
+    Resource instanceResource = getInstanceResource(18432, 30720);
+    Map<String, String> metaData = new HashMap<>();
+    metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());
+    metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, DEFAULT_INSTANCE_FAMILY);
+    metaData.put(InstanceMetaDataConstants.REGION, REGION);
+    metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY, InstanceCategory.ON_DEMAND.name());
+    metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.ECS.name());
+    addParentResource(metaData, DEFAULT_INSTANCE_CPU * 1024, DEFAULT_INSTANCE_MEMORY * 1024);
+    InstanceData instanceData = getInstance(instanceResource, instanceResource, metaData, INSTANCE_START_TIMESTAMP,
+        INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.K8S_NODE);
+    UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
+    when(awsCustomBillingService.getComputeVMPricingInfo(
+             instanceData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP))
+        .thenReturn(
+            VMInstanceBillingData.builder().resourceId("resourceId").networkCost(10.0).computeCost(40.0).build());
+    BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
+        instanceData, utilizationData, 16 * 3600D, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
+    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("30.0"));
+    assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(new BigDecimal("15.0"));
+    assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(new BigDecimal("7.5"));
+    assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(new BigDecimal("7.5"));
     assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(HALF_DAY_SECONDS.doubleValue());
     assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(18432 * HALF_DAY_SECONDS);
     assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(30720 * HALF_DAY_SECONDS);
@@ -457,7 +523,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
         INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.K8S_NODE);
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
-        instanceData, utilizationData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
+        instanceData, utilizationData, 86400.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
     assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("19.2"));
     assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(new BigDecimal("9.6"));
     assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(new BigDecimal("4.8"));
@@ -487,7 +553,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
         INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.ECS_TASK_FARGATE);
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
-        instanceData, utilizationData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
+        instanceData, utilizationData, 86400.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
     assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("24.0"));
     assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(BigDecimal.ZERO);
     assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(BigDecimal.ZERO);
@@ -515,7 +581,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
         INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.K8S_POD);
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
-        instanceData, utilizationData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
+        instanceData, utilizationData, 86400.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
     assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount())
         .isEqualTo(new BigDecimal("0.3358799999999999625"));
   }
@@ -550,7 +616,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
                         .build());
     UtilizationData utilizationData = getUtilization(1, 1);
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
-        instanceData, utilizationData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
+        instanceData, utilizationData, 43200.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
     assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount())
         .isEqualTo(new BigDecimal("1.2960000000000001500"));
   }
@@ -579,7 +645,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
                         .memoryGbPricePerHr(0.008)
                         .build());
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
-        instanceData, utilizationData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
+        instanceData, utilizationData, 86400.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
     assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount())
         .isEqualTo(new BigDecimal("1.2960000000000001500"));
   }
@@ -598,7 +664,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
         .thenReturn(new StoragePricingStrategy());
 
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
-        instanceData, utilizationData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
+        instanceData, utilizationData, 86400.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
 
     BigDecimal totalCost = getTotalCost(0.040D, 12D);
     BigDecimal idleCost = getIdleCost(totalCost);
@@ -630,7 +696,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
         .thenReturn(new StoragePricingStrategy());
 
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
-        instanceData, utilizationData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
+        instanceData, utilizationData, 86400.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
 
     BigDecimal totalCost = getTotalCost(0.17D, 24D);
     assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isCloseTo(totalCost, BIG_DECIMAL_OFFSET);
@@ -654,7 +720,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
         .thenReturn(new StoragePricingStrategy());
 
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
-        instanceData, utilizationData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
+        instanceData, utilizationData, 43200.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
 
     BigDecimal totalCost = getTotalCost(0.040, 24D);
     assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isCloseTo(totalCost, BIG_DECIMAL_OFFSET);
@@ -722,6 +788,18 @@ public class BillingCalculationServiceTest extends CategoryTest {
         .usageStartTime(startInstant)
         .usageStopTime(endInstant)
         .instanceType(instanceType)
+        .build();
+  }
+
+  private InstanceData getInstance(
+      String instanceId, String clusterId, Instant startInstant, Instant endInstant, InstanceType instanceType) {
+    return InstanceData.builder()
+        .accountId(ACCOUNT_ID)
+        .instanceId(instanceId)
+        .clusterId(clusterId)
+        .instanceType(instanceType)
+        .usageStartTime(startInstant)
+        .usageStopTime(endInstant)
         .build();
   }
 

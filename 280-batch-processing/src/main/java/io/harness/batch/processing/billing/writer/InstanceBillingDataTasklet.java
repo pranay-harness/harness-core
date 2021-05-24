@@ -166,6 +166,7 @@ public class InstanceBillingDataTasklet implements Tasklet {
       Map<String, InstanceBillingData> claimRefToPVInstanceBillingData, Map<String, MutableInt> pvcClaimCount) {
     log.info("Instance data list new {} {} {} {}", instanceDataLists.size(), startTime, endTime, parameters.toString());
 
+    Set<String> parentInstanceIds = new HashSet<>();
     instanceDataLists.forEach(instanceData -> {
       if (null == instanceData.getActiveInstanceIterator() && null == instanceData.getUsageStopTime()) {
         instanceDataDao.updateInstanceActiveIterationTime(instanceData);
@@ -182,6 +183,7 @@ public class InstanceBillingDataTasklet implements Tasklet {
       Set<String> resourceIds = new HashSet<>();
       Set<String> eksFargateResourceIds = new HashSet<>();
       instanceDataLists.forEach(instanceData -> {
+        addParentInstanceId(instanceData, parentInstanceIds);
         String resourceId =
             getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID, instanceData);
         String cloudProvider =
@@ -216,6 +218,7 @@ public class InstanceBillingDataTasklet implements Tasklet {
     if (azureDataSetId != null) {
       Set<String> resourceIds = new HashSet<>();
       instanceDataLists.forEach(instanceData -> {
+        addParentInstanceId(instanceData, parentInstanceIds);
         String resourceId =
             getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID, instanceData);
         String cloudProvider =
@@ -237,12 +240,22 @@ public class InstanceBillingDataTasklet implements Tasklet {
           instanceDataList, startTime.toString(), endTime.toString(), firstInstanceData.getAccountId(),
           firstInstanceData.getSettingId(), firstInstanceData.getClusterId());
 
+      List<InstanceData> parentInstanceDataList = instanceDataDao.fetchInstanceData(parentInstanceIds);
+      Map<String, Double> parentInstanceActiveSecondMap =
+          billingCalculationService.getInstanceActiveSeconds(parentInstanceDataList, startTime, endTime);
+
       for (InstanceData instanceData : instanceDataList) {
         if (instanceData.getInstanceType() != null
             && billingDataGenerationValidator.shouldGenerateBillingData(
                 instanceData.getAccountId(), instanceData.getClusterId(), startTime)) {
+          Double parentInstanceActiveSecond = null;
+          String parentInstanceId = getParentInstanceId(instanceData);
+          if (null != parentInstanceId) {
+            parentInstanceActiveSecond = parentInstanceActiveSecondMap.getOrDefault(
+                billingCalculationService.getInstanceClusterIdKey(parentInstanceId, instanceData.getClusterId()), null);
+          }
           InstanceBillingData instanceBillingData = getInstanceBillingData(instanceData, utilizationDataForInstances,
-              startTime, endTime, claimRefToPVInstanceBillingData, pvcClaimCount);
+              startTime, endTime, claimRefToPVInstanceBillingData, pvcClaimCount, parentInstanceActiveSecond);
           instanceBillingDataList.add(instanceBillingData);
         }
       }
@@ -250,6 +263,12 @@ public class InstanceBillingDataTasklet implements Tasklet {
 
     billingDataService.create(instanceBillingDataList, batchJobType);
     return instanceBillingDataList;
+  }
+
+  private void addParentInstanceId(InstanceData instanceData, Set<String> parentInstanceIds) {
+    if (ImmutableSet.of(InstanceType.K8S_POD).contains(instanceData.getInstanceType())) {
+      parentInstanceIds.add(getParentInstanceId(instanceData));
+    }
   }
 
   private boolean validInstanceForBilling(InstanceData instanceData) {
@@ -266,7 +285,8 @@ public class InstanceBillingDataTasklet implements Tasklet {
 
   private InstanceBillingData getInstanceBillingData(final InstanceData instanceData,
       Map<String, UtilizationData> utilizationDataForInstances, Instant startTime, Instant endTime,
-      Map<String, InstanceBillingData> claimRefToPVInstanceBillingData, Map<String, MutableInt> pvcClaimCount) {
+      Map<String, InstanceBillingData> claimRefToPVInstanceBillingData, Map<String, MutableInt> pvcClaimCount,
+      Double parentInstanceActiveSecond) {
     InstanceType instanceType = instanceData.getInstanceType();
     String computeType = InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(
         InstanceMetaDataConstants.COMPUTE_TYPE, instanceData.getMetaData());
@@ -275,8 +295,8 @@ public class InstanceBillingDataTasklet implements Tasklet {
       instanceData.setInstanceType(instanceType);
     }
     UtilizationData utilizationData = utilizationDataForInstances.get(instanceData.getInstanceId());
-    BillingData billingData =
-        billingCalculationService.getInstanceBillingAmount(instanceData, utilizationData, startTime, endTime);
+    BillingData billingData = billingCalculationService.getInstanceBillingAmount(
+        instanceData, utilizationData, parentInstanceActiveSecond, startTime, endTime);
 
     log.trace("Instance detail {} :: {} ", instanceData.getInstanceId(), billingData.getBillingAmountBreakup());
 
