@@ -23,5 +23,5 @@ public class JiraApprovalSpecParameters implements SpecParameters {
   @NotNull ParameterField<String> connectorRef;
   @NotNull ParameterField<String> issueKey;
   @NotNull CriteriaSpecWrapper approvalCriteria;
-  @NotNull CriteriaSpecWrapper rejectionCriteria;
+  CriteriaSpecWrapper rejectionCriteria;
 }
