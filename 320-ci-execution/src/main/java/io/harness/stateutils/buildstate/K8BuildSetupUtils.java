@@ -585,7 +585,7 @@ public class K8BuildSetupUtils {
   private Map<String, String> retrieveGithubEnvVar(GithubConnectorDTO gitConfigDTO, CodeBase ciCodebase) {
     Map<String, String> envVars = new HashMap<>();
     String gitUrl = getGitURL(ciCodebase, gitConfigDTO.getConnectionType(), gitConfigDTO.getUrl());
-    String domain = GitClientHelper.getGitSCM(gitUrl);
+    String domain = getScmDomain(GitClientHelper.getGitSCM(gitUrl));
 
     envVars.put(DRONE_REMOTE_URL, gitUrl);
     envVars.put(DRONE_NETRC_MACHINE, domain);
@@ -609,7 +609,7 @@ public class K8BuildSetupUtils {
   private Map<String, String> retrieveGitlabEnvVar(GitlabConnectorDTO gitConfigDTO, CodeBase ciCodebase) {
     Map<String, String> envVars = new HashMap<>();
     String gitUrl = getGitURL(ciCodebase, gitConfigDTO.getConnectionType(), gitConfigDTO.getUrl());
-    String domain = GitClientHelper.getGitSCM(gitUrl);
+    String domain = getScmDomain(GitClientHelper.getGitSCM(gitUrl));
 
     envVars.put(DRONE_REMOTE_URL, gitUrl);
     envVars.put(DRONE_NETRC_MACHINE, domain);
@@ -634,7 +634,7 @@ public class K8BuildSetupUtils {
     Map<String, String> envVars = new HashMap<>();
     String gitUrl =
         retrieveGenericGitConnectorURL(ciCodebase, gitConfigDTO.getGitConnectionType(), gitConfigDTO.getUrl());
-    String domain = GitClientHelper.getGitSCM(gitUrl);
+    String domain = getScmDomain(GitClientHelper.getGitSCM(gitUrl));
 
     envVars.put(DRONE_REMOTE_URL, gitUrl);
     envVars.put(DRONE_NETRC_MACHINE, domain);
@@ -654,7 +654,7 @@ public class K8BuildSetupUtils {
   private Map<String, String> retrieveBitbucketEnvVar(BitbucketConnectorDTO gitConfigDTO, CodeBase ciCodebase) {
     Map<String, String> envVars = new HashMap<>();
     String gitUrl = getGitURL(ciCodebase, gitConfigDTO.getConnectionType(), gitConfigDTO.getUrl());
-    String domain = GitClientHelper.getGitSCM(gitUrl);
+    String domain = getScmDomain(GitClientHelper.getGitSCM(gitUrl));
 
     envVars.put(DRONE_REMOTE_URL, gitUrl);
     envVars.put(DRONE_NETRC_MACHINE, domain);
@@ -853,5 +853,10 @@ public class K8BuildSetupUtils {
         .withMaxAttempts(MAX_ATTEMPTS)
         .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
         .onFailure(event -> log.error(failureMessage, event.getAttemptCount(), event.getFailure()));
+  }
+
+  private String getScmDomain(String scmUrl) {
+    String[] urlParts = scmUrl.split(":");
+    return urlParts[0];
   }
 }
