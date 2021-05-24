@@ -109,8 +109,8 @@ public class TriggerExecutionHelper {
         }
       }
 
-      pmsYamlSchemaService.validateYamlSchema(
-          ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(), pipelineYaml);
+      pmsYamlSchemaService.validateYamlSchema(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
+          ngTriggerEntity.getProjectIdentifier(), pipelineYaml);
 
       executionMetaDataBuilder.setYaml(pipelineYaml);
       executionMetaDataBuilder.setPrincipalInfo(

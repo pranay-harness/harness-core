@@ -68,7 +68,7 @@ public class PipelineExecuteHelper {
       executionMetadataBuilder.setInputSetYaml(inputSetPipelineYaml);
     }
 
-    pmsYamlSchemaService.validateYamlSchema(orgIdentifier, projectIdentifier, pipelineYaml);
+    pmsYamlSchemaService.validateYamlSchema(accountId, orgIdentifier, projectIdentifier, pipelineYaml);
 
     pipelineRbacServiceImpl.extractAndValidateStaticallyReferredEntities(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml);
@@ -102,7 +102,7 @@ public class PipelineExecuteHelper {
     String pipelineYaml =
         MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), mergedRuntimeInputYaml, true);
 
-    pmsYamlSchemaService.validateYamlSchema(orgIdentifier, projectIdentifier, pipelineYaml);
+    pmsYamlSchemaService.validateYamlSchema(accountId, orgIdentifier, projectIdentifier, pipelineYaml);
 
     pipelineRbacServiceImpl.extractAndValidateStaticallyReferredEntities(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml);
