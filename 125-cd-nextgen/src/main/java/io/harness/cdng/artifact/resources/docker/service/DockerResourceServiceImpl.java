@@ -25,8 +25,12 @@ import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
 import io.harness.exception.ArtifactServerException;
+import io.harness.exception.DelegateNotAvailableException;
+import io.harness.exception.DelegateServiceDriverException;
+import io.harness.exception.HintException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.exception.exceptionmanager.exceptionhandler.DocumentLinksConstants;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
@@ -72,9 +76,15 @@ public class DockerResourceServiceImpl implements DockerResourceService {
                                                       .imagePath(imagePath)
                                                       .sourceType(ArtifactSourceType.DOCKER_REGISTRY)
                                                       .build();
-    ArtifactTaskExecutionResponse artifactTaskExecutionResponse = executeSyncTask(
-        dockerRequest, ArtifactTaskType.GET_BUILDS, baseNGAccess, "Docker Get Builds task failure due to error");
-    return getDockerResponseDTO(artifactTaskExecutionResponse);
+    try {
+      ArtifactTaskExecutionResponse artifactTaskExecutionResponse = executeSyncTask(
+          dockerRequest, ArtifactTaskType.GET_BUILDS, baseNGAccess, "Docker Get Builds task failure due to error");
+      return getDockerResponseDTO(artifactTaskExecutionResponse);
+    } catch (DelegateServiceDriverException ex) {
+      throw new HintException(
+          String.format(HintException.DELEGATE_NOT_AVAILABLE, DocumentLinksConstants.DELEGATE_INSTALLATION_LINK),
+          new DelegateNotAvailableException(ex.getCause().getMessage(), WingsException.USER));
+    }
   }
 
   @Override
