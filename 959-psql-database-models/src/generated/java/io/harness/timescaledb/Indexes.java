@@ -3,6 +3,7 @@
  */
 package io.harness.timescaledb;
 
+import io.harness.timescaledb.tables.BillingData;
 import io.harness.timescaledb.tables.KubernetesUtilizationData;
 
 import org.jooq.Index;
@@ -19,6 +20,67 @@ public class Indexes {
   // INDEX definitions
   // -------------------------------------------------------------------------
 
+  public static final Index BILLING_DATA_ACCOUNTID_INDEX =
+      Internal.createIndex(DSL.name("billing_data_accountid_index"), BillingData.BILLING_DATA,
+          new OrderField[] {BillingData.BILLING_DATA.ACCOUNTID, BillingData.BILLING_DATA.STARTTIME.desc()}, false);
+  public static final Index BILLING_DATA_APPID_COMPOSITE_INDEX =
+      Internal.createIndex(DSL.name("billing_data_appid_composite_index"), BillingData.BILLING_DATA,
+          new OrderField[] {BillingData.BILLING_DATA.ACCOUNTID, BillingData.BILLING_DATA.APPID,
+              BillingData.BILLING_DATA.STARTTIME.desc()},
+          false);
+  public static final Index BILLING_DATA_CLOUDPROVIDERID_COMPOSITE_INDEX =
+      Internal.createIndex(DSL.name("billing_data_cloudproviderid_composite_index"), BillingData.BILLING_DATA,
+          new OrderField[] {BillingData.BILLING_DATA.ACCOUNTID, BillingData.BILLING_DATA.CLOUDPROVIDERID,
+              BillingData.BILLING_DATA.STARTTIME.desc()},
+          false);
+  public static final Index BILLING_DATA_CLOUDSERVICENAME_COMPOSITE_INDEX =
+      Internal.createIndex(DSL.name("billing_data_cloudservicename_composite_index"), BillingData.BILLING_DATA,
+          new OrderField[] {BillingData.BILLING_DATA.ACCOUNTID, BillingData.BILLING_DATA.CLUSTERID,
+              BillingData.BILLING_DATA.CLOUDSERVICENAME, BillingData.BILLING_DATA.STARTTIME.desc()},
+          false);
+  public static final Index BILLING_DATA_CLUSTERID_COMPOSITE_INDEX =
+      Internal.createIndex(DSL.name("billing_data_clusterid_composite_index"), BillingData.BILLING_DATA,
+          new OrderField[] {BillingData.BILLING_DATA.ACCOUNTID, BillingData.BILLING_DATA.CLUSTERID,
+              BillingData.BILLING_DATA.STARTTIME.desc()},
+          false);
+  public static final Index BILLING_DATA_LAUNCHTYPE_COMPOSITE_INDEX =
+      Internal.createIndex(DSL.name("billing_data_launchtype_composite_index"), BillingData.BILLING_DATA,
+          new OrderField[] {BillingData.BILLING_DATA.ACCOUNTID, BillingData.BILLING_DATA.CLUSTERID,
+              BillingData.BILLING_DATA.LAUNCHTYPE, BillingData.BILLING_DATA.STARTTIME.desc()},
+          false);
+  public static final Index BILLING_DATA_NAMESPACE_COMPOSITE_INDEX =
+      Internal.createIndex(DSL.name("billing_data_namespace_composite_index"), BillingData.BILLING_DATA,
+          new OrderField[] {BillingData.BILLING_DATA.ACCOUNTID, BillingData.BILLING_DATA.CLUSTERID,
+              BillingData.BILLING_DATA.NAMESPACE, BillingData.BILLING_DATA.STARTTIME.desc()},
+          false);
+  public static final Index BILLING_DATA_NAMESPACE_WITHOUT_CLUSTER_INDEX =
+      Internal.createIndex(DSL.name("billing_data_namespace_without_cluster_index"), BillingData.BILLING_DATA,
+          new OrderField[] {BillingData.BILLING_DATA.ACCOUNTID, BillingData.BILLING_DATA.NAMESPACE,
+              BillingData.BILLING_DATA.STARTTIME.desc()},
+          false);
+  public static final Index BILLING_DATA_STARTTIME_IDX = Internal.createIndex(DSL.name("billing_data_starttime_idx"),
+      BillingData.BILLING_DATA, new OrderField[] {BillingData.BILLING_DATA.STARTTIME.desc()}, false);
+  public static final Index BILLING_DATA_TASKID_COMPOSITE_INDEX =
+      Internal.createIndex(DSL.name("billing_data_taskid_composite_index"), BillingData.BILLING_DATA,
+          new OrderField[] {BillingData.BILLING_DATA.ACCOUNTID, BillingData.BILLING_DATA.CLUSTERID,
+              BillingData.BILLING_DATA.TASKID, BillingData.BILLING_DATA.STARTTIME.desc()},
+          false);
+  public static final Index BILLING_DATA_UNIQUE_INDEX =
+      Internal.createIndex(DSL.name("billing_data_unique_index"), BillingData.BILLING_DATA,
+          new OrderField[] {BillingData.BILLING_DATA.ACCOUNTID, BillingData.BILLING_DATA.SETTINGID,
+              BillingData.BILLING_DATA.CLUSTERID, BillingData.BILLING_DATA.INSTANCEID,
+              BillingData.BILLING_DATA.INSTANCETYPE, BillingData.BILLING_DATA.STARTTIME.desc()},
+          true);
+  public static final Index BILLING_DATA_WORKLOADNAME_COMPOSITE_INDEX =
+      Internal.createIndex(DSL.name("billing_data_workloadname_composite_index"), BillingData.BILLING_DATA,
+          new OrderField[] {BillingData.BILLING_DATA.ACCOUNTID, BillingData.BILLING_DATA.CLUSTERID,
+              BillingData.BILLING_DATA.WORKLOADNAME, BillingData.BILLING_DATA.STARTTIME.desc()},
+          false);
+  public static final Index BILLING_DATA_WORKLOADNAME_WITHOUT_CLUSTER_INDEX =
+      Internal.createIndex(DSL.name("billing_data_workloadname_without_cluster_index"), BillingData.BILLING_DATA,
+          new OrderField[] {BillingData.BILLING_DATA.ACCOUNTID, BillingData.BILLING_DATA.WORKLOADNAME,
+              BillingData.BILLING_DATA.STARTTIME.desc()},
+          false);
   public static final Index KUBERNETES_UTILIZATION_DATA_INSTANCEID_INDEX = Internal.createIndex(
       DSL.name("kubernetes_utilization_data_instanceid_index"), KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA,
       new OrderField[] {KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA.INSTANCEID,

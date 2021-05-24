@@ -44,7 +44,7 @@ public class OrchestrationEvent extends Queuable implements WithMonitoring {
   NodeExecutionProto nodeExecutionProto;
 
   @NotNull OrchestrationEventType eventType;
-  @Getter @Setter @NonFinal @CreatedDate long createdAt;
+  @Getter @Setter @NonFinal @CreatedDate Long createdAt;
   @Setter @NonFinal @Version Long version;
 
   public AutoLogContext autoLogContext() {

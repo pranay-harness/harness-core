@@ -208,7 +208,6 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
         OutcomeInstance.builder()
             .planExecutionId(planExecution.getUuid())
             .producedBy(LevelUtils.buildLevelFromPlanNode(dummyStart.getUuid(), dummyStart.getNode()))
-            .isGraphOutcome(true)
             .createdAt(System.currentTimeMillis())
             .outcome(doc)
             .build();

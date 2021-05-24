@@ -28,7 +28,7 @@ public class NodeExecutionToExecutioNodeMapper {
 
   public ExecutionNode mapNodeExecutionToExecutionNode(NodeExecution nodeExecution) {
     List<Document> outcomes = PmsOutcomeMapper.convertJsonToDocument(pmsOutcomeService.findAllByRuntimeId(
-        nodeExecution.getAmbiance().getPlanExecutionId(), nodeExecution.getUuid(), true));
+        nodeExecution.getAmbiance().getPlanExecutionId(), nodeExecution.getUuid()));
 
     List<GraphDelegateSelectionLogParams> graphDelegateSelectionLogParamsList =
         delegateInfoHelper.getDelegateInformationForGivenTask(nodeExecution.getExecutableResponses(),

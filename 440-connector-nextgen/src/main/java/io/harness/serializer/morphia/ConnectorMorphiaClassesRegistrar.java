@@ -28,6 +28,7 @@ import io.harness.connector.entities.embedded.ceawsconnector.CURAttributes;
 import io.harness.connector.entities.embedded.ceawsconnector.S3BucketDetails;
 import io.harness.connector.entities.embedded.ceazure.CEAzureConfig;
 import io.harness.connector.entities.embedded.cek8s.CEK8sDetails;
+import io.harness.connector.entities.embedded.datadogconnector.DatadogConnector;
 import io.harness.connector.entities.embedded.docker.DockerConnector;
 import io.harness.connector.entities.embedded.docker.DockerUserNamePasswordAuthentication;
 import io.harness.connector.entities.embedded.gcpccm.GcpBillingExportDetails;
@@ -105,6 +106,7 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(NewRelicConnector.class);
     set.add(GcpCloudCostConfig.class);
     set.add(PrometheusConnector.class);
+    set.add(DatadogConnector.class);
   }
 
   @Override

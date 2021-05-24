@@ -14,21 +14,31 @@ import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Value;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.NotEmpty;
 
-@Value
-@Builder
-@ValidRoleAssignmentFilter
 @OwnedBy(PL)
+@Getter
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@AllArgsConstructor
+@ToString
+@EqualsAndHashCode
+@ValidRoleAssignmentFilter
 public class RoleAssignmentFilter {
-  @NotEmpty String scopeFilter;
-  boolean includeChildScopes;
-  @Builder.Default @NotNull @Size(max = 100) Set<String> resourceGroupFilter = new HashSet<>();
-  @Builder.Default @NotNull @Size(max = 100) Set<String> roleFilter = new HashSet<>();
-  @Builder.Default @NotNull @Size(max = 100) Set<PrincipalType> principalTypeFilter = new HashSet<>();
-  @Builder.Default @NotNull @Size(max = 100) Set<Principal> principalFilter = new HashSet<>();
-  @Builder.Default @NotNull @Valid ManagedFilter managedFilter = NO_FILTER;
-  @Builder.Default @NotNull @Size(max = 100) Set<Boolean> disabledFilter = new HashSet<>();
+  @NotEmpty final String scopeFilter;
+  final boolean includeChildScopes;
+  @Builder.Default @NotNull @Size(max = 100) final Set<String> resourceGroupFilter = new HashSet<>();
+  @Builder.Default @NotNull @Size(max = 100) final Set<String> roleFilter = new HashSet<>();
+  @Setter @Builder.Default @NotNull @Size(max = 100) Set<PrincipalType> principalTypeFilter = new HashSet<>();
+  @Setter @Builder.Default @NotNull @Size(max = 100) Set<Principal> principalFilter = new HashSet<>();
+  @Builder.Default @NotNull @Valid final ManagedFilter managedFilter = NO_FILTER;
+  @Builder.Default @NotNull @Size(max = 100) final Set<Boolean> disabledFilter = new HashSet<>();
 }

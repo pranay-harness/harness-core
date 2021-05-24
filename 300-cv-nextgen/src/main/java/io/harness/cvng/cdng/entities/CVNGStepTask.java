@@ -14,6 +14,7 @@ import io.harness.persistence.UuidAware;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.time.OffsetDateTime;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import lombok.Builder;
@@ -69,6 +70,10 @@ public class CVNGStepTask
       return this.asyncTaskIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  public static List<Status> getNonFinalStatues() {
+    return Collections.singletonList(Status.IN_PROGRESS);
   }
   public void validate() {
     Preconditions.checkNotNull(accountId);

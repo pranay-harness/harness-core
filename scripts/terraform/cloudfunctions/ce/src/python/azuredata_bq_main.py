@@ -39,13 +39,14 @@ from calendar import monthrange
 TABLE_NAME_FORMAT = "%s.BillingReport_%s.%s"
 
 CE_COLUMN_MAPPING = {
-    "startTime":"",
+    "startTime": "",
     "azureResourceRate": "",
     "cost": "",
     "region": "",
     "azureSubscriptionGuid": "",
     "azureInstanceId": "",
 }
+
 
 def main(event, context):
     """Triggered from a message on a Cloud Pub/Sub topic.
@@ -125,7 +126,7 @@ def ingestDataFromCsvToAzureTable(client, jsonData):
         source_format="CSV",
         allow_quoted_newlines=True,
         allow_jagged_rows=True,
-        write_disposition='WRITE_TRUNCATE' #If the table already exists, BigQuery overwrites the table data
+        write_disposition='WRITE_TRUNCATE'  # If the table already exists, BigQuery overwrites the table data
     )
     uris = ["gs://" + jsonData["bucket"] + "/" + csvtoingest]
     print_("Ingesting CSV from %s" % uris)
@@ -161,7 +162,7 @@ def setAvailableColumns(client, jsonData):
             """ % (ds, jsonData["tableSuffix"])
     try:
         query_job = client.query(query)
-        results = query_job.result() # wait for job to complete
+        results = query_job.result()  # wait for job to complete
         columns = set()
         for row in results:
             columns.add(row.column_name)
@@ -215,6 +216,7 @@ def setAvailableColumns(client, jsonData):
         raise Exception("No mapping found for azureInstanceId column")
     print_(CE_COLUMN_MAPPING)
 
+
 def ingestDataToPreaggregatedTable(client, jsonData):
     ds = "%s.%s" % (jsonData["projectName"], jsonData["datasetName"])
     tableName = "%s.%s" % (ds, "preAggregated")
@@ -234,7 +236,7 @@ def ingestDataToPreaggregatedTable(client, jsonData):
     """ % (ds, date_start, date_end, ds, CE_COLUMN_MAPPING["startTime"], CE_COLUMN_MAPPING["azureResourceRate"],
            CE_COLUMN_MAPPING["cost"], CE_COLUMN_MAPPING["azureSubscriptionGuid"], ds, jsonData["tableSuffix"])
 
-    #print(query)
+    # print(query)
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
             bigquery.ScalarQueryParameter(
@@ -279,16 +281,18 @@ def ingestDataInUnifiedTableTable(client, jsonData):
                                 null))
                      """ % (CE_COLUMN_MAPPING["startTime"],
                             CE_COLUMN_MAPPING["cost"], CE_COLUMN_MAPPING["azureInstanceId"],
-                            CE_COLUMN_MAPPING["azureSubscriptionGuid"], jsonData["projectName"], CE_COLUMN_MAPPING["azureInstanceId"],
-                            CE_COLUMN_MAPPING["azureInstanceId"], CE_COLUMN_MAPPING["azureInstanceId"],CE_COLUMN_MAPPING["azureInstanceId"],
+                            CE_COLUMN_MAPPING["azureSubscriptionGuid"], jsonData["projectName"],
+                            CE_COLUMN_MAPPING["azureInstanceId"],
+                            CE_COLUMN_MAPPING["azureInstanceId"], CE_COLUMN_MAPPING["azureInstanceId"],
+                            CE_COLUMN_MAPPING["azureInstanceId"],
                             CE_COLUMN_MAPPING["azureInstanceId"], CE_COLUMN_MAPPING["azureInstanceId"])
 
     # Amend query as per columns availability
     for additionalColumn in ["AccountName", "Frequency", "PublisherType", "ServiceTier", "ResourceType",
                              "SubscriptionName", "ReservationId", "ReservationName", "PublisherName"]:
         if additionalColumn in jsonData["columns"]:
-            INSERT_COLUMNS = INSERT_COLUMNS + ", azure%s"%additionalColumn
-            SELECT_COLUMNS = SELECT_COLUMNS + ", %s as azure%s"%(additionalColumn, additionalColumn)
+            INSERT_COLUMNS = INSERT_COLUMNS + ", azure%s" % additionalColumn
+            SELECT_COLUMNS = SELECT_COLUMNS + ", %s as azure%s" % (additionalColumn, additionalColumn)
 
     query = """DELETE FROM `%s.unifiedTable` WHERE DATE(startTime) >= '%s' AND DATE(startTime) <= '%s'  AND cloudProvider = "AZURE";
                INSERT INTO `%s.unifiedTable` (%s)
@@ -309,6 +313,7 @@ def ingestDataInUnifiedTableTable(client, jsonData):
     query_job = client.query(query, job_config=job_config)
     query_job.result()
     print_("Loaded into %s table..." % tableName)
+
 
 def createUDF(client, projectId):
     create_dataset(client, "CE_INTERNAL")
@@ -342,6 +347,7 @@ def createUDF(client, projectId):
     query_job = client.query(query)
     query_job.result()
 
+
 def alterPreaggTable(client, jsonData):
     print_("Altering Preaggregated Data Table")
     ds = "%s.%s" % (jsonData["projectName"], jsonData["datasetName"])
@@ -357,6 +363,7 @@ def alterPreaggTable(client, jsonData):
         print_(e)
     else:
         print_("Finished Altering preAggregated Table")
+
 
 def alterUnifiedTable(client, jsonData):
     print_("Altering unifiedTable Table")
@@ -389,4 +396,3 @@ def alterUnifiedTable(client, jsonData):
         print_(e)
     else:
         print_("Finished Altering unifiedTable Table")
-

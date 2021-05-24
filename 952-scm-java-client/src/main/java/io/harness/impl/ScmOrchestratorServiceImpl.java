@@ -5,10 +5,12 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitFileDetails;
 import io.harness.beans.gitsync.GitFilePathDetails;
+import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.impl.jgit.JgitGitServiceImpl;
 import io.harness.impl.scm.SCMServiceGitClientImpl;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
+import io.harness.product.ci.scm.proto.CreatePRResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
 import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
@@ -105,5 +107,10 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
   @Override
   public void createNewBranch(ScmConnector scmConnector, String branch, String defaultBranchName) {
     scmServiceGitClient.createNewBranch(scmConnector, branch, defaultBranchName);
+  }
+
+  @Override
+  public CreatePRResponse createPullRequest(ScmConnector scmConnector, GitPRCreateRequest gitPRCreateRequest) {
+    return scmServiceGitClient.createPullRequest(scmConnector, gitPRCreateRequest);
   }
 }

@@ -18,8 +18,6 @@ import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.exception.GeneralException;
-import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
-import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
@@ -234,7 +232,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     addGuiceValidationModule(modules);
     modules.add(new CIManagerServiceModule(configuration));
     modules.add(YamlSdkModule.getInstance());
-    modules.add(ExecutionPlanModule.getInstance());
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(configuration)));
 
     Injector injector = Guice.createInjector(modules);
@@ -244,7 +241,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     registerManagedBeans(environment, injector);
     registerHealthCheck(environment, injector);
     registerAuthFilters(configuration, environment);
-    registerExecutionPlanCreators(injector);
     registerCorrelationFilter(environment, injector);
     registerStores(configuration, injector);
     registerYamlSdk(injector);
@@ -371,10 +367,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         injector.getInstance(NotifyQueuePublisherRegister.class);
     notifyQueuePublisherRegister.register(
         NG_ORCHESTRATION, payload -> publisher.send(singletonList(NG_ORCHESTRATION), payload));
-  }
-
-  private void registerExecutionPlanCreators(Injector injector) {
-    injector.getInstance(CIExecutionPlanCreatorRegistrar.class).register();
   }
 
   private void registerAuthFilters(CIManagerConfiguration configuration, Environment environment) {

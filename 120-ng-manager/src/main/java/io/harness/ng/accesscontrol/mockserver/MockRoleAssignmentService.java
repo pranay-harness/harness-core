@@ -14,7 +14,7 @@ import java.util.List;
 @OwnedBy(PL)
 public interface MockRoleAssignmentService {
   List<RoleAssignmentResponseDTO> createMulti(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      List<RoleAssignmentDTO> filteredRoleAssignments);
+      List<RoleAssignmentDTO> filteredRoleAssignments, Boolean managed);
 
   PageResponse<RoleAssignmentResponseDTO> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       RoleAssignmentFilterDTO roleAssignmentFilter, PageRequest pageRequest);

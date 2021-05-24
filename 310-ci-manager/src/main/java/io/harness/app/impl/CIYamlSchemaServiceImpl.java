@@ -16,6 +16,7 @@ import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
+import io.harness.yaml.schema.beans.FieldEnumData;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.schema.beans.SchemaConstants;
@@ -27,6 +28,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.inject.Inject;
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -34,6 +37,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 
 @OwnedBy(HarnessTeam.CI)
@@ -88,10 +92,25 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
     Set<SubtypeClassMap> mapOfSubtypes = YamlSchemaUtils.getMapOfSubtypesUsingReflection(typedField);
     Set<FieldSubtypeData> classFieldSubtypeData = new HashSet<>();
     classFieldSubtypeData.add(YamlSchemaUtils.getFieldSubtypeData(typedField, mapOfSubtypes));
-    swaggerDefinitionsMetaInfoMap.put(
-        STEP_ELEMENT_CONFIG, SwaggerDefinitionsMetaInfo.builder().subtypeClassMap(classFieldSubtypeData).build());
+    Set<FieldEnumData> fieldEnumData = getFieldEnumData(typedField, mapOfSubtypes);
+    swaggerDefinitionsMetaInfoMap.put(STEP_ELEMENT_CONFIG,
+        SwaggerDefinitionsMetaInfo.builder()
+            .fieldEnumData(fieldEnumData)
+            .subtypeClassMap(classFieldSubtypeData)
+            .build());
     yamlSchemaGenerator.convertSwaggerToJsonSchema(
         swaggerDefinitionsMetaInfoMap, mapper, STEP_ELEMENT_CONFIG, jsonNode);
+  }
+
+  private Set<FieldEnumData> getFieldEnumData(Field typedField, Set<SubtypeClassMap> mapOfSubtypes) {
+    String fieldName = YamlSchemaUtils.getJsonTypeInfo(typedField).property();
+
+    return ImmutableSet.of(
+        FieldEnumData.builder()
+            .fieldName(fieldName)
+            .enumValues(ImmutableSortedSet.copyOf(
+                mapOfSubtypes.stream().map(SubtypeClassMap::getSubtypeEnum).collect(Collectors.toList())))
+            .build());
   }
 
   private void flattenParallelStepElementConfig(ObjectNode objectNode) {

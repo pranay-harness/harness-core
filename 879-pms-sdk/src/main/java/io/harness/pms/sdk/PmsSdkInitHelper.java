@@ -106,8 +106,8 @@ public class PmsSdkInitHelper {
 
   private static void registerQueueListeners(Injector injector) {
     QueueListenerController queueListenerController = injector.getInstance(Key.get(QueueListenerController.class));
-    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 3);
+    queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 2);
     queueListenerController.register(injector.getInstance(InterruptEventListener.class), 1);
   }
 

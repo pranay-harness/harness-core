@@ -11,6 +11,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.event.model.EventType;
 import io.harness.ng.core.common.beans.Generation;
+import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -353,10 +354,17 @@ public interface UserService extends OwnedByAccount {
    * Complete the user invite and login the user in one call.
    *
    * @param userInvite the user invite
-   * @param gen
    * @return the logged-in user
    */
-  User completeInviteAndSignIn(UserInvite userInvite, Generation gen);
+  User completeInviteAndSignIn(UserInvite userInvite);
+
+  /**
+   * Complete the user invite NG and login the user in one call.
+   *
+   * @param userInvite the user invite
+   * @return the logged-in user
+   */
+  User completeNGInviteAndSignIn(UserInviteDTO userInvite);
 
   /**
    * Complete the trial user signup. Both the trial account and the account admin user will be created
@@ -578,4 +586,6 @@ public interface UserService extends OwnedByAccount {
   String generateVerificationUrl(String userId, String accountId) throws URISyntaxException;
 
   String generateLoginUrl(String accountId) throws URISyntaxException;
+
+  boolean isUserPasswordPresent(String accountId, String emailId);
 }

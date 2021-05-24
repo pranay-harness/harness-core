@@ -15,12 +15,17 @@ import io.harness.artifacts.comparator.BuildDetailsInternalComparatorAscending;
 import io.harness.artifacts.comparator.BuildDetailsInternalComparatorDescending;
 import io.harness.artifacts.gcr.GcrRestClient;
 import io.harness.artifacts.gcr.beans.GcrInternalConfig;
+import io.harness.context.MdcGlobalContextData;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.WingsException;
+import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionMetadataKeys;
+import io.harness.exception.runtime.GcrImageNotFoundRuntimeException;
+import io.harness.exception.runtime.GcrInvalidTagRuntimeException;
 import io.harness.expression.RegexFunctor;
+import io.harness.globalcontex.ErrorHandlingGlobalContextData;
+import io.harness.manage.GlobalContextManager;
 import io.harness.network.Http;
 
 import com.google.inject.Singleton;
@@ -71,6 +76,13 @@ public class GcrApiServiceImpl implements GcrApiService {
                                                    .execute();
       checkValidImage(imageName, response);
       return processBuildResponse(gcpConfig.getRegistryHostname(), imageName, response.body());
+    } catch (GcrImageNotFoundRuntimeException ex) {
+      Map<String, String> imageDataMap = new HashMap<>();
+      imageDataMap.put(ExceptionMetadataKeys.IMAGE_NAME.name(), imageName);
+      imageDataMap.put(ExceptionMetadataKeys.URL.name(), gcpConfig.getRegistryHostname() + "/" + imageName);
+      MdcGlobalContextData mdcGlobalContextData = MdcGlobalContextData.builder().map(imageDataMap).build();
+      GlobalContextManager.upsertGlobalContextRecord(mdcGlobalContextData);
+      throw ex;
     } catch (IOException e) {
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER, e).addParam("message", ExceptionUtils.getMessage(e));
     }
@@ -78,6 +90,13 @@ public class GcrApiServiceImpl implements GcrApiService {
 
   private void checkValidImage(String imageName, Response<GcrImageTagResponse> response) {
     if (response.code() == 404) { // Page not found
+      ErrorHandlingGlobalContextData globalContextData =
+          GlobalContextManager.get(ErrorHandlingGlobalContextData.IS_SUPPORTED_ERROR_FRAMEWORK);
+      if (globalContextData != null && globalContextData.isSupportedErrorFramework()
+          && response.body().tags.size() == 0) {
+        throw new GcrImageNotFoundRuntimeException(
+            "Image name [" + imageName + "] does not exist in Google Container Registry.");
+      }
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
           .addParam("args", "Image name [" + imageName + "] does not exist in Google Container Registry.");
     }
@@ -163,16 +182,19 @@ public class GcrApiServiceImpl implements GcrApiService {
 
   @Override
   public BuildDetailsInternal verifyBuildNumber(GcrInternalConfig gcrInternalConfig, String imageName, String tag) {
-    try {
-      List<BuildDetailsInternal> builds = getBuilds(gcrInternalConfig, imageName, MAX_NO_OF_TAGS_PER_IMAGE);
-      builds = builds.stream().filter(build -> build.getNumber().equals(tag)).collect(Collectors.toList());
-      if (builds.size() != 1) {
-        throw new InvalidArtifactServerException("Didn't get build number", USER);
-      }
-      return builds.get(0);
-    } catch (Exception e) {
-      throw new ArtifactServerException(ExceptionUtils.getMessage(e), e, USER);
+    List<BuildDetailsInternal> builds = getBuilds(gcrInternalConfig, imageName, MAX_NO_OF_TAGS_PER_IMAGE);
+    builds = builds.stream().filter(build -> build.getNumber().equals(tag)).collect(Collectors.toList());
+    if (builds.size() != 1) {
+      Map<String, String> imageDataMap = new HashMap<>();
+      imageDataMap.put(ExceptionMetadataKeys.IMAGE_NAME.name(), imageName);
+      imageDataMap.put(ExceptionMetadataKeys.IMAGE_TAG.name(), tag);
+      imageDataMap.put(
+          ExceptionMetadataKeys.URL.name(), gcrInternalConfig.getRegistryHostname() + "/" + imageName + ":" + tag);
+      MdcGlobalContextData mdcGlobalContextData = MdcGlobalContextData.builder().map(imageDataMap).build();
+      GlobalContextManager.upsertGlobalContextRecord(mdcGlobalContextData);
+      throw new GcrInvalidTagRuntimeException("Could not find tag [" + tag + "] for GCR image [" + imageName + "]");
     }
+    return builds.get(0);
   }
 
   private boolean isSuccessful(Response<?> response) {

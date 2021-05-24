@@ -9,6 +9,7 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
 
@@ -27,4 +28,5 @@ public class QLUpdateGitConnectorInput {
   private RequestField<Boolean> generateWebhookUrl;
   private RequestField<QLCustomCommitDetailsInput> customCommitDetails;
   private RequestField<QLUsageScope> usageScope;
+  private RequestField<List<String>> delegateSelectors;
 }

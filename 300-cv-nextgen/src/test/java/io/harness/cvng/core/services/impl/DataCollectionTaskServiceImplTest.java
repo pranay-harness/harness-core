@@ -855,7 +855,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
 
   private VerificationJobInstance createVerificationJobInstance() {
     VerificationJobDTO verificationJobDTO = newVerificationJobDTO();
-    verificationJobService.upsert(accountId, verificationJobDTO);
+    verificationJobService.create(accountId, verificationJobDTO);
     VerificationJob verificationJob = verificationJobService.getVerificationJob(
         accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier());
     VerificationJobInstance verificationJobInstance =

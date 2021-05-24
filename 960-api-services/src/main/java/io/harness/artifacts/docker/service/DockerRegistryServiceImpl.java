@@ -15,13 +15,21 @@ import io.harness.artifacts.comparator.BuildDetailsInternalComparatorDescending;
 import io.harness.artifacts.docker.DockerRegistryRestClient;
 import io.harness.artifacts.docker.beans.DockerInternalConfig;
 import io.harness.artifacts.docker.client.DockerRestClientFactory;
+import io.harness.context.MdcGlobalContextData;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.WingsException;
+import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionMetadataKeys;
+import io.harness.exception.runtime.DockerHubInvalidImageRuntimeRuntimeException;
+import io.harness.exception.runtime.DockerHubInvalidTagRuntimeRuntimeException;
+import io.harness.exception.runtime.DockerHubServerRuntimeException;
+import io.harness.exception.runtime.InvalidDockerHubCredentialsRuntimeException;
 import io.harness.expression.RegexFunctor;
+import io.harness.globalcontex.ErrorHandlingGlobalContextData;
+import io.harness.manage.GlobalContextManager;
 import io.harness.network.Http;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -76,6 +84,8 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       } else {
         buildDetails = dockerPublicRegistryProcessor.getBuilds(dockerConfig, imageName, maxNumberOfBuilds);
       }
+    } catch (DockerHubServerRuntimeException ex) {
+      throw ex;
     } catch (Exception e) {
       throw new ArtifactServerException(ExceptionUtils.getMessage(e), e, WingsException.USER);
     }
@@ -93,8 +103,25 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     Response<DockerImageTagResponse> response = registryRestClient.listImageTags(basicAuthHeader, imageName).execute();
     if (response.code() == 401) { // unauthorized
       token = getToken(dockerConfig, response.headers(), registryRestClient);
+      ErrorHandlingGlobalContextData globalContextData =
+          GlobalContextManager.get(ErrorHandlingGlobalContextData.IS_SUPPORTED_ERROR_FRAMEWORK);
+      if (token == null) {
+        if (globalContextData != null && globalContextData.isSupportedErrorFramework()) {
+          throw new InvalidDockerHubCredentialsRuntimeException(
+              "Unable to validate with given credentials. invalid username or password");
+        }
+      }
       response = registryRestClient.listImageTags(BEARER + token, imageName).execute();
       if (response.code() == 401) {
+        if (globalContextData != null && globalContextData.isSupportedErrorFramework()) {
+          Map<String, String> imageDataMap = new HashMap<>();
+          imageDataMap.put(ExceptionMetadataKeys.IMAGE_NAME.name(), imageName);
+          imageDataMap.put(ExceptionMetadataKeys.URL.name(), dockerConfig.getDockerRegistryUrl() + imageName);
+          MdcGlobalContextData mdcGlobalContextData = MdcGlobalContextData.builder().map(imageDataMap).build();
+          GlobalContextManager.upsertGlobalContextRecord(mdcGlobalContextData);
+          throw new DockerHubInvalidImageRuntimeRuntimeException(
+              "Docker image [" + imageName + "] not found in registry [" + dockerConfig.getDockerRegistryUrl() + "]");
+        }
         throw new InvalidCredentialsException("Invalid Credentials while fetching build details", USER);
       }
     }
@@ -252,7 +279,15 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       builds = builds.stream().filter(build -> build.getNumber().equals(tag)).collect(Collectors.toList());
 
       if (builds.size() != 1) {
-        throw new InvalidArtifactServerException("Didn't get build number", USER);
+        Map<String, String> imageDataMap = new HashMap<>();
+        imageDataMap.put(ExceptionMetadataKeys.IMAGE_NAME.name(), imageName);
+        imageDataMap.put(ExceptionMetadataKeys.IMAGE_TAG.name(), tag);
+        String url = dockerConfig.getDockerRegistryUrl() + "/v2/" + imageName + "/" + tag;
+        imageDataMap.put(ExceptionMetadataKeys.URL.name(), url);
+        MdcGlobalContextData mdcGlobalContextData = MdcGlobalContextData.builder().map(imageDataMap).build();
+        GlobalContextManager.upsertGlobalContextRecord(mdcGlobalContextData);
+        throw new DockerHubInvalidTagRuntimeRuntimeException("Could not find tag [" + tag + "] for Docker image ["
+            + imageName + "] on registry [" + dockerConfig.getDockerRegistryUrl() + "]");
       }
       return builds.get(0);
     } catch (IOException e) {

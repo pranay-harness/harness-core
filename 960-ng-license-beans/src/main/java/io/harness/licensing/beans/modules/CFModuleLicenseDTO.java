@@ -25,7 +25,7 @@ import lombok.experimental.SuperBuilder;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_NULL)
 public class CFModuleLicenseDTO extends ModuleLicenseDTO {
-  int numberOfUsers;
-  int numberOfClientMAUs;
+  Integer numberOfUsers;
+  Integer numberOfClientMAUs;
   List<UpdateChannel> updateChannels;
 }

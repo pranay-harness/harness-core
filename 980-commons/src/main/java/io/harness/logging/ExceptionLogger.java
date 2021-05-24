@@ -15,7 +15,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCodeName;
 import io.harness.eraro.MessageManager;
 import io.harness.eraro.ResponseMessage;
-import io.harness.exception.DataException;
+import io.harness.exception.FrameworkBaseException;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ExecutionContext;
 import io.harness.exception.WingsException.ReportTarget;
@@ -48,7 +48,7 @@ public class ExceptionLogger {
   public static List<ResponseMessage> getResponseMessageList(WingsException wingsException, ReportTarget reportTarget) {
     List<ResponseMessage> list = new ArrayList<>();
     for (Throwable ex = wingsException; ex != null; ex = ex.getCause()) {
-      if (!(ex instanceof WingsException) || ex instanceof DataException) {
+      if (!(ex instanceof WingsException) || ex instanceof FrameworkBaseException) {
         continue;
       }
       final WingsException exception = (WingsException) ex;

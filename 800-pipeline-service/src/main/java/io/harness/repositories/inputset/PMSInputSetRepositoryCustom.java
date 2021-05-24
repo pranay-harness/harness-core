@@ -16,7 +16,8 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(PIPELINE)
 public interface PMSInputSetRepositoryCustom {
-  Page<InputSetEntity> findAll(Criteria criteria, Pageable pageable);
+  Page<InputSetEntity> findAll(
+      Criteria criteria, Pageable pageable, String accountIdentifier, String orgIdentifier, String projectIdentifier);
 
   InputSetEntity save(InputSetEntity entityToSave, InputSetYamlDTO yamlDTO);
 

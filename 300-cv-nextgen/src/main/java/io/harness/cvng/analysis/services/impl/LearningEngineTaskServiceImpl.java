@@ -1,7 +1,6 @@
 package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
-import static io.harness.cvng.analysis.CVAnalysisConstants.LEARNING_ENGINE_TASK_METRIC;
 import static io.harness.cvng.analysis.CVAnalysisConstants.LEARNING_RESOURCE;
 import static io.harness.cvng.analysis.CVAnalysisConstants.MARK_FAILURE_PATH;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -149,16 +148,6 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
     updateOperations.set(LearningEngineTaskKeys.taskStatus, ExecutionStatus.FAILED);
     hPersistence.update(hPersistence.createQuery(LearningEngineTask.class).filter(LearningEngineTaskKeys.uuid, taskId),
         updateOperations);
-  }
-
-  @Override
-  public void recordMetrics() {
-    List<LearningEngineTask> queuedTasks = hPersistence.createQuery(LearningEngineTask.class, excludeAuthority)
-                                               .filter(LearningEngineTaskKeys.taskStatus, ExecutionStatus.QUEUED)
-                                               .project(LearningEngineTaskKeys.accountId, true)
-                                               .asList();
-    log.info("Recording LE Metrics. Queued Tasks size : {}", queuedTasks.size());
-    metricService.recordMetric(LEARNING_ENGINE_TASK_METRIC, queuedTasks.size());
   }
 
   private boolean hasTaskTimedOut(LearningEngineTask task) {

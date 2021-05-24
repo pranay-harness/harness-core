@@ -7,8 +7,10 @@ import io.harness.beans.CommitDetails;
 import io.harness.beans.Repository;
 import io.harness.beans.WebhookGitUser;
 import io.harness.beans.gitsync.GitFileDetails;
+import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.exception.ScmException;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
+import io.harness.product.ci.scm.proto.CreatePRResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
 import io.harness.product.ci.scm.proto.UpdateFileResponse;
 import io.harness.serializer.KryoRegistrar;
@@ -27,5 +29,7 @@ public class ScmJavaClientKryoRegistrar implements KryoRegistrar {
     kryo.register(UpdateFileResponse.class, 955005);
     kryo.register(DeleteFileResponse.class, 955006);
     kryo.register(ScmException.class, 955007);
+    kryo.register(GitPRCreateRequest.class, 955008);
+    kryo.register(CreatePRResponse.class, 955009);
   }
 }

@@ -35,7 +35,7 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
     Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
     String outcomeName = "outcomeName";
     Outcome outcome = DummyOrchestrationOutcome.builder().test("test").build();
-    pmsOutcomeService.consume(ambiance, outcomeName, RecastOrchestrationUtils.toDocumentJson(outcome), "PHASE", false);
+    pmsOutcomeService.consume(ambiance, outcomeName, RecastOrchestrationUtils.toDocumentJson(outcome), "PHASE");
 
     // Resolve with producer id
     DummyOrchestrationOutcome savedOutcome = RecastOrchestrationUtils.fromDocumentJson(
@@ -60,7 +60,7 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
   public void shouldTestSaveAndFindForNull() {
     Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
     String outcomeName = "outcomeName";
-    pmsOutcomeService.consume(ambiance, outcomeName, null, null, false);
+    pmsOutcomeService.consume(ambiance, outcomeName, null, null);
 
     Outcome outcome = RecastOrchestrationUtils.fromDocumentJson(
         pmsOutcomeService.resolve(ambiance, RefObjectUtils.getOutcomeRefObject(outcomeName)), Outcome.class);
@@ -78,10 +78,9 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
     String outcomeName1 = "outcome1";
 
     pmsOutcomeService.consume(ambiance, outcomeName,
-        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test").build()), null, false);
+        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test").build()), null);
     pmsOutcomeService.consume(ambiance1, outcomeName1,
-        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test1").build()), null,
-        false);
+        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test1").build()), null);
 
     List<String> outcomes = pmsOutcomeService.findAllByRuntimeId(
         ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance));
@@ -99,11 +98,9 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
     String outcomeName1 = "outcome1";
 
     String instanceId1 = pmsOutcomeService.consume(ambiance, outcomeName,
-        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test1").build()), null,
-        false);
+        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test1").build()), null);
     String instanceId2 = pmsOutcomeService.consume(ambiance1, outcomeName1,
-        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test2").build()), null,
-        false);
+        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test2").build()), null);
 
     List<String> outcomes = pmsOutcomeService.fetchOutcomes(Arrays.asList(instanceId1, instanceId2));
     assertThat(outcomes.size()).isEqualTo(2);
@@ -123,7 +120,7 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
     String outcomeName = "outcome";
 
     String instanceId = pmsOutcomeService.consume(ambiance, outcomeName,
-        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test").build()), null, false);
+        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test").build()), null);
 
     String outcomeJson = pmsOutcomeService.fetchOutcome(instanceId);
     Outcome outcome = RecastOrchestrationUtils.fromDocumentJson(outcomeJson, Outcome.class);
@@ -141,7 +138,7 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
 
     String outcomeJson =
         RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test").build());
-    pmsOutcomeService.consume(ambiance, outcomeName, outcomeJson, null, false);
+    pmsOutcomeService.consume(ambiance, outcomeName, outcomeJson, null);
 
     // Resolve with producer id
     OptionalOutcome optionalOutcome = pmsOutcomeService.resolveOptional(

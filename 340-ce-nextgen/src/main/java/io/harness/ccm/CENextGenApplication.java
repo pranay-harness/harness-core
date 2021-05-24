@@ -33,11 +33,14 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.dropwizard.Application;
+import io.dropwizard.configuration.ConfigurationSourceProvider;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.jersey.setup.JerseyEnvironment;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import io.federecio.dropwizard.swagger.SwaggerBundle;
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -76,9 +79,23 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
   public void initialize(Bootstrap<CENextGenConfiguration> bootstrap) {
     initializeLogging();
     // Enable variable substitution with environment variables
-    bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
-        bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
+    bootstrap.setConfigurationSourceProvider(getConfigurationProvider(bootstrap.getConfigurationSourceProvider()));
+    bootstrap.addBundle(getSwaggerBundle());
+    bootstrap.setMetricRegistry(metricRegistry);
     configureObjectMapper(bootstrap.getObjectMapper());
+  }
+
+  private static SubstitutingSourceProvider getConfigurationProvider(ConfigurationSourceProvider sourceProvider) {
+    return new SubstitutingSourceProvider(sourceProvider, new EnvironmentVariableSubstitutor(false));
+  }
+
+  private static SwaggerBundle<CENextGenConfiguration> getSwaggerBundle() {
+    return new SwaggerBundle<CENextGenConfiguration>() {
+      @Override
+      protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(CENextGenConfiguration appConfig) {
+        return appConfig.getSwaggerBundleConfiguration();
+      }
+    };
   }
 
   public static void configureObjectMapper(final ObjectMapper mapper) {

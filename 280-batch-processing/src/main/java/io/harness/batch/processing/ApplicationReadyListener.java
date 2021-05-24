@@ -5,16 +5,15 @@ import static io.harness.event.app.EventServiceApplication.EVENTS_STORE;
 import static com.google.common.base.Verify.verify;
 
 import io.harness.batch.processing.config.BatchMainConfig;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.mongo.IndexManager;
 import io.harness.persistence.HPersistence;
 import io.harness.timescaledb.TimeScaleDBService;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
@@ -35,13 +34,15 @@ public class ApplicationReadyListener {
   private final HPersistence hPersistence;
   private final IndexManager indexManager;
   private final Environment environment;
+  private final TimeLimiter timeLimiter;
 
   public ApplicationReadyListener(TimeScaleDBService timeScaleDBService, HPersistence hPersistence, Morphia morphia,
-      IndexManager indexManager, Environment environment) {
+      IndexManager indexManager, TimeLimiter timeLimiter, Environment environment) {
     this.timeScaleDBService = timeScaleDBService;
     this.hPersistence = hPersistence;
     this.morphia = morphia;
     this.indexManager = indexManager;
+    this.timeLimiter = timeLimiter;
     this.environment = environment;
   }
 
@@ -68,12 +69,11 @@ public class ApplicationReadyListener {
   @Order(Ordered.HIGHEST_PRECEDENCE)
   void ensureMongoConnectivity() throws Exception {
     log.info("Inside ensureMongoConnectivity");
-    TimeLimiter timeLimiter = new SimpleTimeLimiter();
     try {
-      timeLimiter.callWithTimeout(() -> {
+      HTimeLimiter.callInterruptible(timeLimiter, hPersistence.healthExpectedResponseTimeout(), () -> {
         hPersistence.isHealthy();
         return null;
-      }, hPersistence.healthExpectedResponseTimeout().toMillis(), TimeUnit.MILLISECONDS, true);
+      });
     } catch (UncheckedTimeoutException e) {
       log.error("Timed out waiting for mongo connectivity");
       throw e;

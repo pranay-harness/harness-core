@@ -1,16 +1,21 @@
 package io.harness.gitsync.common.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.eraro.ErrorCode.PR_CREATION_ERROR;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.gitsync.GitFilePathDetails;
+import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.connector.impl.ConnectorErrorMessagesHelper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.exception.ScmException;
 import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.gitsync.common.service.YamlGitConfigService;
+import io.harness.impl.ScmResponseStatusUtils;
+import io.harness.product.ci.scm.proto.CreatePRResponse;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.service.ScmClient;
 import io.harness.tasks.DecryptGitApiAccessHelper;
@@ -61,6 +66,25 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
                                                                  accountIdentifier, projectIdentifier, orgIdentifier),
         gitFilePathDetails);
     return validateAndGetGitFileContent(fileContent);
+  }
+
+  @Override
+  public Boolean createPullRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String yamlGitConfigRef, GitPRCreateRequest gitCreatePRRequest) {
+    final ScmConnector scmConnector =
+        getScmConnector(yamlGitConfigRef, accountIdentifier, orgIdentifier, projectIdentifier);
+    ScmConnector decryptScmConnector = decryptGitApiAccessHelper.decryptScmApiAccess(
+        scmConnector, accountIdentifier, projectIdentifier, orgIdentifier);
+    CreatePRResponse createPRResponse = null;
+    try {
+      createPRResponse = scmClient.createPullRequest(decryptScmConnector, gitCreatePRRequest);
+      ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(createPRResponse.getStatus(),
+          String.format("Could not create the pull request from %s to %s", gitCreatePRRequest.getSourceBranch(),
+              gitCreatePRRequest.getTargetBranch()));
+    } catch (Exception ex) {
+      throw new ScmException(PR_CREATION_ERROR);
+    }
+    return true;
   }
 
   private ScmConnector getScmConnector(
