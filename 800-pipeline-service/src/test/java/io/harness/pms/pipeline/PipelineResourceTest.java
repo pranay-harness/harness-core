@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
@@ -137,6 +138,7 @@ public class PipelineResourceTest extends CategoryTest {
   @Test
   @Owner(developers = SAMARTH)
   @Category(UnitTests.class)
+  @Ignore("Ignored till Schema validation is behind FF")
   public void testCreatePipelineWithSchemaErrors() throws IOException {
     doThrow(JsonSchemaValidationException.class)
         .when(pmsYamlSchemaService)
@@ -202,6 +204,7 @@ public class PipelineResourceTest extends CategoryTest {
   @Test
   @Owner(developers = SAMARTH)
   @Category(UnitTests.class)
+  @Ignore("Ignored till Schema validation is behind FF")
   public void testUpdatePipelineWithSchemaErrors() {
     doThrow(JsonSchemaValidationException.class)
         .when(pmsYamlSchemaService)
