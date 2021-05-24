@@ -253,6 +253,9 @@ public class InstanceBillingDataTasklet implements Tasklet {
               parentInstanceActiveSecondMap.getOrDefault(billingCalculationService.getInstanceClusterIdKey(
                                                              instanceData.getInstanceId(), instanceData.getClusterId()),
                   null);
+          if (instanceData.getInstanceId().equals("4f7f66fe-4c9c-4452-86b5-3338c5e69a33")) {
+            log.info("parent active sec {}", parentInstanceActiveSecond);
+          }
           InstanceBillingData instanceBillingData = getInstanceBillingData(instanceData, utilizationDataForInstances,
               startTime, endTime, claimRefToPVInstanceBillingData, pvcClaimCount, parentInstanceActiveSecond);
           instanceBillingDataList.add(instanceBillingData);

@@ -41,7 +41,11 @@ public class BillingCalculationService {
   }
 
   public String getInstanceClusterIdKey(String instanceId, String clusterId) {
-    return String.format("%s:%s", instanceId, clusterId);
+    String format = String.format("%s:%s", instanceId, clusterId);
+    if (instanceId.equals("4f7f66fe-4c9c-4452-86b5-3338c5e69a33")) {
+      log.info("format string {}", format);
+    }
+    return format;
   }
 
   public Map<String, Double> getInstanceActiveSeconds(
@@ -67,7 +71,7 @@ public class BillingCalculationService {
           new SystemCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO), 0, 0, 0, 0, 0,
           PricingSource.PUBLIC_API);
     }
-    if (null == parentInstanceActiveSecond) {
+    if (null == parentInstanceActiveSecond || parentInstanceActiveSecond == 0) {
       parentInstanceActiveSecond = instanceActiveSeconds;
     }
 
