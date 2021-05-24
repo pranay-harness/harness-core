@@ -31,6 +31,7 @@ import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecomm
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement;
 
 import com.cronutils.utils.Preconditions;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import io.kubernetes.client.custom.Quantity;
 import java.math.BigDecimal;
@@ -44,6 +45,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemWriter;
 
@@ -53,6 +55,9 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
 
   private static final long podMinCpuMilliCores = 25L;
   private static final long podMinMemoryBytes = 250_000_000L;
+  private static final int cpuScale = 3;
+  private static final int memoryScale = 1;
+  private static final int costScale = 3;
   private static final Set<Integer> requiredPercentiles = ImmutableSet.of(50, 80, 90, 95, 99);
   private static final String PERCENTILE_KEY = "p%d";
 
@@ -203,11 +208,12 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
       BigDecimal monthlySavings = null;
       if (lastDayCost != null) {
         recommendation.setLastDayCost(lastDayCost);
+        recommendation.setLastDayCostAvailable(true);
+
+        setContainerLevelCost(containerRecommendations, lastDayCost);
 
         monthlySavings = estimateMonthlySavings(containerRecommendations, lastDayCost);
         recommendation.setEstimatedSavings(monthlySavings);
-
-        recommendation.setLastDayCostAvailable(true);
 
         monthlyCost = BigDecimal.ZERO.add(lastDayCost.getCpu())
                           .add(lastDayCost.getMemory())
@@ -228,6 +234,28 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
           ofNullable(monthlySavings).map(BigDecimal::doubleValue).orElse(null),
           recommendation.shouldShowRecommendation(),
           firstNonNull(recommendation.getLastReceivedUtilDataAt(), Instant.EPOCH));
+    }
+  }
+
+  @VisibleForTesting
+  public void setContainerLevelCost(Map<String, ContainerRecommendation> containerRecommendationMap, Cost lastDayCost) {
+    BigDecimal totalCpu = totalCurrentResourceValue(containerRecommendationMap, CPU);
+    BigDecimal totalMemory = totalCurrentResourceValue(containerRecommendationMap, MEMORY);
+
+    for (ContainerRecommendation containerRecommendation : containerRecommendationMap.values()) {
+      BigDecimal containerCpu = getResourceValue(containerRecommendation.getCurrent(), CPU, BigDecimal.ZERO);
+      BigDecimal containerMemory = getResourceValue(containerRecommendation.getCurrent(), MEMORY, BigDecimal.ZERO);
+
+      BigDecimal fractionCpu = containerCpu.setScale(cpuScale, HALF_UP).divide(totalCpu, costScale, HALF_UP);
+      BigDecimal fractionMemory =
+          containerMemory.setScale(memoryScale, HALF_UP).divide(totalMemory, costScale, HALF_UP);
+
+      Cost containerCost = Cost.builder()
+                               .cpu(lastDayCost.getCpu().multiply(fractionCpu))
+                               .memory(lastDayCost.getMemory().multiply(fractionMemory))
+                               .build();
+
+      containerRecommendation.setLastDayCost(containerCost);
     }
   }
 
@@ -257,9 +285,10 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
      find percentage diff at workload level, and multiply by the last day's cost to get dailyDiff
      multiply by -30 to convert dailyDiff to  monthly savings.
     */
-    BigDecimal cpuChangePercent = resourceChangePercent(containerRecommendations, "cpu");
-    BigDecimal memoryChangePercent = resourceChangePercent(containerRecommendations, "memory");
+    BigDecimal cpuChangePercent = resourceChangePercent(containerRecommendations, CPU);
+    BigDecimal memoryChangePercent = resourceChangePercent(containerRecommendations, MEMORY);
     BigDecimal monthlySavings = null;
+
     if (cpuChangePercent != null || memoryChangePercent != null) {
       BigDecimal costChangeForDay = BigDecimal.ZERO;
       if (cpuChangePercent != null && lastDayCost.getCpu() != null) {
@@ -282,24 +311,15 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
     BigDecimal resourceChange = BigDecimal.ZERO;
     boolean atLeastOneContainerComputable = false;
     for (ContainerRecommendation containerRecommendation : containerRecommendations.values()) {
-      BigDecimal current = ofNullable(containerRecommendation.getCurrent())
-                               .map(ResourceRequirement::getRequests)
-                               .map(requests -> requests.get(resource))
-                               .map(Quantity::fromString)
-                               .map(Quantity::getNumber)
-                               .orElse(null);
+      BigDecimal current = getResourceValue(containerRecommendation.getCurrent(), resource, null);
 
       ResourceRequirement recommendedResource = containerRecommendation.getGuaranteed();
       if (containerRecommendation.getPercentileBased() != null
           && containerRecommendation.getPercentileBased().containsKey(String.format(PERCENTILE_KEY, 90))) {
         recommendedResource = containerRecommendation.getPercentileBased().get(String.format(PERCENTILE_KEY, 90));
       }
-      BigDecimal recommended = ofNullable(recommendedResource)
-                                   .map(ResourceRequirement::getRequests)
-                                   .map(requests -> requests.get(resource))
-                                   .map(Quantity::fromString)
-                                   .map(Quantity::getNumber)
-                                   .orElse(null);
+      BigDecimal recommended = getResourceValue(recommendedResource, resource, null);
+
       if (current != null && recommended != null) {
         resourceChange = resourceChange.add(recommended.subtract(current));
         resourceCurrent = resourceCurrent.add(current);
@@ -310,5 +330,28 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
       return resourceChange.setScale(3, HALF_UP).divide(resourceCurrent, HALF_UP);
     }
     return null;
+  }
+
+  @NonNull
+  static BigDecimal totalCurrentResourceValue(
+      Map<String, ContainerRecommendation> containerRecommendations, String resource) {
+    BigDecimal totalResource = BigDecimal.ZERO;
+
+    for (ContainerRecommendation containerRecommendation : containerRecommendations.values()) {
+      BigDecimal current = getResourceValue(containerRecommendation.getCurrent(), resource, BigDecimal.ZERO);
+      totalResource = totalResource.add(current);
+    }
+
+    return totalResource;
+  }
+
+  static BigDecimal getResourceValue(
+      ResourceRequirement resourceRequirement, String resource, BigDecimal defaultValue) {
+    return ofNullable(resourceRequirement)
+        .map(ResourceRequirement::getRequests)
+        .map(requests -> requests.get(resource))
+        .map(Quantity::fromString)
+        .map(Quantity::getNumber)
+        .orElse(defaultValue);
   }
 }
