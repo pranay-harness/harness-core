@@ -3,6 +3,7 @@ package io.harness.delegate.task.k8s;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.helm.HelmConstants.HELM_RELEASE_LABEL;
 import static io.harness.helm.HelmSubCommandType.TEMPLATE;
+import static io.harness.k8s.manifest.ManifestHelper.processYaml;
 import static io.harness.k8s.model.Kind.ConfigMap;
 import static io.harness.k8s.model.Kind.Deployment;
 import static io.harness.k8s.model.Kind.Namespace;
@@ -13,6 +14,7 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.SAHIL;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
@@ -60,6 +62,7 @@ import io.harness.delegate.task.helm.HelmTaskHelperBase;
 import io.harness.exception.GitOperationException;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.kubectl.ApplyCommand;
+import io.harness.k8s.kubectl.DeleteCommand;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.HarnessLabelValues;
@@ -79,8 +82,10 @@ import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.shell.SshSessionConfig;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Resources;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
@@ -103,6 +108,7 @@ import io.kubernetes.client.openapi.models.V1ServiceBuilder;
 import io.kubernetes.client.openapi.models.V1ServicePortBuilder;
 import io.kubernetes.client.util.Yaml;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -1099,5 +1105,68 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     assertThat(result).isEqualTo(renderedFiles);
     verify(openShiftDelegateService, times(1))
         .processTemplatization("manifest", ocPath, ocTemplatePath, executionLogCallback, valuesList);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testGetResourcesToBePrunedInOrder() throws Exception {
+    List<KubernetesResource> currentResource = getKubernetesResourcesFromFiles(singletonList("/k8s/deployment.yaml"));
+
+    List<String> previousResourcesYamls = asList(
+        "/k8s/podWithSkipPruneAnnotation.yaml", "/k8s/deployment.yaml", "/k8s/configMap.yaml", "/k8s/service.yaml");
+    List<KubernetesResource> previousResource = getKubernetesResourcesFromFiles(previousResourcesYamls);
+
+    List<KubernetesResourceId> resourcesToBePrunedInOrder =
+        k8sTaskHelperBase.getResourcesToBePrunedInOrder(previousResource, currentResource);
+
+    assertThat(resourcesToBePrunedInOrder).hasSize(2);
+    assertThat(resourcesToBePrunedInOrder.stream().map(KubernetesResourceId::getKind).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder("Service", "ConfigMap");
+    assertThat(resourcesToBePrunedInOrder.stream().map(KubernetesResourceId::getKind).collect(Collectors.toList()))
+        .doesNotContain("Deployment", "Pod");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testexecuteDeleteHandlingPartialExecution() throws Exception {
+    K8sTaskHelperBase spyK8sHelperBase = spy(k8sTaskHelperBase);
+    K8sDelegateTaskParams k8sDelegateTaskParams = K8sDelegateTaskParams.builder().build();
+    List<KubernetesResourceId> resourceIds = new ArrayList<>();
+    resourceIds.add(KubernetesResourceId.builder().name("resource1").build());
+    resourceIds.add(KubernetesResourceId.builder().name("resource2").build());
+    LogCallback logCallback = mock(LogCallback.class);
+    Kubectl client = mock(Kubectl.class);
+    ProcessOutput output = new ProcessOutput("output".getBytes());
+    ProcessResult processResultFail = new ProcessResult(1, output);
+    ProcessResult processResultSuccess = new ProcessResult(0, output);
+
+    doReturn(processResultFail)
+        .doReturn(processResultSuccess)
+        .when(spyK8sHelperBase)
+        .runK8sExecutable(any(), any(), any());
+    doReturn(new DeleteCommand(client)).when(client).delete();
+
+    List<KubernetesResourceId> deletedResources = spyK8sHelperBase.executeDeleteHandlingPartialExecution(
+        client, k8sDelegateTaskParams, resourceIds, logCallback, false);
+
+    assertThat(deletedResources).hasSize(1);
+    assertThat(deletedResources.get(0).getName()).isEqualTo("resource2");
+  }
+
+  private List<KubernetesResource> getKubernetesResourcesFromFiles(List<String> fileNames) {
+    List<KubernetesResource> resources = new ArrayList<>();
+    fileNames.forEach(filename -> {
+      URL url = this.getClass().getResource(filename);
+      String fileContents = null;
+      try {
+        fileContents = Resources.toString(url, Charsets.UTF_8);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      resources.add(processYaml(fileContents).get(0));
+    });
+    return resources;
   }
 }

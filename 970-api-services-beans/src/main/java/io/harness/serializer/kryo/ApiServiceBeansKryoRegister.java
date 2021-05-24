@@ -69,6 +69,7 @@ import io.harness.k8s.model.IstioDestinationWeight;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesClusterAuthType;
+import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.OidcGrantType;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.logging.CommandExecutionStatus;
@@ -315,5 +316,7 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
 
     kryo.register(EntityOperationIdentifier.class, 97021);
     kryo.register(EntityOperationIdentifier.EntityOperation.class, 97022);
+
+    kryo.register(KubernetesResourceId.class, 97031);
   }
 }
