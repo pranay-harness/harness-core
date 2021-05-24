@@ -243,6 +243,7 @@ public class InstanceBillingDataTasklet implements Tasklet {
       List<InstanceData> parentInstanceDataList = instanceDataDao.fetchInstanceData(parentInstanceIds);
       Map<String, Double> parentInstanceActiveSecondMap =
           billingCalculationService.getInstanceActiveSeconds(parentInstanceDataList, startTime, endTime);
+      log.info("Parent instance map {} {}", startTime, parentInstanceActiveSecondMap.toString());
 
       for (InstanceData instanceData : instanceDataList) {
         if (instanceData.getInstanceType() != null

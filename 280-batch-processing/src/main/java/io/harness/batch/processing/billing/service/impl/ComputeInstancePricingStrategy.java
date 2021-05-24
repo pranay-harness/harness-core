@@ -155,6 +155,8 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
     }
     if (null != vmInstanceBillingData && !Double.isNaN(vmInstanceBillingData.getComputeCost())) {
       double pricePerHr = (vmInstanceBillingData.getComputeCost() * 3600) / parentInstanceActiveSecond;
+      log.info("data for instance {} {} {} {}", startTime, instanceData.getInstanceId(), parentInstanceActiveSecond,
+          pricePerHr);
       pricingData = PricingData.builder()
                         .pricePerHour(pricePerHr)
                         .networkCost(vmInstanceBillingData.getNetworkCost())
