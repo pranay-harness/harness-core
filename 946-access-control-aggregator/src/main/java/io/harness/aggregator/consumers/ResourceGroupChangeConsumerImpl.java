@@ -91,6 +91,10 @@ public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceG
 
   @Override
   public long consumeUpdateEvent(String id, ResourceGroupDBO updatedResourceGroup) {
+    // skip processing if the resource group is has full scope selected (_all_resources)
+    if (updatedResourceGroup.isFullScopeSelected()) {
+      return 0;
+    }
     long createdCount = 0;
     int pageIdx = 0;
     int pageSize = 1000;
