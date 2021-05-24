@@ -1,5 +1,10 @@
 package io.harness.k8s.model;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import static java.util.stream.Collectors.toList;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.WingsException;
 import io.harness.k8s.manifest.ObjectYamlUtils;
 import io.harness.k8s.model.Release.Status;
@@ -11,12 +16,15 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@OwnedBy(CDP)
 public class ReleaseHistory {
   public static final String defaultVersion = "v1";
 
@@ -41,6 +49,22 @@ public class ReleaseHistory {
     }
     this.getReleases().add(
         0, Release.builder().number(releaseNumber).status(Status.InProgress).resources(resources).build());
+
+    return getLatestRelease();
+  }
+
+  public Release createNewReleaseWithResourceMap(List<KubernetesResource> resources) {
+    int releaseNumber = 1;
+    if (!this.getReleases().isEmpty()) {
+      releaseNumber = getLatestRelease().getNumber() + 1;
+    }
+    this.getReleases().add(0,
+        Release.builder()
+            .number(releaseNumber)
+            .status(Status.InProgress)
+            .resources(resources.stream().map(KubernetesResource::getResourceId).collect(toList()))
+            .resourcesWithSpec(resources)
+            .build());
 
     return getLatestRelease();
   }
@@ -99,5 +123,9 @@ public class ReleaseHistory {
     int lastSuccessfulReleaseNumber = lastSuccessfulRelease != null ? lastSuccessfulRelease.getNumber() : 0;
     releases.removeIf(
         release -> release.getNumber() < lastSuccessfulReleaseNumber || Status.Failed == release.getStatus());
+  }
+
+  public ReleaseHistory cloneInternal() {
+    return ReleaseHistory.builder().version(this.version).releases(new ArrayList<>(this.releases)).build();
   }
 }
