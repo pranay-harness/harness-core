@@ -43,7 +43,7 @@ public class OrchestrationEventLogRepositoryCustomImpl implements OrchestrationE
     // Setting a ttl of 10 minutes so that we if there is a race condition between multiple replicas while updating,
     // then graph should not be in inconsistent state
     update.set(
-        OrchestrationEventLogKeys.validUntil, Date.from(OffsetDateTime.now().plus(Duration.ofDays(10)).toInstant()));
+        OrchestrationEventLogKeys.validUntil, Date.from(OffsetDateTime.now().plus(Duration.ofMinutes(10)).toInstant()));
     mongoTemplate.updateMulti(new Query(criteria), update, OrchestrationEventLog.class);
   }
 

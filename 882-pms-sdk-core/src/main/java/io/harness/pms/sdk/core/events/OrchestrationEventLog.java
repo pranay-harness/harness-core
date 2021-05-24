@@ -7,6 +7,7 @@ import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.PersistentEntity;
+import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 
 import com.google.common.collect.ImmutableList;
 import java.util.Date;
@@ -49,7 +50,9 @@ public class OrchestrationEventLog implements PersistentEntity {
 
   @Wither @Id @org.mongodb.morphia.annotations.Id String id;
   String planExecutionId;
-  OrchestrationEvent event;
+  String nodeExecutionId;
+  OrchestrationEventType orchestrationEventType;
+  @Deprecated OrchestrationEvent event;
   @FdTtlIndex Date validUntil;
   long createdAt;
 }
