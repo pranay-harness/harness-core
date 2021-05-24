@@ -359,7 +359,7 @@
             "count": {
               "oneOf": [
                 {
-                  "$ref": "#/definitions/ParameterFieldInteger"
+                  "$ref": "#/definitions/ParameterFieldString"
                 },
                 {
                   "type": "string"
@@ -2632,34 +2632,6 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "ParameterFieldInteger": {
-      "type": "object",
-      "properties": {
-        "expression": {
-          "type": "boolean"
-        },
-        "expressionValue": {
-          "type": "string"
-        },
-        "inputSetValidator": {
-          "$ref": "#/definitions/InputSetValidator"
-        },
-        "jsonResponseField": {
-          "type": "boolean"
-        },
-        "responseField": {
-          "type": "string"
-        },
-        "typeString": {
-          "type": "boolean"
-        },
-        "value": {
-          "type": "integer",
-          "format": "int32"
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
     "ParameterFieldListTaskSelectorYaml": {
       "type": "object",
       "properties": {
@@ -2686,6 +2658,33 @@
           "items": {
             "$ref": "#/definitions/TaskSelectorYaml"
           }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParameterFieldString": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -2718,7 +2717,7 @@
             "percentage": {
               "oneOf": [
                 {
-                  "$ref": "#/definitions/ParameterFieldInteger"
+                  "$ref": "#/definitions/ParameterFieldString"
                 },
                 {
                   "type": "string"
