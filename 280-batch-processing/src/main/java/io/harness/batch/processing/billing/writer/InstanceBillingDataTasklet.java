@@ -249,10 +249,12 @@ public class InstanceBillingDataTasklet implements Tasklet {
         if (instanceData.getInstanceType() != null
             && billingDataGenerationValidator.shouldGenerateBillingData(
                 instanceData.getAccountId(), instanceData.getClusterId(), startTime)) {
-          Double parentInstanceActiveSecond =
-              parentInstanceActiveSecondMap.getOrDefault(billingCalculationService.getInstanceClusterIdKey(
-                                                             instanceData.getInstanceId(), instanceData.getClusterId()),
-                  null);
+          Double parentInstanceActiveSecond = null;
+          String parentInstanceId = getParentInstanceId(instanceData);
+          if (null != parentInstanceId) {
+            parentInstanceActiveSecond = parentInstanceActiveSecondMap.getOrDefault(
+                billingCalculationService.getInstanceClusterIdKey(parentInstanceId, instanceData.getClusterId()), null);
+          }
           if (instanceData.getInstanceId().equals("4f7f66fe-4c9c-4452-86b5-3338c5e69a33")) {
             log.info("parent active sec {}", parentInstanceActiveSecond);
           }
