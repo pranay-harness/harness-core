@@ -19,6 +19,7 @@ import io.harness.govern.ServersModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.registrars.ExecutionAdvisers;
 import io.harness.registrars.ExecutionRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
@@ -158,7 +159,7 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
 
   private PmsSdkConfiguration getPmsSdkConfiguration() {
     return PmsSdkConfiguration.builder()
-        .deploymentMode(PmsSdkConfiguration.DeployMode.LOCAL)
+        .deploymentMode(SdkDeployMode.LOCAL)
         .serviceName("ci")
         .engineSteps(ExecutionRegistrar.getEngineSteps())
         .engineAdvisers(ExecutionAdvisers.getEngineAdvisers())

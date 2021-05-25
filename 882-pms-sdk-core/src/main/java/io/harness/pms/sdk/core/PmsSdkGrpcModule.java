@@ -1,4 +1,4 @@
-package io.harness.pms.sdk;
+package io.harness.pms.sdk.core;
 
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcInProcessServer;
@@ -15,7 +15,6 @@ import io.harness.pms.contracts.service.PmsExecutionServiceGrpc;
 import io.harness.pms.contracts.service.PmsExecutionServiceGrpc.PmsExecutionServiceBlockingStub;
 import io.harness.pms.contracts.service.SweepingOutputServiceGrpc;
 import io.harness.pms.contracts.service.SweepingOutputServiceGrpc.SweepingOutputServiceBlockingStub;
-import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.core.plan.creation.creators.PlanCreatorService;
 import io.harness.pms.utils.PmsConstants;
 import io.harness.version.VersionInfo;
@@ -46,18 +45,18 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PmsSdkGrpcModule extends AbstractModule {
-  private final PmsSdkConfiguration config;
+  private final PmsSdkCoreConfig config;
   private static PmsSdkGrpcModule instance;
   private final String deployMode = System.getenv().get("DEPLOY_MODE");
 
-  public static PmsSdkGrpcModule getInstance(PmsSdkConfiguration config) {
+  public static PmsSdkGrpcModule getInstance(PmsSdkCoreConfig config) {
     if (instance == null) {
       instance = new PmsSdkGrpcModule(config);
     }
     return instance;
   }
 
-  private PmsSdkGrpcModule(PmsSdkConfiguration config) {
+  private PmsSdkGrpcModule(PmsSdkCoreConfig config) {
     this.config = config;
   }
 
@@ -74,7 +73,7 @@ public class PmsSdkGrpcModule extends AbstractModule {
     Set<BindableService> cdServices = new HashSet<>();
     cdServices.add(healthStatusManager.getHealthService());
     cdServices.add(planCreatorService);
-    if (config.getDeploymentMode() == DeployMode.REMOTE_IN_PROCESS) {
+    if (config.getSdkDeployMode() == SdkDeployMode.REMOTE_IN_PROCESS) {
       return new GrpcInProcessServer("pmsSdkInternal", cdServices, Collections.emptySet(), healthStatusManager);
     }
     return new GrpcServer(
@@ -115,11 +114,11 @@ public class PmsSdkGrpcModule extends AbstractModule {
   }
 
   private Channel getChannel() throws SSLException {
-    if (config.getDeploymentMode() == DeployMode.REMOTE_IN_PROCESS) {
+    if (config.getSdkDeployMode() == SdkDeployMode.REMOTE_IN_PROCESS) {
       return InProcessChannelBuilder.forName(PmsConstants.INTERNAL_SERVICE_NAME).build();
     }
 
-    GrpcClientConfig clientConfig = config.getPmsGrpcClientConfig();
+    GrpcClientConfig clientConfig = config.getGrpcClientConfig();
     String authorityToUse = clientConfig.getAuthority();
     Channel channel;
 
