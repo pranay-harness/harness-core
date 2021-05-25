@@ -9,12 +9,14 @@ import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 @OwnedBy(DX)
+@Singleton
 public interface YamlGitConfigService {
   Optional<ConnectorInfoDTO> getGitConnector(IdentifierRef identifierRef);
 
