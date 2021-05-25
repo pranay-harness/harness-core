@@ -107,18 +107,21 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
           Criteria.where(PlanExecutionSummaryKeys.modules).in(moduleName),
           Criteria.where(String.format("moduleInfo.%s", moduleName)).exists(true));
     }
+
+    Criteria searchCriteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(searchTerm)) {
-      Criteria searchCriteria =
-          new Criteria().orOperator(where(PlanExecutionSummaryKeys.pipelineIdentifier)
-                                        .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-              where(PlanExecutionSummaryKeys.name)
-                  .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-              where(PlanExecutionSummaryKeys.tags + "." + NGTagKeys.key)
-                  .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-              where(PlanExecutionSummaryKeys.tags + "." + NGTagKeys.value)
-                  .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
-      criteria.andOperator(searchCriteria);
+      searchCriteria.orOperator(where(PlanExecutionSummaryKeys.pipelineIdentifier)
+                                    .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(PlanExecutionSummaryKeys.name)
+              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(PlanExecutionSummaryKeys.tags + "." + NGTagKeys.key)
+              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(PlanExecutionSummaryKeys.tags + "." + NGTagKeys.value)
+              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
     }
+
+    criteria.andOperator(searchCriteria);
+
     return criteria;
   }
 
