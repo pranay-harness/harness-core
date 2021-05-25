@@ -230,6 +230,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
+import software.wings.beans.trigger.WebHookTriggerTask;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.AwsClusterServiceImpl;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
@@ -1323,6 +1324,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.K8S_COMMAND_TASK_NG).toInstance(K8sTaskNG.class);
     mapBinder.addBinding(TaskType.K8S_WATCH_TASK).toInstance(AssignmentTask.class);
     mapBinder.addBinding(TaskType.TRIGGER_TASK).toInstance(TriggerTask.class);
+    mapBinder.addBinding(TaskType.WEBHOOK_TRIGGER_TASK).toInstance(WebHookTriggerTask.class);
     mapBinder.addBinding(TaskType.JIRA).toInstance(JiraTask.class);
     mapBinder.addBinding(TaskType.CONNECTIVITY_VALIDATION).toInstance(ConnectivityValidationTask.class);
     mapBinder.addBinding(TaskType.GIT_COMMAND).toInstance(GitCommandTask.class);

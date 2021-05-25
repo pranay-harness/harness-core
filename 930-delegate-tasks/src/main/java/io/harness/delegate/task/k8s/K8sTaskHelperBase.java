@@ -708,6 +708,7 @@ public class K8sTaskHelperBase {
                    .newContainer(true)
                    .status(ContainerInfo.Status.SUCCESS)
                    .releaseName(releaseName)
+                   .namespace(pod.getNamespace())
                    .build())
         .collect(Collectors.toList());
   }
