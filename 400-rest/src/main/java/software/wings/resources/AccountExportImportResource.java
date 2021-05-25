@@ -221,14 +221,15 @@ public class AccountExportImportResource {
   }
 
   @GET
-  @Path("/exportCollection")
+  @Path("/exportBatchCollection")
   @Produces(MediaType.APPLICATION_JSON)
   @ExceptionMetered
-  public Response exportAccountCollectionData(@QueryParam("accountId") final String accountId,
+  public Response exportAccountCollectionBatchData(@QueryParam("accountId") final String accountId,
       @QueryParam("mode") @DefaultValue("ALL") ExportMode exportMode,
       @QueryParam("entityTypes") List<String> entityTypes,
       @QueryParam("collectionName") String collectionNameToBeExported,
-      @QueryParam("exportConfigs") boolean exportConfigs) throws Exception {
+      @QueryParam("exportConfigs") boolean exportConfigs, @QueryParam("batchNumber") int batchNumber,
+      @QueryParam("batchSize") int batchSize, @QueryParam("mongoBatchSize") int mongoBatchSize) throws Exception {
     // Only if the user the account administrator or in the Harness user group can perform the export operation.
     if (!userService.isAccountAdmin(accountId)) {
       String errorMessage = "User is not account administrator and can't perform the export operation.";
@@ -250,7 +251,9 @@ public class AccountExportImportResource {
 
     Map<String, Boolean> toBeExported = getToBeExported(exportMode, entityTypes);
     List<String> appIds = appService.getAppIdsByAccountId(accountId);
-    int batchSize = mainConfiguration.getExportAccountDataBatchSize();
+    if (batchSize == 0) {
+      batchSize = mainConfiguration.getExportAccountDataBatchSize();
+    }
 
     // 1. Export harness schema collection.
     String schemaCollectionName = getCollectionName(Schema.class);
@@ -337,8 +340,160 @@ public class AccountExportImportResource {
               exportFilter = accountOrAppIdsFilter;
             }
             String collectionName = getCollectionName(entityClazz);
-            List<String> records = mongoExportImport.exportRecords(exportFilter, collectionName);
-            batchExportToStream(zipOutputStream, fileOutputStream, records, collectionName, batchSize);
+            mongoExportImport.exportRecords(zipOutputStream, fileOutputStream, exportFilter, collectionName,
+                batchNumber, batchSize, mongoBatchSize);
+          }
+        }
+      }
+    }
+
+    // 7. No need to export Quartz jobs. They can be recreated based on accountId/appId/triggerId etc.
+    // Export 'kmsConfig' including the global KMS secret manager if configured (e.g. QA and PROD, but not in fremium
+    // yet).
+    if (exportConfigs) {
+      String kmsConfigCollectionName = getCollectionName(KmsConfig.class);
+      if (isExportable(toBeExported, kmsConfigCollectionName)) {
+        List<String> accountIdList = Arrays.asList(accountId);
+        DBObject exportFilter = new BasicDBObject("accountId", new BasicDBObject("$in", accountIdList));
+        List<String> records = mongoExportImport.exportRecords(exportFilter, kmsConfigCollectionName);
+        batchExportToStream(zipOutputStream, fileOutputStream, records, kmsConfigCollectionName, batchSize);
+      }
+    }
+
+    log.info("Flushing exported data into a zip file {}.", zipFileName);
+    zipOutputStream.flush();
+    zipOutputStream.close();
+    fileOutputStream.flush();
+    fileOutputStream.close();
+    log.info("Finished flushing {} bytes of exported account data into a zip file {}.", zipFile.length(), zipFileName);
+
+    return Response.ok(zipFile, MediaType.APPLICATION_OCTET_STREAM)
+        .header("content-disposition", "attachment; filename = " + zipFileName)
+        .build();
+  }
+
+  @GET
+  @Path("/exportCollection")
+  @Produces(MediaType.APPLICATION_JSON)
+  @ExceptionMetered
+  public Response exportAccountCollectionData(@QueryParam("accountId") final String accountId,
+      @QueryParam("mode") @DefaultValue("ALL") ExportMode exportMode,
+      @QueryParam("entityTypes") List<String> entityTypes,
+      @QueryParam("collectionName") String collectionNameToBeExported,
+      @QueryParam("exportConfigs") boolean exportConfigs, @QueryParam("batchSize") int batchSize,
+      @QueryParam("mongoBatchSize") int mongoBatchSize) throws Exception {
+    // Only if the user the account administrator or in the Harness user group can perform the export operation.
+    if (!userService.isAccountAdmin(accountId)) {
+      String errorMessage = "User is not account administrator and can't perform the export operation.";
+      RestResponse<Boolean> restResponse = accountPermissionUtils.checkIfHarnessUser(errorMessage);
+      if (restResponse != null) {
+        log.error(errorMessage);
+        return Response.status(Response.Status.UNAUTHORIZED).build();
+      }
+    }
+
+    if (exportMode == ExportMode.SPECIFIC && isEmpty(entityTypes)) {
+      throw new IllegalArgumentException("Export type is SPECIFIC but no entity type is specified.");
+    }
+
+    String zipFileName = accountId + ZIP_FILE_SUFFIX;
+    File zipFile = new File(Files.createTempDir(), zipFileName);
+    FileOutputStream fileOutputStream = new FileOutputStream(zipFile);
+    ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream);
+
+    Map<String, Boolean> toBeExported = getToBeExported(exportMode, entityTypes);
+    List<String> appIds = appService.getAppIdsByAccountId(accountId);
+    if (batchSize == 0) {
+      batchSize = mainConfiguration.getExportAccountDataBatchSize();
+    }
+
+    // 1. Export harness schema collection.
+    String schemaCollectionName = getCollectionName(Schema.class);
+    if (isExportable(toBeExported, schemaCollectionName)) {
+      DBObject emptyFilter = new BasicDBObject();
+      List<String> schemas = mongoExportImport.exportRecords(emptyFilter, schemaCollectionName);
+      if (schemas.size() == 0) {
+        log.warn("Schema collection data doesn't exist, schema version data won't be exported.");
+      } else {
+        batchExportToStream(zipOutputStream, fileOutputStream, schemas, schemaCollectionName, batchSize);
+      }
+    }
+
+    if (exportConfigs) {
+      collectionNameToBeExported = null;
+    }
+
+    // 2. Export account data.
+    if (isNotEmpty(collectionNameToBeExported) && getCollectionName(Account.class).equals(collectionNameToBeExported)) {
+      String accountCollectionName = getCollectionName(Account.class);
+      if (isExportable(toBeExported, accountCollectionName)) {
+        DBObject idFilter = new BasicDBObject("_id", accountId);
+        List<String> accounts = mongoExportImport.exportRecords(idFilter, accountCollectionName);
+        if (accounts.size() == 0) {
+          throw new IllegalArgumentException(
+              "Account '" + accountId + "' doesn't exist, can't proceed with this export operation.");
+        } else {
+          batchExportToStream(zipOutputStream, fileOutputStream, accounts, accountCollectionName, batchSize);
+        }
+      }
+    }
+
+    // 3. Export all users
+    String userCollectionName = getCollectionName(User.class);
+    if (isExportable(toBeExported, userCollectionName)) {
+      DBObject accountsFilter =
+          new BasicDBObject(UserKeys.accounts, new BasicDBObject("$in", new String[] {accountId}));
+      List<String> users = mongoExportImport.exportRecords(accountsFilter, userCollectionName);
+      batchExportToStream(zipOutputStream, fileOutputStream, users, userCollectionName, batchSize);
+    }
+
+    DBObject accountIdFilter = new BasicDBObject("accountId", accountId);
+    DBObject appIdsFilter = new BasicDBObject("appId", new BasicDBObject("$in", appIds));
+
+    // 4. Export all applications
+    if (isNotEmpty(collectionNameToBeExported)
+        && getCollectionName(Application.class).equals(collectionNameToBeExported)) {
+      String applicationsCollectionName = getCollectionName(Application.class);
+      if (isExportable(toBeExported, applicationsCollectionName)) {
+        List<String> applications = mongoExportImport.exportRecords(accountIdFilter, applicationsCollectionName);
+        batchExportToStream(zipOutputStream, fileOutputStream, applications, applicationsCollectionName, batchSize);
+      }
+    }
+
+    DBObject accountOrAppIdsFilter = new BasicDBObject();
+    accountOrAppIdsFilter.put("$or", Arrays.asList(accountIdFilter, appIdsFilter));
+
+    // 5. Export config file content that are persisted in the Mongo GridFs. "configs.files" and "configs.chunks"
+    // are not managed by Morphia, need to handle it separately and only export those entries associated with
+    // CONFIG_FILE type of secrets for now,
+    if (exportConfigs) {
+      exportConfigFilesContent(zipOutputStream, fileOutputStream, accountOrAppIdsFilter);
+    }
+
+    // 6. Export all other Harness entities that has @Entity annotation excluding what's in the blacklist.
+    if (isNotEmpty(collectionNameToBeExported)) {
+      for (Entry<String, Class<? extends PersistentEntity>> entry : genericExportableEntityTypes.entrySet()) {
+        if (isExportable(toBeExported, entry.getKey())) {
+          Class<? extends PersistentEntity> entityClazz = entry.getValue();
+          if (entityClazz != null && isNotEmpty(getCollectionName(entityClazz))
+              && getCollectionName(entityClazz).equals(collectionNameToBeExported)
+              && !includedMongoCollections.contains(collectionNameToBeExported)) {
+            final DBObject exportFilter;
+            // 'gitCommits' and 'yamlChangeSet' need special export filter.
+            if (GitCommit.class == entityClazz) {
+              exportFilter = getGitCommitExportFilter(accountIdFilter);
+            } else if (YamlChangeSet.class == entityClazz) {
+              exportFilter = getYamlChangeSetExportFilter(accountIdFilter);
+            } else if (FeatureFlag.class == entityClazz) {
+              // 8. Need to migrate the feature flag also as part of account migration
+              //    https://harness.atlassian.net/browse/PL-9683
+              exportFilter = getFeatureFlagExportFilter(accountId);
+            } else {
+              exportFilter = accountOrAppIdsFilter;
+            }
+            String collectionName = getCollectionName(entityClazz);
+            mongoExportImport.exportRecords(
+                zipOutputStream, fileOutputStream, exportFilter, collectionName, batchSize, mongoBatchSize);
           }
         }
       }
