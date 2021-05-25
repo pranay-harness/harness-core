@@ -16,16 +16,14 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.List;
-import lombok.AllArgsConstructor;
 
 @OwnedBy(PL)
 @Singleton
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
-public class SecretNGManagerClientServiceImpl implements SecretManagerClientService {
-  private final SecretNGManagerClient secretManagerClient;
-  private final NGRestClientExecutor restClientExecutor;
-
+public class PrivilegedSecretNGManagerClientServiceImpl implements SecretManagerClientService {
+  @Inject @Named("PRIVILEGED") private SecretNGManagerClient secretManagerClient;
+  @Inject NGRestClientExecutor restClientExecutor;
   @Override
   public List<EncryptedDataDetail> getEncryptionDetails(NGAccess ngAccess, DecryptableEntity consumer) {
     BaseNGAccess baseNGAccess = BaseNGAccess.builder()
