@@ -18,14 +18,19 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.internal.GrpcUtil;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 
 @Slf4j
 public class CIK8ExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
   @NotNull private Type type = Type.K8;
   public static final String DELEGATE_NAMESPACE = "DELEGATE_NAMESPACE";
+  private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
+  private final int MAX_ATTEMPTS = 3;
 
   @Override
   public Type getType() {
@@ -56,6 +61,7 @@ public class CIK8ExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
       executeStepRequest = executeStepRequest.toBuilder().setDelegateSvcEndpoint(namespacedDelegateSvcEndpoint).build();
     }
 
+    final ExecuteStepRequest finalExecuteStepRequest = executeStepRequest;
     String target = format("%s:%d", cik8ExecuteStepTaskParams.getIp(), cik8ExecuteStepTaskParams.getPort());
     ManagedChannelBuilder managedChannelBuilder = ManagedChannelBuilder.forTarget(target).usePlaintext();
     if (!cik8ExecuteStepTaskParams.isLocal()) {
@@ -64,9 +70,18 @@ public class CIK8ExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
     ManagedChannel channel = managedChannelBuilder.build();
     try {
       try {
-        LiteEngineGrpc.LiteEngineBlockingStub liteEngineBlockingStub = LiteEngineGrpc.newBlockingStub(channel);
-        liteEngineBlockingStub.withDeadlineAfter(30, TimeUnit.SECONDS).executeStep(executeStepRequest);
-        return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+        RetryPolicy<Object> retryPolicy =
+            getRetryPolicy(format("[Retrying failed call to send execution call to pod %s: {}",
+                               ((CIK8ExecuteStepTaskParams) ciExecuteStepTaskParams).getIp()),
+                format("Failed to send execution to pod %s after retrying {} times",
+                    ((CIK8ExecuteStepTaskParams) ciExecuteStepTaskParams).getIp()));
+
+        return Failsafe.with(retryPolicy).get(() -> {
+          LiteEngineGrpc.LiteEngineBlockingStub liteEngineBlockingStub = LiteEngineGrpc.newBlockingStub(channel);
+          liteEngineBlockingStub.withDeadlineAfter(30, TimeUnit.SECONDS).executeStep(finalExecuteStepRequest);
+          return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+        });
+
       } finally {
         // ManagedChannels use resources like threads and TCP connections. To prevent leaking these
         // resources the channel should be shut down when it will no longer be used. If it may be used
@@ -95,5 +110,14 @@ public class CIK8ExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
     }
 
     return format("%s.%s.svc.cluster.local:%s", svcArr[0], namespace, svcArr[1]);
+  }
+
+  private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {
+    return new RetryPolicy<>()
+        .handle(Exception.class)
+        .withDelay(RETRY_SLEEP_DURATION)
+        .withMaxAttempts(MAX_ATTEMPTS)
+        .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
+        .onFailure(event -> log.error(failureMessage, event.getAttemptCount(), event.getFailure()));
   }
 }
