@@ -10,6 +10,7 @@ import io.harness.pms.sample.cv.creator.filters.CVFilterCreationResponseMerger;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.sdk.core.execution.listeners.NodeExecutionEventListener;
 import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.queue.QueueListenerController;
@@ -81,7 +82,7 @@ public class CvServiceApplication extends Application<CvServiceConfiguration> {
 
   private PmsSdkConfiguration getPmsSdkConfiguration(CvServiceConfiguration config) {
     return PmsSdkConfiguration.builder()
-        .deploymentMode(PmsSdkConfiguration.DeployMode.REMOTE)
+        .deploymentMode(SdkDeployMode.REMOTE)
         .serviceName("cv")
         .mongoConfig(config.getMongoConfig())
         .grpcServerConfig(config.getPmsSdkGrpcServerConfig())

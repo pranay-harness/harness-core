@@ -29,7 +29,7 @@ public class ScmResponseStatusUtils {
         case 401:
           throw new ScmException(ErrorCode.SCM_UNAUTHORIZED);
         default:
-          if (!(statusCode == 200 || statusCode == 201 || statusCode == 0)) {
+          if (statusCode >= 300) {
             log.error("Encountered new status code: [{}] from scm", statusCode);
             throw new UnexpectedException("Unexpected error occurred while doing scm operation");
           }

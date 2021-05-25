@@ -61,7 +61,8 @@ public class PlanExecutionStatusUpdateEventHandlerTest extends OrchestrationVisu
                                                 .cacheContextOrder(System.currentTimeMillis())
                                                 .build();
 
-    OrchestrationGraph updatedGraph = planExecutionStatusUpdateEventHandler.handleEvent(event, orchestrationGraph);
+    OrchestrationGraph updatedGraph =
+        planExecutionStatusUpdateEventHandler.handleEvent(event.getAmbiance().getPlanExecutionId(), orchestrationGraph);
 
     assertThat(updatedGraph).isNotNull();
     assertThat(updatedGraph.getPlanExecutionId()).isEqualTo(planExecution.getUuid());

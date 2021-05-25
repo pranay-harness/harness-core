@@ -35,6 +35,7 @@ import io.harness.yaml.core.variables.SecretNGVariable;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -52,8 +53,8 @@ public class SecretUtils {
   private final int MAX_ATTEMPTS = 3;
 
   @Inject
-  public SecretUtils(
-      SecretNGManagerClient secretNGManagerClient, SecretManagerClientService secretManagerClientService) {
+  public SecretUtils(SecretNGManagerClient secretNGManagerClient,
+      @Named("PRIVILEGED") SecretManagerClientService secretManagerClientService) {
     this.secretNGManagerClient = secretNGManagerClient;
     this.secretManagerClientService = secretManagerClientService;
   }

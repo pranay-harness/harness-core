@@ -311,7 +311,7 @@ public class InviteServiceImplTest extends CategoryTest {
     ArgumentCaptor<String> idCapture = ArgumentCaptor.forClass(String.class);
     when(claim.asString()).thenReturn(inviteId);
     when(jwtGeneratorUtils.verifyJWTToken(any(), any())).thenReturn(Collections.singletonMap(InviteKeys.id, claim));
-    when(inviteRepository.findFirstByIdAndDeleted(any(), any())).thenReturn(Optional.of(invite));
+    when(inviteRepository.findById(any())).thenReturn(Optional.of(invite));
     when(ngUserService.getUserFromEmail(any())).thenReturn(Optional.of(user));
 
     InviteAcceptResponse inviteAcceptResponse = inviteService.acceptInvite(dummyJWTToken);

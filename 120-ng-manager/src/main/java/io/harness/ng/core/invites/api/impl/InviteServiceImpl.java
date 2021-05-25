@@ -218,8 +218,12 @@ public class InviteServiceImpl implements InviteService {
   }
 
   @Override
-  public Optional<Invite> getInvite(String inviteId) {
-    return inviteRepository.findFirstByIdAndDeleted(inviteId, FALSE);
+  public Optional<Invite> getInvite(String inviteId, boolean allowDeleted) {
+    if (allowDeleted) {
+      return inviteRepository.findById(inviteId);
+    } else {
+      return inviteRepository.findFirstByIdAndDeleted(inviteId, FALSE);
+    }
   }
 
   @Override
@@ -242,7 +246,7 @@ public class InviteServiceImpl implements InviteService {
 
   @Override
   public Optional<Invite> deleteInvite(String inviteId) {
-    Optional<Invite> inviteOptional = getInvite(inviteId);
+    Optional<Invite> inviteOptional = getInvite(inviteId, false);
     if (inviteOptional.isPresent()) {
       Invite invite = inviteOptional.get();
       checkPermissions(invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier());
@@ -276,8 +280,7 @@ public class InviteServiceImpl implements InviteService {
   }
 
   @Override
-  public URI getRedirectUrl(
-      InviteAcceptResponse inviteAcceptResponse, String accountCreationFragment, String jwtToken) {
+  public URI getRedirectUrl(InviteAcceptResponse inviteAcceptResponse, String email, String jwtToken) {
     String accountIdentifier = inviteAcceptResponse.getAccountIdentifier();
     if (inviteAcceptResponse.getResponse().equals(FAIL)) {
       return getLoginPageUrl(accountIdentifier);
@@ -285,20 +288,23 @@ public class InviteServiceImpl implements InviteService {
 
     UserInfo userInfo = inviteAcceptResponse.getUserInfo();
     if (userInfo == null) {
-      return getUserInfoSubmitUrl(accountIdentifier, accountCreationFragment);
+      return getUserInfoSubmitUrl(email, jwtToken, inviteAcceptResponse);
     }
 
-    boolean isUserPasswordSet = isUserPasswordSet(inviteAcceptResponse.getAccountIdentifier(), userInfo.getEmail());
+    boolean isUserPasswordSet = isUserPasswordSet(accountIdentifier, userInfo.getEmail());
     if (!isUserPasswordSet) {
-      return getUserInfoSubmitUrl(accountIdentifier, accountCreationFragment);
+      return getUserInfoSubmitUrl(email, jwtToken, inviteAcceptResponse);
     }
 
     completeInvite(jwtToken);
-    return getResourceUrl(
-        accountIdentifier, inviteAcceptResponse.getOrgIdentifier(), inviteAcceptResponse.getProjectIdentifier());
+    return getResourceUrl(inviteAcceptResponse);
   }
 
-  private URI getResourceUrl(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+  private URI getResourceUrl(InviteAcceptResponse inviteAcceptResponse) {
+    String accountIdentifier = inviteAcceptResponse.getAccountIdentifier();
+    String orgIdentifier = inviteAcceptResponse.getOrgIdentifier();
+    String projectIdentifier = inviteAcceptResponse.getProjectIdentifier();
+
     String baseUrl = getBaseUrl(accountIdentifier, nextGenUiUrl);
     String resourceUrl = String.format("%saccount/%s/projects", baseUrl, accountIdentifier);
     if (isNotEmpty(projectIdentifier)) {
@@ -315,10 +321,14 @@ public class InviteServiceImpl implements InviteService {
     }
   }
 
-  private URI getUserInfoSubmitUrl(String accountIdentifier, String accountCreationFragment) {
+  private URI getUserInfoSubmitUrl(String email, String jwtToken, InviteAcceptResponse inviteAcceptResponse) {
+    String accountIdentifier = inviteAcceptResponse.getAccountIdentifier();
     try {
+      String accountCreationFragment = String.format("accountIdentifier=%s&email=%s&token=%s&returnUrl=%s",
+          accountIdentifier, email, jwtToken, getResourceUrl(inviteAcceptResponse));
       String baseUrl = getBaseUrl(accountIdentifier, nextGenAuthUiUrl);
       URIBuilder uriBuilder = new URIBuilder(baseUrl);
+
       uriBuilder.setFragment("/accept-invite?" + accountCreationFragment);
       return uriBuilder.build();
     } catch (URISyntaxException e) {
@@ -367,7 +377,7 @@ public class InviteServiceImpl implements InviteService {
   }
 
   public InviteAcceptResponse acceptInvite(String jwtToken) {
-    Optional<Invite> inviteOptional = getInviteFromToken(jwtToken);
+    Optional<Invite> inviteOptional = getInviteFromToken(jwtToken, true);
     if (!inviteOptional.isPresent() || !inviteOptional.get().getInviteToken().equals(jwtToken)) {
       log.warn("Invite token {} is invalid", jwtToken);
       return InviteAcceptResponse.builder().response(InviteOperationResponse.FAIL).build();
@@ -387,7 +397,7 @@ public class InviteServiceImpl implements InviteService {
   }
 
   @Override
-  public Optional<Invite> getInviteFromToken(String jwtToken) {
+  public Optional<Invite> getInviteFromToken(String jwtToken, boolean allowDeleted) {
     if (isBlank(jwtToken)) {
       return Optional.empty();
     }
@@ -401,7 +411,7 @@ public class InviteServiceImpl implements InviteService {
       log.warn("Invalid token. verification failed");
       return Optional.empty();
     }
-    return getInvite(inviteIdOptional.get());
+    return getInvite(inviteIdOptional.get(), allowDeleted);
   }
 
   @Override
@@ -410,7 +420,7 @@ public class InviteServiceImpl implements InviteService {
       return Optional.empty();
     }
     preCreateInvite(updatedInvite);
-    Optional<Invite> inviteOptional = getInvite(updatedInvite.getId());
+    Optional<Invite> inviteOptional = getInvite(updatedInvite.getId(), false);
     if (!inviteOptional.isPresent() || TRUE.equals(inviteOptional.get().getApproved())) {
       return Optional.empty();
     }
@@ -559,7 +569,7 @@ public class InviteServiceImpl implements InviteService {
 
   @Override
   public boolean completeInvite(String token) {
-    Optional<Invite> inviteOpt = getInviteFromToken(token);
+    Optional<Invite> inviteOpt = getInviteFromToken(token, false);
     if (!inviteOpt.isPresent()) {
       return false;
     }

@@ -55,6 +55,8 @@ java_library(
 modules = [
     "//110-change-data-capture",
     "//120-ng-manager",
+    "//121-access-control-migration",
+    "//122-ng-core-user",
     "//125-cd-nextgen",
     "//136-git-sync-manager",
     #"//160-model-gen-tool",
@@ -182,7 +184,7 @@ modules = [
     "//970-rbac-core",
     "//970-telemetry-beans",
     "//980-commons",
-    "//990-commons-test",
+    #"//990-commons-test",
 ]
 
 filegroup(

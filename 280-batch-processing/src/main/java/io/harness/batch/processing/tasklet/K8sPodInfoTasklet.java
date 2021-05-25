@@ -176,8 +176,8 @@ public class K8sPodInfoTasklet implements Tasklet {
       }
       populateNodePoolNameFromLabel(nodeMetaData, metaData);
     } else {
-      log.debug("Node detail not found settingId {} node name {} podid {} podname {}", podInfo.getCloudProviderId(),
-          podInfo.getNodeName(), podUid, podInfo.getPodName());
+      log.warn("Node detail not found clusterId {} node name {} podid {} podname {}", clusterId, podInfo.getNodeName(),
+          podUid, podInfo.getPodName());
     }
 
     Map<String, String> labelsMap = podInfo.getLabelsMap();

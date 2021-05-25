@@ -12,6 +12,7 @@ public class ContainerRecommendation {
   ResourceRequirement guaranteed;
   ResourceRequirement recommended;
   Map<String, ResourceRequirement> percentileBased;
+  Cost lastDayCost;
   int numDays;
   int totalSamplesCount;
 }

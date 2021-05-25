@@ -452,8 +452,7 @@
           "required": [
             "approvalCriteria",
             "connectorRef",
-            "issueKey",
-            "rejectionCriteria"
+            "issueKey"
           ],
           "properties": {
             "approvalCriteria": {

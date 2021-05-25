@@ -198,7 +198,7 @@ public class K8sTrafficSplitState extends AbstractK8sState {
   }
 
   @Override
-  public List<CommandUnit> commandUnitList(boolean remoteStoreType) {
+  public List<CommandUnit> commandUnitList(boolean remoteStoreType, String accountId) {
     throw new UnsupportedOperationException();
   }
 

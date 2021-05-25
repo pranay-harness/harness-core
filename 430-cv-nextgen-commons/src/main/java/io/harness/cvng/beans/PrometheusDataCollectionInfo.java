@@ -23,20 +23,31 @@ public class PrometheusDataCollectionInfo extends TimeSeriesDataCollectionInfo<P
     private String query;
     private String metricName;
     private String filters;
+    private String serviceInstanceField;
   }
   @Override
   public Map<String, Object> getDslEnvVariables(PrometheusConnectorDTO connectorConfigDTO) {
     Map<String, Object> collectionEnvs = new HashMap<>();
     List<String> queryList = new ArrayList<>();
     List<String> metricNameList = new ArrayList<>();
+    List<String> filterList = new ArrayList<>();
+    List<String> serviceInstanceFieldList = new ArrayList<>();
+
     metricCollectionInfoList.forEach(metricCollectionInfo -> {
       queryList.add(metricCollectionInfo.getQuery());
       metricNameList.add(metricCollectionInfo.getMetricName());
+      filterList.add(metricCollectionInfo.getFilters());
+      serviceInstanceFieldList.add(metricCollectionInfo.getServiceInstanceField());
     });
+
     Preconditions.checkState(queryList.size() == metricNameList.size());
     collectionEnvs.put("queryList", queryList);
     collectionEnvs.put("metricNameList", metricNameList);
+    collectionEnvs.put("filterList", filterList);
+    collectionEnvs.put("serviceInstanceFieldList", serviceInstanceFieldList);
     collectionEnvs.put("groupName", groupName);
+    collectionEnvs.put("collectHostData", Boolean.toString(this.isCollectHostData()));
+
     return collectionEnvs;
   }
 

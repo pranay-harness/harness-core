@@ -6,7 +6,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.ng.core.invites.entities.Invite;
-import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserProjectMap;
 
 import java.util.Set;
@@ -16,7 +15,6 @@ public class InvitesMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
     set.add(Invite.class);
-    set.add(UserMembership.class);
     set.add(UserProjectMap.class);
   }
 

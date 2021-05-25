@@ -21,8 +21,16 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class JexlCriteriaSpecDTO implements CriteriaSpecDTO {
   @NotEmpty String expression;
 
-  public static JexlCriteriaSpecDTO fromJexlCriteriaSpec(JexlCriteriaSpec jexlCriteriaSpec) {
+  @Override
+  public boolean isEmpty() {
+    return expression == null || expression.trim().equals("");
+  }
+
+  public static JexlCriteriaSpecDTO fromJexlCriteriaSpec(JexlCriteriaSpec jexlCriteriaSpec, boolean skipEmpty) {
     if (ParameterField.isNull(jexlCriteriaSpec.getExpression())) {
+      if (skipEmpty) {
+        return JexlCriteriaSpecDTO.builder().expression("").build();
+      }
       throw new InvalidRequestException("Expression can't be null");
     }
     String expressionString = (String) jexlCriteriaSpec.getExpression().fetchFinalValue();

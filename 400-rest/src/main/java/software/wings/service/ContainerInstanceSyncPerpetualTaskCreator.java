@@ -123,10 +123,6 @@ public class ContainerInstanceSyncPerpetualTaskCreator extends AbstractInstanceS
   @Override
   public List<String> createPerpetualTasksForNewDeployment(List<DeploymentSummary> deploymentSummaries,
       List<PerpetualTaskRecord> existingPerpetualTasks, InfrastructureMapping infrastructureMapping) {
-    String appId = deploymentSummaries.iterator().next().getAppId();
-    String infraMappingId = deploymentSummaries.iterator().next().getInfraMappingId();
-    String accountId = deploymentSummaries.iterator().next().getAccountId();
-
     Set<ContainerMetadata> existingContainersMetadata =
         existingPerpetualTasks.stream()
             .map(record
@@ -212,27 +208,37 @@ public class ContainerInstanceSyncPerpetualTaskCreator extends AbstractInstanceS
               .namespace(((ContainerDeploymentInfoWithNames) baseContainerDeploymentInfo).getNamespace())
               .build());
     } else if (baseContainerDeploymentInfo instanceof ContainerDeploymentInfoWithLabels) {
-      Set<String> controllers =
-          emptyIfNull(((ContainerDeploymentInfoWithLabels) baseContainerDeploymentInfo).getContainerInfoList())
-              .stream()
-              .map(io.harness.container.ContainerInfo::getWorkloadName)
-              .filter(EmptyPredicate::isNotEmpty)
-              .collect(Collectors.toSet());
+      final ContainerDeploymentInfoWithLabels containerDeploymentInfoWithLabels =
+          (ContainerDeploymentInfoWithLabels) baseContainerDeploymentInfo;
+      Set<String> controllers = emptyIfNull(containerDeploymentInfoWithLabels.getContainerInfoList())
+                                    .stream()
+                                    .map(io.harness.container.ContainerInfo::getWorkloadName)
+                                    .filter(EmptyPredicate::isNotEmpty)
+                                    .collect(Collectors.toSet());
       if (isNotEmpty(controllers)) {
         return controllers.stream()
             .map(controller
                 -> ContainerMetadata.builder()
-                       .namespace(((ContainerDeploymentInfoWithLabels) baseContainerDeploymentInfo).getNamespace())
+                       .namespace(containerDeploymentInfoWithLabels.getNamespace())
                        .containerServiceName(controller)
-                       .releaseName(((ContainerDeploymentInfoWithLabels) baseContainerDeploymentInfo).getReleaseName())
+                       .releaseName(containerDeploymentInfoWithLabels.getReleaseName())
                        .build())
             .collect(Collectors.toSet());
-      } else if (isNotEmpty(((ContainerDeploymentInfoWithLabels) baseContainerDeploymentInfo).getContainerInfoList())) {
-        return ImmutableSet.of(
-            ContainerMetadata.builder()
-                .namespace(((ContainerDeploymentInfoWithLabels) baseContainerDeploymentInfo).getNamespace())
-                .releaseName(((ContainerDeploymentInfoWithLabels) baseContainerDeploymentInfo).getReleaseName())
-                .build());
+      } else if (isNotEmpty(containerDeploymentInfoWithLabels.getContainerInfoList())) {
+        if (isNotEmpty(containerDeploymentInfoWithLabels.getNamespaces())) {
+          return containerDeploymentInfoWithLabels.getNamespaces()
+              .stream()
+              .map(ns
+                  -> ContainerMetadata.builder()
+                         .namespace(ns)
+                         .releaseName(containerDeploymentInfoWithLabels.getReleaseName())
+                         .build())
+              .collect(Collectors.toSet());
+        }
+        return ImmutableSet.of(ContainerMetadata.builder()
+                                   .namespace(containerDeploymentInfoWithLabels.getNamespace())
+                                   .releaseName(containerDeploymentInfoWithLabels.getReleaseName())
+                                   .build());
       }
     }
     return Collections.emptySet();

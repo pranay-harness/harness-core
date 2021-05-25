@@ -167,6 +167,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   @Getter @Setter private String secretOutputVars;
   @Getter @Setter private SweepingOutputInstance.Scope sweepingOutputScope;
   @Getter @Setter private String sweepingOutputName;
+  @Getter @Setter private Boolean includeInfraSelectors;
 
   /**
    * Create a new Script State with given name.
@@ -475,6 +476,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
             .kerberosConfig(kerberosConfig)
             .sshVaultConfig(sshVaultConfig)
             .role(role)
+            .includeInfraSelectors(includeInfraSelectors)
             .publicKey(publicKey)
             .isVaultSSH(isVaultSSH)
             .localOverrideFeatureFlag(

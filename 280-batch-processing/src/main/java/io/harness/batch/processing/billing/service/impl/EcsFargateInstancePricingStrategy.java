@@ -34,8 +34,8 @@ public class EcsFargateInstancePricingStrategy implements InstancePricingStrateg
   }
 
   @Override
-  public PricingData getPricePerHour(
-      InstanceData instanceData, Instant startTime, Instant endTime, double instanceActiveSeconds) {
+  public PricingData getPricePerHour(InstanceData instanceData, Instant startTime, Instant endTime,
+      double instanceActiveSeconds, double parentInstanceActiveSecond) {
     Map<String, String> instanceMetaData = instanceData.getMetaData();
     String region = instanceMetaData.get(InstanceMetaDataConstants.REGION);
     EcsFargatePricingInfo fargatePricingInfo = vmPricingService.getFargatePricingInfo(region);

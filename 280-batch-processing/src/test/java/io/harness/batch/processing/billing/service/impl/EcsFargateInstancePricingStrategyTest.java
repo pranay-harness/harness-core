@@ -59,7 +59,7 @@ public class EcsFargateInstancePricingStrategyTest extends CategoryTest {
                                     .build();
 
     PricingData pricingData = ecsFargateInstancePricingStrategy.getPricePerHour(
-        instanceData, NOW.minus(24, ChronoUnit.HOURS), NOW, 24 * 3600D);
+        instanceData, NOW.minus(24, ChronoUnit.HOURS), NOW, 24 * 3600D, 24 * 3600D);
 
     assertThat(pricingData.getPricePerHour()).isEqualTo(0.08743999999999999);
     assertThat(pricingData.getCpuUnit()).isEqualTo(1.0 * 1024);
@@ -87,7 +87,7 @@ public class EcsFargateInstancePricingStrategyTest extends CategoryTest {
             .build();
 
     PricingData pricingData = ecsFargateInstancePricingStrategy.getPricePerHour(
-        instanceData, NOW.minus(24, ChronoUnit.HOURS), NOW, 24 * 3600D);
+        instanceData, NOW.minus(24, ChronoUnit.HOURS), NOW, 24 * 3600D, 24 * 3600D);
 
     assertThat(pricingData.getPricePerHour()).isEqualTo(0.13911);
     assertThat(pricingData.getCpuUnit()).isEqualTo(1.0 * 1024);

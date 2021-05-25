@@ -13,8 +13,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class StoragePricingStrategy implements InstancePricingStrategy {
   @Override
-  public PricingData getPricePerHour(
-      InstanceData instanceData, Instant startTime, Instant endTime, double instanceActiveSeconds) {
+  public PricingData getPricePerHour(InstanceData instanceData, Instant startTime, Instant endTime,
+      double instanceActiveSeconds, double parentInstanceActiveSecond) {
     Double pricePerMbPerHour = StoragePricingData.getPricePerMbPerHour(instanceData.getMetaData());
     Double storageMb = instanceData.getStorageResource().getCapacity();
 

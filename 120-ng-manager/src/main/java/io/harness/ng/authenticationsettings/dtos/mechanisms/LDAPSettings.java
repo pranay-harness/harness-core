@@ -26,18 +26,21 @@ import lombok.EqualsAndHashCode;
 @OwnedBy(HarnessTeam.PL)
 public class LDAPSettings extends NGAuthSettings {
   @NotNull @Valid LdapConnectionSettings connectionSettings;
+  @NotNull private String identifier;
 
   @Valid List<LdapUserSettings> userSettingsList;
 
   @Valid List<LdapGroupSettings> groupSettingsList;
 
   public LDAPSettings(@JsonProperty("connectionSettings") LdapConnectionSettings connectionSettings,
+      @JsonProperty("identifier") String identifier,
       @JsonProperty("userSettingsList") List<LdapUserSettings> userSettingsList,
       @JsonProperty("groupSettingsList") List<LdapGroupSettings> groupSettingsList) {
     super(AuthenticationMechanism.LDAP);
     this.connectionSettings = connectionSettings;
     this.userSettingsList = userSettingsList;
     this.groupSettingsList = groupSettingsList;
+    this.identifier = identifier;
   }
 
   @Override

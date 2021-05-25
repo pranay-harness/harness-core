@@ -6,10 +6,13 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitFileDetails;
 import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.beans.gitsync.GitPRCreateRequest;
+import io.harness.beans.gitsync.GitWebhookDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
+import io.harness.product.ci.scm.proto.CreateWebhookResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
+import io.harness.product.ci.scm.proto.DeleteWebhookResponse;
 import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.product.ci.scm.proto.FindFilesInBranchResponse;
@@ -18,6 +21,7 @@ import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
 import io.harness.product.ci.scm.proto.IsLatestFileResponse;
 import io.harness.product.ci.scm.proto.ListBranchesResponse;
 import io.harness.product.ci.scm.proto.ListCommitsResponse;
+import io.harness.product.ci.scm.proto.ListWebhooksResponse;
 import io.harness.product.ci.scm.proto.SCMGrpc;
 import io.harness.product.ci.scm.proto.UpdateFileResponse;
 import io.harness.service.ScmClient;
@@ -112,5 +116,25 @@ public class SCMServiceGitClientImpl implements ScmClient {
   @Override
   public CreatePRResponse createPullRequest(ScmConnector scmConnector, GitPRCreateRequest gitPRCreateRequest) {
     return scmServiceClient.createPullRequest(scmConnector, gitPRCreateRequest, scmBlockingStub);
+  }
+
+  @Override
+  public CreateWebhookResponse createWebhook(ScmConnector scmConnector, GitWebhookDetails gitWebhookDetails) {
+    return scmServiceClient.createWebhook(scmConnector, gitWebhookDetails, scmBlockingStub);
+  }
+
+  @Override
+  public DeleteWebhookResponse deleteWebhook(ScmConnector scmConnector, String id) {
+    return scmServiceClient.deleteWebhook(scmConnector, id, scmBlockingStub);
+  }
+
+  @Override
+  public ListWebhooksResponse listWebhook(ScmConnector scmConnector) {
+    return scmServiceClient.listWebhook(scmConnector, scmBlockingStub);
+  }
+
+  @Override
+  public CreateWebhookResponse upsertWebhook(ScmConnector scmConnector, GitWebhookDetails gitWebhookDetails) {
+    return scmServiceClient.upsertWebhook(scmConnector, gitWebhookDetails, scmBlockingStub);
   }
 }

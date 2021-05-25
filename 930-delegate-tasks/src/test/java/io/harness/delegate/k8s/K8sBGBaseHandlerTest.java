@@ -3,16 +3,25 @@ package io.harness.delegate.k8s;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.k8s.K8sTestHelper.service;
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 
 import static software.wings.beans.LogColor.Blue;
 import static software.wings.beans.LogColor.Green;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
@@ -36,13 +45,13 @@ import com.google.common.collect.ImmutableMap;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServiceBuilder;
 import io.kubernetes.client.openapi.models.V1ServiceSpecBuilder;
-import java.util.Collections;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -150,8 +159,8 @@ public class K8sBGBaseHandlerTest extends CategoryTest {
   public void testGetAllPods() throws Exception {
     final K8sPod stagePod = K8sPod.builder().name("stage-pod").build();
     final K8sPod primaryPod = K8sPod.builder().name("primary-pod").build();
-    final List<K8sPod> stagePods = Collections.singletonList(stagePod);
-    final List<K8sPod> primaryPods = Collections.singletonList(primaryPod);
+    final List<K8sPod> stagePods = singletonList(stagePod);
+    final List<K8sPod> primaryPods = singletonList(primaryPod);
     final KubernetesConfig config = KubernetesConfig.builder().build();
     final KubernetesResource managedWorkload =
         KubernetesResource.builder().resourceId(KubernetesResourceId.builder().namespace("default").build()).build();
@@ -179,7 +188,7 @@ public class K8sBGBaseHandlerTest extends CategoryTest {
     releaseHistory.getLatestRelease().setManagedWorkload(stage);
     releaseHistory.setReleaseNumber(0);
 
-    releaseHistory.createNewRelease(Collections.singletonList(stage));
+    releaseHistory.createNewRelease(singletonList(stage));
     releaseHistory.setReleaseStatus(Release.Status.Failed);
     releaseHistory.getLatestRelease().setManagedWorkload(stage);
     releaseHistory.setReleaseNumber(1);
@@ -194,8 +203,13 @@ public class K8sBGBaseHandlerTest extends CategoryTest {
     releaseHistory.getLatestRelease().setManagedWorkload(stage);
     releaseHistory.setReleaseNumber(3);
 
-    k8sBGBaseHandler.cleanupForBlueGreen(
+    PrePruningInfo prePruningInfo = k8sBGBaseHandler.cleanupForBlueGreen(
         delegateTaskParams, releaseHistory, logCallback, "green", "blue", releaseHistory.getLatestRelease(), kubectl);
+
+    // PrePruningInfo should contain releaseHistory prior to deletion of stage releases history
+    assertThat(prePruningInfo.getReleaseHistoryBeforeStageCleanUp().getReleases()).hasSize(4);
+    assertThat(prePruningInfo.getDeletedResourcesInStage()).hasSize(1);
+    assertThat(prePruningInfo.getDeletedResourcesInStage().get(0).getName()).isEqualTo("config-1");
 
     // Should remove all stage release expect the current one and keep primary
     assertThat(releaseHistory.getReleases()).hasSize(2);
@@ -212,10 +226,116 @@ public class K8sBGBaseHandlerTest extends CategoryTest {
   public void testCleanupForBlueGreenSameColor() throws Exception {
     ReleaseHistory releaseHistory = mock(ReleaseHistory.class);
 
-    k8sBGBaseHandler.cleanupForBlueGreen(K8sDelegateTaskParams.builder().build(), releaseHistory, logCallback, "blue",
-        "blue", Release.builder().build(), kubectl);
+    PrePruningInfo prePruningInfo = k8sBGBaseHandler.cleanupForBlueGreen(K8sDelegateTaskParams.builder().build(),
+        releaseHistory, logCallback, "blue", "blue", Release.builder().build(), kubectl);
 
     // Do nothing if colors are the same
     verifyNoMoreInteractions(releaseHistory);
+    assertThat(prePruningInfo.getReleaseHistoryBeforeStageCleanUp()).isEqualTo(releaseHistory);
+    assertThat(prePruningInfo.getDeletedResourcesInStage()).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testPruneForBg() throws Exception {
+    String primaryColor = "green";
+    String stageColor = "blue";
+
+    KubernetesResourceId stage0 = KubernetesResourceId.builder().name(format("deployment-0-%s", stageColor)).build();
+    KubernetesResourceId stage1 = KubernetesResourceId.builder().name(format("deployment-1-%s", stageColor)).build();
+    KubernetesResourceId currentStage =
+        KubernetesResourceId.builder().name(format("deployment-current-%s", stageColor)).build();
+    KubernetesResourceId versioned0 = KubernetesResourceId.builder().name("config-0").versioned(true).build();
+    KubernetesResourceId versioned1 = KubernetesResourceId.builder().name("config-1").versioned(true).build();
+    KubernetesResourceId versioned2 = KubernetesResourceId.builder().name("config-2").versioned(true).build();
+    KubernetesResourceId versioned3 = KubernetesResourceId.builder().name("config-3").versioned(true).build();
+    KubernetesResourceId persistentResource = KubernetesResourceId.builder().name("config").versioned(false).build();
+    KubernetesResourceId oldResource = KubernetesResourceId.builder().name("old-config").versioned(false).build();
+    KubernetesResourceId primary = KubernetesResourceId.builder().name(format("deployment-%s", primaryColor)).build();
+
+    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
+
+    ReleaseHistory releaseHistory = ReleaseHistory.createNew();
+
+    releaseHistory.createNewReleaseWithResourceMap(
+        getResourcesWithSpecForRelease(asList(stage0, versioned0, persistentResource, oldResource)));
+    releaseHistory.setReleaseStatus(Release.Status.Succeeded);
+    releaseHistory.getLatestRelease().setManagedWorkload(stage0);
+    releaseHistory.setReleaseNumber(0);
+
+    releaseHistory.createNewReleaseWithResourceMap(
+        getResourcesWithSpecForRelease(asList(stage1, versioned1, persistentResource, oldResource)));
+    releaseHistory.setReleaseStatus(Release.Status.Failed);
+    releaseHistory.getLatestRelease().setManagedWorkload(stage1);
+    releaseHistory.setReleaseNumber(1);
+
+    releaseHistory.createNewReleaseWithResourceMap(
+        getResourcesWithSpecForRelease(asList(primary, versioned2, persistentResource)));
+    releaseHistory.setReleaseStatus(Release.Status.Succeeded);
+    releaseHistory.getLatestRelease().setManagedWorkload(primary);
+    releaseHistory.setReleaseNumber(2);
+
+    releaseHistory.createNewReleaseWithResourceMap(getResourcesWithSpecForRelease(asList(currentStage, versioned3)));
+    releaseHistory.setReleaseStatus(Release.Status.Succeeded);
+    releaseHistory.getLatestRelease().setManagedWorkload(currentStage);
+    releaseHistory.setReleaseNumber(3);
+
+    PrePruningInfo prePruningInfo = PrePruningInfo.builder()
+                                        .releaseHistoryBeforeStageCleanUp(releaseHistory)
+                                        .deletedResourcesInStage(asList(versioned0, versioned1))
+                                        .build();
+
+    when(k8sTaskHelperBase.arrangeResourceIdsInDeletionOrder(anyList())).thenAnswer(i -> i.getArguments()[0]);
+    when(k8sTaskHelperBase.executeDeleteHandlingPartialExecution(
+             any(Kubectl.class), any(K8sDelegateTaskParams.class), anyList(), any(LogCallback.class), anyBoolean()))
+        .thenAnswer(i -> i.getArguments()[2]);
+
+    List<KubernetesResourceId> resourcesPruned = k8sBGBaseHandler.pruneForBg(delegateTaskParams, prePruningInfo,
+        logCallback, primaryColor, stageColor, releaseHistory.getRelease(3), kubectl);
+    assertThat(resourcesPruned).hasSize(3);
+    assertThat(resourcesPruned.stream().map(KubernetesResourceId::getName).collect(toList()))
+        .containsExactlyInAnyOrder(
+            format("deployment-0-%s", stageColor), format("deployment-1-%s", stageColor), "old-config");
+    verify(k8sTaskHelperBase, times(2))
+        .executeDeleteHandlingPartialExecution(
+            any(Kubectl.class), any(K8sDelegateTaskParams.class), anyList(), any(LogCallback.class), anyBoolean());
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testPruneForBgSameColor() throws Exception {
+    ReleaseHistory releaseHistory = mock(ReleaseHistory.class);
+    PrePruningInfo prePruningInfo = PrePruningInfo.builder().releaseHistoryBeforeStageCleanUp(releaseHistory).build();
+
+    List<KubernetesResourceId> resourcesPruned = k8sBGBaseHandler.pruneForBg(K8sDelegateTaskParams.builder().build(),
+        prePruningInfo, logCallback, "blue", "blue", Release.builder().build(), kubectl);
+
+    // Do nothing if colors are the same
+    verifyNoMoreInteractions(releaseHistory);
+    assertThat(resourcesPruned).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testPruneForNoPreviousReleases() throws Exception {
+    PrePruningInfo prePruningInfo1 = PrePruningInfo.builder().build();
+
+    List<KubernetesResourceId> resourcesPruned = k8sBGBaseHandler.pruneForBg(K8sDelegateTaskParams.builder().build(),
+        prePruningInfo1, logCallback, "blue", "green", Release.builder().build(), kubectl);
+
+    // Do nothing if colors are the same
+    ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+    assertThat(resourcesPruned).isEmpty();
+    verify(logCallback, times(1)).saveExecutionLog(captor.capture());
+    assertThat(captor.getValue()).contains("No older releases are available in release history");
+  }
+
+  private List<KubernetesResource> getResourcesWithSpecForRelease(List<KubernetesResourceId> resourceIds) {
+    return resourceIds.stream()
+        .map(resourceId -> KubernetesResource.builder().resourceId(resourceId).build())
+        .collect(toList());
   }
 }

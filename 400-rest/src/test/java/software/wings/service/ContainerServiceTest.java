@@ -40,12 +40,12 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ecs.model.ListTasksResult;
 import com.amazonaws.services.ecs.model.Service;
 import com.google.common.collect.ImmutableMap;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
+import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1PodBuilder;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -140,15 +140,15 @@ public class ContainerServiceTest extends WingsBaseTest {
                                                                     .withName(KUBERNETES_SERVICE_NAME)
                                                                     .endMetadata()
                                                                     .build();
-    Pod pod = new PodBuilder()
-                  .withApiVersion("v1")
-                  .withNewStatus()
-                  .withPhase("Running")
-                  .endStatus()
-                  .withNewMetadata()
-                  .addToLabels("app", "MyApp")
-                  .endMetadata()
-                  .build();
+    V1Pod pod = new V1PodBuilder()
+                    .withApiVersion("v1")
+                    .withNewStatus()
+                    .withPhase("Running")
+                    .endStatus()
+                    .withNewMetadata()
+                    .addToLabels("app", "MyApp")
+                    .endMetadata()
+                    .build();
     PodTemplateSpec podTemplateSpec = new PodTemplateSpecBuilder()
                                           .withNewMetadata()
                                           .withLabels(ImmutableMap.of("app", "MyApp"))
@@ -161,7 +161,8 @@ public class ContainerServiceTest extends WingsBaseTest {
     when(kubernetesContainerService.getController(eq(kubernetesConfig), anyString())).thenReturn(replicationController);
     when(kubernetesContainerService.getServices(eq(kubernetesConfig), anyObject()))
         .thenReturn(singletonList(kubernetesService));
-    when(kubernetesContainerService.getPods(eq(kubernetesConfig), anyObject())).thenReturn(singletonList(pod));
+    when(kubernetesContainerService.getRunningPodsWithLabels(eq(kubernetesConfig), anyString(), anyObject()))
+        .thenReturn(singletonList(pod));
     when(kubernetesContainerService.getControllers(eq(kubernetesConfig), anyObject()))
         .thenReturn((List) singletonList(replicationController));
     when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), anyString()))

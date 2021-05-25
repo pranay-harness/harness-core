@@ -1101,7 +1101,7 @@ plain_artifacts = [
     "com.google.auth:google-auth-library-credentials:0.18.0",
     "com.google.auth:google-auth-library-oauth2-http:0.20.0",
     "com.google.auto.service:auto-service:1.0-rc6",
-    "com.google.auto.value:auto-value-annotations:1.7",
+    "com.google.auto.value:auto-value-annotations:1.7.4",
     "com.google.cloud.datastore:datastore-v1-proto-client:1.6.0",
     "com.google.cloud:google-cloud-bigquery:1.106.0",
     "com.google.cloud:google-cloud-bigquerydatatransfer:0.126.0-beta",
@@ -1875,7 +1875,7 @@ load("//:bazel-credentials.bzl", "JFROG_PASSWORD", "JFROG_USERNAME")
 maven_install(
     name = "maven_harness",
     artifacts = [
-        "io.harness.cv:data-collection-dsl:0.22-RELEASE",
+        "io.harness.cv:data-collection-dsl:0.23-RELEASE",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",

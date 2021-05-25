@@ -145,6 +145,11 @@ public class EventsFrameworkModule extends AbstractModule {
           .annotatedWith(Names.named(GIT_PR_EVENT_STREAM))
           .toInstance(RedisProducer.of(
               GIT_PR_EVENT_STREAM, redisConfig, GIT_PR_EVENT_STREAM_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
+      bind(Consumer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.SAML_AUTHORIZATION_ASSERTION))
+          .toInstance(RedisConsumer.of(EventsFrameworkConstants.SAML_AUTHORIZATION_ASSERTION, NG_MANAGER.getServiceId(),
+              redisConfig, EventsFrameworkConstants.DEFAULT_MAX_PROCESSING_TIME,
+              EventsFrameworkConstants.DEFAULT_READ_BATCH_SIZE));
     }
   }
 }
