@@ -11,8 +11,8 @@ import io.harness.manage.GlobalContextManager;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @UtilityClass
+@Slf4j
 @OwnedBy(DX)
 public class GitContextHelper {
   /***
