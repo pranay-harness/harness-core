@@ -311,7 +311,8 @@ public enum TaskType {
   SCM_PATH_FILTER_EVALUATION_TASK(TaskGroup.GIT, "SCM Path Filter Evaluation Task"),
   SCM_GIT_REF_TASK(TaskGroup.GIT, "SCM Git Ref Task"),
   SCM_GIT_FILE_TASK(TaskGroup.GIT, "SCM Git File Task"),
-  SCM_PULL_REQUEST_TASK(TaskGroup.GIT, "SCM Git PR Task");
+  SCM_PULL_REQUEST_TASK(TaskGroup.GIT, "SCM Git PR Task"),
+  SCM_GIT_WEBHOOK_TASK(TaskGroup.GIT, "SCM Git Webhook Task");
 
   private final TaskGroup taskGroup;
   private final String displayName;

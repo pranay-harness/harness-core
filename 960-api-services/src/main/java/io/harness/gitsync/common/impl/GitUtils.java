@@ -22,7 +22,8 @@ public class GitUtils {
       for (RepoProviders repoProvider : RepoProviders.values()) {
         if (StringUtils.containsIgnoreCase(host, repoProvider.name())) {
           return SaasGitDTO.builder()
-              .isSaasGit(host.contains("www." + repoProvider.name().toLowerCase() + ".com"))
+              .isSaasGit(host.contains("www." + repoProvider.name().toLowerCase() + ".com")
+                  || host.contains("www." + repoProvider.name().toLowerCase() + ".org"))
               .build();
         }
       }
@@ -38,5 +39,9 @@ public class GitUtils {
 
   String getHostNameWithWWW(String host) {
     return (host.startsWith("www.")) ? host : ("www." + host);
+  }
+
+  public boolean isBitBucketCloud(String url) {
+    return url.contains("bitbucket.org/");
   }
 }

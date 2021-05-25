@@ -11,6 +11,7 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.exception.UnknownEnumTypeException;
 import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
@@ -88,7 +89,7 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
       case NONE:
         throw new NotImplementedException("Not Implemented");
       default: {
-        throw new NotImplementedException("Not Implemented");
+        throw new UnknownEnumTypeException("ChangeType", scmPushTaskParams.getChangeType().toString());
       }
     }
   }
