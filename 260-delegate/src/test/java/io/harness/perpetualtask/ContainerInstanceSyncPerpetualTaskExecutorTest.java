@@ -1,5 +1,8 @@
 package io.harness.perpetualtask;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.rule.OwnerRule.YOGESH;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -12,6 +15,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.DelegateTestBase;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
@@ -59,6 +63,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import retrofit2.Call;
 
 @RunWith(MockitoJUnitRunner.class)
+@OwnedBy(CDP)
 public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTestBase {
   @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
   @Mock private transient K8sTaskHelper k8sTaskHelper;
@@ -199,12 +204,52 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
 
     assertThat(containerSyncResponse.isEcs()).isTrue();
     verifyContainerServicesCallSuccess(containerInfo, perpetualTaskResponse, containerSyncResponse);
+    assertThat(containerSyncResponse.getControllerName()).isEqualTo("service");
 
     doThrow(new RuntimeException()).when(call).execute();
     perpetualTaskResponse = executor.runOnce(
         PerpetualTaskId.newBuilder().setId("id").build(), getContainerInstancePerpetualTaskParams(), Instant.now());
 
     verifyContainerServicesCallSuccess(containerInfo, perpetualTaskResponse, containerSyncResponse);
+    assertThat(containerSyncResponse.getControllerName()).isEqualTo("service");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void runOnceWithContainerServicesHelmCallSuccess() throws Exception {
+    final KubernetesContainerInfo containerInfo = KubernetesContainerInfo.builder()
+                                                      .namespace("namespace")
+                                                      .podName("test-pod")
+                                                      .ip("10.20.30.40")
+                                                      .releaseName("release")
+                                                      .build();
+    doReturn(Arrays.asList(containerInfo))
+        .when(containerService)
+        .getContainerInfos(any(ContainerServiceParams.class), eq(true));
+    doReturn(call)
+        .when(delegateAgentManagerClient)
+        .publishInstanceSyncResult(anyString(), anyString(), any(DelegateResponseData.class));
+    doReturn(retrofit2.Response.success("success")).when(call).execute();
+
+    PerpetualTaskResponse perpetualTaskResponse;
+    perpetualTaskResponse = executor.runOnce(
+        PerpetualTaskId.newBuilder().setId("id").build(), getContainerInstancePerpetualTaskParamsHelm(), Instant.now());
+
+    verify(delegateAgentManagerClient, times(1))
+        .publishInstanceSyncResult(eq("id"), eq("accountId"), containerSyncResponseCaptor.capture());
+
+    final ContainerSyncResponse containerSyncResponse = containerSyncResponseCaptor.getValue();
+
+    verifyContainerServicesCallSuccess(containerInfo, perpetualTaskResponse, containerSyncResponse);
+
+    doThrow(new RuntimeException()).when(call).execute();
+    perpetualTaskResponse = executor.runOnce(
+        PerpetualTaskId.newBuilder().setId("id").build(), getContainerInstancePerpetualTaskParams(), Instant.now());
+
+    verifyContainerServicesCallSuccess(containerInfo, perpetualTaskResponse, containerSyncResponse);
+    assertThat(containerSyncResponse.getReleaseName()).isEqualTo("release");
+    assertThat(containerSyncResponse.getNamespace()).isEqualTo("namespace");
   }
 
   private void verifyContainerServicesCallSuccess(ContainerInfo containerInfo,
@@ -213,7 +258,6 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
     assertThat(containerSyncResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     assertThat(containerSyncResponse.getContainerInfoList()).isNotNull();
     assertThat(containerSyncResponse.getContainerInfoList()).containsExactly(containerInfo);
-    assertThat(containerSyncResponse.getControllerName()).isEqualTo("service");
 
     assertThat(perpetualTaskResponse.getResponseMessage()).isEqualTo("success");
     assertThat(perpetualTaskResponse.getResponseCode()).isEqualTo(Response.SC_OK);
@@ -288,6 +332,27 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
                                                         .setContainerSvcName("service")
                                                         .setRegion("us-east-1")
                                                         .setClusterName("cluster")
+                                                        .build())
+            .build();
+    return PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(params)).build();
+  }
+
+  private PerpetualTaskExecutionParams getContainerInstancePerpetualTaskParamsHelm() {
+    AwsConfig awsConfig = AwsConfig.builder().accountId("accountId").build();
+    ByteString configBytes = ByteString.copyFrom(kryoSerializer.asBytes(
+        SettingAttribute.Builder.aSettingAttribute().withAccountId("accountId").withValue(awsConfig).build()));
+    ByteString encryptionDetailsBytes = ByteString.copyFrom(kryoSerializer.asBytes(new ArrayList<>()));
+
+    ContainerInstanceSyncPerpetualTaskParams params =
+        ContainerInstanceSyncPerpetualTaskParams.newBuilder()
+            .setContainerType("")
+            .setContainerServicePerpetualTaskParams(ContainerServicePerpetualTaskParams.newBuilder()
+                                                        .setSettingAttribute(configBytes)
+                                                        .setEncryptionDetails(encryptionDetailsBytes)
+                                                        .setNamespace("namespace")
+                                                        .setRegion("us-east-1")
+                                                        .setClusterName("cluster")
+                                                        .setReleaseName("release")
                                                         .build())
             .build();
     return PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(params)).build();
