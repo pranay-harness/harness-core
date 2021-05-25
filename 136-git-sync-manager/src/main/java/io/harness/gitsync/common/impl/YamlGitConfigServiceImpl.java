@@ -207,13 +207,6 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
         accountId, organizationId, projectId);
   }
 
-  @Override
-  public Optional<ConnectorInfoDTO> getGitConnector(YamlGitConfigDTO ygs, String gitConnectorId) {
-    Optional<ConnectorResponseDTO> connectorDTO = connectorService.get(
-        ygs.getAccountIdentifier(), ygs.getOrganizationIdentifier(), ygs.getProjectIdentifier(), gitConnectorId);
-    return connectorDTO.map(ConnectorResponseDTO::getConnector);
-  }
-
   public YamlGitConfigDTO save(YamlGitConfigDTO ygs, String accountId, boolean performFullSync) {
     // TODO(abhinav): add full sync logic.
     return saveInternal(ygs, accountId);
@@ -269,7 +262,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   private void validateAPIAccessFieldPresence(YamlGitConfigDTO ygs) {
     IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(ygs.getGitConnectorRef(),
         ygs.getAccountIdentifier(), ygs.getOrganizationIdentifier(), ygs.getProjectIdentifier());
-    Optional<ConnectorInfoDTO> gitConnectorOptional = getGitConnector(ygs, identifierRef.getIdentifier());
+    Optional<ConnectorInfoDTO> gitConnectorOptional = getGitConnector(identifierRef);
     if (gitConnectorOptional.isPresent()) {
       ConnectorConfigDTO connectorConfig = gitConnectorOptional.get().getConnectorConfig();
       if (connectorConfig instanceof ScmConnector) {
@@ -282,6 +275,13 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
       throw new InvalidRequestException(
           String.format("No connector found for the connector reference %s", ygs.getGitConnectorRef()));
     }
+  }
+
+  @Override
+  public Optional<ConnectorInfoDTO> getGitConnector(IdentifierRef identifierRef) {
+    Optional<ConnectorResponseDTO> connectorDTO = connectorService.get(identifierRef.getAccountIdentifier(),
+        identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
+    return connectorDTO.map(ConnectorResponseDTO::getConnector);
   }
 
   /**
