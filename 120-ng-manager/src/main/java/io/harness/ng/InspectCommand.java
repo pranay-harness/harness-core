@@ -1,5 +1,7 @@
 package io.harness.ng;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
@@ -12,6 +14,8 @@ import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NextGenRegistrars;
+import io.harness.serializer.NgAccessControlMigrationRegistrars;
+import io.harness.serializer.NgUserCoreRegistrars;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -35,6 +39,7 @@ import net.sourceforge.argparse4j.inf.Namespace;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.converters.TypeConverter;
 
+@OwnedBy(HarnessTeam.PL)
 public class InspectCommand<T extends io.dropwizard.Configuration> extends ConfiguredCommand<T> {
   private final Class<T> configurationClass;
 
@@ -85,6 +90,8 @@ public class InspectCommand<T extends io.dropwizard.Configuration> extends Confi
       public Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(NextGenRegistrars.morphiaRegistrars)
+            .addAll(NgUserCoreRegistrars.morphiaRegistrars)
+            .addAll(NgAccessControlMigrationRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -93,6 +100,8 @@ public class InspectCommand<T extends io.dropwizard.Configuration> extends Confi
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
             .addAll(NextGenRegistrars.morphiaConverters)
+            .addAll(NgAccessControlMigrationRegistrars.morphiaConverters)
+            .addAll(NgUserCoreRegistrars.morphiaConverters)
             .build();
       }
     });

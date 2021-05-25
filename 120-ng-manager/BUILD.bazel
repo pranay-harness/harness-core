@@ -17,6 +17,8 @@ shared_dependencies = [
     "@maven//:io_grpc_grpc_stub",
 ] + [
     "//:lombok",
+    "//121-access-control-migration:module",
+    "//122-ng-core-user:module",
     "//125-cd-nextgen:module",
     "//136-git-sync-manager:module",
     "//400-rest:module",
@@ -64,7 +66,6 @@ shared_dependencies = [
     "//440-connector-nextgen:module",
     "//955-filters-sdk:module",
     "//955-outbox-sdk:module",
-    "//958-migration-sdk:module",
     "//958-ng-file-service-sdk:module",
     "//960-notification-beans:module",
     "//960-persistence:module",
