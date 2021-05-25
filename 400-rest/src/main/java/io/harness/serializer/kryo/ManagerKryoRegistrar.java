@@ -363,6 +363,9 @@ import software.wings.beans.template.ImportedTemplateMetadata;
 import software.wings.beans.template.TemplateReference;
 import software.wings.beans.template.dto.HarnessImportedTemplateDetails;
 import software.wings.beans.trigger.TriggerCommand.TriggerCommandType;
+import software.wings.beans.trigger.WebHookTriggerResponseData;
+import software.wings.beans.trigger.WebhookSource;
+import software.wings.beans.trigger.WebhookTriggerParameters;
 import software.wings.beans.utm.UtmInfo;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
@@ -1772,6 +1775,10 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ArtifactStreamMetadata.class, 8126);
     kryo.register(ArtifactSummary.class, 8127);
     kryo.register(CommandParameters.class, 8509);
+
+    kryo.register(WebhookTriggerParameters.class, 8550);
+    kryo.register(WebhookSource.class, 8551);
+    kryo.register(WebHookTriggerResponseData.class, 8552);
 
     kryo.register(StateMachineResumeCallback.class, 40001);
     kryo.register(BuildSourceCleanupCallback.class, 40002);

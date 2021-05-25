@@ -1,8 +1,10 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.FeatureName.GITHUB_WEBHOOK_AUTHENTICATION;
 import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.HARSH;
@@ -16,6 +18,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
 import static software.wings.service.impl.WebHookServiceImpl.X_BIT_BUCKET_EVENT;
 import static software.wings.service.impl.WebHookServiceImpl.X_GIT_HUB_EVENT;
+import static software.wings.service.impl.trigger.WebhookEventUtils.X_HUB_SIGNATURE_256;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.BUILD_NO;
@@ -42,12 +45,15 @@ import static org.mockito.Mockito.when;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.DelegateTask;
 import io.harness.beans.FeatureName;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.serializer.JsonUtils;
 
 import software.wings.WingsBaseTest;
@@ -62,6 +68,7 @@ import software.wings.beans.trigger.GithubAction;
 import software.wings.beans.trigger.ReleaseAction;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebHookTriggerCondition;
+import software.wings.beans.trigger.WebHookTriggerResponseData;
 import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
@@ -72,6 +79,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WebHookService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.trigger.TriggerExecutionService;
 import software.wings.utils.CryptoUtils;
 
@@ -86,6 +94,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import org.apache.commons.io.FileUtils;
@@ -101,6 +110,7 @@ import org.mockito.Mock;
 @TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class WebHookServiceImplTest extends WingsBaseTest {
   private static final String API_KEY = "API_KEY";
+  private static final String WEBHOOK_SECRET = "WEBHOOK_SECRET";
   @Mock private TriggerService triggerService;
   @Mock private AppService appService;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;
@@ -110,9 +120,12 @@ public class WebHookServiceImplTest extends WingsBaseTest {
   @Mock private ArtifactStreamService artifactStreamService;
   @Inject ManagerExpressionEvaluator expressionEvaluator;
   @Inject @InjectMocks TriggerExecutionService triggerExecutionService;
+  @Mock private SecretManager secretManager;
+  @Mock private DelegateServiceImpl delegateService;
 
   @Inject @InjectMocks private WebHookService webHookService;
   @Inject WingsPersistence wingsPersistence;
+  @Inject @InjectMocks private WebHookServiceImpl webHookServiceImpl;
 
   final String token = CryptoUtils.secureRandAlphaNumString(40);
 
@@ -915,7 +928,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     Trigger webhookTrigger = constructWebhookPushTrigger();
     WebHookServiceImpl webHookServiceImpl = new WebHookServiceImpl();
     webHookServiceImpl.validateWebHook(WebhookSource.GITHUB, webhookTrigger,
-        (WebHookTriggerCondition) webhookTrigger.getCondition(), new HashMap<>(), null);
+        (WebHookTriggerCondition) webhookTrigger.getCondition(), new HashMap<>(), null, null);
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -926,7 +939,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     WebHookServiceImpl webHookServiceImpl = new WebHookServiceImpl();
     doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
     webHookServiceImpl.validateWebHook(WebhookSource.GITHUB, webhookTrigger,
-        (WebHookTriggerCondition) webhookTrigger.getCondition(), new HashMap<>(), httpHeaders);
+        (WebHookTriggerCondition) webhookTrigger.getCondition(), new HashMap<>(), httpHeaders, null);
   }
 
   @Test
@@ -952,7 +965,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     assertThatThrownBy(()
                            -> webHookServiceImpl.validateWebHook(WebhookSource.GITHUB, webhookTrigger,
                                (WebHookTriggerCondition) webhookTrigger.getCondition(),
-                               ImmutableMap.of("action", GithubAction.CLOSED.getValue()), httpHeaders))
+                               ImmutableMap.of("action", GithubAction.CLOSED.getValue()), httpHeaders, null))
         .hasMessageContaining(" is not associated with the received GitHub action");
   }
 
@@ -989,7 +1002,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
                                  .build();
     WebHookServiceImpl webHookServiceImpl = new WebHookServiceImpl();
     webHookServiceImpl.validateWebHook(WebhookSource.BITBUCKET, webhookTrigger,
-        (WebHookTriggerCondition) webhookTrigger.getCondition(), new HashMap<>(), null);
+        (WebHookTriggerCondition) webhookTrigger.getCondition(), new HashMap<>(), null, null);
   }
 
   @Test
@@ -1151,5 +1164,135 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     WebHookResponse response = (WebHookResponse) webHookService.execute(token, request, httpHeaders).getEntity();
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(RUNNING.name());
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldValidateGithubWebHook_hashedPayloadHeaderMissing() {
+    Trigger webhookTrigger = getGithubTriggerWithSecret();
+    doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
+    doReturn(true).when(featureFlagService).isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, ACCOUNT_ID);
+
+    assertThatThrownBy(()
+                           -> webHookServiceImpl.validateWebHook(WebhookSource.GITHUB, webhookTrigger,
+                               (WebHookTriggerCondition) webhookTrigger.getCondition(),
+                               ImmutableMap.of("action", GithubAction.OPENED.getValue()), httpHeaders, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Harness trigger has webhook secret but its not present in GITHUB");
+  }
+
+  private Trigger getGithubTriggerWithSecret() {
+    return Trigger.builder()
+        .workflowId(PIPELINE_ID)
+        .uuid(TRIGGER_ID)
+        .appId(APP_ID)
+        .name(TRIGGER_NAME)
+        .webHookToken(token)
+        .condition(WebHookTriggerCondition.builder()
+                       .webhookSource(WebhookSource.GITHUB)
+                       .eventTypes(Collections.singletonList(WebhookEventType.PULL_REQUEST))
+                       .actions(Arrays.asList(GithubAction.OPENED))
+                       .webHookToken(WebHookToken.builder().webHookToken(token).build())
+                       .webHookSecret(WEBHOOK_SECRET)
+                       .build())
+        .build();
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldValidateGithubWebHook_WebhookSecretMissing() {
+    Trigger webhookTrigger = Trigger.builder()
+                                 .workflowId(PIPELINE_ID)
+                                 .uuid(TRIGGER_ID)
+                                 .appId(APP_ID)
+                                 .name(TRIGGER_NAME)
+                                 .webHookToken(token)
+                                 .condition(WebHookTriggerCondition.builder()
+                                                .webhookSource(WebhookSource.GITHUB)
+                                                .eventTypes(Collections.singletonList(WebhookEventType.PULL_REQUEST))
+                                                .actions(Arrays.asList(GithubAction.OPENED))
+                                                .webHookToken(WebHookToken.builder().webHookToken(token).build())
+                                                .build())
+                                 .build();
+    doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
+    doReturn("x-hub-signature-256").when(httpHeaders).getHeaderString(X_HUB_SIGNATURE_256);
+    doReturn(true).when(featureFlagService).isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, ACCOUNT_ID);
+
+    assertThatThrownBy(()
+                           -> webHookServiceImpl.validateWebHook(WebhookSource.GITHUB, webhookTrigger,
+                               (WebHookTriggerCondition) webhookTrigger.getCondition(),
+                               ImmutableMap.of("action", GithubAction.OPENED.getValue()), httpHeaders, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Webhook secret is present in GITHUB but harness trigger doesn't have it");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldValidateGithubWebHook_WebhookSecretMissingInDb() {
+    Trigger webhookTrigger = getGithubTriggerWithSecret();
+    doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
+    doReturn("x-hub-signature-256").when(httpHeaders).getHeaderString(X_HUB_SIGNATURE_256);
+    doReturn(true).when(featureFlagService).isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, ACCOUNT_ID);
+    doReturn(Optional.empty()).when(secretManager).encryptedDataDetails(ACCOUNT_ID, null, WEBHOOK_SECRET, null);
+
+    assertThatThrownBy(()
+                           -> webHookServiceImpl.validateWebHook(WebhookSource.GITHUB, webhookTrigger,
+                               (WebHookTriggerCondition) webhookTrigger.getCondition(),
+                               ImmutableMap.of("action", GithubAction.OPENED.getValue()), httpHeaders, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Error fetching the secret from database");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldValidateGithubWebHook_WebHookAuthenticationFailed() {
+    Trigger webhookTrigger = getGithubTriggerWithSecret();
+    doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
+    doReturn("x-hub-signature-256").when(httpHeaders).getHeaderString(X_HUB_SIGNATURE_256);
+    doReturn(true).when(featureFlagService).isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, ACCOUNT_ID);
+    doReturn(
+        Optional.of(
+            EncryptedDataDetail.builder().encryptedData(EncryptedRecordData.builder().kmsId("id").build()).build()))
+        .when(secretManager)
+        .encryptedDataDetails(ACCOUNT_ID, null, WEBHOOK_SECRET, null);
+    doReturn(WebHookTriggerResponseData.builder().executionStatus(FAILED).build())
+        .when(delegateService)
+        .executeTask(any(DelegateTask.class));
+
+    assertThatThrownBy(()
+                           -> webHookServiceImpl.validateWebHook(WebhookSource.GITHUB, webhookTrigger,
+                               (WebHookTriggerCondition) webhookTrigger.getCondition(),
+                               ImmutableMap.of("action", GithubAction.OPENED.getValue()), httpHeaders, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Error in webhook authentication: ");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldValidateGithubWebHook_WebHookSecretsMismatch() {
+    Trigger webhookTrigger = getGithubTriggerWithSecret();
+    doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
+    doReturn("x-hub-signature-256").when(httpHeaders).getHeaderString(X_HUB_SIGNATURE_256);
+    doReturn(true).when(featureFlagService).isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, ACCOUNT_ID);
+    doReturn(
+        Optional.of(
+            EncryptedDataDetail.builder().encryptedData(EncryptedRecordData.builder().kmsId("id").build()).build()))
+        .when(secretManager)
+        .encryptedDataDetails(ACCOUNT_ID, null, WEBHOOK_SECRET, null);
+    doReturn(WebHookTriggerResponseData.builder().executionStatus(SUCCESS).isWebhookAuthenticated(false).build())
+        .when(delegateService)
+        .executeTask(any(DelegateTask.class));
+
+    assertThatThrownBy(()
+                           -> webHookServiceImpl.validateWebHook(WebhookSource.GITHUB, webhookTrigger,
+                               (WebHookTriggerCondition) webhookTrigger.getCondition(),
+                               ImmutableMap.of("action", GithubAction.OPENED.getValue()), httpHeaders, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Webhook secret present in Harness and GITHUB might be different");
   }
 }
