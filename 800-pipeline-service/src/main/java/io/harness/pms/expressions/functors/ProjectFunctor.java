@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.FunctorException;
+import io.harness.exception.EngineFunctorException;
 import io.harness.expression.LateBindingValue;
 import io.harness.network.SafeHttpCall;
 import io.harness.ng.core.dto.ProjectResponse;
@@ -39,7 +39,7 @@ public class ProjectFunctor implements LateBindingValue {
           SafeHttpCall.execute(projectClient.getProject(projectIdentifier, accountId, orgIdentifier)).getData();
       return resp.map(ProjectResponse::getProject).orElse(null);
     } catch (Exception ex) {
-      throw new FunctorException(String.format("Invalid project: %s", projectIdentifier), ex);
+      throw new EngineFunctorException(String.format("Invalid project: %s", projectIdentifier), ex);
     }
   }
 }
