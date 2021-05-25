@@ -8,6 +8,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
@@ -37,7 +38,7 @@ import org.mongodb.morphia.annotations.Entity;
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
-public abstract class SSOSettings extends Base implements AccountAccess {
+public abstract class SSOSettings extends Base implements AccountAccess, PersistentRegularIterable {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -51,12 +52,23 @@ public abstract class SSOSettings extends Base implements AccountAccess {
   @NotNull protected SSOType type;
   @NotEmpty protected String displayName;
   @NotEmpty protected String url;
+  private Long nextIteration;
 
   public SSOSettings(SSOType type, String displayName, String url) {
     this.type = type;
     this.displayName = displayName;
     this.url = url;
     appId = GLOBAL_APP_ID;
+  }
+
+  @Override
+  public void updateNextIteration(String fieldName, long nextIteration) {
+    this.nextIteration = nextIteration;
+  }
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    return this.nextIteration;
   }
 
   // TODO: Return list of all sso settings instead with the use of @JsonIgnore to trim the unnecessary elements
