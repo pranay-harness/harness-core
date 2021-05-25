@@ -10,6 +10,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 
+import io.harness.security.annotations.InternalApi;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.ApiKeyEntry.ApiKeyEntryKeys;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -108,6 +109,7 @@ public class ApiKeyResource {
   @Path("validate")
   @Timed
   @ExceptionMetered
+  @InternalApi
   public RestResponse<Boolean> validate(
       @NotEmpty @QueryParam("accountId") String accountId, @NotEmpty @QueryParam("apiKey") String apiKey) {
     return new RestResponse<>(apiKeyService.isApiKeyValid(apiKey, accountId));
