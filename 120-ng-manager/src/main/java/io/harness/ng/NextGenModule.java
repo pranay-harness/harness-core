@@ -127,6 +127,7 @@ import io.harness.persistence.UserProvider;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.CEAwsSetupConfig;
+import io.harness.remote.client.ClientMode;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.secrets.SecretNGManagerClientModule;
@@ -362,7 +363,8 @@ public class NextGenModule extends AbstractModule {
     install(new SecretManagementClientModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new SecretNGManagerClientModule(this.appConfig.getNgManagerClientConfig(),
-        this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
+        this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId(),
+        ClientMode.PRIVILEGED));
     install(new DelegateServiceDriverGrpcClientModule(this.appConfig.getNextGenConfig().getManagerServiceSecret(),
         this.appConfig.getGrpcClientConfig().getTarget(), this.appConfig.getGrpcClientConfig().getAuthority()));
     install(new EntitySetupUsageClientModule(this.appConfig.getNgManagerClientConfig(),

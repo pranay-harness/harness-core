@@ -183,7 +183,7 @@ public class CIManagerServiceModule extends AbstractModule {
     install(new ConnectorResourceClientModule(ciManagerConfiguration.getNgManagerClientConfig(),
         ciManagerConfiguration.getNgManagerServiceSecret(), "CIManager", ClientMode.PRIVILEGED));
     install(new SecretNGManagerClientModule(ciManagerConfiguration.getNgManagerClientConfig(),
-        ciManagerConfiguration.getNgManagerServiceSecret(), "CIManager"));
+        ciManagerConfiguration.getNgManagerServiceSecret(), "CIManager", ClientMode.PRIVILEGED));
     install(new CILogServiceClientModule(ciManagerConfiguration.getLogServiceConfig()));
     install(new TIServiceClientModule(ciManagerConfiguration.getTiServiceConfig()));
   }
