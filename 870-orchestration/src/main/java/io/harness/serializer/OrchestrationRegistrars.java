@@ -20,6 +20,7 @@ import io.harness.serializer.morphia.converters.FacilitatorObtainmentMorphiaConv
 import io.harness.serializer.morphia.converters.FacilitatorTypeMorphiaConverter;
 import io.harness.serializer.morphia.converters.FailureInfoMorphiaConverter;
 import io.harness.serializer.morphia.converters.InterruptConfigMorphiaConverter;
+import io.harness.serializer.morphia.converters.InterruptEffectMorphiaConverter;
 import io.harness.serializer.morphia.converters.LevelMorphiaConverter;
 import io.harness.serializer.morphia.converters.RefObjectMorphiaConverter;
 import io.harness.serializer.morphia.converters.RefTypeMorphiaConverter;
@@ -57,6 +58,8 @@ import io.harness.serializer.spring.converters.graphlayout.LayoutNodeInfoReadCon
 import io.harness.serializer.spring.converters.graphlayout.LayoutNodeInfoWriteConverter;
 import io.harness.serializer.spring.converters.interrupt.InterruptConfigReadConverter;
 import io.harness.serializer.spring.converters.interrupt.InterruptConfigWriteConverter;
+import io.harness.serializer.spring.converters.interrupt.InterruptEffectReadConverter;
+import io.harness.serializer.spring.converters.interrupt.InterruptEffectWriteConverter;
 import io.harness.serializer.spring.converters.level.LevelReadConverter;
 import io.harness.serializer.spring.converters.level.LevelWriteConverter;
 import io.harness.serializer.spring.converters.logging.UnitProgressReadConverter;
@@ -139,7 +142,7 @@ public class OrchestrationRegistrars {
           .add(ExecutableResponseMorphiaConverter.class)
           .add(ExecutionTriggerInfoMorphiaConverter.class)
           .add(ExecutionPrincipalInfoMorphiaConverter.class)
-
+          .add(InterruptEffectMorphiaConverter.class)
           .add(TriggeredByMorphiaConverter.class)
           .add(ExecutionMetadataMorphiaConverter.class)
           .add(TriggerPayloadMorphiaConverter.class)
@@ -170,7 +173,8 @@ public class OrchestrationRegistrars {
       InterruptConfigReadConverter.class, InterruptConfigWriteConverter.class,
       SdkResponseEventRequestReadConverter.class, SdkResponseEventRequestWriteConverter.class,
       NodeRunInfoReadConverter.class, NodeRunInfoWriteConverter.class, ExecutionPrincipalInfoReadConverter.class,
-      ExecutionPrincipalInfoWriteConverter.class);
+      ExecutionPrincipalInfoWriteConverter.class, InterruptEffectReadConverter.class,
+      InterruptEffectWriteConverter.class);
 
   public static final List<Class<? extends Converter<?, ?>>> springConverters =
       ImmutableList.<Class<? extends Converter<?, ?>>>builder()

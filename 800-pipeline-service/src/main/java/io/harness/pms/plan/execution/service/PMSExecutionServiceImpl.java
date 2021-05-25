@@ -18,9 +18,9 @@ import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
 import io.harness.interrupts.Interrupt;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
-import io.harness.pms.contracts.advisers.InterruptConfig;
-import io.harness.pms.contracts.advisers.IssuedBy;
-import io.harness.pms.contracts.advisers.ManualIssuer;
+import io.harness.pms.contracts.interrupts.InterruptConfig;
+import io.harness.pms.contracts.interrupts.IssuedBy;
+import io.harness.pms.contracts.interrupts.ManualIssuer;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.filter.utils.ModuleInfoFilterUtils;
@@ -34,6 +34,7 @@ import io.harness.pms.plan.execution.beans.dto.PipelineExecutionFilterProperties
 import io.harness.pms.utils.PmsConstants;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 import io.harness.serializer.JsonUtils;
+import io.harness.serializer.ProtoUtils;
 import io.harness.service.GraphGenerationService;
 
 import com.google.inject.Inject;
@@ -196,7 +197,10 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
             .nodeExecutionId(nodeExecutionId)
             .interruptConfig(
                 InterruptConfig.newBuilder()
-                    .setIssuedBy(IssuedBy.newBuilder().setManualIssuer(ManualIssuer.newBuilder().build()).build())
+                    .setIssuedBy(IssuedBy.newBuilder()
+                                     .setManualIssuer(ManualIssuer.newBuilder().build())
+                                     .setIssueTime(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
+                                     .build())
                     .build())
             .metadata(getMetadata(executionInterruptType))
             .build();

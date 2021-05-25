@@ -9,7 +9,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
-import io.harness.pms.contracts.advisers.InterruptConfig;
+import io.harness.pms.contracts.interrupts.InterruptConfig;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 
