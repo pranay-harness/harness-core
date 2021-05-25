@@ -1839,23 +1839,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  @Deprecated
-  public List<Pod> getRunningPodsWithLabelsFabric8(
-      KubernetesConfig kubernetesConfig, String namespace, Map<String, String> labels) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
-        .pods()
-        .inNamespace(namespace)
-        .withLabels(labels)
-        .list()
-        .getItems()
-        .stream()
-        .filter(pod
-            -> StringUtils.isBlank(pod.getMetadata().getDeletionTimestamp())
-                && StringUtils.equals(pod.getStatus().getPhase(), RUNNING))
-        .collect(Collectors.toList());
-  }
-
-  @Override
   public List<V1Pod> getRunningPodsWithLabels(
       KubernetesConfig kubernetesConfig, String namespace, Map<String, String> labels) {
     final Supplier<List<V1Pod>> podSupplier = Retry.decorateSupplier(retry, () -> {
