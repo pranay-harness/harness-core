@@ -21,15 +21,18 @@ import lombok.EqualsAndHashCode;
 @OwnedBy(HarnessTeam.PL)
 public class SAMLSettings extends NGAuthSettings {
   @NotNull private String origin;
+  @NotNull private String identifier;
   private String logoutUrl;
   private String groupMembershipAttr;
   private String displayName;
   private Boolean authorizationEnabled;
 
-  public SAMLSettings(@JsonProperty("origin") String origin, @JsonProperty("logoutUrl") String logoutUrl,
-      @JsonProperty("groupMembershipAttr") String groupMembershipAttr, @JsonProperty("displayName") String displayName,
+  public SAMLSettings(@JsonProperty("origin") String origin, @JsonProperty("identifier") String identifier,
+      @JsonProperty("logoutUrl") String logoutUrl, @JsonProperty("groupMembershipAttr") String groupMembershipAttr,
+      @JsonProperty("displayName") String displayName,
       @JsonProperty("authorizationEnabled") Boolean authorizationEnabled) {
     super(AuthenticationMechanism.SAML);
+    this.identifier = identifier;
     this.displayName = displayName;
     this.origin = origin;
     this.logoutUrl = logoutUrl;
