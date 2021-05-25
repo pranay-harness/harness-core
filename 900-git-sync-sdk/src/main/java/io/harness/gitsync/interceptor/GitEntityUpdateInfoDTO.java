@@ -27,4 +27,5 @@ public class GitEntityUpdateInfoDTO {
   @QueryParam(GitSyncApiConstants.CREATE_PR_KEY) boolean createPr;
   @QueryParam(GitSyncApiConstants.LAST_OBJECT_ID_KEY) String lastObjectId; // required in case of update file
   @QueryParam(GitSyncApiConstants.TARGET_BRANCH_FOR_PR) String targetBranchForPr;
+  @QueryParam(GitSyncApiConstants.BASE_BRANCH) String baseBranch;
 }
