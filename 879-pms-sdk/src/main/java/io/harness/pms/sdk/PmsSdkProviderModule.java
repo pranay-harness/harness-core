@@ -1,6 +1,6 @@
 package io.harness.pms.sdk;
 
-import static io.harness.pms.sdk.PmsSdkConfiguration.DeployMode.REMOTE;
+import static io.harness.pms.sdk.core.SdkDeployMode.REMOTE;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -9,6 +9,7 @@ import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.interrupt.PMSInterruptService;
+import io.harness.pms.sdk.core.interrupt.PMSInterruptServiceGrpcImpl;
 import io.harness.pms.sdk.core.pipeline.filters.FilterCreationResponseMerger;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.resolver.expressions.EngineGrpcExpressionService;
@@ -17,7 +18,6 @@ import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingGrpcOutputService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.execution.SdkNodeExecutionServiceImpl;
-import io.harness.pms.sdk.interrupt.PMSInterruptServiceGrpcImpl;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;

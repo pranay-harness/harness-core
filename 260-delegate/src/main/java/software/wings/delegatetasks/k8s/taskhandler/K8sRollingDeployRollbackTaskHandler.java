@@ -1,21 +1,28 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.k8s.K8sCommandUnitConstants.DeleteFailedReleaseResources;
 import static io.harness.k8s.K8sCommandUnitConstants.Init;
+import static io.harness.k8s.K8sCommandUnitConstants.RecreatePrunedResource;
 import static io.harness.k8s.K8sCommandUnitConstants.Rollback;
 import static io.harness.k8s.K8sCommandUnitConstants.WaitForSteadyState;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.RUNNING;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
+import static io.harness.logging.LogLevel.WARN;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.k8s.K8sRollingRollbackBaseHandler;
+import io.harness.delegate.k8s.K8sRollingRollbackBaseHandler.ResourceRecreationStatus;
 import io.harness.delegate.k8s.beans.K8sRollingRollbackHandlerConfig;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.K8sDelegateTaskParams;
+import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.logging.CommandExecutionStatus;
 
 import software.wings.beans.command.ExecutionLogCallback;
@@ -28,9 +35,13 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 
 @NoArgsConstructor
 @Slf4j
@@ -66,8 +77,31 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
       return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
     }
 
+    ResourceRecreationStatus resourceRecreationStatus = ResourceRecreationStatus.NO_RESOURCE_CREATED;
+
+    if (((K8sRollingDeployRollbackTaskParameters) k8sTaskParameters).isPruningEnabled()) {
+      ExecutionLogCallback pruneLogCallback = k8sTaskHelper.getExecutionLogCallback(request, RecreatePrunedResource);
+      try {
+        resourceRecreationStatus = k8sRollingRollbackBaseHandler.recreatePrunedResources(rollbackHandlerConfig,
+            request.getReleaseNumber(), request.getPrunedResourcesIds(), pruneLogCallback, k8sDelegateTaskParams);
+        logResourceRecreationStatus(resourceRecreationStatus, pruneLogCallback);
+      } catch (Exception ex) {
+        resourceRecreationStatus = ResourceRecreationStatus.RESOURCE_CREATION_FAILED;
+        pruneLogCallback.saveExecutionLog("Failed to recreate pruned resources.", WARN, RUNNING);
+        pruneLogCallback.saveExecutionLog(ex.getMessage(), WARN, SUCCESS);
+      }
+    }
+
+    if (((K8sRollingDeployRollbackTaskParameters) k8sTaskParameters).isPruningEnabled()) {
+      ExecutionLogCallback deleteLogCallback =
+          k8sTaskHelper.getExecutionLogCallback(request, DeleteFailedReleaseResources);
+      k8sRollingRollbackBaseHandler.deleteNewResourcesForCurrentFailedRelease(
+          rollbackHandlerConfig, request.getReleaseNumber(), deleteLogCallback, k8sDelegateTaskParams);
+    }
+
     success = k8sRollingRollbackBaseHandler.rollback(rollbackHandlerConfig, k8sDelegateTaskParams,
-        request.getReleaseNumber(), k8sTaskHelper.getExecutionLogCallback(request, Rollback));
+        request.getReleaseNumber(), k8sTaskHelper.getExecutionLogCallback(request, Rollback),
+        getResourcesRecreated(request, resourceRecreationStatus));
     if (!success) {
       return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
     }
@@ -84,6 +118,23 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
       waitForSteadyStateLogCallback.saveExecutionLog(e.getMessage(), ERROR, FAILURE);
       throw e;
     }
+  }
+
+  private void logResourceRecreationStatus(
+      ResourceRecreationStatus resourceRecreationStatus, ExecutionLogCallback pruneLogCallback) {
+    if (resourceRecreationStatus == ResourceRecreationStatus.RESOURCE_CREATION_SUCCESSFUL) {
+      pruneLogCallback.saveExecutionLog("Successfully recreated pruned resources.", INFO, SUCCESS);
+    } else if (resourceRecreationStatus == ResourceRecreationStatus.NO_RESOURCE_CREATED) {
+      pruneLogCallback.saveExecutionLog("No resource recreated.", INFO, SUCCESS);
+    }
+  }
+
+  @NotNull
+  private Set<KubernetesResourceId> getResourcesRecreated(
+      K8sRollingDeployRollbackTaskParameters request, ResourceRecreationStatus resourceRecreationStatus) {
+    return resourceRecreationStatus.equals(ResourceRecreationStatus.RESOURCE_CREATION_SUCCESSFUL)
+        ? new HashSet<>(request.getPrunedResourcesIds())
+        : Collections.emptySet();
   }
 
   private boolean init(K8sRollingDeployRollbackTaskParameters k8sRollingDeployRollbackTaskParameters,

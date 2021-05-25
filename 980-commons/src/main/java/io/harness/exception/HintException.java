@@ -36,6 +36,8 @@ public class HintException extends WingsException {
       "Please check if image is available. Refer https://docs.docker.com/engine/reference/commandline/images/#list-images-by-name-and-tag for more information";
   public static final String HINT_INVALID_CONNECTOR =
       "Please ensure that connector %s is valid and using the correct Credentials.";
+  public static final String DELEGATE_NOT_AVAILABLE =
+      "Please make sure that your delegates are connected. Refer %s for more information on delegate Installation";
 
   public static final HintException MOVE_TO_THE_PARENT_OBJECT =
       new HintException("Navigate back to the parent object page and continue from there.");

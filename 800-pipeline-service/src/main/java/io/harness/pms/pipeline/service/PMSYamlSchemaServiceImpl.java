@@ -8,6 +8,7 @@ import static java.lang.String.format;
 import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.encryption.Scope;
 import io.harness.exception.JsonSchemaValidationException;
 import io.harness.jackson.JsonNodeUtils;
@@ -16,6 +17,7 @@ import io.harness.plancreator.stages.parallel.ParallelStageElementConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.pms.helpers.PmsFeatureFlagHelper;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.utils.PmsConstants;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
@@ -91,6 +93,8 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
               return getPipelineYamlSchema(schemaKey.getProjectId(), schemaKey.getOrgId(), schemaKey.getScope());
             }
           });
+
+  private final PmsFeatureFlagHelper pmsFeatureFlagHelper;
 
   public JsonNode getPipelineYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope) {
     JsonNode pipelineSchema =
@@ -308,6 +312,13 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     } catch (Exception ex) {
       log.error(ex.getMessage());
       throw new JsonSchemaValidationException(ex.getMessage());
+    }
+  }
+
+  @Override
+  public void validateYamlSchema(String accountId, String orgId, String projectId, String yaml) {
+    if (pmsFeatureFlagHelper.isEnabled(accountId, FeatureName.NG_SCHEMA_VALIDATION)) {
+      validateYamlSchema(orgId, projectId, yaml);
     }
   }
 

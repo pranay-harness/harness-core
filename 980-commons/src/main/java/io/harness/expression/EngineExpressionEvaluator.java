@@ -47,9 +47,9 @@ public class EngineExpressionEvaluator {
   public static final String EXPR_END_ESC = ">";
   public static final String HARNESS_INTERNAL_VARIABLE_PREFIX = "__HVAR_";
 
-  private static final Pattern VARIABLE_PATTERN = Pattern.compile(EXPR_START_ESC + "[^{}<>]*" + EXPR_END_ESC);
+  private static final Pattern VARIABLE_PATTERN = Pattern.compile(EXPR_START_ESC + "[^<>]*" + EXPR_END_ESC);
   private static final Pattern SECRET_VARIABLE_PATTERN =
-      Pattern.compile(EXPR_START_ESC + "secret(Manager|Delegate)\\.[^{}<>]*" + EXPR_END_ESC);
+      Pattern.compile(EXPR_START_ESC + "secret(Manager|Delegate)\\.[^<>]*" + EXPR_END_ESC);
   private static final Pattern VALID_VARIABLE_FIELD_NAME_PATTERN = Pattern.compile("^[a-zA-Z_][a-zA-Z_0-9]*$");
   private static final Pattern ALIAS_NAME_PATTERN = Pattern.compile("^[a-zA-Z_][a-zA-Z_0-9]*$");
 

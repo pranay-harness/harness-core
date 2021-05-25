@@ -7,6 +7,7 @@ import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
@@ -23,7 +24,7 @@ import lombok.Value;
 @Value
 @Builder
 public class PmsSdkConfiguration {
-  @Builder.Default DeployMode deploymentMode = DeployMode.LOCAL;
+  @Builder.Default SdkDeployMode deploymentMode = SdkDeployMode.LOCAL;
   String serviceName;
   MongoConfig mongoConfig;
   GrpcServerConfig grpcServerConfig;
@@ -35,14 +36,4 @@ public class PmsSdkConfiguration {
   Map<FacilitatorType, Class<? extends Facilitator>> engineFacilitators;
   Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap;
   Class<? extends ExecutionSummaryModuleInfoProvider> executionSummaryModuleInfoProviderClass;
-
-  public enum DeployMode {
-    LOCAL,
-    REMOTE,
-    REMOTE_IN_PROCESS;
-
-    public boolean isNonLocal() {
-      return this != LOCAL;
-    }
-  }
 }

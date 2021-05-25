@@ -687,7 +687,7 @@
             "$ref": "#/definitions/cvng/StepSpecType"
           }, {
             "type": "object",
-            "required": [ "approvalCriteria", "connectorRef", "issueKey", "rejectionCriteria" ],
+            "required": [ "approvalCriteria", "connectorRef", "issueKey" ],
             "properties": {
               "approvalCriteria": {
                 "$ref": "#/definitions/cvng/CriteriaSpecWrapper"

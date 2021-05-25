@@ -78,6 +78,8 @@ public enum ErrorCode {
 
   INVALID_KEY("Invalid key"),
 
+  INVALID_CONNECTOR_TYPE,
+
   INVALID_KEYPATH,
 
   INVALID_VARIABLE,
@@ -258,6 +260,8 @@ public enum ErrorCode {
   IMAGE_NOT_FOUND,
 
   IMAGE_TAG_NOT_FOUND,
+
+  DELEGATE_NOT_AVAILABLE,
 
   INVALID_YAML_PAYLOAD,
 

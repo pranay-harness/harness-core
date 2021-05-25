@@ -308,7 +308,7 @@ public class InstanceBillingDataTaskletTest extends CategoryTest {
     when(customBillingMetaDataService.getAwsDataSetId(ACCOUNT_ID)).thenReturn("AWS_DATA_SETID");
     when(utilizationDataService.getUtilizationDataForInstances(any(), any(), any(), any(), any(), any()))
         .thenReturn(utilizationDataForInstances);
-    when(billingCalculationService.getInstanceBillingAmount(any(), any(), any(), any()))
+    when(billingCalculationService.getInstanceBillingAmount(any(), any(), any(), any(), any()))
         .thenReturn(new BillingData(BillingAmountBreakup.builder().billingAmount(BigDecimal.ONE).build(),
             new IdleCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO),
             new SystemCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO), USAGE_DURATION_SECONDS,

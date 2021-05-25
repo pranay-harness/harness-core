@@ -19,8 +19,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,8 +40,21 @@ public class BillingCalculationService {
     this.instancePricingStrategyContext = instancePricingStrategyContext;
   }
 
-  public BillingData getInstanceBillingAmount(
-      InstanceData instanceData, UtilizationData utilizationData, Instant startTime, Instant endTime) {
+  public String getInstanceClusterIdKey(String instanceId, String clusterId) {
+    return String.format("%s:%s", instanceId, clusterId);
+  }
+
+  public Map<String, Double> getInstanceActiveSeconds(
+      List<InstanceData> instanceDataList, Instant startTime, Instant endTime) {
+    return instanceDataList.stream().collect(Collectors.toMap(instanceData
+        -> getInstanceClusterIdKey(instanceData.getInstanceId(), instanceData.getClusterId()),
+        instanceData
+        -> getInstanceActiveSeconds(instanceData, startTime, endTime),
+        (existing, replacement) -> existing));
+  }
+
+  public BillingData getInstanceBillingAmount(InstanceData instanceData, UtilizationData utilizationData,
+      Double parentInstanceActiveSecond, Instant startTime, Instant endTime) {
     double instanceActiveSeconds = getInstanceActiveSeconds(instanceData, startTime, endTime);
     if (instanceActiveSeconds == 0) {
       return new BillingData(BillingAmountBreakup.builder()
@@ -52,18 +67,23 @@ public class BillingCalculationService {
           new SystemCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO), 0, 0, 0, 0, 0,
           PricingSource.PUBLIC_API);
     }
+    if (null == parentInstanceActiveSecond || parentInstanceActiveSecond == 0) {
+      parentInstanceActiveSecond = instanceActiveSeconds;
+    }
 
-    PricingData pricingData = getPricingData(instanceData, startTime, endTime, instanceActiveSeconds);
+    PricingData pricingData =
+        getPricingData(instanceData, startTime, endTime, instanceActiveSeconds, parentInstanceActiveSecond);
 
     return getBillingAmount(instanceData, utilizationData, pricingData, instanceActiveSeconds);
   }
 
-  private PricingData getPricingData(
-      InstanceData instanceData, Instant startTime, Instant endTime, double instanceActiveSeconds) {
+  private PricingData getPricingData(InstanceData instanceData, Instant startTime, Instant endTime,
+      double instanceActiveSeconds, double parentInstanceActiveSecond) {
     InstancePricingStrategy instancePricingStrategy =
         instancePricingStrategyContext.getInstancePricingStrategy(instanceData.getInstanceType());
 
-    return instancePricingStrategy.getPricePerHour(instanceData, startTime, endTime, instanceActiveSeconds);
+    return instancePricingStrategy.getPricePerHour(
+        instanceData, startTime, endTime, instanceActiveSeconds, parentInstanceActiveSecond);
   }
 
   BillingData getBillingAmount(InstanceData instanceData, UtilizationData utilizationData, PricingData pricingData,

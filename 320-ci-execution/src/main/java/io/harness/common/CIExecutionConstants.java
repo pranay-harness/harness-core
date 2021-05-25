@@ -32,6 +32,7 @@ public class CIExecutionConstants {
   public static final Integer GIT_CLONE_DEPTH = 50;
   public static final Integer GIT_CLONE_MANUAL_DEPTH = 1;
   public static final String GIT_CLONE_DEPTH_ATTRIBUTE = "depth";
+  public static final String GIT_SSL_NO_VERIFY = "GIT_SSL_NO_VERIFY";
   public static final String GIT_URL_SUFFIX = ".git";
   public static final String PATH_SEPARATOR = "/";
 
