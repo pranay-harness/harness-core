@@ -142,6 +142,7 @@ import io.harness.delegate.task.scm.ScmDelegateClientImpl;
 import io.harness.delegate.task.scm.ScmGitFileTask;
 import io.harness.delegate.task.scm.ScmGitPRTask;
 import io.harness.delegate.task.scm.ScmGitRefTask;
+import io.harness.delegate.task.scm.ScmGitWebhookTask;
 import io.harness.delegate.task.scm.ScmPathFilterEvaluationTask;
 import io.harness.delegate.task.scm.ScmPushTask;
 import io.harness.delegate.task.shell.ShellScriptTaskNG;
@@ -1386,6 +1387,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.SCM_GIT_REF_TASK).toInstance(ScmGitRefTask.class);
     mapBinder.addBinding(TaskType.SCM_GIT_FILE_TASK).toInstance(ScmGitFileTask.class);
     mapBinder.addBinding(TaskType.SCM_PULL_REQUEST_TASK).toInstance(ScmGitPRTask.class);
+    mapBinder.addBinding(TaskType.SCM_GIT_WEBHOOK_TASK).toInstance(ScmGitWebhookTask.class);
   }
 
   private void registerSecretManagementBindings() {

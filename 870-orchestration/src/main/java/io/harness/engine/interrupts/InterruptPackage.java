@@ -3,7 +3,7 @@ package io.harness.engine.interrupts;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.contracts.advisers.InterruptConfig;
+import io.harness.pms.contracts.interrupts.InterruptConfig;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 

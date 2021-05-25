@@ -148,6 +148,42 @@ public class PipelineRbacHelperTest extends CategoryTest {
         .checkForAccess(
             Mockito.eq(Principal.of(io.harness.accesscontrol.principals.PrincipalType.USER, "princ")), anyList());
   }
+
+  // NOTE: Order matters for this test
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void throwAccessDeniedErrorWithIdentifier() {
+    List<AccessControlDTO> accessControlDTOS = new ArrayList<>();
+    accessControlDTOS.add(AccessControlDTO.builder()
+                              .permitted(true)
+                              .permission("core_connector_access")
+                              .resourceType("Connectors")
+                              .build());
+    accessControlDTOS.add(AccessControlDTO.builder()
+                              .permitted(false)
+                              .permission("core_connector_access")
+                              .resourceType("Connectors")
+                              .resourceIdentifier("ri")
+                              .build());
+    accessControlDTOS.add(AccessControlDTO.builder()
+                              .permitted(false)
+                              .permission("core_connector_access")
+                              .resourceType("Connectors")
+                              .resourceIdentifier("ri")
+                              .build());
+
+    accessControlDTOS.add(
+        AccessControlDTO.builder().permitted(false).permission("core_service_access").resourceType("Service").build());
+
+    assertThatThrownBy(() -> pipelineRbacHelper.throwAccessDeniedError(accessControlDTOS))
+        .isInstanceOf(AccessDeniedException.class);
+    assertThatThrownBy(() -> pipelineRbacHelper.throwAccessDeniedError(accessControlDTOS))
+        .hasMessage("For Connectors, these permissions are not there: [core_connector_access].\n"
+            + "For Connectors with identifier ri, these permissions are not there: [core_connector_access, core_connector_access].\n"
+            + "For Service, these permissions are not there: [core_service_access].\n");
+  }
+
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)

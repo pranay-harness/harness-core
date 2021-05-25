@@ -16,4 +16,6 @@ public class NGServiceConstants {
   public static final String TIME_ENTITY = "time_entity";
   public static final String NUMBER_OF_RECORDS = "numberOfRecords";
   public static final String BUCKET_SIZE_IN_DAYS = "bucketSizeInDays";
+  public static final String PIPELINE_EXECUTION_ID = "pipeline_execution_summary_cd_id";
+  public static final String ENVIRONMENT_TYPE = "environmentType";
 }

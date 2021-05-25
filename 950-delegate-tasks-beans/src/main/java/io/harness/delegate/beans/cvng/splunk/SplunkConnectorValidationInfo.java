@@ -1,7 +1,7 @@
-package io.harness.cvng.beans.splunk;
+package io.harness.delegate.beans.cvng.splunk;
 
-import io.harness.cvng.beans.ConnectorValidationInfo;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
+import io.harness.delegate.beans.cvng.ConnectorValidationInfo;
 
 import java.util.HashMap;
 import java.util.Map;

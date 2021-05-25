@@ -1,4 +1,4 @@
-package io.harness.cvng.beans.datadog;
+package io.harness.delegate.beans.cvng.datadog;
 
 import io.harness.delegate.beans.connector.datadog.DatadogConnectorDTO;
 

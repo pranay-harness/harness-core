@@ -6,10 +6,13 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitFileDetails;
 import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.beans.gitsync.GitPRCreateRequest;
+import io.harness.beans.gitsync.GitWebhookDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
+import io.harness.product.ci.scm.proto.CreateWebhookResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
+import io.harness.product.ci.scm.proto.DeleteWebhookResponse;
 import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.product.ci.scm.proto.FindFilesInBranchResponse;
@@ -18,6 +21,7 @@ import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
 import io.harness.product.ci.scm.proto.IsLatestFileResponse;
 import io.harness.product.ci.scm.proto.ListBranchesResponse;
 import io.harness.product.ci.scm.proto.ListCommitsResponse;
+import io.harness.product.ci.scm.proto.ListWebhooksResponse;
 import io.harness.product.ci.scm.proto.UpdateFileResponse;
 
 import java.util.List;
@@ -55,4 +59,12 @@ public interface ScmClient {
   void createNewBranch(ScmConnector scmConnector, String branch, String defaultBranchName);
 
   CreatePRResponse createPullRequest(ScmConnector scmConnector, GitPRCreateRequest gitPRCreateRequest);
+
+  CreateWebhookResponse createWebhook(ScmConnector scmConnector, GitWebhookDetails gitWebhookDetails);
+
+  DeleteWebhookResponse deleteWebhook(ScmConnector scmConnector, String id);
+
+  ListWebhooksResponse listWebhook(ScmConnector scmConnector);
+
+  CreateWebhookResponse upsertWebhook(ScmConnector scmConnector, GitWebhookDetails gitWebhookDetails);
 }

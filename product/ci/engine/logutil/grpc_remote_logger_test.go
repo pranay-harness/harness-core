@@ -3,6 +3,7 @@ package logutil
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -18,6 +19,7 @@ import (
 // This type implements a lite engine gRPC client to track ops done on it
 type logProxyClient struct {
 	ops []string
+	wg  sync.WaitGroup
 	err error // if created with error, return error
 }
 
@@ -37,6 +39,7 @@ func (lc *logProxyUploadUsingLinkClient) CloseAndRecv() (*pb.UploadUsingLinkResp
 
 func (lpc *logProxyClient) Open(ctx context.Context, in *pb.OpenRequest, opts ...grpc.CallOption) (*pb.OpenResponse, error) {
 	lpc.ops = append(lpc.ops, "open")
+	lpc.wg.Done() // Record an open call
 	return &pb.OpenResponse{}, lpc.err
 }
 
@@ -76,6 +79,7 @@ func Test_GetGrpcRemoteLogger(t *testing.T) {
 		newLogProxyClient = oldLogProxyClient
 	}()
 	mGrpcClient := NewMockGrpcLogProxyClient(nil)
+	mGrpcClient.wg.Add(1)
 	mEngineClient := mclient.NewMockLogProxyClient(ctrl)
 	mEngineClient.EXPECT().Client().Return(mGrpcClient)
 
@@ -84,6 +88,8 @@ func Test_GetGrpcRemoteLogger(t *testing.T) {
 	}
 	key := "foo:test"
 	_, err := GetGrpcRemoteLogger(key)
+
+	mGrpcClient.wg.Wait() // Wait for the open call
 
 	assert.Equal(t, err, nil)
 	assert.Equal(t, len(mGrpcClient.ops), 1)
@@ -99,6 +105,7 @@ func Test_GetGrpcRemoteLogger_OpenFailure(t *testing.T) {
 		newLogProxyClient = oldEngineClient
 	}()
 	mGrpcClient := NewMockGrpcLogProxyClient(errors.New("failure"))
+	mGrpcClient.wg.Add(1)
 	mEngineClient := mclient.NewMockLogProxyClient(ctrl)
 	mEngineClient.EXPECT().Client().Return(mGrpcClient)
 	newLogProxyClient = func(port uint, log *zap.SugaredLogger) (grpcclient.LogProxyClient, error) {
@@ -106,6 +113,8 @@ func Test_GetGrpcRemoteLogger_OpenFailure(t *testing.T) {
 	}
 	key := "foo:test"
 	_, err := GetGrpcRemoteLogger(key)
+
+	mGrpcClient.wg.Wait() // Wait for the open call
 
 	// Failure of opening the stream should not error out the logger
 	assert.Nil(t, err)

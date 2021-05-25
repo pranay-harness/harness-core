@@ -19,7 +19,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public interface InviteService {
   InviteOperationResponse create(Invite invite);
 
-  Optional<Invite> getInvite(String inviteId);
+  Optional<Invite> getInvite(String inviteId, boolean allowDeleted);
 
   PageResponse<Invite> getInvites(Criteria criteria, PageRequest pageRequest);
 
@@ -34,7 +34,7 @@ public interface InviteService {
 
   Optional<Invite> deleteInvite(String inviteId);
 
-  Optional<Invite> getInviteFromToken(String jwtToken);
+  Optional<Invite> getInviteFromToken(String jwtToken, boolean allowDeleted);
 
   boolean deleteInvite(String accountIdentifier, String orgIdentifier, String projectIdentifier, String emailId);
 

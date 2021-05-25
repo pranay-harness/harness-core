@@ -85,8 +85,8 @@ public class PipelineExecuteHelper {
   }
 
   public PlanExecutionResponseDto runPipelineWithInputSetReferencesList(String accountId, String orgIdentifier,
-      String projectIdentifier, String pipelineIdentifier, List<String> inputSetReferences,
-      ExecutionTriggerInfo triggerInfo) throws IOException {
+      String projectIdentifier, String pipelineIdentifier, List<String> inputSetReferences, String pipelineBranch,
+      String pipelineRepoID, ExecutionTriggerInfo triggerInfo) throws IOException {
     Optional<PipelineEntity> pipelineEntity =
         pmsPipelineService.incrementRunSequence(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
     if (!pipelineEntity.isPresent()) {
@@ -97,8 +97,8 @@ public class PipelineExecuteHelper {
                                                              .setExecutionUuid(generateUuid())
                                                              .setTriggerInfo(triggerInfo)
                                                              .setRunSequence(pipelineEntity.get().getRunSequence());
-    String mergedRuntimeInputYaml = validateAndMergeHelper.getMergeInputSetFromPipelineTemplate(
-        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences);
+    String mergedRuntimeInputYaml = validateAndMergeHelper.getMergeInputSetFromPipelineTemplate(accountId,
+        orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences, pipelineBranch, pipelineRepoID);
     String pipelineYaml =
         MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), mergedRuntimeInputYaml, true);
 

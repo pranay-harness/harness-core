@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.interrupts;
+
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+
+import "io/harness/pms/contracts/interrupts/interrupt_config.proto";
+import "io/harness/pms/contracts/interrupts/interrupt_type.proto";
+
+message InterruptEffectProto {
+  string interruptId = 1;
+  google.protobuf.Timestamp tookEffectAt = 2;
+  interrupts.InterruptType interruptType = 3;
+  InterruptConfig interruptConfig = 4;
+}

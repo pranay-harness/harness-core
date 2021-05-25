@@ -1,16 +1,16 @@
-package io.harness.cvng.beans;
+package io.harness.delegate.beans.cvng;
 
-import io.harness.cvng.beans.appd.AppDynamicsConnectorValidationInfo;
-import io.harness.cvng.beans.datadog.DatadogConnectorValidationInfo;
-import io.harness.cvng.beans.newrelic.NewRelicConnectorValidationInfo;
-import io.harness.cvng.beans.prometheus.PrometheusConnectorValidationInfo;
-import io.harness.cvng.beans.splunk.SplunkConnectorValidationInfo;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.delegate.beans.connector.datadog.DatadogConnectorDTO;
 import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
 import io.harness.delegate.beans.connector.prometheusconnector.PrometheusConnectorDTO;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
+import io.harness.delegate.beans.cvng.appd.AppDynamicsConnectorValidationInfo;
+import io.harness.delegate.beans.cvng.datadog.DatadogConnectorValidationInfo;
+import io.harness.delegate.beans.cvng.newrelic.NewRelicConnectorValidationInfo;
+import io.harness.delegate.beans.cvng.prometheus.PrometheusConnectorValidationInfo;
+import io.harness.delegate.beans.cvng.splunk.SplunkConnectorValidationInfo;
 
 import com.google.common.io.Resources;
 import java.io.IOException;

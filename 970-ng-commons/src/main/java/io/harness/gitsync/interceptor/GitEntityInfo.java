@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.Wither;
 
 @Getter
 @Builder
@@ -25,6 +26,6 @@ public class GitEntityInfo {
   String lastObjectId; // required in case of update file
   boolean isNewBranch;
   boolean isSyncFromGit;
-  boolean findDefaultFromOtherBranches;
+  @Wither boolean findDefaultFromOtherBranches;
   String baseBranch;
 }

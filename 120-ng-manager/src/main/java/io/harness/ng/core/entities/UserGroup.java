@@ -13,6 +13,8 @@ import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.PersistentEntity;
 
+import software.wings.beans.sso.SSOType;
+
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -56,6 +58,13 @@ public class UserGroup implements PersistentEntity, NGAccountAccess {
   @EntityIdentifier(allowBlank = true) String orgIdentifier;
   @EntityIdentifier(allowBlank = true) String projectIdentifier;
   @EntityIdentifier String identifier;
+
+  private boolean isSsoLinked;
+  private SSOType linkedSsoType;
+  private String linkedSsoId;
+  private String linkedSsoDisplayName;
+  private String ssoGroupId;
+  private String ssoGroupName;
 
   @NGEntityName String name;
   @NotNull List<String> users;
