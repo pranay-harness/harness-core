@@ -5,17 +5,14 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
-import io.harness.ng.core.invites.entities.Invite;
-import io.harness.ng.core.user.entities.UserProjectMap;
+import io.harness.ng.core.user.entities.UserMembership;
 
 import java.util.Set;
-
 @OwnedBy(PL)
-public class InvitesMorphiaRegistrar implements MorphiaRegistrar {
+public class NgUserMembershipMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
-    set.add(Invite.class);
-    set.add(UserProjectMap.class);
+    set.add(UserMembership.class);
   }
 
   @Override

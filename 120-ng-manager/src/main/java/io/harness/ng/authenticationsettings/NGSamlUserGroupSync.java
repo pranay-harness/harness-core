@@ -5,8 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 import io.harness.ng.core.api.UserGroupService;
-import io.harness.ng.core.entities.UserGroup;
 import io.harness.ng.core.user.UserInfo;
+import io.harness.ng.core.user.entities.UserGroup;
 import io.harness.ng.core.user.service.NgUserService;
 
 import software.wings.security.authentication.SamlUserAuthorization;
