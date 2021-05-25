@@ -64,16 +64,18 @@ import org.cloudfoundry.operations.routes.Routes;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @OwnedBy(HarnessTeam.CDP)
+@RunWith(MockitoJUnitRunner.class)
 public class CfSdkClientImplTest extends CategoryTest {
   // cfSdkClient
   @Mock private CloudFoundryOperationsWrapper wrapper;
@@ -86,15 +88,14 @@ public class CfSdkClientImplTest extends CategoryTest {
   @Mock private LogCallback logCallback;
   @Spy private CfSdkClientImpl cfSdkClient;
 
-  // mockedSdkClient
+  // spyCfSdkClient
   private final CloudFoundryOperationsProvider cloudFoundryOperationsProvider = new CloudFoundryOperationsProvider();
   private final ConnectionContextProvider connectionContextProvider = new ConnectionContextProvider();
   private final CloudFoundryClientProvider cloudFoundryClientProvider = new CloudFoundryClientProvider();
-  @Spy private CfSdkClientImpl mockedSdkClient;
+  @Spy private CfSdkClientImpl spyCfSdkClient;
 
   @Before
   public void setupMocks() throws Exception {
-    MockitoAnnotations.initMocks(this);
     // cfSdkClient
     when(wrapper.getCloudFoundryOperations()).thenReturn(operations);
     when(operations.applications()).thenReturn(applications);
@@ -102,10 +103,10 @@ public class CfSdkClientImplTest extends CategoryTest {
     doReturn(wrapper).when(cloudFoundryOperationsProviderMock).getCloudFoundryOperationsWrapper(any());
     on(cfSdkClient).set("cloudFoundryOperationsProvider", cloudFoundryOperationsProviderMock);
 
-    // mockedSdkClient
+    // spyCfSdkClient
     on(cloudFoundryOperationsProvider).set("connectionContextProvider", connectionContextProvider);
     on(cloudFoundryOperationsProvider).set("cloudFoundryClientProvider", cloudFoundryClientProvider);
-    on(mockedSdkClient).set("cloudFoundryOperationsProvider", cloudFoundryOperationsProvider);
+    on(spyCfSdkClient).set("cloudFoundryOperationsProvider", cloudFoundryOperationsProvider);
 
     clearProperties();
   }
@@ -331,7 +332,7 @@ public class CfSdkClientImplTest extends CategoryTest {
     cfRequestConfig.setEndpointUrl("api.run.pivotal.io");
 
     try {
-      mockedSdkClient.getOrganizations(cfRequestConfig);
+      spyCfSdkClient.getOrganizations(cfRequestConfig);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
@@ -349,7 +350,7 @@ public class CfSdkClientImplTest extends CategoryTest {
     cfRequestConfig.setEndpointUrl("api.run.pivotal.io");
 
     try {
-      mockedSdkClient.getApplicationByName(cfRequestConfig);
+      spyCfSdkClient.getApplicationByName(cfRequestConfig);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
@@ -368,7 +369,7 @@ public class CfSdkClientImplTest extends CategoryTest {
     cfRequestConfig.setApplicationName("app");
 
     try {
-      mockedSdkClient.getApplicationEnvironmentsByName(cfRequestConfig);
+      spyCfSdkClient.getApplicationEnvironmentsByName(cfRequestConfig);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e instanceof PivotalClientApiException).isTrue();
@@ -386,7 +387,7 @@ public class CfSdkClientImplTest extends CategoryTest {
     cfRequestConfig.setEndpointUrl("api.run.pivotal.io");
 
     try {
-      mockedSdkClient.getRouteMap(cfRequestConfig, "qa.harness.io/api");
+      spyCfSdkClient.getRouteMap(cfRequestConfig, "qa.harness.io/api");
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
@@ -405,7 +406,7 @@ public class CfSdkClientImplTest extends CategoryTest {
     cfRequestConfig.setEndpointUrl("api.run.pivotal.io");
 
     try {
-      mockedSdkClient.getApplications(cfRequestConfig);
+      spyCfSdkClient.getApplications(cfRequestConfig);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage()).isEqualTo("Exception occurred while fetching Applications, Error: No space targeted");
@@ -422,7 +423,7 @@ public class CfSdkClientImplTest extends CategoryTest {
     cfRequestConfig.setEndpointUrl("api.run.pivotal.io");
 
     try {
-      mockedSdkClient.getSpacesForOrganization(cfRequestConfig);
+      spyCfSdkClient.getSpacesForOrganization(cfRequestConfig);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
@@ -440,7 +441,7 @@ public class CfSdkClientImplTest extends CategoryTest {
     cfRequestConfig.setEndpointUrl("api.run.pivotal.io");
 
     try {
-      mockedSdkClient.deleteApplication(cfRequestConfig);
+      spyCfSdkClient.deleteApplication(cfRequestConfig);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
@@ -458,7 +459,7 @@ public class CfSdkClientImplTest extends CategoryTest {
     cfRequestConfig.setEndpointUrl("api.run.pivotal.io");
 
     try {
-      mockedSdkClient.stopApplication(cfRequestConfig);
+      spyCfSdkClient.stopApplication(cfRequestConfig);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
@@ -476,7 +477,7 @@ public class CfSdkClientImplTest extends CategoryTest {
     cfRequestConfig.setEndpointUrl("api.run.pivotal.io");
 
     try {
-      mockedSdkClient.getTasks(cfRequestConfig);
+      spyCfSdkClient.getTasks(cfRequestConfig);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
@@ -494,7 +495,7 @@ public class CfSdkClientImplTest extends CategoryTest {
     cfRequestConfig.setEndpointUrl("api.run.pivotal.io");
 
     try {
-      mockedSdkClient.scaleApplications(cfRequestConfig);
+      spyCfSdkClient.scaleApplications(cfRequestConfig);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
@@ -512,7 +513,7 @@ public class CfSdkClientImplTest extends CategoryTest {
     cfRequestConfig.setEndpointUrl("api.run.pivotal.io");
 
     try {
-      mockedSdkClient.startApplication(cfRequestConfig);
+      spyCfSdkClient.startApplication(cfRequestConfig);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
@@ -532,7 +533,7 @@ public class CfSdkClientImplTest extends CategoryTest {
     Route route = Route.builder().application("app").host("stage").domain("harness.io").id("1").space("space").build();
 
     try {
-      mockedSdkClient.unmapRouteMapForApp(cfRequestConfig, route);
+      spyCfSdkClient.unmapRouteMapForApp(cfRequestConfig, route);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
@@ -552,7 +553,7 @@ public class CfSdkClientImplTest extends CategoryTest {
     Route route = Route.builder().application("app").host("stage").domain("harness.io").id("1").space("space").build();
 
     try {
-      mockedSdkClient.mapRouteMapForApp(cfRequestConfig, route);
+      spyCfSdkClient.mapRouteMapForApp(cfRequestConfig, route);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())
@@ -797,10 +798,10 @@ public class CfSdkClientImplTest extends CategoryTest {
     Route route = Route.builder().application("app").host("stage").domain("harness.io").id("1").space("space").build();
     List<String> routes = new ArrayList<>();
     String path1 = "stage.harness.io";
-    doReturn(asList(route)).when(mockedSdkClient).getRouteMapsByNames(anyList(), any());
+    doReturn(asList(route)).when(spyCfSdkClient).getRouteMapsByNames(anyList(), any());
 
     try {
-      mockedSdkClient.unmapRoutesForApplication(cfRequestConfig, routes);
+      spyCfSdkClient.unmapRoutesForApplication(cfRequestConfig, routes);
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage())

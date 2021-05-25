@@ -17,21 +17,16 @@ import java.time.Duration;
 import java.util.Optional;
 import org.cloudfoundry.reactor.ConnectionContext;
 import org.cloudfoundry.reactor.DefaultConnectionContext;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.MockitoAnnotations;
+import org.junit.runner.RunWith;
 import org.mockito.Spy;
+import org.mockito.runners.MockitoJUnitRunner;
 
 @OwnedBy(HarnessTeam.CDP)
+@RunWith(MockitoJUnitRunner.class)
 public class ConnectionContextProviderTest extends CategoryTest {
-  @InjectMocks @Spy private ConnectionContextProvider connectionContextProvider;
-
-  @Before
-  public void setupMocks() throws Exception {
-    MockitoAnnotations.initMocks(this);
-  }
+  @Spy private ConnectionContextProvider connectionContextProvider;
 
   @Test
   @Owner(developers = ADWAIT)

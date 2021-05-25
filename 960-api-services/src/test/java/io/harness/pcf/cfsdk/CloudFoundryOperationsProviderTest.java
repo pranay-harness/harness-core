@@ -22,25 +22,20 @@ import io.harness.rule.Owner;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.operations.DefaultCloudFoundryOperations;
 import org.cloudfoundry.reactor.ConnectionContext;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
+import org.mockito.runners.MockitoJUnitRunner;
 
 @OwnedBy(HarnessTeam.CDP)
+@RunWith(MockitoJUnitRunner.class)
 public class CloudFoundryOperationsProviderTest extends CategoryTest {
   @Mock private ConnectionContextProvider connectionContextProvider;
   @Mock private CloudFoundryClientProvider cloudFoundryClientProvider;
 
-  @InjectMocks @Spy private CloudFoundryOperationsProvider cloudFoundryOperationsProvider;
-
-  @Before
-  public void setupMocks() {
-    MockitoAnnotations.initMocks(this);
-  }
+  @InjectMocks private CloudFoundryOperationsProvider cloudFoundryOperationsProvider;
 
   @Test
   @Owner(developers = {ANSHUL, IVAN})

@@ -72,16 +72,18 @@ import org.cloudfoundry.operations.domains.Status;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.StartedProcess;
 
 @OwnedBy(HarnessTeam.CDP)
+@RunWith(MockitoJUnitRunner.class)
 public class CfCliClientImplTest extends CategoryTest {
   public static final String BIN_BASH = "/bin/bash";
   public static final String CF_COMMAND_FOR_APP_LOG_TAILING = "cf logs <APP_NAME>";
@@ -89,11 +91,11 @@ public class CfCliClientImplTest extends CategoryTest {
   public static final String APP_NAME = "APP_NAME";
   public static final String PATH = "path";
 
-  /// mockedSdkClient
+  // spyCfSdkClient
   private final CloudFoundryOperationsProvider cloudFoundryOperationsProvider = new CloudFoundryOperationsProvider();
   private final ConnectionContextProvider connectionContextProvider = new ConnectionContextProvider();
   private final CloudFoundryClientProvider cloudFoundryClientProvider = new CloudFoundryClientProvider();
-  @Mock private CfSdkClientImpl mockedSdkClient;
+  @Spy private CfSdkClientImpl spyCfSdkClient;
 
   // cfCliClient
   @Mock private LogCallback logCallback;
@@ -101,13 +103,13 @@ public class CfCliClientImplTest extends CategoryTest {
 
   @Before
   public void setUp() {
-    MockitoAnnotations.initMocks(this);
-
-    // mockedSdkClient
+    // spyCfSdkClient
     on(cloudFoundryOperationsProvider).set("connectionContextProvider", connectionContextProvider);
     on(cloudFoundryOperationsProvider).set("cloudFoundryClientProvider", cloudFoundryClientProvider);
-    on(mockedSdkClient).set("cloudFoundryOperationsProvider", cloudFoundryOperationsProvider);
-    on(cfCliClient).set("cfSdkClient", mockedSdkClient);
+    on(spyCfSdkClient).set("cloudFoundryOperationsProvider", cloudFoundryOperationsProvider);
+
+    // cfCliClient
+    on(cfCliClient).set("cfSdkClient", spyCfSdkClient);
 
     clearProperties();
   }
@@ -456,7 +458,7 @@ public class CfCliClientImplTest extends CategoryTest {
                                         .build();
     doReturn(true).when(cfCliClient).doLogin(any(), any(), anyString());
     List<Domain> domains = singletonList(Domain.builder().name("example.com").id("id").status(Status.OWNED).build());
-    doReturn(domains).when(mockedSdkClient).getAllDomainsForSpace(any());
+    doReturn(domains).when(spyCfSdkClient).getAllDomainsForSpace(any());
     Map<String, String> envMap = new HashMap<>();
     envMap.put("CF_HOME", "/cf/home");
     PcfRouteInfo info = PcfRouteInfo.builder()
