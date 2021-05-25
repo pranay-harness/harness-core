@@ -2,25 +2,24 @@ package io.harness.licensing.entities.modules;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.licensing.UpdateChannel;
 
-import java.util.List;
 import lombok.Builder;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Value;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.Persistent;
 import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(HarnessTeam.GTM)
-@Value
+@Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "moduleLicenses", noClassnameStored = true)
 @Persistent
 @TypeAlias("io.harness.license.entities.module.CFModuleLicense")
 public class CFModuleLicense extends ModuleLicense {
-  private Integer numberOfUsers;
-  private Integer numberOfClientMAUs;
-  private List<UpdateChannel> updateChannels;
+  private Integer maxFeatureFlagUnit;
+  private Long maxClientMAUs;
+  private Integer totalFeatureFlagUnit;
+  private Long totalClientMAUs;
 }

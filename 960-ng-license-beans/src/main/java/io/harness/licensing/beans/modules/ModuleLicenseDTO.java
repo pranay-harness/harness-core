@@ -8,11 +8,13 @@ import io.harness.licensing.Edition;
 import io.harness.licensing.LicenseStatus;
 import io.harness.licensing.LicenseType;
 import io.harness.licensing.ModuleType;
+import io.harness.licensing.beans.transactions.LicenseTransactionDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -42,9 +44,9 @@ public abstract class ModuleLicenseDTO {
   ModuleType moduleType;
   Edition edition;
   LicenseType licenseType;
-  long startTime;
-  long expiryTime;
   LicenseStatus status;
+  long expiryTime;
+  List<LicenseTransactionDTO> transactions;
   Long createdAt;
   Long lastModifiedAt;
 }

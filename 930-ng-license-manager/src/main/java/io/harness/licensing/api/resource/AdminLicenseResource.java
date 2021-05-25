@@ -2,9 +2,8 @@ package io.harness.licensing.api.resource;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.accesscontrol.AccountIdentifier;
-import io.harness.licensing.beans.modules.AccountLicensesDTO;
-import io.harness.licensing.beans.modules.ModuleLicenseDTO;
-import io.harness.licensing.services.LicenseService;
+import io.harness.licensing.beans.modules.AccountLicenseDTO;
+import io.harness.licensing.services.AccountLicenseService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -38,40 +37,41 @@ import javax.ws.rs.QueryParam;
 @NextGenManagerAuth
 public class AdminLicenseResource {
   private static final String MODULE_TYPE_KEY = "moduleType";
-  private final LicenseService licenseService;
+  private final AccountLicenseService licenseService;
 
   @Inject
-  public AdminLicenseResource(LicenseService licenseService) {
+  public AdminLicenseResource(AccountLicenseService licenseService) {
     this.licenseService = licenseService;
   }
 
   @GET
-  @Path("account")
+  @Path("{accountIdentifier}")
   @InternalApi
-  public ResponseDTO<AccountLicensesDTO> getAccountLicensesDTO(
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
+  public ResponseDTO<AccountLicenseDTO> getAccountLicensesDTO(
+      @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     // TODO change to Admin Auth when it's ready
-    AccountLicensesDTO accountLicenses = licenseService.getAccountLicense(accountIdentifier);
+    AccountLicenseDTO accountLicenses = licenseService.getAccountLicense(accountIdentifier);
     return ResponseDTO.newResponse(accountLicenses);
   }
 
   @POST
-  @Path("{identifier}")
   @InternalApi
-  public ResponseDTO<ModuleLicenseDTO> create(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @PathParam("identifier") String identifier, @NotNull @Valid ModuleLicenseDTO moduleLicenseDTO) {
+  public ResponseDTO<AccountLicenseDTO> create(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @Valid AccountLicenseDTO accountLicenseDTO) {
     // TODO change to Admin Auth when it's ready
-    ModuleLicenseDTO created = licenseService.createModuleLicense(moduleLicenseDTO);
+    AccountLicenseDTO created = licenseService.createAccountLicense(accountLicenseDTO);
     return ResponseDTO.newResponse(created);
   }
 
   @PUT
   @Path("{identifier}")
   @InternalApi
-  public ResponseDTO<ModuleLicenseDTO> update(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @PathParam("identifier") String identifier, @NotNull @Valid ModuleLicenseDTO moduleLicenseDTO) {
+  public ResponseDTO<AccountLicenseDTO> update(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @PathParam("identifier") String identifier, @NotNull @Valid AccountLicenseDTO accountLicenseDTO) {
     // TODO change to Admin Auth when it's ready
-    ModuleLicenseDTO updated = licenseService.updateModuleLicense(moduleLicenseDTO);
+    AccountLicenseDTO updated = licenseService.updateAccountLicense(accountLicenseDTO);
     return ResponseDTO.newResponse(updated);
   }
 }

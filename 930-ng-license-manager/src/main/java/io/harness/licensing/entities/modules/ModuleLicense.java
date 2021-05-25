@@ -9,6 +9,7 @@ import io.harness.licensing.Edition;
 import io.harness.licensing.LicenseStatus;
 import io.harness.licensing.LicenseType;
 import io.harness.licensing.ModuleType;
+import io.harness.licensing.entities.transactions.LicenseTransaction;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
@@ -45,13 +46,17 @@ public abstract class ModuleLicense implements PersistentEntity, NGAccountAccess
   @NotEmpty protected ModuleType moduleType;
   @NotEmpty protected Edition edition;
   @NotEmpty protected LicenseType licenseType;
-  @NotEmpty protected long startTime;
-  @NotEmpty protected long expiryTime;
   @NotEmpty protected LicenseStatus status;
+  @NotEmpty protected long expireTime;
+  protected List<LicenseTransaction> transactions;
   @CreatedBy protected EmbeddedUser createdBy;
   @LastModifiedBy protected EmbeddedUser lastUpdatedBy;
   @CreatedDate protected Long createdAt;
   @LastModifiedDate protected Long lastUpdatedAt;
+
+  public boolean isActive() {
+    return LicenseStatus.ACTIVE.equals(status);
+  }
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

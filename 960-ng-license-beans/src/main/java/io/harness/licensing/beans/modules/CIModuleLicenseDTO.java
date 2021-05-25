@@ -23,5 +23,6 @@ import lombok.experimental.SuperBuilder;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_NULL)
 public class CIModuleLicenseDTO extends ModuleLicenseDTO {
-  Integer numberOfCommitters;
+  Integer maxDevelopers;
+  Integer totalDevelopers;
 }

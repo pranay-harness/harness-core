@@ -4,13 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
+import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.licensing.LicenseStatus;
-import io.harness.licensing.LicenseTestBase;
 import io.harness.licensing.LicenseType;
 import io.harness.licensing.ModuleType;
-import io.harness.licensing.beans.modules.AccountLicensesDTO;
+import io.harness.licensing.beans.modules.AccountLicenseDTO;
 import io.harness.licensing.beans.modules.CIModuleLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.beans.modules.StartTrialRequestDTO;
@@ -27,31 +28,31 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
-public class LicenseResourceTest extends LicenseTestBase {
+public class LicenseResourceTest extends CategoryTest {
   @Mock LicenseService licenseService;
   @InjectMocks LicenseResource licenseResource;
   private ModuleLicenseDTO defaultModueLicenseDTO;
-  private AccountLicensesDTO defaultAccountLicensesDTO;
+  private AccountLicenseDTO defaultAccountLicensesDTO;
   private static final String ACCOUNT_IDENTIFIER = "account";
   private static final ModuleType DEFAULT_MODULE_TYPE = ModuleType.CI;
   private StartTrialRequestDTO startTrialRequestDTO;
 
   @Before
   public void setUp() {
+    initMocks(this);
     defaultModueLicenseDTO = CIModuleLicenseDTO.builder()
-                                 .numberOfCommitters(10)
+                                 .totalDevelopers(10)
+                                 .maxDevelopers(11)
                                  .id("id")
                                  .accountIdentifier(ACCOUNT_IDENTIFIER)
                                  .licenseType(LicenseType.TRIAL)
                                  .moduleType(DEFAULT_MODULE_TYPE)
                                  .status(LicenseStatus.ACTIVE)
-                                 .startTime(0)
-                                 .expiryTime(0)
                                  .createdAt(0L)
                                  .lastModifiedAt(0L)
                                  .build();
     defaultAccountLicensesDTO =
-        AccountLicensesDTO.builder()
+        AccountLicenseDTO.builder()
             .accountId(ACCOUNT_IDENTIFIER)
             .moduleLicenses(Collections.singletonMap(DEFAULT_MODULE_TYPE, defaultModueLicenseDTO))
             .build();
@@ -74,7 +75,7 @@ public class LicenseResourceTest extends LicenseTestBase {
   @Category(UnitTests.class)
   public void testGetAccountLicensesDTO() {
     doReturn(defaultAccountLicensesDTO).when(licenseService).getAccountLicense(ACCOUNT_IDENTIFIER);
-    ResponseDTO<AccountLicensesDTO> responseDTO = licenseResource.getAccountLicensesDTO(ACCOUNT_IDENTIFIER);
+    ResponseDTO<AccountLicenseDTO> responseDTO = licenseResource.getAccountLicensesDTO(ACCOUNT_IDENTIFIER);
     Mockito.verify(licenseService, times(1)).getAccountLicense(ACCOUNT_IDENTIFIER);
     assertThat(responseDTO.getData()).isNotNull();
     assertThat(responseDTO.getData().getModuleLicenses().get(ModuleType.CI)).isEqualTo(defaultModueLicenseDTO);

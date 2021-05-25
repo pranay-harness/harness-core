@@ -64,7 +64,8 @@ import io.harness.govern.ProviderModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.client.GrpcClientConfig;
-import io.harness.licensing.LicenseModule;
+import io.harness.licensing.AbstractLicenseModule;
+import io.harness.licensing.LicenseConfiguration;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
 import io.harness.logstreaming.LogStreamingServiceConfiguration;
@@ -499,14 +500,18 @@ public class NextGenModule extends AbstractModule {
         return appConfig.getSegmentConfiguration();
       }
     });
-
     install(new AbstractAccountModule() {
       @Override
       public AccountConfig accountConfiguration() {
         return appConfig.getAccountConfig();
       }
     });
-    install(LicenseModule.getInstance());
+    install(new AbstractLicenseModule() {
+      @Override
+      public LicenseConfiguration licenseConfiguration() {
+        return appConfig.getLicenseConfiguration();
+      }
+    });
     bind(AggregateUserService.class).to(AggregateUserServiceImpl.class);
     registerOutboxEventHandlers();
     bind(OutboxEventHandler.class).to(NextGenOutboxEventHandler.class);

@@ -3,9 +3,10 @@ package io.harness.licensing.mappers.modules;
 import static io.harness.rule.OwnerRule.ZHUO;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.licensing.LicenseTestBase;
 import io.harness.licensing.UpdateChannel;
 import io.harness.licensing.beans.modules.CFModuleLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
@@ -20,25 +21,30 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
-public class CFLicenseObjectMapperTest extends LicenseTestBase {
+public class CFLicenseObjectMapperTest extends CategoryTest {
   @InjectMocks CFLicenseObjectMapper objectMapper;
   private CFModuleLicense moduleLicense;
   private CFModuleLicenseDTO moduleLicenseDTO;
   private static final List<UpdateChannel> DEFAULT_CHANNELS = Lists.newArrayList(UpdateChannel.POLLING);
   private static final int DEFAULT_USER_NUMBER = 2;
-  private static final int DEFAULT_CLIENT_MAU = 5000;
+  private static final long DEFAULT_CLIENT_MAU = 5000;
+  private static final long START_TIME = 10;
+  private static final long EXPIRY_TIME = 11;
 
   @Before
   public void setUp() {
+    initMocks(this);
     moduleLicense = CFModuleLicense.builder()
-                        .updateChannels(DEFAULT_CHANNELS)
-                        .numberOfUsers(DEFAULT_USER_NUMBER)
-                        .numberOfClientMAUs(DEFAULT_CLIENT_MAU)
+                        .totalFeatureFlagUnit(DEFAULT_USER_NUMBER)
+                        .maxFeatureFlagUnit(DEFAULT_USER_NUMBER)
+                        .totalClientMAUs(DEFAULT_CLIENT_MAU)
+                        .maxClientMAUs(DEFAULT_CLIENT_MAU)
                         .build();
     moduleLicenseDTO = CFModuleLicenseDTO.builder()
-                           .updateChannels(DEFAULT_CHANNELS)
-                           .numberOfUsers(DEFAULT_USER_NUMBER)
-                           .numberOfClientMAUs(DEFAULT_CLIENT_MAU)
+                           .totalFeatureFlagUnit(DEFAULT_USER_NUMBER)
+                           .maxFeatureFlagUnit(DEFAULT_USER_NUMBER)
+                           .totalClientMAUs(DEFAULT_CLIENT_MAU)
+                           .maxClientMAUs(DEFAULT_CLIENT_MAU)
                            .build();
   }
 

@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.remote.client.NGRestUtils.getResponse;
 
 import io.harness.ccm.commons.dao.CEDataCleanupRequestDao;
 import io.harness.ccm.commons.entities.batch.CEDataCleanupRequest;
@@ -9,6 +10,8 @@ import io.harness.datahandler.models.AccountSummary;
 import io.harness.datahandler.models.FeatureFlagBO;
 import io.harness.datahandler.services.AdminAccountService;
 import io.harness.datahandler.services.AdminUserService;
+import io.harness.licensing.beans.modules.AccountLicenseDTO;
+import io.harness.licensing.remote.admin.AdminLicenseHttpClient;
 import io.harness.limits.ActionType;
 import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.impl.model.RateLimit;
@@ -51,11 +54,14 @@ import retrofit2.http.Body;
 public class AdminAccountResource {
   private AdminAccountService adminAccountService;
   private AdminUserService adminUserService;
+  private AdminLicenseHttpClient adminLicenseHttpClient;
 
   @Inject
-  public AdminAccountResource(AdminAccountService adminAccountService, AdminUserService adminUserService) {
+  public AdminAccountResource(AdminAccountService adminAccountService, AdminUserService adminUserService,
+      AdminLicenseHttpClient adminLicenseHttpClient) {
     this.adminAccountService = adminAccountService;
     this.adminUserService = adminUserService;
+    this.adminLicenseHttpClient = adminLicenseHttpClient;
   }
 
   @Inject CEDataCleanupRequestDao ceDataCleanupRequestDao;
@@ -208,5 +214,26 @@ public class AdminAccountResource {
       companyNameUpdateStatus = adminAccountService.updateCompanyName(accountId, companyName);
     }
     return new RestResponse<>(accountNameUpdateSuccess && companyNameUpdateStatus);
+  }
+
+  @POST
+  @Path("{accountId}/ng/license")
+  public RestResponse<AccountLicenseDTO> createNgAccountLicense(
+      @PathParam("accountId") String accountId, @Body AccountLicenseDTO accountLicenseDTO) {
+    return new RestResponse<>(getResponse(adminLicenseHttpClient.createAccountLicense(accountId, accountLicenseDTO)));
+  }
+
+  @PUT
+  @Path("{accountId}/ng/license")
+  public RestResponse<AccountLicenseDTO> updateNgAccountLicense(
+      @PathParam("accountId") String accountId, @Body AccountLicenseDTO accountLicenseDTO) {
+    return new RestResponse<>(getResponse(
+        adminLicenseHttpClient.updateAccountLicense(accountLicenseDTO.getUuid(), accountId, accountLicenseDTO)));
+  }
+
+  @GET
+  @Path("{accountId}/ng/license")
+  public RestResponse<AccountLicenseDTO> getNgAccountLicense(@PathParam("accountId") String accountId) {
+    return new RestResponse<>(getResponse(adminLicenseHttpClient.getAccountLicense(accountId)));
   }
 }

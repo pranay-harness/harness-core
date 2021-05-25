@@ -24,5 +24,6 @@ import lombok.experimental.SuperBuilder;
 @JsonInclude(NON_NULL)
 public class CDModuleLicenseDTO extends ModuleLicenseDTO {
   Integer maxWorkLoads;
+  Integer totalWorkLoads;
   Integer deploymentsPerDay;
 }

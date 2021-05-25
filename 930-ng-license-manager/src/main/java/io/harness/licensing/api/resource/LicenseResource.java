@@ -7,13 +7,14 @@ import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
 import io.harness.licensing.ModuleType;
 import io.harness.licensing.accesscontrol.ResourceTypes;
-import io.harness.licensing.beans.modules.AccountLicensesDTO;
+import io.harness.licensing.beans.modules.AccountLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.beans.modules.StartTrialRequestDTO;
 import io.harness.licensing.services.LicenseService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.inject.Inject;
@@ -42,6 +43,7 @@ import retrofit2.http.Body;
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 @NextGenManagerAuth
+@Deprecated
 public class LicenseResource {
   private static final String MODULE_TYPE_KEY = "moduleType";
   private final LicenseService licenseService;
@@ -67,9 +69,9 @@ public class LicenseResource {
   @Path("account")
   @ApiOperation(value = "Gets All Module License Information in Account", nickname = "getAccountLicenses")
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
-  public ResponseDTO<AccountLicensesDTO> getAccountLicensesDTO(
+  public ResponseDTO<AccountLicenseDTO> getAccountLicensesDTO(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
-    AccountLicensesDTO accountLicenses = licenseService.getAccountLicense(accountIdentifier);
+    AccountLicenseDTO accountLicenses = licenseService.getAccountLicense(accountIdentifier);
     return ResponseDTO.newResponse(accountLicenses);
   }
 
@@ -91,5 +93,22 @@ public class LicenseResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @Valid @Body StartTrialRequestDTO startTrialRequestDTO) {
     return ResponseDTO.newResponse(licenseService.startTrialLicense(accountIdentifier, startTrialRequestDTO));
+  }
+
+  @GET
+  @Path("{accountId}/inactive-status")
+  @ApiOperation(value = "Deprecated Check All Inactive", nickname = "checkNGLicensesAllInactiveDeprecated")
+  @InternalApi
+  public ResponseDTO<Boolean> checkNGLicensesAllInactive(@PathParam("accountId") String accountId) {
+    return ResponseDTO.newResponse(licenseService.checkNGLicensesAllInactive(accountId));
+  }
+
+  @GET
+  @Path("{accountId}/soft-delete")
+  @ApiOperation(value = "Deprecated Soft Delete", nickname = "softDeleteDeprecated")
+  @InternalApi
+  public ResponseDTO<Boolean> softDelete(@PathParam("accountId") String accountId) {
+    licenseService.softDelete(accountId);
+    return ResponseDTO.newResponse(Boolean.TRUE);
   }
 }

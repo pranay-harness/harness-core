@@ -324,3 +324,7 @@ signupNotificationConfiguration:
       gcsFileName: "signup_confirmation.txt"
       templateId: "signup_confirmation"
   expireDurationInMinutes: 60
+
+licenseConfiguration:
+  accountLicenseCheckJobFrequencyInMinutes: 30
+

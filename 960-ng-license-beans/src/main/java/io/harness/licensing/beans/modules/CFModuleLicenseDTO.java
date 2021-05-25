@@ -4,11 +4,9 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.licensing.UpdateChannel;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import java.util.List;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -25,7 +23,8 @@ import lombok.experimental.SuperBuilder;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_NULL)
 public class CFModuleLicenseDTO extends ModuleLicenseDTO {
-  Integer numberOfUsers;
-  Integer numberOfClientMAUs;
-  List<UpdateChannel> updateChannels;
+  Integer maxFeatureFlagUnit;
+  Long maxClientMAUs;
+  Integer totalFeatureFlagUnit;
+  Long totalClientMAUs;
 }
