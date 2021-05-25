@@ -102,10 +102,6 @@ RUN cd /tmp \
     && cd / \
     && rm -rf /tmp/*
 
-RUN curl -fsSL https://get.docker.com/ | sh \
-    && yum -y install python36
-
-ENV python /usr/bin/python
-ENV PATH ${PATH}:/usr/bin/python
+RUN curl -fsSL https://get.docker.com/ | sh
 
 ENTRYPOINT ["jenkins-slave"]
