@@ -1361,6 +1361,13 @@ public class UserServiceImpl implements UserService {
     return wingsPersistence.createQuery(UserInvite.class).filter(UserInvite.UUID_KEY, inviteId).get();
   }
 
+  private UserInvite getInviteFromEmail(String accountId, String email) {
+    return wingsPersistence.createQuery(UserInvite.class)
+        .filter(UserInviteKeys.accountId, accountId)
+        .filter(UserInviteKeys.email, email)
+        .get();
+  }
+
   @Override
   public List<UserInvite> getInvitesFromAccountId(String accountId) {
     return wingsPersistence.createQuery(UserInvite.class).filter(UserInvite.ACCOUNT_ID_KEY2, accountId).asList();
@@ -2297,10 +2304,15 @@ public class UserServiceImpl implements UserService {
 
     users.forEach(user -> {
       Collection<UserGroup> userGroups = userUserGroupMap.get(user.getUuid());
-      if (isEmpty(userGroups)) {
-        user.setUserGroups(new ArrayList<>());
+      if (isUserInvitedToAccount(user, accountId)) {
+        user.setUserGroups(
+            userGroupService.getUserGroupSummary(getInviteFromEmail(accountId, user.getEmail()).getUserGroups()));
       } else {
-        user.setUserGroups(new ArrayList<>(userGroups));
+        if (isEmpty(userGroups)) {
+          user.setUserGroups(new ArrayList<>());
+        } else {
+          user.setUserGroups(new ArrayList<>(userGroups));
+        }
       }
     });
   }
@@ -3265,6 +3277,7 @@ public class UserServiceImpl implements UserService {
     if (loadUserGroups) {
       loadUserGroupsForUsers(userList, accountId);
     }
+
     return userList;
   }
 
