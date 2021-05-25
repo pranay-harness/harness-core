@@ -13,7 +13,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationVisualizationEventLogHandlerAsync;
 import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.delay.DelayEventListener;
-import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -41,11 +40,13 @@ import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.approval.ApprovalInstanceExpirationJob;
 import io.harness.pms.approval.ApprovalInstanceHandler;
 import io.harness.pms.event.PMSEventConsumerService;
+import io.harness.pms.event.PlanExecutionSummaryUpdateEventHandler;
 import io.harness.pms.exception.WingsExceptionMapper;
 import io.harness.pms.inputset.gitsync.InputSetEntityGitSyncHelper;
 import io.harness.pms.inputset.gitsync.InputSetYamlDTO;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.observers.InputSetsDeleteObserver;
+import io.harness.pms.orchestrationevent.OrchestrationEventLogPublisher;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntityCrudObserver;
 import io.harness.pms.pipeline.PipelineSetupUsageHelper;
@@ -277,15 +278,19 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         injector.getInstance(Key.get(PipelineExecutionSummaryDeleteObserver.class)));
     pmsPipelineService.getPipelineSubject().register(injector.getInstance(Key.get(InputSetsDeleteObserver.class)));
 
-    OrchestrationEventEmitter orchestrationEventEmitter =
-        injector.getInstance(Key.get(OrchestrationEventEmitter.class));
-    orchestrationEventEmitter.getOrchestrationEventLogSubjectSubject().register(
+    OrchestrationEventLogPublisher orchestrationEventLogPublisher =
+        injector.getInstance(Key.get(OrchestrationEventLogPublisher.class));
+    orchestrationEventLogPublisher.getOrchestrationEventLogSubjectSubject().register(
         injector.getInstance(Key.get(OrchestrationVisualizationEventLogHandlerAsync.class)));
 
     NodeExecutionServiceImpl nodeExecutionService =
         (NodeExecutionServiceImpl) injector.getInstance(Key.get(NodeExecutionService.class));
     nodeExecutionService.getStepStatusUpdateSubject().register(
         injector.getInstance(Key.get(PlanExecutionService.class)));
+    nodeExecutionService.getNodeExecutionUpdateSubject().register(
+        injector.getInstance(Key.get(PlanExecutionSummaryUpdateEventHandler.class)));
+    nodeExecutionService.getNodeExecutionUpdateSubject().register(
+        injector.getInstance(Key.get(OrchestrationEventLogPublisher.class)));
 
     SdkResponseEventListener sdkResponseEventListener = injector.getInstance(SdkResponseEventListener.class);
     sdkResponseEventListener.getQueueListenerObserverSubject().register(

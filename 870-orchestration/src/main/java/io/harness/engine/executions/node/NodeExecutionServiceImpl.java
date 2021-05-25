@@ -11,8 +11,10 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
+import io.harness.engine.interrupts.statusupdate.NodeExecutionUpdate;
 import io.harness.engine.interrupts.statusupdate.StepStatusUpdate;
 import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
+import io.harness.engine.utils.TransactionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.execution.NodeExecution;
@@ -49,8 +51,10 @@ import org.springframework.data.mongodb.core.query.Update;
 public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Inject private MongoTemplate mongoTemplate;
   @Inject private OrchestrationEventEmitter eventEmitter;
+  @Inject private TransactionUtils transactionUtils;
 
   @Getter private final Subject<StepStatusUpdate> stepStatusUpdateSubject = new Subject<>();
+  @Getter private final Subject<NodeExecutionUpdate> nodeExecutionUpdateSubject = new Subject<>();
 
   @Override
   public NodeExecution get(String nodeExecutionId) {
@@ -153,8 +157,8 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       throw new NodeExecutionUpdateFailedException(
           "Node Execution Cannot be updated with provided operations" + nodeExecutionId);
     }
-
-    emitEvent(updated, OrchestrationEventType.NODE_EXECUTION_UPDATE);
+    nodeExecutionUpdateSubject.fireInform(
+        (nodeExecutionUpdate, nodeExecution) -> nodeExecutionUpdate.onUpdate(, nodeExecution), updated);
     return updated;
   }
 
@@ -212,13 +216,17 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     if (updated == null) {
       log.warn("Cannot update execution status for the node {} with {}", nodeExecutionId, status);
     } else {
-      emitEvent(updated, OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE);
-      stepStatusUpdateSubject.fireInform(StepStatusUpdate::onStepStatusUpdate,
-          StepStatusUpdateInfo.builder()
-              .nodeExecutionId(updated.getUuid())
-              .planExecutionId(updated.getAmbiance().getPlanExecutionId())
-              .status(updated.getStatus())
-              .build());
+      transactionUtils.performTransaction(() -> {
+        emitEvent(updated, OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE);
+        stepStatusUpdateSubject.fireInform(StepStatusUpdate::onStepStatusUpdate,
+            StepStatusUpdateInfo.builder()
+                .nodeExecutionId(updated.getUuid())
+                .planExecutionId(updated.getAmbiance().getPlanExecutionId())
+                .status(updated.getStatus())
+                .build());
+        nodeExecutionUpdateSubject.fireInform(
+            NodeExecutionUpdate::onUpdate, OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE, updated);
+      });
     }
     return updated;
   }
