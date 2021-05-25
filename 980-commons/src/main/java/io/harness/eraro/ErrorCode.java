@@ -78,6 +78,8 @@ public enum ErrorCode {
 
   INVALID_KEY("Invalid key"),
 
+  INVALID_CONNECTOR_TYPE,
+
   INVALID_KEYPATH,
 
   INVALID_VARIABLE,
