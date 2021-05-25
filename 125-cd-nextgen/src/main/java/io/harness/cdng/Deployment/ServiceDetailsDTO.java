@@ -9,23 +9,21 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
 
-@OwnedBy(HarnessTeam.CDC)
+@OwnedBy(HarnessTeam.DX)
 @Value
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class WorkloadDeploymentInfo {
+public class ServiceDetailsDTO {
   String serviceName;
-  String serviceId;
-  LastWorkloadInfo lastExecuted;
+  String serviceIdentifier;
   List<String> deploymentTypeList;
   long totalDeployments;
   double totalDeploymentChangeRate;
-  double percentSuccess;
-  double rateSuccess;
+  double successRate;
+  double successRateChangeRate;
   double failureRate;
   double failureRateChangeRate;
   double frequency;
   double frequencyChangeRate;
-  String lastPipelineExecutionId;
-  List<WorkloadDateCountInfo> workload;
+  ServicePipelineInfo lastPipelineExecuted;
 }

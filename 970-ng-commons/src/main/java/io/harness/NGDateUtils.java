@@ -24,4 +24,12 @@ public class NGDateUtils {
   public static long getNumberOfDays(long start, long end) {
     return (end - start) / DAY_IN_MS + 1;
   }
+
+  public static long getStartTimeOfPreviousInterval(long epoch, long numberOfDays) {
+    return epoch - (numberOfDays * DAY_IN_MS);
+  }
+
+  public static long getEndTimeOfPreviousInterval(long epoch) {
+    return epoch - DAY_IN_MS;
+  }
 }
