@@ -1,30 +1,29 @@
-package io.harness.secretmanagerclient.services;
+package io.harness.secrets.services;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.remote.client.RestClientUtils.getResponse;
+import static io.harness.remote.client.NGRestUtils.getResponse;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
-import io.harness.remote.client.RestClientExecutor;
+import io.harness.remote.client.NGRestClientExecutor;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
-import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
+import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.List;
 
 @OwnedBy(PL)
 @Singleton
-public class SecretManagerClientServiceImpl implements SecretManagerClientService {
-  @Inject private RestClientExecutor restClientExecutor;
-  @Inject private SecretManagerClient secretManagerClient;
-
-  // TODO: improve the error messages(https://harness.atlassian.net/browse/CDNG-5674)
+public class NonPrivilegedSecretNGManagerClientServiceImpl implements SecretManagerClientService {
+  @Inject @Named("NON_PRIVILEGED") private SecretNGManagerClient secretManagerClient;
+  @Inject NGRestClientExecutor restClientExecutor;
   @Override
   public List<EncryptedDataDetail> getEncryptionDetails(NGAccess ngAccess, DecryptableEntity consumer) {
     BaseNGAccess baseNGAccess = BaseNGAccess.builder()
