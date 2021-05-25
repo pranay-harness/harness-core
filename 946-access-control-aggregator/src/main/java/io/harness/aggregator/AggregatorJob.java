@@ -22,6 +22,7 @@ import io.debezium.engine.ChangeEvent;
 import io.debezium.engine.DebeziumEngine;
 import io.debezium.engine.format.Json;
 import io.debezium.serde.DebeziumSerdes;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -135,65 +136,73 @@ public class AggregatorJob implements Runnable {
       try {
         Thread.sleep(30000);
       } catch (InterruptedException e) {
-        // ignore
+        Thread.currentThread().interrupt();
+        return;
       }
     }
 
     log.info("Acquired ACCESS_CONTROL_AGGREGATOR_LOCK lock, starting Debezium engine now...");
 
-    Map<String, ChangeConsumer<? extends AccessControlEntity>> collectionToConsumerMap = new HashMap<>();
-    Map<String, Deserializer<? extends AccessControlEntity>> collectionToDeserializerMap = new HashMap<>();
+    try {
+      Map<String, ChangeConsumer<? extends AccessControlEntity>> collectionToConsumerMap = new HashMap<>();
+      Map<String, Deserializer<? extends AccessControlEntity>> collectionToDeserializerMap = new HashMap<>();
 
-    collectionToConsumerMap.put(ROLE_ASSIGNMENTS, roleAssignmentChangeConsumer);
-    collectionToConsumerMap.put(ROLES, roleChangeConsumer);
-    collectionToConsumerMap.put(RESOURCE_GROUPS, resourceGroupChangeConsumer);
-    collectionToConsumerMap.put(USER_GROUPS, userGroupChangeConsumer);
+      collectionToConsumerMap.put(ROLE_ASSIGNMENTS, roleAssignmentChangeConsumer);
+      collectionToConsumerMap.put(ROLES, roleChangeConsumer);
+      collectionToConsumerMap.put(RESOURCE_GROUPS, resourceGroupChangeConsumer);
+      collectionToConsumerMap.put(USER_GROUPS, userGroupChangeConsumer);
 
-    // configuring id deserializer
-    Serde<String> idSerde = DebeziumSerdes.payloadJson(String.class);
-    idSerde.configure(Maps.newHashMap(ImmutableMap.of("from.field", "id")), true);
-    Deserializer<String> idDeserializer = idSerde.deserializer();
+      // configuring id deserializer
+      Serde<String> idSerde = DebeziumSerdes.payloadJson(String.class);
+      idSerde.configure(Maps.newHashMap(ImmutableMap.of("from.field", "id")), true);
+      Deserializer<String> idDeserializer = idSerde.deserializer();
 
-    Map<String, String> valueDeserializerConfig = Maps.newHashMap(ImmutableMap.of(UNKNOWN_PROPERTIES_IGNORED, "true"));
+      Map<String, String> valueDeserializerConfig =
+          Maps.newHashMap(ImmutableMap.of(UNKNOWN_PROPERTIES_IGNORED, "true"));
 
-    // configuring role assignment deserializer
-    Serde<RoleAssignmentDBO> roleAssignmentSerde = DebeziumSerdes.payloadJson(RoleAssignmentDBO.class);
-    roleAssignmentSerde.configure(valueDeserializerConfig, false);
-    collectionToDeserializerMap.put(ROLE_ASSIGNMENTS, roleAssignmentSerde.deserializer());
+      // configuring role assignment deserializer
+      Serde<RoleAssignmentDBO> roleAssignmentSerde = DebeziumSerdes.payloadJson(RoleAssignmentDBO.class);
+      roleAssignmentSerde.configure(valueDeserializerConfig, false);
+      collectionToDeserializerMap.put(ROLE_ASSIGNMENTS, roleAssignmentSerde.deserializer());
 
-    // configuring role deserializer
-    Serde<RoleDBO> roleSerde = DebeziumSerdes.payloadJson(RoleDBO.class);
-    roleSerde.configure(valueDeserializerConfig, false);
-    collectionToDeserializerMap.put(ROLES, roleSerde.deserializer());
+      // configuring role deserializer
+      Serde<RoleDBO> roleSerde = DebeziumSerdes.payloadJson(RoleDBO.class);
+      roleSerde.configure(valueDeserializerConfig, false);
+      collectionToDeserializerMap.put(ROLES, roleSerde.deserializer());
 
-    // configuring resource group deserializer
-    Serde<ResourceGroupDBO> resourceGroupSerde = DebeziumSerdes.payloadJson(ResourceGroupDBO.class);
-    resourceGroupSerde.configure(valueDeserializerConfig, false);
-    collectionToDeserializerMap.put(RESOURCE_GROUPS, resourceGroupSerde.deserializer());
+      // configuring resource group deserializer
+      Serde<ResourceGroupDBO> resourceGroupSerde = DebeziumSerdes.payloadJson(ResourceGroupDBO.class);
+      resourceGroupSerde.configure(valueDeserializerConfig, false);
+      collectionToDeserializerMap.put(RESOURCE_GROUPS, resourceGroupSerde.deserializer());
 
-    // configuring resource group deserializer
-    Serde<UserGroupDBO> userGroupSerde = DebeziumSerdes.payloadJson(UserGroupDBO.class);
-    userGroupSerde.configure(valueDeserializerConfig, false);
-    collectionToDeserializerMap.put(USER_GROUPS, userGroupSerde.deserializer());
+      // configuring resource group deserializer
+      Serde<UserGroupDBO> userGroupSerde = DebeziumSerdes.payloadJson(UserGroupDBO.class);
+      userGroupSerde.configure(valueDeserializerConfig, false);
+      collectionToDeserializerMap.put(USER_GROUPS, userGroupSerde.deserializer());
 
-    // configuring debezium
-    AccessControlDebeziumChangeConsumer accessControlDebeziumChangeConsumer =
-        new AccessControlDebeziumChangeConsumer(idDeserializer, collectionToDeserializerMap, collectionToConsumerMap);
+      // configuring debezium
+      AccessControlDebeziumChangeConsumer accessControlDebeziumChangeConsumer =
+          new AccessControlDebeziumChangeConsumer(idDeserializer, collectionToDeserializerMap, collectionToConsumerMap);
 
-    DebeziumEngine<ChangeEvent<String, String>> debeziumEngine =
-        getEngine(aggregatorConfiguration.getDebeziumConfig(), accessControlDebeziumChangeConsumer);
-    Future<?> debeziumEngineFuture = executorService.submit(debeziumEngine);
-
-    log.info("waiting for debezium failure to release lock...");
-    while (!debeziumEngineFuture.isDone()) {
-      try {
-        Thread.sleep(60000);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
+      DebeziumEngine<ChangeEvent<String, String>> debeziumEngine =
+          getEngine(aggregatorConfiguration.getDebeziumConfig(), accessControlDebeziumChangeConsumer);
+      Future<?> debeziumEngineFuture = executorService.submit(debeziumEngine);
+      log.info("waiting for debezium failure to release lock...");
+      while (!debeziumEngineFuture.isDone()) {
+        try {
+          Thread.sleep(60000);
+        } catch (InterruptedException e) {
+          try {
+            debeziumEngine.close();
+          } catch (IOException exception) {
+            // ignore
+          }
+          Thread.currentThread().interrupt();
+        }
       }
+    } finally {
+      log.info("Debezium engine failed, releasing lock now...");
+      aggregatorLock.release();
     }
-
-    log.info("Debezium engine failed, releasing lock now...");
-    aggregatorLock.release();
   }
 }
