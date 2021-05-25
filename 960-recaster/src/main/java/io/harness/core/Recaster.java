@@ -179,7 +179,7 @@ public class Recaster {
   @SuppressWarnings("unchecked")
   public Document toDocument(Object entity, final Map<Object, Document> involvedObjects) {
     if (entity == null) {
-      log.info("Null reference was passed as object");
+      log.debug("Null reference was passed as object");
       return null;
     }
 
