@@ -29,5 +29,6 @@ trigger:
             value: ^pr-[0-9a-f]{7}$
         jexlCondition: true
         pathFilters:
-          - path1
-          - path2
+          key: ignored
+          operator: equals
+          value: path2
