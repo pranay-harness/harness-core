@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -275,6 +276,8 @@ public class CDDashboardApisTest {
     List<String> workloadsId = Arrays.asList("ServiceId1", "ServiceId1", "ServiceId2", "ServiceId3", "ServiceId3",
         "ServiceId3", "ServiceId1", "ServiceId1", "ServiceId3", "ServiceId2", "ServiceId1", "ServiceId1", "ServiceId2",
         "ServiceId3", "ServiceId3", "ServiceId3", "ServiceId1", "ServiceId1", "ServiceId3", "ServiceId2");
+    List<String> deploymentTypeList = Arrays.asList(
+        "kuber1", "kuber2", "kuber1", "kuber3", "kuber3", "kuber1", "kuber4", "kuber2", "kuber2", "kuber1");
 
     List<String> status = Arrays.asList(ExecutionStatus.SUCCESS.name(), ExecutionStatus.EXPIRED.name(),
         ExecutionStatus.RUNNING.name(), ExecutionStatus.ABORTED.name(), ExecutionStatus.SUCCESS.name(),
@@ -283,16 +286,33 @@ public class CDDashboardApisTest {
         ExecutionStatus.EXPIRED.name(), ExecutionStatus.RUNNING.name(), ExecutionStatus.ABORTED.name(),
         ExecutionStatus.SUCCESS.name(), ExecutionStatus.SUCCESS.name(), ExecutionStatus.FAILED.name(),
         ExecutionStatus.SUCCESS.name(), ExecutionStatus.SUCCESS.name(), ExecutionStatus.FAILED.name());
+    List<Pair<Long, Long>> timeInterval = new ArrayList<Pair<Long, Long>>() {
+      {
+        add(Pair.of(1619626802000L, 1619626802000L));
+        add(Pair.of(1619885951000L, 1619885951000L));
+        add(Pair.of(1619885925000L, 1619885925000L));
+        add(Pair.of(1619799469000L, 1619799469000L));
+        add(Pair.of(1619885815000L, 1619885815000L));
+        add(Pair.of(1619972127000L, 1619972127000L));
 
-    List<Long> startTime = Arrays.asList(1619626802000L, 1619885951000L, 1619885925000L, 1619799469000L, 1619885815000L,
-        1619972127000L, 1619799299000L, 1619885632000L, 1619799229000L, 1619626420000L, 1619540351000L, 1619540351000L,
-        1619281125000L, 1619367469000L, 1619194615000L, 1619453727000L, 1619453699000L, 1619280832000L, 1619280829000L,
-        1619453620000L);
+        add(Pair.of(1619799299000L, 1619799299000L));
+        add(Pair.of(1619885632000L, 1619885632000L));
+        add(Pair.of(1619799229000L, 1619799229000L));
+        add(Pair.of(1619626420000L, 1619626420000L));
 
-    List<Long> endTime = Arrays.asList(1619626802000L, 1619885951000L, 1619885925000L, 1619799469000L, 1619885815000L,
-        1619972127000L, 1619799299000L, 1619885632000L, 1619799229000L, 1619626420000L, 1619540351000L, 1619540351000L,
-        1619281125000L, 1619367469000L, 1619194615000L, 1619453727000L, 1619453699000L, 1619280832000L, 1619280829000L,
-        1619453620000L);
+        add(Pair.of(1619540351000L, 1619540351000L));
+        add(Pair.of(1619540351000L, 1619540351000L));
+        add(Pair.of(1619281125000L, 1619281125000L));
+        add(Pair.of(1619367469000L, 1619367469000L));
+
+        add(Pair.of(1619194615000L, 1619194615000L));
+        add(Pair.of(1619453727000L, 1619453727000L));
+        add(Pair.of(1619453699000L, 1619453699000L));
+        add(Pair.of(1619280832000L, 1619280832000L));
+        add(Pair.of(1619280829000L, 1619280829000L));
+        add(Pair.of(1619453620000L, 1619453620000L));
+      }
+    };
 
     HashMap<String, String> hashMap = new HashMap<>();
     hashMap.put("ServiceId1", "Service1");
@@ -300,10 +320,10 @@ public class CDDashboardApisTest {
     hashMap.put("ServiceId3", "Service3");
 
     DashboardWorkloadDeployment dashboardWorkloadDeployment =
-        cdOverviewDashboardServiceImpl.getWorkloadDeploymentInfoCalculation(workloadsId, status, startTime, endTime,
+        cdOverviewDashboardServiceImpl.getWorkloadDeploymentInfoCalculation(workloadsId, status, timeInterval,
             Arrays.asList(
                 "kuber1", "kuber2", "kuber1", "kuber3", "kuber3", "kuber1", "kuber4", "kuber2", "kuber2", "kuber1"),
-            hashMap, startInterval, endInterval);
+            hashMap, startInterval, endInterval, workloadsId);
 
     List<WorkloadDeploymentInfo> workloadDeploymentInfos = new ArrayList<>();
 
@@ -376,21 +396,33 @@ public class CDDashboardApisTest {
     workloadDeploymentInfos.add(WorkloadDeploymentInfo.builder()
                                     .serviceName("Service3")
                                     .serviceId("ServiceId3")
+                                    .totalDeploymentChangeRate(400.00)
+                                    .failureRate(50.0)
+                                    .failureRateChangeRate(200.00)
+                                    .frequency(0.0)
+                                    .frequencyChangeRate(0.0)
                                     .lastExecuted(LastWorkloadInfo.builder()
                                                       .startTime(1619972127000L)
                                                       .endTime(1619972127000L)
                                                       .status(ExecutionStatus.FAILED.name())
                                                       .deploymentType("kuber1")
                                                       .build())
+                                    .deploymentTypeList(deploymentTypeList)
                                     .rateSuccess(((-1) / (double) 3) * 100)
                                     .percentSuccess((2 / (double) 4) * 100)
                                     .totalDeployments(4)
+                                    .lastPipelineExecutionId("ServiceId3")
                                     .workload(service3WorkloadDateCount)
                                     .build());
 
     workloadDeploymentInfos.add(WorkloadDeploymentInfo.builder()
                                     .serviceName("Service2")
                                     .serviceId("ServiceId2")
+                                    .totalDeploymentChangeRate(200.00)
+                                    .failureRate(0.0)
+                                    .failureRateChangeRate(-100.00)
+                                    .frequency(0.0)
+                                    .frequencyChangeRate(0.0)
                                     .rateSuccess(0.0)
                                     .percentSuccess(0.0)
                                     .lastExecuted(LastWorkloadInfo.builder()
@@ -399,6 +431,8 @@ public class CDDashboardApisTest {
                                                       .status(ExecutionStatus.RUNNING.name())
                                                       .deploymentType("kuber1")
                                                       .build())
+                                    .deploymentTypeList(deploymentTypeList)
+                                    .lastPipelineExecutionId("ServiceId2")
                                     .totalDeployments(2)
                                     .workload(service2WorkloadDateCount)
                                     .build());
@@ -406,6 +440,10 @@ public class CDDashboardApisTest {
     workloadDeploymentInfos.add(WorkloadDeploymentInfo.builder()
                                     .serviceName("Service1")
                                     .serviceId("ServiceId1")
+                                    .totalDeploymentChangeRate(400.00)
+                                    .failureRate(50.0)
+                                    .failureRateChangeRate(100)
+                                    .frequencyChangeRate(0.00)
                                     .rateSuccess(0.0)
                                     .percentSuccess((2 / (double) 4) * 100)
                                     .lastExecuted(LastWorkloadInfo.builder()
@@ -414,6 +452,8 @@ public class CDDashboardApisTest {
                                                       .status(ExecutionStatus.EXPIRED.name())
                                                       .deploymentType("kuber2")
                                                       .build())
+                                    .deploymentTypeList(deploymentTypeList)
+                                    .lastPipelineExecutionId("ServiceId1")
 
                                     .totalDeployments(4)
                                     .workload(service1WorkloadDateCount)
