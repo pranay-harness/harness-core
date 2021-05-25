@@ -369,4 +369,9 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
     }
     return object;
   }
+
+  public <B extends GitSyncableEntity, Y extends YamlDTO> Optional<B> findOne(
+      Criteria criteria, String repo, String branch, Class<B> entityClass) {
+    throw new UnsupportedOperationException("Not Implemented");
+  }
 }
