@@ -1,4 +1,4 @@
-package io.harness.cvng.beans.appd;
+package io.harness.delegate.beans.cvng.appd;
 
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsAuthType;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;

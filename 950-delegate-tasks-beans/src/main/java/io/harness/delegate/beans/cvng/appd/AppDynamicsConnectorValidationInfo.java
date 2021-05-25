@@ -1,7 +1,7 @@
-package io.harness.cvng.beans.appd;
+package io.harness.delegate.beans.cvng.appd;
 
-import io.harness.cvng.beans.ConnectorValidationInfo;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
+import io.harness.delegate.beans.cvng.ConnectorValidationInfo;
 
 import java.util.Map;
 import lombok.Builder;

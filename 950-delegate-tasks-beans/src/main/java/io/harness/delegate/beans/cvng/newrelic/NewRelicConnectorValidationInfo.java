@@ -1,7 +1,7 @@
-package io.harness.cvng.beans.newrelic;
+package io.harness.delegate.beans.cvng.newrelic;
 
-import io.harness.cvng.beans.ConnectorValidationInfo;
 import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
+import io.harness.delegate.beans.cvng.ConnectorValidationInfo;
 
 import java.util.Map;
 import lombok.Builder;
