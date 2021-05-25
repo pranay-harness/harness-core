@@ -19,6 +19,7 @@ import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.task.artifacts.ArtifactSourceDelegateRequest;
+import io.harness.exception.InvalidConnectorTypeException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.NGAccess;
@@ -53,6 +54,11 @@ public class ArtifactStepHelper {
       case DOCKER_REGISTRY:
         DockerHubArtifactConfig dockerConfig = (DockerHubArtifactConfig) artifactConfig;
         connectorDTO = getConnector(dockerConfig.getConnectorRef().getValue(), ambiance);
+        if (!(connectorDTO.getConnectorConfig() instanceof DockerConnectorDTO)) {
+          throw new InvalidConnectorTypeException("provided Connector " + dockerConfig.getConnectorRef().getValue()
+                  + " is not compatible with " + dockerConfig.getSourceType() + " Artifact",
+              WingsException.USER);
+        }
         DockerConnectorDTO connectorConfig = (DockerConnectorDTO) connectorDTO.getConnectorConfig();
         if (connectorConfig.getAuth() != null && connectorConfig.getAuth().getCredentials() != null) {
           encryptedDataDetails =
@@ -63,6 +69,11 @@ public class ArtifactStepHelper {
       case GCR:
         GcrArtifactConfig gcrArtifactConfig = (GcrArtifactConfig) artifactConfig;
         connectorDTO = getConnector(gcrArtifactConfig.getConnectorRef().getValue(), ambiance);
+        if (!(connectorDTO.getConnectorConfig() instanceof GcpConnectorDTO)) {
+          throw new InvalidConnectorTypeException("provided Connector " + gcrArtifactConfig.getConnectorRef().getValue()
+                  + " is not compatible with " + gcrArtifactConfig.getSourceType() + " Artifact",
+              WingsException.USER);
+        }
         GcpConnectorDTO gcpConnectorDTO = (GcpConnectorDTO) connectorDTO.getConnectorConfig();
         if (gcpConnectorDTO.getCredential() != null && gcpConnectorDTO.getCredential().getConfig() != null) {
           encryptedDataDetails =
@@ -73,6 +84,11 @@ public class ArtifactStepHelper {
       case ECR:
         EcrArtifactConfig ecrArtifactConfig = (EcrArtifactConfig) artifactConfig;
         connectorDTO = getConnector(ecrArtifactConfig.getConnectorRef().getValue(), ambiance);
+        if (!(connectorDTO.getConnectorConfig() instanceof AwsConnectorDTO)) {
+          throw new InvalidConnectorTypeException("provided Connector " + ecrArtifactConfig.getConnectorRef().getValue()
+                  + " is not compatible with " + ecrArtifactConfig.getSourceType() + " Artifact",
+              WingsException.USER);
+        }
         AwsConnectorDTO awsConnectorDTO = (AwsConnectorDTO) connectorDTO.getConnectorConfig();
         if (awsConnectorDTO.getCredential() != null
             && awsConnectorDTO.getCredential().getConfig() instanceof DecryptableEntity) {
