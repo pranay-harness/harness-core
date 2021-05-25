@@ -9,13 +9,12 @@ import io.harness.beans.DelegateTaskRequest;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.task.scm.ScmPathFilterEvaluationTaskParams;
+import io.harness.delegate.task.scm.ScmPathFilterEvaluationTaskParams.ScmPathFilterEvaluationTaskParamsBuilder;
 import io.harness.delegate.task.scm.ScmPathFilterEvaluationTaskResponseData;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse.WebhookEventMappingResponseBuilder;
-import io.harness.ngtriggers.beans.source.NGTriggerSpec;
-import io.harness.ngtriggers.beans.source.webhook.WebhookCondition;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
 import io.harness.ngtriggers.conditionchecker.ConditionEvaluator;
@@ -41,7 +40,6 @@ import java.util.Map;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
@@ -103,7 +101,7 @@ public class FilepathTriggerFilter implements TriggerFilter {
       return false;
     }
     if (shouldEvaluateOnDelegate(filterRequestData)) {
-      ScmPathFilterEvaluationTaskParams.ScmPathFilterEvaluationTaskParamsBuilder paramsBuilder =
+      ScmPathFilterEvaluationTaskParamsBuilder paramsBuilder =
           ScmPathFilterEvaluationTaskParams.builder()
               .scmConnector(connector)
               .operator(webhookTriggerSpec.getSpec().getPathFilters().getOperator())
@@ -145,6 +143,7 @@ public class FilepathTriggerFilter implements TriggerFilter {
     switch (filterRequestData.getWebhookPayloadData().getParseWebhookResponse().getHookCase()) {
       case PR:
         return true;
+      default: // continue
     }
     TriggerExpressionEvaluator triggerExpressionEvaluator =
         WebhookTriggerFilterUtils.generatorPMSExpressionEvaluator(filterRequestData.getWebhookPayloadData());
