@@ -36,10 +36,11 @@ public class MockRoleAssignmentServiceImpl implements MockRoleAssignmentService 
 
   @Override
   public List<RoleAssignmentResponseDTO> createMulti(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, List<RoleAssignmentDTO> roleAssignments) {
+      String projectIdentifier, List<RoleAssignmentDTO> roleAssignments, Boolean managed) {
     List<RoleAssignmentResponseDTO> createdRoleAssignmentDTOs = new ArrayList<>();
     for (RoleAssignmentDTO roleAssignment : roleAssignments) {
       try {
+        roleAssignment = roleAssignment.toBuilder().managed(managed).build();
         RoleAssignmentResponseDTO roleAssignmentResponseDTO =
             create(accountIdentifier, orgIdentifier, projectIdentifier, roleAssignment);
         createdRoleAssignmentDTOs.add(roleAssignmentResponseDTO);

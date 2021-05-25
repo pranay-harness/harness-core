@@ -21,6 +21,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 
 @Singleton
 @Slf4j
@@ -32,9 +33,19 @@ public class ExceptionManager {
   public final String DEFAULT_ERROR_MESSAGE = "NULL EXCEPTION";
 
   public WingsException processException(Exception exception) {
+    return processException(exception, null, null);
+  }
+
+  public WingsException processException(
+      Exception exception, WingsException.ExecutionContext logExecutionContext, Logger log) {
     try {
       WingsException processedException = handleException(exception);
-      return ensureExceptionIsKryoSerializable(processedException);
+      processedException = ensureExceptionIsKryoSerializable(processedException);
+      if (log != null) {
+        // skip logging in case log object is null
+        ExceptionLogger.logProcessedMessages(processedException, logExecutionContext, log);
+      }
+      return processedException;
     } catch (Exception ex) {
       log.error("Exception occured while handling error in exception manager", ex);
       return NestedExceptionUtils.hintWithExplanationException(HintException.HINT_UNEXPECTED_ERROR,
@@ -43,7 +54,12 @@ public class ExceptionManager {
   }
 
   public List<ResponseMessage> buildResponseFromException(Exception exception) {
-    WingsException processedException = processException(exception);
+    return buildResponseFromException(exception, null, null);
+  }
+
+  public List<ResponseMessage> buildResponseFromException(
+      Exception exception, WingsException.ExecutionContext logExecutionContext, Logger log) {
+    WingsException processedException = processException(exception, logExecutionContext, log);
     return ExceptionLogger.getResponseMessageList(processedException, REST_API);
   }
 

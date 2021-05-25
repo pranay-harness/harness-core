@@ -121,9 +121,10 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
   @Builder
   @JsonTypeName("verifyStepOutcome")
   @TypeAlias("verifyStepOutcome")
-  public static class VerifyStepOutcome implements Outcome {
+  public static class VerifyStepOutcome implements ProgressData, Outcome {
     int progressPercentage;
     String estimatedRemainingTime;
+    String activityId;
   }
 
   @Override
@@ -147,10 +148,6 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
       case IGNORED:
         status = Status.ERRORED;
         break;
-      case NOT_STARTED:
-      case IN_PROGRESS:
-        status = Status.RUNNING;
-        break;
       default:
         throw new IllegalStateException("Invalid status value: " + cvngResponseData.getActivityStatusDTO().getStatus());
     }
@@ -163,6 +160,7 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
                          .estimatedRemainingTime(TimeUnit.MILLISECONDS.toMinutes(
                                                      cvngResponseData.getActivityStatusDTO().getRemainingTimeMs())
                              + " minutes")
+                         .activityId(cvngResponseData.getActivityId())
                          .build())
             .build());
     if (status == Status.FAILED) {
@@ -187,6 +185,17 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
               .build());
     }
     return stepResponseBuilder.build();
+  }
+
+  @Override
+  public ProgressData handleProgress(Ambiance ambiance, CVNGStepParameter stepParameters, ProgressData progressData) {
+    CVNGResponseData cvngResponseData = (CVNGResponseData) progressData;
+    return VerifyStepOutcome.builder()
+        .progressPercentage(cvngResponseData.getActivityStatusDTO().getProgressPercentage())
+        .estimatedRemainingTime(
+            TimeUnit.MILLISECONDS.toMinutes(cvngResponseData.getActivityStatusDTO().getRemainingTimeMs()) + " minutes")
+        .activityId(cvngResponseData.getActivityId())
+        .build();
   }
 
   @Override

@@ -17,6 +17,7 @@ import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 import io.harness.beans.SortOrder;
+import io.harness.ng.authenticationsettings.NGSamlUserGroupSync;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.UserGroupService;
@@ -29,7 +30,11 @@ import io.harness.ng.core.entities.UserGroup;
 import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.user.remote.dto.UserFilter;
 import io.harness.ng.core.utils.UserGroupMapper;
+import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
+
+import software.wings.beans.sso.SSOType;
+import software.wings.beans.sso.SamlLinkGroupRequest;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -75,7 +80,7 @@ import retrofit2.http.Body;
 public class UserGroupResource {
   private final UserGroupService userGroupService;
   private final AccessControlClient accessControlClient;
-
+  @Inject private NGSamlUserGroupSync ngSamlUserGroupSync;
   @POST
   @ApiOperation(value = "Create a User Group", nickname = "postUserGroup")
   public ResponseDTO<UserGroupDTO> create(
@@ -245,5 +250,23 @@ public class UserGroupResource {
                                Pair.of(orgIdentifier, userGroupDTO.getOrgIdentifier()),
                                Pair.of(projectIdentifier, userGroupDTO.getProjectIdentifier())),
         true);
+  }
+
+  @PUT
+  @Path("{userGroupId}/unlink")
+  @ApiOperation(value = "API to unlink the harness user group from SSO group", nickname = "unlinkSsoGroup")
+  public RestResponse<UserGroup> unlinkSsoGroup(@PathParam("userGroupId") String userGroupId,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("retainMembers") boolean retainMembers) {
+    return new RestResponse<>(userGroupService.unlinkSsoGroup(accountId, userGroupId, retainMembers));
+  }
+
+  @PUT
+  @Path("{userGroupId}/link/saml/{samlId}")
+  @ApiOperation(value = "Link to SAML group", nickname = "linkToSamlGroup")
+  public RestResponse<UserGroup> linkToSamlGroup(@PathParam("userGroupId") String userGroupId,
+      @PathParam("samlId") String samlId, @QueryParam("accountId") @NotEmpty String accountId,
+      @NotNull @Valid SamlLinkGroupRequest groupRequest) {
+    return new RestResponse<>(userGroupService.linkToSsoGroup(accountId, userGroupId, SSOType.SAML, samlId,
+        groupRequest.getSamlGroupName(), groupRequest.getSamlGroupName()));
   }
 }

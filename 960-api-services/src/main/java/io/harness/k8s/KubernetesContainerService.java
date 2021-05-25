@@ -41,6 +41,8 @@ public interface KubernetesContainerService {
 
   void validate(KubernetesConfig kubernetesConfig);
 
+  void validateMasterUrl(KubernetesConfig kubernetesConfig);
+
   @SuppressWarnings("squid:S1452") List<? extends HasMetadata> listControllers(KubernetesConfig kubernetesConfig);
 
   void deleteController(KubernetesConfig kubernetesConfig, String name);

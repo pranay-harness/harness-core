@@ -1,6 +1,6 @@
 package io.harness.beans.yaml.extended.container;
 
-import io.harness.yaml.core.intfc.WithIdentifier;
+import io.harness.beans.WithIdentifier;
 
 import java.beans.ConstructorProperties;
 import java.util.Optional;

@@ -15,15 +15,15 @@ import (
 )
 
 const (
-	defaultOffset  = "0"
-	defaultLimit   = "100"
-	asc            = "ASC"
-	desc           = "DESC"
-	writeBatchSize = 1000 // Write this many test cases at a time
+	defaultOffset = "0"
+	defaultLimit  = "100"
+	asc           = "ASC"
+	desc          = "DESC"
 )
 
 var (
-	now = time.Now
+	writeBatchSize = 1000 // Write this many test cases at a time
+	now            = time.Now
 )
 
 // TimeScaleDb is a wrapper on top of a timescale DB connection.
@@ -95,7 +95,7 @@ func (tdb *TimeScaleDb) Write(ctx context.Context, accountId, orgId, projectId, 
 			stmt := fmt.Sprintf(
 				`
 					INSERT INTO %s
-					(created_at, account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id, repo, commit_id, report, name, suite_name,
+					(created_at, account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id, report, repo, commit_id, name, suite_name,
 					class_name, duration_ms, result, message, type, description, stdout, stderr)
 					VALUES %s`, tdb.EvalTable, strings.Join(valueStrings, ","))
 			_, err := tdb.Conn.Exec(stmt, valueArgs...)

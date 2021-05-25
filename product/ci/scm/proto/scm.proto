@@ -453,36 +453,86 @@ message ListCommitsResponse {
   PageResponse pagination = 2;
 }
 
-message HookEvents {
-  bool branch = 1;
-  bool deployment = 2;
-  bool issue = 3;
-  bool issueComment = 4;
-  bool pullRequest = 5;
-  bool pullRequestComment = 6;
-  bool push = 7;
-  bool reviewComment = 8;
-  bool tag = 9;
+enum GithubWebhookEvent {
+  GITHUB_CREATE = 0;
+  GITHUB_DELETE = 1;
+  GITHUB_DEPLOYMENT = 2;
+  GITHUB_ISSUE = 3;
+  GITHUB_ISSUE_COMMENT = 4;
+  GITHUB_PULL_REQUEST = 5;
+  GITHUB_PULL_REQUEST_REVIEW = 6;
+  GITHUB_PUSH = 7;
 }
 
+enum GitlabWebhookEvent {
+  GITLAB_COMMENT = 0;
+  GITLAB_ISSUES = 1;
+  GITLAB_MERGE = 2;
+  GITLAB_PUSH = 3;
+  GITLAB_TAG = 4;
+}
+
+enum BitbucketCloudWebhookEvent {
+  BITBUCKET_CLOUD_ISSUE = 0;
+  BITBUCKET_CLOUD_ISSUE_COMMENT = 1;
+  BITBUCKET_CLOUD_PULL_REQUEST = 2;
+  BITBUCKET_CLOUD_PULL_REQUEST_COMMENT = 3;
+  BITBUCKET_CLOUD_PUSH = 4;
+}
+
+enum BitbucketServerWebhookEvent {
+  BITBUCKET_SERVER_BRANCH_PUSH_TAG = 0;
+  BITBUCKET_SERVER_PR = 1;
+  BITBUCKET_SERVER_PR_COMMENT = 2;
+}
+
+message GithubWebhookEvents {
+  repeated GithubWebhookEvent events = 1;
+}
+
+message GitlabWebhookEvents {
+  repeated GitlabWebhookEvent events = 1;
+}
+
+message BitbucketCloudWebhookEvents {
+  repeated BitbucketCloudWebhookEvent events = 1;
+}
+
+message BitbucketServerWebhookEvents {
+  repeated BitbucketServerWebhookEvent events = 1;
+}
+
+message NativeEvents {
+  oneof nativeEvents {
+    GithubWebhookEvents github = 1;
+    GitlabWebhookEvents gitlab = 2;
+    BitbucketCloudWebhookEvents bitbucket_cloud = 3;
+    BitbucketServerWebhookEvents bitbucket_server = 4;
+  }
+}
 message CreateWebhookRequest {
   string slug = 1;
   string name = 2;
   string target = 3;
   string secret = 4;
-  HookEvents events = 5;
+  NativeEvents nativeEvents = 5;
   bool skipVerify = 6;
   Provider provider = 7;
 }
 
-message CreateWebhookResponse {
+message WebhookResponse {
   string id = 1;
   string name = 2;
   string target = 3;
-  repeated string events = 4;
+  NativeEvents nativeEvents = 4;
   bool active = 5;
   bool skipVerify = 6;
-  int32 status = 7;
+}
+
+message CreateWebhookResponse {
+  WebhookResponse webhook = 1;
+  int32 status = 2;
+  string error = 3;
 }
 
 message DeleteWebhookRequest {
@@ -493,6 +543,7 @@ message DeleteWebhookRequest {
 
 message DeleteWebhookResponse {
   int32 status = 1;
+  string error = 2;
 }
 
 message ListWebhooksRequest {
@@ -501,18 +552,11 @@ message ListWebhooksRequest {
   Provider provider = 3;
 }
 
-message WebhookResponse {
-  string id = 1;
-  string name = 2;
-  string target = 3;
-  repeated string events = 4;
-  bool active = 5;
-  bool skipVerify = 6;
-}
-
 message ListWebhooksResponse {
   repeated WebhookResponse webhooks = 1;
-  PageResponse pagination = 2;
+  int32 status = 2;
+  string error = 3;
+  PageResponse pagination = 4;
 }
 
 service SCM {

@@ -40,20 +40,22 @@ import io.harness.pms.sdk.core.registries.AdviserRegistry;
 import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.queue.QueueConsumer;
-import io.harness.queue.QueueListener;
+import io.harness.queue.QueueListenerWithObservers;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ErrorResponseData;
 import io.harness.tasks.ProgressData;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
-public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent> {
+@Singleton
+public class NodeExecutionEventListener extends QueueListenerWithObservers<NodeExecutionEvent> {
   @Inject private FacilitatorRegistry facilitatorRegistry;
   @Inject private AdviserRegistry adviserRegistry;
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
@@ -67,7 +69,7 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
   }
 
   @Override
-  public void onMessage(NodeExecutionEvent event) {
+  public void onMessageInternal(NodeExecutionEvent event) {
     try (AutoLogContext autoLogContext = event.autoLogContext()) {
       boolean handled;
       NodeExecutionEventType nodeExecutionEventType = event.getEventType();

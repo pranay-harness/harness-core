@@ -47,8 +47,8 @@ public class LicenseResourceTest extends LicenseTestBase {
                                  .status(LicenseStatus.ACTIVE)
                                  .startTime(0)
                                  .expiryTime(0)
-                                 .createdAt(0)
-                                 .lastModifiedAt(0)
+                                 .createdAt(0L)
+                                 .lastModifiedAt(0L)
                                  .build();
     defaultAccountLicensesDTO =
         AccountLicensesDTO.builder()

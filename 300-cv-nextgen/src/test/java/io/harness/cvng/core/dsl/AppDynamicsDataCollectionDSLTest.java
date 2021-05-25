@@ -14,7 +14,6 @@ import io.harness.cvng.HoverflyCVNextGenTestBase;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
-import io.harness.cvng.beans.appd.AppDynamicsConnectorValidationInfo;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.MetricPackService;
@@ -23,6 +22,7 @@ import io.harness.datacollection.entity.RuntimeParameters;
 import io.harness.datacollection.entity.TimeSeriesRecord;
 import io.harness.datacollection.impl.DataCollectionServiceImpl;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
+import io.harness.delegate.beans.cvng.appd.AppDynamicsConnectorValidationInfo;
 import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 

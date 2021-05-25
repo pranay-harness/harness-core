@@ -153,6 +153,9 @@ roles:
         - core_resourcegroup_edit
         - core_resourcegroup_delete
         - core_license_view
+        - core_authsetting_view
+        - core_authsetting_edit
+        - core_authsetting_delete
       allowedScopeLevels:
         - account
       managed: true
@@ -171,6 +174,7 @@ roles:
         - core_role_view
         - core_resourcegroup_view
         - core_license_view
+        - core_authsetting_view
       allowedScopeLevels:
         - account
       managed: true

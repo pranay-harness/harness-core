@@ -20,8 +20,8 @@ import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
-import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.queue.QueueController;
 import io.harness.registrars.ExecutionAdvisers;
 import io.harness.registrars.ExecutionRegistrar;
@@ -140,7 +140,7 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
 
   private PmsSdkConfiguration getPmsSdkConfiguration() {
     return PmsSdkConfiguration.builder()
-        .deploymentMode(DeployMode.LOCAL)
+        .deploymentMode(SdkDeployMode.LOCAL)
         .serviceName("ci")
         .engineSteps(ExecutionRegistrar.getEngineSteps())
         .engineAdvisers(ExecutionAdvisers.getEngineAdvisers())

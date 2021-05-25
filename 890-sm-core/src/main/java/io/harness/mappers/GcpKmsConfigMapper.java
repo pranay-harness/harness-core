@@ -1,6 +1,7 @@
 package io.harness.mappers;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.mapper.TagMapper;
@@ -29,7 +30,9 @@ public class GcpKmsConfigMapper {
 
   public static GcpKmsConfig applyUpdate(GcpKmsConfig gcpKmsConfig, GcpKmsConfigUpdateDTO gcpKmsConfigDTO) {
     gcpKmsConfig.setProjectId(gcpKmsConfigDTO.getProjectId());
-    gcpKmsConfig.setCredentials(gcpKmsConfigDTO.getCredentials());
+    if (isNotEmpty(gcpKmsConfigDTO.getCredentials())) {
+      gcpKmsConfig.setCredentials(gcpKmsConfigDTO.getCredentials());
+    }
     gcpKmsConfig.setKeyName(gcpKmsConfigDTO.getKeyName());
     gcpKmsConfig.setKeyRing(gcpKmsConfigDTO.getKeyRing());
     gcpKmsConfig.setDefault(gcpKmsConfigDTO.isDefault());

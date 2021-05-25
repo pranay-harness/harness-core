@@ -13,11 +13,15 @@ import io.harness.encryption.Scope;
 import io.harness.jackson.JsonNodeUtils;
 import io.harness.network.SafeHttpCall;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
+import io.harness.yaml.schema.beans.FieldEnumData;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.schema.beans.SchemaConstants;
+import io.harness.yaml.schema.beans.SubtypeClassMap;
+import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
 import io.harness.yaml.schema.client.YamlSchemaClient;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
@@ -25,8 +29,14 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.inject.Inject;
+import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,6 +45,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
   private static final String DEPLOYMENT_STAGE_CONFIG = YamlSchemaUtils.getSwaggerName(DeploymentStageConfig.class);
+  private static final String STEP_ELEMENT_CONFIG = YamlSchemaUtils.getSwaggerName(StepElementConfig.class);
+  private static final Class<StepElementConfig> STEP_ELEMENT_CONFIG_CLASS = StepElementConfig.class;
+
   private static final String CD_NAMESPACE = "cd";
   private static final String CVNG_INSTANCE_NAME = "cvng";
   private final YamlSchemaProvider yamlSchemaProvider;
@@ -69,6 +82,11 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
       flattenParallelStepElementConfig((ObjectNode) jsonNode);
     }
 
+    JsonNode stepElementConfigNode = definitions.get(StepElementConfig.class.getSimpleName());
+    if (stepElementConfigNode != null && stepElementConfigNode.isObject()) {
+      modifyStepElementSchema((ObjectNode) stepElementConfigNode);
+    }
+
     yamlSchemaGenerator.modifyRefsNamespace(deploymentStageSchema, CD_NAMESPACE);
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
     JsonNode node = mapper.createObjectNode().set(CD_NAMESPACE, definitions);
@@ -81,6 +99,32 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
         .schema(partialCdSchema)
         .nodeType(getDeploymentStageTypeName())
         .build();
+  }
+
+  private void modifyStepElementSchema(ObjectNode jsonNode) {
+    ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
+    Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap = new HashMap<>();
+
+    Set<FieldEnumData> fieldEnumData = getFieldEnumData(STEP_ELEMENT_CONFIG_CLASS);
+
+    swaggerDefinitionsMetaInfoMap.put(
+        STEP_ELEMENT_CONFIG, SwaggerDefinitionsMetaInfo.builder().fieldEnumData(fieldEnumData).build());
+
+    yamlSchemaGenerator.convertSwaggerToJsonSchema(
+        swaggerDefinitionsMetaInfoMap, mapper, STEP_ELEMENT_CONFIG, jsonNode);
+  }
+
+  private Set<FieldEnumData> getFieldEnumData(Class<?> clazz) {
+    Field typedField = YamlSchemaUtils.getTypedField(clazz);
+    String fieldName = YamlSchemaUtils.getJsonTypeInfo(typedField).property();
+    Set<SubtypeClassMap> mapOfSubtypes = YamlSchemaUtils.getMapOfSubtypesUsingReflection(typedField);
+
+    return ImmutableSet.of(
+        FieldEnumData.builder()
+            .fieldName(fieldName)
+            .enumValues(ImmutableSortedSet.copyOf(
+                mapOfSubtypes.stream().map(SubtypeClassMap::getSubtypeEnum).collect(Collectors.toList())))
+            .build());
   }
 
   private void flattenParallelStepElementConfig(ObjectNode objectNode) {

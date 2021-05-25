@@ -26,6 +26,7 @@ public class SecretManagerClientServiceImpl implements SecretManagerClientServic
   private final RestClientExecutor restClientExecutor;
   private final SecretManagerClient secretManagerClient;
 
+  // TODO: improve the error messages(https://harness.atlassian.net/browse/CDNG-5674)
   @Override
   public List<EncryptedDataDetail> getEncryptionDetails(NGAccess ngAccess, DecryptableEntity consumer) {
     BaseNGAccess baseNGAccess = BaseNGAccess.builder()

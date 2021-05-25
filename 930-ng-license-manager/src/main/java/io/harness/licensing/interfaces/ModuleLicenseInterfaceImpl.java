@@ -48,7 +48,7 @@ public class ModuleLicenseInterfaceImpl implements ModuleLicenseInterface {
       moduleLicenseDTO.setLicenseType(type);
     }
     if (moduleLicenseDTO.getStartTime() == 0) {
-      moduleLicenseDTO.setStartTime(Instant.now().getEpochSecond());
+      moduleLicenseDTO.setStartTime(Instant.now().toEpochMilli());
     }
     if (moduleLicenseDTO.getExpiryTime() == 0) {
       moduleLicenseDTO.setExpiryTime(Instant.now().plus(TRIAL_DURATION, ChronoUnit.DAYS).toEpochMilli());

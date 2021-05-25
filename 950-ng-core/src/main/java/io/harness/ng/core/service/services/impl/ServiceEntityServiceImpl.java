@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.client.result.UpdateResult;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -36,7 +37,9 @@ import org.json.JSONObject;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton
@@ -47,6 +50,7 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
   private final EntitySetupUsageService entitySetupUsageService;
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Service [%s] under Project[%s], Organization [%s] already exists";
+  private static final Integer QUERY_PAGE_SIZE = 10000;
 
   void validatePresenceOfRequiredFields(Object... fields) {
     Lists.newArrayList(fields).forEach(field -> Objects.requireNonNull(field, "One of the required fields is null."));
@@ -196,6 +200,11 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
     }
   }
 
+  @Override
+  public List<ServiceEntity> getAllServices(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return getAllServices(accountIdentifier, orgIdentifier, projectIdentifier, QUERY_PAGE_SIZE);
+  }
+
   @VisibleForTesting
   String getDuplicateServiceExistsErrorMessage(String exceptionString) {
     String errorMessageToBeReturned = null;
@@ -209,6 +218,34 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
       errorMessageToBeReturned = "A Duplicate Service already exists";
     }
     return errorMessageToBeReturned;
+  }
+
+  @VisibleForTesting
+  List<ServiceEntity> getAllServices(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, Integer pageSize) {
+    List<ServiceEntity> serviceEntityList = new ArrayList<>();
+
+    Criteria criteria = Criteria.where(ServiceEntityKeys.accountId)
+                            .is(accountIdentifier)
+                            .where(ServiceEntityKeys.orgIdentifier)
+                            .is(orgIdentifier)
+                            .where(ServiceEntityKeys.projectIdentifier)
+                            .is(projectIdentifier);
+
+    int pageNum = 0;
+    // Query in batches of 10k
+    while (true) {
+      PageRequest pageRequest =
+          PageRequest.of(pageNum, pageSize, Sort.by(Sort.Direction.ASC, ServiceEntityKeys.createdAt));
+      Page<ServiceEntity> pageResponse = serviceRepository.findAll(criteria, pageRequest);
+      if (pageResponse.isEmpty()) {
+        break;
+      }
+      serviceEntityList.addAll(pageResponse.getContent());
+      pageNum += 1;
+    }
+
+    return serviceEntityList;
   }
 
   private void validateTheServicesList(List<ServiceEntity> serviceEntities) {

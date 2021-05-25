@@ -20,4 +20,8 @@ import lombok.experimental.FieldDefaults;
 public class InviteAcceptResponse {
   InviteOperationResponse response;
   UserInfo userInfo;
+  String accountIdentifier;
+  String orgIdentifier;
+  String projectIdentifier;
+  String inviteId;
 }

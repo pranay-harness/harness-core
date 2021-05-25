@@ -161,7 +161,7 @@ public class K8sApplyState extends AbstractK8sState {
   public void handleAbortEvent(ExecutionContext context) {}
 
   @Override
-  public List<CommandUnit> commandUnitList(boolean remoteStoreType) {
+  public List<CommandUnit> commandUnitList(boolean remoteStoreType, String accountId) {
     List<CommandUnit> applyCommandUnits = new ArrayList<>();
 
     if (remoteStoreType) {

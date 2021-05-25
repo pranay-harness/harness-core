@@ -7,11 +7,12 @@ import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.pms.contracts.advisers.InterruptConfig;
-import io.harness.pms.contracts.advisers.IssuedBy;
-import io.harness.pms.contracts.advisers.TimeoutIssuer;
+import io.harness.pms.contracts.interrupts.InterruptConfig;
 import io.harness.pms.contracts.interrupts.InterruptType;
+import io.harness.pms.contracts.interrupts.IssuedBy;
+import io.harness.pms.contracts.interrupts.TimeoutIssuer;
 import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.serializer.ProtoUtils;
 import io.harness.timeout.TimeoutCallback;
 import io.harness.timeout.TimeoutDetails;
 import io.harness.timeout.TimeoutInstance;
@@ -50,7 +51,12 @@ public class NodeExecutionTimeoutCallback implements TimeoutCallback {
             .interruptType(InterruptType.MARK_EXPIRED)
             .interruptConfig(
                 InterruptConfig.newBuilder()
-                    .setIssuedBy(IssuedBy.newBuilder().setTimeoutIssuer(TimeoutIssuer.newBuilder().build()).build())
+                    .setIssuedBy(
+                        IssuedBy.newBuilder()
+                            .setTimeoutIssuer(
+                                TimeoutIssuer.newBuilder().setTimeoutInstanceId(timeoutInstance.getUuid()).build())
+                            .setIssueTime(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
+                            .build())
                     .build())
             .build());
   }

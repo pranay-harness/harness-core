@@ -180,7 +180,6 @@ java_library(
         "@maven//:io_grpc_grpc_grpclb",
         "@maven//:io_grpc_grpc_netty_shaded",
         "@maven//:io_grpc_grpc_protobuf",
-        "@maven//:io_grpc_grpc_protobuf_lite",
         "@maven//:io_grpc_grpc_stub",
         "@maven//:io_gsonfire_gson_fire",
         "@maven//:io_kubernetes_client_java",

@@ -4,6 +4,13 @@ load("//:macros.bzl", "run_analysis")
 
 HarnessTeam = "CE"
 
+shared_dependencies = [
+    "//:lombok",
+    "//970-ng-commons:module",
+    "@maven//:com_google_inject_guice",
+    "@maven//:org_jooq_jooq",
+]
+
 java_library(
     name = "module",
     srcs = glob([
@@ -15,11 +22,27 @@ java_library(
         "manual",
     ],
     visibility = ["//visibility:public"],
-    deps = [
-        "@maven//:org_jooq_jooq",
+    deps = shared_dependencies,
+)
+
+java_library(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    tags = [
+        "aeriform",
+        "manual",
+    ],
+    visibility = ["//visibility:public"],
+    deps = shared_dependencies + [
+        ":module",
+        "//990-commons-test:module",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
     ],
 )
 
-run_analysis(
-    run_checkstyle = False,
-)
+run_tests()
+
+run_analysis()

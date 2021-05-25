@@ -1,5 +1,6 @@
 package io.harness.k8s.model;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
@@ -10,6 +11,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Objects.nonNull;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.k8s.manifest.ObjectYamlUtils;
@@ -69,6 +71,7 @@ import org.apache.commons.lang3.StringUtils;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@OwnedBy(CDP)
 public class KubernetesResource {
   private static final String MISSING_DEPLOYMENT_SPEC_MSG = "Deployment does not have spec";
   private static final String MISSING_DEPLOYMENT_CONFIG_SPEC_MSG = "DeploymentConfig does not have spec";
@@ -190,6 +193,10 @@ public class KubernetesResource {
       return hasMetadataAnnotation(HarnessAnnotations.primaryService);
     }
     return false;
+  }
+
+  public boolean isSkipPruning() {
+    return hasMetadataAnnotation(HarnessAnnotations.skipPruning);
   }
 
   public boolean isStageService() {

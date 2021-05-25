@@ -155,6 +155,8 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
+      @QueryParam("pipelineBranch") @ResourceIdentifier String pipelineBranch,
+      @QueryParam("pipelineRepoID") @ResourceIdentifier String pipelineRepoID,
       @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo, @NotNull @ApiParam(hidden = true) String yaml) {
     try {
       yaml = removeRuntimeInputFromYaml(yaml);
@@ -162,8 +164,8 @@ public class InputSetResourcePMS {
       throw new InvalidRequestException("Could not clear <+input> fields from yaml : " + e.getMessage());
     }
 
-    InputSetErrorWrapperDTOPMS errorWrapperDTO =
-        validateAndMergeHelper.validateInputSet(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
+    InputSetErrorWrapperDTOPMS errorWrapperDTO = validateAndMergeHelper.validateInputSet(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml, pipelineBranch, pipelineRepoID);
     if (errorWrapperDTO != null) {
       return ResponseDTO.newResponse(PMSInputSetElementMapper.toInputSetResponseDTOPMS(
           accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml, errorWrapperDTO));
@@ -211,6 +213,8 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
+      @QueryParam("pipelineBranch") @ResourceIdentifier String pipelineBranch,
+      @QueryParam("pipelineRepoID") @ResourceIdentifier String pipelineRepoID,
       @BeanParam GitEntityUpdateInfoDTO gitEntityInfo, @NotNull @ApiParam(hidden = true) String yaml) {
     try {
       yaml = removeRuntimeInputFromYaml(yaml);
@@ -218,8 +222,8 @@ public class InputSetResourcePMS {
       throw new InvalidRequestException("Could not clear <+input> fields from yaml : " + e.getMessage());
     }
 
-    InputSetErrorWrapperDTOPMS errorWrapperDTO =
-        validateAndMergeHelper.validateInputSet(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
+    InputSetErrorWrapperDTOPMS errorWrapperDTO = validateAndMergeHelper.validateInputSet(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml, pipelineBranch, pipelineRepoID);
     if (errorWrapperDTO != null) {
       return ResponseDTO.newResponse(PMSInputSetElementMapper.toInputSetResponseDTOPMS(
           accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml, errorWrapperDTO));
@@ -298,7 +302,8 @@ public class InputSetResourcePMS {
       pageRequest = PageUtils.getPageRequest(page, size, sort);
     }
     Page<InputSetSummaryResponseDTOPMS> inputSetList =
-        pmsInputSetService.list(criteria, pageRequest).map(PMSInputSetElementMapper::toInputSetSummaryResponseDTOPMS);
+        pmsInputSetService.list(criteria, pageRequest, accountId, orgIdentifier, projectIdentifier)
+            .map(PMSInputSetElementMapper::toInputSetSummaryResponseDTOPMS);
     return ResponseDTO.newResponse(getNGPageResponse(inputSetList));
   }
 
@@ -310,7 +315,8 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier) {
+      @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     String pipelineTemplateYaml =
         validateAndMergeHelper.getPipelineTemplate(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
     return ResponseDTO.newResponse(
@@ -329,12 +335,46 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
-      @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
+      @QueryParam("pipelineBranch") @ResourceIdentifier String pipelineBranch,
+      @QueryParam("pipelineRepoID") @ResourceIdentifier String pipelineRepoID,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @NotNull @Valid MergeInputSetRequestDTOPMS mergeInputSetRequestDTO) {
     List<String> inputSetReferences = mergeInputSetRequestDTO.getInputSetReferences();
-    String mergedYaml = validateAndMergeHelper.getMergeInputSetFromPipelineTemplate(
-        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences);
-    return ResponseDTO.newResponse(
-        MergeInputSetResponseDTOPMS.builder().isErrorResponse(false).pipelineYaml(mergedYaml).build());
+    String mergedYaml = validateAndMergeHelper.getMergeInputSetFromPipelineTemplate(accountId, orgIdentifier,
+        projectIdentifier, pipelineIdentifier, inputSetReferences, pipelineBranch, pipelineRepoID);
+    String fullYaml = "";
+    if (mergeInputSetRequestDTO.isWithMergedPipelineYaml()) {
+      fullYaml = validateAndMergeHelper.mergeInputSetIntoPipeline(
+          accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, mergedYaml, pipelineBranch, pipelineRepoID);
+    }
+    return ResponseDTO.newResponse(MergeInputSetResponseDTOPMS.builder()
+                                       .isErrorResponse(false)
+                                       .pipelineYaml(mergedYaml)
+                                       .completePipelineYaml(fullYaml)
+                                       .build());
+  }
+
+  @POST
+  @Path("mergeWithTemplateYaml")
+  @ApiOperation(
+      value = "Merges given runtime input yaml on pipeline and return input set template format of applied pipeline",
+      nickname = "getMergeInputSetFromPipelineTemplate")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
+  public ResponseDTO<MergeInputSetResponseDTOPMS>
+  getMergeInputSetFromPipelineTemplate(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
+      @QueryParam("pipelineBranch") @ResourceIdentifier String pipelineBranch,
+      @QueryParam("pipelineRepoID") @ResourceIdentifier String pipelineRepoID,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo, @NotNull @ApiParam(hidden = true) String runtimeInputYaml) {
+    String fullYaml = validateAndMergeHelper.mergeInputSetIntoPipeline(accountId, orgIdentifier, projectIdentifier,
+        pipelineIdentifier, runtimeInputYaml, pipelineBranch, pipelineRepoID);
+    return ResponseDTO.newResponse(MergeInputSetResponseDTOPMS.builder()
+                                       .isErrorResponse(false)
+                                       .pipelineYaml(runtimeInputYaml)
+                                       .completePipelineYaml(fullYaml)
+                                       .build());
   }
 }

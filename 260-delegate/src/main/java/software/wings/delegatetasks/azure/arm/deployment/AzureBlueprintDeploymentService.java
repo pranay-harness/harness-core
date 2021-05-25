@@ -5,8 +5,11 @@ import static io.harness.azure.model.AzureConstants.ROLE_ASSIGNMENT_EXISTS_CLOUD
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureAuthorizationClient;
 import io.harness.azure.client.AzureBlueprintClient;
@@ -45,7 +48,13 @@ import org.apache.commons.lang3.StringUtils;
 @NoArgsConstructor
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(HarnessTeam.CDP)
 public class AzureBlueprintDeploymentService {
+  public static final String CREATING = "creating";
+  public static final String UPDATING = "updating";
+  public static final String CREATED = "created";
+  public static final String UPDATED = "updated";
+
   @Inject private AzureBlueprintClient azureBlueprintClient;
   @Inject private AzureAuthorizationClient azureAuthorizationClient;
   @Inject private ARMDeploymentSteadyStateChecker deploymentSteadyStateChecker;
@@ -89,7 +98,7 @@ public class AzureBlueprintDeploymentService {
             definitionResourceScope, blueprintName));
 
     Blueprint blueprint = azureBlueprintClient.getBlueprint(azureConfig, definitionResourceScope, blueprintName);
-    context.setBlueprint(blueprint);
+    context.setExistingBlueprint(blueprint);
 
     blueprintDeploymentLogCallback.saveExecutionLog(blueprint == null
             ? "Not found blueprint definition at requested scope"
@@ -136,8 +145,8 @@ public class AzureBlueprintDeploymentService {
       final DeploymentBlueprintContext context, LogCallback blueprintDeploymentLogCallback) {
     String definitionResourceScope = context.getDefinitionResourceScope();
     String blueprintName = context.getBlueprintName();
-    String creatingOrUpdating = context.getBlueprint() == null ? "creating" : "updating";
-    String createdOrUpdated = context.getBlueprint() == null ? "created" : "updated";
+    String creatingOrUpdating = context.getExistingBlueprint() == null ? CREATING : UPDATING;
+    String createdOrUpdated = context.getExistingBlueprint() == null ? CREATED : UPDATED;
 
     blueprintDeploymentLogCallback.saveExecutionLog(
         format("%nStart %s blueprint definition %n- Scope: [%s]", creatingOrUpdating, definitionResourceScope));
@@ -153,8 +162,8 @@ public class AzureBlueprintDeploymentService {
     String definitionResourceScope = context.getDefinitionResourceScope();
     String blueprintName = context.getBlueprintName();
     Map<String, String> artifacts = context.getArtifacts();
-    String creatingOrUpdating = context.getBlueprint() == null ? "creating" : "updating";
-    String createdOrUpdated = context.getBlueprint() == null ? "created" : "updated";
+    String creatingOrUpdating = context.getExistingBlueprint() == null ? CREATING : UPDATING;
+    String createdOrUpdated = context.getExistingBlueprint() == null ? CREATED : UPDATED;
 
     blueprintDeploymentLogCallback.saveExecutionLog(format("Start %s blueprint artifacts", creatingOrUpdating));
 
@@ -193,20 +202,41 @@ public class AzureBlueprintDeploymentService {
   }
 
   private void createAssignment(final DeploymentBlueprintContext context, LogCallback blueprintDeploymentLogCallback) {
+    boolean assignmentExists = checkExistingAssignment(context, blueprintDeploymentLogCallback);
     grantAzureBlueprintsSPOwnerRole(context, blueprintDeploymentLogCallback);
     AzureConfig azureConfig = context.getAzureConfig();
     String assignmentResourceScope = context.getAssignmentResourceScope();
     String assignmentName = context.getAssignment().getName();
     String assignmentJSON = context.getAssignmentJSON();
+    String creatingOrUpdating = assignmentExists ? UPDATING : CREATING;
 
     blueprintDeploymentLogCallback.saveExecutionLog(
-        format("%nStart creating assignment %n- Scope: [%s] %n- Assignment Name: [%s]", assignmentResourceScope,
-            context.getAssignment().getName()));
+        format("%nStart %s assignment %n- Scope: [%s] %n- Assignment Name: [%s]", creatingOrUpdating,
+            assignmentResourceScope, assignmentName));
 
     azureBlueprintClient.beginCreateOrUpdateAssignment(
         azureConfig, assignmentResourceScope, assignmentName, assignmentJSON);
 
     blueprintDeploymentLogCallback.saveExecutionLog("Blueprint assignment request sent successfully");
+  }
+
+  private boolean checkExistingAssignment(
+      DeploymentBlueprintContext context, LogCallback blueprintDeploymentLogCallback) {
+    String assignmentResourceScope = context.getAssignmentResourceScope();
+    String assignmentName = context.getAssignment().getName();
+
+    blueprintDeploymentLogCallback.saveExecutionLog(
+        String.format("%nChecking existing assignment at scope %n- Scope: [%s] %n- Assignment Name: [%s]",
+            assignmentResourceScope, assignmentName));
+
+    Assignment assignment =
+        azureBlueprintClient.getAssignment(context.getAzureConfig(), assignmentResourceScope, assignmentName);
+
+    blueprintDeploymentLogCallback.saveExecutionLog(assignment == null
+            ? format("Not found assignment at requested scope %n")
+            : format("Found existing assignment at requested scope %n"));
+
+    return assignment != null && isNotBlank(assignment.getId());
   }
 
   private void grantAzureBlueprintsSPOwnerRole(

@@ -52,7 +52,7 @@ public class ConnectorResourceImpl implements Resource {
         NGRestUtils
             .getResponse(connectorResourceClient.listConnectors(scope.getAccountIdentifier(), scope.getOrgIdentifier(),
                 scope.getProjectIdentifier(), 0, resourceIds.size(),
-                ConnectorFilterPropertiesDTO.builder().connectorIdentifiers(resourceIds).build()))
+                ConnectorFilterPropertiesDTO.builder().connectorIdentifiers(resourceIds).build(), true))
             .getContent();
     Set<String> validResourceIds =
         secretManagers.stream().map(e -> e.getConnector().getIdentifier()).collect(Collectors.toSet());

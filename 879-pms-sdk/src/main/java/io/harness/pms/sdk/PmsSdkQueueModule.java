@@ -11,7 +11,7 @@ import io.harness.mongo.queue.QueueFactory;
 import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.execution.SdkResponseEvent;
 import io.harness.pms.interrupts.InterruptEvent;
-import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
+import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.execution.listeners.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.interrupt.InterruptEventListener;
@@ -113,7 +113,7 @@ public class PmsSdkQueueModule extends AbstractModule {
   }
 
   private MongoTemplate getMongoTemplate(Injector injector) {
-    if (config.getDeploymentMode() == DeployMode.REMOTE_IN_PROCESS) {
+    if (config.getDeploymentMode() == SdkDeployMode.REMOTE_IN_PROCESS) {
       return injector.getInstance(MongoTemplate.class);
     } else {
       return injector.getInstance(Key.get(MongoTemplate.class, Names.named("pmsSdkMongoTemplate")));

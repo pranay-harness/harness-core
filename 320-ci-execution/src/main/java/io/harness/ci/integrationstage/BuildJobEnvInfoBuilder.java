@@ -403,6 +403,10 @@ public class BuildJobEnvInfoBuilder {
         envVarMap.put(key, entry.getValue());
       }
     }
+    if (!isEmpty(pluginStepInfo.getEnvVariables())) {
+      envVarMap.putAll(pluginStepInfo.getEnvVariables());
+    }
+
     boolean privileged = resolveBooleanParameter(pluginStepInfo.getPrivileged(), false);
     Integer runAsUser = resolveIntegerParameter(pluginStepInfo.getRunAsUser(), null);
 

@@ -8,13 +8,16 @@ import static java.lang.String.format;
 import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.encryption.Scope;
+import io.harness.exception.JsonSchemaValidationException;
 import io.harness.jackson.JsonNodeUtils;
 import io.harness.network.SafeHttpCall;
 import io.harness.plancreator.stages.parallel.ParallelStageElementConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.pms.helpers.PmsFeatureFlagHelper;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.utils.PmsConstants;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
@@ -29,14 +32,20 @@ import io.harness.yaml.schema.beans.SchemaConstants;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
 import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
 import io.harness.yaml.schema.client.YamlSchemaClient;
+import io.harness.yaml.utils.JsonPipelineUtils;
 import io.harness.yaml.utils.YamlSchemaUtils;
+import io.harness.yaml.validator.YamlSchemaValidator;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.inject.Inject;
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -45,8 +54,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -61,11 +75,26 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
   private static final Class<StepElementConfig> STEP_ELEMENT_CONFIG_CLASS = StepElementConfig.class;
   private static final String APPROVAL_NAMESPACE = "approval";
 
+  private static final int CACHE_EVICTION_TIME_HOUR = 1;
+
   private final YamlSchemaProvider yamlSchemaProvider;
   private final YamlSchemaGenerator yamlSchemaGenerator;
   private final Map<String, YamlSchemaClient> yamlSchemaClientMapper;
+  private final YamlSchemaValidator yamlSchemaValidator;
 
   private final PmsSdkInstanceService pmsSdkInstanceService;
+
+  private final LoadingCache<SchemaKey, JsonNode> schemaCache =
+      CacheBuilder.newBuilder()
+          .expireAfterAccess(CACHE_EVICTION_TIME_HOUR, TimeUnit.HOURS)
+          .build(new CacheLoader<SchemaKey, JsonNode>() {
+            @Override
+            public JsonNode load(@NotNull final SchemaKey schemaKey) {
+              return getPipelineYamlSchema(schemaKey.getProjectId(), schemaKey.getOrgId(), schemaKey.getScope());
+            }
+          });
+
+  private final PmsFeatureFlagHelper pmsFeatureFlagHelper;
 
   public JsonNode getPipelineYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope) {
     JsonNode pipelineSchema =
@@ -181,6 +210,17 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
                                .build());
   }
 
+  private Set<FieldEnumData> getFieldEnumData(Field typedField, Set<SubtypeClassMap> mapOfSubtypes) {
+    String fieldName = YamlSchemaUtils.getJsonTypeInfo(typedField).property();
+
+    return ImmutableSet.of(
+        FieldEnumData.builder()
+            .fieldName(fieldName)
+            .enumValues(ImmutableSortedSet.copyOf(
+                mapOfSubtypes.stream().map(SubtypeClassMap::getSubtypeEnum).collect(Collectors.toList())))
+            .build());
+  }
+
   private void flatten(ObjectNode objectNode) {
     JsonNode sections = objectNode.get(PROPERTIES_NODE).get("sections");
     if (sections.isObject()) {
@@ -240,8 +280,12 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     Set<SubtypeClassMap> mapOfSubtypes = YamlSchemaUtils.getMapOfSubtypesUsingReflection(typedField);
     Set<FieldSubtypeData> classFieldSubtypeData = new HashSet<>();
     classFieldSubtypeData.add(YamlSchemaUtils.getFieldSubtypeData(typedField, mapOfSubtypes));
-    swaggerDefinitionsMetaInfoMap.put(
-        STEP_ELEMENT_CONFIG, SwaggerDefinitionsMetaInfo.builder().subtypeClassMap(classFieldSubtypeData).build());
+    Set<FieldEnumData> fieldEnumData = getFieldEnumData(typedField, mapOfSubtypes);
+    swaggerDefinitionsMetaInfoMap.put(STEP_ELEMENT_CONFIG,
+        SwaggerDefinitionsMetaInfo.builder()
+            .fieldEnumData(fieldEnumData)
+            .subtypeClassMap(classFieldSubtypeData)
+            .build());
     yamlSchemaGenerator.convertSwaggerToJsonSchema(
         swaggerDefinitionsMetaInfoMap, mapper, STEP_ELEMENT_CONFIG, jsonNode);
   }
@@ -255,6 +299,29 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     return yamlSchemaClientMapper.get(instanceName);
   }
 
+  @Override
+  public void validateYamlSchema(String orgId, String projectId, String yaml) {
+    try {
+      JsonNode schema =
+          schemaCache.get(SchemaKey.builder().projectId(projectId).orgId(orgId).scope(Scope.PROJECT).build());
+      String schemaString = JsonPipelineUtils.writeJsonString(schema);
+      Set<String> errors = yamlSchemaValidator.validate(yaml, schemaString);
+      if (!errors.isEmpty()) {
+        throw new JsonSchemaValidationException(String.join("\n", errors));
+      }
+    } catch (Exception ex) {
+      log.error(ex.getMessage());
+      throw new JsonSchemaValidationException(ex.getMessage());
+    }
+  }
+
+  @Override
+  public void validateYamlSchema(String accountId, String orgId, String projectId, String yaml) {
+    if (pmsFeatureFlagHelper.isEnabled(accountId, FeatureName.NG_SCHEMA_VALIDATION)) {
+      validateYamlSchema(orgId, projectId, yaml);
+    }
+  }
+
   private void removeUnwantedNodes(JsonNode definitions) {
     if (definitions.isObject()) {
       Iterator<JsonNode> elements = definitions.elements();
@@ -263,5 +330,14 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
         yamlSchemaGenerator.removeUnwantedNodes(jsonNode, YAMLFieldNameConstants.ROLLBACK_STEPS);
       }
     }
+  }
+
+  @Value
+  @Builder
+  @EqualsAndHashCode(callSuper = false)
+  private static class SchemaKey {
+    String projectId;
+    String orgId;
+    Scope scope;
   }
 }

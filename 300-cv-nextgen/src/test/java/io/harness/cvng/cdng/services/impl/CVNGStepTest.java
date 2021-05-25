@@ -17,6 +17,7 @@ import io.harness.cvng.cdng.beans.CVNGStepParameter;
 import io.harness.cvng.cdng.beans.TestVerificationJobSpec;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskKeys;
+import io.harness.cvng.cdng.services.impl.CVNGStep.VerifyStepOutcome;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.CVConfigService;
@@ -125,9 +126,10 @@ public class CVNGStepTest extends CvNextGenTestBase {
     assertThat(stepResponse.getFailureInfo()).isNull();
     StepOutcome stepOutcome = StepOutcome.builder()
                                   .name("output")
-                                  .outcome(CVNGStep.VerifyStepOutcome.builder()
+                                  .outcome(VerifyStepOutcome.builder()
                                                .progressPercentage(100)
                                                .estimatedRemainingTime("0 minutes")
+                                               .activityId(activityId)
                                                .build())
                                   .build();
     assertThat(stepResponse.getStepOutcomes()).isEqualTo(Collections.singletonList(stepOutcome));
@@ -162,9 +164,10 @@ public class CVNGStepTest extends CvNextGenTestBase {
                        .build());
     StepOutcome stepOutcome = StepOutcome.builder()
                                   .name("output")
-                                  .outcome(CVNGStep.VerifyStepOutcome.builder()
+                                  .outcome(VerifyStepOutcome.builder()
                                                .progressPercentage(100)
                                                .estimatedRemainingTime("0 minutes")
+                                               .activityId(activityId)
                                                .build())
                                   .build();
     assertThat(stepResponse.getStepOutcomes()).isEqualTo(Collections.singletonList(stepOutcome));
@@ -184,18 +187,14 @@ public class CVNGStepTest extends CvNextGenTestBase {
                                               .remainingTimeMs(Duration.ofMinutes(3).toMillis())
                                               .durationMs(Duration.ofMinutes(30).toMillis())
                                               .build();
-    StepResponse stepResponse = cvngStep.handleAsyncResponse(ambiance, cvngStepParameter,
-        Collections.singletonMap(activityId,
-            CVNGStep.CVNGResponseData.builder().activityId(activityId).activityStatusDTO(activityStatusDTO).build()));
-    assertThat(stepResponse.getStatus()).isEqualTo(Status.RUNNING);
-    assertThat(stepResponse.getFailureInfo()).isNull();
-    StepOutcome stepOutcome =
-        StepOutcome.builder()
-            .name("output")
-            .outcome(
-                CVNGStep.VerifyStepOutcome.builder().progressPercentage(50).estimatedRemainingTime("3 minutes").build())
-            .build();
-    assertThat(stepResponse.getStepOutcomes()).isEqualTo(Collections.singletonList(stepOutcome));
+    assertThatThrownBy(()
+                           -> cvngStep.handleAsyncResponse(ambiance, cvngStepParameter,
+                               Collections.singletonMap(activityId,
+                                   CVNGStep.CVNGResponseData.builder()
+                                       .activityId(activityId)
+                                       .activityStatusDTO(activityStatusDTO)
+                                       .build())))
+        .isInstanceOf(IllegalStateException.class);
   }
 
   @Test
@@ -225,13 +224,39 @@ public class CVNGStepTest extends CvNextGenTestBase {
                                            .setMessage("Verification could not complete due to an unknown error")
                                            .build())
                        .build());
-    StepOutcome stepOutcome =
-        StepOutcome.builder()
-            .name("output")
-            .outcome(
-                CVNGStep.VerifyStepOutcome.builder().progressPercentage(50).estimatedRemainingTime("3 minutes").build())
-            .build();
+    StepOutcome stepOutcome = StepOutcome.builder()
+                                  .name("output")
+                                  .outcome(VerifyStepOutcome.builder()
+                                               .progressPercentage(50)
+                                               .estimatedRemainingTime("3 minutes")
+                                               .activityId(activityId)
+                                               .build())
+                                  .build();
     assertThat(stepResponse.getStepOutcomes()).isEqualTo(Collections.singletonList(stepOutcome));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testHandleProgress() {
+    Ambiance ambiance = getAmbiance();
+    CVNGStepParameter cvngStepParameter = getCvngStepParameter();
+    String activityId = generateUuid();
+    ActivityStatusDTO activityStatusDTO = ActivityStatusDTO.builder()
+                                              .activityId(activityId)
+                                              .status(ActivityVerificationStatus.ERROR)
+                                              .progressPercentage(50)
+                                              .remainingTimeMs(Duration.ofMinutes(3).toMillis())
+                                              .durationMs(Duration.ofMinutes(30).toMillis())
+                                              .build();
+    VerifyStepOutcome verifyStepOutcome = (VerifyStepOutcome) cvngStep.handleProgress(ambiance, cvngStepParameter,
+        CVNGStep.CVNGResponseData.builder().activityId(activityId).activityStatusDTO(activityStatusDTO).build());
+    VerifyStepOutcome expected = VerifyStepOutcome.builder()
+                                     .progressPercentage(50)
+                                     .estimatedRemainingTime("3 minutes")
+                                     .activityId(activityId)
+                                     .build();
+    assertThat(verifyStepOutcome).isEqualTo(expected);
   }
 
   private CVNGStepParameter getCvngStepParameter() {

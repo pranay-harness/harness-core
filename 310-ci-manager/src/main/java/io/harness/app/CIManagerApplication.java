@@ -18,8 +18,6 @@ import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.exception.GeneralException;
-import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
-import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
@@ -34,9 +32,9 @@ import io.harness.persistence.Store;
 import io.harness.persistence.UserProvider;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.pms.sdk.PmsSdkConfiguration;
-import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
@@ -234,7 +232,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     addGuiceValidationModule(modules);
     modules.add(new CIManagerServiceModule(configuration));
     modules.add(YamlSdkModule.getInstance());
-    modules.add(ExecutionPlanModule.getInstance());
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(configuration)));
 
     Injector injector = Guice.createInjector(modules);
@@ -244,7 +241,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     registerManagedBeans(environment, injector);
     registerHealthCheck(environment, injector);
     registerAuthFilters(configuration, environment);
-    registerExecutionPlanCreators(injector);
     registerCorrelationFilter(environment, injector);
     registerStores(configuration, injector);
     registerYamlSdk(injector);
@@ -291,7 +287,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
 
   private void registerPMSSDK(CIManagerConfiguration config, Injector injector) {
     PmsSdkConfiguration sdkConfig = getPmsSdkConfiguration(config);
-    if (sdkConfig.getDeploymentMode().equals(DeployMode.REMOTE)) {
+    if (sdkConfig.getDeploymentMode().equals(SdkDeployMode.REMOTE)) {
       try {
         PmsSdkInitHelper.initializeSDKInstance(injector, sdkConfig);
       } catch (Exception e) {
@@ -307,7 +303,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     }
 
     return PmsSdkConfiguration.builder()
-        .deploymentMode(remote ? DeployMode.REMOTE : DeployMode.LOCAL)
+        .deploymentMode(remote ? SdkDeployMode.REMOTE : SdkDeployMode.LOCAL)
         .serviceName("ci")
         .pipelineServiceInfoProviderClass(CIPipelineServiceInfoProvider.class)
         .mongoConfig(config.getPmsMongoConfig())
@@ -371,10 +367,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         injector.getInstance(NotifyQueuePublisherRegister.class);
     notifyQueuePublisherRegister.register(
         NG_ORCHESTRATION, payload -> publisher.send(singletonList(NG_ORCHESTRATION), payload));
-  }
-
-  private void registerExecutionPlanCreators(Injector injector) {
-    injector.getInstance(CIExecutionPlanCreatorRegistrar.class).register();
   }
 
   private void registerAuthFilters(CIManagerConfiguration configuration, Environment environment) {

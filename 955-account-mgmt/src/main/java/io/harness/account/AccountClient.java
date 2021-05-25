@@ -42,6 +42,6 @@ public interface AccountClient {
   Call<RestResponse<Boolean>> doesAccountExist(@Path("accountName") String accountName);
 
   @PUT(ACCOUNT_API + "/{accountId}/default-experience")
-  Call<RestResponse<Boolean>> updateDefaultExperienceIfNull(
+  Call<RestResponse<Boolean>> updateDefaultExperienceIfApplicable(
       @Path("accountId") String accountId, @Query("defaultExperience") DefaultExperience defaultExperience);
 }

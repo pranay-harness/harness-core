@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.core.Recast;
 import io.harness.core.Recaster;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.packages.HarnessPackages;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.serializer.recaster.JsonObjectRecastTransformer;
 import io.harness.serializer.recaster.ParameterFieldRecastTransformer;
@@ -21,6 +22,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +39,7 @@ public class RecastOrchestrationUtils {
   private static final Recast recast = new Recast();
 
   static {
+    recast.registerAliases(HarnessPackages.IO_HARNESS, HarnessPackages.SOFTWARE_WINGS);
     recast.addTransformer(new JsonObjectRecastTransformer());
     recast.addTransformer(new ProtoRecastTransformer());
     recast.addTransformer(new ProtoEnumRecastTransformer());
@@ -162,8 +165,12 @@ public class RecastOrchestrationUtils {
   }
 
   private static boolean isParameterField(Document value1) {
-    return value1.containsKey(Recaster.RECAST_CLASS_KEY)
-        && value1.get(Recaster.RECAST_CLASS_KEY).equals(ParameterField.class.getName());
+    String documentIdentifier = (String) RecastReflectionUtils.getDocumentIdentifier(value1);
+    return documentIdentifier != null
+        && (documentIdentifier.equals(ParameterField.class.getName())
+            || documentIdentifier.equals(
+                Optional.ofNullable(RecastReflectionUtils.obtainRecasterAliasValueOrNull(ParameterField.class))
+                    .orElse("")));
   }
 
   @SuppressWarnings("unchecked")

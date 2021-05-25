@@ -208,7 +208,7 @@ public class NGTriggerResource {
 
     return ResponseDTO.newResponse(getNGPageResponse(
         ngTriggerService.list(criteria, pageRequest)
-            .map(triggerEntity -> ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(triggerEntity, false))));
+            .map(triggerEntity -> ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(triggerEntity, true))));
   }
 
   @GET

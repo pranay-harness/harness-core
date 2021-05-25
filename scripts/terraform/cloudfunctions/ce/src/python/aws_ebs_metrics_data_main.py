@@ -5,36 +5,9 @@ import io
 import os
 import base64
 from google.cloud import bigquery
-from util import create_dataset, if_tbl_exists, createTable, print_, ACCOUNTID_LOG
+from util import create_dataset, if_tbl_exists, createTable, print_, ACCOUNTID_LOG, TABLE_NAME_FORMAT
+from aws_util import assumed_role_session, get_secret_key
 
-EBS_DATA_MAP = []
-TABLE_NAME_FORMAT = "%s.BillingReport_%s.%s"
-
-# TODO: Move this to util
-def get_secret_key(jsonData, key):
-    client = secretmanager.SecretManagerServiceClient()
-    secret_name = key
-    project_id = jsonData["projectName"]
-    request = {"name": f"projects/{project_id}/secrets/{secret_name}/versions/latest"}
-    response = client.access_secret_version(request)
-    secret_string = response.payload.data.decode("UTF-8")
-    return secret_string
-
-# TODO: Move this to util
-def assumed_role_session(jsonData):
-    """
-    :return: Access key, Secret Key and Session Token
-    """
-    roleArn, roleSessionName, externalId = jsonData["roleArn"], jsonData["accountIdOrig"], jsonData["externalId"]
-    sts_client = boto3.client('sts', aws_access_key_id=get_secret_key(jsonData, "CE_AWS_ACCESS_KEY_GCPSM"),
-                              aws_secret_access_key=get_secret_key(jsonData, "CE_AWS_SECRET_ACCESS_KEY_GCPSM"))
-    assumed_role_object = sts_client.assume_role(
-        RoleArn=roleArn,
-        RoleSessionName=roleSessionName,
-        ExternalId=externalId,
-    )
-    credentials = assumed_role_object['Credentials']
-    return credentials['AccessKeyId'], credentials['SecretAccessKey'], credentials['SessionToken']
 
 def get_regions_and_volumes(jsonData):
     REGIONS_VOLUME_MAP = {}

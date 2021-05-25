@@ -61,7 +61,7 @@ public class K8sRollingRollbackStep extends TaskExecutableWithRollback<K8sDeploy
 
     K8sRollingOutcome k8sRollingOutcome = (K8sRollingOutcome) optionalSweepingOutput.getOutput();
     InfrastructureOutcome infrastructure = (InfrastructureOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
 
     K8sRollingRollbackDeployRequest rollingRollbackDeployRequest =
         K8sRollingRollbackDeployRequest.builder()

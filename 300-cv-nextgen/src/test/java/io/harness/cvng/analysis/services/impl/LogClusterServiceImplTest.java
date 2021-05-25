@@ -140,7 +140,7 @@ public class LogClusterServiceImplTest extends CvNextGenTestBase {
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     String accountId = generateUuid();
     VerificationJobDTO verificationJob = newCanaryVerificationJob();
-    verificationJobService.upsert(accountId, verificationJob);
+    verificationJobService.create(accountId, verificationJob);
     VerificationJobInstance verificationJobInstance = newVerificationJobInstanceDTO();
     String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
     String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);

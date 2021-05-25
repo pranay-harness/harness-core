@@ -35,6 +35,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
@@ -98,6 +99,15 @@ public class JenkinsConfig extends SettingValue
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
         jenkinsUrl, maskingEvaluator));
+  }
+
+  @Override
+  public boolean shouldDeleteArtifact(SettingValue prev) {
+    if (!(prev instanceof JenkinsConfig)) {
+      return true;
+    }
+    JenkinsConfig prevConfig = (JenkinsConfig) prev;
+    return !StringUtils.equals(prevConfig.getJenkinsUrl(), jenkinsUrl);
   }
 
   @Override

@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CV;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.DataCollectionRequestType;
+import io.harness.delegate.beans.cvng.appd.AppDynamicsUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.Map;

@@ -9,7 +9,6 @@ import io.harness.batch.processing.pricing.gcp.bigquery.impl.BigQueryHelperServi
 
 import java.time.Instant;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
@@ -21,17 +20,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class DataCheckBigqueryAndTimescaleTasklet implements Tasklet {
   @Autowired private BillingDataServiceImpl billingDataService;
   @Autowired private BigQueryHelperServiceImpl bigQueryHelperService;
-  private JobParameters parameters;
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
-    parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
-    Long startTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE);
-    String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
-    ClusterDataDetails timeScaleClusterData =
-        billingDataService.getTimeScaleClusterData(accountId, Instant.ofEpochMilli(startTime));
-    ClusterDataDetails bigQueryClusterData =
-        bigQueryHelperService.getClusterDataDetails(accountId, Instant.ofEpochMilli(startTime));
+    final CCMJobConstants jobConstants = new CCMJobConstants(chunkContext);
+
+    ClusterDataDetails timeScaleClusterData = billingDataService.getTimeScaleClusterData(
+        jobConstants.getAccountId(), Instant.ofEpochMilli(jobConstants.getJobStartTime()));
+    ClusterDataDetails bigQueryClusterData = bigQueryHelperService.getClusterDataDetails(
+        jobConstants.getAccountId(), Instant.ofEpochMilli(jobConstants.getJobStartTime()));
     if (timeScaleClusterData != null && bigQueryClusterData != null) {
       log.info("Timescale Billing data entries count {} , Timescale Sum of billing amount: {}",
           timeScaleClusterData.getEntriesCount(), timeScaleClusterData.getBillingAmountSum());

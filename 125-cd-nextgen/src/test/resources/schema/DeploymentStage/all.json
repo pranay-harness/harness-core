@@ -199,7 +199,7 @@
           "type": "string"
         },
         "primary": {
-          "$ref": "#/definitions/ArtifactSpecWrapper"
+          "$ref": "#/definitions/PrimaryArtifact"
         },
         "sidecars": {
           "type": "array",
@@ -230,73 +230,6 @@
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "ArtifactSpecWrapper": {
-      "type": "object",
-      "required": [
-        "type"
-      ],
-      "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "Dockerhub",
-            "Gcr",
-            "Ecr"
-          ]
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "allOf": [
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "Dockerhub"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/DockerHubArtifactConfig"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "Ecr"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/EcrArtifactConfig"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "Gcr"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/GcrArtifactConfig"
-              }
-            }
-          }
-        }
-      ]
     },
     "BarrierStepInfo": {
       "allOf": [
@@ -424,7 +357,17 @@
           "type": "object",
           "properties": {
             "count": {
-              "type": "string"
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldString"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
             }
           }
         }
@@ -495,6 +438,9 @@
         {
           "type": "object",
           "properties": {
+            "allManifestPaths": {
+              "type": "boolean"
+            },
             "manifestPaths": {
               "type": "array",
               "items": {
@@ -513,7 +459,11 @@
         },
         {
           "type": "object",
-          "properties": { }
+          "properties": {
+            "deleteNamespace": {
+              "type": "boolean"
+            }
+          }
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -525,7 +475,14 @@
         },
         {
           "type": "object",
-          "properties": { }
+          "properties": {
+            "resourceNames": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -533,31 +490,6 @@
     "DeleteResourcesBaseSpec": {
       "type": "object",
       "discriminator": "type",
-      "properties": {
-        "allManifestPaths": {
-          "type": "boolean"
-        },
-        "deleteNamespace": {
-          "type": "boolean"
-        },
-        "manifestPaths": {
-          "type": "string"
-        },
-        "resourceNames": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "ResourceName",
-            "ReleaseName",
-            "ManifestPath"
-          ]
-        }
-      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "DeleteResourcesWrapper": {
@@ -749,6 +681,9 @@
     },
     "ExecutionElementConfig": {
       "type": "object",
+      "required": [
+        "steps"
+      ],
       "properties": {
         "rollbackSteps": {
           "type": "array",
@@ -760,7 +695,9 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/ExecutionWrapperConfig"
-          }
+          },
+          "maxItems": 2147483647,
+          "minItems": 1
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -1522,19 +1459,6 @@
     "InstanceSelectionBase": {
       "type": "object",
       "discriminator": "type",
-      "properties": {
-        "instances": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "Count",
-            "Percentage"
-          ]
-        }
-      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "InstanceSelectionWrapper": {
@@ -1613,8 +1537,7 @@
           "required": [
             "approvalCriteria",
             "connectorRef",
-            "issueKey",
-            "rejectionCriteria"
+            "issueKey"
           ],
           "properties": {
             "approvalCriteria": {
@@ -1716,6 +1639,11 @@
         },
         {
           "type": "object",
+          "required": [
+            "connectorRef",
+            "namespace",
+            "releaseName"
+          ],
           "properties": {
             "connectorRef": {
               "type": "string"
@@ -1905,6 +1833,12 @@
         },
         {
           "type": "object",
+          "required": [
+            "cluster",
+            "connectorRef",
+            "namespace",
+            "releaseName"
+          ],
           "properties": {
             "cluster": {
               "type": "string"
@@ -2446,6 +2380,10 @@
               "type": "number",
               "format": "double"
             },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+            },
             "type": {
               "type": "string",
               "enum": [
@@ -2496,7 +2434,16 @@
         "errors": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "AnyOther",
+              "Authentication",
+              "Connectivity",
+              "Timeout",
+              "Authorization",
+              "Verification",
+              "DelegateProvisioning"
+            ]
           }
         }
       },
@@ -2684,34 +2631,6 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "ParameterFieldInteger": {
-      "type": "object",
-      "properties": {
-        "expression": {
-          "type": "boolean"
-        },
-        "expressionValue": {
-          "type": "string"
-        },
-        "inputSetValidator": {
-          "$ref": "#/definitions/InputSetValidator"
-        },
-        "jsonResponseField": {
-          "type": "boolean"
-        },
-        "responseField": {
-          "type": "string"
-        },
-        "typeString": {
-          "type": "boolean"
-        },
-        "value": {
-          "type": "integer",
-          "format": "int32"
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
     "ParameterFieldListTaskSelectorYaml": {
       "type": "object",
       "properties": {
@@ -2738,6 +2657,33 @@
           "items": {
             "$ref": "#/definitions/TaskSelectorYaml"
           }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParameterFieldString": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -2770,7 +2716,7 @@
             "percentage": {
               "oneOf": [
                 {
-                  "$ref": "#/definitions/ParameterFieldInteger"
+                  "$ref": "#/definitions/ParameterFieldString"
                 },
                 {
                   "type": "string"
@@ -2789,7 +2735,14 @@
       "type": "object",
       "properties": {
         "allowSimultaneousDeployments": {
-          "type": "boolean"
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "environment": {
           "$ref": "#/definitions/EnvironmentYaml"
@@ -2822,6 +2775,73 @@
               ]
             }
           ]
+        }
+      ]
+    },
+    "PrimaryArtifact": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "DockerRegistry",
+            "Gcr",
+            "Ecr"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "DockerRegistry"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/DockerHubArtifactConfig"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Ecr"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/EcrArtifactConfig"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Gcr"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/GcrArtifactConfig"
+              }
+            }
+          }
         }
       ]
     },
@@ -3064,6 +3084,10 @@
             "default": {
               "type": "string"
             },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+            },
             "type": {
               "type": "string",
               "enum": [
@@ -3101,6 +3125,11 @@
       "allOf": [
         {
           "oneOf": [
+            {
+              "required": [
+                "useFromStage"
+              ]
+            },
             {
               "required": [
                 "service"
@@ -3439,7 +3468,7 @@
         "type": {
           "type": "string",
           "enum": [
-            "Dockerhub",
+            "DockerRegistry",
             "Gcr",
             "Ecr"
           ]
@@ -3451,7 +3480,7 @@
           "if": {
             "properties": {
               "type": {
-                "const": "Dockerhub"
+                "const": "DockerRegistry"
               }
             }
           },
@@ -3590,10 +3619,12 @@
           }
         },
         "identifier": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
         },
         "timeout": {
           "type": "string"
@@ -3959,10 +3990,12 @@
           }
         },
         "identifier": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
         },
         "rollbackSteps": {
           "type": "array",
@@ -3974,7 +4007,9 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/ExecutionWrapperConfig"
-          }
+          },
+          "maxItems": 2147483647,
+          "minItems": 1
         },
         "when": {
           "$ref": "#/definitions/StepWhenCondition"
@@ -4174,6 +4209,10 @@
             "default": {
               "type": "string"
             },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+            },
             "type": {
               "type": "string",
               "enum": [
@@ -4207,6 +4246,12 @@
           "properties": {
             "configuration": {
               "$ref": "#/definitions/TerrformStepConfiguration"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "metadata": {
               "type": "string"
@@ -4270,6 +4315,12 @@
           "properties": {
             "configuration": {
               "$ref": "#/definitions/TerrformStepConfiguration"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "metadata": {
               "type": "string"
@@ -4389,6 +4440,12 @@
             "configuration": {
               "$ref": "#/definitions/TerraformPlanExecutionData"
             },
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
             "provisionerIdentifier": {
               "type": "string"
             }
@@ -4408,6 +4465,12 @@
             "provisionerIdentifier"
           ],
           "properties": {
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
             "provisionerIdentifier": {
               "type": "string"
             }

@@ -86,7 +86,7 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
       }
     });
     install(OrchestrationBeansModule.getInstance());
-    install(OrchestrationQueueModule.getInstance(config));
+    install(OrchestrationQueueModule.getInstance());
 
     bind(NodeExecutionService.class).to(NodeExecutionServiceImpl.class).in(Singleton.class);
     bind(PlanExecutionService.class).to(PlanExecutionServiceImpl.class).in(Singleton.class);

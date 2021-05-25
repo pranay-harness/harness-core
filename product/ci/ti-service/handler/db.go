@@ -19,7 +19,7 @@ func HandleWrite(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 		ctx := r.Context()
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam,
 			pipelineIdParam, buildIdParam, stageIdParam,
-			stepIdParam, reportParam, repoParam, shaParam)
+			stepIdParam, reportParam)
 		if err != nil {
 			WriteInternalError(w, err)
 			return

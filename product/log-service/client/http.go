@@ -118,7 +118,7 @@ func (c *HTTPClient) DownloadLink(ctx context.Context, key string) (*Link, error
 // Open opens the data stream.
 func (c *HTTPClient) Open(ctx context.Context, key string) error {
 	path := fmt.Sprintf(streamEndpoint, c.AccountID, key)
-	backoff := createBackoff(60 * time.Second)
+	backoff := createBackoff(10 * time.Second)
 	_, err := c.retry(ctx, c.Endpoint+path, "POST", nil, nil, false, backoff)
 	return err
 }

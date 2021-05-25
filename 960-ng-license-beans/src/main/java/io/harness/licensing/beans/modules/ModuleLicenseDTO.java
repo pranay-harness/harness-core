@@ -45,6 +45,6 @@ public abstract class ModuleLicenseDTO {
   long startTime;
   long expiryTime;
   LicenseStatus status;
-  long createdAt;
-  long lastModifiedAt;
+  Long createdAt;
+  Long lastModifiedAt;
 }

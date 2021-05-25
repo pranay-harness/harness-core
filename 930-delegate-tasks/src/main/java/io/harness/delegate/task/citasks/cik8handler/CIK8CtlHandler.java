@@ -286,15 +286,30 @@ public class CIK8CtlHandler {
   }
 
   public Boolean deletePod(KubernetesClient kubernetesClient, String podName, String namespace) {
-    return kubernetesClient.pods().inNamespace(namespace).withName(podName).delete();
+    RetryPolicy<Object> retryPolicy =
+        getRetryPolicy(format("[Retrying failed to delete pod: [%s]; attempt: {}", podName),
+            format("Failed to delete pod after retrying {} times", podName));
+
+    return Failsafe.with(retryPolicy)
+        .get(() -> kubernetesClient.pods().inNamespace(namespace).withName(podName).delete());
   }
 
   public Boolean deleteService(KubernetesClient kubernetesClient, String namespace, String serviceName) {
-    return kubernetesClient.services().inNamespace(namespace).withName(serviceName).delete();
+    RetryPolicy<Object> retryPolicy =
+        getRetryPolicy(format("[Retrying failed to delete service: [%s]; attempt: {}", serviceName),
+            format("Failed to delete service after retrying {} times", serviceName));
+
+    return Failsafe.with(retryPolicy)
+        .get(() -> kubernetesClient.services().inNamespace(namespace).withName(serviceName).delete());
   }
 
   public Boolean deleteSecret(KubernetesClient kubernetesClient, String namespace, String secretName) {
-    return kubernetesClient.secrets().inNamespace(namespace).withName(secretName).delete();
+    RetryPolicy<Object> retryPolicy =
+        getRetryPolicy(format("[Retrying failed to delete secret: [%s]; attempt: {}", secretName),
+            format("Failed to delete secret after retrying {} times", secretName));
+
+    return Failsafe.with(retryPolicy)
+        .get(() -> kubernetesClient.secrets().inNamespace(namespace).withName(secretName).delete());
   }
 
   public void createGitSecret(KubernetesClient kubernetesClient, String namespace, ConnectorDetails gitConnector)

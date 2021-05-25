@@ -6,10 +6,8 @@ import io.harness.beans.execution.PRWebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.execution.WebhookGitUser;
 import io.harness.ci.beans.entities.CIBuild;
-import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
-import io.harness.pms.contracts.execution.Status;
 
 import java.util.Arrays;
 
@@ -66,9 +64,5 @@ public class BuildDtoMapperTestHelper {
         .identifier(PIPELINE_ID)
         .ngPipeline(NgPipeline.builder().name(PIPELINE_NAME).build())
         .build();
-  }
-
-  public static OrchestrationGraphDTO getGraph() {
-    return OrchestrationGraphDTO.builder().planExecutionId(EXECUTION_ID).status(Status.SUCCEEDED).build();
   }
 }

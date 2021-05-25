@@ -5,6 +5,7 @@ import static io.harness.distribution.barrier.Barrier.State.STANDING;
 import static io.harness.rule.OwnerRule.ALEXEI;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.data.Offset.offset;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -34,6 +35,7 @@ import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTracker;
 import io.fabric8.utils.Lists;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -121,12 +123,15 @@ public class PMSBarrierServiceTest extends PipelineServiceTestBase {
     Ambiance ambiance = Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build();
     String planNodeId = generateUuid();
     String timeoutId = generateUuid();
+    long currentTimeMillis = System.currentTimeMillis();
+    long timeoutIn = TimeUnit.MINUTES.toMillis(2);
 
-    NodeExecution nodeExecution =
-        NodeExecution.builder().timeoutInstanceIds(Collections.singletonList(timeoutId)).build();
+    NodeExecution nodeExecution = NodeExecution.builder()
+                                      .startTs(currentTimeMillis)
+                                      .timeoutInstanceIds(Collections.singletonList(timeoutId))
+                                      .build();
 
-    TimeoutInstance timeoutInstance =
-        TimeoutInstance.builder().tracker(new AbsoluteTimeoutTracker(System.currentTimeMillis())).build();
+    TimeoutInstance timeoutInstance = TimeoutInstance.builder().tracker(new AbsoluteTimeoutTracker(timeoutIn)).build();
 
     BarrierExecutionInstance instance1 =
         BarrierExecutionInstance.builder()
@@ -161,6 +166,6 @@ public class PMSBarrierServiceTest extends PipelineServiceTestBase {
     assertThat(barrierExecutionInfo.isStarted()).isFalse();
     assertThat(barrierExecutionInfo.getStages())
         .containsExactlyInAnyOrder(StageDetail.builder().identifier("stage-identifier").name("stage-name").build());
-    assertThat(barrierExecutionInfo.getTimeoutIn()).isLessThanOrEqualTo(System.currentTimeMillis());
+    assertThat(barrierExecutionInfo.getTimeoutIn()).isCloseTo(timeoutIn, offset(100L));
   }
 }

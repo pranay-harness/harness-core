@@ -5,6 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ARCHIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -18,18 +19,19 @@ import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.advisers.AdviseType;
-import io.harness.pms.contracts.advisers.AdviserIssuer;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.EndPlanAdvise;
-import io.harness.pms.contracts.advisers.InterruptConfig;
-import io.harness.pms.contracts.advisers.IssuedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.interrupts.AdviserIssuer;
+import io.harness.pms.contracts.interrupts.InterruptConfig;
 import io.harness.pms.contracts.interrupts.InterruptType;
+import io.harness.pms.contracts.interrupts.IssuedBy;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.rule.Owner;
+import io.harness.serializer.ProtoUtils;
 import io.harness.testlib.RealMongo;
 
 import com.google.inject.Inject;
@@ -111,6 +113,7 @@ public class EndPlanAdviserResponseHandlerTest extends OrchestrationTestBase {
                         .setIssuedBy(IssuedBy.newBuilder()
                                          .setAdviserIssuer(
                                              AdviserIssuer.newBuilder().setAdviserType(AdviseType.END_PLAN).build())
+                                         .setIssueTime(ProtoUtils.unixMillisToTimestamp(anyLong()))
                                          .build())
                         .build())
                 .build());

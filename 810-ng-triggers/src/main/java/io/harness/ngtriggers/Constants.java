@@ -15,4 +15,6 @@ public interface Constants {
   String ISSUE_COMMENT_EVENT_TYPE = "Issue Comment";
 
   String TRIGGER_EXECUTION_TAG_TAG_VALUE_DELIMITER = ":";
+  String TRIGGER_REF_DELIMITER = "/";
+  String TRIGGER_REF = "triggerRef";
 }

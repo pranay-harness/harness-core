@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.StepTypeLookupService;
 import io.harness.logging.AutoLogContext;
+import io.harness.observer.Subject;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
@@ -15,20 +16,25 @@ import io.harness.queue.QueuePublisher;
 import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.sql.Date;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Set;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
+@Singleton
 public class OrchestrationEventEmitter {
   @Inject private OrchestrationEventHandlerRegistry handlerRegistry;
   @Inject private QueuePublisher<OrchestrationEvent> orchestrationEventQueue;
   @Inject(optional = true) private StepTypeLookupService stepTypeLookupService;
   @Inject private OrchestrationEventLogRepository orchestrationEventLogRepository;
+  @Getter @Setter Subject<OrchestrationEventLogHandler> orchestrationEventLogSubjectSubject = new Subject<>();
 
   public void emitEvent(OrchestrationEvent event) {
     try (AutoLogContext ignore = event.autoLogContext()) {
@@ -62,13 +68,15 @@ public class OrchestrationEventEmitter {
     if (event.getEventType() == OrchestrationEventType.NODE_EXECUTION_UPDATE
         || event.getEventType() == OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE
         || event.getEventType() == OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE) {
-      orchestrationEventLogRepository.save(
+      OrchestrationEventLog orchestrationEventLog = orchestrationEventLogRepository.save(
           OrchestrationEventLog.builder()
               .createdAt(System.currentTimeMillis())
-              .event(event)
+              .nodeExecutionId(event.getNodeExecutionProto() == null ? null : event.getNodeExecutionProto().getUuid())
+              .orchestrationEventType(event.getEventType())
               .planExecutionId(event.getAmbiance().getPlanExecutionId())
               .validUntil(Date.from(OffsetDateTime.now().plus(Duration.ofDays(14)).toInstant()))
               .build());
+      orchestrationEventLogSubjectSubject.fireInform(OrchestrationEventLogHandler::handleLog, orchestrationEventLog);
     }
   }
 }

@@ -16,6 +16,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.common.YamlProcessingLogContext;
 import io.harness.gitsync.common.beans.YamlChangeSet;
+import io.harness.gitsync.common.beans.YamlChangeSetStatus;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.beans.GitWebhookRequestAttributes;
 import io.harness.gitsync.core.service.GitCommitService;
@@ -219,7 +220,7 @@ public class GitSyncTriggerServiceImpl implements GitSyncTriggerService {
       HttpHeaders headers, String gitConnectorId, String repoName, String branchName, String headCommitId) {
     return YamlChangeSet.builder()
         .accountId(accountId)
-        .status(YamlChangeSet.Status.QUEUED.name())
+        .status(YamlChangeSetStatus.QUEUED.name())
         .gitWebhookRequestAttributes(GitWebhookRequestAttributes.builder()
                                          .webhookBody(yamlWebHookPayload)
                                          .gitConnectorId(gitConnectorId)

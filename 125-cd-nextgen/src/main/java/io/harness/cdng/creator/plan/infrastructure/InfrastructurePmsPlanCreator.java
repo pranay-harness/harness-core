@@ -3,18 +3,19 @@ package io.harness.cdng.creator.plan.infrastructure;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.advisers.RollbackCustomAdviser;
+import io.harness.cdng.creator.plan.PlanCreatorConstants;
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.cdng.infra.steps.InfraSectionStepParameters;
 import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.infra.steps.InfrastructureSectionStep;
 import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
+import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.utils.CommonPlanCreatorUtils;
@@ -31,6 +32,7 @@ import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.PlanNode.PlanNodeBuilder;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.utilities.ResourceConstraintUtility;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -70,18 +72,22 @@ public class InfrastructurePmsPlanCreator {
       YamlField resourceConstraintField) {
     PipelineInfrastructure actualInfraConfig = getActualInfraConfig(infrastructure, infraField);
 
+    boolean allowSimultaneousDeployments = ResourceConstraintUtility.isSimultaneousDeploymentsAllowed(
+        infrastructure.getAllowSimultaneousDeployments(), resourceConstraintField);
+
     PlanNodeBuilder planNodeBuilder =
         PlanNode.builder()
             .uuid(infraSectionNode.getUuid())
             .name(PlanCreatorConstants.INFRA_SECTION_NODE_NAME)
             .identifier(PlanCreatorConstants.INFRA_SECTION_NODE_IDENTIFIER)
+            .group(OutcomeExpressionConstants.INFRASTRUCTURE_GROUP)
             .stepType(InfrastructureSectionStep.STEP_TYPE)
             .stepParameters(InfraSectionStepParameters.getStepParameters(actualInfraConfig, infraStepNodeUuid))
             .facilitatorObtainment(
                 FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
-            .adviserObtainments(infrastructure.isAllowSimultaneousDeployments()
-                    ? getAdviserObtainmentFromMetaDataToResourceConstraint(resourceConstraintField, kryoSerializer)
-                    : getAdviserObtainmentFromMetaDataToExecution(infraSectionNode, kryoSerializer));
+            .adviserObtainments(allowSimultaneousDeployments
+                    ? getAdviserObtainmentFromMetaDataToExecution(infraSectionNode, kryoSerializer)
+                    : getAdviserObtainmentFromMetaDataToResourceConstraint(resourceConstraintField, kryoSerializer));
 
     if (!isProvisionerConfigured(actualInfraConfig)) {
       planNodeBuilder.skipGraphType(SkipType.SKIP_NODE);
@@ -124,7 +130,9 @@ public class InfrastructurePmsPlanCreator {
     return adviserObtainments;
   }
 
-  /** Method returns actual InfraStructure object by resolving useFromStage if present. */
+  /**
+   * Method returns actual InfraStructure object by resolving useFromStage if present.
+   */
   public PipelineInfrastructure getActualInfraConfig(
       PipelineInfrastructure pipelineInfrastructure, YamlField infraField) {
     if (pipelineInfrastructure.getUseFromStage() != null) {
@@ -224,7 +232,7 @@ public class InfrastructurePmsPlanCreator {
     return provisionerYamlField.getNode().getUuid();
   }
 
-  public boolean areSimultaneousDeploymentsAllowed(YamlNode infraNode) {
-    return infraNode.getCurrJsonNode().get("allowSimultaneousDeployments") != null;
+  public boolean areSimultaneousDeploymentsAllowed(boolean allowSimultaneousDeployments, YamlField rcField) {
+    return !(allowSimultaneousDeployments || rcField == null);
   }
 }

@@ -20,7 +20,6 @@ import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
-import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
@@ -31,8 +30,8 @@ import io.harness.ng.core.entitysetupusage.EntitySetupUsageModule;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
-import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueController;
 import io.harness.registrars.CDServiceAdviserRegistrar;
@@ -170,11 +169,10 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
       }
     });
     modules.add(TimeModule.getInstance());
-    modules.add(NGModule.getInstance(getOrchestrationConfig()));
+    modules.add(NGModule.getInstance());
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
     modules.add(OrchestrationModule.getInstance(getOrchestrationConfig()));
-    modules.add(ExecutionPlanModule.getInstance());
     modules.add(mongoTypeModule(annotations));
     modules.add(new EntitySetupUsageModule());
 
@@ -211,7 +209,7 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
   }
   private PmsSdkConfiguration getPmsSdkConfiguration() {
     return PmsSdkConfiguration.builder()
-        .deploymentMode(DeployMode.LOCAL)
+        .deploymentMode(SdkDeployMode.LOCAL)
         .serviceName("cd")
         .engineSteps(NgStepRegistrar.getEngineSteps())
         .engineAdvisers(CDServiceAdviserRegistrar.getEngineAdvisers())

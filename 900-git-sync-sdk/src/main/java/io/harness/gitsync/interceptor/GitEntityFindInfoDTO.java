@@ -21,5 +21,5 @@ import lombok.experimental.FieldNameConstants;
 public class GitEntityFindInfoDTO {
   @QueryParam(GitSyncApiConstants.BRANCH_KEY) String branch;
   @QueryParam(GitSyncApiConstants.REPO_IDENTIFIER_KEY) String yamlGitConfigId;
-  @QueryParam(GitSyncApiConstants.DEFAULT_FROM_OTHER_REPO) String defaultFromOtherRepo;
+  @QueryParam(GitSyncApiConstants.DEFAULT_FROM_OTHER_REPO) Boolean defaultFromOtherRepo;
 }

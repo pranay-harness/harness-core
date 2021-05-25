@@ -30,6 +30,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
@@ -65,6 +66,8 @@ import org.mockito.MockitoAnnotations;
 public class K8sRollingDeployRollbackTest extends CategoryTest {
   @Mock private K8sStateHelper k8sStateHelper;
   @Mock private ActivityService activityService;
+  @Mock private FeatureFlagService featureFlagService;
+
   @InjectMocks
   K8sRollingDeployRollback k8sRollingDeployRollback =
       spy(new K8sRollingDeployRollback(K8S_DEPLOYMENT_ROLLING_ROLLBACK));

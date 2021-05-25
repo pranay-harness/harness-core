@@ -40,6 +40,7 @@ import io.harness.migrations.timescaledb.CreateInstanceStatsDayTable;
 import io.harness.migrations.timescaledb.CreateInstanceStatsHourTable;
 import io.harness.migrations.timescaledb.CreateKubernetesUtilizationData;
 import io.harness.migrations.timescaledb.CreateNewInstanceV2Migration;
+import io.harness.migrations.timescaledb.CreateNodeInfoTableAndIsAliveFunction;
 import io.harness.migrations.timescaledb.CreatePreAggHourlyTable;
 import io.harness.migrations.timescaledb.CreateUtilizationData;
 import io.harness.migrations.timescaledb.DeploymentAdditionalColumns;
@@ -115,6 +116,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(49, AddNewIndexToAnomalies.class))
         .add(Pair.of(50, RecommendationsRelatedTables.class))
         .add(Pair.of(51, CreateCeRecommendationTable.class))
+        .add(Pair.of(52, CreateNodeInfoTableAndIsAliveFunction.class))
         .build();
   }
 }

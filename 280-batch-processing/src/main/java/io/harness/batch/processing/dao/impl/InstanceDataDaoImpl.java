@@ -6,6 +6,8 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeAuthorityCount;
 import static io.harness.persistence.HQuery.excludeCount;
 
+import static java.util.Collections.singletonList;
+
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.events.timeseries.data.CostEventData;
 import io.harness.batch.processing.events.timeseries.service.intfc.CostEventService;
@@ -122,16 +124,7 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
 
   @Override
   public List<InstanceData> fetchActivePVList(String accountId, Instant startTime, Instant endTime) {
-    Query<InstanceData> query = hPersistence.createQuery(InstanceData.class)
-                                    .filter(InstanceDataKeys.accountId, accountId)
-                                    .filter(InstanceDataKeys.instanceType, K8S_PV);
-
-    query.and(query.or(query.and(query.criteria(InstanceDataKeys.usageStartTime).lessThanOrEq(startTime),
-                           query.or(query.criteria(InstanceDataKeys.usageStopTime).doesNotExist(),
-                               query.criteria(InstanceDataKeys.usageStopTime).greaterThan(startTime))),
-        query.and(query.criteria(InstanceDataKeys.usageStartTime).greaterThanOrEq(startTime),
-            query.criteria(InstanceDataKeys.usageStartTime).lessThan(endTime))));
-
+    Query<InstanceData> query = getActiveInstanceQuery(accountId, startTime, endTime, singletonList(K8S_PV));
     return query.asList();
   }
 
@@ -240,16 +233,21 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
   @Override
   public List<InstanceData> getInstanceDataListsOfTypes(
       String accountId, int batchSize, Instant startTime, Instant endTime, List<InstanceType> instanceTypes) {
-    Query<InstanceData> query = hPersistence.createQuery(InstanceData.class, excludeCount)
-                                    .filter(InstanceDataKeys.accountId, accountId)
-                                    .field(InstanceDataKeys.instanceType)
-                                    .in(instanceTypes)
-                                    .field(InstanceDataKeys.activeInstanceIterator)
-                                    .greaterThanOrEq(startTime)
-                                    .field(InstanceDataKeys.usageStartTime)
-                                    .lessThanOrEq(endTime)
-                                    .order("accountId,instanceType,activeInstanceIterator");
-
+    Query<InstanceData> query = getActiveInstanceQuery(accountId, startTime, endTime, instanceTypes);
     return query.asList(new FindOptions().limit(batchSize));
+  }
+
+  private Query<InstanceData> getActiveInstanceQuery(
+      String accountId, Instant startTime, Instant endTime, List<InstanceType> instanceTypes) {
+    return hPersistence.createQuery(InstanceData.class, excludeCount)
+        .filter(InstanceDataKeys.accountId, accountId)
+        .field(InstanceDataKeys.instanceType)
+        .in(instanceTypes)
+        .field(InstanceDataKeys.activeInstanceIterator)
+        .greaterThanOrEq(startTime)
+        .field(InstanceDataKeys.usageStartTime)
+        .lessThanOrEq(endTime)
+        .order(InstanceDataKeys.accountId + "," + InstanceDataKeys.instanceType + ","
+            + InstanceDataKeys.activeInstanceIterator);
   }
 }

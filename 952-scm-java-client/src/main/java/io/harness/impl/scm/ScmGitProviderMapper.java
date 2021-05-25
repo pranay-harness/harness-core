@@ -5,52 +5,70 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernameTokenApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
+import io.harness.gitsync.common.impl.GitUtils;
 import io.harness.product.ci.scm.proto.BitbucketCloudProvider;
+import io.harness.product.ci.scm.proto.BitbucketServerProvider;
 import io.harness.product.ci.scm.proto.GithubProvider;
 import io.harness.product.ci.scm.proto.GitlabProvider;
 import io.harness.product.ci.scm.proto.Provider;
+import io.harness.utils.FieldWithPlainTextOrSecretValueHelper;
 
 import com.google.inject.Singleton;
+import java.util.Arrays;
 import org.apache.commons.lang3.NotImplementedException;
 
 @Singleton
 @OwnedBy(DX)
 public class ScmGitProviderMapper {
-  // todo @deepak: We won't be pusing the code using the connector instead we will be using
-  // source code managers, refactor this code later to use source code manager
   public Provider mapToSCMGitProvider(ScmConnector scmConnector) {
+    final Provider.Builder providerBuilder = Provider.newBuilder();
+    if (!GitUtils.isSaasGit(scmConnector.getUrl()).isSaasGit()) {
+      providerBuilder.setEndpoint(scmConnector.getUrl());
+    }
     if (scmConnector instanceof GithubConnectorDTO) {
-      return mapToGithubProvider((GithubConnectorDTO) scmConnector);
+      return providerBuilder.setGithub(createGithubProvider((GithubConnectorDTO) scmConnector)).build();
     } else if (scmConnector instanceof GitlabConnectorDTO) {
-      return mapToGitLabProvider((GitlabConnectorDTO) scmConnector);
+      return providerBuilder.setGitlab(createGitLabProvider((GitlabConnectorDTO) scmConnector)).build();
     } else if (scmConnector instanceof BitbucketConnectorDTO) {
-      return mapToBitbucketProvider((BitbucketConnectorDTO) scmConnector);
+      if (GitUtils.isSaasGit(scmConnector.getUrl()).isSaasGit()) {
+        return providerBuilder.setBitbucketCloud(createBitbucketCloudProvider((BitbucketConnectorDTO) scmConnector))
+            .build();
+      } else {
+        return providerBuilder.setBitbucketServer(createBitbucketServerProvider((BitbucketConnectorDTO) scmConnector))
+            .build();
+      }
     } else {
       throw new NotImplementedException(
           String.format("The scm apis for the provider type %s is not supported", scmConnector.getClass()));
     }
   }
 
-  private Provider mapToBitbucketProvider(BitbucketConnectorDTO bitbucketConnector) {
-    return Provider.newBuilder().setBitbucketCloud(createBitbucketProvider(bitbucketConnector)).build();
+  private BitbucketCloudProvider createBitbucketCloudProvider(BitbucketConnectorDTO bitbucketConnector) {
+    final BitbucketUsernameTokenApiAccessDTO bitbucketUsernameTokenApiAccessDTO =
+        (BitbucketUsernameTokenApiAccessDTO) bitbucketConnector.getApiAccess().getSpec();
+    String username = FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef(
+        bitbucketUsernameTokenApiAccessDTO.getUsername(), bitbucketUsernameTokenApiAccessDTO.getUsernameRef());
+    return BitbucketCloudProvider.newBuilder()
+        .setUsername(username)
+        .setAppPassword(Arrays.toString(bitbucketUsernameTokenApiAccessDTO.getTokenRef().getDecryptedValue()))
+        .build();
   }
 
-  private BitbucketCloudProvider createBitbucketProvider(BitbucketConnectorDTO bitbucketConnector) {
-    // todo @deepak: Implement the bitbucket type, currently confused about the two options
-    //  avaiable here using bitbucket cloud for now
-    return BitbucketCloudProvider.newBuilder().build();
-  }
-
-  private Provider mapToGitLabProvider(GitlabConnectorDTO gitlabConnector) {
-    return Provider.newBuilder()
-        .setGitlab(createGitLabProvider(gitlabConnector))
-        .setEndpoint(gitlabConnector.getUrl())
+  private BitbucketServerProvider createBitbucketServerProvider(BitbucketConnectorDTO bitbucketConnector) {
+    final BitbucketUsernameTokenApiAccessDTO bitbucketUsernameTokenApiAccessDTO =
+        (BitbucketUsernameTokenApiAccessDTO) bitbucketConnector.getApiAccess().getSpec();
+    String username = FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef(
+        bitbucketUsernameTokenApiAccessDTO.getUsername(), bitbucketUsernameTokenApiAccessDTO.getUsernameRef());
+    return BitbucketServerProvider.newBuilder()
+        .setUsername(username)
+        .setPersonalAccessToken(Arrays.toString(bitbucketUsernameTokenApiAccessDTO.getTokenRef().getDecryptedValue()))
         .build();
   }
 
@@ -63,10 +81,6 @@ public class ScmGitProviderMapper {
     GitlabApiAccessDTO apiAccess = gitlabConnector.getApiAccess();
     GitlabTokenSpecDTO apiAccessDTO = (GitlabTokenSpecDTO) apiAccess.getSpec();
     return String.valueOf(apiAccessDTO.getTokenRef().getDecryptedValue());
-  }
-
-  private Provider mapToGithubProvider(GithubConnectorDTO githubConnector) {
-    return Provider.newBuilder().setGithub(createGithubProvider(githubConnector)).build();
   }
 
   private GithubProvider createGithubProvider(GithubConnectorDTO githubConnector) {

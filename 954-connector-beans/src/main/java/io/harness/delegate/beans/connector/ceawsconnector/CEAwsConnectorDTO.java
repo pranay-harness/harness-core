@@ -22,7 +22,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class CEAwsConnectorDTO extends ConnectorConfigDTO {
   @NotNull @Valid CrossAccountAccessDTO crossAccountAccess;
   @Valid AwsCurAttributesDTO curAttributes;
-
+  String awsAccountId;
   @NotEmpty(message = "At least one CEAwsFeatures should be enabled") List<CEAwsFeatures> featuresEnabled;
 
   @Override

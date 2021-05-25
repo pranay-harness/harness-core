@@ -6,17 +6,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CategoryTest;
-import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.config.BatchMainConfig;
-import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
 import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
@@ -29,8 +25,8 @@ import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.PVEvent;
 import io.harness.perpetualtask.k8s.watch.PVInfo;
 import io.harness.perpetualtask.k8s.watch.Quantity;
-import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
+import io.harness.testsupport.BaseTaskletTest;
 
 import software.wings.security.authentication.BatchQueryConfig;
 
@@ -50,14 +46,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.scope.context.ChunkContext;
-import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.repeat.RepeatStatus;
 
 @RunWith(MockitoJUnitRunner.class)
-public class K8sPVInfoEventTaskletTest extends CategoryTest {
+public class K8sPVInfoEventTaskletTest extends BaseTaskletTest {
   private static final String PV_NAME = "pv-name";
   private static final PVInfo.PVType PV_TYPE = PVInfo.PVType.PV_TYPE_GCE_PERSISTENT_DISK;
   private static final Quantity CAPACITY = Quantity.newBuilder().setAmount(1024 * 1024).build();
@@ -70,33 +62,20 @@ public class K8sPVInfoEventTaskletTest extends CategoryTest {
   private final Instant NOW = Instant.now();
   private final Timestamp START_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(1, ChronoUnit.DAYS));
   private final Timestamp END_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(10, ChronoUnit.MINUTES));
-  private final long START_TIME_MILLIS = NOW.minus(1, ChronoUnit.HOURS).toEpochMilli();
-  private final long END_TIME_MILLIS = NOW.toEpochMilli();
 
   @Mock private BatchMainConfig config;
-  @Mock private HPersistence hPersistence;
-  @Mock private InstanceDataDao instanceDataDao;
   @Mock private InstanceDataService instanceDataService;
   @Mock private InstanceDataBulkWriteService instanceDataBulkWriteService;
   @Mock private PublishedMessageDao publishedMessageDao;
   @InjectMocks private K8sPVEventTasklet k8sPVEventTasklet;
   @InjectMocks private K8sPVInfoTasklet k8sPVInfoTasklet;
 
-  ChunkContext chunkContext = mock(ChunkContext.class);
-  StepContext stepContext = mock(StepContext.class);
-  StepExecution stepExecution = mock(StepExecution.class);
-  JobParameters parameters = mock(JobParameters.class);
-
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
+    mockChunkContext();
+
     when(config.getBatchQueryConfig()).thenReturn(BatchQueryConfig.builder().queryBatchSize(50).build());
-    when(chunkContext.getStepContext()).thenReturn(stepContext);
-    when(stepContext.getStepExecution()).thenReturn(stepExecution);
-    when(stepExecution.getJobParameters()).thenReturn(parameters);
-    when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
-    when(parameters.getString(CCMJobConstants.ACCOUNT_ID)).thenReturn(ACCOUNT_ID);
-    when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
     when(instanceDataBulkWriteService.updateList(any())).thenReturn(true);
   }
 

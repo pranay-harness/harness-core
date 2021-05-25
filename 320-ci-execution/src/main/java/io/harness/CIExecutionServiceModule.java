@@ -17,9 +17,6 @@ import io.harness.ci.serializer.RunTestsStepProtobufSerializer;
 import io.harness.core.ci.services.CIBuildService;
 import io.harness.core.ci.services.CIBuildServiceImpl;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
-import io.harness.executionplan.ExecutionPlanModule;
-import io.harness.impl.CIPipelineExecutionService;
-import io.harness.impl.CIPipelineExecutionServiceImpl;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 
@@ -43,20 +40,15 @@ public class CIExecutionServiceModule extends AbstractModule {
   protected void configure() {
     install(CIBeansModule.getInstance());
     install(OrchestrationStepsModule.getInstance(null));
-    install(OrchestrationVisualizationModule.getInstance());
-    install(ExecutionPlanModule.getInstance());
-
-    install(
-        NGPipelineCommonsModule.getInstance(OrchestrationModuleConfig.builder()
+    install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
                                                 .serviceName("CI")
                                                 .withPMS(Optional.ofNullable(withPMS).orElse(false))
                                                 .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
                                                 .publisherName(NgOrchestrationNotifyEventListener.NG_ORCHESTRATION)
-                                                .maxPoolSize(10)
                                                 .build()));
+    install(NGPipelineCommonsModule.getInstance());
     bind(CIBuildService.class).to(CIBuildServiceImpl.class);
     this.bind(CIExecutionServiceConfig.class).toInstance(this.ciExecutionServiceConfig);
-    bind(CIPipelineExecutionService.class).to(CIPipelineExecutionServiceImpl.class);
 
     bind(new TypeLiteral<ProtobufSerializer<ExecutionElementConfig>>() {
     }).toInstance(new ExecutionProtobufSerializer());

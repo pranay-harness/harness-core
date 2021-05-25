@@ -8,6 +8,7 @@ import io.harness.engine.ExecutionCheck;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
+import io.harness.exception.ExceptionUtils;
 import io.harness.pms.contracts.execution.failure.FailureData;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
@@ -20,20 +21,20 @@ public abstract class ExpressionEvalPreFacilitationChecker extends AbstractPreFa
   @Inject private OrchestrationEngine orchestrationEngine;
 
   ExecutionCheck handleExpressionEvaluationError(String nodeExecutionID, Exception ex) {
+    String message = ExceptionUtils.getMessage(ex);
     StepResponseProto stepResponseProto =
         StepResponseProto.newBuilder()
             .setStatus(FAILED)
             .setFailureInfo(
                 FailureInfo.newBuilder()
-                    .setErrorMessage(String.format("Skip Condition Evaluation failed : %s", ex.getMessage()))
+                    .setErrorMessage(String.format("Skip Condition Evaluation failed : %s", message))
                     .addFailureTypes(FailureType.APPLICATION_FAILURE)
-                    .addFailureData(
-                        FailureData.newBuilder()
-                            .setMessage(String.format("Skip Condition Evaluation failed : %s", ex.getMessage()))
-                            .setLevel(Level.ERROR.name())
-                            .setCode(ErrorCode.DEFAULT_ERROR_CODE.name())
-                            .addFailureTypes(FailureType.APPLICATION_FAILURE)
-                            .build())
+                    .addFailureData(FailureData.newBuilder()
+                                        .setMessage(String.format("Skip Condition Evaluation failed : %s", message))
+                                        .setLevel(Level.ERROR.name())
+                                        .setCode(ErrorCode.DEFAULT_ERROR_CODE.name())
+                                        .addFailureTypes(FailureType.APPLICATION_FAILURE)
+                                        .build())
                     .build())
             .build();
     orchestrationEngine.handleStepResponse(nodeExecutionID, stepResponseProto);

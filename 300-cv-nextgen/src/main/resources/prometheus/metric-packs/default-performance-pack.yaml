@@ -1,0 +1,12 @@
+identifier: Performance
+category: Performance
+metrics:
+  - name: Response Time
+    type: RESP_TIME
+    included: false
+  - name: Throughput
+    type: THROUGHPUT
+    included: false
+  - name: Other
+    type: ERROR
+    included: false

@@ -3,6 +3,7 @@ package io.harness.cdng.service.beans;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
 import io.harness.pms.sdk.core.data.Outcome;
@@ -22,6 +23,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("serviceOutcome")
 @JsonTypeName("serviceOutcome")
 @OwnedBy(CDC)
+@ToBeDeleted
 public class ServiceOutcome implements Outcome {
   String identifier;
   String name;
@@ -46,11 +48,6 @@ public class ServiceOutcome implements Outcome {
 
   public String getServiceDefinitionType() {
     return type;
-  }
-
-  @Override
-  public String toViewJson() {
-    return null;
   }
 
   @Data

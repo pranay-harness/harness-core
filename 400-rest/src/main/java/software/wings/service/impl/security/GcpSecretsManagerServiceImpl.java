@@ -247,6 +247,7 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
   private String saveSecretField(GcpKmsConfig gcpKmsConfig, String configId, EncryptedData secretFieldEncryptedData) {
     String secretFieldEncryptedDataId = null;
     if (secretFieldEncryptedData != null) {
+      secretFieldEncryptedData.setNgMetadata(getNgEncryptedDataMetadata(gcpKmsConfig));
       secretFieldEncryptedData.setAccountId(gcpKmsConfig.getAccountId());
       secretFieldEncryptedData.addParent(
           EncryptedDataParent.createParentRef(configId, GcpKmsConfig.class, GcpKmsConfigKeys.credentials, GCP_KMS));

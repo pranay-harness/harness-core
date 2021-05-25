@@ -1,0 +1,5 @@
+name: SdkResponseEvent Metrics Group
+identifier: sdk_event_group
+labels:
+  - eventType
+  - runtimeId

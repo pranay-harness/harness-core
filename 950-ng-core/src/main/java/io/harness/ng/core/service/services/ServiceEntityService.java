@@ -26,4 +26,7 @@ public interface ServiceEntityService {
       String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier, Long version);
 
   Page<ServiceEntity> bulkCreate(String accountId, List<ServiceEntity> serviceEntities);
+
+  // Find all services for given accountId + orgId + projectId including deleted services in asc order of creation
+  List<ServiceEntity> getAllServices(String accountIdentifier, String orgIdentifier, String projectIdentifier);
 }

@@ -80,4 +80,7 @@ public interface UserClient {
   @POST(USERS_API + "/{urlType}/url")
   Call<RestResponse<Optional<String>>> generateSignupNotificationUrl(
       @Path("urlType") String urlType, @Body UserInfo userInfo);
+
+  @GET(USERS_API + "/user-password-present")
+  Call<RestResponse<Boolean>> isUserPasswordSet(@Query("accountId") String accountId, @Query("emailId") String emailId);
 }

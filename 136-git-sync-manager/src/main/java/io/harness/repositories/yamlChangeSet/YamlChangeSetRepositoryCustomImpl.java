@@ -7,6 +7,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.beans.YamlChangeSet.YamlChangeSetKeys;
+import io.harness.gitsync.common.beans.YamlChangeSetStatus;
 
 import com.google.inject.Inject;
 import com.mongodb.client.result.UpdateResult;
@@ -28,7 +29,7 @@ public class YamlChangeSetRepositoryCustomImpl implements YamlChangeSetRepositor
   private final MongoTemplate mongoTemplate;
 
   @Override
-  public UpdateResult updateYamlChangeSetStatus(YamlChangeSet.Status status, String yamlChangeSetId) {
+  public UpdateResult updateYamlChangeSetStatus(YamlChangeSetStatus status, String yamlChangeSetId) {
     Query query = new Query().addCriteria(Criteria.where(YamlChangeSetKeys.uuid).is(yamlChangeSetId));
     Update update = new Update().set(YamlChangeSetKeys.status, status);
     return mongoTemplate.updateFirst(query, update, YamlChangeSet.class);
@@ -36,7 +37,7 @@ public class YamlChangeSetRepositoryCustomImpl implements YamlChangeSetRepositor
 
   @Override
   public UpdateResult updateYamlChangeSetsStatus(
-      YamlChangeSet.Status oldStatus, YamlChangeSet.Status newStatus, String accountId) {
+      YamlChangeSetStatus oldStatus, YamlChangeSetStatus newStatus, String accountId) {
     Query query = new Query().addCriteria(
         new Criteria().and(YamlChangeSetKeys.accountId).is(accountId).and(YamlChangeSetKeys.status).is(oldStatus));
     Update update = new Update().set(YamlChangeSetKeys.status, newStatus);
@@ -44,13 +45,10 @@ public class YamlChangeSetRepositoryCustomImpl implements YamlChangeSetRepositor
   }
 
   @Override
-  public UpdateResult updateYamlChangeSetsToNewStatusWithMessageCodeAndCreatedAtLessThan(
-      YamlChangeSet.Status oldStatus, YamlChangeSet.Status newStatus, long cutOffCreatedAt, String message) {
-    Query query = new Query().addCriteria(new Criteria()
-                                              .and(YamlChangeSetKeys.status)
-                                              .is(oldStatus)
-                                              .and(YamlChangeSetKeys.createdAt)
-                                              .lt(cutOffCreatedAt));
+  public UpdateResult updateYamlChangeSetsToNewStatusWithMessageCodeAndQueuedAtLessThan(
+      YamlChangeSetStatus oldStatus, YamlChangeSetStatus newStatus, long cutOffCreatedAt, String message) {
+    Query query = new Query().addCriteria(
+        new Criteria().and(YamlChangeSetKeys.status).is(oldStatus).and(YamlChangeSetKeys.queuedOn).lt(cutOffCreatedAt));
     Update update = new Update().set(YamlChangeSetKeys.status, newStatus).set(YamlChangeSetKeys.messageCode, message);
     return mongoTemplate.updateMulti(query, update, YamlChangeSet.class);
   }
@@ -76,8 +74,8 @@ public class YamlChangeSetRepositoryCustomImpl implements YamlChangeSetRepositor
   }
 
   @Override
-  public List<String> findDistinctAccountIdByStatus(YamlChangeSet.Status status) {
-    Criteria criteria = Criteria.where(YamlChangeSetKeys.status).is(status);
+  public List<String> findDistinctAccountIdByStatusIn(List<YamlChangeSetStatus> status) {
+    Criteria criteria = Criteria.where(YamlChangeSetKeys.status).in(status);
     Query query = query(criteria);
     return mongoTemplate.findDistinct(query, YamlChangeSetKeys.accountId, YamlChangeSet.class, String.class);
   }

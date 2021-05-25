@@ -29,9 +29,9 @@ resource "google_pubsub_topic" "ce-awsdata-ec2-inventory-topic" {
   project = "${var.projectId}"
 }
 
-# PubSub topic for AWS EC2 Inventory CPU data pipeline. scheduler pushes into this
-resource "google_pubsub_topic" "ce-awsdata-ec2-cpu-topic" {
-  name = "ce-awsdata-ec2-cpu-inventory-scheduler"
+# PubSub topic for AWS EC2 Inventory metric data pipeline. scheduler pushes into this
+resource "google_pubsub_topic" "ce-awsdata-ec2-metric-topic" {
+  name = "ce-awsdata-ec2-metric-inventory-scheduler"
   project = "${var.projectId}"
 }
 
@@ -55,16 +55,8 @@ data "archive_file" "ce-clusterdata" {
     filename = "main.py"
   }
   source {
-    content  = "${file("${path.module}/src/python/clusterdata_schema.py")}"
-    filename = "clusterdata_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/unified_schema.py")}"
-    filename = "unified_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/preaggregated_schema.py")}"
-    filename = "preaggregated_schema.py"
+    content  = "${file("${path.module}/src/python/bq_schema.py")}"
+    filename = "bq_schema.py"
   }
   source {
     content  = "${file("${path.module}/src/python/util.py")}"
@@ -84,16 +76,8 @@ data "archive_file" "ce-gcpdata" {
     filename = "main.py"
   }
   source {
-    content  = "${file("${path.module}/src/python/clusterdata_schema.py")}"
-    filename = "clusterdata_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/unified_schema.py")}"
-    filename = "unified_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/preaggregated_schema.py")}"
-    filename = "preaggregated_schema.py"
+    content  = "${file("${path.module}/src/python/bq_schema.py")}"
+    filename = "bq_schema.py"
   }
   source {
     content  = "${file("${path.module}/src/python/util.py")}"
@@ -126,16 +110,8 @@ data "archive_file" "ce-awsdata" {
     filename = "main.py"
   }
   source {
-    content  = "${file("${path.module}/src/python/clusterdata_schema.py")}"
-    filename = "clusterdata_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/unified_schema.py")}"
-    filename = "unified_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/preaggregated_schema.py")}"
-    filename = "preaggregated_schema.py"
+    content  = "${file("${path.module}/src/python/bq_schema.py")}"
+    filename = "bq_schema.py"
   }
   source {
     content  = "${file("${path.module}/src/python/util.py")}"
@@ -155,16 +131,8 @@ data "archive_file" "ce-azuredata-gcs" {
     filename = "main.py"
   }
   source {
-    content  = "${file("${path.module}/src/python/clusterdata_schema.py")}"
-    filename = "clusterdata_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/unified_schema.py")}"
-    filename = "unified_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/preaggregated_schema.py")}"
-    filename = "preaggregated_schema.py"
+    content  = "${file("${path.module}/src/python/bq_schema.py")}"
+    filename = "bq_schema.py"
   }
   source {
     content  = "${file("${path.module}/src/python/util.py")}"
@@ -184,16 +152,8 @@ data "archive_file" "ce-azuredata-bq" {
     filename = "main.py"
   }
   source {
-    content  = "${file("${path.module}/src/python/clusterdata_schema.py")}"
-    filename = "clusterdata_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/unified_schema.py")}"
-    filename = "unified_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/preaggregated_schema.py")}"
-    filename = "preaggregated_schema.py"
+    content  = "${file("${path.module}/src/python/bq_schema.py")}"
+    filename = "bq_schema.py"
   }
   source {
     content  = "${file("${path.module}/src/python/util.py")}"
@@ -213,28 +173,16 @@ data "archive_file" "ce-awsdata-ec2" {
     filename = "main.py"
   }
   source {
-    content  = "${file("${path.module}/src/python/clusterdata_schema.py")}"
-    filename = "clusterdata_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/aws_ec2_inventory_schema.py")}"
-    filename = "aws_ec2_inventory_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/aws_ebs_inventory_schema.py")}"
-    filename = "aws_ebs_inventory_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/unified_schema.py")}"
-    filename = "unified_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/preaggregated_schema.py")}"
-    filename = "preaggregated_schema.py"
+    content  = "${file("${path.module}/src/python/bq_schema.py")}"
+    filename = "bq_schema.py"
   }
   source {
     content  = "${file("${path.module}/src/python/util.py")}"
     filename = "util.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/aws_util.py")}"
+    filename = "aws_util.py"
   }
   source {
     content  = "${file("${path.module}/src/python/requirements.txt")}"
@@ -242,32 +190,20 @@ data "archive_file" "ce-awsdata-ec2" {
   }
 }
 
-data "archive_file" "ce-awsdata-ec2-cpu" {
+data "archive_file" "ce-awsdata-ec2-metric" {
   type        = "zip"
-  output_path = "${path.module}/files/ce-awsdata-ec2-cpu.zip"
+  output_path = "${path.module}/files/ce-awsdata-ec2-metric.zip"
   source {
-    content  = "${file("${path.module}/src/python/aws_ec2_cpu_data_main.py")}"
+    content  = "${file("${path.module}/src/python/aws_ec2_metric_data_main.py")}"
     filename = "main.py"
   }
   source {
-    content  = "${file("${path.module}/src/python/clusterdata_schema.py")}"
-    filename = "clusterdata_schema.py"
+    content  = "${file("${path.module}/src/python/bq_schema.py")}"
+    filename = "bq_schema.py"
   }
   source {
-    content  = "${file("${path.module}/src/python/aws_ec2_inventory_schema.py")}"
-    filename = "aws_ec2_inventory_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/aws_ebs_inventory_schema.py")}"
-    filename = "aws_ebs_inventory_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/unified_schema.py")}"
-    filename = "unified_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/preaggregated_schema.py")}"
-    filename = "preaggregated_schema.py"
+    content  = "${file("${path.module}/src/python/aws_util.py")}"
+    filename = "aws_util.py"
   }
   source {
     content  = "${file("${path.module}/src/python/util.py")}"
@@ -287,28 +223,16 @@ data "archive_file" "ce-awsdata-ebs" {
     filename = "main.py"
   }
   source {
-    content  = "${file("${path.module}/src/python/clusterdata_schema.py")}"
-    filename = "clusterdata_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/aws_ec2_inventory_schema.py")}"
-    filename = "aws_ec2_inventory_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/aws_ebs_inventory_schema.py")}"
-    filename = "aws_ebs_inventory_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/unified_schema.py")}"
-    filename = "unified_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/preaggregated_schema.py")}"
-    filename = "preaggregated_schema.py"
+    content  = "${file("${path.module}/src/python/bq_schema.py")}"
+    filename = "bq_schema.py"
   }
   source {
     content  = "${file("${path.module}/src/python/util.py")}"
     filename = "util.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/aws_util.py")}"
+    filename = "aws_util.py"
   }
   source {
     content  = "${file("${path.module}/src/python/requirements.txt")}"
@@ -324,28 +248,16 @@ data "archive_file" "ce-awsdata-ebs-metrics" {
     filename = "main.py"
   }
   source {
-    content  = "${file("${path.module}/src/python/clusterdata_schema.py")}"
-    filename = "clusterdata_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/aws_ec2_inventory_schema.py")}"
-    filename = "aws_ec2_inventory_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/aws_ebs_inventory_schema.py")}"
-    filename = "aws_ebs_inventory_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/unified_schema.py")}"
-    filename = "unified_schema.py"
-  }
-  source {
-    content  = "${file("${path.module}/src/python/preaggregated_schema.py")}"
-    filename = "preaggregated_schema.py"
+    content  = "${file("${path.module}/src/python/bq_schema.py")}"
+    filename = "bq_schema.py"
   }
   source {
     content  = "${file("${path.module}/src/python/util.py")}"
     filename = "util.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/aws_util.py")}"
+    filename = "aws_util.py"
   }
   source {
     content  = "${file("${path.module}/src/python/requirements.txt")}"
@@ -402,11 +314,11 @@ resource "google_storage_bucket_object" "ce-awsdata-ec2-archive" {
   depends_on = ["data.archive_file.ce-awsdata-ec2"]
 }
 
-resource "google_storage_bucket_object" "ce-awsdata-ec2-cpu-archive" {
-  name = "ce-awsdata.${data.archive_file.ce-awsdata-ec2-cpu.output_md5}.zip"
+resource "google_storage_bucket_object" "ce-awsdata-ec2-metric-archive" {
+  name = "ce-awsdata.${data.archive_file.ce-awsdata-ec2-metric.output_md5}.zip"
   bucket = "${google_storage_bucket.bucket1.name}"
-  source = "${path.module}/files/ce-awsdata-ec2-cpu.zip"
-  depends_on = ["data.archive_file.ce-awsdata-ec2-cpu"]
+  source = "${path.module}/files/ce-awsdata-ec2-metric.zip"
+  depends_on = ["data.archive_file.ce-awsdata-ec2-metric"]
 }
 
 resource "google_storage_bucket_object" "ce-awsdata-ebs-archive" {
@@ -604,8 +516,8 @@ resource "google_cloudfunctions_function" "ce-awsdata-ec2-function" {
   }
 }
 
-resource "google_cloudfunctions_function" "ce-awsdata-ec2-cpu-function" {
-  name                      = "ce-awsdata-ec2-cpu-terraform"
+resource "google_cloudfunctions_function" "ce-awsdata-ec2-metric-function" {
+  name                      = "ce-awsdata-ec2-metric-terraform"
   description               = "This cloudfunction gets triggered upon event in a pubsub topic"
   entry_point               = "main"
   available_memory_mb       = 256
@@ -614,7 +526,7 @@ resource "google_cloudfunctions_function" "ce-awsdata-ec2-cpu-function" {
   project                   = "${var.projectId}"
   region                    = "${var.region}"
   source_archive_bucket     = "${google_storage_bucket.bucket1.name}"
-  source_archive_object     = "${google_storage_bucket_object.ce-awsdata-ec2-cpu-archive.name}"
+  source_archive_object     = "${google_storage_bucket_object.ce-awsdata-ec2-metric-archive.name}"
 
   environment_variables = {
     disabled = "false"
@@ -624,7 +536,7 @@ resource "google_cloudfunctions_function" "ce-awsdata-ec2-cpu-function" {
 
   event_trigger {
     event_type = "google.pubsub.topic.publish"
-    resource   = "${google_pubsub_topic.ce-awsdata-ec2-cpu-topic.name}"
+    resource   = "${google_pubsub_topic.ce-awsdata-ec2-metric-topic.name}"
     failure_policy {
       retry = false
     }

@@ -9,7 +9,10 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.utils.UserGroupMapper.toDTO;
 import static io.harness.ng.core.utils.UserGroupMapper.toEntity;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
+import static io.harness.remote.client.RestClientUtils.getResponse;
 
+import static java.lang.Boolean.TRUE;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -23,6 +26,7 @@ import io.harness.beans.Scope;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.authenticationsettings.remote.AuthSettingsManagerClient;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.UserGroupService;
@@ -50,6 +54,10 @@ import io.harness.user.remote.UserFilterNG;
 import io.harness.utils.RetryUtils;
 import io.harness.utils.ScopeUtils;
 
+import software.wings.beans.sso.SSOSettings;
+import software.wings.beans.sso.SSOType;
+import software.wings.security.authentication.SSOConfig;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -67,6 +75,7 @@ import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
+import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -85,7 +94,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   private final AccessControlAdminClient accessControlAdminClient;
   private final TransactionTemplate transactionTemplate;
   private final NgUserService ngUserService;
-
+  private final AuthSettingsManagerClient managerClient;
   private static final RetryPolicy<Object> retryPolicy =
       RetryUtils.getRetryPolicy("Could not find the user with the given identifier on attempt %s",
           "Could not find the user with the given identifier", Lists.newArrayList(InvalidRequestException.class),
@@ -98,13 +107,14 @@ public class UserGroupServiceImpl implements UserGroupService {
   public UserGroupServiceImpl(UserGroupRepository userGroupRepository, UserClient userClient,
       OutboxService outboxService, AccessControlAdminClient accessControlAdminClient,
       @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate, UserInfoService userInfoService,
-      NgUserService ngUserService) {
+      NgUserService ngUserService, AuthSettingsManagerClient managerClient) {
     this.userGroupRepository = userGroupRepository;
     this.userClient = userClient;
     this.outboxService = outboxService;
     this.accessControlAdminClient = accessControlAdminClient;
     this.transactionTemplate = transactionTemplate;
     this.ngUserService = ngUserService;
+    this.managerClient = managerClient;
   }
 
   @Override
@@ -222,6 +232,19 @@ public class UserGroupServiceImpl implements UserGroupService {
       existingUserGroup.getUsers().add(userIdentifier);
     }
     return updateInternal(existingUserGroup, oldUserGroup);
+  }
+
+  @Override
+  public void addUserToUserGroups(String accountIdentifier, UserInfo userInfo, List<UserGroup> userGroups) {
+    if (isEmpty(userGroups)) {
+      return;
+    }
+
+    for (UserGroup userGroup : userGroups) {
+      if (!checkMember(accountIdentifier, null, null, userGroup.getIdentifier(), userInfo.getUuid())) {
+        addMember(accountIdentifier, null, null, userGroup.getIdentifier(), userInfo.getUuid());
+      }
+    }
   }
 
   @Override
@@ -446,5 +469,82 @@ public class UserGroupServiceImpl implements UserGroupService {
     Criteria criteria = createScopeCriteria(accountIdentifier, orgIdentifier, projectIdentifier);
     criteria.and(UserGroupKeys.identifier).is(identifier);
     return criteria;
+  }
+
+  private Criteria getUserGroupbySsoIdCriteria(String accountIdentifier, String ssoId) {
+    Criteria criteria = createScopeCriteria(accountIdentifier, null, null);
+    criteria.and(UserGroupKeys.isSsoLinked).is(true);
+    criteria.and(UserGroupKeys.linkedSsoId).is(ssoId);
+    return criteria;
+  }
+
+  @Override
+  public List<UserGroup> getUserGroupsBySsoId(String accountIdentifier, String ssoId) {
+    Criteria criteria = getUserGroupbySsoIdCriteria(accountIdentifier, ssoId);
+    return userGroupRepository.findAll(criteria);
+  }
+
+  @Override
+  public UserGroup linkToSsoGroup(@NotBlank String accountIdentifier, @NotBlank String userGroupIdentifier,
+      @NotNull SSOType ssoType, @NotBlank String ssoId, @NotBlank String ssoGroupId, @NotBlank String ssoGroupName) {
+    UserGroup existingUserGroup = getOrThrow(accountIdentifier, null, null, userGroupIdentifier);
+    UserGroupDTO oldUserGroup = (UserGroupDTO) NGObjectMapperHelper.clone(toDTO(existingUserGroup));
+
+    if (existingUserGroup.isSsoLinked()) {
+      throw new InvalidRequestException("SSO Provider already linked to the group. Try unlinking first.");
+    }
+
+    SSOConfig ssoConfig = getResponse(managerClient.getAccountAccessManagementSettings(accountIdentifier));
+
+    List<SSOSettings> ssoSettingsList = ssoConfig.getSsoSettings();
+    SSOSettings ssoSettings = null;
+    for (SSOSettings ssoSetting : ssoSettingsList) {
+      if (ssoSetting.getUuid().equals(ssoId)) {
+        ssoSettings = ssoSetting;
+        break;
+      }
+    }
+
+    if (null == ssoSettings) {
+      throw new InvalidRequestException("Invalid ssoId");
+    }
+    existingUserGroup.setSsoLinked(TRUE);
+    existingUserGroup.setLinkedSsoType(ssoType);
+    existingUserGroup.setLinkedSsoId(ssoId);
+    existingUserGroup.setLinkedSsoDisplayName(ssoSettings.getDisplayName());
+    existingUserGroup.setSsoGroupId(ssoGroupId);
+    existingUserGroup.setSsoGroupName(ssoGroupName);
+
+    // auditing TBD
+    //    auditServiceHelper.reportForAuditingUsingAccountId(accountId, group, updatedGroup, Event.Type.LINK_SSO);
+
+    return updateInternal(existingUserGroup, oldUserGroup);
+  }
+
+  @Override
+  public UserGroup unlinkSsoGroup(
+      @NotBlank String accountIdentifier, @NotBlank String userGroupIdentifier, boolean retainMembers) {
+    UserGroup existingUserGroup = getOrThrow(accountIdentifier, null, null, userGroupIdentifier);
+    UserGroupDTO oldUserGroup = (UserGroupDTO) NGObjectMapperHelper.clone(toDTO(existingUserGroup));
+
+    if (!existingUserGroup.isSsoLinked()) {
+      throw new InvalidRequestException("Group is not linked to any SSO group.");
+    }
+
+    if (!retainMembers) {
+      existingUserGroup.setUsers(emptyList());
+      existingUserGroup = updateInternal(existingUserGroup, oldUserGroup);
+    }
+
+    existingUserGroup.setSsoGroupId(null);
+    existingUserGroup.setSsoLinked(false);
+    existingUserGroup.setSsoGroupName(null);
+    existingUserGroup.setLinkedSsoId(null);
+    existingUserGroup.setLinkedSsoType(null);
+    existingUserGroup.setLinkedSsoDisplayName(null);
+
+    //    auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, group, Event.Type.UNLINK_SSO);
+    //    log.info("Auditing unlink from SSO Group for groupId={}", group.getUuid());
+    return updateInternal(existingUserGroup, oldUserGroup);
   }
 }

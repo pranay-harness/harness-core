@@ -8,6 +8,8 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 
+import static java.util.Collections.emptySet;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -67,7 +69,7 @@ public class K8sRollingRollbackRequestHandler extends K8sRequestHandler {
 
     success = rollbackBaseHandler.rollback(rollbackHandlerConfig, k8sDelegateTaskParams,
         k8sRollingRollbackDeployRequest.getReleaseNumber(),
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Rollback, true, commandUnitsProgress));
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Rollback, true, commandUnitsProgress), emptySet());
     if (!success) {
       return getGenericFailureResponse(null);
     }

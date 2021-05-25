@@ -9,7 +9,7 @@ import io.harness.licensing.interfaces.clients.CEModuleLicenseClient;
 public class CELocalClient implements CEModuleLicenseClient {
   @Override
   public CEModuleLicenseDTO createTrialLicense(Edition edition, String accountId, LicenseType licenseType) {
-    return CEModuleLicenseDTO.builder().numberOfCluster(2).spendLimit(250000).dataRetentionInDays(30).build();
+    return CEModuleLicenseDTO.builder().numberOfCluster(2).spendLimit(250000L).dataRetentionInDays(30).build();
   }
 
   @Override
