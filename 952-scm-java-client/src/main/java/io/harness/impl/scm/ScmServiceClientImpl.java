@@ -10,13 +10,19 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitFileDetails;
 import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.beans.gitsync.GitPRCreateRequest;
+import io.harness.beans.gitsync.GitWebhookDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.product.ci.scm.proto.CreateBranchRequest;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.CreatePRRequest;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
+import io.harness.product.ci.scm.proto.CreateWebhookRequest;
+import io.harness.product.ci.scm.proto.CreateWebhookResponse;
 import io.harness.product.ci.scm.proto.DeleteFileRequest;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
+import io.harness.product.ci.scm.proto.DeleteWebhookRequest;
+import io.harness.product.ci.scm.proto.DeleteWebhookResponse;
 import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileChange;
 import io.harness.product.ci.scm.proto.FileContent;
@@ -38,11 +44,14 @@ import io.harness.product.ci.scm.proto.ListBranchesRequest;
 import io.harness.product.ci.scm.proto.ListBranchesResponse;
 import io.harness.product.ci.scm.proto.ListCommitsRequest;
 import io.harness.product.ci.scm.proto.ListCommitsResponse;
+import io.harness.product.ci.scm.proto.ListWebhooksRequest;
+import io.harness.product.ci.scm.proto.ListWebhooksResponse;
 import io.harness.product.ci.scm.proto.PageRequest;
 import io.harness.product.ci.scm.proto.Provider;
 import io.harness.product.ci.scm.proto.SCMGrpc;
 import io.harness.product.ci.scm.proto.Signature;
 import io.harness.product.ci.scm.proto.UpdateFileResponse;
+import io.harness.product.ci.scm.proto.WebhookResponse;
 import io.harness.service.ScmServiceClient;
 
 import com.google.inject.Inject;
@@ -364,6 +373,90 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     return scmBlockingStub.createPR(createPRRequest);
   }
 
+  @Override
+  public CreateWebhookResponse createWebhook(
+      ScmConnector scmConnector, GitWebhookDetails gitWebhookDetails, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    String slug = scmGitProviderHelper.getSlug(scmConnector);
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+    CreateWebhookRequest createWebhookRequest =
+        getCreateWebhookRequest(slug, gitProvider, gitWebhookDetails, scmConnector, null);
+    return scmBlockingStub.createWebhook(createWebhookRequest);
+  }
+
+  public CreateWebhookResponse createWebhook(ScmConnector scmConnector, GitWebhookDetails gitWebhookDetails,
+      SCMGrpc.SCMBlockingStub scmBlockingStub, WebhookResponse exisitingWebhook) {
+    String slug = scmGitProviderHelper.getSlug(scmConnector);
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+    CreateWebhookRequest createWebhookRequest =
+        getCreateWebhookRequest(slug, gitProvider, gitWebhookDetails, scmConnector, exisitingWebhook);
+    return scmBlockingStub.createWebhook(createWebhookRequest);
+  }
+
+  private CreateWebhookRequest getCreateWebhookRequest(String slug, Provider gitProvider,
+      GitWebhookDetails gitWebhookDetails, ScmConnector scmConnector, WebhookResponse identicalTarget) {
+    final CreateWebhookRequest.Builder createWebhookRequestBuilder = CreateWebhookRequest.newBuilder()
+                                                                         .setSlug(slug)
+                                                                         .setName(gitWebhookDetails.getName())
+                                                                         .setProvider(gitProvider)
+                                                                         .setSecret(gitWebhookDetails.getSecret())
+                                                                         .setTarget(gitWebhookDetails.getTarget());
+    return ScmGitWebhookHelper.getCreateWebhookRequest(
+        createWebhookRequestBuilder, gitWebhookDetails, scmConnector, identicalTarget);
+  }
+
+  @Override
+  public DeleteWebhookResponse deleteWebhook(
+      ScmConnector scmConnector, String id, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    String slug = scmGitProviderHelper.getSlug(scmConnector);
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+    DeleteWebhookRequest deleteWebhookRequest = getDeleteWebhookRequest(slug, gitProvider, id);
+    return scmBlockingStub.deleteWebhook(deleteWebhookRequest);
+  }
+
+  private DeleteWebhookRequest getDeleteWebhookRequest(String slug, Provider gitProvider, String id) {
+    return DeleteWebhookRequest.newBuilder().setSlug(slug).setProvider(gitProvider).setId(id).build();
+  }
+
+  @Override
+  public ListWebhooksResponse listWebhook(ScmConnector scmConnector, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    String slug = scmGitProviderHelper.getSlug(scmConnector);
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+    ListWebhooksRequest listWebhooksRequest = getListWebhookRequest(slug, gitProvider);
+    return scmBlockingStub.listWebhooks(listWebhooksRequest);
+  }
+
+  @Override
+  public CreateWebhookResponse upsertWebhook(
+      ScmConnector scmConnector, GitWebhookDetails gitWebhookDetails, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    ListWebhooksResponse listWebhooksResponse = listWebhook(scmConnector, scmBlockingStub);
+    final List<WebhookResponse> webhooksList = listWebhooksResponse.getWebhooksList();
+    WebhookResponse existingWebhook = null;
+    for (WebhookResponse webhookResponse : webhooksList) {
+      if (isIdentical(webhookResponse, gitWebhookDetails, scmConnector)) {
+        return CreateWebhookResponse.newBuilder().build();
+      }
+      if (isIdenticalTarget(webhookResponse, gitWebhookDetails)) {
+        existingWebhook = webhookResponse;
+        final DeleteWebhookResponse deleteWebhookResponse =
+            deleteWebhook(scmConnector, webhookResponse.getId(), scmBlockingStub);
+        ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(deleteWebhookResponse.getStatus(), null);
+      }
+    }
+    CreateWebhookResponse createWebhookResponse =
+        createWebhook(scmConnector, gitWebhookDetails, scmBlockingStub, existingWebhook);
+    ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(createWebhookResponse.getStatus(), null);
+    return createWebhookResponse;
+  }
+
+  private ListWebhooksRequest getListWebhookRequest(String slug, Provider gitProvider) {
+    // Do pagination if webhook goes beyond single page
+    return ListWebhooksRequest.newBuilder()
+        .setSlug(slug)
+        .setProvider(gitProvider)
+        .setPagination(PageRequest.newBuilder().setPage(1).build())
+        .build();
+  }
+
   private void createNewBranchFromDefault(String slug, Provider gitProvider, String branch, String latestShaOfBranch,
       SCMGrpc.SCMBlockingStub scmBlockingStub) {
     scmBlockingStub.createBranch(CreateBranchRequest.newBuilder()
@@ -386,5 +479,15 @@ public class ScmServiceClientImpl implements ScmServiceClient {
 
   private String getGithubToken(Provider gitProvider) {
     return gitProvider.getGithub().getAccessToken();
+  }
+
+  private boolean isIdenticalTarget(WebhookResponse webhookResponse, GitWebhookDetails gitWebhookDetails) {
+    return webhookResponse.getTarget().equals(gitWebhookDetails.getTarget());
+  }
+
+  private boolean isIdentical(
+      WebhookResponse webhookResponse, GitWebhookDetails gitWebhookDetails, ScmConnector scmConnector) {
+    return isIdenticalTarget(webhookResponse, gitWebhookDetails)
+        && ScmGitWebhookHelper.isIdenticalEvents(webhookResponse, gitWebhookDetails.getHookEventType(), scmConnector);
   }
 }
