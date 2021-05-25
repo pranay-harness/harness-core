@@ -1,6 +1,6 @@
-package io.harness.cvng.beans.datadog;
-import io.harness.cvng.beans.ConnectorValidationInfo;
+package io.harness.delegate.beans.cvng.datadog;
 import io.harness.delegate.beans.connector.datadog.DatadogConnectorDTO;
+import io.harness.delegate.beans.cvng.ConnectorValidationInfo;
 
 import java.time.Instant;
 import java.util.Map;

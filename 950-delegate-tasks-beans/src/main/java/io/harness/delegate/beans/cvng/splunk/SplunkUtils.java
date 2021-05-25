@@ -1,4 +1,4 @@
-package io.harness.cvng.beans.splunk;
+package io.harness.delegate.beans.cvng.splunk;
 
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 

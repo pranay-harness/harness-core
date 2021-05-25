@@ -1,4 +1,4 @@
-package io.harness.cvng.beans.newrelic;
+package io.harness.delegate.beans.cvng.newrelic;
 
 import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
 

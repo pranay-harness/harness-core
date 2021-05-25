@@ -1,7 +1,7 @@
-package io.harness.cvng.beans.prometheus;
+package io.harness.delegate.beans.cvng.prometheus;
 
-import io.harness.cvng.beans.ConnectorValidationInfo;
 import io.harness.delegate.beans.connector.prometheusconnector.PrometheusConnectorDTO;
+import io.harness.delegate.beans.cvng.ConnectorValidationInfo;
 
 import java.util.Collections;
 import java.util.Map;
