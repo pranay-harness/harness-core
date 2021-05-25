@@ -129,7 +129,7 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
 
   @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> Optional<B> findOne(
-      Criteria criteria, Class<B> entityClass, String repo, String branch) {
+      Criteria criteria, String repo, String branch, Class<B> entityClass) {
     final Criteria gitSyncCriteria = createGitSyncCriteriaForRepoAndBranch(repo, branch, entityClass);
 
     List<Criteria> criteriaList = Arrays.asList(criteria, gitSyncCriteria);
