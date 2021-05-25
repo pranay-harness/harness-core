@@ -4,10 +4,14 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.CollectionUtils;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
+import io.harness.pms.contracts.interrupts.InterruptEffectProto;
 import io.harness.serializer.ProtoUtils;
 
 import java.util.Collections;
+import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 
 @OwnedBy(CDC)
@@ -39,6 +43,28 @@ public class NodeExecutionMapper {
         .outcomeRefs(CollectionUtils.emptyIfNull(proto.getOutcomeRefsList()))
         .retryIds(proto.getRetryIdsList())
         .oldRetry(proto.getOldRetry())
+        .interruptHistories(proto.getInterruptHistoriesList()
+                                .stream()
+                                .map(NodeExecutionMapper::fromInterruptEffectProto)
+                                .collect(Collectors.toList()))
+        .build();
+  }
+
+  private InterruptEffect fromInterruptEffectProto(InterruptEffectProto interruptEffectProto) {
+    return InterruptEffect.builder()
+        .interruptId(interruptEffectProto.getInterruptId())
+        .interruptType(interruptEffectProto.getInterruptType())
+        .interruptConfig(interruptEffectProto.getInterruptConfig())
+        .tookEffectAt(ProtoUtils.timestampToUnixMillis(interruptEffectProto.getTookEffectAt()))
+        .build();
+  }
+
+  private InterruptEffectProto toInterruptEffect(InterruptEffect interruptEffect) {
+    return InterruptEffectProto.newBuilder()
+        .setTookEffectAt(ProtoUtils.unixMillisToTimestamp(interruptEffect.getTookEffectAt()))
+        .setInterruptConfig(interruptEffect.getInterruptConfig())
+        .setInterruptId(interruptEffect.getInterruptId())
+        .setInterruptType(interruptEffect.getInterruptType())
         .build();
   }
 
@@ -89,6 +115,12 @@ public class NodeExecutionMapper {
     }
     if (nodeExecution.getFailureInfo() != null) {
       builder.setFailureInfo(nodeExecution.getFailureInfo());
+    }
+    if (EmptyPredicate.isNotEmpty(nodeExecution.getInterruptHistories())) {
+      builder.addAllInterruptHistories(nodeExecution.getInterruptHistories()
+                                           .stream()
+                                           .map(NodeExecutionMapper::toInterruptEffect)
+                                           .collect(Collectors.toList()));
     }
 
     return builder.build();
