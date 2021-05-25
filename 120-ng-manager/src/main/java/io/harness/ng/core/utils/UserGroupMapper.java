@@ -40,6 +40,11 @@ public class UserGroupMapper {
               .description(userGroup.getDescription())
               .tags(convertToMap(userGroup.getTags()))
               .name(userGroup.getName())
+              .ssoGroupId(userGroup.getSsoGroupId())
+              .ssoGroupName(userGroup.getSsoGroupName())
+              .linkedSsoDisplayName(userGroup.getLinkedSsoDisplayName())
+              .linkedSsoId(userGroup.getLinkedSsoId())
+              .isSsoLinked(userGroup.isSsoLinked())
               .notificationConfigs(
                   userGroup.getNotificationConfigs().stream().map(UserGroupMapper::toDTO).collect(Collectors.toList()))
               .users(userGroup.getUsers() == null ? emptyList() : userGroup.getUsers())
