@@ -14,6 +14,7 @@ import io.harness.gitsync.InfoForPush;
 import io.harness.gitsync.UserPrincipal;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.interceptor.GitEntityInfo;
+import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.gitsync.scm.beans.SCMNoOpResponse;
 import io.harness.gitsync.scm.beans.ScmPushResponse;
 import io.harness.ng.core.EntityDetail;
@@ -39,20 +40,24 @@ public class SCMGitSyncHelper {
   @Inject private EntityDetailRestToProtoMapper entityDetailRestToProtoMapper;
   @Inject @Named(SCM_ON_MANAGER) private ScmGitHelper scmManagerGitHelper;
   @Inject @Named(SCM_ON_DELEGATE) private ScmGitHelper scmDelegateGitHelper;
+  @Inject GitSyncSdkService gitSyncSdkService;
 
   public ScmPushResponse pushToGit(
       GitEntityInfo gitBranchInfo, String yaml, ChangeType changeType, EntityDetail entityDetail) {
-    final InfoForGitPush infoForPush = getInfoForPush(gitBranchInfo, entityDetail);
     if (gitBranchInfo.isSyncFromGit()) {
+      final boolean defaultBranch =
+          gitSyncSdkService.isDefaultBranch(entityDetail.getEntityRef().getAccountIdentifier(),
+              entityDetail.getEntityRef().getOrgIdentifier(), entityDetail.getEntityRef().getProjectIdentifier());
       return SCMNoOpResponse.builder()
           .filePath(gitBranchInfo.getFilePath())
-          .pushToDefaultBranch(infoForPush.isDefault())
+          .pushToDefaultBranch(defaultBranch)
           .objectId(gitBranchInfo.getLastObjectId())
           .yamlGitConfigId(gitBranchInfo.getYamlGitConfigId())
           .branch(gitBranchInfo.getBranch())
           .folderPath(gitBranchInfo.getFolderPath())
           .build();
     }
+    final InfoForGitPush infoForPush = getInfoForPush(gitBranchInfo, entityDetail);
     if (infoForPush.isExecuteOnDelegate()) {
       return scmDelegateGitHelper.pushToGitBasedOnChangeType(yaml, changeType, gitBranchInfo, infoForPush);
     } else {
