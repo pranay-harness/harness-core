@@ -4,7 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 
+import lombok.experimental.UtilityClass;
+
 @OwnedBy(DX)
+@UtilityClass
 public class NGDateUtils {
   public static final long HOUR_IN_MS = 60 * 60 * 1000;
   public static final long DAY_IN_MS = 24 * HOUR_IN_MS;
@@ -31,5 +34,23 @@ public class NGDateUtils {
 
   public static long getEndTimeOfPreviousInterval(long epoch) {
     return epoch - DAY_IN_MS;
+  }
+
+  // Returns starting midnight timestamp for next day for input timestamp
+  // If input timestamp is midnight, then returns it as it is
+  // eg: if input is 2nd Feb, 2020 01:10:00 UTC
+  // o/p: 3rd Feb, 2020 00:00:00 UTC
+  public static long getNextNearestWholeDayUTC(long epochInMs) {
+    if (isTimestampMidnight(epochInMs)) {
+      return epochInMs;
+    }
+
+    return getStartTimeOfNextDay(epochInMs);
+  }
+
+  // ----------------------- PRIVATE METHODS ---------------------------
+
+  private static boolean isTimestampMidnight(long epochInMs) {
+    return epochInMs % DAY_IN_MS == 0;
   }
 }
