@@ -496,9 +496,9 @@ public class UserServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore("Ignoring it while finding the actual fix")
   @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
+  @Ignore("Ignoring it while finding the actual fix")
   public void testMarketPlaceSignUp() {
     when(configuration.getPortal().getJwtMarketPlaceSecret()).thenReturn("TESTSECRET");
     when(configuration.getMarketPlaceConfig())
