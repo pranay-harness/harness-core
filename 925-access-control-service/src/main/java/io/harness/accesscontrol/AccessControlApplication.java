@@ -23,7 +23,7 @@ import io.harness.accesscontrol.commons.events.FeatureFlagEventListenerService;
 import io.harness.accesscontrol.commons.events.UserMembershipEventListenerService;
 import io.harness.accesscontrol.principals.usergroups.iterators.UserGroupReconciliationIterator;
 import io.harness.accesscontrol.resources.resourcegroups.iterators.ResourceGroupReconciliationIterator;
-import io.harness.aggregator.AggregatorApplication;
+import io.harness.aggregator.AggregatorService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.exception.ConstraintViolationExceptionMapper;
@@ -130,7 +130,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     accessControlManagementJob.run();
 
     if (appConfig.getAggregatorConfiguration().isEnabled()) {
-      environment.lifecycle().manage(injector.getInstance(AggregatorApplication.class));
+      environment.lifecycle().manage(injector.getInstance(AggregatorService.class));
     }
 
     MaintenanceController.forceMaintenance(false);

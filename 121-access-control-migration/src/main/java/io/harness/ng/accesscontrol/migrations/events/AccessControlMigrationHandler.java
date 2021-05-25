@@ -38,6 +38,7 @@ import io.harness.utils.CryptoUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.ArrayList;
@@ -98,7 +99,8 @@ public class AccessControlMigrationHandler implements MessageListener {
         ORGANIZATION_LEVEL, ImmutableList.of(ORG_ADMIN_ROLE_IDENTIFIER, ORG_VIEWER_ROLE_IDENTIFIER));
     levelToRolesMapping.put(
         PROJECT_LEVEL, ImmutableList.of(PROJECT_ADMIN_ROLE_IDENTIFIER, PROJECT_VIEWER_ROLE_IDENTIFIER));
-    executorService = Executors.newFixedThreadPool(4);
+    executorService = Executors.newFixedThreadPool(
+        4, new ThreadFactoryBuilder().setNameFormat("access-control-migration-handler").build());
   }
 
   private Optional<RoleAssignmentDTO> getManagedRoleAssignment(
@@ -137,10 +139,13 @@ public class AccessControlMigrationHandler implements MessageListener {
       String projectIdentifier, boolean managed, List<RoleAssignmentDTO> roleAssignments) {
     List<RoleAssignmentResponseDTO> createdRoleAssignments = new ArrayList<>();
     List<List<RoleAssignmentDTO>> batchOfRoleAssignments = Lists.partition(roleAssignments, 25);
+    log.info("Attempting to create {} role assignments for account: {}, org: {} and project: {}",
+        roleAssignments.size(), accountIdentifier, orgIdentifier, projectIdentifier);
     batchOfRoleAssignments.forEach(batch
         -> createdRoleAssignments.addAll(
             getResponse(accessControlAdminClient.createMultiRoleAssignment(accountIdentifier, orgIdentifier,
                 projectIdentifier, managed, RoleAssignmentCreateRequestDTO.builder().roleAssignments(batch).build()))));
+    log.info("Role assignments created: {}", createdRoleAssignments.size());
     return createdRoleAssignments;
   }
 

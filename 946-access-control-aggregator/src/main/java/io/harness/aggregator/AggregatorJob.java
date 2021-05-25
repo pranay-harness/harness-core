@@ -10,19 +10,18 @@ import io.harness.accesscontrol.roles.persistence.RoleDBO;
 import io.harness.aggregator.consumers.AccessControlDebeziumChangeConsumer;
 import io.harness.aggregator.consumers.ChangeConsumer;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.UnexpectedException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.debezium.engine.ChangeEvent;
 import io.debezium.engine.DebeziumEngine;
 import io.debezium.engine.format.Json;
 import io.debezium.serde.DebeziumSerdes;
-import io.dropwizard.lifecycle.Managed;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +29,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
@@ -37,7 +37,7 @@ import org.apache.kafka.common.serialization.Serde;
 @OwnedBy(PL)
 @Singleton
 @Slf4j
-public class AggregatorApplication implements Managed {
+public class AggregatorJob implements Runnable {
   private final ChangeConsumer<RoleDBO> roleChangeConsumer;
   private final ChangeConsumer<RoleAssignmentDBO> roleAssignmentChangeConsumer;
   private final ChangeConsumer<ResourceGroupDBO> resourceGroupChangeConsumer;
@@ -74,7 +74,7 @@ public class AggregatorApplication implements Managed {
   private static final String UNKNOWN_PROPERTIES_IGNORED = "unknown.properties.ignored";
 
   @Inject
-  public AggregatorApplication(ChangeConsumer<RoleDBO> roleChangeConsumer,
+  public AggregatorJob(ChangeConsumer<RoleDBO> roleChangeConsumer,
       ChangeConsumer<RoleAssignmentDBO> roleAssignmentChangeConsumer,
       ChangeConsumer<ResourceGroupDBO> resourceGroupChangeConsumer,
       ChangeConsumer<UserGroupDBO> userGroupChangeConsumer, AggregatorConfiguration aggregatorConfiguration,
@@ -84,7 +84,8 @@ public class AggregatorApplication implements Managed {
     this.resourceGroupChangeConsumer = resourceGroupChangeConsumer;
     this.userGroupChangeConsumer = userGroupChangeConsumer;
     this.aggregatorConfiguration = aggregatorConfiguration;
-    this.executorService = Executors.newFixedThreadPool(4);
+    this.executorService =
+        Executors.newFixedThreadPool(4, new ThreadFactoryBuilder().setNameFormat("aggregator").build());
     this.persistentLocker = persistentLocker;
   }
 
@@ -120,20 +121,25 @@ public class AggregatorApplication implements Managed {
   }
 
   @Override
-  public void start() {
-    try {
-      AcquiredLock<?> aggregatorLock = persistentLocker.waitToAcquireLock(
-          ACCESS_CONTROL_AGGREGATOR_LOCK, Duration.ofMinutes(2), Duration.ofSeconds(20));
-      if (aggregatorLock == null) {
-        throw new UnexpectedException(ACCESS_CONTROL_AGGREGATOR_LOCK
-            + " lock is not acquired by some other pod and we cannot acquire it on this pod, this is an illegal state.");
+  public void run() {
+    AcquiredLock<?> aggregatorLock = null;
+
+    while (aggregatorLock == null) {
+      try {
+        log.info("Trying to acquire ACCESS_CONTROL_AGGREGATOR_LOCK lock with 5 seconds timeout...");
+        aggregatorLock = persistentLocker.tryToAcquireInfiniteLockWithPeriodicRefresh(
+            ACCESS_CONTROL_AGGREGATOR_LOCK, Duration.ofSeconds(5));
+      } catch (Exception ex) {
+        log.info("Unable to get ACCESS_CONTROL_AGGREGATOR_LOCK lock, going to sleep for 30 seconds...");
       }
-    } catch (UnexpectedException ex) {
-      throw ex;
-    } catch (Exception ex) {
-      log.info("Cannot take lock on this pod, skip running aggregator.");
-      return;
+      try {
+        Thread.sleep(30000);
+      } catch (InterruptedException e) {
+        // ignore
+      }
     }
+
+    log.info("Acquired ACCESS_CONTROL_AGGREGATOR_LOCK lock, starting Debezium engine now...");
 
     Map<String, ChangeConsumer<? extends AccessControlEntity>> collectionToConsumerMap = new HashMap<>();
     Map<String, Deserializer<? extends AccessControlEntity>> collectionToDeserializerMap = new HashMap<>();
@@ -176,9 +182,18 @@ public class AggregatorApplication implements Managed {
 
     DebeziumEngine<ChangeEvent<String, String>> debeziumEngine =
         getEngine(aggregatorConfiguration.getDebeziumConfig(), accessControlDebeziumChangeConsumer);
-    executorService.submit(debeziumEngine);
-  }
+    Future<?> debeziumEngineFuture = executorService.submit(debeziumEngine);
 
-  @Override
-  public void stop() {}
+    log.info("waiting for debezium failure to release lock...");
+    while (!debeziumEngineFuture.isDone()) {
+      try {
+        Thread.sleep(60000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+
+    log.info("Debezium engine failed, releasing lock now...");
+    aggregatorLock.release();
+  }
 }
