@@ -3,12 +3,12 @@ package io.harness.licensing.entities.modules;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 import io.harness.licensing.Edition;
 import io.harness.licensing.LicenseStatus;
 import io.harness.licensing.LicenseType;
 import io.harness.licensing.ModuleType;
+import io.harness.licensing.entities.transactions.LicenseTransaction;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
@@ -23,11 +23,7 @@ import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.springframework.data.annotation.CreatedBy;
-import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedBy;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.Persistent;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -45,13 +41,12 @@ public abstract class ModuleLicense implements PersistentEntity, NGAccountAccess
   @NotEmpty protected ModuleType moduleType;
   @NotEmpty protected Edition edition;
   @NotEmpty protected LicenseType licenseType;
-  @NotEmpty protected long startTime;
-  @NotEmpty protected long expiryTime;
   @NotEmpty protected LicenseStatus status;
-  @CreatedBy protected EmbeddedUser createdBy;
-  @LastModifiedBy protected EmbeddedUser lastUpdatedBy;
-  @CreatedDate protected Long createdAt;
-  @LastModifiedDate protected Long lastUpdatedAt;
+  protected List<LicenseTransaction> transactions;
+
+  public boolean isActive() {
+    return LicenseStatus.ACTIVE.equals(status);
+  }
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

@@ -32,7 +32,12 @@ public class LicenseTestRule implements InjectorRuleMixin, MethodRule {
     ExecutorModule.getInstance().setExecutorService(new CurrentThreadExecutor());
 
     List<Module> modules = new ArrayList<>();
-    modules.add(LicenseModule.getInstance());
+    modules.add(new AbstractLicenseModule() {
+      @Override
+      public LicenseConfiguration licenseConfiguration() {
+        return LicenseConfiguration.builder().accountLicenseCheckJobFrequencyInMinutes(30).build();
+      }
+    });
     modules.add(new SpringPersistenceTestModule());
     modules.add(new AccountClientModule(ServiceHttpClientConfig.builder().build(), "test", "test"));
     modules.add(new ProviderModule() {

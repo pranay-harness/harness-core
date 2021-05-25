@@ -21,11 +21,19 @@ public class CILicenseObjectMapperTest extends LicenseTestBase {
   private CIModuleLicense moduleLicense;
   private CIModuleLicenseDTO moduleLicenseDTO;
   private static final int DEFAULT_NUMBER_OF_COMMITTERS = 10;
+  private static final int START_TIME = 10;
+  private static final int EXPIRY_TIME = 11;
 
   @Before
   public void setUp() {
-    moduleLicense = CIModuleLicense.builder().numberOfCommitters(DEFAULT_NUMBER_OF_COMMITTERS).build();
-    moduleLicenseDTO = CIModuleLicenseDTO.builder().numberOfCommitters(DEFAULT_NUMBER_OF_COMMITTERS).build();
+    moduleLicense = CIModuleLicense.builder()
+                        .totalDevelopers(DEFAULT_NUMBER_OF_COMMITTERS)
+                        .maxDevelopers(DEFAULT_NUMBER_OF_COMMITTERS)
+                        .build();
+    moduleLicenseDTO = CIModuleLicenseDTO.builder()
+                           .totalDevelopers(DEFAULT_NUMBER_OF_COMMITTERS)
+                           .maxDevelopers(DEFAULT_NUMBER_OF_COMMITTERS)
+                           .build();
   }
 
   @Test

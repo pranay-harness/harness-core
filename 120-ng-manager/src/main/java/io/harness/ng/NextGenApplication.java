@@ -44,6 +44,7 @@ import io.harness.gitsync.server.GitSyncGrpcModule;
 import io.harness.gitsync.server.GitSyncServiceConfiguration;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
+import io.harness.licensing.scheduler.AccountLicenseCheckHandler;
 import io.harness.logstreaming.LogStreamingModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
@@ -364,6 +365,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   public void registerIterators(Injector injector) {
     injector.getInstance(WebhookEventProcessingService.class).registerIterators();
     injector.getInstance(UserMembershipMigrationService.class).registerIterators();
+    injector.getInstance(AccountLicenseCheckHandler.class).registerIterators();
   }
 
   public void registerJobs(Injector injector) {

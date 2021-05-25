@@ -4,45 +4,57 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.licensing.ModuleType;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
+import io.harness.licensing.beans.transactions.LicenseTransactionDTO;
 import io.harness.licensing.entities.modules.ModuleLicense;
+import io.harness.licensing.entities.transactions.LicenseTransaction;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @OwnedBy(HarnessTeam.GTM)
 @Singleton
-public class LicenseObjectMapperImpl implements LicenseObjectMapper {
+public class LicenseObjectConverter {
   @Inject Map<ModuleType, LicenseObjectMapper> mapperMap;
-  @Override
-  public ModuleLicenseDTO toDTO(ModuleLicense moduleLicense) {
+  @Inject LicenseTransactionConverter licenseTransactionConverter;
+
+  public <T extends ModuleLicenseDTO> T toDTO(ModuleLicense moduleLicense) {
     ModuleType moduleType = moduleLicense.getModuleType();
     ModuleLicenseDTO moduleLicenseDTO = mapperMap.get(moduleType).toDTO(moduleLicense);
-    moduleLicenseDTO.setId(moduleLicense.getId());
     moduleLicenseDTO.setAccountIdentifier(moduleLicense.getAccountIdentifier());
     moduleLicenseDTO.setModuleType(moduleLicense.getModuleType());
     moduleLicenseDTO.setEdition(moduleLicense.getEdition());
     moduleLicenseDTO.setLicenseType(moduleLicense.getLicenseType());
-    moduleLicenseDTO.setStartTime(moduleLicense.getStartTime());
-    moduleLicenseDTO.setExpiryTime(moduleLicense.getExpiryTime());
     moduleLicenseDTO.setStatus(moduleLicense.getStatus());
-    moduleLicenseDTO.setCreatedAt(moduleLicense.getCreatedAt());
-    moduleLicenseDTO.setLastModifiedAt(moduleLicense.getLastUpdatedAt());
-    return moduleLicenseDTO;
+    if (moduleLicense.getTransactions() != null) {
+      moduleLicenseDTO.setTransactions(moduleLicense.getTransactions()
+                                           .stream()
+                                           .map(l -> licenseTransactionConverter.<LicenseTransactionDTO>toDTO(l))
+                                           .collect(Collectors.toList()));
+    } else {
+      moduleLicenseDTO.setTransactions(Lists.newArrayList());
+    }
+    return (T) moduleLicenseDTO;
   }
 
-  @Override
-  public ModuleLicense toEntity(ModuleLicenseDTO moduleLicenseDTO) {
+  public <T extends ModuleLicense> T toEntity(ModuleLicenseDTO moduleLicenseDTO) {
     ModuleType moduleType = moduleLicenseDTO.getModuleType();
     ModuleLicense moduleLicense = mapperMap.get(moduleType).toEntity(moduleLicenseDTO);
-    moduleLicense.setId(moduleLicenseDTO.getId());
     moduleLicense.setAccountIdentifier(moduleLicenseDTO.getAccountIdentifier());
     moduleLicense.setModuleType(moduleLicenseDTO.getModuleType());
     moduleLicense.setEdition(moduleLicenseDTO.getEdition());
     moduleLicense.setLicenseType(moduleLicenseDTO.getLicenseType());
-    moduleLicense.setStartTime(moduleLicenseDTO.getStartTime());
-    moduleLicense.setExpiryTime(moduleLicenseDTO.getExpiryTime());
     moduleLicense.setStatus(moduleLicenseDTO.getStatus());
-    return moduleLicense;
+    if (moduleLicenseDTO.getTransactions() != null) {
+      moduleLicense.setTransactions(moduleLicenseDTO.getTransactions()
+                                        .stream()
+                                        .map(l -> licenseTransactionConverter.<LicenseTransaction>toEntity(l))
+                                        .collect(Collectors.toList()));
+    } else {
+      moduleLicense.setTransactions(Lists.newArrayList());
+    }
+    return (T) moduleLicense;
   }
 }

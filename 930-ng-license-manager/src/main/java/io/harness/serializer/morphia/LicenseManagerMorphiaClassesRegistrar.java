@@ -1,5 +1,6 @@
 package io.harness.serializer.morphia;
 
+import io.harness.licensing.entities.account.AccountLicense;
 import io.harness.licensing.entities.modules.CDModuleLicense;
 import io.harness.licensing.entities.modules.CEModuleLicense;
 import io.harness.licensing.entities.modules.CFModuleLicense;
@@ -20,6 +21,7 @@ public class LicenseManagerMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(CFModuleLicense.class);
     set.add(CIModuleLicense.class);
     set.add(CVModuleLicense.class);
+    set.add(AccountLicense.class);
   }
 
   @Override

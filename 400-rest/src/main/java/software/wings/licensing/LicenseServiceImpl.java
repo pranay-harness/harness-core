@@ -2,12 +2,14 @@ package software.wings.licensing;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.remote.client.NGRestUtils.getResponse;
 import static io.harness.validation.Validator.notNullCheck;
 
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.ccm.license.CeLicenseType;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
+import io.harness.licensing.remote.NgLicenseHttpClient;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
@@ -84,6 +86,7 @@ public class LicenseServiceImpl implements LicenseService {
   private final UserService userService;
   private final UserGroupService userGroupService;
   private final AccountDao accountDao;
+  private final NgLicenseHttpClient ngLicenseHttpClient;
   private List<String> trialDefaultContacts;
   private List<String> paidDefaultContacts;
 
@@ -93,7 +96,8 @@ public class LicenseServiceImpl implements LicenseService {
   public LicenseServiceImpl(AccountService accountService, AccountDao accountDao, WingsPersistence wingsPersistence,
       GenericDbCache dbCache, ExecutorService executorService, LicenseProvider licenseProvider,
       EmailNotificationService emailNotificationService, EventPublishHelper eventPublishHelper,
-      MainConfiguration mainConfiguration, UserService userService, UserGroupService userGroupService) {
+      MainConfiguration mainConfiguration, UserService userService, UserGroupService userGroupService,
+      NgLicenseHttpClient ngLicenseHttpClient) {
     this.accountService = accountService;
     this.accountDao = accountDao;
     this.wingsPersistence = wingsPersistence;
@@ -104,6 +108,7 @@ public class LicenseServiceImpl implements LicenseService {
     this.eventPublishHelper = eventPublishHelper;
     this.userService = userService;
     this.userGroupService = userGroupService;
+    this.ngLicenseHttpClient = ngLicenseHttpClient;
 
     DefaultSalesContacts defaultSalesContacts = mainConfiguration.getDefaultSalesContacts();
     if (defaultSalesContacts != null && defaultSalesContacts.isEnabled()) {
@@ -168,9 +173,13 @@ public class LicenseServiceImpl implements LicenseService {
           sendEmailToSales(account, expiryTime, accountType, EMAIL_SUBJECT_ACCOUNT_EXPIRED, EMAIL_BODY_ACCOUNT_EXPIRED,
               accountType.equals(AccountType.PAID) ? paidDefaultContacts : trialDefaultContacts);
         }
+
+        // Check if all ng licenses inactive before decides expire account
+        Boolean ngLicenseAllInactive = getResponse(ngLicenseHttpClient.checkNGLicensesAllInactive(account.getUuid()));
         if (accountType.equals(AccountType.TRIAL) && !AccountStatus.DELETED.equals(accountStatus)
-            && !account.isPovAccount() && !account.isCloudCostEnabled()) {
+            && !account.isPovAccount() && !account.isCloudCostEnabled() && ngLicenseAllInactive) {
           handleTrialAccountExpiration(account, expiryTime);
+          getResponse(ngLicenseHttpClient.softDelete(account.getUuid()));
         }
       }
     } catch (Exception e) {

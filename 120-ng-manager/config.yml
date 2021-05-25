@@ -327,3 +327,7 @@ signupNotificationConfiguration:
   expireDurationInMinutes: 60
 
 useRedisForSdkResponseEvents: false
+
+licenseConfiguration:
+  accountLicenseCheckJobFrequencyInMinutes: 30
+

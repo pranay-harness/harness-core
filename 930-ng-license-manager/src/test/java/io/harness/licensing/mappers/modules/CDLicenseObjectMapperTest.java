@@ -23,15 +23,19 @@ public class CDLicenseObjectMapperTest extends LicenseTestBase {
   private CDModuleLicenseDTO moduleLicenseDTO;
   private static final int DEFAULT_MAX_WORK_LOAD = 5;
   private static final int DEFAULT_DEPLOYMENT_PER_DAY = 10;
+  private static final long START_TIME = 10;
+  private static final long EXPIRY_TIME = 10;
 
   @Before
   public void setUp() {
     moduleLicense = CDModuleLicense.builder()
                         .maxWorkLoads(DEFAULT_MAX_WORK_LOAD)
+                        .totalWorkLoads(DEFAULT_MAX_WORK_LOAD)
                         .deploymentsPerDay(DEFAULT_DEPLOYMENT_PER_DAY)
                         .build();
     moduleLicenseDTO = CDModuleLicenseDTO.builder()
                            .maxWorkLoads(DEFAULT_MAX_WORK_LOAD)
+                           .totalWorkLoads(DEFAULT_MAX_WORK_LOAD)
                            .deploymentsPerDay(DEFAULT_DEPLOYMENT_PER_DAY)
                            .build();
   }

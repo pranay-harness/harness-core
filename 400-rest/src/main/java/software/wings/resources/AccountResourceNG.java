@@ -61,6 +61,7 @@ public class AccountResourceNG {
   public RestResponse<AccountDTO> create(@NotNull AccountDTO dto) {
     Account account = AccountMapper.fromAccountDTO(dto);
     account.setCreatedFromNG(true);
+    account.setDefaultExperience(DefaultExperience.NG);
 
     account.setLicenseInfo(
         LicenseInfo.builder().accountType(AccountType.TRIAL).accountStatus(AccountStatus.ACTIVE).build());
