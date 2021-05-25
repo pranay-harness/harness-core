@@ -463,7 +463,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     return queryParameters.getFirst(key) != null ? queryParameters.getFirst(key) : pathParameters.getFirst(key);
   }
 
-  boolean isInternalRequest(ResourceInfo requestResourceInfo) {
+  private boolean isInternalRequest(ResourceInfo requestResourceInfo) {
     return requestResourceInfo.getResourceMethod().getAnnotation(InternalApi.class) != null
         || requestResourceInfo.getResourceClass().getAnnotation(InternalApi.class) != null;
   }
