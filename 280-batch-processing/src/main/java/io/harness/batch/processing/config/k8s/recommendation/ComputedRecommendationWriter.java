@@ -242,6 +242,10 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
     BigDecimal totalCpu = totalCurrentResourceValue(containerRecommendationMap, CPU);
     BigDecimal totalMemory = totalCurrentResourceValue(containerRecommendationMap, MEMORY);
 
+    if (BigDecimal.ZERO.compareTo(totalCpu) == 0 || BigDecimal.ZERO.compareTo(totalMemory) == 0) {
+      return;
+    }
+
     for (ContainerRecommendation containerRecommendation : containerRecommendationMap.values()) {
       BigDecimal containerCpu = getResourceValue(containerRecommendation.getCurrent(), CPU, BigDecimal.ZERO);
       BigDecimal containerMemory = getResourceValue(containerRecommendation.getCurrent(), MEMORY, BigDecimal.ZERO);
@@ -339,7 +343,7 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
 
     for (ContainerRecommendation containerRecommendation : containerRecommendations.values()) {
       BigDecimal current = getResourceValue(containerRecommendation.getCurrent(), resource, BigDecimal.ZERO);
-      totalResource = totalResource.add(current);
+      totalResource = totalResource.setScale(4, HALF_UP).add(current);
     }
 
     return totalResource;

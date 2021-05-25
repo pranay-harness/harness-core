@@ -554,6 +554,21 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
   @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
+  public void testSetContainerLevelCostWithExplicitZeroCurrentResource() {
+    Map<String, ContainerRecommendation> containerRecommendationMap = ImmutableMap.of("c1",
+        ContainerRecommendation.builder()
+            .current(ResourceRequirement.builder().request("cpu", "0m").request("memory", "0M").build())
+            .build());
+
+    Cost lastDayCost = Cost.builder().cpu(BigDecimal.valueOf(100)).memory(BigDecimal.valueOf(100)).build();
+    computedRecommendationWriter.setContainerLevelCost(containerRecommendationMap, lastDayCost);
+
+    assertThat(containerRecommendationMap.get("c1").getLastDayCost()).isNull();
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
   public void testSetContainerLevelCostWithZeroLastDayCost() {
     Map<String, ContainerRecommendation> containerRecommendationMap = ImmutableMap.of("c1",
         ContainerRecommendation.builder()
