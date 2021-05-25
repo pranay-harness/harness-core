@@ -505,7 +505,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetInstanceBillingAmountForSpotComputeInstance() throws IOException {
     when(vmPricingService.getComputeVMPricingInfo(GCP_INSTANCE_FAMILY, GCP_REGION, CloudProvider.GCP)).thenReturn(null);
-    when(pricingProfileService.fetchPricingProfile(ACCOUNT_ID))
+    when(pricingProfileService.fetchPricingProfile(ACCOUNT_ID, InstanceCategory.SPOT))
         .thenReturn(
             PricingProfile.builder().accountId(ACCOUNT_ID).vCpuPricePerHr(0.2).memoryGbPricePerHr(0.05).build());
     when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.K8S_NODE))
@@ -608,7 +608,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
     addParentResource(metaData, 8 * 1024, 20 * 1024);
     InstanceData instanceData = getInstance(instanceResource, instanceResource, metaData, INSTANCE_START_TIMESTAMP,
         INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.K8S_POD);
-    when(pricingProfileService.fetchPricingProfile(instanceData.getAccountId()))
+    when(pricingProfileService.fetchPricingProfile(instanceData.getAccountId(), InstanceCategory.ON_DEMAND))
         .thenReturn(PricingProfile.builder()
                         .accountId(instanceData.getAccountId())
                         .vCpuPricePerHr(0.016)
@@ -638,7 +638,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
     InstanceData instanceData = getInstance(instanceResource, instanceResource, metaData, INSTANCE_START_TIMESTAMP,
         INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.K8S_POD);
     UtilizationData utilizationData = getUtilization(1, 1);
-    when(pricingProfileService.fetchPricingProfile(instanceData.getAccountId()))
+    when(pricingProfileService.fetchPricingProfile(instanceData.getAccountId(), InstanceCategory.ON_DEMAND))
         .thenReturn(PricingProfile.builder()
                         .accountId(instanceData.getAccountId())
                         .vCpuPricePerHr(0.016)
