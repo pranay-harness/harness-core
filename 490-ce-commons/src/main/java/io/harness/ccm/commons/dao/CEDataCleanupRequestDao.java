@@ -22,9 +22,9 @@ public class CEDataCleanupRequestDao {
   }
 
   public List<CEDataCleanupRequest> getNotProcessedDataCleanupRequests() {
-    return persistence.createQuery(CEDataCleanupRequest.class)
+    return persistence.createQuery(CEDataCleanupRequest.class, excludeValidate)
         .field(CEDataCleanupRequestKeys.processedRequest)
-        .doesNotExist()
+        .equal(false)
         .order(CEDataCleanupRequestKeys.createdAt)
         .asList();
   }

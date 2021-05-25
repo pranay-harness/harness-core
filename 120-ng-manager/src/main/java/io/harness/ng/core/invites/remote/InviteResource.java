@@ -158,9 +158,7 @@ public class InviteResource {
   verifyInviteViaNGAuthUi(@QueryParam("token") @NotNull String jwtToken,
       @QueryParam("accountIdentifier") @NotNull String accountIdentifier, @QueryParam("email") @NotNull String email) {
     InviteAcceptResponse inviteAcceptResponse = inviteService.acceptInvite(jwtToken);
-    String accountCreationFragment =
-        String.format("accountIdentifier=%s&email=%s&token=%s", accountIdentifier, email, jwtToken);
-    URI redirectURL = inviteService.getRedirectUrl(inviteAcceptResponse, accountCreationFragment, jwtToken);
+    URI redirectURL = inviteService.getRedirectUrl(inviteAcceptResponse, email, jwtToken);
     return Response.seeOther(redirectURL).build();
   }
 

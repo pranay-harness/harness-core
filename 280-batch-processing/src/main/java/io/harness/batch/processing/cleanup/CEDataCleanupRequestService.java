@@ -32,8 +32,9 @@ public class CEDataCleanupRequestService {
         batchJobScheduledDataService.invalidateJobs(dataCleanupRequest);
         if (ImmutableSet.of(BatchJobType.INSTANCE_BILLING, BatchJobType.INSTANCE_BILLING_HOURLY)
                 .contains(batchJobType)) {
-          billingDataService.cleanBillingData(
+          boolean cleanBillingData = billingDataService.cleanBillingData(
               dataCleanupRequest.getAccountId(), dataCleanupRequest.getStartAt(), Instant.now(), batchJobType);
+          log.info("Cleanup billing data {}", cleanBillingData);
         }
       } catch (Exception ex) {
         log.error("Exception while processing request", ex);

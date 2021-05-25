@@ -25,10 +25,11 @@ type RemoteWriter struct {
 
 	key string // Unique key to identify in storage
 
-	num   int
-	now   time.Time
-	size  int
-	limit int
+	num    int
+	now    time.Time
+	size   int
+	limit  int
+	opened bool // whether the stream has been successfully opened
 
 	interval time.Duration
 	pending  []*stream.Line
@@ -133,16 +134,22 @@ func (b *RemoteWriter) Write(p []byte) (n int, err error) {
 		jsonLine, _ := json.Marshal(line)
 		b.log.Infow(string(jsonLine))
 
-		for b.size+len(p) > b.limit {
+		for b.size+len(jsonLine) > b.limit {
 			// Keep streaming even after the limit, but only upload last `b.limit` data to the store
 			if len(b.history) == 0 {
 				break
 			}
-			b.size -= len(b.history[0].Message)
+
+			hline, err := json.Marshal(b.history[0])
+			if err != nil {
+				// Log the error
+				b.log.Errorw("could not marshal log", zap.Error(err))
+			}
+			b.size -= len(hline)
 			b.history = b.history[1:]
 		}
 
-		b.size = b.size + len(part)
+		b.size = b.size + len(jsonLine)
 		b.num++
 
 		if !b.stopped() {
@@ -167,9 +174,12 @@ func (b *RemoteWriter) Write(p []byte) (n int, err error) {
 func (b *RemoteWriter) Open() error {
 	err := b.client.Open(context.Background(), b.key)
 	if err != nil {
+		b.log.Errorw("could not open the stream", "key", b.key, zap.Error(err))
 		b.stop() // stop trying to stream if we could not open the stream
 		return err
 	}
+	b.opened = true
+	b.log.Infow("successfully opened log stream", "key", b.key)
 	return nil
 }
 
@@ -185,6 +195,7 @@ func (b *RemoteWriter) Close() error {
 	}
 	err := b.upload()
 	// Close the log stream once upload has completed. Log in case of any error
+
 	if errc := b.client.Close(context.Background(), b.key); errc != nil {
 		b.log.Errorw("failed to close log stream", "key", b.key, zap.Error(errc))
 	}
@@ -208,7 +219,6 @@ func (b *RemoteWriter) upload() error {
 		b.log.Errorw("errored while trying to get upload link", zap.Error(err))
 		return err
 	}
-
 	b.log.Infow("uploading logs", "key", b.key, "num_lines", len(b.history))
 	err = b.client.UploadUsingLink(context.Background(), link.Value, data)
 	if err != nil {
@@ -220,6 +230,9 @@ func (b *RemoteWriter) upload() error {
 
 // flush batch uploads all buffered logs to the server.
 func (b *RemoteWriter) flush() error {
+	if !b.opened {
+		return nil
+	}
 	b.Lock()
 	lines := b.copy()
 	b.clear()
