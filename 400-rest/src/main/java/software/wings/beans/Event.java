@@ -277,7 +277,11 @@ public class Event {
     /**
      * for API Invocation using API_Key
      */
-    INVOKED
+    INVOKED,
+    /**
+     * Apply Delegate Profile
+     */
+    APPLY
   }
 
   /**
