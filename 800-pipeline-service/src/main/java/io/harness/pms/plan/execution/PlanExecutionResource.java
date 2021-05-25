@@ -108,7 +108,8 @@ public class PlanExecutionResource {
                                            .build();
     PlanExecutionResponseDto planExecutionResponseDto =
         pipelineExecuteHelper.runPipelineWithInputSetReferencesList(accountId, orgIdentifier, projectIdentifier,
-            pipelineIdentifier, mergeInputSetRequestDTO.getInputSetReferences(), triggerInfo);
+            pipelineIdentifier, mergeInputSetRequestDTO.getInputSetReferences(), gitEntityBasicInfo.getBranch(),
+            gitEntityBasicInfo.getYamlGitConfigId(), triggerInfo);
     return ResponseDTO.newResponse(planExecutionResponseDto);
   }
 
