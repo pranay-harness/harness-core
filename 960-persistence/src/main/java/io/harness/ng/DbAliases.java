@@ -13,5 +13,6 @@ public class DbAliases {
   public static final String RESOURCEGROUP = "resourcegroup";
   public static final String PMS = "pms-harness";
   public static final String CIMANAGER = "ci-manager";
+  public static final String CG_MANAGER = "manager";
   public static final String ALL = "all";
 }

@@ -3,11 +3,13 @@ package software.wings.beans;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.mongo.index.FdIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -28,6 +30,7 @@ import org.mongodb.morphia.annotations.Id;
 @Data
 @Entity(value = "pipelineExecutions", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@StoreIn(DbAliases.CG_MANAGER)
 public class PipelineExecution
     implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, ApplicationAccess {
   public static final String PIPELINE_ID_KEY = "pipelineId";

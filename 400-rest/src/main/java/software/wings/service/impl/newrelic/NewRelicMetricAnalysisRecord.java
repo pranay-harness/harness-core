@@ -7,6 +7,7 @@ import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -17,6 +18,7 @@ import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 
 import software.wings.beans.Base;
@@ -50,6 +52,7 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessEntity(exportable = false)
 @OwnedBy(HarnessTeam.CV)
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@StoreIn(DbAliases.CG_MANAGER)
 public class NewRelicMetricAnalysisRecord
     extends Base implements Comparable<NewRelicMetricAnalysisRecord>, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {

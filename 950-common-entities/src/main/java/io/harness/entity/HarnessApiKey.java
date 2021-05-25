@@ -1,8 +1,10 @@
 package io.harness.entity;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.beans.ClientType;
 import io.harness.mongo.index.FdIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 
@@ -19,6 +21,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "harnessApiKeys", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "HarnessApiKeyKeys")
+@StoreIn(DbAliases.CG_MANAGER)
 public class HarnessApiKey implements PersistentEntity, UuidAware {
   @Id private String uuid;
   @NotEmpty private byte[] encryptedKey;

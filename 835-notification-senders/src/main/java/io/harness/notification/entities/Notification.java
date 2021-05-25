@@ -32,8 +32,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "notificationsNg", noClassnameStored = true)
 @Document("notificationsNg")
 @TypeAlias("notificationsNg")
-@StoreIn(DbAliases.NOTIFICATION)
 @OwnedBy(PL)
+@StoreIn(DbAliases.NOTIFICATION)
 public class Notification implements PersistentRegularIterable, PersistentEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

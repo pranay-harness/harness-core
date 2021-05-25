@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -18,6 +19,7 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.serializer.JsonUtils;
 
@@ -69,6 +71,7 @@ import org.mongodb.morphia.annotations.Entity;
 @HarnessEntity(exportable = false)
 @OwnedBy(HarnessTeam.CV)
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@StoreIn(DbAliases.CG_MANAGER)
 public class LogMLAnalysisRecord extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

@@ -8,10 +8,12 @@ import static io.harness.persistence.GoogleDataStoreAware.readString;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
+import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.GoogleDataStoreAware;
 
 import software.wings.beans.Base;
@@ -38,6 +40,7 @@ import org.mongodb.morphia.annotations.Entity;
 @IgnoreUnusedIndex
 @Entity(value = "logMlFeedbackRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@StoreIn(DbAliases.CG_MANAGER)
 public class LogMLFeedbackRecord extends Base implements GoogleDataStoreAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

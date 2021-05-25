@@ -2,7 +2,9 @@ package io.harness.ccm.config;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -23,6 +25,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "GcpOrganizationKeys")
 @Entity(value = "gcpOrganization", noClassnameStored = true)
 @OwnedBy(CE)
+@StoreIn(DbAliases.CG_MANAGER)
 public class GcpOrganization implements PersistentEntity, UuidAware, AccountAccess, CreatedAtAware, UpdatedAtAware {
   @Id String uuid;
   String accountId;

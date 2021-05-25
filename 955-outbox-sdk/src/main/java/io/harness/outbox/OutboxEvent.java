@@ -2,12 +2,14 @@ package io.harness.outbox;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.context.GlobalContext;
 import io.harness.iterator.PersistentIterable;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.Resource;
 import io.harness.ng.core.Resource.ResourceKeys;
 import io.harness.ng.core.ResourceScope;
@@ -35,6 +37,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "outboxEvents", noClassnameStored = true)
 @Document("outboxEvents")
 @TypeAlias("outboxEvents")
+@StoreIn(DbAliases.ALL)
 public class OutboxEvent implements PersistentIterable, PersistentRegularIterable {
   @Id @org.mongodb.morphia.annotations.Id String id;
 

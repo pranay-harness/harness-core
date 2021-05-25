@@ -1,11 +1,13 @@
 package software.wings.beans.appmanifest;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.NameAccess;
@@ -30,6 +32,7 @@ import org.mongodb.morphia.annotations.Id;
 @Builder
 @Entity(value = "helmCharts", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "HelmChartKeys")
+@StoreIn(DbAliases.CG_MANAGER)
 public class HelmChart implements AccountAccess, NameAccess, PersistentEntity, UuidAware, CreatedAtAware,
                                   UpdatedAtAware, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {

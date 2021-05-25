@@ -1,10 +1,12 @@
 package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.FdUniqueIndex;
+import io.harness.ng.DbAliases;
 
 import java.util.Date;
 import lombok.Builder;
@@ -19,6 +21,7 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "permits", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@StoreIn(DbAliases.CG_MANAGER)
 public class Permit extends Base {
   public static final String PERMIT_KEY_ID = "key";
   @FdUniqueIndex private String key;

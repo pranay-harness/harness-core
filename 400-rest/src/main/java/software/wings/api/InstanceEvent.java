@@ -1,6 +1,8 @@
 package software.wings.api;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
+import io.harness.ng.DbAliases;
 import io.harness.queue.Queuable;
 
 import software.wings.beans.infrastructure.instance.Instance;
@@ -24,6 +26,7 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "instanceEventQueue", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@StoreIn(DbAliases.CG_MANAGER)
 public class InstanceEvent extends Queuable {
   private String accountId;
   private Set<String> deletions;

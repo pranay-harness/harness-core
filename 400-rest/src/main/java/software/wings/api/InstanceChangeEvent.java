@@ -1,6 +1,8 @@
 package software.wings.api;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
+import io.harness.ng.DbAliases;
 import io.harness.queue.Queuable;
 
 import software.wings.beans.infrastructure.instance.Instance;
@@ -22,6 +24,7 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "instanceChangeQueue", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@StoreIn(DbAliases.CG_MANAGER)
 public class InstanceChangeEvent extends Queuable {
   private List<Instance> instanceList;
   private List<String> autoScalingGroupList;

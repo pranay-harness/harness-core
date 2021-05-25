@@ -2,8 +2,10 @@ package io.harness.pms.interrupts;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
+import static io.harness.ng.DbAliases.PMS;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.interrupts.InterruptType;
@@ -29,6 +31,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("interruptEventQueue")
 @TypeAlias("interruptEvent")
 @HarnessEntity(exportable = false)
+@StoreIn(PMS)
 public class InterruptEvent extends Queuable {
   @NonNull String interruptUuid;
   @NonNull NodeExecutionProto nodeExecution;

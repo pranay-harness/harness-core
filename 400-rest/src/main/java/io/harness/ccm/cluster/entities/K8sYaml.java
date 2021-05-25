@@ -8,7 +8,6 @@ import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.ccm.cluster.entities.K8sYaml.K8sYamlKeys;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.MongoIndex;

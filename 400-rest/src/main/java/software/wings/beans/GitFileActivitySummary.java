@@ -1,8 +1,10 @@
 package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -32,6 +34,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "gitFileActivitySummary", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "GitFileActivitySummaryKeys")
 @HarnessEntity(exportable = true)
+@StoreIn(DbAliases.CG_MANAGER)
 public class GitFileActivitySummary
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {

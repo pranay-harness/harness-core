@@ -3,9 +3,11 @@ package io.harness.governance.pipeline.service.model;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.mongo.index.FdIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
@@ -30,6 +32,7 @@ import org.mongodb.morphia.annotations.Id;
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "PipelineGovernanceConfigKeys")
 @ParametersAreNonnullByDefault
+@StoreIn(DbAliases.CG_MANAGER)
 public class PipelineGovernanceConfig implements PersistentEntity, UuidAccess, AccountAccess {
   @Id private String uuid;
   @Nonnull @FdIndex private String accountId;

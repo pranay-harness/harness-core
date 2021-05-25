@@ -1,6 +1,9 @@
 package io.harness.pms.sdk.core.events;
 
+import static io.harness.ng.DbAliases.PMS;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -31,6 +34,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("orchestrationEventLog")
 @HarnessEntity(exportable = false)
 @TypeAlias("OrchestrationEventLog")
+@StoreIn(PMS)
 public class OrchestrationEventLog implements PersistentEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

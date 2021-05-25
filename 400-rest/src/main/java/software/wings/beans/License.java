@@ -1,7 +1,9 @@
 package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
+import io.harness.ng.DbAliases;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -14,6 +16,7 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "licenses", noClassnameStored = true)
 @HarnessEntity(exportable = true)
+@StoreIn(DbAliases.CG_MANAGER)
 public class License extends Base {
   private String name;
   private List<Entitlement> entitlements;

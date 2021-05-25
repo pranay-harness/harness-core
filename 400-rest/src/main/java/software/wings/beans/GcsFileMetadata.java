@@ -3,11 +3,13 @@ package software.wings.beans;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ChecksumType;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.file.GcsHarnessFileMetadata;
 import io.harness.mongo.index.FdIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 
 import java.util.Map;
@@ -41,6 +43,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "gcsFileMetadata", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "GcsFileMetadataKeys")
+@StoreIn(DbAliases.ALL)
 public class GcsFileMetadata extends Base implements AccountAccess, GcsHarnessFileMetadata {
   @NotEmpty @FdIndex private String accountId;
   @NotEmpty @FdIndex private String fileId; // Mongo GridFs fileId.

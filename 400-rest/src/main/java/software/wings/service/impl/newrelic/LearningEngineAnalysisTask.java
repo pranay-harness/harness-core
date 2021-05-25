@@ -3,6 +3,7 @@ package software.wings.service.impl.newrelic;
 import static io.harness.annotations.dev.HarnessTeam.CV;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -11,6 +12,7 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.version.ServiceApiVersion;
 
@@ -49,6 +51,7 @@ import org.mongodb.morphia.annotations.Entity;
 @HarnessEntity(exportable = false)
 @OwnedBy(CV)
 @TargetModule(HarnessModule._270_VERIFICATION)
+@StoreIn(DbAliases.CG_MANAGER)
 public class LearningEngineAnalysisTask extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

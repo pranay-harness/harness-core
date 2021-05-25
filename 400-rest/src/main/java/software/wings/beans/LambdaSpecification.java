@@ -5,7 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.trim;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.FdUniqueIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.yaml.BaseYaml;
 
@@ -26,6 +28,7 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "LambdaSpecificationKeys")
 @Entity("lambdaSpecifications")
 @HarnessEntity(exportable = true)
+@StoreIn(DbAliases.CG_MANAGER)
 public class LambdaSpecification extends DeploymentSpecification implements AccountAccess {
   @NotEmpty @FdUniqueIndex private String serviceId;
   private DefaultSpecification defaults;

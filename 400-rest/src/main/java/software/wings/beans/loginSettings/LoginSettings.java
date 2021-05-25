@@ -1,8 +1,10 @@
 package software.wings.beans.loginSettings;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.FdIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -23,6 +25,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "LoginSettingKeys")
 @Entity(value = "loginSettings")
 @HarnessEntity(exportable = true)
+@StoreIn(DbAliases.CG_MANAGER)
 public class LoginSettings implements PersistentEntity, UuidAware, UpdatedAtAware, UpdatedByAware, AccountAccess {
   @Id @NotNull @SchemaIgnore private String uuid;
 

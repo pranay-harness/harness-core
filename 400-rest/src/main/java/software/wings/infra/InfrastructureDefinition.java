@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
@@ -11,6 +12,7 @@ import io.harness.data.validator.EntityName;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -47,6 +49,7 @@ import org.mongodb.morphia.annotations.Id;
 @HarnessEntity(exportable = true)
 @TargetModule(_871_CG_BEANS)
 @OwnedBy(CDP)
+@StoreIn(DbAliases.CG_MANAGER)
 public class InfrastructureDefinition
     implements PersistentEntity, UuidAware, NameAccess, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware,
                ApplicationAccess, CustomDeploymentTypeAware, AccountAccess {

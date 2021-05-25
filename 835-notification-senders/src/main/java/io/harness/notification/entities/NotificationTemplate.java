@@ -29,8 +29,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("notificationTemplates")
 @Entity("notificationTemplates")
 @TypeAlias("notificationTemplate")
-@StoreIn(DbAliases.NOTIFICATION)
 @OwnedBy(PL)
+@StoreIn(DbAliases.NOTIFICATION)
 public class NotificationTemplate {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

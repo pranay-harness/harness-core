@@ -1,8 +1,10 @@
 package software.wings.service.impl.newrelic;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 
 import software.wings.beans.Base;
 import software.wings.service.impl.analysis.MLAnalysisType;
@@ -21,6 +23,7 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "mlExperiments", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@StoreIn(DbAliases.CG_MANAGER)
 public class MLExperiments extends Base {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

@@ -1,12 +1,12 @@
 package software.wings.beans.infrastructure;
 
-import static software.wings.beans.infrastructure.Host.HostKeys;
-
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 
 import software.wings.beans.Base;
 
@@ -28,6 +28,7 @@ import org.mongodb.morphia.annotations.Entity;
 @HarnessEntity(exportable = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "HostKeys")
+@StoreIn(DbAliases.CG_MANAGER)
 public class Host extends Base {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

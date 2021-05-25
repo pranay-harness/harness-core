@@ -1,9 +1,11 @@
 package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
@@ -37,6 +39,7 @@ import org.mongodb.morphia.annotations.Reference;
 @HarnessEntity(exportable = true)
 @Deprecated
 @FieldNameConstants(innerTypeName = "NotificationGroupKeys")
+@StoreIn(DbAliases.CG_MANAGER)
 public class NotificationGroup extends Base implements NotificationReceiverInfo, NameAccess, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -408,12 +411,12 @@ public class NotificationGroup extends Base implements NotificationReceiverInfo,
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseEntityYaml {
-    private List<NotificationGroupAddressYaml> addresses;
+    private List<software.wings.beans.NotificationGroupAddressYaml> addresses;
     private String defaultNotificationGroupForAccount;
 
     @Builder
-    public Yaml(String type, String harnessApiVersion, List<NotificationGroupAddressYaml> addresses,
-        String defaultNotificationGroupForAccount) {
+    public Yaml(String type, String harnessApiVersion,
+        List<software.wings.beans.NotificationGroupAddressYaml> addresses, String defaultNotificationGroupForAccount) {
       super(type, harnessApiVersion);
       this.addresses = addresses;
       this.defaultNotificationGroupForAccount = defaultNotificationGroupForAccount;

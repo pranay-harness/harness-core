@@ -1,8 +1,10 @@
 package io.harness.pms.sdk.core.events;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
+import static io.harness.ng.DbAliases.PMS;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
@@ -39,6 +41,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("orchestrationEventQueue")
 @HarnessEntity(exportable = false)
 @TypeAlias("orchestrationEvent")
+@StoreIn(PMS)
 public class OrchestrationEvent extends Queuable implements WithMonitoring {
   @NotNull Ambiance ambiance;
   NodeExecutionProto nodeExecutionProto;

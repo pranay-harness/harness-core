@@ -1,6 +1,8 @@
 package io.harness.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
+import io.harness.ng.DbAliases;
 import io.harness.queue.Queuable;
 
 import javax.validation.constraints.NotNull;
@@ -21,6 +23,7 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "kmsTransitionEvent2", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@StoreIn(DbAliases.CG_MANAGER)
 public class MigrateSecretTask extends Queuable {
   @NotNull private String accountId;
   @NotNull private String secretId;

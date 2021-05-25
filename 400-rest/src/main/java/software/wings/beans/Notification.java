@@ -1,8 +1,10 @@
 package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.event.model.EventType;
 import io.harness.mongo.index.FdIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -24,6 +26,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "notifications")
 @HarnessEntity(exportable = false)
 @JsonTypeInfo(use = Id.NAME, property = "notificationType", include = As.EXISTING_PROPERTY)
+@StoreIn(DbAliases.CG_MANAGER)
 public abstract class Notification extends Base implements AccountAccess {
   private String environmentId;
   private String entityId;

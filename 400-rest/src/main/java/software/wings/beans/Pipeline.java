@@ -10,6 +10,7 @@ import static io.harness.beans.WorkflowType.PIPELINE;
 import static java.util.Arrays.asList;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
@@ -17,6 +18,7 @@ import io.harness.data.validator.EntityName;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 
@@ -61,6 +63,7 @@ import org.mongodb.morphia.annotations.Transient;
 @FieldNameConstants(innerTypeName = "PipelineKeys")
 @Entity(value = "pipelines", noClassnameStored = true)
 @HarnessEntity(exportable = true)
+@StoreIn(DbAliases.CG_MANAGER)
 public class Pipeline extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

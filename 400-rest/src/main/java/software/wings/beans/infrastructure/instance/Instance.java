@@ -1,11 +1,13 @@
 package software.wings.beans.infrastructure.instance;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 
 import software.wings.beans.Base;
@@ -36,6 +38,7 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "InstanceKeys")
 @Entity(value = "instance", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@StoreIn(DbAliases.CG_MANAGER)
 public class Instance extends Base implements AccountAccess, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

@@ -6,10 +6,12 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.FdIndex;
+import io.harness.ng.DbAliases;
 
 import software.wings.beans.Base;
 
@@ -36,6 +38,7 @@ import org.mongodb.morphia.annotations.Entity;
 @HarnessEntity(exportable = true)
 @OwnedBy(PL)
 @TargetModule(_970_RBAC_CORE)
+@StoreIn(DbAliases.CG_MANAGER)
 public class HarnessUserGroup extends Base {
   @NotEmpty private String name;
   private String description;

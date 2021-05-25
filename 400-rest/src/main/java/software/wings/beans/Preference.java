@@ -1,8 +1,10 @@
 package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -30,7 +32,7 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "preferences")
 @HarnessEntity(exportable = true)
-
+@StoreIn(DbAliases.CG_MANAGER)
 public abstract class Preference extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
