@@ -3,6 +3,7 @@ package io.harness.secrets;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.remote.client.ClientMode;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.secrets.remote.SecretNGManagerClient;
@@ -20,18 +21,28 @@ public class SecretNGManagerClientModule extends AbstractModule {
   private final ServiceHttpClientConfig serviceHttpClientConfig;
   private final String serviceSecret;
   private final String clientId;
+  private final ClientMode clientMode;
+
+  public SecretNGManagerClientModule(
+      ServiceHttpClientConfig serviceHttpClientConfig, String serviceSecret, String clientId, ClientMode clientMode) {
+    this.serviceHttpClientConfig = serviceHttpClientConfig;
+    this.serviceSecret = serviceSecret;
+    this.clientId = clientId;
+    this.clientMode = clientMode;
+  }
 
   public SecretNGManagerClientModule(
       ServiceHttpClientConfig serviceHttpClientConfig, String serviceSecret, String clientId) {
     this.serviceHttpClientConfig = serviceHttpClientConfig;
     this.serviceSecret = serviceSecret;
     this.clientId = clientId;
+    this.clientMode = ClientMode.NON_PRIVILEGED;
   }
 
   @Provides
   private SecretNGManagerHttpClientFactory secretNGManagerHttpClientFactory(KryoConverterFactory kryoConverterFactory) {
-    return new SecretNGManagerHttpClientFactory(
-        serviceHttpClientConfig, serviceSecret, new ServiceTokenGenerator(), kryoConverterFactory, clientId);
+    return new SecretNGManagerHttpClientFactory(serviceHttpClientConfig, serviceSecret, new ServiceTokenGenerator(),
+        kryoConverterFactory, clientId, clientMode);
   }
 
   @Override
