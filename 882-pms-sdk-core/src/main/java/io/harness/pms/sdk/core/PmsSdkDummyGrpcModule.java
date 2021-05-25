@@ -1,4 +1,4 @@
-package io.harness.pms.sdk;
+package io.harness.pms.sdk.core;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 

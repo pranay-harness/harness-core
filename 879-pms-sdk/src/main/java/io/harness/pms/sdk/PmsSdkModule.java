@@ -2,10 +2,11 @@ package io.harness.pms.sdk;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
-import io.harness.PmsSdkCoreModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.exceptionmanager.ExceptionManager;
 import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionHandler;
+import io.harness.pms.sdk.core.PmsSdkCoreConfig;
+import io.harness.pms.sdk.core.PmsSdkCoreModule;
 import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
 
 import com.google.inject.AbstractModule;
@@ -49,15 +50,14 @@ public class PmsSdkModule extends AbstractModule {
   @NotNull
   private List<Module> getModules() {
     List<Module> modules = new ArrayList<>();
-    modules.add(PmsSdkCoreModule.getInstance());
+    modules.add(PmsSdkCoreModule.getInstance(PmsSdkCoreConfig.builder()
+                                                 .grpcClientConfig(config.getPmsGrpcClientConfig())
+                                                 .grpcServerConfig(config.getGrpcServerConfig())
+                                                 .sdkDeployMode(config.getDeploymentMode())
+                                                 .build()));
     modules.add(PmsSdkRegistryModule.getInstance(config));
     modules.add(PmsSdkProviderModule.getInstance(config));
     modules.add(PmsSdkQueueModule.getInstance(config));
-    if (config.getDeploymentMode().isNonLocal()) {
-      modules.add(PmsSdkGrpcModule.getInstance(config));
-    } else {
-      modules.add(PmsSdkDummyGrpcModule.getInstance());
-    }
     modules.add(SdkMonitoringModule.getInstance());
     return modules;
   }

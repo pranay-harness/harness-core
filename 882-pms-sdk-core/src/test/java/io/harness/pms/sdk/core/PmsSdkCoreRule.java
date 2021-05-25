@@ -1,7 +1,6 @@
 package io.harness.pms.sdk.core;
 
 import io.harness.PmsCommonsModule;
-import io.harness.PmsSdkCoreModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
@@ -47,7 +46,7 @@ public class PmsSdkCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleM
 
     List<Module> modules = new ArrayList<>();
     modules.add(new ClosingFactoryModule(closingFactory));
-    modules.add(PmsSdkCoreModule.getInstance());
+    modules.add(PmsSdkCoreModule.getInstance(PmsSdkCoreConfig.builder().sdkDeployMode(SdkDeployMode.LOCAL).build()));
     modules.add(PmsCommonsModule.getInstance());
     modules.add(mongoTypeModule(annotations));
     modules.add(KryoModule.getInstance());

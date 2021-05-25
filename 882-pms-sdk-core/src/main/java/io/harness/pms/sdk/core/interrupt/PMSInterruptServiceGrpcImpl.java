@@ -1,11 +1,10 @@
-package io.harness.pms.sdk.interrupt;
+package io.harness.pms.sdk.core.interrupt;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.service.InterruptProtoServiceGrpc.InterruptProtoServiceBlockingStub;
 import io.harness.pms.contracts.service.InterruptRequest;
-import io.harness.pms.sdk.core.interrupt.PMSInterruptService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
