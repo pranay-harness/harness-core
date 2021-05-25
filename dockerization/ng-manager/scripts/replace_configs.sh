@@ -225,6 +225,14 @@ if [[ "" != "$FILE_STORAGE_CLUSTER_NAME" ]]; then
   yq write -i $CONFIG_FILE fileServiceConfiguration.clusterName "$FILE_STORAGE_CLUSTER_NAME"
 fi
 
+if [[ "" != "$CVNG_SERVICE_CONNECT_TIMEOUT_IN_SECONDS" ]]; then
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.cvng.serviceHttpClientConfig.connectTimeOutSeconds $CVNG_SERVICE_CONNECT_TIMEOUT_IN_SECONDS
+fi
+
+if [[ "" != "$CVNG_SERVICE_READ_TIMEOUT_IN_SECONDS" ]]; then
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.cvng.serviceHttpClientConfig.readTimeOutSeconds $CVNG_SERVICE_READ_TIMEOUT_IN_SECONDS
+fi
+
 replace_key_value eventsFramework.redis.sentinel $EVENTS_FRAMEWORK_USE_SENTINEL
 replace_key_value eventsFramework.redis.envNamespace $EVENTS_FRAMEWORK_ENV_NAMESPACE
 replace_key_value eventsFramework.redis.redisUrl $EVENTS_FRAMEWORK_REDIS_URL

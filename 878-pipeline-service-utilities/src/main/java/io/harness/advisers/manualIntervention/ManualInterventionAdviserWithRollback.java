@@ -13,6 +13,7 @@ import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.advisers.InterventionWaitAdvise;
 import io.harness.pms.contracts.commons.RepairActionCode;
+import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.adviser.Adviser;
@@ -53,6 +54,9 @@ public class ManualInterventionAdviserWithRollback implements Adviser {
 
   @Override
   public boolean canAdvise(AdvisingEvent advisingEvent) {
+    if (checkIfPreviousAdviserExpired(advisingEvent.getNodeExecution())) {
+      return false;
+    }
     boolean canAdvise = StatusUtils.brokeStatuses().contains(advisingEvent.getToStatus())
         && advisingEvent.getFromStatus() != INTERVENTION_WAITING;
     ManualInterventionAdviserRollbackParameters parameters = extractParameters(advisingEvent);
@@ -62,6 +66,17 @@ public class ManualInterventionAdviserWithRollback implements Adviser {
           && !Collections.disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypesList());
     }
     return canAdvise;
+  }
+
+  private boolean checkIfPreviousAdviserExpired(NodeExecutionProto nodeExecutionProto) {
+    if (nodeExecutionProto.getInterruptHistoriesCount() == 0) {
+      return false;
+    }
+    return nodeExecutionProto.getInterruptHistoriesList()
+        .get(nodeExecutionProto.getInterruptHistoriesCount() - 1)
+        .getInterruptConfig()
+        .getIssuedBy()
+        .hasTimeoutIssuer();
   }
 
   private ManualInterventionAdviserRollbackParameters extractParameters(AdvisingEvent advisingEvent) {

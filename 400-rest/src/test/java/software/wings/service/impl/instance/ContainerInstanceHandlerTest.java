@@ -31,6 +31,7 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.SER
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.US_EAST;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
 import static software.wings.utils.WingsTestConstants.UUID;
 
 import static java.util.Arrays.asList;
@@ -2065,6 +2066,23 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void shouldUpdateInstancesFromPerpetualTaskResponseReleaseAndNamespaceAwareNewPodsHelm() {
+    List<Instance> instancesInDb =
+        Arrays.asList(createKubernetesContainerInstance("instance1", "releaseX", "namespaceX"),
+            createKubernetesContainerInstance("instance2", "releaseX", "namespaceX"),
+            createKubernetesContainerInstance("instance3", "releaseX", "namespaceY"),
+            createKubernetesContainerInstance("instance4", "releaseY", "namespaceX"),
+            createKubernetesContainerInstance("instance5", "releaseY", "namespaceY"));
+
+    ContainerSyncResponse instanceSyncResponse =
+        createContainerSyncResponseWith("releaseX", "namespaceX", "instance1", "instance2", "instance6");
+
+    assertSavedAndDeletedInstances(instancesInDb, instanceSyncResponse, singletonList("instance6"), emptyList());
+  }
+
+  @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void shouldUpdateInstancesFromPerpetualTaskResponseReleaseAndNamespaceAwareNoNewPods() {
@@ -2076,6 +2094,23 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
 
     K8sInstanceSyncResponse instanceSyncResponse =
         creteK8sPodSyncResponseWith("releaseX", "namespaceX", "instance1", "instance2");
+
+    assertSavedAndDeletedInstances(instancesInDb, instanceSyncResponse, emptyList(), emptyList());
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void shouldUpdateInstancesFromPerpetualTaskResponseReleaseAndNamespaceAwareNoNewPodsHelm() {
+    List<Instance> instancesInDb =
+        Arrays.asList(createKubernetesContainerInstance("instance1", "releaseX", "namespaceX"),
+            createKubernetesContainerInstance("instance2", "releaseX", "namespaceX"),
+            createKubernetesContainerInstance("instance3", "releaseX", "namespaceY"),
+            createKubernetesContainerInstance("instance4", "releaseY", "namespaceX"),
+            createKubernetesContainerInstance("instance5", "releaseY", "namespaceY"));
+
+    ContainerSyncResponse instanceSyncResponse =
+        createContainerSyncResponseWith("releaseX", "namespaceX", "instance1", "instance2");
 
     assertSavedAndDeletedInstances(instancesInDb, instanceSyncResponse, emptyList(), emptyList());
   }
@@ -2097,6 +2132,23 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void shouldUpdateInstancesFromPerpetualTaskResponseReleaseAndNamespaceAwareDeletedPodsHelm() {
+    List<Instance> instancesInDb =
+        Arrays.asList(createKubernetesContainerInstance("instance1", "releaseX", "namespaceX"),
+            createKubernetesContainerInstance("instance2", "releaseX", "namespaceX"),
+            createKubernetesContainerInstance("instance3", "releaseX", "namespaceX"),
+            createKubernetesContainerInstance("instance4", "releaseX", "namespaceY"),
+            createKubernetesContainerInstance("instance5", "releaseY", "namespaceX"),
+            createKubernetesContainerInstance("instance6", "releaseY", "namespaceY"));
+
+    ContainerSyncResponse instanceSyncResponse = createContainerSyncResponseWith("releaseX", "namespaceX", "instance2");
+
+    assertSavedAndDeletedInstances(instancesInDb, instanceSyncResponse, emptyList(), asList("instance1", "instance3"));
+  }
+
+  @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void shouldUpdateInstancesFromPerpetualTaskResponseReleaseAndNamespaceAwareMixed() {
@@ -2110,6 +2162,26 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
 
     K8sInstanceSyncResponse instanceSyncResponse =
         creteK8sPodSyncResponseWith("releaseX", "namespaceX", "instance2", "instance3", "instance8", "instance9");
+
+    assertSavedAndDeletedInstances(
+        instancesInDb, instanceSyncResponse, asList("instance8", "instance9"), asList("instance1", "instance4"));
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void shouldUpdateInstancesFromPerpetualTaskResponseReleaseAndNamespaceAwareMixedHelm() {
+    List<Instance> instancesInDb =
+        Arrays.asList(createKubernetesContainerInstance("instance1", "releaseX", "namespaceX"),
+            createKubernetesContainerInstance("instance2", "releaseX", "namespaceX"),
+            createKubernetesContainerInstance("instance3", "releaseX", "namespaceX"),
+            createKubernetesContainerInstance("instance4", "releaseX", "namespaceX"),
+            createKubernetesContainerInstance("instance5", "releaseX", "namespaceY"),
+            createKubernetesContainerInstance("instance6", "releaseY", "namespaceX"),
+            createKubernetesContainerInstance("instance7", "releaseY", "namespaceY"));
+
+    ContainerSyncResponse instanceSyncResponse =
+        createContainerSyncResponseWith("releaseX", "namespaceX", "instance2", "instance3", "instance8", "instance9");
 
     assertSavedAndDeletedInstances(
         instancesInDb, instanceSyncResponse, asList("instance8", "instance9"), asList("instance1", "instance4"));
@@ -2162,6 +2234,37 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .containsExactlyInAnyOrderElementsOf(deletedInstances);
   }
 
+  private void assertSavedAndDeletedInstances(List<Instance> instancesInDb, ContainerSyncResponse containerSyncResponse,
+      List<String> savedInstances, List<String> deletedInstances) {
+    ContainerInfrastructureMapping infrastructureMapping =
+        DirectKubernetesInfrastructureMapping.builder()
+            .appId(APP_ID)
+            .infraMappingType(InfrastructureMappingType.DIRECT_KUBERNETES.name())
+            .build();
+    infrastructureMapping.setUuid(UUID);
+
+    doReturn(instancesInDb).when(instanceService).getInstancesForAppAndInframapping(APP_ID, UUID);
+
+    containerInstanceHandler.processInstanceSyncResponseFromPerpetualTask(infrastructureMapping, containerSyncResponse);
+
+    ArgumentCaptor<Instance> savedInstancesCaptor = ArgumentCaptor.forClass(Instance.class);
+    ArgumentCaptor<Set<String>> deletedInstancesCaptor =
+        ArgumentCaptor.forClass((Class<Set<String>>) (Object) Set.class);
+
+    // don't care about the number of calls until we save/delete right instances
+    verify(instanceService, atLeast(0)).save(savedInstancesCaptor.capture());
+    verify(instanceService, atLeast(0)).delete(deletedInstancesCaptor.capture());
+
+    assertThat(savedInstancesCaptor.getAllValues()
+                   .stream()
+                   .map(Instance::getInstanceInfo)
+                   .map(KubernetesContainerInfo.class ::cast)
+                   .map(KubernetesContainerInfo::getPodName))
+        .containsExactlyInAnyOrderElementsOf(savedInstances);
+    assertThat(deletedInstancesCaptor.getAllValues().stream().flatMap(Set::stream).collect(Collectors.toList()))
+        .containsExactlyInAnyOrderElementsOf(deletedInstances);
+  }
+
   private Instance createK8sPodInstance(String id, String releaseName, String namespace) {
     return Instance.builder()
         .uuid(id)
@@ -2178,12 +2281,44 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .build();
   }
 
+  private Instance createKubernetesContainerInstance(String id, String releaseName, String namespace) {
+    return Instance.builder()
+        .uuid(id)
+        .instanceType(KUBERNETES_CONTAINER_INSTANCE)
+        .containerInstanceKey(ContainerInstanceKey.builder().containerId(id).namespace(namespace).build())
+        .instanceInfo(KubernetesContainerInfo.builder()
+                          .clusterName(KUBE_CLUSTER)
+                          .podName(id)
+                          .namespace(namespace)
+                          .releaseName(releaseName)
+                          .build())
+        .lastWorkflowExecutionId("1")
+        .build();
+  }
+
   private K8sInstanceSyncResponse creteK8sPodSyncResponseWith(String releaseName, String namespace, String... podIds) {
     return K8sInstanceSyncResponse.builder()
         .releaseName(releaseName)
         .namespace(namespace)
         .k8sPodInfoList(
             Arrays.stream(podIds).map(id -> createK8sPod(id, releaseName, namespace)).collect(Collectors.toList()))
+        .build();
+  }
+
+  private ContainerSyncResponse createContainerSyncResponseWith(
+      String releaseName, String namespace, String... podIds) {
+    return ContainerSyncResponse.builder()
+        .namespace(namespace)
+        .releaseName(releaseName)
+        .containerInfoList(Arrays.stream(podIds)
+                               .map(id
+                                   -> KubernetesContainerInfo.builder()
+                                          .clusterName(CLUSTER_NAME)
+                                          .releaseName(releaseName)
+                                          .namespace(namespace)
+                                          .podName(id)
+                                          .build())
+                               .collect(Collectors.toList()))
         .build();
   }
 

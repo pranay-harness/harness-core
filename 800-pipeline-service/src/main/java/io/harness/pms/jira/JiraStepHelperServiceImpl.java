@@ -33,6 +33,7 @@ import io.harness.supplier.ThrowingSupplier;
 import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -44,7 +45,7 @@ public class JiraStepHelperServiceImpl implements JiraStepHelperService {
 
   @Inject
   public JiraStepHelperServiceImpl(ConnectorResourceClient connectorResourceClient,
-      SecretManagerClientService secretManagerClientService, KryoSerializer kryoSerializer) {
+      @Named("PRIVILEGED") SecretManagerClientService secretManagerClientService, KryoSerializer kryoSerializer) {
     this.connectorResourceClient = connectorResourceClient;
     this.secretManagerClientService = secretManagerClientService;
     this.kryoSerializer = kryoSerializer;

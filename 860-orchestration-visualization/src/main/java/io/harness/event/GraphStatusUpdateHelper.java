@@ -54,7 +54,7 @@ public class GraphStatusUpdateHelper {
         } else {
           updateGraphVertex(graphVertexMap, nodeExecution, planExecutionId);
         }
-      } else {
+      } else if (!nodeExecution.isOldRetry()) {
         log.info("Adding graph vertex with id [{}] and status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
             nodeExecution.getStatus(), planExecutionId);
         orchestrationAdjacencyListGenerator.addVertex(orchestrationGraph.getAdjacencyList(), nodeExecution);

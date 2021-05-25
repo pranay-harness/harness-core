@@ -531,7 +531,9 @@ public enum ErrorCode {
   CONTEXT,
   PR_CREATION_ERROR,
   URL_NOT_REACHABLE,
-  URL_NOT_PROVIDED;
+  URL_NOT_PROVIDED,
+  ENGINE_EXPRESSION_EVALUATION_ERROR,
+  ENGINE_FUNCTOR_ERROR;
 
   private Status status = BAD_REQUEST;
   private String description;

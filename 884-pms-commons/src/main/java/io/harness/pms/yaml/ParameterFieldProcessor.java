@@ -73,14 +73,21 @@ public class ParameterFieldProcessor {
   }
 
   private ProcessorResult validateUsingValidator(Object value, InputSetValidator inputSetValidator) {
-    if (inputSetValidator != null) {
-      RuntimeValidator runtimeValidator = inputSetValidatorFactory.obtainValidator(
-          inputSetValidator, engineExpressionEvaluator, skipUnresolvedExpressionsCheck);
-      RuntimeValidatorResponse validatorResponse =
-          runtimeValidator.isValidValue(value, inputSetValidator.getParameters());
-      if (!validatorResponse.isValid()) {
-        return ProcessorResult.builder().error(true).message(validatorResponse.getErrorMessage()).build();
-      }
+    if (inputSetValidator == null) {
+      return ProcessorResult.builder().build();
+    }
+
+    RuntimeValidator runtimeValidator = inputSetValidatorFactory.obtainValidator(
+        inputSetValidator, engineExpressionEvaluator, skipUnresolvedExpressionsCheck);
+    RuntimeValidatorResponse validatorResponse =
+        runtimeValidator.isValidValue(value, inputSetValidator.getParameters());
+    if (!validatorResponse.isValid()) {
+      return ProcessorResult.builder()
+          .error(true)
+          .expression(String.format(
+              "<+input>.%s(%s)", inputSetValidator.getValidatorType().getYamlName(), inputSetValidator.getParameters()))
+          .message(validatorResponse.getErrorMessage())
+          .build();
     }
     return ProcessorResult.builder().build();
   }
