@@ -128,11 +128,12 @@ public class ConnectorHeartbeatPerpetualTaskClient implements PerpetualTaskServi
           gcpKmsConnectorDTO.setCredentials(gcpKmsConfig.getCredentials());
           return;
         case AWS_KMS:
-          AwsKmsConfigDTO kmsConfig = (AwsKmsConfigDTO) secretManagerConfig;
-          AwsKmsConnectorDTO kmsConnectorDTO =
+          AwsKmsConfigDTO awsKmsConfigDTO = (AwsKmsConfigDTO) secretManagerConfig;
+          AwsKmsConnectorDTO awsKmsConnectorDTO =
               ((AwsKmsValidationParams) connectorValidationParams).getAwsKmsConnectorDTO();
-          kmsConnectorDTO.setCredential(
-              populateKmsCredential((KmsConfig) SecretManagerConfigMapper.fromDTO(kmsConfig)));
+          KmsConfig kmsConfig = (KmsConfig) SecretManagerConfigMapper.fromDTO(awsKmsConfigDTO);
+          awsKmsConnectorDTO.setKmsArn(kmsConfig.getKmsArn());
+          awsKmsConnectorDTO.setCredential(populateKmsCredential(kmsConfig));
           return;
         default:
       }
