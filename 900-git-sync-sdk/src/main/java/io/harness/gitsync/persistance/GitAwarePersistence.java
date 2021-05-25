@@ -26,6 +26,9 @@ public interface GitAwarePersistence {
   <B extends GitSyncableEntity, Y extends YamlDTO> Optional<B> findOne(@NotNull Criteria criteria,
       String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass);
 
+  <B extends GitSyncableEntity, Y extends YamlDTO> Optional<B> findOne(
+      Criteria criteria, Class<B> entityClass, String repo, String branch);
+
   <B extends GitSyncableEntity, Y extends YamlDTO> List<B> find(@NotNull Criteria criteria, Pageable pageable,
       String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass);
 

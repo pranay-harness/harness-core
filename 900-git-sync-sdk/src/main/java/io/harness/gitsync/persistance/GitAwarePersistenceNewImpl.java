@@ -128,6 +128,34 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
   }
 
   @Override
+  public <B extends GitSyncableEntity, Y extends YamlDTO> Optional<B> findOne(
+      Criteria criteria, Class<B> entityClass, String repo, String branch) {
+    final Criteria gitSyncCriteria = createGitSyncCriteriaForRepoAndBranch(repo, branch, entityClass);
+
+    List<Criteria> criteriaList = Arrays.asList(criteria, gitSyncCriteria);
+    Query query =
+        new Query().addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[criteriaList.size()])));
+    final B object = mongoTemplate.findOne(query, entityClass);
+    return Optional.ofNullable(object);
+  }
+
+  private <B extends GitSyncableEntity> Criteria createGitSyncCriteriaForRepoAndBranch(
+      String repo, String branch, Class<B> entityClass) {
+    final GitSdkEntityHandlerInterface gitSdkEntityHandlerInterface =
+        gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName());
+    if (repo == null || branch == null || repo.equals(DEFAULT) || branch.equals(DEFAULT)) {
+      return new Criteria().andOperator(
+          new Criteria().orOperator(Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey()).is(true),
+              Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey()).exists(false)));
+    }
+    return new Criteria()
+        .and(gitSdkEntityHandlerInterface.getBranchKey())
+        .is(branch)
+        .and(gitSdkEntityHandlerInterface.getYamlGitConfigRefKey())
+        .is(repo);
+  }
+
+  @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> List<B> find(Criteria criteria, Pageable pageable,
       String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
     final Criteria gitSyncCriteria =
