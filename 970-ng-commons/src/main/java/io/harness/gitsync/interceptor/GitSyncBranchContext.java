@@ -7,6 +7,7 @@ import io.harness.context.GlobalContextData;
 
 import lombok.Builder;
 import lombok.Value;
+import lombok.experimental.Wither;
 import org.springframework.data.annotation.TypeAlias;
 
 @Value
@@ -16,7 +17,7 @@ import org.springframework.data.annotation.TypeAlias;
 public class GitSyncBranchContext implements GlobalContextData {
   public static final String NG_GIT_SYNC_CONTEXT = "NG_GIT_SYNC_CONTEXT";
 
-  GitEntityInfo gitBranchInfo;
+  @Wither GitEntityInfo gitBranchInfo;
 
   @Override
   public String getKey() {
