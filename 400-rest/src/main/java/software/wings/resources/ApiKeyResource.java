@@ -103,4 +103,13 @@ public class ApiKeyResource {
     status.put("deleted", true);
     return new RestResponse<>(status);
   }
+
+  @GET
+  @Path("validate")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> validate(
+      @NotEmpty @QueryParam("accountId") String accountId, @NotEmpty @QueryParam("apiKey") String apiKey) {
+    return new RestResponse<>(apiKeyService.isApiKeyValid(apiKey, accountId));
+  }
 }

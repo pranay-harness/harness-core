@@ -32,6 +32,7 @@ import io.harness.security.JWTAuthenticationFilter;
 import io.harness.security.JWTTokenHandler;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.annotations.DelegateAuth;
+import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.annotations.PublicApi;
@@ -211,6 +212,11 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         return;
       }
       throw new InvalidRequestException(INVALID_CREDENTIAL.name(), INVALID_CREDENTIAL, USER);
+    }
+
+    if (isInternalRequest(resourceInfo)) {
+      validateInternalRequest(containerRequestContext);
+      return;
     }
 
     // Bearer token validation is needed for environments without Gateway
@@ -455,5 +461,14 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   private String getRequestParamFromContext(
       String key, MultivaluedMap<String, String> pathParameters, MultivaluedMap<String, String> queryParameters) {
     return queryParameters.getFirst(key) != null ? queryParameters.getFirst(key) : pathParameters.getFirst(key);
+  }
+
+  boolean isInternalRequest(ResourceInfo requestResourceInfo) {
+    return requestResourceInfo.getResourceMethod().getAnnotation(InternalApi.class) != null
+        || requestResourceInfo.getResourceClass().getAnnotation(InternalApi.class) != null;
+  }
+
+  private void validateInternalRequest(ContainerRequestContext containerRequestContext) {
+    JWTAuthenticationFilter.filter(containerRequestContext, serviceToJWTTokenHandlerMapping, serviceToSecretMapping);
   }
 }
