@@ -285,6 +285,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     newConnector.setCreatedAt(existingConnector.getCreatedAt());
     newConnector.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
     newConnector.setActivityDetails(existingConnector.getActivityDetails());
+    updateInCaseOfCommitToNewBranch(newConnector);
     if (existingConnector.getHeartbeatPerpetualTaskId() == null
         && !harnessManagedConnectorHelper.isHarnessManagedSecretManager(connector)) {
       PerpetualTaskId connectorHeartbeatTaskId =
@@ -303,6 +304,20 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       throw new DuplicateFieldException(format("Connector [%s] already exists", existingConnector.getIdentifier()));
     }
     return connectorMapper.writeDTO(updatedConnector);
+  }
+
+  private void updateInCaseOfCommitToNewBranch(Connector newConnector) {
+    GitEntityInfo gitEntityInfo = getGitEntityInfo();
+    if (gitEntityInfo != null) {
+      if (gitEntityInfo.isNewBranch()) {
+        newConnector.setId(null);
+        newConnector.setVersion(null);
+        newConnector.setConnectivityDetails(null);
+        newConnector.setCreatedAt(System.currentTimeMillis());
+        newConnector.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
+        newConnector.setActivityDetails(null);
+      }
+    }
   }
 
   private Optional<Connector> getExistingConnectorToBeModified(
