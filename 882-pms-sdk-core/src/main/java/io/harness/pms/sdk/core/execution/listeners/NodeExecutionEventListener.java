@@ -24,6 +24,8 @@ import io.harness.pms.execution.ProgressNodeExecutionEventData;
 import io.harness.pms.execution.ResumeNodeExecutionEventData;
 import io.harness.pms.execution.StartNodeExecutionEventData;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
+import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
+import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
@@ -62,6 +64,7 @@ public class NodeExecutionEventListener extends QueueListenerWithObservers<NodeE
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private ExecutableProcessorFactory executableProcessorFactory;
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private PmsGitSyncHelper pmsGitSyncHelper;
 
   @Inject
   public NodeExecutionEventListener(QueueConsumer<NodeExecutionEvent> queueConsumer) {
@@ -70,32 +73,38 @@ public class NodeExecutionEventListener extends QueueListenerWithObservers<NodeE
 
   @Override
   public void onMessageInternal(NodeExecutionEvent event) {
-    try (AutoLogContext autoLogContext = event.autoLogContext()) {
-      boolean handled;
-      NodeExecutionEventType nodeExecutionEventType = event.getEventType();
-      log.info("Starting to handle NodeExecutionEvent of type: {}", event.getEventType());
-      switch (nodeExecutionEventType) {
-        case START:
-          handled = startExecution(event);
-          break;
-        case FACILITATE:
-          handled = facilitateExecution(event);
-          break;
-        case RESUME:
-          handled = resumeExecution(event);
-          break;
-        case ADVISE:
-          handled = adviseExecution(event);
-          break;
-        case PROGRESS:
-          handled = handleProgress(event);
-          break;
-        default:
-          throw new UnsupportedOperationException("NodeExecution Event Has no handler" + event.getEventType());
-      }
-      log.info("Handled NodeExecutionEvent of type: {} {}", event.getEventType(),
-          handled ? "SUCCESSFULLY" : "UNSUCCESSFULLY");
+    try (PmsGitSyncBranchContextGuard ignore1 =
+             pmsGitSyncHelper.createGitSyncBranchContextGuard(event.getNodeExecution().getAmbiance(), true);
+         AutoLogContext ignore2 = event.autoLogContext()) {
+      onMessageInternalWithContext(event);
     }
+  }
+
+  private void onMessageInternalWithContext(NodeExecutionEvent event) {
+    boolean handled;
+    NodeExecutionEventType nodeExecutionEventType = event.getEventType();
+    log.info("Starting to handle NodeExecutionEvent of type: {}", event.getEventType());
+    switch (nodeExecutionEventType) {
+      case START:
+        handled = startExecution(event);
+        break;
+      case FACILITATE:
+        handled = facilitateExecution(event);
+        break;
+      case RESUME:
+        handled = resumeExecution(event);
+        break;
+      case ADVISE:
+        handled = adviseExecution(event);
+        break;
+      case PROGRESS:
+        handled = handleProgress(event);
+        break;
+      default:
+        throw new UnsupportedOperationException("NodeExecution Event Has no handler" + event.getEventType());
+    }
+    log.info(
+        "Handled NodeExecutionEvent of type: {} {}", event.getEventType(), handled ? "SUCCESSFULLY" : "UNSUCCESSFULLY");
   }
 
   private boolean handleProgress(NodeExecutionEvent event) {

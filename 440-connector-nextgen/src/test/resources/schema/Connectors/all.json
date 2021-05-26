@@ -996,7 +996,7 @@
                 "type": "string",
                 "enum": [
                   "CUR",
-                  "EVENTS",
+                  "VISIBILITY",
                   "OPTIMIZATION"
                 ]
               }

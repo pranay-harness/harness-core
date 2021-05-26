@@ -13,6 +13,7 @@ import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.beans.gitsync.GitWebhookDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.impl.ScmResponseStatusUtils;
+import io.harness.product.ci.scm.proto.Commit;
 import io.harness.product.ci.scm.proto.CreateBranchRequest;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.CreatePRRequest;
@@ -42,6 +43,8 @@ import io.harness.product.ci.scm.proto.IsLatestFileRequest;
 import io.harness.product.ci.scm.proto.IsLatestFileResponse;
 import io.harness.product.ci.scm.proto.ListBranchesRequest;
 import io.harness.product.ci.scm.proto.ListBranchesResponse;
+import io.harness.product.ci.scm.proto.ListCommitsInPRRequest;
+import io.harness.product.ci.scm.proto.ListCommitsInPRResponse;
 import io.harness.product.ci.scm.proto.ListCommitsRequest;
 import io.harness.product.ci.scm.proto.ListCommitsResponse;
 import io.harness.product.ci.scm.proto.ListWebhooksRequest;
@@ -229,6 +232,29 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     return scmBlockingStub.listCommits(listCommitsRequest);
   }
 
+  @Override
+  public ListCommitsInPRResponse listCommitsInPR(
+      ScmConnector scmConnector, long prNumber, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    final String slug = scmGitProviderHelper.getSlug(scmConnector);
+    final Provider provider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+    int pageNumber = 1;
+    ListCommitsInPRResponse commitsInPRResponse;
+    List<Commit> commitList = new ArrayList<>();
+    do {
+      ListCommitsInPRRequest listCommitsInPRRequest =
+          ListCommitsInPRRequest.newBuilder()
+              .setSlug(slug)
+              .setNumber(prNumber)
+              .setProvider(provider)
+              .setPagination(PageRequest.newBuilder().setPage(pageNumber).build())
+              .build();
+      commitsInPRResponse = scmBlockingStub.listCommitsInPR(listCommitsInPRRequest);
+      commitList.addAll(commitsInPRResponse.getCommitsList());
+      pageNumber = commitsInPRResponse.getPagination().getNext();
+    } while (pageNumber != 0);
+    return ListCommitsInPRResponse.newBuilder().addAllCommits(commitList).build();
+  }
+
   private GetBatchFileRequest createBatchFileRequest(
       List<String> harnessRelatedFilePaths, String slug, String branch, Provider gitProvider) {
     List<GetFileRequest> getBatchFileRequests = new ArrayList<>();
@@ -323,6 +349,14 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     return ListCommitsRequest.newBuilder()
         .setSlug(scmGitProviderHelper.getSlug(scmConnector))
         .setBranch(branch)
+        .setProvider(scmGitProviderMapper.mapToSCMGitProvider(scmConnector))
+        .build();
+  }
+
+  private ListCommitsInPRRequest getListCommitsInPRRequest(ScmConnector scmConnector, long prNumber) {
+    return ListCommitsInPRRequest.newBuilder()
+        .setSlug(scmGitProviderHelper.getSlug(scmConnector))
+        .setNumber(prNumber)
         .setProvider(scmGitProviderMapper.mapToSCMGitProvider(scmConnector))
         .build();
   }

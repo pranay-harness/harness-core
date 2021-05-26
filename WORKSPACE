@@ -960,8 +960,8 @@ go_repository(
 go_repository(
     name = "com_github_drone_go_scm",
     importpath = "github.com/drone/go-scm",
-    sum = "h1:L6g6wUzM6pV90S0VFQL/HjcTmW5JoaSGAX8VDiN76g4=",
-    version = "v1.13.1",
+    sum = "h1:G+0P1jC425/Uk+7SYYfUIZ933YcvEEYg9zEPuvyO0+g=",
+    version = "v1.14.1",
 )
 
 go_repository(
@@ -5266,6 +5266,42 @@ go_repository(
     version = "v1.3.1",
 )
 
+#========== Python Configuration Begin=========================
+
+# Special logic for building python interpreter with OpenSSL from homebrew.
+# See https://devguide.python.org/setup/#macos-and-os-x
+_py_configure = """
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    ./configure --prefix=$(pwd)/bazel_install --with-openssl=$(brew --prefix openssl)
+else
+    ./configure --prefix=$(pwd)/bazel_install
+fi
+"""
+
+http_archive(
+    name = "python_interpreter",
+    build_file_content = """
+exports_files(["python_bin"])
+filegroup(
+    name = "files",
+    srcs = glob(["bazel_install/**"], exclude = ["**/* *"]),
+    visibility = ["//visibility:public"],
+)
+""",
+    patch_cmds = [
+        "mkdir $(pwd)/bazel_install",
+        _py_configure,
+        "make",
+        "make install",
+        "ln -s bazel_install/bin/python3 python_bin",
+    ],
+    sha256 = "991c3f8ac97992f3d308fefeb03a64db462574eadbff34ce8bc5bb583d9903ff",
+    strip_prefix = "Python-3.9.1",
+    urls = ["https://www.python.org/ftp/python/3.9.1/Python-3.9.1.tar.xz"],
+)
+
+register_toolchains("//:py_toolchain")
+
 #========== Docker Rules Configuration Begin=========================
 
 http_archive(
@@ -5294,6 +5330,14 @@ container_pull(
     registry = "us.gcr.io",
     repository = "platform-205701/alpine",
     tag = "safe-alpine3.12-sec1096-apm",
+)
+
+container_pull(
+    name = "platform_ubuntu",
+    digest = "sha256:8540a3afd5c6d43a9f6549f19f56abff42c7010265426c3c39ccc64d1d88a1c2",
+    registry = "us.gcr.io",
+    repository = "platform-205701/ubuntu",
+    tag = "safe-ubuntu18.04-sec1096",
 )
 
 load(

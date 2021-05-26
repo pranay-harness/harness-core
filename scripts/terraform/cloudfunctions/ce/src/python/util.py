@@ -45,7 +45,7 @@ def createTable(client, tableName):
         fieldset = clusterDataTableFields
     elif tableName.endswith("preAggregated"):
         fieldset = preAggreagtedTableSchema
-    elif tableName.endswith("awsEc2Inventory") or tableName.endswith("awsEc2InventoryTemp"):
+    elif tableName.split(".")[-1].startswith("awsEc2Inventory"):
         fieldset = awsEc2InventorySchema
     elif tableName.endswith("awsEc2InventoryCPU"):
         fieldset = awsEc2InventoryCPUSchema
@@ -74,11 +74,10 @@ def createTable(client, tableName):
             type_=bigquery.TimePartitioningType.DAY,
             field="startTime"  # name of column to use for partitioning
         )
-
-    elif tableName.endswith("awsEc2Inventory") or tableName.endswith("awsEc2InventoryTemp") or tableName.endswith("awsEbsInventory") or tableName.endswith("awsEbsInventoryTemp"):
-        table.time_partitioning = bigquery.TimePartitioning(
-            type_=bigquery.TimePartitioningType.DAY,
-            field="lastUpdatedAt"
+    elif tableName.split(".")[-1].startswith("awsEc2Inventory") or tableName.endswith("awsEbsInventory") or tableName.endswith("awsEbsInventoryTemp"):
+        table.range_partitioning = bigquery.RangePartitioning(
+            range_=bigquery.PartitionRange(start=0, end=10000, interval=1),
+            field="linkedAccountIdPartition"
         )
     elif tableName.endswith("awsEc2InventoryCPU") or tableName.endswith("awsEbsInventoryMetrics"):
         table.time_partitioning = bigquery.TimePartitioning(

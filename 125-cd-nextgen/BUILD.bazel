@@ -17,6 +17,7 @@ java_library(
         "//860-orchestration-steps:module",
         "//879-pms-sdk:module",
         "//884-pms-commons:module",
+        "//888-pms-client:module",
         "//890-sm-core:module",
         "//910-delegate-service-driver:module",
         "//948-access-control-sdk:module",

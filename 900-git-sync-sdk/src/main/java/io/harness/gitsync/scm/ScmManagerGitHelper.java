@@ -5,6 +5,9 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitFileDetails;
 import io.harness.beans.gitsync.GitFilePathDetails;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.ScmException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.interceptor.GitEntityInfo;
@@ -35,8 +38,16 @@ public class ScmManagerGitHelper implements ScmGitHelper {
     switch (changeType) {
       case ADD:
         final CreateFileResponse createFileResponse = doScmCreateFile(yaml, gitBranchInfo, infoForPush);
-        ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
-            createFileResponse.getStatus(), createFileResponse.getError());
+        try {
+          ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
+              createFileResponse.getStatus(), createFileResponse.getError());
+        } catch (ScmException e) {
+          if (ErrorCode.SCM_CONFLICT_ERROR.equals(e.getCode())) {
+            throw new InvalidRequestException(String.format(
+                "A file with name %s already exists in the remote Git repository", gitBranchInfo.getFilePath()));
+          }
+          throw e;
+        }
         return ScmGitUtils.createScmCreateFileResponse(yaml, infoForPush);
       case DELETE:
         final DeleteFileResponse deleteFileResponse = doScmDeleteFile(gitBranchInfo, infoForPush);

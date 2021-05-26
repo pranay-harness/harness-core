@@ -10,6 +10,6 @@ import lombok.Value;
 @Value
 @Builder
 public class PipelineExecutionInfo {
-  private String date;
+  private long date;
   private PipelineCountInfo count;
 }

@@ -8,6 +8,9 @@ import io.harness.beans.DelegateTaskRequest;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.scm.ScmPushTaskParams;
 import io.harness.delegate.task.scm.ScmPushTaskResponseData;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.ScmException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.git.model.ChangeType;
@@ -58,9 +61,17 @@ public class ScmDelegateGitHelper implements ScmGitHelper {
     try {
       switch (changeType) {
         case ADD:
-          ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
-              CreateFileResponse.parseFrom(scmPushTaskResponseData.getCreateFileResponse()).getStatus(),
-              CreateFileResponse.parseFrom(scmPushTaskResponseData.getCreateFileResponse()).getError());
+          try {
+            ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
+                CreateFileResponse.parseFrom(scmPushTaskResponseData.getCreateFileResponse()).getStatus(),
+                CreateFileResponse.parseFrom(scmPushTaskResponseData.getCreateFileResponse()).getError());
+          } catch (ScmException e) {
+            if (ErrorCode.SCM_CONFLICT_ERROR.equals(e.getCode())) {
+              throw new InvalidRequestException(String.format(
+                  "A file with name %s already exists in the remote Git repository", gitBranchInfo.getFilePath()));
+            }
+            throw e;
+          }
           return ScmGitUtils.createScmCreateFileResponse(yaml, infoForPush);
         case MODIFY:
           ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(

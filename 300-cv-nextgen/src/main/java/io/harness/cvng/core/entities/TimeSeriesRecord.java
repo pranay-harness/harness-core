@@ -1,11 +1,13 @@
 package io.harness.cvng.core.entities;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -36,6 +38,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "TimeSeriesRecordKeys")
 @Entity(value = "timeSeriesRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@StoreIn(DbAliases.CVNG)
 public final class TimeSeriesRecord
     implements CreatedAtAware, AccountAccess, PersistentEntity, Comparable<TimeSeriesRecord> {
   public static List<MongoIndex> mongoIndexes() {

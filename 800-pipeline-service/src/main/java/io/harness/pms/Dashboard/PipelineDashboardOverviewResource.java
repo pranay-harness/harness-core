@@ -1,8 +1,10 @@
 package io.harness.pms.Dashboard;
 
+import static io.harness.NGDateUtils.DAY_IN_MS;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -15,10 +17,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -52,22 +51,14 @@ public class PipelineDashboardOverviewResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
       @NotNull @QueryParam("moduleInfo") String moduleInfo,
-      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
-          "startInterval") String startInterval,
-      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
-          "endInterval") String endInterval) {
-    LocalDate startDate = LocalDate.parse(startInterval);
-    LocalDate endDate = LocalDate.parse(endInterval);
-    long interval = ChronoUnit.DAYS.between(startDate, endDate);
+      @NotNull @QueryParam(NGResourceFilterConstants.START) long startInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.END) long endInterval) {
+    log.info("Getting pipeline health");
+    long previousInterval = startInterval - (endInterval - startInterval + DAY_IN_MS);
 
-    if (interval < 0) {
-      interval = interval * (-1);
-    }
-
-    LocalDate previousStartDate = startDate.minusDays(interval);
     return ResponseDTO.newResponse(
         pipelineDashboardService.getDashboardPipelineHealthInfo(accountIdentifier, orgIdentifier, projectIdentifier,
-            pipelineIdentifier, startInterval, endInterval, previousStartDate.toString(), moduleInfo));
+            pipelineIdentifier, startInterval, endInterval, previousInterval, moduleInfo));
   }
 
   @GET
@@ -79,10 +70,9 @@ public class PipelineDashboardOverviewResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
       @NotNull @QueryParam("moduleInfo") String moduleInfo,
-      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
-          "startInterval") String startInterval,
-      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
-          "endInterval") String endInterval) {
+      @NotNull @QueryParam(NGResourceFilterConstants.START) long startInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.END) long endInterval) {
+    log.info("getting pipeline execution");
     return ResponseDTO.newResponse(pipelineDashboardService.getDashboardPipelineExecutionInfo(accountIdentifier,
         orgIdentifier, projectIdentifier, pipelineIdentifier, startInterval, endInterval, moduleInfo));
   }
