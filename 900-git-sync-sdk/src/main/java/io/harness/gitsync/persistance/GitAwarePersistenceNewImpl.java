@@ -141,18 +141,10 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
 
   private <B extends GitSyncableEntity> Criteria createGitSyncCriteriaForRepoAndBranch(
       String repo, String branch, Class<B> entityClass) {
-    final GitSdkEntityHandlerInterface gitSdkEntityHandlerInterface =
-        gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName());
     if (repo == null || branch == null || repo.equals(DEFAULT) || branch.equals(DEFAULT)) {
-      return new Criteria().andOperator(
-          new Criteria().orOperator(Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey()).is(true),
-              Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey()).exists(false)));
+      return getCriteriaWhenGitSyncNotEnabled(entityClass);
     }
-    return new Criteria()
-        .and(gitSdkEntityHandlerInterface.getBranchKey())
-        .is(branch)
-        .and(gitSdkEntityHandlerInterface.getYamlGitConfigRefKey())
-        .is(repo);
+    return getRepoAndBranchCriteria(repo, branch, entityClass);
   }
 
   @Override
@@ -190,26 +182,39 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
     return gitSyncSdkService.isGitSyncEnabled(accountIdentifier, orgIdentifier, projectIdentifier);
   }
 
+  private Criteria getCriteriaWhenGitSyncNotEnabled(Class entityClass) {
+    final GitSdkEntityHandlerInterface gitSdkEntityHandlerInterface =
+        gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName());
+    return new Criteria().andOperator(
+        new Criteria().orOperator(Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey()).is(true),
+            Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey()).exists(false)));
+  }
+
+  private Criteria getRepoAndBranchCriteria(String repo, String branch, Class entityClass) {
+    final GitSdkEntityHandlerInterface gitSdkEntityHandlerInterface =
+        gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName());
+    return new Criteria()
+        .and(gitSdkEntityHandlerInterface.getBranchKey())
+        .is(branch)
+        .and(gitSdkEntityHandlerInterface.getYamlGitConfigRefKey())
+        .is(repo);
+  }
+
   private Criteria updateCriteriaIfGitSyncEnabled(
       String projectIdentifier, String orgIdentifier, String accountId, Class entityClass) {
     if (isGitSyncEnabled(projectIdentifier, orgIdentifier, accountId)) {
-      final GitSdkEntityHandlerInterface gitSdkEntityHandlerInterface =
-          gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName());
       final GitEntityInfo gitBranchInfo = getGitEntityInfo();
       if (gitBranchInfo == null || gitBranchInfo.getYamlGitConfigId() == null || gitBranchInfo.getBranch() == null
           || gitBranchInfo.getYamlGitConfigId().equals(DEFAULT) || gitBranchInfo.getBranch().equals(DEFAULT)) {
-        return new Criteria().andOperator(
-            new Criteria().orOperator(Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey()).is(true),
-                Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey()).exists(false)));
+        return getCriteriaWhenGitSyncNotEnabled(entityClass);
       } else {
         // case 1: list from branch only
         // case 2: list from branch in context and default of others.
-        final Criteria criteria = new Criteria()
-                                      .and(gitSdkEntityHandlerInterface.getBranchKey())
-                                      .is(gitBranchInfo.getBranch())
-                                      .and(gitSdkEntityHandlerInterface.getYamlGitConfigRefKey())
-                                      .is(gitBranchInfo.getYamlGitConfigId());
+        final Criteria criteria = getRepoAndBranchCriteria(
+            gitBranchInfo.getYamlGitConfigId(), gitBranchInfo.getYamlGitConfigId(), entityClass);
         if (gitBranchInfo.isFindDefaultFromOtherBranches()) {
+          final GitSdkEntityHandlerInterface gitSdkEntityHandlerInterface =
+              gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName());
           return new Criteria().orOperator(criteria,
               Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey())
                   .is(true)
