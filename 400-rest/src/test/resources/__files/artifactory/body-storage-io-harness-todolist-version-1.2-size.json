@@ -1,0 +1,12 @@
+{
+  "repo" : "harness-maven",
+  "path" : "/io/harness/todolist/todolist/1.2/todolist-1.2.war",
+  "created" : "2017-09-27T04:59:04.807Z",
+  "createdBy" : "admin",
+  "lastModified" : "2017-09-27T04:57:32.000Z",
+  "modifiedBy" : "admin",
+  "lastUpdated" : "2017-09-27T04:57:32.000Z",
+  "downloadUri" : "https://harness.jfrog.io/harness/harness-maven/io/harness/todolist/todolist/1.2/todolist-1.2.war",
+  "mimeType" : "application/java-archive",
+  "uri" : "https://harness.jfrog.io/harness/api/storage/harness-maven/io/harness/todolist/todolist/1.2ß/todolist-1.2.war"
+}
