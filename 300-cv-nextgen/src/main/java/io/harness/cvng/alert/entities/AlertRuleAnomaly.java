@@ -1,9 +1,11 @@
 package io.harness.cvng.alert.entities;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -28,6 +30,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "AlertRuleAnomalyKeys")
 @Entity(value = "alertRuleAnomalies", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@StoreIn(DbAliases.CVNG)
 public final class AlertRuleAnomaly implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id private String uuid;
   private long createdAt;
