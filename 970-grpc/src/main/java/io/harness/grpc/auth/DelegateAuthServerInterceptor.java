@@ -29,7 +29,7 @@ public class DelegateAuthServerInterceptor implements ServerInterceptor {
   public static final Context.Key<String> ACCOUNT_ID_CTX_KEY = Context.key("accountId");
   private static final ServerCall.Listener NOOP_LISTENER = new ServerCall.Listener() {};
   private static final Set<String> INCLUDED_SERVICES = ImmutableSet.of("io.harness.perpetualtask.PerpetualTaskService",
-      "io.harness.event.PingPongService", "io.harness.event.EventPublisher");
+      "io.harness.event.PingPongService", "io.harness.event.EventPublisher", "io.harness.delegate.DelegateService");
 
   private final TokenAuthenticator tokenAuthenticator;
 
@@ -47,6 +47,16 @@ public class DelegateAuthServerInterceptor implements ServerInterceptor {
 
     String accountId = metadata.get(DelegateAuthCallCredentials.ACCOUNT_ID_METADATA_KEY);
     String token = metadata.get(DelegateAuthCallCredentials.TOKEN_METADATA_KEY);
+
+    // Urgent fix for DEL-1954. We are allowing delegate service to be invoked by delegate agent, in which case
+    // accountId is mandatory, but also by other backend services, in which case serviceId is mandatory. If accountId is
+    // present this interceptor should authorize, but if it is not present and serviceId is present, then we need to let
+    // ServiceAuthServerInterceptor with lower interceptor priority to authorize.
+    String serviceId = GrpcAuthUtils.getServiceIdFromRequest(metadata).orElse(null);
+    if (accountId == null && serviceId != null) {
+      return Contexts.interceptCall(Context.current(), call, metadata, next);
+    }
+
     @SuppressWarnings("unchecked") Listener<ReqT> noopListener = NOOP_LISTENER;
     if (accountId == null) {
       log.warn("No account id in metadata. Token verification failed");

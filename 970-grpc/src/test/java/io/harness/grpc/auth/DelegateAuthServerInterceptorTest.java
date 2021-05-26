@@ -4,6 +4,7 @@ import static io.harness.grpc.auth.DelegateAuthCallCredentials.ACCOUNT_ID_METADA
 import static io.harness.grpc.auth.DelegateAuthCallCredentials.TOKEN_METADATA_KEY;
 import static io.harness.grpc.auth.DelegateAuthServerInterceptor.ACCOUNT_ID_CTX_KEY;
 import static io.harness.rule.OwnerRule.AVMOHAN;
+import static io.harness.rule.OwnerRule.MARKO;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -79,6 +80,17 @@ public class DelegateAuthServerInterceptorTest extends CategoryTest {
   public void shouldPassThroughIfExcludedService() throws Exception {
     val healthStub = HealthGrpc.newBlockingStub(channel);
     assertThatCode(() -> healthStub.check(HealthCheckRequest.newBuilder().build())).doesNotThrowAnyException();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldPassThroughWithoutAccountIdAndWithServiceId() throws Exception {
+    val metadata = new Metadata();
+    metadata.put(Metadata.Key.of("serviceId", Metadata.ASCII_STRING_MARSHALLER), "service");
+    val eventSvcStub = EventPublisherGrpc.newBlockingStub(channel).withInterceptors(
+        MetadataUtils.newAttachHeadersInterceptor(metadata));
+    assertThatCode(() -> eventSvcStub.publish(PublishRequest.newBuilder().build())).doesNotThrowAnyException();
   }
 
   @Test

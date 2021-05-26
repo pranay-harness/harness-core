@@ -190,8 +190,6 @@ spec:
           value: "${grpcServiceEnabled}"
         - name: GRPC_SERVICE_CONNECTOR_PORT
           value: "${grpcServiceConnectorPort}"
-        - name: MANAGER_SERVICE_SECRET
-          value: "${managerServiceSecret}"
         - name: DELEGATE_NAMESPACE
           valueFrom:
             fieldRef:
