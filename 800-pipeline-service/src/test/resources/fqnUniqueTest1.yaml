@@ -1,0 +1,11 @@
+a:
+  b: 12
+  c: 22
+  d:
+    e: ${input}
+    f: harness
+    g: default
+    h:
+      - listElem1
+      - listElem2
+      - listElem3
