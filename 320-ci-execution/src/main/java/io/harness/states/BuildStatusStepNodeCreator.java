@@ -7,7 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
-import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 
 @OwnedBy(HarnessTeam.CI)
