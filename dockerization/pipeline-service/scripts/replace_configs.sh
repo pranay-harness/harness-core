@@ -13,6 +13,7 @@ replace_key_value () {
 yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
 yq delete -i $CONFIG_FILE grpcServerConfig.connectors[0]
+yq delete -i $CONFIG_FILE gitSdkConfiguration.gitSdkGrpcServerConfig.connectors[0]
 
 if [[ "" != "$LOGGING_LEVEL" ]]; then
     yq write -i $CONFIG_FILE logging.level "$LOGGING_LEVEL"
@@ -137,6 +138,14 @@ fi
 
 if [[ "" != "$CI_MANAGER_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE grpcClientConfigs.ci.authority $CI_MANAGER_AUTHORITY
+fi
+
+if [[ "" != "$NG_MANAGER_TARGET" ]]; then
+  yq write -i $CONFIG_FILE gitSdkConfiguration.gitManagerGrpcClientConfig.target $NG_MANAGER_TARGET
+fi
+
+if [[ "" != "$NG_MANAGER_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE gitSdkConfiguration.gitManagerGrpcClientConfig.authority $NG_MANAGER_AUTHORITY
 fi
 
 if [[ "" != "$SCM_SERVICE_URI" ]]; then
