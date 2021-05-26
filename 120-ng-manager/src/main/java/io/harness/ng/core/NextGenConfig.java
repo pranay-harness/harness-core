@@ -12,7 +12,6 @@ public class NextGenConfig {
   String managerServiceSecret;
   String userVerificationSecret;
   String ngManagerServiceSecret;
-  String pipelineServiceSecret;
   String jwtAuthSecret;
   String jwtIdentityServiceSecret;
 }

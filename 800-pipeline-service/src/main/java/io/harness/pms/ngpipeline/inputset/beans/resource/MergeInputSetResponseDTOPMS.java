@@ -1,4 +1,4 @@
-package io.harness.pms.inputset;
+package io.harness.pms.ngpipeline.inputset.beans.resource;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 

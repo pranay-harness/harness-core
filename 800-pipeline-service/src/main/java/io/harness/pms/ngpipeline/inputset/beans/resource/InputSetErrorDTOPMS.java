@@ -1,4 +1,4 @@
-package io.harness.pms.inputset;
+package io.harness.pms.ngpipeline.inputset.beans.resource;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
