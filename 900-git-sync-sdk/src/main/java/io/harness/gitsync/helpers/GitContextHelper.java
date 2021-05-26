@@ -20,7 +20,7 @@ public class GitContextHelper {
         GlobalContextManager.get(GitSyncBranchContext.NG_GIT_SYNC_CONTEXT);
     if (gitSyncBranchContext == null) {
       log.error("Git branch context set as null even git sync is enabled");
-      // Setting to default branch in case it is not set.
+      // Setting to default  branch in case it is not set.
       return null;
     }
     GitEntityInfo gitBranchInfo = gitSyncBranchContext.getGitBranchInfo();
