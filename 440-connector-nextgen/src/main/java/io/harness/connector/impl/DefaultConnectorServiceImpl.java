@@ -6,6 +6,7 @@ import static io.harness.connector.ConnectivityStatus.FAILURE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.errorhandling.NGErrorHelper.DEFAULT_ERROR_SUMMARY;
+import static io.harness.gitsync.helpers.GitContextHelper.getGitEntityInfo;
 import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
 import static java.lang.String.format;
@@ -50,6 +51,7 @@ import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.exception.ngexception.ConnectorValidationException;
 import io.harness.git.model.ChangeType;
+import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.BaseNGAccess;
@@ -268,11 +270,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     assurePredefined(connectorRequest, accountIdentifier);
     ConnectorInfoDTO connector = connectorRequest.getConnectorInfo();
     Objects.requireNonNull(connector.getIdentifier());
-    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+    Optional<Connector> existingConnectorOptional = getExistingConnectorToBeModified(
         accountIdentifier, connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier());
-    Optional<Connector> existingConnectorOptional =
-        connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier,
-            connector.getProjectIdentifier(), connector.getOrgIdentifier(), accountIdentifier, true);
     if (!existingConnectorOptional.isPresent()) {
       throw new InvalidRequestException(
           format("No connector exists with the  Identifier %s", connector.getIdentifier()));
@@ -286,6 +285,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     newConnector.setCreatedAt(existingConnector.getCreatedAt());
     newConnector.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
     newConnector.setActivityDetails(existingConnector.getActivityDetails());
+    updateInCaseOfCommitToNewBranch(newConnector);
     if (existingConnector.getHeartbeatPerpetualTaskId() == null
         && !harnessManagedConnectorHelper.isHarnessManagedSecretManager(connector)) {
       PerpetualTaskId connectorHeartbeatTaskId =
@@ -304,6 +304,37 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       throw new DuplicateFieldException(format("Connector [%s] already exists", existingConnector.getIdentifier()));
     }
     return connectorMapper.writeDTO(updatedConnector);
+  }
+
+  private void updateInCaseOfCommitToNewBranch(Connector newConnector) {
+    GitEntityInfo gitEntityInfo = getGitEntityInfo();
+    if (gitEntityInfo != null) {
+      if (gitEntityInfo.isNewBranch()) {
+        newConnector.setId(null);
+        newConnector.setVersion(null);
+        newConnector.setConnectivityDetails(null);
+        newConnector.setCreatedAt(System.currentTimeMillis());
+        newConnector.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
+        newConnector.setActivityDetails(null);
+        newConnector.setLastModifiedAt(null);
+        newConnector.setHeartbeatPerpetualTaskId(null);
+      }
+    }
+  }
+
+  private Optional<Connector> getExistingConnectorToBeModified(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
+    GitEntityInfo gitEntityInfo = getGitEntityInfo();
+    String repo = null;
+    String branch = null;
+    if (gitEntityInfo != null) {
+      repo = gitEntityInfo.getYamlGitConfigId();
+      branch = gitEntityInfo.isNewBranch() ? gitEntityInfo.getBaseBranch() : gitEntityInfo.getBranch();
+    }
+    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+    Criteria criteria = new Criteria().where(ConnectorKeys.fullyQualifiedIdentifier).is(fullyQualifiedIdentifier);
+    return connectorRepository.findOne(criteria, repo, branch);
   }
 
   private void validateTheUpdateRequestIsValid(
