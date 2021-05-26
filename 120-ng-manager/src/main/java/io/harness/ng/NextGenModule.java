@@ -124,9 +124,11 @@ import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.persistence.UserProvider;
+import io.harness.pipeline.PipelineRemoteClientModule;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.CEAwsSetupConfig;
+import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.secrets.SecretNGManagerClientModule;
@@ -359,6 +361,9 @@ public class NextGenModule extends AbstractModule {
     install(new SecretManagementModule());
     install(new AccountClientModule(appConfig.getManagerClientConfig(),
         appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.toString()));
+    install(new PipelineRemoteClientModule(
+        ServiceHttpClientConfig.builder().baseUrl(appConfig.getPipelineServiceClientConfig().getBaseUrl()).build(),
+        appConfig.getNextGenConfig().getPipelineServiceSecret(), NG_MANAGER.toString()));
     install(new SecretManagementClientModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new SecretNGManagerClientModule(this.appConfig.getNgManagerClientConfig(),
