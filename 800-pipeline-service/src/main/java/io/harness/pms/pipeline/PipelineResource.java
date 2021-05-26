@@ -58,6 +58,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
@@ -112,10 +113,14 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo, @NotNull @ApiParam(hidden = true) String yaml) {
+      @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo, @NotNull @ApiParam(hidden = true) String yaml)
+      throws IOException {
     log.info("Creating pipeline");
 
     pmsYamlSchemaService.validateYamlSchema(accountId, orgId, projectId, yaml);
+
+    // validate unique fqn in yaml
+    pmsYamlSchemaService.validateUniqueFqn(yaml);
 
     PipelineEntity pipelineEntity = PMSPipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
     PipelineEntity createdEntity = pmsPipelineService.create(pipelineEntity);
@@ -174,7 +179,8 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId,
-      @BeanParam GitEntityUpdateInfoDTO gitEntityInfo, @NotNull @ApiParam(hidden = true) String yaml) {
+      @BeanParam GitEntityUpdateInfoDTO gitEntityInfo, @NotNull @ApiParam(hidden = true) String yaml)
+      throws IOException {
     log.info("Updating pipeline");
 
     pmsYamlSchemaService.validateYamlSchema(accountId, orgId, projectId, yaml);
@@ -185,6 +191,9 @@ public class PipelineResource implements YamlSchemaResource {
     }
 
     PipelineEntity withVersion = pipelineEntity.withVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
+
+    // validate unique fqn in yaml
+    pmsYamlSchemaService.validateUniqueFqn(yaml);
 
     PipelineEntity updatedEntity = pmsPipelineService.updatePipelineYaml(withVersion);
 
