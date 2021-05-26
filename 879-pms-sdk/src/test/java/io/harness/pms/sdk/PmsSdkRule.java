@@ -49,14 +49,13 @@ public class PmsSdkRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
   @Override
   public List<Module> modules(List<Annotation> annotations) throws Exception {
     ExecutorModule.getInstance().setExecutorService(new CurrentThreadExecutor());
-
+    PmsSdkConfiguration sdkConfiguration = PmsSdkConfiguration.builder().deploymentMode(SdkDeployMode.LOCAL).build();
     List<Module> modules = new ArrayList<>();
     modules.add(new ClosingFactoryModule(closingFactory));
-    modules.add(PmsSdkModule.getInstance(PmsSdkConfiguration.builder().deploymentMode(SdkDeployMode.LOCAL).build()));
+    modules.add(PmsSdkModule.getInstance(sdkConfiguration));
     modules.add(PmsSdkCoreModule.getInstance(PmsSdkCoreConfig.builder().sdkDeployMode(SdkDeployMode.LOCAL).build()));
     modules.add(PmsCommonsModule.getInstance());
-    modules.add(
-        PmsSdkRegistryModule.getInstance(PmsSdkConfiguration.builder().deploymentMode(SdkDeployMode.LOCAL).build()));
+    modules.add(PmsSdkRegistryModule.getInstance(sdkConfiguration));
     modules.add(mongoTypeModule(annotations));
     modules.add(KryoModule.getInstance());
 

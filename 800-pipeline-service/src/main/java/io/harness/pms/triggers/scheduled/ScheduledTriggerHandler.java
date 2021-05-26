@@ -7,6 +7,7 @@ import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.execution.PlanExecution;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
@@ -17,6 +18,9 @@ import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
+import io.harness.ngtriggers.beans.entity.TriggerEventHistory.TriggerEventHistoryBuilder;
+import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
+import io.harness.ngtriggers.beans.response.TargetExecutionSummary;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.pms.contracts.triggers.TriggerPayload;
@@ -79,28 +83,47 @@ public class ScheduledTriggerHandler implements Handler<NGTriggerEntity> {
               .ngTriggerEntity(entity)
               .ngTriggerConfig(ngTriggerElementMapper.toTriggerConfig(entity.getYaml()))
               .build(),
-          TriggerPayload.newBuilder().setType(Type.SCHEDULED).build());
+          TriggerPayload.newBuilder().setType(Type.SCHEDULED).build(),
+          TriggerWebhookEvent.builder()
+              .accountId(entity.getAccountId())
+              .orgIdentifier(entity.getOrgIdentifier())
+              .projectIdentifier(entity.getProjectIdentifier())
+              .triggerIdentifier(entity.getIdentifier())
+              .uuid("Cron_" + UUIDGenerator.generateUuid())
+              .build());
       triggerEventHistoryRepository.save(toHistoryRecord(
-          entity, "TARGET_EXECUTION_REQUESTED", "Pipeline execution was requested successfully", false));
+          entity, "TARGET_EXECUTION_REQUESTED", "Pipeline execution was requested successfully", false, response));
       log.info("Execution started for cron trigger: " + entity + " with response " + response);
     } catch (Exception e) {
-      triggerEventHistoryRepository.save(toHistoryRecord(entity, "EXCEPTION_WHILE_PROCESSING", e.getMessage(), true));
+      triggerEventHistoryRepository.save(
+          toHistoryRecord(entity, "EXCEPTION_WHILE_PROCESSING", e.getMessage(), true, null));
       log.error("Exception while triggering cron. Please check", e);
     }
   }
 
-  private TriggerEventHistory toHistoryRecord(
-      NGTriggerEntity entity, String finalStatus, String message, boolean exceptionOccurred) {
-    return TriggerEventHistory.builder()
-        .accountId(entity.getAccountId())
-        .orgIdentifier(entity.getOrgIdentifier())
-        .projectIdentifier(entity.getProjectIdentifier())
-        .targetIdentifier(entity.getTargetIdentifier())
-        .eventCreatedAt(System.currentTimeMillis())
-        .finalStatus(finalStatus)
-        .message(message)
-        .exceptionOccurred(exceptionOccurred)
-        .triggerIdentifier(entity.getIdentifier())
-        .build();
+  private TriggerEventHistory toHistoryRecord(NGTriggerEntity entity, String finalStatus, String message,
+      boolean exceptionOccurred, PlanExecution planExecution) {
+    TriggerEventHistoryBuilder triggerEventHistoryBuilder = TriggerEventHistory.builder()
+                                                                .accountId(entity.getAccountId())
+                                                                .orgIdentifier(entity.getOrgIdentifier())
+                                                                .projectIdentifier(entity.getProjectIdentifier())
+                                                                .targetIdentifier(entity.getTargetIdentifier())
+                                                                .eventCreatedAt(System.currentTimeMillis())
+                                                                .finalStatus(finalStatus)
+                                                                .message(message)
+                                                                .exceptionOccurred(exceptionOccurred)
+                                                                .triggerIdentifier(entity.getIdentifier());
+
+    if (planExecution != null) {
+      triggerEventHistoryBuilder.targetExecutionSummary(TargetExecutionSummary.builder()
+                                                            .planExecutionId(planExecution.getUuid())
+                                                            .startTs(planExecution.getStartTs())
+                                                            .triggerId(entity.getIdentifier())
+                                                            .executionStatus(planExecution.getStatus().name())
+                                                            .targetId(entity.getTargetIdentifier())
+                                                            .build());
+    }
+
+    return triggerEventHistoryBuilder.build();
   }
 }

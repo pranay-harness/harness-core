@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.interrupts;
+
+option java_multiple_files = true;
+
+import "io/harness/pms/contracts/interrupts/interrupt_type.proto";
+import "io/harness/pms/contracts/execution/node_execution_proto.proto";
+
+message InterruptEvent {
+  string interruptUuid = 1;
+  InterruptType type = 2;
+  io.harness.pms.contracts.execution.NodeExecutionProto nodeExecution = 3;
+  map<string, string> metadata = 4;
+  string notifyId = 5;
+}

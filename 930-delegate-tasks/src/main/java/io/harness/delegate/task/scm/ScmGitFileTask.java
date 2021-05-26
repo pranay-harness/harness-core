@@ -50,7 +50,7 @@ public class ScmGitFileTask extends AbstractDelegateRunnableTask {
                 scmGitFileTaskParams.getBranchName(), SCMGrpc.newBlockingStub(c)));
         return GitFileTaskResponseData.builder()
             .gitFileTaskType(scmGitFileTaskParams.getGitFileTaskType())
-            .fileBatchContentResponse(fileBatchContentResponse)
+            .fileBatchContentResponse(fileBatchContentResponse.toByteArray())
             .build();
       case GET_FILE_CONTENT:
         final FileContent fileContent = scmDelegateClient.processScmRequest(c
@@ -58,7 +58,7 @@ public class ScmGitFileTask extends AbstractDelegateRunnableTask {
                 scmGitFileTaskParams.getGitFilePathDetails(), SCMGrpc.newBlockingStub(c)));
         return GitFileTaskResponseData.builder()
             .gitFileTaskType(scmGitFileTaskParams.getGitFileTaskType())
-            .fileContent(fileContent)
+            .fileContent(fileContent.toByteArray())
             .build();
       default:
         throw new UnknownEnumTypeException("GitFileTaskType", scmGitFileTaskParams.getGitFileTaskType().toString());

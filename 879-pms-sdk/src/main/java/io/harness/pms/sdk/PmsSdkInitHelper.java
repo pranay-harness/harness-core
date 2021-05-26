@@ -80,6 +80,12 @@ public class PmsSdkInitHelper {
           injector.getInstance(Key.get(ServiceManager.class, Names.named("pmsSDKServiceManager"))).startAsync();
       serviceManager.awaitHealthy();
       Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
+
+      ServiceManager pmsManagedServiceManager =
+          injector.getInstance(Key.get(ServiceManager.class, Names.named("pmsManagedServiceManager"))).startAsync();
+      pmsManagedServiceManager.awaitHealthy();
+      Runtime.getRuntime().addShutdownHook(new Thread(() -> pmsManagedServiceManager.stopAsync().awaitStopped()));
+
       PipelineServiceInfoProvider pipelineServiceInfoProvider = config.getPipelineServiceInfoProviderClass() == null
           ? null
           : injector.getInstance(config.getPipelineServiceInfoProviderClass());
