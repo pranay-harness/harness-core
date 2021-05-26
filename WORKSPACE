@@ -5295,9 +5295,9 @@ filegroup(
         "make install",
         "ln -s bazel_install/bin/python3 python_bin",
     ],
-    sha256 = "dfab5ec723c218082fe3d5d7ae17ecbdebffa9a1aea4d64aa3a2ecdd2e795864",
-    strip_prefix = "Python-3.8.3",
-    urls = ["https://www.python.org/ftp/python/3.8.3/Python-3.8.3.tar.xz"],
+    sha256 = "991c3f8ac97992f3d308fefeb03a64db462574eadbff34ce8bc5bb583d9903ff",
+    strip_prefix = "Python-3.9.1",
+    urls = ["https://www.python.org/ftp/python/3.9.1/Python-3.9.1.tar.xz"],
 )
 
 register_toolchains("//:py_toolchain")
