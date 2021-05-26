@@ -8,5 +8,5 @@ import lombok.Value;
 @Builder
 public class StatusAndTime {
   private List<String> status;
-  private List<String> time;
+  private List<Long> time;
 }
