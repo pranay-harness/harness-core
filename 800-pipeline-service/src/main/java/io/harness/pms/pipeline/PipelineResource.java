@@ -28,12 +28,15 @@ import io.harness.gitsync.interceptor.GitEntityCreateInfoDTO;
 import io.harness.gitsync.interceptor.GitEntityDeleteInfoDTO;
 import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
 import io.harness.gitsync.interceptor.GitEntityUpdateInfoDTO;
+import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.notification.bean.NotificationRules;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.execution.ExecutionStatus;
+import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
+import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.ExecutionGraphMapper;
 import io.harness.pms.pipeline.mappers.NodeExecutionToExecutioNodeMapper;
@@ -105,6 +108,7 @@ public class PipelineResource implements YamlSchemaResource {
   private final NodeExecutionService nodeExecutionService;
   private final AccessControlClient accessControlClient;
   private final NodeExecutionToExecutioNodeMapper nodeExecutionToExecutioNodeMapper;
+  private final PmsGitSyncHelper pmsGitSyncHelper;
 
   @POST
   @ApiOperation(value = "Create a Pipeline", nickname = "createPipeline")
@@ -285,7 +289,7 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo, @QueryParam("searchTerm") String searchTerm,
+      @QueryParam("searchTerm") String searchTerm,
       @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size,
       @QueryParam("sort") List<String> sort, @QueryParam("filterIdentifier") String filterIdentifier,
@@ -302,15 +306,14 @@ public class PipelineResource implements YamlSchemaResource {
       pageRequest = PageUtils.getPageRequest(page, size, sort);
     }
 
+    // NOTE: We are getting entity git details from git context and not pipeline entity as we'll have to make DB calls
+    // to fetch them and each might have a different branch context so we cannot even batch them. The only data missing
+    // because of this approach is objectId which UI doesn't use.
     Page<PipelineExecutionSummaryDTO> planExecutionSummaryDTOS =
-        pmsExecutionService.getPipelineExecutionSummaryEntity(criteria, pageRequest).map(e -> {
-          Optional<PipelineEntity> optionalPipelineEntity =
-              pmsPipelineService.get(accountId, orgId, projectId, e.getPipelineIdentifier(), false);
-          if (!optionalPipelineEntity.isPresent()) {
-            throw new InvalidRequestException("Pipeline with identifier " + e.getPipelineIdentifier() + " not found");
-          }
-          return PipelineExecutionSummaryDtoMapper.toDto(e, optionalPipelineEntity.get());
-        });
+        pmsExecutionService.getPipelineExecutionSummaryEntity(criteria, pageRequest)
+            .map(e
+                -> PipelineExecutionSummaryDtoMapper.toDto(
+                    e, pmsGitSyncHelper.getEntityGitDetailsFromBytes(e.getGitSyncBranchContext())));
 
     return ResponseDTO.newResponse(planExecutionSummaryDTOS);
   }
@@ -323,15 +326,19 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @QueryParam("filter") String filter, @QueryParam("stageNodeId") String stageNodeId,
-      @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId,
-      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
+      @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
     log.info("Get Execution Detail");
 
     PipelineExecutionSummaryEntity executionSummaryEntity =
         pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId, false);
 
-    Optional<PipelineEntity> optionalPipelineEntity =
-        pmsPipelineService.get(accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier(), false);
+    Optional<PipelineEntity> optionalPipelineEntity;
+    try (PmsGitSyncBranchContextGuard ignore = pmsGitSyncHelper.createGitSyncBranchContextGuardFromBytes(
+             executionSummaryEntity.getGitSyncBranchContext(), false)) {
+      optionalPipelineEntity =
+          pmsPipelineService.get(accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier(), false);
+    }
+
     if (!optionalPipelineEntity.isPresent()) {
       throw new InvalidRequestException(
           "Pipeline with identifier " + executionSummaryEntity.getPipelineIdentifier() + " not found");
@@ -342,8 +349,8 @@ public class PipelineResource implements YamlSchemaResource {
 
     PipelineExecutionDetailDTO pipelineExecutionDetailDTO =
         PipelineExecutionDetailDTO.builder()
-            .pipelineExecutionSummary(
-                PipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntity, optionalPipelineEntity.get()))
+            .pipelineExecutionSummary(PipelineExecutionSummaryDtoMapper.toDto(
+                executionSummaryEntity, EntityGitDetailsMapper.mapEntityGitDetails(optionalPipelineEntity.get())))
             .executionGraph(ExecutionGraphMapper.toExecutionGraph(
                 pmsExecutionService.getOrchestrationGraph(stageNodeId, planExecutionId)))
             .build();

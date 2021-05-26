@@ -2,11 +2,15 @@ package io.harness.pms.sdk.core.plan.creation.creators;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
+import io.harness.manage.ManagedExecutorService;
 import io.harness.pms.contracts.plan.ErrorResponse;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.FilterCreationBlobRequest;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
 import io.harness.pms.contracts.plan.FilterCreationResponse;
@@ -18,6 +22,8 @@ import io.harness.pms.contracts.plan.VariablesCreationBlobResponse;
 import io.harness.pms.contracts.plan.VariablesCreationResponse;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.exception.YamlNodeErrorInfo;
+import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
+import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.pipeline.filters.FilterCreatorService;
 import io.harness.pms.sdk.core.plan.creation.PlanCreationResponseBlobHelper;
@@ -31,6 +37,7 @@ import io.harness.serializer.JsonUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,24 +53,27 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 @Singleton
 public class PlanCreatorService extends PlanCreationServiceImplBase {
-  private final Executor executor = Executors.newFixedThreadPool(2);
+  private final Executor executor = new ManagedExecutorService(Executors.newFixedThreadPool(2));
 
   private final FilterCreatorService filterCreatorService;
   private final VariableCreatorService variableCreatorService;
   private final List<PartialPlanCreator<?>> planCreators;
   private final PlanCreationResponseBlobHelper planCreationResponseBlobHelper;
+  private final PmsGitSyncHelper pmsGitSyncHelper;
 
   @Inject
   public PlanCreatorService(@NotNull PipelineServiceInfoProvider pipelineServiceInfoProvider,
       @NotNull FilterCreatorService filterCreatorService, VariableCreatorService variableCreatorService,
-      PlanCreationResponseBlobHelper planCreationResponseBlobHelper) {
+      PlanCreationResponseBlobHelper planCreationResponseBlobHelper, PmsGitSyncHelper pmsGitSyncHelper) {
     this.planCreators = pipelineServiceInfoProvider.getPlanCreators();
     this.filterCreatorService = filterCreatorService;
     this.variableCreatorService = variableCreatorService;
     this.planCreationResponseBlobHelper = planCreationResponseBlobHelper;
+    this.pmsGitSyncHelper = pmsGitSyncHelper;
   }
 
   @Override
@@ -115,10 +125,20 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
     }
 
     PlanCreationContext ctx = PlanCreationContext.builder().globalContext(context).build();
-    Map<String, YamlField> dependencies = new HashMap<>(initialDependencies);
-    while (!dependencies.isEmpty()) {
-      createPlanForDependencies(ctx, finalResponse, dependencies);
-      initialDependencies.keySet().forEach(dependencies::remove);
+    PlanCreationContextValue planCreationContextValue = ctx.getMetadata();
+    ByteString gitSyncBranchContext = null;
+    if (planCreationContextValue != null) {
+      ExecutionMetadata executionMetadata = planCreationContextValue.getMetadata();
+      gitSyncBranchContext = executionMetadata.getGitSyncBranchContext();
+    }
+
+    try (PmsGitSyncBranchContextGuard ignore =
+             pmsGitSyncHelper.createGitSyncBranchContextGuardFromBytes(gitSyncBranchContext, true)) {
+      Map<String, YamlField> dependencies = new HashMap<>(initialDependencies);
+      while (!dependencies.isEmpty()) {
+        createPlanForDependencies(ctx, finalResponse, dependencies);
+        initialDependencies.keySet().forEach(dependencies::remove);
+      }
     }
 
     if (EmptyPredicate.isNotEmpty(finalResponse.getDependencies())) {

@@ -64,7 +64,7 @@ public class ValidateAndMergeHelper {
             .build();
 
     String pipelineYaml;
-    try (PmsGitSyncBranchContextGuard ignored = new PmsGitSyncBranchContextGuard(gitSyncBranchContext)) {
+    try (PmsGitSyncBranchContextGuard ignored = new PmsGitSyncBranchContextGuard(gitSyncBranchContext, false)) {
       Optional<PipelineEntity> pipelineEntity =
           pmsPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
       if (pipelineEntity.isPresent()) {
