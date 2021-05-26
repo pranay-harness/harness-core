@@ -5266,6 +5266,42 @@ go_repository(
     version = "v1.3.1",
 )
 
+#========== Python Configuration Begin=========================
+
+# Special logic for building python interpreter with OpenSSL from homebrew.
+# See https://devguide.python.org/setup/#macos-and-os-x
+_py_configure = """
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    ./configure --prefix=$(pwd)/bazel_install --with-openssl=$(brew --prefix openssl)
+else
+    ./configure --prefix=$(pwd)/bazel_install
+fi
+"""
+
+http_archive(
+    name = "python_interpreter",
+    build_file_content = """
+exports_files(["python_bin"])
+filegroup(
+    name = "files",
+    srcs = glob(["bazel_install/**"], exclude = ["**/* *"]),
+    visibility = ["//visibility:public"],
+)
+""",
+    patch_cmds = [
+        "mkdir $(pwd)/bazel_install",
+        _py_configure,
+        "make",
+        "make install",
+        "ln -s bazel_install/bin/python3 python_bin",
+    ],
+    sha256 = "dfab5ec723c218082fe3d5d7ae17ecbdebffa9a1aea4d64aa3a2ecdd2e795864",
+    strip_prefix = "Python-3.8.3",
+    urls = ["https://www.python.org/ftp/python/3.8.3/Python-3.8.3.tar.xz"],
+)
+
+register_toolchains("//:py_toolchain")
+
 #========== Docker Rules Configuration Begin=========================
 
 http_archive(
@@ -5294,6 +5330,14 @@ container_pull(
     registry = "us.gcr.io",
     repository = "platform-205701/alpine",
     tag = "safe-alpine3.12-sec1096-apm",
+)
+
+container_pull(
+    name = "platform_ubuntu",
+    digest = "sha256:8540a3afd5c6d43a9f6549f19f56abff42c7010265426c3c39ccc64d1d88a1c2",
+    registry = "us.gcr.io",
+    repository = "platform-205701/ubuntu",
+    tag = "safe-ubuntu18.04-sec1096",
 )
 
 load(
