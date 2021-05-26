@@ -8,6 +8,7 @@ import io.harness.beans.HookEventType;
 import io.harness.beans.Repository;
 import io.harness.beans.WebhookGitUser;
 import io.harness.beans.gitsync.GitFileDetails;
+import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.beans.gitsync.GitWebhookDetails;
 import io.harness.exception.ScmException;
@@ -41,5 +42,6 @@ public class ScmJavaClientKryoRegistrar implements KryoRegistrar {
     kryo.register(ListWebhooksResponse.class, 955012);
     kryo.register(GitWebhookDetails.class, 955013);
     kryo.register(HookEventType.class, 955014);
+    kryo.register(GitFilePathDetails.class, 955015);
   }
 }
