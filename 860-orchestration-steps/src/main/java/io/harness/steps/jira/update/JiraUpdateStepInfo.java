@@ -57,7 +57,7 @@ public class JiraUpdateStepInfo implements PMSStepInfo, WithConnectorRef {
         .connectorRef(connectorRef)
         .issueKey(issueKey)
         .transitionTo(transitionTo)
-        .fields(JiraStepUtils.prepareFieldMap(fields))
+        .fields(JiraStepUtils.processJiraFieldsList(fields))
         .build();
   }
 

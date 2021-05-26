@@ -25,7 +25,7 @@ import org.apache.commons.lang3.NotImplementedException;
 
 @OwnedBy(CDC)
 public class JiraTestConnectionTaskNG extends AbstractDelegateRunnableTask {
-  @Inject JiraTaskNGHelper jiraTaskNGHelper;
+  @Inject private JiraTaskNGHelper jiraTaskNGHelper;
 
   public JiraTestConnectionTaskNG(DelegateTaskPackage delegateTaskPackage,
       ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> consumer,
