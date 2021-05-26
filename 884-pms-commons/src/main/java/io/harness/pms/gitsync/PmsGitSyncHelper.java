@@ -1,8 +1,9 @@
 package io.harness.pms.gitsync;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.manage.GlobalContextManager;
@@ -44,11 +45,11 @@ public class PmsGitSyncHelper {
   }
 
   public GitSyncBranchContext deserializeGitSyncBranchContext(ByteString byteString) {
-    if (byteString == null || byteString.isEmpty()) {
+    if (isEmpty(byteString)) {
       return null;
     }
     byte[] bytes = byteString.toByteArray();
-    return EmptyPredicate.isEmpty(bytes) ? null : (GitSyncBranchContext) kryoSerializer.asInflatedObject(bytes);
+    return isEmpty(bytes) ? null : (GitSyncBranchContext) kryoSerializer.asInflatedObject(bytes);
   }
 
   public ByteString serializeGitSyncBranchContext(GitSyncBranchContext gitSyncBranchContext) {
