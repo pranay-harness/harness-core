@@ -2,6 +2,7 @@ package io.harness.engine.interrupts.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.pms.contracts.interrupts.InterruptType.ABORT;
 
 import static java.util.stream.Collectors.toList;
 
@@ -12,13 +13,12 @@ import io.harness.engine.executions.node.NodeExecutionUpdateFailedException;
 import io.harness.engine.interrupts.AbortInterruptCallback;
 import io.harness.engine.interrupts.InterruptEventQueuePublisher;
 import io.harness.engine.interrupts.InterruptProcessingFailedException;
+import io.harness.engine.interrupts.handlers.publisher.InterruptEventPublisher;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
-import io.harness.execution.NodeExecutionMapper;
 import io.harness.interrupts.Interrupt;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.interrupts.InterruptType;
-import io.harness.pms.interrupts.InterruptEvent;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
@@ -36,6 +36,7 @@ public class AbortHelper {
   @Inject private InterruptEventQueuePublisher interruptEventQueuePublisher;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private InterruptHelper interruptHelper;
+  @Inject private InterruptEventPublisher interruptEventPublisher;
 
   public String discontinueMarkedInstance(NodeExecution nodeExecution, Interrupt interrupt) {
     try {
@@ -43,14 +44,7 @@ public class AbortHelper {
       if (!taskDiscontinued) {
         log.error("Delegate Task Cannot be aborted for NodeExecutionId: {}", nodeExecution.getUuid());
       }
-
-      InterruptEvent interruptEvent = InterruptEvent.builder()
-                                          .interruptUuid(interrupt.getUuid())
-                                          .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
-                                          .interruptType(InterruptType.ABORT)
-                                          .build();
-      interruptEventQueuePublisher.send(nodeExecution.getNode().getServiceName(), interruptEvent);
-
+      String notifyId = interruptEventPublisher.publishEvent(nodeExecution.getUuid(), interrupt, ABORT);
       waitNotifyEngine.waitForAllOn(publisherName,
           AbortInterruptCallback.builder()
               .nodeExecutionId(nodeExecution.getUuid())
@@ -58,8 +52,8 @@ public class AbortHelper {
               .interruptType(interrupt.getType())
               .interruptConfig(interrupt.getInterruptConfig())
               .build(),
-          interruptEvent.getNotifyId());
-      return interruptEvent.getNotifyId();
+          notifyId);
+      return notifyId;
     } catch (NodeExecutionUpdateFailedException ex) {
       throw new InterruptProcessingFailedException(InterruptType.ABORT_ALL,
           "Abort failed for execution Plan :" + nodeExecution.getAmbiance().getPlanExecutionId()
