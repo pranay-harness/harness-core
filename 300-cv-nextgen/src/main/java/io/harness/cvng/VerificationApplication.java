@@ -401,7 +401,6 @@ public class VerificationApplication extends Application<VerificationConfigurati
         .engineFacilitators(new HashMap<>())
         .filterCreationResponseMerger(new CVNGFilterCreationResponseMerger())
         .executionSummaryModuleInfoProviderClass(CVNGModuleInfoProvider.class)
-        .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
         .build();
   }
 
