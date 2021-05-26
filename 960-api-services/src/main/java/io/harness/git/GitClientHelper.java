@@ -121,6 +121,39 @@ public class GitClientHelper {
   public static boolean isGithubSAAS(String url) {
     return getGitSCM(url).equals("github.com");
   }
+  public static boolean isGitlabSAAS(String url) {
+    return getGitSCM(url).contains("gitlab.com");
+  }
+
+  public static boolean isBitBucketSAAS(String url) {
+    return getGitSCM(url).contains("bitbucket.org");
+  }
+
+  public static String getGithubApiURL(String url) {
+    if (GitClientHelper.isGithubSAAS(url)) {
+      return "https://api.github.com/";
+    } else {
+      String domain = GitClientHelper.getGitSCM(url);
+      return "https://" + domain + "/api/v3/";
+    }
+  }
+  public static String getGitlabApiURL(String url) {
+    if (GitClientHelper.isGitlabSAAS(url)) {
+      return "https://gitlab.com/";
+    } else {
+      String domain = GitClientHelper.getGitSCM(url);
+      return "https://" + domain + "/";
+    }
+  }
+
+  public static String getBitBucketApiURL(String url) {
+    if (isBitBucketSAAS(url)) {
+      return "https://api.bitbucket.org/";
+    } else {
+      String domain = GitClientHelper.getGitSCM(url);
+      return "https://" + domain + "/";
+    }
+  }
 
   public static String getGitSCM(String url) {
     Matcher m = GIT_URL.matcher(url);

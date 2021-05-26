@@ -113,6 +113,7 @@ message PullRequest {
   google.protobuf.Timestamp created = 15;
   google.protobuf.Timestamp updated = 16;
   repeated Label labels = 17;
+  repeated Commit commits = 18;  // List of commits associated with the pull request
 }
 
 message PullRequestHook {
@@ -453,6 +454,18 @@ message ListCommitsResponse {
   PageResponse pagination = 2;
 }
 
+message ListCommitsInPRRequest {
+  string slug = 1;
+  int64 number = 2;
+  PageRequest pagination = 3;
+  Provider provider = 4;
+}
+
+message ListCommitsInPRResponse {
+  repeated Commit commits = 1;
+  PageResponse pagination = 2;
+}
+
 enum GithubWebhookEvent {
   GITHUB_CREATE = 0;
   GITHUB_DELETE = 1;
@@ -583,6 +596,9 @@ service SCM {
   rpc GetLatestCommit(GetLatestCommitRequest) returns (GetLatestCommitResponse);
   rpc ListBranches(ListBranchesRequest) returns (ListBranchesResponse);
   rpc ListCommits(ListCommitsRequest) returns (ListCommitsResponse);
+
+  // Push Request functions.
+  rpc ListCommitsInPR(ListCommitsInPRRequest) returns (ListCommitsInPRResponse);
 
   // repo functions from go-scm
   rpc CreateWebhook(CreateWebhookRequest) returns (CreateWebhookResponse);
