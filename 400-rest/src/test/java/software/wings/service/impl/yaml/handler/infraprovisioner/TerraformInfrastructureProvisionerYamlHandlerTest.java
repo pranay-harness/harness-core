@@ -10,6 +10,7 @@ import static software.wings.service.impl.yaml.handler.infraprovisioner.TestCons
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -21,6 +22,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
 import software.wings.beans.Application;
@@ -154,6 +156,11 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends YamlHandl
     handler.upsertFromYaml(changeContext, null);
     TerraformInfrastructureProvisioner provisioner1 = captor.getValue();
     assertThat(provisioner).isEqualToIgnoringGivenFields(provisioner1, "uuid", "name", "description");
+
+    doReturn(null).when(secretManager).getSecretManager(anyString(), anyString());
+    assertThatThrownBy(() -> handler.toYaml(provisioner, APP_ID))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("No secret manager found");
   }
 
   @Test
@@ -226,6 +233,11 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends YamlHandl
     assertThat(tfList.get(1).getVariables()).isNull();
     assertThat(tfList.get(1).getBackendConfigs()).isNull();
     assertThat(tfList.get(1).getEnvironmentVariables()).isNull();
+
+    doReturn(null).when(secretManager).getSecretManagerByName(any(), any());
+    assertThatThrownBy(() -> handler.upsertFromYaml(changeContext, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("No secret manager found");
   }
 
   private ChangeContext<Yaml> getChangeContext() {
