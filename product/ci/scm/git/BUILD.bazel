@@ -7,6 +7,7 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//commons/go/lib/utils:go_default_library",
+        "//product/ci/scm/converter:go_default_library",
         "//product/ci/scm/gitclient:go_default_library",
         "//product/ci/scm/proto:go_default_library",
         "@com_github_drone_go_scm//scm:go_default_library",

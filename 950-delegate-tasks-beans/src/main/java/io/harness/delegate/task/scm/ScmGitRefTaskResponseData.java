@@ -21,4 +21,5 @@ public class ScmGitRefTaskResponseData implements DelegateResponseData {
   String branch;
   byte[] listBranchesResponse;
   byte[] listCommitsResponse;
+  byte[] listCommitsInPRResponse;
 }
