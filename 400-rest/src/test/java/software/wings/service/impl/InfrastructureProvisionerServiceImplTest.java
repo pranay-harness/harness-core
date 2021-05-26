@@ -29,6 +29,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -77,6 +78,7 @@ import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerDetails;
+import software.wings.beans.KmsConfig;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
@@ -157,6 +159,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Inject private HPersistence persistence;
 
   private String blankString = "     ";
+  private static String SECRET_MANAGER_ID = "SECRET_MANAGER_ID";
 
   @Test
   @Owner(developers = SATYAM)
@@ -338,6 +341,52 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
 
     shouldValidateTerragruntSourceRepo(terragruntProvisioner, provisionerService);
     provisionerService.validateProvisioner(terragruntProvisioner);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void shouldValidateTerragruntProvisionerForSecretManager() {
+    TerragruntInfrastructureProvisioner terragruntProvisioner = TerragruntInfrastructureProvisioner.builder()
+                                                                    .accountId(ACCOUNT_ID)
+                                                                    .appId(APP_ID)
+                                                                    .name("terragrunt-test")
+                                                                    .sourceRepoBranch("master")
+                                                                    .path("module/terragrunt.hcl")
+                                                                    .secretManagerId("secretManagerId")
+                                                                    .sourceRepoSettingId(SETTING_ID)
+                                                                    .build();
+    InfrastructureProvisionerServiceImpl provisionerService = infrastructureProvisionerServiceImpl;
+    doReturn(GitConfig.builder().build()).when(gitUtilsManager).getGitConfig(SETTING_ID);
+    shouldValidateTerraGroupProvisionerSecretManager(terragruntProvisioner, provisionerService);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void shouldValidateTerraformProvisionerForSecretManager() {
+    TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder()
+                                                         .accountId(ACCOUNT_ID)
+                                                         .appId(APP_ID)
+                                                         .name("terragrunt-test")
+                                                         .sourceRepoBranch("master")
+                                                         .path("module/terragrunt.hcl")
+                                                         .kmsId("secretManagerId")
+                                                         .sourceRepoSettingId(SETTING_ID)
+                                                         .build();
+    InfrastructureProvisionerServiceImpl provisionerService = infrastructureProvisionerServiceImpl;
+    doReturn(GitConfig.builder().build()).when(gitUtilsManager).getGitConfig(SETTING_ID);
+    shouldValidateTerraGroupProvisionerSecretManager(provisioner, provisionerService);
+  }
+
+  private void shouldValidateTerraGroupProvisionerSecretManager(
+      InfrastructureProvisioner provisioner, InfrastructureProvisionerServiceImpl provisionerService) {
+    doReturn(KmsConfig.builder().build()).doReturn(null).when(secretManager).getSecretManager(any(), any());
+    assertThatCode(() -> provisionerService.validateProvisioner(provisioner)).doesNotThrowAnyException();
+
+    assertThatThrownBy(() -> provisionerService.validateProvisioner(provisioner))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("No secret manger found");
   }
 
   @Test
