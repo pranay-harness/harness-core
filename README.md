@@ -58,19 +58,7 @@ To check if your protobuf files are according to the coding standards execute in
 buf check lint
 ```
 
-8. Bazel install
-Create a file `.bazelrc` in your portal repo root with the following content
-```
-import bazelrc.local
-```
-Here is a sample `.bazelrc`
-```
-import bazelrc.local
-```
-
-If you have regular bazel installed, please uninstall bazel and install bazelisk. It allows us to use the git repo to synchronize everyone's installation of bazel.
-
-9. Download the data-collection-dsl username and password from [vault](https://vault-internal.harness.io:8200/ui/vault/secrets/secret/show/credentials/artifactory-internal-read) and add following lines in your `~/.bashrc` file
+8. Download the data-collection-dsl username and password from [vault](https://vault-internal.harness.io:8200/ui/vault/secrets/secret/show/credentials/artifactory-internal-read) and add following lines in your `~/.bashrc` file
 ```
 export JFROG_USERNAME=<username-here>
 export JFROG_PASSWORD=<password-here>
@@ -124,19 +112,26 @@ NOTE: the data from it is used for every git operation github does on you behave
    to setup your SSH keys. You can then use SSH to interact with git
 
 2. Update your maven settings file
-    a. Download the credentials for the Datacollection artifact from here : https://vault-internal.harness.io:8200/ui/vault/secrets/secret/show/credentials/artifactory-internal-read
-    b. Copy the settings.xml file present under tools/build/custom-settings.xml and paste this file into ~/.m2/settings.xml (Remember to rename the file to settings.xml)
-    c. Edit the file and replace the text "${REPLACE_USERNAME_HERE}" with the username from vault secret
-    d. Replace "${REPLACE_PASSWORD_HERE}" with the encrypted password that was present in the vault secret
+    1. Download the credentials for the Datacollection artifact from here: https://vault-internal.harness.io:8200/ui/vault/secrets/secret/show/credentials/artifactory-internal-read
+    1. Copy the settings.xml file present under tools/build/custom-settings.xml and paste this file into ~/.m2/settings.xml (Remember to rename the file to settings.xml)
+    1. Edit the file and replace the text "${REPLACE_USERNAME_HERE}" with the username from vault secret
+    1. Replace "${REPLACE_PASSWORD_HERE}" with the encrypted password that was present in the vault secret
 
+3. Bazel install
 
-3. Go to `portal` directory and run
+    Create a file `.bazelrc` in your portal repo root with the following content
+    ```
+    import bazelrc.local
+    ```
+    NOTE: If you have regular bazel installed, please uninstall bazel and install bazelisk. It allows us to use the git repo to synchronize everyone's installation of bazel.
+
+4. Go to `portal` directory and run
 
     `mvn clean install -DskipTests`
 
     `bazel build :all`
 
-4. If Global Search is not required:
+5. If Global Search is not required:
 
     Install and start MongoDB Docker Image (v3.6):
     ```
@@ -146,7 +141,7 @@ NOTE: the data from it is used for every git operation github does on you behave
 
     Install & use [RoboMongo](https://robomongo.org/download) client to test MongoDB connection.
 
-5. If Global search has to be enabled (OPTIONAL):
+6. If Global search has to be enabled (OPTIONAL):
 
     Install and start Elasticsearch Docker Image for Search(v7.3):
     ```
@@ -180,10 +175,10 @@ NOTE: the data from it is used for every git operation github does on you behave
     rs.add('mongo3:30003')
     ```
 
-    In config.yml set `mongo.uri` to `mongodb://mongo1:30001,mongo2:30002,mongo3:30003/harness`.
+    In `360-cg-manager/config.yml` set `mongo.uri` to `mongodb://mongo1:30001,mongo2:30002,mongo3:30003/harness`.
     Do the same in `config-datagen.yml` and `verification-config.yml`.
 
-6. If TimeScaleDB has to be enabled (Optional for now)
+7. If TimeScaleDB has to be enabled (Optional for now)
 
    a. Start TimeScaleDB using the following docker command: `docker run -d --name harness-timescaledb -v ~/timescaledb/data:/var/lib/postgresql/data -p 5432:5432 --rm -e POSTGRES_USER=admin -e POSTGRES_DB=harness -e POSTGRES_PASSWORD=password timescale/timescaledb`
 
@@ -194,7 +189,7 @@ NOTE: the data from it is used for every git operation github does on you behave
     timescaledbUsername: admin
     timescaledbPassword: password
   ```
-7. Install Redis - Follow the instructions from [here](https://gist.github.com/tomysmile/1b8a321e7c58499ef9f9441b2faa0aa8)
+8. Install Redis - Follow the instructions from [here](https://gist.github.com/tomysmile/1b8a321e7c58499ef9f9441b2faa0aa8)
 
 
 ### Run Harness without IDE (especially for the UI development)
@@ -202,7 +197,8 @@ cd to `portal` directory
 1. Start server by running following commands :
 
    * `bazel build //360-cg-manager:module_deploy.jar`
-   * `java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:~/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar .bazel-dirs/bin/360-cg-manager/module_deploy.jar server 360-cg-manager/config.yml > portal.log &`
+   * `mvn dependency:get -Dartifact="org.mortbay.jetty.alpn:alpn-boot:8.1.13.v20181017"`
+   * `java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:~/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar ~/.bazel-dirs/bin/360-cg-manager/module_deploy.jar server 360-cg-manager/config.yml > portal.log &`
 
 2. Generate sample data required to run the services locally by running the following step only once.
    DataGenUtil: Open a new terminal and run following command (Make sure you [setup `HARNESS_GENERATION_PASSPHRASE` environment variable](https://docs.google.com/document/d/1CddJtyZ7CvLzHnBIe408tQN-zCeQ7NXTfIdEGilm4bs/edit) in your Bash profile):
@@ -268,7 +264,10 @@ helper shell scripts:
 ### IntelliJ Setup
 
 1. Install IntelliJ community edition 2020.1.4
-2. Import `portal` as maven project
+2. Import `portal` as a Bazel project
+   1. Open `File > Import Bazel Project...`
+   1. Enter `/path/to/repo/portal` for Workspace, click Next
+   1. Select `Import project view file` and enter `.bazelproject` as the Project view
 3. Install ClangFormatIJ Plugin: https://plugins.jetbrains.com/plugin/8396-clangformatij
    (use `Ctrl/Cmd-Alt-K` to format current statement or the selection)
 
@@ -287,12 +286,19 @@ helper shell scripts:
    - This plugin is really helpful to analyze your code for issues as you code.
    - Go to `Preferences -> Plugins` ->  type SonarLint -> Install plugin. (Will need to restart Intellij)
    - Go to `Preferences -> Other settings -> Sonarlint general settings`. Check "Automatically trigger analysis". Add a connection to `https://sonar.harness.io`. You'll need to create a custom token.
-   - Go to `Preferences -> Other settings -> Sonarlint project settings`. Check "Bind project to sonarqube", and select the connection, and set project as `portal`. This is so that we use the same rules locally instead of the default rules.
+   - Go to `Preferences -> Other settings -> Sonarlint project settings`. Check "Bind project to sonarqube", and select the connection, and set project as `portal_bazel`. This is so that we use the same rules locally instead of the default rules.
     ![config image](img/sonar-config.png).
    - Go to `Preferences -> Editor -> Colorscheme -> Sonarlint`. For Blocker, Critical & Major, untick "Inherit values from" checkbox and configure a different highlighting style. These violations are treated as release blockers and this configuration is to highlight them differently from regular warnings.
     ![config image](img/sonar-highlight-config.png).
    - Just right click on file in intellij and "Analyze with SonarLint" or enable autoscan.
-6. Install the [IntelliJ Checkstyle Plugin](https://plugins.jetbrains.com/plugin/1065-checkstyle-idea). Setup Checkstyle plugin. In `Preferences -> Other settings -> Checkstyle` add `tools/config/target/config-0.0.1-SNAPSHOT-jar-with-dependencies.jar` and `tools/checkstyle/target/checkstyle-0.0.1-SNAPSHOT.jar` jars in the repo to the 3rd party checks classpath. Add configuration file `harness-checks.xml` (Choose the option to resolve the file from the 3rd party checks classpath - it's within the config jar) and choose it as the default active. Set scan scope to  `java sources including tests`.
+6. Install the [IntelliJ Checkstyle Plugin](https://plugins.jetbrains.com/plugin/1065-checkstyle-idea).
+
+   1. Run Maven build of the tools directory
+      ```
+      mvn -f tools/ clean install -DskipTests
+      ```
+
+   1. Setup Checkstyle plugin. In `Preferences -> Other settings -> Checkstyle` add `tools/config/target/config-0.0.1-SNAPSHOT-jar-with-dependencies.jar` and `tools/checkstyle/target/checkstyle-0.0.1-SNAPSHOT.jar` jars in the repo to the 3rd party checks classpath. Add configuration file `harness_checks.xml` (Choose the option to resolve the file from the 3rd party checks classpath - it's within the config jar) and choose it as the default active. Set scan scope to  `java sources including tests`.
    *  ![config image](img/checkstyle-config-pre.png).
    *  ![config image](img/checkstyle-config.png).
 7. Change settings to mark injected fields as assigned. (Settings > Editor > Inspections > Java > Declaration Redundancy > Unused Declarations>Entry Points >
