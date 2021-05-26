@@ -12,6 +12,7 @@ import io.harness.context.MdcGlobalContextData;
 import io.harness.exception.AwsAutoScaleException;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.HintException;
+import io.harness.exception.IllegalArgumentException;
 import io.harness.exception.ImageNotFoundException;
 import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.InvalidRequestException;
@@ -27,6 +28,7 @@ import com.amazonaws.services.codedeploy.model.AmazonCodeDeployException;
 import com.amazonaws.services.codedeploy.model.InvalidTagException;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
 import com.amazonaws.services.ecr.model.AmazonECRException;
+import com.amazonaws.services.ecr.model.InvalidParameterException;
 import com.amazonaws.services.ecr.model.RepositoryNotFoundException;
 import com.amazonaws.services.ecs.model.AmazonECSException;
 import com.amazonaws.services.ecs.model.ClusterNotFoundException;
@@ -85,6 +87,17 @@ public class AmazonServiceExceptionHandler implements ExceptionHandler {
       }
       return new HintException(
           HintException.HINT_ECR_IMAGE_NAME, new ImageNotFoundException(ex.getMessage(), IMAGE_NOT_FOUND, USER));
+    } else if (ex instanceof InvalidParameterException) {
+      if (GlobalContextManager.get(MdcGlobalContextData.MDC_ID) != null) {
+        Map<String, String> imageDetails =
+            ((MdcGlobalContextData) GlobalContextManager.get(MdcGlobalContextData.MDC_ID)).getMap();
+        return new ExplanationException(String.format(ExplanationException.ILLEGAL_IMAGE_FORMAT,
+                                            imageDetails.get(ExceptionMetadataKeys.IMAGE_NAME.name())),
+            new HintException(
+                HintException.HINT_ILLEGAL_IMAGE_PATH, new IllegalArgumentException(ex.getMessage(), USER)));
+      }
+      return new ExplanationException("Provided image path does not satisfy ECR image path format",
+          new HintException("Please provide valid image path", new IllegalArgumentException(ex.getMessage(), USER)));
     } else if (ex instanceof AmazonECSException || ex instanceof AmazonECRException) {
       if (GlobalContextManager.get(MdcGlobalContextData.MDC_ID) != null) {
         Map<String, String> imageDetails =

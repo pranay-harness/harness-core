@@ -230,3 +230,5 @@ replace_key_value logStreamingServiceConfig.serviceToken "$LOG_STREAMING_SERVICE
 replace_key_value iteratorsConfig.approvalInstanceIteratorConfig.enabled "$APPROVAL_INSTANCE_ITERATOR_ENABLED"
 replace_key_value iteratorsConfig.approvalInstanceIteratorConfig.targetIntervalInSeconds "$APPROVAL_INSTANCE_ITERATOR_INTERVAL_SEC"
 replace_key_value orchestrationStepConfig.ffServerBaseUrl "$FF_SERVER_BASE_URL"
+
+replace_key_value shouldDeployWithGitSync "$ENABLE_GIT_SYNC"

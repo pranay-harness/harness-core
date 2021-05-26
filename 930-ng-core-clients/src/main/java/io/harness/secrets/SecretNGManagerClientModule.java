@@ -45,19 +45,13 @@ public class SecretNGManagerClientModule extends AbstractModule {
         .annotatedWith(Names.named(ClientMode.PRIVILEGED.name()))
         .toProvider(privilegedSecretNGManagerHttpClientFactory())
         .in(Scopes.SINGLETON);
-    bind(SecretNGManagerClient.class)
-        .annotatedWith(Names.named(ClientMode.NON_PRIVILEGED.name()))
-        .toProvider(nonPrivilegedSecretNGManagerHttpClientFactory())
-        .in(Scopes.SINGLETON);
+    bind(SecretNGManagerClient.class).toProvider(nonPrivilegedSecretNGManagerHttpClientFactory()).in(Scopes.SINGLETON);
 
     bind(SecretManagerClientService.class).to(NonPrivilegedSecretNGManagerClientServiceImpl.class).in(Scopes.SINGLETON);
     bind(SecretManagerClientService.class)
         .annotatedWith(Names.named(ClientMode.PRIVILEGED.name()))
         .to(PrivilegedSecretNGManagerClientServiceImpl.class)
         .in(Scopes.SINGLETON);
-    bind(SecretManagerClientService.class)
-        .annotatedWith(Names.named(ClientMode.NON_PRIVILEGED.name()))
-        .to(NonPrivilegedSecretNGManagerClientServiceImpl.class)
-        .in(Scopes.SINGLETON);
+    bind(SecretManagerClientService.class).to(NonPrivilegedSecretNGManagerClientServiceImpl.class).in(Scopes.SINGLETON);
   }
 }
