@@ -11,12 +11,13 @@ import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 public class PmsGitSyncBranchContextGuard implements AutoCloseable {
   private final GlobalContextGuard guard;
 
-  public PmsGitSyncBranchContextGuard(GitSyncBranchContext gitSyncBranchContext) {
+  public PmsGitSyncBranchContextGuard(GitSyncBranchContext gitSyncBranchContext, boolean findDefaultFromOtherBranches) {
     if (gitSyncBranchContext != null && gitSyncBranchContext.getGitBranchInfo() != null) {
       this.guard = GlobalContextManager.initGlobalContextGuard(GlobalContextManager.obtainGlobalContextCopy());
+
       // Set findDefaultFromOtherBranches if it's not already true. This is done so that we can fetch entities used by
       // steps (like connectors) from default branch of other repos also.
-      if (!gitSyncBranchContext.getGitBranchInfo().isFindDefaultFromOtherBranches()) {
+      if (findDefaultFromOtherBranches && !gitSyncBranchContext.getGitBranchInfo().isFindDefaultFromOtherBranches()) {
         gitSyncBranchContext = gitSyncBranchContext.withGitBranchInfo(
             gitSyncBranchContext.getGitBranchInfo().withFindDefaultFromOtherBranches(true));
       }

@@ -5,12 +5,16 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.UnexpectedException;
 import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.VariablesCreationBlobRequest;
 import io.harness.pms.contracts.plan.VariablesCreationBlobResponse;
+import io.harness.pms.contracts.plan.VariablesCreationMetadata;
 import io.harness.pms.contracts.plan.VariablesCreationResponse;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
+import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
 import io.harness.pms.sdk.PmsSdkHelper;
 import io.harness.pms.utils.CompletableFutures;
@@ -19,6 +23,7 @@ import io.harness.pms.yaml.YamlUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -30,17 +35,20 @@ import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 @Slf4j
 public class VariableCreatorMergeService {
   private final PmsSdkHelper pmsSdkHelper;
+  private final PmsGitSyncHelper pmsGitSyncHelper;
 
   private static final int MAX_DEPTH = 10;
   private final Executor executor = Executors.newFixedThreadPool(5);
 
   @Inject
-  public VariableCreatorMergeService(PmsSdkHelper pmsSdkHelper) {
+  public VariableCreatorMergeService(PmsSdkHelper pmsSdkHelper, PmsGitSyncHelper pmsGitSyncHelper) {
     this.pmsSdkHelper = pmsSdkHelper;
+    this.pmsGitSyncHelper = pmsGitSyncHelper;
   }
 
   public VariableMergeServiceResponse createVariablesResponse(@NotNull String yaml) throws IOException {
@@ -51,14 +59,22 @@ public class VariableCreatorMergeService {
     Map<String, YamlFieldBlob> dependencies = new HashMap<>();
     dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
 
-    VariablesCreationBlobResponse response = createVariablesForDependenciesRecursive(services, dependencies);
+    VariablesCreationMetadata.Builder metadataBuilder = VariablesCreationMetadata.newBuilder();
+    ByteString gitSyncBranchContext = pmsGitSyncHelper.getGitSyncBranchContextBytesThreadLocal();
+    if (gitSyncBranchContext != null) {
+      metadataBuilder.setGitSyncBranchContext(gitSyncBranchContext);
+    }
+
+    VariablesCreationBlobResponse response =
+        createVariablesForDependenciesRecursive(services, dependencies, metadataBuilder.build());
 
     return VariableCreationBlobResponseUtils.getMergeServiceResponse(
         YamlUtils.writeYamlString(processedYaml), response);
   }
 
   private VariablesCreationBlobResponse createVariablesForDependenciesRecursive(
-      Map<String, PlanCreatorServiceInfo> services, Map<String, YamlFieldBlob> dependencies) {
+      Map<String, PlanCreatorServiceInfo> services, Map<String, YamlFieldBlob> dependencies,
+      VariablesCreationMetadata metadata) {
     VariablesCreationBlobResponse.Builder responseBuilder =
         VariablesCreationBlobResponse.newBuilder().putAllDependencies(dependencies);
     if (isEmpty(services) || isEmpty(dependencies)) {
@@ -67,7 +83,7 @@ public class VariableCreatorMergeService {
 
     for (int i = 0; i < MAX_DEPTH && isNotEmpty(responseBuilder.getDependenciesMap()); i++) {
       VariablesCreationBlobResponse variablesCreationBlobResponse =
-          obtainVariablesPerIteration(services, responseBuilder.getDependenciesMap());
+          obtainVariablesPerIteration(services, responseBuilder.getDependenciesMap(), metadata);
       VariableCreationBlobResponseUtils.mergeResolvedDependencies(responseBuilder, variablesCreationBlobResponse);
       if (isNotEmpty(responseBuilder.getDependenciesMap())) {
         VariableCreationBlobResponseUtils.mergeYamlProperties(responseBuilder, variablesCreationBlobResponse);
@@ -81,8 +97,8 @@ public class VariableCreatorMergeService {
     return responseBuilder.build();
   }
 
-  private VariablesCreationBlobResponse obtainVariablesPerIteration(
-      Map<String, PlanCreatorServiceInfo> services, Map<String, YamlFieldBlob> dependencies) {
+  private VariablesCreationBlobResponse obtainVariablesPerIteration(Map<String, PlanCreatorServiceInfo> services,
+      Map<String, YamlFieldBlob> dependencies, VariablesCreationMetadata metadata) {
     CompletableFutures<VariablesCreationResponse> completableFutures = new CompletableFutures<>(executor);
     for (Map.Entry<String, PlanCreatorServiceInfo> entry : services.entrySet()) {
       if (!pmsSdkHelper.containsSupportedDependency(entry.getValue(), dependencies)) {
@@ -92,7 +108,7 @@ public class VariableCreatorMergeService {
       completableFutures.supplyAsync(() -> {
         try {
           return entry.getValue().getPlanCreationClient().createVariablesYaml(
-              VariablesCreationBlobRequest.newBuilder().putAllDependencies(dependencies).build());
+              VariablesCreationBlobRequest.newBuilder().putAllDependencies(dependencies).setMetadata(metadata).build());
         } catch (Exception ex) {
           log.error(String.format("Error connecting with service: [%s]. Is this service Running?", entry.getKey()), ex);
           ErrorResponse errorResponse = ErrorResponse.newBuilder()

@@ -19,4 +19,5 @@ message ExecutionMetadata {
   string yaml = 7;
   ExecutionPrincipalInfo principalInfo = 8;
   string processedYaml = 9;
+  bytes gitSyncBranchContext = 10;
 }

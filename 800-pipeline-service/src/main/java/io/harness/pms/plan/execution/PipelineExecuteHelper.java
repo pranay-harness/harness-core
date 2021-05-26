@@ -13,6 +13,7 @@ import io.harness.plan.Plan;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
+import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.helpers.PrincipalInfoHelper;
 import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
@@ -25,6 +26,7 @@ import io.harness.pms.rbac.validator.PipelineRbacService;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -45,6 +47,7 @@ public class PipelineExecuteHelper {
   private final PipelineRbacService pipelineRbacServiceImpl;
   private final PrincipalInfoHelper principalInfoHelper;
   private final PMSYamlSchemaService pmsYamlSchemaService;
+  private final PmsGitSyncHelper pmsGitSyncHelper;
 
   public PlanExecutionResponseDto runPipelineWithInputSetPipelineYaml(@NotNull String accountId,
       @NotNull String orgIdentifier, @NotNull String projectIdentifier, @NotNull String pipelineIdentifier,
@@ -122,6 +125,12 @@ public class PipelineExecuteHelper {
   public PlanExecution startExecution(String accountId, String orgIdentifier, String projectIdentifier, String yaml,
       ExecutionMetadata executionMetadata) throws IOException {
     ExecutionMetadata.Builder executionMetadataBuilder = ExecutionMetadata.newBuilder(executionMetadata);
+    // Set git sync branch context in execute metadata. This will be used for plan creation and execution.
+    ByteString gitSyncBranchContext = pmsGitSyncHelper.getGitSyncBranchContextBytesThreadLocal();
+    if (gitSyncBranchContext != null) {
+      executionMetadataBuilder.setGitSyncBranchContext(gitSyncBranchContext);
+    }
+
     PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(yaml, executionMetadataBuilder);
     Plan plan = PlanExecutionUtils.extractPlan(resp);
     ImmutableMap.Builder<String, String> abstractionsBuilder =
