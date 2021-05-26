@@ -148,7 +148,6 @@ import org.jetbrains.annotations.NotNull;
 public class K8BuildSetupUtils {
   @Inject private SecretUtils secretUtils;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
-  @Inject private ServiceTokenUtils serviceTokenUtils;
   @Inject private ConnectorUtils connectorUtils;
   @Inject private InternalContainerParamsProvider internalContainerParamsProvider;
   @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
@@ -451,9 +450,8 @@ public class K8BuildSetupUtils {
       Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys, Ambiance ambiance) {
     Map<String, ConnectorDetails> stepConnectorDetails = new HashMap<>();
 
-    String serviceToken = serviceTokenUtils.getServiceToken();
     return internalContainerParamsProvider.getLiteEngineContainerParams(connectorDetails, stepConnectorDetails,
-        k8PodDetails, serviceToken, stageCpuRequest, stageMemoryRequest, serviceGrpcPortList, logEnvVars, tiEnvVars,
+        k8PodDetails, stageCpuRequest, stageMemoryRequest, serviceGrpcPortList, logEnvVars, tiEnvVars,
         volumeToMountPath, workDirPath, logPrefix, ambiance);
   }
 

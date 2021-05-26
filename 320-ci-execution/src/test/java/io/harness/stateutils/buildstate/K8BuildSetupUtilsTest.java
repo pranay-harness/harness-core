@@ -3,7 +3,6 @@ package io.harness.stateutils.buildstate;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_AWS_REGION;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_REMOTE_URL;
 import static io.harness.common.CIExecutionConstants.ACCESS_KEY_MINIO_VARIABLE;
-import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_ORG_ID_VARIABLE;
@@ -207,8 +206,6 @@ public class K8BuildSetupUtilsTest extends CIExecutionTestBase {
         .containsAnyElementsOf(secretVariableDetails);
     assertThat(podParams.getContainerParamsList().get(3).getEnvVars()).containsAllEntriesOf(stepEnvVars);
 
-    stepEnvVars.put(DELEGATE_SERVICE_TOKEN_VARIABLE,
-        podParams.getContainerParamsList().get(4).getEnvVars().get(DELEGATE_SERVICE_TOKEN_VARIABLE));
     assertThat(podParams.getContainerParamsList().get(4))
         .isEqualToIgnoringGivenFields(
             ciExecutionPlanTestHelper.getPluginStepCIK8Container().build(), "envVars", "containerSecrets");
