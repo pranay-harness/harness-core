@@ -140,14 +140,9 @@ public class DefaultLicenseServiceImpl implements LicenseService {
 
     log.info("Trial license for module [{}] is started in account [{}]", startTrialRequestDTO.getModuleType(),
         accountIdentifier);
-    updateDefaultExperienceIfNull(accountIdentifier, startTrialRequestDTO.getModuleType());
-    return licenseObjectMapper.toDTO(savedEntity);
-  }
 
-  private void updateDefaultExperienceIfNull(String accountIdentifier, ModuleType moduleType) {
-    if (ModuleType.CI.equals(moduleType)) {
-      accountService.updateDefaultExperienceIfApplicable(accountIdentifier, DefaultExperience.NG);
-    }
+    accountService.updateDefaultExperienceIfApplicable(accountIdentifier, DefaultExperience.NG);
+    return licenseObjectMapper.toDTO(savedEntity);
   }
 
   private void sendSucceedTelemetryEvents(ModuleLicense moduleLicense, String accountIdentifier) {

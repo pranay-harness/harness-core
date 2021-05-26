@@ -3808,6 +3808,15 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(webHookTriggerCondition.getWebHookSecret()).isEqualTo(SECRET_ID);
   }
 
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldNotSaveWebHookSecretWhenFfOff() {
+    assertThatThrownBy(() -> triggerService.save(createWebHookTriggerWithSecret(GITHUB)))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Please enable feature flag to authenticate your webhook sources");
+  }
+
   private Trigger createWebHookTriggerWithSecret(WebhookSource webhookSource) {
     return Trigger.builder()
         .workflowId(WORKFLOW_ID)

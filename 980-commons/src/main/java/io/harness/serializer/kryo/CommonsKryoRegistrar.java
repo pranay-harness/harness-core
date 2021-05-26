@@ -9,10 +9,13 @@ import io.harness.exception.ArtifactoryServerException;
 import io.harness.exception.ContextException;
 import io.harness.exception.DelegateErrorHandlerException;
 import io.harness.exception.DelegateNotAvailableException;
+import io.harness.exception.EngineExpressionEvaluationException;
+import io.harness.exception.EngineFunctorException;
 import io.harness.exception.ExceptionHandlerNotFoundException;
 import io.harness.exception.GcpServerException;
 import io.harness.exception.GeneralException;
 import io.harness.exception.HttpResponseException;
+import io.harness.exception.IllegalArgumentException;
 import io.harness.exception.ImageNotFoundException;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidCredentialsException;
@@ -68,11 +71,14 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(InvalidTagException.class, 31020);
     kryo.register(SecretNotFoundException.class, 31021);
     kryo.register(DelegateNotAvailableException.class, 31022);
+    kryo.register(IllegalArgumentException.class, 31023);
 
     kryo.register(PrincipalContextData.class, 980001);
     kryo.register(UserPrincipal.class, 980002);
     kryo.register(SourcePrincipalContextData.class, 980003);
     kryo.register(Principal.class, 980004);
     kryo.register(PrincipalType.class, 980005);
+    kryo.register(EngineExpressionEvaluationException.class, 980006);
+    kryo.register(EngineFunctorException.class, 980007);
   }
 }

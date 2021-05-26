@@ -693,6 +693,56 @@ public class AuthServiceImpl implements AuthService {
     return getUserRestrictionInfoFromDB(accountId, user, userPermissionInfo);
   }
 
+  public void updateUserPermissionCacheInfo(String accountId, User user, boolean cacheOnly) {
+    Cache<String, UserPermissionInfo> userPermissionInfoCache = getUserPermissionCache(accountId);
+    if (userPermissionInfoCache == null && cacheOnly) {
+      return;
+    }
+    String key = user.getUuid();
+    UserPermissionInfo value;
+    try {
+      value = userPermissionInfoCache.get(key);
+      if (value == null && cacheOnly) {
+        return;
+      }
+
+      value = getUserPermissionInfoFromDB(accountId, user);
+      userPermissionInfoCache.put(key, value);
+
+    } catch (Exception e) {
+      log.warn("Error in fetching user while updating UserPermissionInfo from Cache of accountId: " + accountId
+              + " userId: " + key,
+          e);
+    }
+  }
+
+  public void updateUserRestrictionCacheInfo(
+      String accountId, User user, UserPermissionInfo userPermissionInfo, boolean cacheOnly) {
+    Cache<String, UserRestrictionInfo> userRestrictionInfoCache = getUserRestrictionCache(accountId);
+    if (userRestrictionInfoCache == null) {
+      if (cacheOnly) {
+        return;
+      }
+      log.error("UserInfoCache is null. This should not happen. Fall back to DB");
+    }
+    String key = user.getUuid();
+    UserRestrictionInfo value;
+    try {
+      value = userRestrictionInfoCache.get(key);
+      if (value == null) {
+        if (cacheOnly) {
+          return;
+        }
+      }
+      value = getUserRestrictionInfoFromDB(accountId, user, userPermissionInfo);
+      userRestrictionInfoCache.put(key, value);
+    } catch (Exception e) {
+      log.warn("Error in fetching user while updating UserRestrictionInfo from Cache of accountId: " + accountId
+              + " userId: " + key,
+          e);
+    }
+  }
+
   @Override
   public void evictUserPermissionAndRestrictionCacheForAccount(
       String accountId, boolean rebuildUserPermissionInfo, boolean rebuildUserRestrictionInfo) {

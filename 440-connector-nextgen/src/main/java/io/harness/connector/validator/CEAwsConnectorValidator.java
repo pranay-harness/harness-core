@@ -81,10 +81,10 @@ public class CEAwsConnectorValidator extends AbstractConnectorValidator {
     try {
       final AWSCredentialsProvider credentialsProvider = getCredentialProvider(crossAccountAccessDTO);
 
-      if (featuresEnabled.contains(CEAwsFeatures.EVENTS)) {
+      if (featuresEnabled.contains(CEAwsFeatures.VISIBILITY)) {
         final Policy eventsPolicy = getRequiredEventsPolicy();
-        errorList.addAll(validateIfPolicyIsCorrect(
-            credentialsProvider, crossAccountAccessDTO.getCrossAccountRoleArn(), CEAwsFeatures.EVENTS, eventsPolicy));
+        errorList.addAll(validateIfPolicyIsCorrect(credentialsProvider, crossAccountAccessDTO.getCrossAccountRoleArn(),
+            CEAwsFeatures.VISIBILITY, eventsPolicy));
       }
 
       if (featuresEnabled.contains(CEAwsFeatures.OPTIMIZATION)) {

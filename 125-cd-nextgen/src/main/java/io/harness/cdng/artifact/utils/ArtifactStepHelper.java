@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
 @Singleton
 public class ArtifactStepHelper {
   @Named(DEFAULT_CONNECTOR_SERVICE) @Inject private ConnectorService connectorService;
-  @Inject private SecretManagerClientService secretManagerClientService;
+  @Named("PRIVILEGED") @Inject private SecretManagerClientService secretManagerClientService;
 
   public ArtifactSourceDelegateRequest toSourceDelegateRequest(ArtifactConfig artifactConfig, Ambiance ambiance) {
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();

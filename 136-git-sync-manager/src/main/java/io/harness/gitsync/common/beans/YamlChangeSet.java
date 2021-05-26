@@ -3,7 +3,6 @@ package io.harness.gitsync.common.beans;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.IdentifierRef;
 import io.harness.data.validator.Trimmed;
 import io.harness.gitsync.core.beans.GitWebhookRequestAttributes;
 import io.harness.mongo.index.FdIndex;
@@ -13,9 +12,6 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
-import java.util.ArrayList;
-import java.util.List;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -51,14 +47,11 @@ public class YamlChangeSet implements PersistentEntity, UuidAware, CreatedAtAwar
   @NotNull private String queueKey;
   @NotNull private String eventType;
   private String messageCode;
-  // Connector which will be used for all the operations in lifecycle.
-  private IdentifierRef connectorRef;
   private String repoUrl;
   private String branch;
-  private boolean isFileFetchComplete;
-  private boolean isUISync;
 
-  @Builder.Default @Valid @NotNull private List<GitFileChangeMsvcMap> gitFileChanges = new ArrayList<>();
+  // Any special event metadata which has to go back from queue as is can be pushed in this interface.
+  EventMetadata eventMetadata;
 
   @EqualsAndHashCode.Exclude @CreatedDate private long createdAt;
   @EqualsAndHashCode.Exclude @LastModifiedDate private long lastUpdatedAt;
@@ -66,8 +59,8 @@ public class YamlChangeSet implements PersistentEntity, UuidAware, CreatedAtAwar
   @Builder
   public YamlChangeSet(String uuid, String accountId, String status, long queuedOn,
       GitWebhookRequestAttributes gitWebhookRequestAttributes, Integer retryCount, String queueKey, String eventType,
-      String messageCode, IdentifierRef connectorRef, String repoUrl, String branch, boolean isFileFetchComplete,
-      boolean isUISync, List<GitFileChangeMsvcMap> gitFileChanges, long createdAt, long lastUpdatedAt) {
+      String messageCode, String repoUrl, String branch, EventMetadata eventMetadata, long createdAt,
+      long lastUpdatedAt) {
     this.uuid = uuid;
     this.accountId = accountId;
     this.status = status;
@@ -77,12 +70,9 @@ public class YamlChangeSet implements PersistentEntity, UuidAware, CreatedAtAwar
     this.queueKey = queueKey;
     this.eventType = eventType;
     this.messageCode = messageCode;
-    this.connectorRef = connectorRef;
     this.repoUrl = repoUrl;
     this.branch = branch;
-    this.isFileFetchComplete = isFileFetchComplete;
-    this.isUISync = isUISync;
-    this.gitFileChanges = gitFileChanges;
+    this.eventMetadata = eventMetadata;
     this.createdAt = createdAt;
     this.lastUpdatedAt = lastUpdatedAt;
   }

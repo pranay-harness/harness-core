@@ -1,6 +1,6 @@
 package io.harness.serializer.json;
 
-import io.harness.pms.contracts.advisers.InterruptConfig;
+import io.harness.pms.contracts.interrupts.InterruptConfig;
 
 public class InterruptConfigSerializer extends ProtoJsonSerializer<InterruptConfig> {
   public InterruptConfigSerializer() {

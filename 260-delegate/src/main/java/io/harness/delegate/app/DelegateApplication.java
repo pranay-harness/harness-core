@@ -184,8 +184,11 @@ public class DelegateApplication {
       }
     });
 
-    if (!"ONPREM".equals(System.getenv().get(DEPLOY_MODE))) {
+    if (!ImmutableSet.of("ONPREM", "KUBERNETES_ONPREM").contains(System.getenv().get(DEPLOY_MODE))) {
       modules.add(new PingPongModule());
+    }
+
+    if (!"ONPREM".equals(System.getenv().get(DEPLOY_MODE))) {
       modules.add(new PerpetualTaskWorkerModule());
       modules.add(DelegateServiceGrpcAgentClientModule.getInstance());
     }
@@ -219,7 +222,7 @@ public class DelegateApplication {
       watcherData.put(WATCHER_PROCESS, watcherProcess);
       messageService.putAllData(WATCHER_DATA, watcherData);
     }
-    if (!"ONPREM".equals(System.getenv().get(DEPLOY_MODE))) {
+    if (!ImmutableSet.of("ONPREM", "KUBERNETES_ONPREM").contains(System.getenv().get(DEPLOY_MODE))) {
       injector.getInstance(PingPongClient.class).startAsync();
     }
     Runtime.getRuntime().addShutdownHook(new Thread(() -> injector.getInstance(PingPongClient.class).stopAsync()));

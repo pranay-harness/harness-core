@@ -259,6 +259,10 @@ public class UserResourceNG {
         .defaultAccountId(user.getDefaultAccountId())
         .twoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled())
         .emailVerified(user.isEmailVerified())
+        .accounts(user.getAccounts()
+                      .stream()
+                      .map(account -> AccountMapper.toGatewayAccountRequest(account))
+                      .collect(Collectors.toList()))
         .token(user.getToken())
         .admin(
             Optional.ofNullable(user.getUserGroups())
