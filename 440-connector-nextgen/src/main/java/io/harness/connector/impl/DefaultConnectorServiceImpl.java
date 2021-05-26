@@ -316,6 +316,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
         newConnector.setCreatedAt(System.currentTimeMillis());
         newConnector.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
         newConnector.setActivityDetails(null);
+        newConnector.setLastModifiedAt(null);
+        newConnector.setHeartbeatPerpetualTaskId(null);
       }
     }
   }
