@@ -357,7 +357,7 @@ public class InputSetResourcePMS {
   @POST
   @Path("mergeWithTemplateYaml")
   @ApiOperation(
-      value = "Merges given runtime input yaml on pipeline and return input set template format of applied pipeline",
+      value = "Merges  given runtime input yaml on pipeline and return input set template format of applied pipeline",
       nickname = "getMergeInputSetFromPipelineTemplate")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
   public ResponseDTO<MergeInputSetResponseDTOPMS>
