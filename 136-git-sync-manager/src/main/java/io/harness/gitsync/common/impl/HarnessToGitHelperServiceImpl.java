@@ -44,7 +44,10 @@ import io.harness.gitsync.common.service.GitSyncSettingsService;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.common.service.gittoharness.GitToHarnessProcessorService;
+import io.harness.gitsync.interceptor.GitEntityInfo;
+import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.gitsync.scm.ScmGitUtils;
+import io.harness.manage.GlobalContextManager;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
@@ -277,11 +280,17 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   @Override
   public void processFilesInBranch(String accountId, String gitSyncConfigId, String projectIdentifier,
       String orgIdentifier, String branch, String filePathToBeExcluded, String repoURL) {
-    final YamlGitConfigDTO yamlGitConfigDTO =
-        yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountId, gitSyncConfigId);
-    gitToHarnessProcessorService.readFilesFromBranchAndProcess(
-        yamlGitConfigDTO, branch, accountId, yamlGitConfigDTO.getBranch(), filePathToBeExcluded);
-    gitBranchService.updateBranchSyncStatus(accountId, repoURL, branch, SYNCED);
+    final GitEntityInfo emptyRepoBranch =
+        GitEntityInfo.builder().branch(null).yamlGitConfigId(null).findDefaultFromOtherBranches(true).build();
+    try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+      GlobalContextManager.upsertGlobalContextRecord(
+          GitSyncBranchContext.builder().gitBranchInfo(emptyRepoBranch).build());
+      final YamlGitConfigDTO yamlGitConfigDTO =
+          yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountId, gitSyncConfigId);
+      gitToHarnessProcessorService.readFilesFromBranchAndProcess(
+          yamlGitConfigDTO, branch, accountId, yamlGitConfigDTO.getBranch(), filePathToBeExcluded);
+      gitBranchService.updateBranchSyncStatus(accountId, repoURL, branch, SYNCED);
+    }
   }
 
   private void createGitBranch(

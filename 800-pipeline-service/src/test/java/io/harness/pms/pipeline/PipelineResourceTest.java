@@ -127,7 +127,7 @@ public class PipelineResourceTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testCreatePipeline() {
+  public void testCreatePipeline() throws IOException {
     doReturn(entityWithVersion).when(pmsPipelineService).create(entity);
     ResponseDTO<String> identifier =
         pipelineResource.createPipeline(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, yaml);
@@ -194,7 +194,7 @@ public class PipelineResourceTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testUpdatePipeline() {
+  public void testUpdatePipeline() throws IOException {
     doReturn(entityWithVersion).when(pmsPipelineService).updatePipelineYaml(entity);
     ResponseDTO<String> responseDTO = pipelineResource.updatePipeline(
         null, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null, yaml);
