@@ -7,7 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.connector.ConnectorType.GIT;
 import static io.harness.errorhandling.NGErrorHelper.DEFAULT_ERROR_SUMMARY;
-import static io.harness.gitsync.helpers.GitContextHelper.getGitInfoToGetExistingEntity;
+import static io.harness.gitsync.helpers.GitContextHelper.getGitEntityInfo;
 import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
 import static java.lang.String.format;
@@ -307,11 +307,17 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
   private Optional<Connector> getExistingConnectorToBeModified(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    GitEntityInfo gitEntityInfo = getGitInfoToGetExistingEntity();
+    GitEntityInfo gitEntityInfo = getGitEntityInfo();
+    String repo = null;
+    String branch = null;
+    if (gitEntityInfo != null) {
+      repo = gitEntityInfo.getYamlGitConfigId();
+      branch = gitEntityInfo.isNewBranch() ? gitEntityInfo.getBaseBranch() : gitEntityInfo.getBranch();
+    }
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     Criteria criteria = new Criteria().where(ConnectorKeys.fullyQualifiedIdentifier).is(fullyQualifiedIdentifier);
-    return connectorRepository.findOne(criteria, gitEntityInfo.getYamlGitConfigId(), gitEntityInfo.getBranch());
+    return connectorRepository.findOne(criteria, repo, branch);
   }
 
   private void validateTheUpdateRequestIsValid(
