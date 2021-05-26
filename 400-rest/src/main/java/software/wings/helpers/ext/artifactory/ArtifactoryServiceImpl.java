@@ -651,10 +651,11 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       ArtifactoryResponse artifactoryResponse = artifactory.restCall(repositoryRequest);
       handleErrorResponse(artifactoryResponse);
       LinkedHashMap<String, String> response = artifactoryResponse.parseBody(LinkedHashMap.class);
-      if (response != null) {
+      if (response != null && isNotBlank(response.get("size"))) {
         return Long.valueOf(response.get("size"));
       } else {
-        throw new ArtifactoryServerException("Unable to get artifact file size ", INVALID_ARTIFACT_SERVER, USER);
+        throw new ArtifactoryServerException(
+            "Unable to get artifact file size. The file probably does not exist", INVALID_ARTIFACT_SERVER, USER);
       }
     } catch (Exception e) {
       log.error("Error occurred while retrieving File Paths from Artifactory server {}",
