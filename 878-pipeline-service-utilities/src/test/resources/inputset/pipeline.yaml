@@ -1,0 +1,225 @@
+pipeline:
+  name: My Deployment Pipeline
+  identifier: myPipeline1
+  description: This is my first pipeline. It is really concrete
+  variables:
+    - name: pipelineN1
+      type: String
+      value: stringValue1
+    - name: pipelineN2
+      type: Number
+      value: 11
+  stages:
+    - parallel:
+      - stage:
+          name: qa
+          identifier: stage1
+          failureStrategies:
+            - onFailure:
+                errors:
+                  - Timeout
+                action:
+                  type: StepGroupRollback
+            - onFailure:
+                errors:
+                  - Connectivity
+                action:
+                  type: StageRollback
+            - onFailure:
+                errors:
+                  - AnyOther
+                action:
+                  type: MarkAsSuccess
+          type: Deployment
+          spec:
+            serviceConfig:
+              service:
+                name: service1
+                identifier: service1
+                tags:
+                  k1: v1
+                  k2: v2
+              serviceDefinition:
+                type: Kubernetes # Can it be type to make it consistent with other types
+                spec:
+                  variables:
+                    - name: serviceN1
+                      type: String
+                      value: stringValue3
+                    - name: serviceN2
+                      type: Number
+                      value: 13
+                  artifacts:
+                    primary:
+                      type: DockerRegistry
+                      spec:
+                        connectorRef: npQuotecenter
+                        imagePath: <+input>
+                        tag: "latest"
+                    sidecars:
+                      - sidecar:
+                          identifier: sidecar1
+                          type: DockerRegistry
+                          spec:
+                            connectorRef: myDocker2
+                            imagePath: "library/redis"
+                            tag: <+input>
+                  manifests:
+                    - manifest:
+                        identifier: specFiles
+                        type: K8sManifest
+                        spec:
+                          store:
+                            type: Git
+                            spec:
+                              connectorRef: myGitConnector
+                              gitFetchType: Branch
+                              branch: master
+                              paths: <+input>.allowedValues(['paths1', 'master/paths2', 'paths3'])
+                  manifestOverrideSets:
+                    - overrideSet:
+                        identifier: overrideSet1
+                        manifests:
+                          - manifest:
+                              identifier: baseValues
+                              type: K8sManifest
+                              spec:
+                                store:
+                                  type: Git
+                                  # Git|Local
+                                  spec:
+                                    connectorRef: <+input>
+                                    gitFetchType: Branch
+                                    branch: master
+                                    paths:
+                                      - test/spec
+                  variableOverrideSets:
+                    - overrideSet:
+                        identifier: VariableoverrideSet
+                        variables:
+                          - name: o1
+                            type: Number
+                            value: 14
+            infrastructure:
+              environment:
+                name: env1
+                identifier: env1
+                type: PreProduction
+                tags:
+                  envType: prod
+                  envRegion: us-east1
+              infrastructureDefinition:
+                type: KubernetesDirect
+                spec:
+                  connectorRef: np-quotecenter_quotecenter-yin
+                  namespace: <+input>.allowedValues(jexl(${stage.name} == 'qa' ? 'dev1, qa1':'prod1, stage1'))
+            execution:
+              steps:
+                - parallel:
+                    - step:
+                        name: "Rollout Deployment"
+                        identifier: rolloutDeployment
+                        type: K8sRollingDeploy
+                        spec:
+                          timeout: <+input>.allowedValues(100, 1000, 100)
+                          skipDryRun: <+input>.allowedValues(true, false)
+                    - step:
+                        name: "Rollout Deployment"
+                        identifier: rolloutDeployment2
+                        type: K8sRollingDeploy
+                        spec:
+                          timeout: <+input>.allowedValues(100, 1000, 100)
+                          skipDryRun: <+input>.allowedValues(true, false)
+                - stepGroup:
+                    identifier: HttpValidationSteps
+                    failureStrategies:
+                      - onFailure:
+                          errors:
+                            - Authentication
+                            - Authorization
+                            - Verification
+                            - DelegateProvisioning
+                          action:
+                            type: Abort
+                    steps:
+                      - step:
+                          identifier: HttpValidation
+                          type: Http
+                          spec:
+                            timeout: 30s
+                            url: http://httpstat.us/500
+                - step:
+                    name: http step 1
+                    identifier: httpStep1
+                    type: Http
+                    spec:
+                      timeout: 10m
+                      method: GET
+                      url: http://httpstat.us/500
+              rollbackSteps:
+                - step:
+                    name: "Rollback Rollout Deployment"
+                    identifier: rollbackRolloutDeployment1
+                    type: K8sRollingRollback
+                    spec:
+                      timeout: <+input>.allowedValues(100, 1000, 100)
+                - step:
+                    name: http rollback step 2
+                    identifier: httpStep4
+                    type: Http
+                    spec:
+                      timeout: 10s
+                      method: GET
+                      url: http://httpstat.us/200
+    - stage:
+        identifier: prod
+        name: Prod stage
+        type: Deployment
+        spec:
+          serviceConfig:
+            useFromStage:
+              stage: <+input>.regex(^prod*)
+            stageOverrides:
+              manifests:
+                - manifest:
+                    identifier: prodOverride
+                    type: Values
+                    spec:
+                      store:
+                        type: Git
+                        spec:
+                          connectorRef: <+input>
+                          gitFetchType: Branch
+                          branch: master
+                          paths:
+                            - test/prod/values.yaml
+              useVariableOverrideSets:
+                - VariableoverrideSet
+              useManifestOverrideSets:
+                - overrideSet1
+                - overrideSet2
+              artifacts:
+                primary:
+                  type: Dockerhub
+                  spec:
+                    tag: "1.18"
+          infrastructure:
+            useFromStage:
+              stage: qaStage
+              overrides:
+                environment:
+                  name: envSomeNumber
+                  identifier: envSomeNumber
+                infrastructureDefinition:
+                  type: KubernetesDirect
+                  spec:
+                    releaseName: testingprod
+          execution:
+            steps:
+              - step:
+                  name: Rollout Deployment
+                  identifier: rolloutDeployment
+                  type: K8sRollingDeploy
+                  spec:
+                    timeout: 120000
+                    skipDryRun: false
