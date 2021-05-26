@@ -24,6 +24,7 @@ import io.harness.exception.KryoHandlerNotFoundException;
 import io.harness.exception.SecretNotFoundException;
 import io.harness.exception.ServiceNowException;
 import io.harness.exception.ShellExecutionException;
+import io.harness.exception.UnresolvedExpressionsException;
 import io.harness.exception.VerificationOperationException;
 import io.harness.logging.LogLevel;
 import io.harness.security.PrincipalContextData;
@@ -80,5 +81,6 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(PrincipalType.class, 980005);
     kryo.register(EngineExpressionEvaluationException.class, 980006);
     kryo.register(EngineFunctorException.class, 980007);
+    kryo.register(UnresolvedExpressionsException.class, 980008);
   }
 }

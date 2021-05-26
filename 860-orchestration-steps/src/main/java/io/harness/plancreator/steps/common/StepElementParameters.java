@@ -47,14 +47,14 @@ public class StepElementParameters implements StepParameters {
 
   @Override
   public String toViewJson() {
-    StepElementParameters stepElementParameters = cloneParameters();
+    StepElementParameters stepElementParameters = cloneParameters(false);
     stepElementParameters.setSpec(spec.getViewJsonObject());
     return RecastOrchestrationUtils.toDocumentJson(stepElementParameters);
   }
 
-  public StepElementParameters cloneParameters() {
+  public StepElementParameters cloneParameters(boolean includeUuid) {
     return StepElementParameters.builder()
-        .uuid(this.uuid)
+        .uuid(includeUuid ? this.uuid : null)
         .type(this.type)
         .name(this.name)
         .description(this.description)
