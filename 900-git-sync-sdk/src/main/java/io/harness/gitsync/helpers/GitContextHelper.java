@@ -34,8 +34,7 @@ public class GitContextHelper {
     GitEntityInfo gitEntityInfo = getGitEntityInfo();
     String repo;
     String branch;
-    if (gitEntityInfo == null || gitEntityInfo.getYamlGitConfigId() == null || gitEntityInfo.getBranch() == null
-        || gitEntityInfo.getYamlGitConfigId().equals(DEFAULT) || gitEntityInfo.getBranch().equals(DEFAULT)) {
+    if (gitEntityInfo == null) {
       repo = null;
       branch = null;
     } else {
@@ -55,8 +54,13 @@ public class GitContextHelper {
     if (gitSyncBranchContext == null) {
       log.error("Git branch context set as null even git sync is enabled");
       // Setting to default branch in case it is not set.
-      return GitEntityInfo.builder().yamlGitConfigId(DEFAULT).branch(DEFAULT).build();
+      return null;
     }
-    return gitSyncBranchContext.getGitBranchInfo();
+    GitEntityInfo gitBranchInfo = gitSyncBranchContext.getGitBranchInfo();
+    if (gitBranchInfo == null || gitBranchInfo.getYamlGitConfigId() == null || gitBranchInfo.getBranch() == null
+        || gitBranchInfo.getYamlGitConfigId().equals(DEFAULT) || gitBranchInfo.getBranch().equals(DEFAULT)) {
+      return null;
+    }
+    return gitBranchInfo;
   }
 }
