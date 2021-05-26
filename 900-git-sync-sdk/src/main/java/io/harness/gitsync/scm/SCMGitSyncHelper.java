@@ -59,8 +59,10 @@ public class SCMGitSyncHelper {
     }
     final InfoForGitPush infoForPush = getInfoForPush(gitBranchInfo, entityDetail);
     if (infoForPush.isExecuteOnDelegate()) {
+      log.info("Pushing the changes using delegate");
       return scmDelegateGitHelper.pushToGitBasedOnChangeType(yaml, changeType, gitBranchInfo, infoForPush);
     } else {
+      log.info("Pushing the changes using manager");
       return scmManagerGitHelper.pushToGitBasedOnChangeType(yaml, changeType, gitBranchInfo, infoForPush);
     }
   }
