@@ -255,7 +255,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerJobs(injector);
     registerMigrations(injector);
     registerQueueListeners(injector);
-    log.info(("checking new changes picked up 1"));
+    log.info(("checking new changes picked up 2"));
 
     intializeGitSync(injector, appConfig);
     //  This is ordered below health registration so that kubernetes deployment readiness check passes under 10 minutes
