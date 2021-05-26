@@ -48,4 +48,8 @@ if [[ "" != "$TIMESCALEDB_PASSWORD" ]]; then
   yq write -i $CONFIG_FILE timescaledb.timescaledbPassword "$TIMESCALEDB_PASSWORD"
 fi
 
+if [[ "" != "$GCP_PROJECT_ID" ]]; then
+  yq write -i $CONFIG_FILE gcp-project-id "$GCP_PROJECT_ID"
+fi
+
 
