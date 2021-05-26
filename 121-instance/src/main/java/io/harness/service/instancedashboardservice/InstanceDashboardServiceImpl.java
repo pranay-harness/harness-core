@@ -1,5 +1,7 @@
 package io.harness.service.instancedashboardservice;
 
+import static java.lang.System.currentTimeMillis;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.entities.instance.Instance;
@@ -30,8 +32,9 @@ public class InstanceDashboardServiceImpl implements InstanceDashboardService {
   @Override
   public InstanceCountDetails getActiveInstanceCountDetailsByEnvType(
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    final long currentTimestamp = currentTimeMillis();
     List<Instance> instances =
-        instanceRepository.getActiveInstances(accountIdentifier, orgIdentifier, projectIdentifier);
+        instanceRepository.getActiveInstances(accountIdentifier, orgIdentifier, projectIdentifier, currentTimestamp);
 
     Map<String, Map<EnvironmentType, Integer>> serviceVsInstanceCountMap = new HashMap<>();
     instances.forEach(instance -> {
@@ -42,6 +45,12 @@ public class InstanceDashboardServiceImpl implements InstanceDashboardService {
     });
 
     return prepareInstanceCountDetailsResponse(serviceVsInstanceCountMap);
+  }
+
+  @Override
+  public List<Instance> getActiveInstances(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, long timestampInMs) {
+    return instanceRepository.getActiveInstances(accountIdentifier, orgIdentifier, projectIdentifier, timestampInMs);
   }
 
   // ----------------------------- PRIVATE METHODS -----------------------------
