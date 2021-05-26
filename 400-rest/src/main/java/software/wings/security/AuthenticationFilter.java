@@ -252,6 +252,15 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         || requestResourceInfo.getResourceClass().getAnnotation(NextGenManagerAuth.class) != null;
   }
 
+  private boolean isInternalRequest(ResourceInfo requestResourceInfo) {
+    return requestResourceInfo.getResourceMethod().getAnnotation(InternalApi.class) != null
+        || requestResourceInfo.getResourceClass().getAnnotation(InternalApi.class) != null;
+  }
+
+  private void validateInternalRequest(ContainerRequestContext containerRequestContext) {
+    JWTAuthenticationFilter.filter(containerRequestContext, serviceToJWTTokenHandlerMapping, serviceToSecretMapping);
+  }
+
   @VisibleForTesting
   boolean isNextGenAuthorizationValid(ContainerRequestContext containerRequestContext) {
     String nextGenManagerToken =
@@ -461,14 +470,5 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   private String getRequestParamFromContext(
       String key, MultivaluedMap<String, String> pathParameters, MultivaluedMap<String, String> queryParameters) {
     return queryParameters.getFirst(key) != null ? queryParameters.getFirst(key) : pathParameters.getFirst(key);
-  }
-
-  private boolean isInternalRequest(ResourceInfo requestResourceInfo) {
-    return requestResourceInfo.getResourceMethod().getAnnotation(InternalApi.class) != null
-        || requestResourceInfo.getResourceClass().getAnnotation(InternalApi.class) != null;
-  }
-
-  private void validateInternalRequest(ContainerRequestContext containerRequestContext) {
-    JWTAuthenticationFilter.filter(containerRequestContext, serviceToJWTTokenHandlerMapping, serviceToSecretMapping);
   }
 }
