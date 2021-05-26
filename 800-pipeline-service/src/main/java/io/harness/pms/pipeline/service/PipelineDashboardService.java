@@ -8,8 +8,8 @@ import io.harness.pms.Dashboard.DashboardPipelineHealthInfo;
 @OwnedBy(HarnessTeam.CDC)
 public interface PipelineDashboardService {
   DashboardPipelineHealthInfo getDashboardPipelineHealthInfo(String accountId, String orgId, String projectId,
-      String pipelineId, String startInterval, String endInterval, String previousStartInterval, String moduleInfo);
+      String pipelineId, long startInterval, long endInterval, long previousStartInterval, String moduleInfo);
 
   DashboardPipelineExecutionInfo getDashboardPipelineExecutionInfo(String accountId, String orgId, String projectId,
-      String pipelineId, String startInterval, String endInterval, String moduleInfo);
+      String pipelineId, long startInterval, long endInterval, String moduleInfo);
 }
