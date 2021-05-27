@@ -1,7 +1,9 @@
 package io.harness.pms.merger.helpers;
 
+import static io.harness.pms.yaml.validation.InputSetValidatorType.ALLOWED_VALUES;
+import static io.harness.pms.yaml.validation.InputSetValidatorType.REGEX;
+
 import static java.util.stream.Collectors.toMap;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import io.harness.common.NGExpressionUtils;
 import io.harness.data.structure.EmptyPredicate;
@@ -10,6 +12,7 @@ import io.harness.pms.merger.PipelineYamlConfig;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlUtils;
+import io.harness.pms.yaml.validation.InputSetValidator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
@@ -20,6 +23,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -50,20 +54,66 @@ public class MergeHelper {
     return (new PipelineYamlConfig(templateMap, pipeline.getYamlMap())).getYaml();
   }
 
-  public Set<FQN> getInvalidFQNsInInputSet(String templateYaml, String inputSetPipelineCompYaml) throws IOException {
+  public Map<FQN, String> getInvalidFQNsInInputSet(String templateYaml, String inputSetPipelineCompYaml)
+      throws IOException {
     PipelineYamlConfig inputSetConfig = new PipelineYamlConfig(inputSetPipelineCompYaml);
     PipelineYamlConfig templateConfig = new PipelineYamlConfig(templateYaml);
-    Set<FQN> res = new LinkedHashSet<>(inputSetConfig.getFqnToValueMap().keySet());
+    Set<FQN> inputSetFQNs = new LinkedHashSet<>(inputSetConfig.getFqnToValueMap().keySet());
+
+    Map<FQN, String> errorMap = new LinkedHashMap<>();
     templateConfig.getFqnToValueMap().keySet().forEach(key -> {
-      if (res.contains(key)) {
-        res.remove(key);
+      if (inputSetFQNs.contains(key)) {
+        String error = validateStaticValues(
+            templateConfig.getFqnToValueMap().get(key), inputSetConfig.getFqnToValueMap().get(key));
+        if (EmptyPredicate.isNotEmpty(error)) {
+          errorMap.put(key, error);
+        }
+        inputSetFQNs.remove(key);
       } else {
         Map<FQN, Object> subMap =
             io.harness.pms.merger.helpers.FQNUtils.getSubMap(inputSetConfig.getFqnToValueMap(), key);
-        subMap.keySet().forEach(res::remove);
+        subMap.keySet().forEach(inputSetFQNs::remove);
       }
     });
-    return res;
+    inputSetFQNs.forEach(fqn -> errorMap.put(fqn, "Field either not present in pipeline or not a runtime input"));
+    return errorMap;
+  }
+
+  private String validateStaticValues(Object templateObject, Object inputSetObject) {
+    String error = "";
+    String templateValue = ((JsonNode) templateObject).asText();
+    String inputSetValue = ((JsonNode) inputSetObject).asText();
+
+    if (NGExpressionUtils.matchesInputSetPattern(templateValue)
+        && !NGExpressionUtils.isRuntimeOrExpressionField(inputSetValue)) {
+      try {
+        ParameterField<?> templateField = YamlUtils.read(templateValue, ParameterField.class);
+        if (templateField.getInputSetValidator() == null) {
+          return error;
+        }
+        InputSetValidator inputSetValidator = templateField.getInputSetValidator();
+        if (inputSetValidator.getValidatorType() == REGEX) {
+          boolean matchesPattern =
+              NGExpressionUtils.matchesPattern(Pattern.compile(inputSetValidator.getParameters()), inputSetValue);
+          error = matchesPattern ? "" : "The value provided does not match the required regex pattern";
+        } else if (inputSetValidator.getValidatorType() == ALLOWED_VALUES) {
+          String[] allowedValues = inputSetValidator.getParameters().split(", *");
+          boolean matches = false;
+          for (String allowedValue : allowedValues) {
+            if (NGExpressionUtils.isRuntimeOrExpressionField(allowedValue)) {
+              return error;
+            } else if (allowedValue.equals(inputSetValue)) {
+              matches = true;
+            }
+          }
+          error = matches ? "" : "The value provided does not match any of the allowed values";
+        }
+      } catch (IOException e) {
+        throw new InvalidRequestException(
+            "Input set expression " + templateValue + " or " + inputSetValue + " is not valid");
+      }
+    }
+    return error;
   }
 
   public String mergeInputSetIntoPipeline(
@@ -126,7 +176,7 @@ public class MergeHelper {
     String templateYaml = MergeHelper.createTemplateFromPipeline(pipelineYaml);
 
     if (templateYaml == null) {
-      return EMPTY;
+      return "";
     }
 
     // Strip off inputSet top key from yaml.
@@ -141,7 +191,7 @@ public class MergeHelper {
     }
     PipelineYamlConfig inputSetConfig = new PipelineYamlConfig(filteredInputSetYaml);
 
-    Set<FQN> invalidFQNsInInputSet = getInvalidFQNsInInputSet(templateYaml, filteredInputSetYaml);
+    Set<FQN> invalidFQNsInInputSet = getInvalidFQNsInInputSet(templateYaml, filteredInputSetYaml).keySet();
 
     Map<FQN, Object> filtered = inputSetConfig.getFqnToValueMap()
                                     .entrySet()
