@@ -2,6 +2,7 @@ package io.harness.cdng.pipeline.stepinfo;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.cdng.visitor.helpers.cdstepinfo.ShellScriptStepInfoVisitorHelper;
 import io.harness.data.structure.CollectionUtils;
@@ -24,6 +25,7 @@ import io.harness.yaml.utils.NGVariablesUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
@@ -41,6 +43,7 @@ import org.springframework.data.annotation.TypeAlias;
 public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDStepInfo, Visitable {
   List<NGVariable> outputVariables;
   List<NGVariable> environmentVariables;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
   ParameterField<List<TaskSelectorYaml>> delegateSelectors;
 
   @Builder(builderMethodName = "infoBuilder")
