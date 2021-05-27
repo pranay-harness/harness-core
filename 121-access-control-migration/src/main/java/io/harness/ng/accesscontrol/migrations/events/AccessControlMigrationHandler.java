@@ -37,6 +37,8 @@ import io.harness.user.remote.UserClient;
 import io.harness.utils.CryptoUtils;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.ArrayList;
@@ -48,6 +50,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -75,6 +80,7 @@ public class AccessControlMigrationHandler implements MessageListener {
   private final NgUserService ngUserService;
   private final AccessControlAdminClient accessControlAdminClient;
   private final UserClient userClient;
+  private final ExecutorService executorService;
 
   @Inject
   public AccessControlMigrationHandler(ProjectService projectService, OrganizationService organizationService,
@@ -93,6 +99,8 @@ public class AccessControlMigrationHandler implements MessageListener {
         ORGANIZATION_LEVEL, ImmutableList.of(ORG_ADMIN_ROLE_IDENTIFIER, ORG_VIEWER_ROLE_IDENTIFIER));
     levelToRolesMapping.put(
         PROJECT_LEVEL, ImmutableList.of(PROJECT_ADMIN_ROLE_IDENTIFIER, PROJECT_VIEWER_ROLE_IDENTIFIER));
+    executorService = Executors.newFixedThreadPool(
+        4, new ThreadFactoryBuilder().setNameFormat("access-control-migration-handler").build());
   }
 
   private Optional<RoleAssignmentDTO> getManagedRoleAssignment(
@@ -127,6 +135,20 @@ public class AccessControlMigrationHandler implements MessageListener {
     return Optional.empty();
   }
 
+  private List<RoleAssignmentResponseDTO> createRoleAssignmentsInternal(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, boolean managed, List<RoleAssignmentDTO> roleAssignments) {
+    List<RoleAssignmentResponseDTO> createdRoleAssignments = new ArrayList<>();
+    List<List<RoleAssignmentDTO>> batchOfRoleAssignments = Lists.partition(roleAssignments, 25);
+    log.info("Attempting to create {} role assignments for account: {}, org: {} and project: {}",
+        roleAssignments.size(), accountIdentifier, orgIdentifier, projectIdentifier);
+    batchOfRoleAssignments.forEach(batch
+        -> createdRoleAssignments.addAll(
+            getResponse(accessControlAdminClient.createMultiRoleAssignment(accountIdentifier, orgIdentifier,
+                projectIdentifier, managed, RoleAssignmentCreateRequestDTO.builder().roleAssignments(batch).build()))));
+    log.info("Role assignments created: {}", createdRoleAssignments.size());
+    return createdRoleAssignments;
+  }
+
   private RoleAssignmentMetadata createRoleAssignments(
       String account, String org, String project, List<UserInfo> users) {
     List<RoleAssignmentDTO> managedRoleAssignments = new ArrayList<>();
@@ -136,31 +158,27 @@ public class AccessControlMigrationHandler implements MessageListener {
       getUserRoleAssignment(user, account, org, project).ifPresent(userRoleAssignments::add);
     }
 
-    List<RoleAssignmentDTO> allRoleAssignments = new ArrayList<>();
-    List<RoleAssignmentResponseDTO> createdRoleAssignmentResponses = new ArrayList<>();
-    allRoleAssignments.addAll(managedRoleAssignments);
-    allRoleAssignments.addAll(userRoleAssignments);
+    List<RoleAssignmentDTO> roleAssignmentsToCreate = new ArrayList<>(managedRoleAssignments);
+    roleAssignmentsToCreate.addAll(userRoleAssignments);
 
-    RoleAssignmentCreateRequestDTO createRequestDTO =
-        RoleAssignmentCreateRequestDTO.builder().roleAssignments(managedRoleAssignments).build();
-    List<RoleAssignmentResponseDTO> response =
-        getResponse(accessControlAdminClient.createMultiRoleAssignment(account, org, project, true, createRequestDTO));
-    createdRoleAssignmentResponses.addAll(response);
+    List<RoleAssignmentResponseDTO> createdManagedRoleAssignments =
+        createRoleAssignmentsInternal(account, org, project, true, managedRoleAssignments);
 
-    createRequestDTO = RoleAssignmentCreateRequestDTO.builder().roleAssignments(userRoleAssignments).build();
-    response =
-        getResponse(accessControlAdminClient.createMultiRoleAssignment(account, org, project, false, createRequestDTO));
-    createdRoleAssignmentResponses.addAll(response);
+    List<RoleAssignmentResponseDTO> createdUserRoleAssignments =
+        createRoleAssignmentsInternal(account, org, project, false, userRoleAssignments);
 
-    Set<RoleAssignmentDTO> createdRoleAssignmentSet = createdRoleAssignmentResponses.stream()
-                                                          .map(RoleAssignmentResponseDTO::getRoleAssignment)
-                                                          .collect(Collectors.toSet());
+    List<RoleAssignmentResponseDTO> createdRoleAssignments = new ArrayList<>(createdManagedRoleAssignments);
+    createdRoleAssignments.addAll(createdUserRoleAssignments);
 
-    List<RoleAssignmentDTO> failedRoleAssignments =
-        allRoleAssignments.stream().filter(x -> !createdRoleAssignmentSet.contains(x)).collect(Collectors.toList());
+    Set<RoleAssignmentDTO> createdRoleAssignmentSet =
+        createdRoleAssignments.stream().map(RoleAssignmentResponseDTO::getRoleAssignment).collect(Collectors.toSet());
+
+    List<RoleAssignmentDTO> failedRoleAssignments = roleAssignmentsToCreate.stream()
+                                                        .filter(x -> !createdRoleAssignmentSet.contains(x))
+                                                        .collect(Collectors.toList());
 
     return RoleAssignmentMetadata.builder()
-        .createdRoleAssignments(createdRoleAssignmentResponses)
+        .createdRoleAssignments(createdRoleAssignments)
         .failedRoleAssignments(failedRoleAssignments)
         .build();
   }
@@ -183,8 +201,9 @@ public class AccessControlMigrationHandler implements MessageListener {
     return new ArrayList<>(users);
   }
 
-  private boolean handleAccessControlMigrationEnabledFlag(String accountId) {
+  private boolean handleMigrationInternal(String accountId) {
     log.info("Running ng access control migration for account: {}", accountId);
+
     // get users along with user groups for account
     List<UserInfo> users = getUsers(accountId);
     AccessControlMigrationBuilder migrationBuilder =
@@ -225,7 +244,13 @@ public class AccessControlMigrationHandler implements MessageListener {
     }
     accessControlMigrationService.save(
         migrationBuilder.endedAt(new Date()).metadata(roleAssignmentMetadataList).build());
+
     log.info("Finished ng access control migration for account {}", accountId);
+    return true;
+  }
+
+  private boolean handleAccessControlMigrationEnabledFlag(String accountId) {
+    CompletableFuture.supplyAsync(() -> handleMigrationInternal(accountId), executorService);
     return true;
   }
 
