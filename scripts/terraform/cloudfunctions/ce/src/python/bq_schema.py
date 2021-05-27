@@ -116,6 +116,10 @@ preAggreagtedTableSchema = [
     {
         "name": "azureSubscriptionGuid",
         "type": "STRING"
+    },
+    {
+        "name": "azureTenantId",
+        "type": "STRING"
     }
 ]
 
@@ -938,6 +942,10 @@ unifiedTableTableSchema = [
     },
     {
         "name": "azureVMProviderId",
+        "type": "STRING"
+    },
+    {
+        "name": "azureTenantId",
         "type": "STRING"
     },
 ]
