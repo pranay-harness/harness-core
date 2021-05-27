@@ -100,6 +100,7 @@ import io.harness.delegate.beans.connector.azureconnector.AzureContainerRegistry
 import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultValidationParams;
 import io.harness.delegate.beans.connector.cvconnector.CVConnectorTaskParams;
 import io.harness.delegate.beans.connector.cvconnector.CVConnectorTaskResponse;
+import io.harness.delegate.beans.connector.cvconnector.CVConnectorValidationParams;
 import io.harness.delegate.beans.connector.docker.DockerTestConnectionTaskParams;
 import io.harness.delegate.beans.connector.docker.DockerTestConnectionTaskResponse;
 import io.harness.delegate.beans.connector.docker.DockerValidationParams;
@@ -768,5 +769,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ScmGitFileTaskParams.class, 543122);
     kryo.register(GitFileTaskResponseData.class, 543123);
     kryo.register(GitFileTaskType.class, 543124);
+    kryo.register(CVConnectorValidationParams.class, 543322);
   }
 }
