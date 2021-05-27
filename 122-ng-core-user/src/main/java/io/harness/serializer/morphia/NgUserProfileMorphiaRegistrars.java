@@ -15,7 +15,7 @@ import io.harness.ng.userprofile.entities.SourceCodeManager;
 import java.util.Set;
 
 @OwnedBy(PL)
-public class UserProfileMorphiaRegistrars implements MorphiaRegistrar {
+public class NgUserProfileMorphiaRegistrars implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
     set.add(SourceCodeManager.class);
