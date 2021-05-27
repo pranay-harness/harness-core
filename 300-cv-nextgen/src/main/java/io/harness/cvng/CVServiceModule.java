@@ -213,13 +213,6 @@ public class CVServiceModule extends AbstractModule {
         return WaiterConfiguration.builder().persistenceLayer(PersistenceLayer.MORPHIA).build();
       }
     });
-    bind(ExecutorService.class)
-        .toInstance(ThreadPool.create(1, 20, 5, TimeUnit.SECONDS,
-            new ThreadFactoryBuilder()
-                .setNameFormat("default-cv-nextgen-executor-%d")
-                .setPriority(Thread.MIN_PRIORITY)
-                .setUncaughtExceptionHandler((t, e) -> log.error("error while processing task", e))
-                .build()));
     install(PrimaryVersionManagerModule.getInstance());
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(TimeSeriesRecordService.class).to(TimeSeriesRecordServiceImpl.class);
@@ -308,7 +301,7 @@ public class CVServiceModule extends AbstractModule {
     bind(CVSetupService.class).to(CVSetupServiceImpl.class);
     bindTheMonitoringSourceImportStatusCreators();
     bind(CVNGMigrationService.class).to(CVNGMigrationServiceImpl.class).in(Singleton.class);
-    bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+    bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter(defaultExecutor()));
     bind(StackdriverService.class).to(StackdriverServiceImpl.class);
     bind(CVEventService.class).to(CVEventServiceImpl.class);
     bind(RedisConfig.class)
@@ -383,6 +376,17 @@ public class CVServiceModule extends AbstractModule {
   @Singleton
   public AsyncWaitEngine asyncWaitEngine(WaitNotifyEngine waitNotifyEngine) {
     return new AsyncWaitEngineImpl(waitNotifyEngine, CVNG_ORCHESTRATION);
+  }
+
+  @Provides
+  @Singleton
+  public ExecutorService defaultExecutor() {
+    return ThreadPool.create(1, 20, 5, TimeUnit.SECONDS,
+        new ThreadFactoryBuilder()
+            .setNameFormat("default-cv-nextgen-executor-%d")
+            .setPriority(Thread.MIN_PRIORITY)
+            .setUncaughtExceptionHandler((t, e) -> log.error("error while processing task", e))
+            .build());
   }
 
   @Provides
