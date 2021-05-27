@@ -303,6 +303,17 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldFailWhenSizeIsNull() {
+    Map<String, String> metadata = new HashMap<>();
+    metadata.put(ArtifactMetadataKeys.artifactPath, "harness-maven/io/harness/todolist/todolist/1.2/todolist-1.2.war");
+    assertThatThrownBy(() -> artifactoryService.getFileSize(artifactoryConfig, null, metadata))
+        .isInstanceOf(ArtifactoryServerException.class)
+        .hasMessageContaining("Unable to get artifact file size. The file probably does not exist");
+  }
+
+  @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTestArtifactoryRunning() {

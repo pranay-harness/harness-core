@@ -1,0 +1,45 @@
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
+load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
+load("@io_bazel_rules_docker//docker/util:run.bzl", "container_run_and_commit")
+
+container_run_and_commit(
+    name = "delegate_layer_1_image",
+    commands = [
+        "apt-get update",
+        "apt-get -y install apt-utils curl unzip apt-transport-https gnupg2",
+        "apt-get clean",
+    ],
+    image = "@platform_ubuntu//image",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+)
+
+pkg_tar(
+    name = "delegate_scripts_tar",
+    srcs = glob(["scripts/*"]),
+    mode = "0755",
+    package_dir = "/opt/harness-delegate",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+)
+
+container_image(
+    name = "delegate_image",
+    base = ":delegate_layer_1_image",
+    cmd = ["/bin/echo 'hello world'"],
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+    tars = [
+        "delegate_scripts_tar",
+        "@jre_x64_linux_8u242b08",
+    ],
+)

@@ -17,7 +17,7 @@ public interface YamlChangeSetRepository
 
   int countByAccountIdAndStatusInAndQueueKey(String accountId, List<String> status, String queueKey);
 
-  Optional<YamlChangeSet> findFirstByAccountIdAndQueueKeyAndStatusOrderByCreatedAt(
+  Optional<YamlChangeSet> findFirstByAccountIdAndQueueKeyAndStatusOrderByQueuedOn(
       String accountId, String queueKey, String status);
 
   List<YamlChangeSet> findByAccountIdAndStatusInAndLastUpdatedAtLessThan(

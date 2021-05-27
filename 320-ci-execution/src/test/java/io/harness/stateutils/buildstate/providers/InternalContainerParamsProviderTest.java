@@ -23,7 +23,7 @@ import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Test;
@@ -43,7 +43,7 @@ public class InternalContainerParamsProviderTest extends CIExecutionTestBase {
 
     assertThat(containerParams.getName()).isEqualTo(SETUP_ADDON_CONTAINER_NAME);
     assertThat(containerParams.getContainerType()).isEqualTo(CIContainerType.ADD_ON);
-    assertThat(containerParams.getArgs()).isEqualTo(Arrays.asList(SETUP_ADDON_ARGS));
+    assertThat(containerParams.getArgs()).isEqualTo(Collections.singletonList(SETUP_ADDON_ARGS));
   }
 
   @Test
@@ -80,14 +80,12 @@ public class InternalContainerParamsProviderTest extends CIExecutionTestBase {
 
     Map<String, String> volumeToMountPath = new HashMap<>();
 
-    String serialisedStage = "test";
-    String serviceToken = "test";
     Integer stageCpuRequest = 500;
     Integer stageMemoryRequest = 200;
 
     CIK8ContainerParams containerParams = internalContainerParamsProvider.getLiteEngineContainerParams(connectorDetails,
-        publishArtifactConnectorDetailsMap, k8PodDetails, serviceToken, stageCpuRequest, stageMemoryRequest, null,
-        logEnvVars, tiEnvVars, volumeToMountPath, "/step-exec/workspace", "test", ambiance);
+        publishArtifactConnectorDetailsMap, k8PodDetails, stageCpuRequest, stageMemoryRequest, null, logEnvVars,
+        tiEnvVars, volumeToMountPath, "/step-exec/workspace", "test", ambiance);
 
     Map<String, String> expectedEnv = new HashMap<>();
     expectedEnv.put(LOG_SERVICE_ENDPOINT_VARIABLE, logEndpoint);

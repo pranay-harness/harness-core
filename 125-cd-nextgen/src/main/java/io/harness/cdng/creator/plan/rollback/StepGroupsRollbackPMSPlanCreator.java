@@ -30,8 +30,6 @@ public class StepGroupsRollbackPMSPlanCreator {
     }
     List<YamlNode> stepsArrayFields = executionStepsField.getNode().asArray();
 
-    YamlNode stageNode =
-        YamlUtils.getGivenYamlNodeFromParentPath(executionStepsField.getNode(), YAMLFieldNameConstants.STAGE);
     RollbackOptionalChildChainStepParametersBuilder sectionOptionalChildChainStepParametersBuilder =
         RollbackOptionalChildChainStepParameters.builder();
 

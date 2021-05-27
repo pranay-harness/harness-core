@@ -15,6 +15,7 @@ import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.MILOS;
@@ -133,6 +134,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.con
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructLinkedTemplate;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructMulitServiceTemplateWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructMultiServiceWorkflow;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructMultiServiceWorkflowWithPhase;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructPhysicalInfraMapping;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructPipeline;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructServiceCommand;
@@ -1918,6 +1920,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   public Workflow createMultiServiceWorkflow() {
     Workflow workflow2 = workflowService.createWorkflow(constructMultiServiceWorkflow());
+    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
+    assertOrchestrationWorkflow((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow());
+    return workflow2;
+  }
+
+  public Workflow createMultiServiceWorkflowWithPhase() {
+    Workflow workflow2 = workflowService.createWorkflow(constructMultiServiceWorkflowWithPhase());
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
     assertOrchestrationWorkflow((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow());
     return workflow2;
@@ -5159,5 +5168,32 @@ public class WorkflowServiceTest extends WingsBaseTest {
     verify(wingsPersistence).delete(eq(Workflow.class), anyString(), anyString());
     verify(wingsPersistence).delete(any(Query.class));
     verify(wingsPersistence).createQuery(StateMachine.class);
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void shouldUpdateMultiServiceWorkflowPhaseWithoutServiceId() {
+    // multi service workflow with phase
+    Workflow workflow1 = createMultiServiceWorkflowWithPhase();
+
+    // Remove the serviceId from phase (simulated like YAML) and templatize service
+    WorkflowPhase templatizedWorkflowPhase =
+        ((CanaryOrchestrationWorkflow) workflow1.getOrchestrationWorkflow()).getWorkflowPhases().get(0);
+    templatizedWorkflowPhase.setServiceId(null);
+    templatizedWorkflowPhase.setTemplateExpressions(singletonList(getServiceTemplateExpression()));
+    workflowService.updateWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), templatizedWorkflowPhase);
+
+    // Add a new phase
+    WorkflowPhase workflowPhase = aWorkflowPhase().infraDefinitionId(INFRA_DEFINITION_ID).serviceId(SERVICE_ID).build();
+    workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
+
+    Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow2).isNotNull();
+
+    List<WorkflowPhase> workflowPhases2 =
+        ((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow()).getWorkflowPhases();
+    // verify attach
+    assertThat(workflowPhases2.size()).isEqualTo(2);
   }
 }

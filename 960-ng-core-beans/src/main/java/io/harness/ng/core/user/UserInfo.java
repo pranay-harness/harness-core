@@ -3,8 +3,10 @@ package io.harness.ng.core.user;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.core.dto.GatewayAccountRequestDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -23,6 +25,7 @@ public class UserInfo {
   String email;
   String token;
   String defaultAccountId;
+  List<GatewayAccountRequestDTO> accounts;
   boolean admin;
   boolean twoFactorAuthenticationEnabled;
   boolean emailVerified;

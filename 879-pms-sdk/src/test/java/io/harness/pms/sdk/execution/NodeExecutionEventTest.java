@@ -9,11 +9,14 @@ import static org.joor.Reflect.on;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.NodeExecutionEvent;
+import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.sdk.PmsSdkTestBase;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
@@ -41,6 +44,7 @@ public class NodeExecutionEventTest extends PmsSdkTestBase {
 
   @Mock private EngineObtainmentHelper engineObtainmentHelper;
   @Mock private SdkResponseEventPublisher sdkResponseEventPublisher;
+  @Mock private PmsGitSyncHelper pmsGitSyncHelper;
   @Inject private FacilitatorRegistry facilitatorRegistry;
   @Inject private StepRegistry stepRegistry;
 
@@ -51,6 +55,7 @@ public class NodeExecutionEventTest extends PmsSdkTestBase {
     eventListener = new NodeExecutionEventListener(null);
     on(eventListener).set("engineObtainmentHelper", engineObtainmentHelper);
     on(eventListener).set("facilitatorRegistry", facilitatorRegistry);
+    on(eventListener).set("pmsGitSyncHelper", pmsGitSyncHelper);
 
     SdkNodeExecutionService sdkNodeExecutionService = new SdkNodeExecutionServiceImpl();
     on(sdkNodeExecutionService).set("stepRegistry", stepRegistry);
@@ -62,20 +67,23 @@ public class NodeExecutionEventTest extends PmsSdkTestBase {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldFacilitate() {
-    assertThatCode(()
-                       -> eventListener.onMessage(
-                           NodeExecutionEvent.builder()
-                               .eventType(NodeExecutionEventType.FACILITATE)
-                               .nodeExecution(NodeExecutionProto.newBuilder()
-                                                  .setUuid(NODE_EXECUTION_ID)
-                                                  .setNode(PlanNodeProto.newBuilder()
-                                                               .addFacilitatorObtainments(
-                                                                   FacilitatorObtainment.newBuilder()
-                                                                       .setType(SyncFacilitator.FACILITATOR_TYPE)
-                                                                       .build())
-                                                               .build())
-                                                  .build())
-                               .build()))
+    assertThatCode(
+        ()
+            -> eventListener.onMessage(
+                NodeExecutionEvent.builder()
+                    .eventType(NodeExecutionEventType.FACILITATE)
+                    .nodeExecution(
+                        NodeExecutionProto.newBuilder()
+                            .setAmbiance(
+                                Ambiance.newBuilder().setMetadata(ExecutionMetadata.newBuilder().build()).build())
+                            .setUuid(NODE_EXECUTION_ID)
+                            .setNode(PlanNodeProto.newBuilder()
+                                         .addFacilitatorObtainments(FacilitatorObtainment.newBuilder()
+                                                                        .setType(SyncFacilitator.FACILITATOR_TYPE)
+                                                                        .build())
+                                         .build())
+                            .build())
+                    .build()))
         .doesNotThrowAnyException();
   }
 }

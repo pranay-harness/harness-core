@@ -30,6 +30,7 @@ import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
+import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.product.ci.scm.proto.ListBranchesResponse;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -109,7 +110,12 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
         getDelegateTaskRequest(accountIdentifier, scmGitFileTaskParams, TaskType.SCM_GIT_FILE_TASK);
     final DelegateResponseData delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
     GitFileTaskResponseData gitFileTaskResponseData = (GitFileTaskResponseData) delegateResponseData;
-    return validateAndGetGitFileContent(gitFileTaskResponseData.getFileContent());
+    gitFileTaskResponseData.getFileContent();
+    try {
+      return validateAndGetGitFileContent(FileContent.parseFrom(gitFileTaskResponseData.getFileContent()));
+    } catch (InvalidProtocolBufferException e) {
+      throw new UnexpectedException("Unexpected error occurred while doing scm operation");
+    }
   }
 
   private ScmGitFileTaskParams getScmGitFileTaskParams(ScmConnector scmConnector,

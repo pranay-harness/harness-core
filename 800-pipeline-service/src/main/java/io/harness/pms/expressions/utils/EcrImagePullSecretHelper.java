@@ -37,6 +37,7 @@ import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Duration;
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ import javax.annotation.Nonnull;
 
 @Singleton
 public class EcrImagePullSecretHelper {
-  @Inject private SecretManagerClientService secretManagerClientService;
+  @Named("PRIVILEGED") @Inject private SecretManagerClientService secretManagerClientService;
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   @Inject private NgDelegate2TaskExecutor ngDelegate2TaskExecutor;
   @Inject private KryoSerializer kryoSerializer;

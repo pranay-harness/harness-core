@@ -6,8 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
@@ -24,7 +22,6 @@ import io.harness.gitsync.core.service.GitSyncTriggerService;
 import io.harness.gitsync.core.service.YamlChangeSetService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
-import io.harness.mongo.ProcessTimeLogContext;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.JsonUtils;
 import io.harness.waiter.WaitNotifyEngine;
@@ -37,7 +34,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -147,13 +143,16 @@ public class GitSyncTriggerServiceImpl implements GitSyncTriggerService {
 
       YamlChangeSet yamlChangeSet = buildYamlChangeSetForGitToHarness(
           accountId, yamlWebHookPayload, headers, gitConnectorId, repoName.get(), branchName, headCommitId);
-      final YamlChangeSet savedYamlChangeSet = yamlChangeSetService.save(yamlChangeSet);
 
-      try (ProcessTimeLogContext ignore3 =
-               new ProcessTimeLogContext(startedStopWatch.elapsed(MILLISECONDS), OVERRIDE_ERROR)) {
-        log.info(GIT_YAML_LOG_PREFIX + "Successfully accepted webhook request for processing as yamlChangeSetId=[{}]",
-            savedYamlChangeSet.getUuid());
-      }
+      // TODO: add changeset save logic
+      //      final YamlChangeSetDTO savedYamlChangeSet = yamlChangeSetService.save(yamlChangeSet);
+
+      //      try (ProcessTimeLogContext ignore3 =
+      //               new ProcessTimeLogContext(startedStopWatch.elapsed(MILLISECONDS), OVERRIDE_ERROR)) {
+      //        log.info(GIT_YAML_LOG_PREFIX + "Successfully accepted webhook request for processing as
+      //        yamlChangeSetId=[{}]",
+      //            savedYamlChangeSet.getUuid());
+      //      }
 
       return WEBHOOK_SUCCESS_MSG;
     }
@@ -229,7 +228,6 @@ public class GitSyncTriggerServiceImpl implements GitSyncTriggerService {
                                          .branchName(branchName)
                                          .headCommitId(headCommitId)
                                          .build())
-        .gitFileChanges(new ArrayList<>())
         .retryCount(0)
         .build();
   }

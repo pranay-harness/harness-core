@@ -5,7 +5,6 @@ import static io.harness.NGConstants.CONNECTOR_STRING;
 import static io.harness.connector.ConnectivityStatus.FAILURE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.beans.connector.ConnectorType.GIT;
 import static io.harness.errorhandling.NGErrorHelper.DEFAULT_ERROR_SUMMARY;
 import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
@@ -38,8 +37,9 @@ import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.stats.ConnectorStatistics;
 import io.harness.connector.validator.ConnectionValidator;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.encryption.SecretRefData;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.errorhandling.NGErrorHelper;
@@ -423,7 +423,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
         getConnectorWithIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     ConnectorValidationResult validationResult;
 
-    if (connector.getType() != GIT) {
+    if (connector.getCategories() != null & !connector.getCategories().contains(ConnectorCategory.CODE_REPO)) {
       log.info("Test Connection failed for connector with identifier[{}] in account[{}] with error [{}]",
           connector.getIdentifier(), accountIdentifier, "Non git connector is provided for repo verification");
       validationResult = ConnectorValidationResult.builder().status(FAILURE).build();
@@ -432,11 +432,13 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
     ConnectorResponseDTO connectorDTO = connectorMapper.writeDTO(connector);
     ConnectorInfoDTO connectorInfo = connectorDTO.getConnector();
-    GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorInfo.getConnectorConfig();
+    ConnectorConfigDTO connectorConfig = connectorInfo.getConnectorConfig();
     // Use Repo URL from parameter instead of using configured URL
-    gitConfigDTO.setUrl(gitRepoURL);
-    connectorInfo.setConnectorConfig(gitConfigDTO);
-
+    if (isNotEmpty(gitRepoURL)) {
+      ScmConnector scmConnector = (ScmConnector) connectorConfig;
+      scmConnector.setUrl(gitRepoURL);
+      connectorInfo.setConnectorConfig(connectorConfig);
+    }
     return validateConnector(connector, connectorDTO, connectorInfo, accountIdentifier, orgIdentifier,
         projectIdentifier, connectorIdentifier);
   }

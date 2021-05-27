@@ -47,6 +47,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
   @Inject private SamlUserGroupSync samlUserGroupSync;
   @Inject private SSOSettingService ssoSettingService;
   @Inject private DomainWhitelistCheckerService domainWhitelistCheckerService;
+  @Inject private NgSamlAuthorizationEventPublisher ngSamlAuthorizationEventPublisher;
 
   @Override
   public AuthenticationResponse authenticate(String... credentials) {
@@ -74,12 +75,21 @@ public class SamlBasedAuthHandler implements AuthHandler {
           log.info("SAML test login successful for user: [{}]", user.getEmail());
           throw new WingsException(ErrorCode.SAML_TEST_SUCCESS_MECHANISM_NOT_ENABLED);
         }
-
         if (Objects.nonNull(samlSettings) && samlSettings.isAuthorizationEnabled()) {
           List<String> userGroups = getUserGroupsForIdpUrl(idpUrl, samlResponseString);
           SamlUserAuthorization samlUserAuthorization =
               SamlUserAuthorization.builder().email(user.getEmail()).userGroups(userGroups).build();
+
+          // Event Publisher
           samlUserGroupSync.syncUserGroup(samlUserAuthorization, account.getUuid(), samlSettings.getUuid());
+          try {
+            ngSamlAuthorizationEventPublisher.publishSamlAuthorizationAssertion(
+                samlUserAuthorization, account.getUuid(), samlSettings.getUuid());
+          } catch (Exception e) {
+            log.error(
+                "Exception in publishing event for SAML Assertion for {} with account {} userGroups {} and SSO {} ",
+                user.getEmail(), account.getUuid(), userGroups, samlSettings.getDisplayName());
+          }
         }
         return new AuthenticationResponse(user);
       }

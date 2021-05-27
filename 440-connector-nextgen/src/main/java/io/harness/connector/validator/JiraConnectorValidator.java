@@ -44,6 +44,7 @@ public class JiraConnectorValidator extends AbstractConnectorValidator {
                 ? null
                 : delegateResponseData.getDelegateMetaInfo().getId())
         .status(delegateResponseData.getCanConnect() ? ConnectivityStatus.SUCCESS : ConnectivityStatus.FAILURE)
+        .errorSummary(delegateResponseData.getErrorMessage())
         .build();
   }
 }

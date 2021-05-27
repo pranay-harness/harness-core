@@ -63,6 +63,8 @@ public class SignupServiceImpl implements SignupService {
     verifyReCaptcha(dto, captchaToken);
     verifyEmailAndPassword(dto);
 
+    dto.setEmail(dto.getEmail().toLowerCase());
+
     AccountDTO account = createAccount(dto);
     UserInfo user = createUser(dto, account);
     sendSucceedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), account, user);

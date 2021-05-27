@@ -128,7 +128,7 @@ public class GitBranchServiceImpl implements GitBranchService {
     try {
       gitBranchesRepository.save(gitBranch);
     } catch (DuplicateKeyException duplicateKeyException) {
-      log.error("The branch %s in repo %s is already stored", gitBranch.getRepoURL(), gitBranch.getRepoURL());
+      log.error("The branch {} in repo {} is already saved", gitBranch.getRepoURL(), gitBranch.getRepoURL());
     }
   }
 

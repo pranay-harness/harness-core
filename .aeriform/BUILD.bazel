@@ -6,7 +6,11 @@ aeriform("//120-ng-manager:module")
 
 aeriform("//120-ng-manager:tests")
 
+aeriform("//121-access-control-migration:module")
+
 aeriform("//121-instance:module")
+
+aeriform("//122-ng-core-user:module")
 
 aeriform("//125-cd-nextgen:module")
 

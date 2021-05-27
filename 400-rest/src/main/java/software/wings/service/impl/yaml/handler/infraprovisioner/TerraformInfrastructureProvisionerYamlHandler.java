@@ -5,12 +5,15 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
+import static java.lang.String.format;
+import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SecretManagerConfig;
+import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.InfrastructureProvisionerType;
 import software.wings.beans.NameValuePair;
@@ -45,8 +48,12 @@ public class TerraformInfrastructureProvisionerYamlHandler
 
     if (isNotEmpty(bean.getKmsId())) {
       SecretManagerConfig secretManagerConfig = secretManager.getSecretManager(bean.getAccountId(), bean.getKmsId());
+      if (isNull(secretManagerConfig)) {
+        throw new InvalidRequestException("No secret manager found.", USER);
+      }
       yaml.setSecretMangerName(secretManagerConfig.getName());
     }
+
     yaml.setSkipRefreshBeforeApplyingPlan(bean.isSkipRefreshBeforeApplyingPlan());
     return yaml;
   }
@@ -105,6 +112,10 @@ public class TerraformInfrastructureProvisionerYamlHandler
     if (isNotEmpty(yaml.getSecretMangerName())) {
       SecretManagerConfig secretManagerConfig =
           secretManager.getSecretManagerByName(bean.getAccountId(), yaml.getSecretMangerName());
+      if (isNull(secretManagerConfig)) {
+        throw new InvalidRequestException(
+            format("No secret manager found with name: %s.", yaml.getSecretMangerName()), USER);
+      }
       bean.setKmsId(secretManagerConfig.getUuid());
     }
   }

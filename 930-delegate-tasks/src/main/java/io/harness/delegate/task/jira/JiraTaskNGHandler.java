@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.task.jira.mappers.JiraRequestResponseMapper;
-import io.harness.exception.InvalidRequestException;
+import io.harness.exception.GeneralException;
 import io.harness.jira.JiraClient;
 import io.harness.jira.JiraIssueCreateMetadataNG;
 import io.harness.jira.JiraIssueNG;
@@ -28,7 +28,7 @@ public class JiraTaskNGHandler {
     } catch (Exception ex) {
       String errorMessage = "Failed to fetch projects during credential validation";
       log.error(errorMessage, ex);
-      throw new InvalidRequestException(errorMessage);
+      throw new GeneralException(errorMessage, ex);
     }
   }
 

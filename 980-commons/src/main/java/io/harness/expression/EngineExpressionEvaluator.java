@@ -6,7 +6,8 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.algorithm.IdentifierName;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.CriticalExpressionEvaluationException;
+import io.harness.exception.EngineExpressionEvaluationException;
+import io.harness.exception.EngineFunctorException;
 import io.harness.exception.FunctorException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnresolvedExpressionsException;
@@ -299,8 +300,8 @@ public class EngineExpressionEvaluator {
     if (object instanceof String && hasVariables((String) object)) {
       if (createExpression(expressionBlock).equals(object)) {
         // If returned expression is exactly the same, throw exception.
-        throw new CriticalExpressionEvaluationException(
-            "Infinite loop in variable interpretation", createExpression(expressionBlock));
+        throw new EngineExpressionEvaluationException(
+            "Infinite loop in variable evaluation", createExpression(expressionBlock));
       } else {
         PartialEvaluateResult result = partialEvaluateExpressionInternal((String) object, ctx, partialCtx, depth - 1);
         if (result.isPartial()) {
@@ -342,7 +343,7 @@ public class EngineExpressionEvaluator {
     if (object instanceof String && hasVariables((String) object)) {
       if (createExpression(expressionBlock).equals(object)) {
         // If returned expression is exactly the same, throw exception.
-        throw new CriticalExpressionEvaluationException(
+        throw new EngineExpressionEvaluationException(
             "Infinite loop in variable interpretation", createExpression(expressionBlock));
       } else {
         observed(expressionBlock, object);
@@ -367,10 +368,20 @@ public class EngineExpressionEvaluator {
           object = evaluateInternal(finalExpression, ctx);
         }
       } catch (JexlException ex) {
-        if (ex.getCause() instanceof FunctorException) {
-          throw(FunctorException) ex.getCause();
+        if (ex.getCause() instanceof EngineFunctorException) {
+          throw new EngineExpressionEvaluationException(
+              (EngineFunctorException) ex.getCause(), createExpression(expressionBlock));
+        } else if (ex.getCause() instanceof FunctorException) {
+          // For backwards compatibility.
+          throw new EngineExpressionEvaluationException(
+              (FunctorException) ex.getCause(), createExpression(expressionBlock));
         }
         log.debug(format("Failed to evaluate final expression: %s", finalExpression), ex);
+      } catch (EngineFunctorException ex) {
+        throw new EngineExpressionEvaluationException(ex, createExpression(expressionBlock));
+      } catch (FunctorException ex) {
+        // For backwards compatibility.
+        throw new EngineExpressionEvaluationException(ex, createExpression(expressionBlock));
       }
 
       if (object != null) {
@@ -430,7 +441,7 @@ public class EngineExpressionEvaluator {
       }
     }
 
-    throw new CriticalExpressionEvaluationException(
+    throw new EngineExpressionEvaluationException(
         "Infinite loop or too deep indirection in static alias interpretation", expression);
   }
 
@@ -461,8 +472,8 @@ public class EngineExpressionEvaluator {
 
   private static void checkDepth(int depth, String expression) {
     if (depth <= 0) {
-      throw new CriticalExpressionEvaluationException(
-          "Infinite loop or too deep indirection in expression interpretation", expression);
+      throw new EngineExpressionEvaluationException(
+          "Infinite loop or too deep indirection in expression evaluation", expression);
     }
   }
 

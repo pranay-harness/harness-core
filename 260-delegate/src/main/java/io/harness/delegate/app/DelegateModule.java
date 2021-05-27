@@ -112,6 +112,7 @@ import io.harness.delegate.task.citasks.CIBuildCommandTask;
 import io.harness.delegate.task.citasks.CICleanupTask;
 import io.harness.delegate.task.citasks.CIExecuteStepTask;
 import io.harness.delegate.task.citasks.ExecuteCommandTask;
+import io.harness.delegate.task.cvng.CVConnectorValidationHandler;
 import io.harness.delegate.task.docker.DockerTestConnectionDelegateTask;
 import io.harness.delegate.task.docker.DockerValidationHandler;
 import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTask;
@@ -142,6 +143,7 @@ import io.harness.delegate.task.scm.ScmDelegateClientImpl;
 import io.harness.delegate.task.scm.ScmGitFileTask;
 import io.harness.delegate.task.scm.ScmGitPRTask;
 import io.harness.delegate.task.scm.ScmGitRefTask;
+import io.harness.delegate.task.scm.ScmGitWebhookTask;
 import io.harness.delegate.task.scm.ScmPathFilterEvaluationTask;
 import io.harness.delegate.task.scm.ScmPushTask;
 import io.harness.delegate.task.shell.ShellScriptTaskNG;
@@ -229,6 +231,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
+import software.wings.beans.trigger.WebHookTriggerTask;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.AwsClusterServiceImpl;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
@@ -1322,6 +1325,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.K8S_COMMAND_TASK_NG).toInstance(K8sTaskNG.class);
     mapBinder.addBinding(TaskType.K8S_WATCH_TASK).toInstance(AssignmentTask.class);
     mapBinder.addBinding(TaskType.TRIGGER_TASK).toInstance(TriggerTask.class);
+    mapBinder.addBinding(TaskType.WEBHOOK_TRIGGER_TASK).toInstance(WebHookTriggerTask.class);
     mapBinder.addBinding(TaskType.JIRA).toInstance(JiraTask.class);
     mapBinder.addBinding(TaskType.CONNECTIVITY_VALIDATION).toInstance(ConnectivityValidationTask.class);
     mapBinder.addBinding(TaskType.GIT_COMMAND).toInstance(GitCommandTask.class);
@@ -1386,6 +1390,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.SCM_GIT_REF_TASK).toInstance(ScmGitRefTask.class);
     mapBinder.addBinding(TaskType.SCM_GIT_FILE_TASK).toInstance(ScmGitFileTask.class);
     mapBinder.addBinding(TaskType.SCM_PULL_REQUEST_TASK).toInstance(ScmGitPRTask.class);
+    mapBinder.addBinding(TaskType.SCM_GIT_WEBHOOK_TASK).toInstance(ScmGitWebhookTask.class);
   }
 
   private void registerSecretManagementBindings() {
@@ -1487,6 +1492,16 @@ public class DelegateModule extends AbstractModule {
         .to(GcpValidationTaskHandler.class);
     connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.AWS.getDisplayName())
         .to(AwsValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.DATADOG.getDisplayName())
+        .to(CVConnectorValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.APP_DYNAMICS.getDisplayName())
+        .to(CVConnectorValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.NEW_RELIC.getDisplayName())
+        .to(CVConnectorValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.SPLUNK.getDisplayName())
+        .to(CVConnectorValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.PROMETHEUS.getDisplayName())
+        .to(CVConnectorValidationHandler.class);
   }
 
   private void bindExceptionHandlers() {

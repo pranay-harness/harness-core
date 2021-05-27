@@ -1,6 +1,7 @@
 package io.harness.cvng.activity.entities;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.activity.ActivitySourceDTO;
@@ -11,6 +12,7 @@ import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -43,6 +45,7 @@ import org.mongodb.morphia.annotations.Id;
 @HarnessEntity(exportable = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
 @OwnedBy(HarnessTeam.CV)
+@StoreIn(DbAliases.CVNG)
 public abstract class ActivitySource
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, PersistentRegularIterable {
   public static List<MongoIndex> mongoIndexes() {

@@ -34,6 +34,8 @@ import io.harness.pms.contracts.execution.tasks.DelegateTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
+import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -73,13 +75,14 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
   private final WaitNotifyEngine waitNotifyEngine;
   private final LogStreamingStepClientFactory logStreamingStepClientFactory;
   private final String publisherName;
+  private final PmsGitSyncHelper pmsGitSyncHelper;
 
   @Inject
   public JiraApprovalHelperServiceImpl(NgDelegate2TaskExecutor ngDelegate2TaskExecutor,
       ConnectorResourceClient connectorResourceClient, KryoSerializer kryoSerializer,
       SecretNGManagerClient secretManagerClient, WaitNotifyEngine waitNotifyEngine,
       LogStreamingStepClientFactory logStreamingStepClientFactory,
-      @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName) {
+      @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName, PmsGitSyncHelper pmsGitSyncHelper) {
     this.ngDelegate2TaskExecutor = ngDelegate2TaskExecutor;
     this.connectorResourceClient = connectorResourceClient;
     this.kryoSerializer = kryoSerializer;
@@ -87,11 +90,14 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
     this.waitNotifyEngine = waitNotifyEngine;
     this.logStreamingStepClientFactory = logStreamingStepClientFactory;
     this.publisherName = publisherName;
+    this.pmsGitSyncHelper = pmsGitSyncHelper;
   }
 
   @Override
   public void handlePollingEvent(JiraApprovalInstance instance) {
-    try (AutoLogContext ignore = instance.autoLogContext()) {
+    try (PmsGitSyncBranchContextGuard ignore1 =
+             pmsGitSyncHelper.createGitSyncBranchContextGuard(instance.getAmbiance(), true);
+         AutoLogContext ignore2 = instance.autoLogContext()) {
       handlePollingEventInternal(instance);
     }
   }

@@ -5,6 +5,7 @@ import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageF
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.TimeRange;
@@ -14,6 +15,7 @@ import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -42,6 +44,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Entity(value = "cvConfigs")
 @HarnessEntity(exportable = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
+@StoreIn(DbAliases.CVNG)
 public abstract class CVConfig
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, PersistentRegularIterable {
   public static List<MongoIndex> mongoIndexes() {

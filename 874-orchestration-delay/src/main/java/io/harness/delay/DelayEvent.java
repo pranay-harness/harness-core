@@ -3,7 +3,9 @@ package io.harness.delay;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.DbAliases;
 import io.harness.queue.Queuable;
 
 import java.util.Date;
@@ -17,6 +19,7 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "delayQueue", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@StoreIn(DbAliases.ALL)
 public class DelayEvent extends Queuable {
   private String resumeId;
   private Map<String, String> context;

@@ -3,8 +3,6 @@ package io.harness.delegate.task.scm;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateResponseData;
-import io.harness.product.ci.scm.proto.FileBatchContentResponse;
-import io.harness.product.ci.scm.proto.FileContent;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,6 +18,6 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = false)
 public class GitFileTaskResponseData implements DelegateResponseData {
   GitFileTaskType gitFileTaskType;
-  FileBatchContentResponse fileBatchContentResponse;
-  FileContent fileContent;
+  byte[] fileBatchContentResponse;
+  byte[] fileContent;
 }

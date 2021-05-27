@@ -13,7 +13,7 @@ import io.harness.engine.expressions.functors.OutcomeFunctor;
 import io.harness.engine.expressions.functors.SecretFunctor;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
-import io.harness.exception.CriticalExpressionEvaluationException;
+import io.harness.exception.EngineExpressionEvaluationException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.expression.EngineExpressionEvaluator;
@@ -210,7 +210,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
     private void processObjectInternal(ParameterDocumentField documentField) {
       ProcessorResult processorResult = parameterFieldProcessor.process(documentField);
       if (processorResult.isError()) {
-        throw new CriticalExpressionEvaluationException(processorResult.getMessage());
+        throw new EngineExpressionEvaluationException(processorResult.getMessage(), processorResult.getExpression());
       }
     }
   }

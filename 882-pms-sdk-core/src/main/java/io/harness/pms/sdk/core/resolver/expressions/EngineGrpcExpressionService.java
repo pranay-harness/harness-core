@@ -2,7 +2,6 @@ package io.harness.pms.sdk.core.resolver.expressions;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.GeneralException;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.service.EngineExpressionProtoServiceGrpc.EngineExpressionProtoServiceBlockingStub;
 import io.harness.pms.contracts.service.ExpressionEvaluateBlobRequest;
@@ -10,11 +9,11 @@ import io.harness.pms.contracts.service.ExpressionEvaluateBlobResponse;
 import io.harness.pms.contracts.service.ExpressionRenderBlobRequest;
 import io.harness.pms.contracts.service.ExpressionRenderBlobResponse;
 import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.sdk.core.grpc.client.PmsSdkGrpcClientUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import io.grpc.StatusRuntimeException;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
@@ -38,8 +37,8 @@ public class EngineGrpcExpressionService implements EngineExpressionService {
                   .setSkipUnresolvedExpressionsCheck(skipUnresolvedExpressionsCheck)
                   .build());
       return expressionRenderBlobResponse.getValue();
-    } catch (StatusRuntimeException ex) {
-      throw new GeneralException(ex.getStatus().getDescription());
+    } catch (Exception ex) {
+      throw PmsSdkGrpcClientUtils.processException(ex);
     }
   }
 
@@ -50,8 +49,8 @@ public class EngineGrpcExpressionService implements EngineExpressionService {
           engineExpressionProtoServiceBlockingStub.evaluateExpression(
               ExpressionEvaluateBlobRequest.newBuilder().setAmbiance(ambiance).setExpression(expression).build());
       return RecastOrchestrationUtils.fromDocumentJson(expressionEvaluateBlobResponse.getValue(), Object.class);
-    } catch (StatusRuntimeException ex) {
-      throw new GeneralException(ex.getStatus().getDescription());
+    } catch (Exception ex) {
+      throw PmsSdkGrpcClientUtils.processException(ex);
     }
   }
 }
