@@ -22,6 +22,7 @@ import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
 import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
 import io.harness.product.ci.scm.proto.IsLatestFileResponse;
 import io.harness.product.ci.scm.proto.ListBranchesResponse;
+import io.harness.product.ci.scm.proto.ListCommitsInPRResponse;
 import io.harness.product.ci.scm.proto.ListCommitsResponse;
 import io.harness.product.ci.scm.proto.ListWebhooksResponse;
 import io.harness.product.ci.scm.proto.UpdateFileResponse;
@@ -101,6 +102,11 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
   @Override
   public ListCommitsResponse listCommits(ScmConnector scmConnector, String branchName) {
     return scmServiceGitClient.listCommits(scmConnector, branchName);
+  }
+
+  @Override
+  public ListCommitsInPRResponse listCommitsInPR(ScmConnector scmConnector, int prNumber) {
+    return scmServiceGitClient.listCommitsInPR(scmConnector, prNumber);
   }
 
   @Override

@@ -1,5 +1,7 @@
 package io.harness.pms.pipeline.service;
 
+import static io.harness.NGDateUtils.DAY_IN_MS;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.Dashboard.DashboardPipelineExecutionInfo;
@@ -21,7 +23,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -42,7 +43,7 @@ public class PipelineDashboardServiceImpl implements PipelineDashboardService {
   private static final int MAX_RETRY_COUNT = 5;
 
   public String queryBuilderSelectStatusAndTime(String accountId, String orgId, String projectId, String pipelineId,
-      String startInterval, String endInterval, String tableName) {
+      long startInterval, long endInterval, String tableName) {
     String selectStatusQuery = "select status,startts from " + tableName + " where ";
     StringBuilder totalBuildSqlBuilder = new StringBuilder();
     totalBuildSqlBuilder.append(selectStatusQuery);
@@ -63,8 +64,8 @@ public class PipelineDashboardServiceImpl implements PipelineDashboardService {
       totalBuildSqlBuilder.append(String.format("pipelineidentifier='%s' and ", pipelineId));
     }
 
-    if (startInterval != null && endInterval != null) {
-      totalBuildSqlBuilder.append(String.format("startts between '%s' and '%s';", startInterval, endInterval));
+    if (startInterval > 0 && endInterval > 0) {
+      totalBuildSqlBuilder.append(String.format("startts>=%s and startts<%s;", startInterval, endInterval));
     }
 
     return totalBuildSqlBuilder.toString();
@@ -89,11 +90,8 @@ public class PipelineDashboardServiceImpl implements PipelineDashboardService {
   }
 
   public String queryBuilderMean(String accountId, String orgId, String projectId, String pipelineId,
-      String startInterval, String endInterval, String tableName) {
-    String selectMeanQuery =
-        "select avg(((DATE_PART('day', endts::timestamp - startts::timestamp) * 24 +                                                                                                                                                                                      DATE_PART('hour', endts::timestamp - startts::timestamp)) * 60 +\n"
-        + "                DATE_PART('minute', endts::timestamp - startts::timestamp)) * 60 +\n"
-        + "                DATE_PART('second', endts::timestamp - startts::timestamp)) from " + tableName + " where ";
+      long startInterval, long endInterval, String tableName) {
+    String selectMeanQuery = "select avg(endts-startts)/1000 as avg from " + tableName + " where ";
     StringBuilder totalBuildSqlBuilder = new StringBuilder();
     totalBuildSqlBuilder.append(selectMeanQuery);
 
@@ -113,21 +111,19 @@ public class PipelineDashboardServiceImpl implements PipelineDashboardService {
       totalBuildSqlBuilder.append(String.format("pipelineidentifier='%s' and ", pipelineId));
     }
 
-    if (startInterval != null && endInterval != null) {
+    if (startInterval > 0 && endInterval > 0) {
       totalBuildSqlBuilder.append(
-          String.format("startts between '%s' and '%s' and endts is not null;", startInterval, endInterval));
+          String.format("startts>=%s and startts<%s and endts is not null;", startInterval, endInterval));
     }
 
     return totalBuildSqlBuilder.toString();
   }
 
   public String queryBuilderMedian(String accountId, String orgId, String projectId, String pipelineId,
-      String startInterval, String endInterval, String tableName) {
+      long startInterval, long endInterval, String tableName) {
     String selectMedianQuery =
-        "select PERCENTILE_DISC(0.5) within group (order by ((DATE_PART('day', endts::timestamp - startts::timestamp) * 24 + \n"
-        + "                DATE_PART('hour', endts::timestamp - startts::timestamp)) * 60 +\n"
-        + "                DATE_PART('minute', endts::timestamp - startts::timestamp)) * 60 +\n"
-        + "                DATE_PART('second', endts::timestamp - startts::timestamp)) from " + tableName + " where ";
+        "select PERCENTILE_DISC(0.5) within group (order by (endts-startts)) as percentile_disc from " + tableName
+        + " where ";
     StringBuilder totalBuildSqlBuilder = new StringBuilder();
     totalBuildSqlBuilder.append(selectMedianQuery);
 
@@ -147,9 +143,9 @@ public class PipelineDashboardServiceImpl implements PipelineDashboardService {
       totalBuildSqlBuilder.append(String.format("pipelineidentifier='%s' and ", pipelineId));
     }
 
-    if (startInterval != null && endInterval != null) {
+    if (startInterval > 0 && endInterval > 0) {
       totalBuildSqlBuilder.append(
-          String.format("startts between '%s' and '%s' and endts is not null;", startInterval, endInterval));
+          String.format("startts>=%s and startts<%s and endts is not null;", startInterval, endInterval));
     }
 
     return totalBuildSqlBuilder.toString();
@@ -159,7 +155,7 @@ public class PipelineDashboardServiceImpl implements PipelineDashboardService {
     long totalTries = 0;
 
     List<String> status = new ArrayList<>();
-    List<String> time = new ArrayList<>();
+    List<Long> time = new ArrayList<>();
     boolean successfulOperation = false;
     while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
       ResultSet resultSet = null;
@@ -168,7 +164,7 @@ public class PipelineDashboardServiceImpl implements PipelineDashboardService {
         resultSet = statement.executeQuery();
         while (resultSet != null && resultSet.next()) {
           status.add(resultSet.getString("status"));
-          time.add(resultSet.getString("startts"));
+          time.add(Long.parseLong(resultSet.getString("startts")));
         }
         successfulOperation = true;
       } catch (SQLException ex) {
@@ -242,26 +238,27 @@ public class PipelineDashboardServiceImpl implements PipelineDashboardService {
 
   @Override
   public DashboardPipelineHealthInfo getDashboardPipelineHealthInfo(String accountId, String orgId, String projectId,
-      String pipelineId, String startInterval, String endInterval, String previousStartInterval, String moduleInfo) {
-    LocalDate startDate = LocalDate.parse(startInterval);
-    LocalDate endDate = LocalDate.parse(endInterval);
-    LocalDate previousStartDate = LocalDate.parse(previousStartInterval);
+      String pipelineId, long startInterval, long endInterval, long previousStartInterval, String moduleInfo) {
+    startInterval = getStartingDateEpochValue(startInterval);
+    endInterval = getStartingDateEpochValue(endInterval);
+    previousStartInterval = getStartingDateEpochValue(previousStartInterval);
+
+    endInterval = endInterval + DAY_IN_MS;
 
     String tableName = selectTableFromModuleInfo(moduleInfo);
 
     String query = queryBuilderSelectStatusAndTime(
-        accountId, orgId, projectId, pipelineId, previousStartInterval, endDate.plusDays(1).toString(), tableName);
+        accountId, orgId, projectId, pipelineId, previousStartInterval, endInterval, tableName);
 
     StatusAndTime statusAndTime = queryCalculatorForStatusAndTime(query);
     List<String> status = statusAndTime.getStatus();
-    List<String> time = statusAndTime.getTime();
+    List<Long> time = statusAndTime.getTime();
 
     long currentTotal = 0, currentSuccess = 0;
     long previousTotal = 0, previousSuccess = 0;
     for (int i = 0; i < time.size(); i++) {
-      // make time.get(i) in yyyy-mm-dd format
-      LocalDate variableDate = LocalDate.parse(time.get(i).substring(0, time.get(i).indexOf(' ')));
-      if (startDate.compareTo(variableDate) <= 0 && endDate.compareTo(variableDate) >= 0) {
+      long variableEpoch = time.get(i);
+      if (variableEpoch >= startInterval && variableEpoch < endInterval) {
         currentTotal++;
         if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
           currentSuccess++;
@@ -269,7 +266,7 @@ public class PipelineDashboardServiceImpl implements PipelineDashboardService {
       }
 
       // previous interval record
-      if (previousStartDate.compareTo(variableDate) <= 0 && startDate.compareTo(variableDate) > 0) {
+      if (previousStartInterval <= variableEpoch && startInterval > variableEpoch) {
         previousTotal++;
         if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
           previousSuccess++;
@@ -278,8 +275,8 @@ public class PipelineDashboardServiceImpl implements PipelineDashboardService {
     }
 
     // mean calculation
-    String queryMeanCurrent = queryBuilderMean(
-        accountId, orgId, projectId, pipelineId, startInterval, endDate.plusDays(1).toString(), tableName);
+    String queryMeanCurrent =
+        queryBuilderMean(accountId, orgId, projectId, pipelineId, startInterval, endInterval, tableName);
     long currentMean = queryCalculatorMean(queryMeanCurrent);
 
     String queryMeanPrevious =
@@ -287,8 +284,8 @@ public class PipelineDashboardServiceImpl implements PipelineDashboardService {
     long previousMean = queryCalculatorMean(queryMeanPrevious);
 
     // Median calculation
-    String queryMedianCurrent = queryBuilderMedian(
-        accountId, orgId, projectId, pipelineId, startInterval, endDate.plusDays(1).toString(), tableName);
+    String queryMedianCurrent =
+        queryBuilderMedian(accountId, orgId, projectId, pipelineId, startInterval, endInterval, tableName);
     long currentMedian = queryCalculatorMedian(queryMedianCurrent);
 
     String queryMedianPrevious =
@@ -303,38 +300,35 @@ public class PipelineDashboardServiceImpl implements PipelineDashboardService {
                              .rate(getRate(currentSuccess, previousSuccess))
                              .percent(successPercent(currentSuccess, currentTotal))
                              .build())
-                .meanInfo(MeanMedianInfo.builder()
-                              .duration(String.valueOf(currentMean))
-                              .rate(String.valueOf(currentMean - previousMean))
-                              .build())
-                .medianInfo(MeanMedianInfo.builder()
-                                .duration(String.valueOf(currentMedian))
-                                .rate(String.valueOf(currentMedian - previousMedian))
-                                .build())
+                .meanInfo(MeanMedianInfo.builder().duration(currentMean).rate(currentMean - previousMean).build())
+                .medianInfo(
+                    MeanMedianInfo.builder().duration(currentMedian).rate(currentMedian - previousMedian).build())
                 .build())
         .build();
   }
 
   @Override
   public DashboardPipelineExecutionInfo getDashboardPipelineExecutionInfo(String accountId, String orgId,
-      String projectId, String pipelineId, String startInterval, String endInterval, String moduleInfo) {
-    LocalDate startDate = LocalDate.parse(startInterval);
-    LocalDate endDate = LocalDate.parse(endInterval);
+      String projectId, String pipelineId, long startInterval, long endInterval, String moduleInfo) {
+    startInterval = getStartingDateEpochValue(startInterval);
+    endInterval = getStartingDateEpochValue(endInterval);
+
+    endInterval = endInterval + DAY_IN_MS;
 
     String tableName = selectTableFromModuleInfo(moduleInfo);
 
-    String query = queryBuilderSelectStatusAndTime(
-        accountId, orgId, projectId, pipelineId, startInterval, endDate.plusDays(1).toString(), tableName);
+    String query =
+        queryBuilderSelectStatusAndTime(accountId, orgId, projectId, pipelineId, startInterval, endInterval, tableName);
     StatusAndTime statusAndTime = queryCalculatorForStatusAndTime(query);
     List<String> status = statusAndTime.getStatus();
-    List<String> time = statusAndTime.getTime();
+    List<Long> time = statusAndTime.getTime();
 
     List<PipelineExecutionInfo> pipelineExecutionInfoList = new ArrayList<>();
 
-    while (!startDate.isAfter(endDate)) {
+    while (startInterval < endInterval) {
       long total = 0, success = 0, failed = 0;
       for (int i = 0; i < time.size(); i++) {
-        if (time.get(i).contains(startDate.toString())) {
+        if (startInterval == getStartingDateEpochValue(time.get(i))) {
           total++;
           if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
             success++;
@@ -345,12 +339,16 @@ public class PipelineDashboardServiceImpl implements PipelineDashboardService {
       }
       pipelineExecutionInfoList.add(
           PipelineExecutionInfo.builder()
-              .date(startDate.toString())
+              .date(startInterval)
               .count(PipelineCountInfo.builder().total(total).success(success).failure(failed).build())
               .build());
-      startDate = startDate.plusDays(1);
+      startInterval = startInterval + DAY_IN_MS;
     }
 
     return DashboardPipelineExecutionInfo.builder().pipelineExecutionInfoList(pipelineExecutionInfoList).build();
+  }
+
+  public long getStartingDateEpochValue(long epochValue) {
+    return epochValue - epochValue % DAY_IN_MS;
   }
 }

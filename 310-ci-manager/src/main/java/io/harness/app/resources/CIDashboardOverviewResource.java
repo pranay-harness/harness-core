@@ -1,5 +1,7 @@
 package io.harness.app.resources;
 
+import io.harness.NGCommonEntityConstants;
+import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.beans.entities.BuildActiveInfo;
@@ -19,11 +21,8 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -48,42 +47,35 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CIDashboardOverviewResource {
   private final CIOverviewDashboardService ciOverviewDashboardService;
+  private final long HR_IN_MS = 60 * 60 * 1000;
+  private final long DAY_IN_MS = 24 * HR_IN_MS;
+
   @GET
   @Path("/buildHealth")
   @ApiOperation(value = "Get build health", nickname = "getBuildHealth")
   public ResponseDTO<DashboardBuildsHealthInfo> getBuildHealth(
-      @NotNull @QueryParam("accountId") String accountIdentifier,
-      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
-          "startInterval") String startInterval,
-      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
-          "endInterval") String endInterval) {
-    LocalDate startDate = LocalDate.parse(startInterval);
-    LocalDate endDate = LocalDate.parse(endInterval);
-    long interval = ChronoUnit.DAYS.between(startDate, endDate);
-
-    if (interval < 0) {
-      interval = interval * (-1);
-    }
-
-    LocalDate previousStartDate = startDate.minusDays(interval);
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGResourceFilterConstants.START) long startInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.END) long endInterval) {
+    log.info("Getting build health");
+    long previousInterval = startInterval - (endInterval - startInterval + DAY_IN_MS);
 
     return ResponseDTO.newResponse(ciOverviewDashboardService.getDashBoardBuildHealthInfoWithRate(
-        accountIdentifier, orgIdentifier, projectIdentifier, startInterval, endInterval, previousStartDate.toString()));
+        accountIdentifier, orgIdentifier, projectIdentifier, startInterval, endInterval, previousInterval));
   }
 
   @GET
   @Path("/buildExecution")
   @ApiOperation(value = "Get build execution", nickname = "getBuildExecution")
   public ResponseDTO<DashboardBuildExecutionInfo> getBuildExecution(
-      @NotNull @QueryParam("accountId") String accountIdentifier,
-      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
-          "startInterval") String startInterval,
-      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
-          "endInterval") String endInterval) {
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGResourceFilterConstants.START) long startInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.END) long endInterval) {
+    log.info("Getting build execution");
     return ResponseDTO.newResponse(ciOverviewDashboardService.getBuildExecutionBetweenIntervals(
         accountIdentifier, orgIdentifier, projectIdentifier, startInterval, endInterval));
   }
@@ -92,34 +84,26 @@ public class CIDashboardOverviewResource {
   @Path("/repositoryBuild")
   @ApiOperation(value = "Get build getRepositoryBuild", nickname = "getRepositoryBuild")
   public ResponseDTO<DashboardBuildRepositoryInfo> getRepositoryBuild(
-      @NotNull @QueryParam("accountId") String accountIdentifier,
-      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
-          "startInterval") String startInterval,
-      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
-          "endInterval") String endInterval) {
-    LocalDate startDate = LocalDate.parse(startInterval);
-    LocalDate endDate = LocalDate.parse(endInterval);
-    long interval = ChronoUnit.DAYS.between(startDate, endDate);
-
-    if (interval < 0) {
-      interval = interval * (-1);
-    }
-
-    LocalDate previousStartDate = startDate.minusDays(interval);
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGResourceFilterConstants.START) long startInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.END) long endInterval) {
+    log.info("Getting build repository");
+    long previousInterval = startInterval - (endInterval - startInterval + DAY_IN_MS);
     return ResponseDTO.newResponse(ciOverviewDashboardService.getDashboardBuildRepository(
-        accountIdentifier, orgIdentifier, projectIdentifier, startInterval, endInterval, previousStartDate.toString()));
+        accountIdentifier, orgIdentifier, projectIdentifier, startInterval, endInterval, previousInterval));
   }
 
   @GET
   @Path("/getBuilds")
   @ApiOperation(value = "Get builds", nickname = "getBuilds")
   public ResponseDTO<DashboardBuildsActiveAndFailedInfo> getActiveAndFailedBuild(
-      @NotNull @QueryParam("accountId") String accountIdentifier,
-      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam("top") @DefaultValue("20") long days) {
+    log.info("Getting builds details failed and active");
     List<BuildFailureInfo> failureInfos = ciOverviewDashboardService.getDashboardBuildFailureInfo(
         accountIdentifier, orgIdentifier, projectIdentifier, days);
     List<BuildActiveInfo> activeInfos = ciOverviewDashboardService.getDashboardBuildActiveInfo(

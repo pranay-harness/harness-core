@@ -4,11 +4,15 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.pms.plan.creation.PlanCreatorUtils.supportsField;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.plan.VariablesCreationBlobRequest;
 import io.harness.pms.contracts.plan.VariablesCreationBlobResponse;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
+import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
+import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationContext;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationResponse;
@@ -23,13 +27,17 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 public class VariableCreatorService {
   private final PipelineServiceInfoProvider pipelineServiceInfoProvider;
+  private final PmsGitSyncHelper pmsGitSyncHelper;
 
   @Inject
-  public VariableCreatorService(PipelineServiceInfoProvider pipelineServiceInfoProvider) {
+  public VariableCreatorService(
+      PipelineServiceInfoProvider pipelineServiceInfoProvider, PmsGitSyncHelper pmsGitSyncHelper) {
     this.pipelineServiceInfoProvider = pipelineServiceInfoProvider;
+    this.pmsGitSyncHelper = pmsGitSyncHelper;
   }
 
   public VariablesCreationBlobResponse createVariablesResponse(VariablesCreationBlobRequest request) {
@@ -46,8 +54,11 @@ public class VariableCreatorService {
       }
     }
 
-    VariableCreationResponse response = processNodesRecursively(initialDependencies);
-    return response.toBlobResponse();
+    try (PmsGitSyncBranchContextGuard ignore = pmsGitSyncHelper.createGitSyncBranchContextGuardFromBytes(
+             request.getMetadata().getGitSyncBranchContext(), true)) {
+      VariableCreationResponse response = processNodesRecursively(initialDependencies);
+      return response.toBlobResponse();
+    }
   }
 
   private VariableCreationResponse processNodesRecursively(Map<String, YamlField> initialDependencies) {

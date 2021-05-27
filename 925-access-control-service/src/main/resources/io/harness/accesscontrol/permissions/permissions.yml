@@ -306,7 +306,7 @@ permissions:
   - identifier: core_authsetting_view
     name: View Auth setting
     status: ACTIVE
-    includeInAllRoles: false
+    includeInAllRoles: true
     allowedScopeLevels:
       - account
   - identifier: core_authsetting_edit

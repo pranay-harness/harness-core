@@ -13,15 +13,15 @@ public interface CIOverviewDashboardService {
   BuildHealth getCountAndRate(long currentCount, long previousCount);
 
   DashboardBuildsHealthInfo getDashBoardBuildHealthInfoWithRate(String accountId, String orgId, String projectId,
-      String startInterval, String endInterval, String previousStartInterval);
+      long startInterval, long endInterval, long previousStartInterval);
 
   DashboardBuildExecutionInfo getBuildExecutionBetweenIntervals(
-      String accountId, String orgId, String projectId, String startInterval, String endInterval);
+      String accountId, String orgId, String projectId, long startInterval, long endInterval);
 
   List<BuildFailureInfo> getDashboardBuildFailureInfo(String accountId, String orgId, String projectId, long days);
 
   List<BuildActiveInfo> getDashboardBuildActiveInfo(String accountId, String orgId, String projectId, long days);
 
   DashboardBuildRepositoryInfo getDashboardBuildRepository(String accountId, String orgId, String projectId,
-      String startInterval, String endInterval, String previousStartInterval);
+      long startInterval, long endInterval, long previousStartInterval);
 }

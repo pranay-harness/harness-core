@@ -55,6 +55,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.mongodb.MongoCommandException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -72,6 +73,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.transaction.TransactionException;
@@ -97,7 +99,9 @@ public class NgUserServiceImpl implements NgUserService {
   private final UserGroupService userGroupService;
 
   private final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
-      "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
+      "[Failed] attempt: {}",
+      ImmutableList.of(TransactionException.class, UncategorizedMongoDbException.class, MongoCommandException.class),
+      Duration.ofSeconds(1), 3, log);
 
   @Inject
   public NgUserServiceImpl(UserClient userClient, UserMembershipRepository userMembershipRepository,

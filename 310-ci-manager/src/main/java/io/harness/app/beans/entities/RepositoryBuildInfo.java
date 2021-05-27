@@ -6,6 +6,6 @@ import lombok.Value;
 @Value
 @Builder
 public class RepositoryBuildInfo {
-  private String time;
+  private long time;
   private BuildRepositoryCount builds;
 }

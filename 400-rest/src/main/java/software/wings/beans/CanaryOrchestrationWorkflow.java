@@ -977,7 +977,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     }
     for (String phaseId : workflowPhaseIds) {
       WorkflowPhase existingPhase = workflowPhaseIdMap.get(phaseId);
-      if (existingPhase.getServiceId().equals(workflowPhase.getServiceId())
+      if (isNotEmpty(existingPhase.getServiceId()) && existingPhase.getServiceId().equals(workflowPhase.getServiceId())
           && existingPhase.getDeploymentType() == workflowPhase.getDeploymentType()
           && existingPhase.getInfraDefinitionId() != null
           && existingPhase.getInfraDefinitionId().equals(workflowPhase.getInfraDefinitionId())) {

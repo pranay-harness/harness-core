@@ -18,9 +18,11 @@ import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.helpers.PmsFeatureFlagHelper;
+import io.harness.pms.merger.helpers.FQNUtils;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.utils.PmsConstants;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.steps.approval.stage.ApprovalStageConfig;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
@@ -47,6 +49,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.inject.Inject;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -320,6 +323,11 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     if (pmsFeatureFlagHelper.isEnabled(accountId, FeatureName.NG_SCHEMA_VALIDATION)) {
       validateYamlSchema(orgId, projectId, yaml);
     }
+  }
+
+  @Override
+  public void validateUniqueFqn(String yaml) throws IOException {
+    FQNUtils.generateFQNMap(YamlUtils.readTree(yaml).getNode().getCurrJsonNode());
   }
 
   private void removeUnwantedNodes(JsonNode definitions) {
