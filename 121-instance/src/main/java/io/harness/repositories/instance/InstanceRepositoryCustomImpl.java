@@ -44,6 +44,9 @@ public class InstanceRepositoryCustomImpl implements InstanceRepositoryCustom {
     return null;
   }
 
+  /*
+    Returns instances that are active at a given timestamp for specified orgId, projectId and orgId
+   */
   @Override
   public List<Instance> getActiveInstances(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, long timestampInMs) {
