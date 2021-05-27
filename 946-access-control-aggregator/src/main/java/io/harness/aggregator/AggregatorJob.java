@@ -10,33 +10,43 @@ import io.harness.accesscontrol.roles.persistence.RoleDBO;
 import io.harness.aggregator.consumers.AccessControlDebeziumChangeConsumer;
 import io.harness.aggregator.consumers.ChangeConsumer;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.debezium.engine.ChangeEvent;
 import io.debezium.engine.DebeziumEngine;
 import io.debezium.engine.format.Json;
 import io.debezium.serde.DebeziumSerdes;
+import java.io.IOException;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
 
 @OwnedBy(PL)
 @Singleton
-public class AggregatorApplication {
+@Slf4j
+public class AggregatorJob implements Runnable {
   private final ChangeConsumer<RoleDBO> roleChangeConsumer;
   private final ChangeConsumer<RoleAssignmentDBO> roleAssignmentChangeConsumer;
   private final ChangeConsumer<ResourceGroupDBO> resourceGroupChangeConsumer;
   private final ChangeConsumer<UserGroupDBO> userGroupChangeConsumer;
   private final AggregatorConfiguration aggregatorConfiguration;
   private final ExecutorService executorService;
+  private final PersistentLocker persistentLocker;
+  private static final String ACCESS_CONTROL_AGGREGATOR_LOCK = "ACCESS_CONTROL_AGGREGATOR_LOCK";
   private static final String MONGO_DB_CONNECTOR = "io.debezium.connector.mongodb.MongoDbConnector";
   private static final String CONNECTOR_NAME = "name";
   private static final String OFFSET_STORAGE = "offset.storage";
@@ -65,61 +75,19 @@ public class AggregatorApplication {
   private static final String UNKNOWN_PROPERTIES_IGNORED = "unknown.properties.ignored";
 
   @Inject
-  public AggregatorApplication(ChangeConsumer<RoleDBO> roleChangeConsumer,
+  public AggregatorJob(ChangeConsumer<RoleDBO> roleChangeConsumer,
       ChangeConsumer<RoleAssignmentDBO> roleAssignmentChangeConsumer,
       ChangeConsumer<ResourceGroupDBO> resourceGroupChangeConsumer,
-      ChangeConsumer<UserGroupDBO> userGroupChangeConsumer, AggregatorConfiguration aggregatorConfiguration) {
+      ChangeConsumer<UserGroupDBO> userGroupChangeConsumer, AggregatorConfiguration aggregatorConfiguration,
+      PersistentLocker persistentLocker) {
     this.roleChangeConsumer = roleChangeConsumer;
     this.roleAssignmentChangeConsumer = roleAssignmentChangeConsumer;
     this.resourceGroupChangeConsumer = resourceGroupChangeConsumer;
     this.userGroupChangeConsumer = userGroupChangeConsumer;
     this.aggregatorConfiguration = aggregatorConfiguration;
-    this.executorService = Executors.newFixedThreadPool(5);
-  }
-
-  public void run() {
-    Map<String, ChangeConsumer<? extends AccessControlEntity>> collectionToConsumerMap = new HashMap<>();
-    Map<String, Deserializer<? extends AccessControlEntity>> collectionToDeserializerMap = new HashMap<>();
-
-    collectionToConsumerMap.put(ROLE_ASSIGNMENTS, roleAssignmentChangeConsumer);
-    collectionToConsumerMap.put(ROLES, roleChangeConsumer);
-    collectionToConsumerMap.put(RESOURCE_GROUPS, resourceGroupChangeConsumer);
-    collectionToConsumerMap.put(USER_GROUPS, userGroupChangeConsumer);
-
-    // configuring id deserializer
-    Serde<String> idSerde = DebeziumSerdes.payloadJson(String.class);
-    idSerde.configure(Maps.newHashMap(ImmutableMap.of("from.field", "id")), true);
-    Deserializer<String> idDeserializer = idSerde.deserializer();
-
-    Map<String, String> valueDeserializerConfig = Maps.newHashMap(ImmutableMap.of(UNKNOWN_PROPERTIES_IGNORED, "true"));
-
-    // configuring role assignment deserializer
-    Serde<RoleAssignmentDBO> roleAssignmentSerde = DebeziumSerdes.payloadJson(RoleAssignmentDBO.class);
-    roleAssignmentSerde.configure(valueDeserializerConfig, false);
-    collectionToDeserializerMap.put(ROLE_ASSIGNMENTS, roleAssignmentSerde.deserializer());
-
-    // configuring role deserializer
-    Serde<RoleDBO> roleSerde = DebeziumSerdes.payloadJson(RoleDBO.class);
-    roleSerde.configure(valueDeserializerConfig, false);
-    collectionToDeserializerMap.put(ROLES, roleSerde.deserializer());
-
-    // configuring resource group deserializer
-    Serde<ResourceGroupDBO> resourceGroupSerde = DebeziumSerdes.payloadJson(ResourceGroupDBO.class);
-    resourceGroupSerde.configure(valueDeserializerConfig, false);
-    collectionToDeserializerMap.put(RESOURCE_GROUPS, resourceGroupSerde.deserializer());
-
-    // configuring resource group deserializer
-    Serde<UserGroupDBO> userGroupSerde = DebeziumSerdes.payloadJson(UserGroupDBO.class);
-    userGroupSerde.configure(valueDeserializerConfig, false);
-    collectionToDeserializerMap.put(USER_GROUPS, userGroupSerde.deserializer());
-
-    AccessControlDebeziumChangeConsumer accessControlDebeziumChangeConsumer =
-        new AccessControlDebeziumChangeConsumer(idDeserializer, collectionToDeserializerMap, collectionToConsumerMap);
-
-    // configuring debezium
-    DebeziumEngine<ChangeEvent<String, String>> debeziumEngine =
-        getEngine(aggregatorConfiguration.getDebeziumConfig(), accessControlDebeziumChangeConsumer);
-    executorService.submit(debeziumEngine);
+    this.executorService =
+        Executors.newFixedThreadPool(4, new ThreadFactoryBuilder().setNameFormat("aggregator").build());
+    this.persistentLocker = persistentLocker;
   }
 
   private static DebeziumEngine<ChangeEvent<String, String>> getEngine(
@@ -151,5 +119,90 @@ public class AggregatorApplication {
     props.setProperty(TRANSFORMS_UNWRAP_ADD_HEADERS, "op");
 
     return DebeziumEngine.create(Json.class).using(props).notifying(changeConsumer).build();
+  }
+
+  @Override
+  public void run() {
+    AcquiredLock<?> aggregatorLock = null;
+
+    while (aggregatorLock == null) {
+      try {
+        log.info("Trying to acquire ACCESS_CONTROL_AGGREGATOR_LOCK lock with 5 seconds timeout...");
+        aggregatorLock = persistentLocker.tryToAcquireInfiniteLockWithPeriodicRefresh(
+            ACCESS_CONTROL_AGGREGATOR_LOCK, Duration.ofSeconds(5));
+      } catch (Exception ex) {
+        log.info("Unable to get ACCESS_CONTROL_AGGREGATOR_LOCK lock, going to sleep for 30 seconds...");
+      }
+      try {
+        Thread.sleep(30000);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        return;
+      }
+    }
+
+    log.info("Acquired ACCESS_CONTROL_AGGREGATOR_LOCK lock, starting Debezium engine now...");
+
+    try {
+      Map<String, ChangeConsumer<? extends AccessControlEntity>> collectionToConsumerMap = new HashMap<>();
+      Map<String, Deserializer<? extends AccessControlEntity>> collectionToDeserializerMap = new HashMap<>();
+
+      collectionToConsumerMap.put(ROLE_ASSIGNMENTS, roleAssignmentChangeConsumer);
+      collectionToConsumerMap.put(ROLES, roleChangeConsumer);
+      collectionToConsumerMap.put(RESOURCE_GROUPS, resourceGroupChangeConsumer);
+      collectionToConsumerMap.put(USER_GROUPS, userGroupChangeConsumer);
+
+      // configuring id deserializer
+      Serde<String> idSerde = DebeziumSerdes.payloadJson(String.class);
+      idSerde.configure(Maps.newHashMap(ImmutableMap.of("from.field", "id")), true);
+      Deserializer<String> idDeserializer = idSerde.deserializer();
+
+      Map<String, String> valueDeserializerConfig =
+          Maps.newHashMap(ImmutableMap.of(UNKNOWN_PROPERTIES_IGNORED, "true"));
+
+      // configuring role assignment deserializer
+      Serde<RoleAssignmentDBO> roleAssignmentSerde = DebeziumSerdes.payloadJson(RoleAssignmentDBO.class);
+      roleAssignmentSerde.configure(valueDeserializerConfig, false);
+      collectionToDeserializerMap.put(ROLE_ASSIGNMENTS, roleAssignmentSerde.deserializer());
+
+      // configuring role deserializer
+      Serde<RoleDBO> roleSerde = DebeziumSerdes.payloadJson(RoleDBO.class);
+      roleSerde.configure(valueDeserializerConfig, false);
+      collectionToDeserializerMap.put(ROLES, roleSerde.deserializer());
+
+      // configuring resource group deserializer
+      Serde<ResourceGroupDBO> resourceGroupSerde = DebeziumSerdes.payloadJson(ResourceGroupDBO.class);
+      resourceGroupSerde.configure(valueDeserializerConfig, false);
+      collectionToDeserializerMap.put(RESOURCE_GROUPS, resourceGroupSerde.deserializer());
+
+      // configuring resource group deserializer
+      Serde<UserGroupDBO> userGroupSerde = DebeziumSerdes.payloadJson(UserGroupDBO.class);
+      userGroupSerde.configure(valueDeserializerConfig, false);
+      collectionToDeserializerMap.put(USER_GROUPS, userGroupSerde.deserializer());
+
+      // configuring debezium
+      AccessControlDebeziumChangeConsumer accessControlDebeziumChangeConsumer =
+          new AccessControlDebeziumChangeConsumer(idDeserializer, collectionToDeserializerMap, collectionToConsumerMap);
+
+      DebeziumEngine<ChangeEvent<String, String>> debeziumEngine =
+          getEngine(aggregatorConfiguration.getDebeziumConfig(), accessControlDebeziumChangeConsumer);
+      Future<?> debeziumEngineFuture = executorService.submit(debeziumEngine);
+      log.info("waiting for debezium failure to release lock...");
+      while (!debeziumEngineFuture.isDone()) {
+        try {
+          Thread.sleep(60000);
+        } catch (InterruptedException e) {
+          try {
+            debeziumEngine.close();
+          } catch (IOException exception) {
+            // ignore
+          }
+          Thread.currentThread().interrupt();
+        }
+      }
+    } finally {
+      log.info("Debezium engine failed, releasing lock now...");
+      aggregatorLock.release();
+    }
   }
 }
