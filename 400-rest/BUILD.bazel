@@ -340,7 +340,6 @@ shared_dependencies = [
     "@maven//:io_fabric8_kubernetes_api",
     "@maven//:io_fabric8_kubernetes_client",
     "@maven//:io_fabric8_kubernetes_model",
-    "@maven//:io_fabric8_kubernetes_server_mock",
     "@maven//:io_fabric8_openshift_client",
     "@maven//:io_fabric8_zjsonpatch",
     "@maven//:io_github_resilience4j_resilience4j_circuitbreaker",
@@ -732,6 +731,7 @@ test_dependencies = shared_dependencies + [
     "@maven//:org_powermock_powermock_module_junit4",
     "@maven//:pl_pragmatists_JUnitParams",
     "@maven//:io_grpc_grpc_testing",
+    "@maven//:io_fabric8_kubernetes_server_mock",
 ]
 
 run_package_tests(

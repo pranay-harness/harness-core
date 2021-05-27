@@ -38,10 +38,10 @@ import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummaryFilter;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
 import io.harness.plan.Plan;
-import io.harness.pms.contracts.advisers.InterruptConfig;
-import io.harness.pms.contracts.advisers.IssuedBy;
-import io.harness.pms.contracts.advisers.ManualIssuer;
+import io.harness.pms.contracts.interrupts.InterruptConfig;
 import io.harness.pms.contracts.interrupts.InterruptType;
+import io.harness.pms.contracts.interrupts.IssuedBy;
+import io.harness.pms.contracts.interrupts.ManualIssuer;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.plan.TriggeredBy;

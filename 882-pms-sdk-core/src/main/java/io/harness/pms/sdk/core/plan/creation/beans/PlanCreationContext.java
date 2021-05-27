@@ -1,5 +1,7 @@
 package io.harness.pms.sdk.core.plan.creation.beans;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.yaml.YamlField;
@@ -12,6 +14,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Singular;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Data
 @Builder
 @EqualsAndHashCode
@@ -32,5 +35,9 @@ public class PlanCreationContext {
       this.setGlobalContext(new HashMap<>());
     }
     this.getGlobalContext().putAll(planCreationResponse.getContextMap());
+  }
+
+  public PlanCreationContextValue getMetadata() {
+    return globalContext == null ? null : globalContext.get("metadata");
   }
 }

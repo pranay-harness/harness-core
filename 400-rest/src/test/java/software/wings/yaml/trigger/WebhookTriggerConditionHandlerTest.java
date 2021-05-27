@@ -146,24 +146,4 @@ public class WebhookTriggerConditionHandlerTest extends WingsBaseTest {
     assertThat(webHookTriggerCondition.getWebhookSource()).isEqualTo(GITHUB);
     assertThat(webHookTriggerCondition.getWebHookSecret()).isEqualTo(SECRET);
   }
-
-  @Test
-  @Owner(developers = INDER)
-  @Category(UnitTests.class)
-  public void upsertFromYamlForGithub_WithIncorrectWebHookSecretFormat() {
-    WebhookEventTriggerConditionYaml webhookEventTriggerConditionYaml = WebhookEventTriggerConditionYaml.builder()
-                                                                            .action(asList("closed"))
-                                                                            .branchRegex("abc")
-                                                                            .repositoryType("GITHUB")
-                                                                            .webhookSecret(SECRET)
-                                                                            .build();
-    when(featureFlagService.isEnabled(FeatureName.GITHUB_WEBHOOK_AUTHENTICATION, ACCOUNTID)).thenReturn(true);
-    when(secretManager.getEncryptedDataFromYamlRef(SECRET, ACCOUNTID))
-        .thenReturn(EncryptedData.builder().uuid(SECRET).build());
-    on(yamlHelper).set("secretManager", secretManager);
-
-    assertThatThrownBy(() -> webhookTriggerConditionHandler.fromYAML(webhookEventTriggerConditionYaml, ACCOUNTID))
-        .isInstanceOf(InvalidRequestException.class)
-        .hasMessage("Please use proper format for webHookSecret: <secretManger>:<refId>");
-  }
 }

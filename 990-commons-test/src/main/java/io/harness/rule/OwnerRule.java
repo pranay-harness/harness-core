@@ -129,6 +129,7 @@ public class OwnerRule implements TestRule {
   public static final String SANDESH = "sandesh.katta";
   public static final String SANJA = "sanja.jokic";
   public static final String SANYASI_NAIDU = "sanyasi.naidu";
+  public static final String SEAN = "sean.dunne";
   public static final String SHASWAT = "shaswat.deep";
   public static final String SHIVAKUMAR = "shivakumar.ningappa";
   public static final String SHUBHANSHU = "shubhanshu.verma";
@@ -181,6 +182,8 @@ public class OwnerRule implements TestRule {
   public static final String KANHAIYA = "kanhaiya.rathi";
   public static final String ABHINAV_MITTAL = "abhinav.mittal";
   public static final String SHASHANK = "shashank.singh";
+  public static final String PRAKHAR = "prakhar.saxena";
+  public static final String JASMEET = "jasmeet.saini";
 
   @Deprecated public static final String UNKNOWN = "unknown";
 
@@ -260,6 +263,7 @@ public class OwnerRule implements TestRule {
           .put(SANDESH, defaultUserInfo(SANDESH).slack("U015PLPSD47").team(CE).build())
           .put(SANJA, defaultUserInfo(SANJA).slack("U015Q24465T").team(DEL).build())
           .put(SANYASI_NAIDU, defaultUserInfo(SANYASI_NAIDU).slack("U012P5KH3RU").team(DX).build())
+          .put(SEAN, defaultUserInfo(SEAN).slack("U020VELFZNK").team(DEL).build())
           .put(SHASWAT, UserInfo.builder().email("shaswat.deep@harness.io").slack("UL9J5EH7A").build())
           .put(SHIVAKUMAR, defaultUserInfo(SHIVAKUMAR).slack("U01124VC43C").team(CI).build())
           .put(SHUBHANSHU, defaultUserInfo(SHUBHANSHU).slack("UKLTRSAN9").team(CE).build())
@@ -308,6 +312,8 @@ public class OwnerRule implements TestRule {
           .put(ABHINAV_MITTAL, defaultUserInfo(ABHINAV_MITTAL).slack("U01Q893534N").team(CDC).build())
           .put(SHASHANK, defaultUserInfo(SHASHANK).slack("U01S8B29PFD").team(PL).build())
           .put(VLAD, defaultUserInfo(VLAD).slack("U0209EGCC49").team(DEL).build())
+          .put(PRAKHAR, defaultUserInfo(PRAKHAR).slack("U01U399V1PW").team(CDP).build())
+          .put(JASMEET, defaultUserInfo(JASMEET).slack("U01LAM57V5K").team(DX).build())
           .build();
 
   private static String prDeveloperId = findDeveloperId(System.getenv(GHPRB_PULL_AUTHOR_EMAIL));

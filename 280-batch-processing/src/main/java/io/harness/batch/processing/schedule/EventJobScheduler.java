@@ -227,10 +227,11 @@ public class EventJobScheduler {
     boolean masterPod = accountShardService.isMasterPod();
     if (masterPod) {
       try {
-        ceDataCleanupRequestService.processDataCleanUpRequest();
-        log.info("updated cost data");
+        try (AutoLogContext ignore2 = new BatchJobTypeLogContext("DataCleanupRequest", OVERRIDE_ERROR)) {
+          ceDataCleanupRequestService.processDataCleanUpRequest();
+        }
       } catch (Exception ex) {
-        log.error("Exception while running updateCostMetadatRecord", ex);
+        log.error("Exception while running processDataCleanupRequest", ex);
       }
     }
   }

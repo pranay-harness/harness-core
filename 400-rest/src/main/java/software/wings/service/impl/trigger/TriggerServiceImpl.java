@@ -1613,6 +1613,9 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   private void validateWebHookSecret(Trigger trigger, WebHookTriggerCondition webHookTriggerCondition) {
+    if (webHookTriggerCondition.getWebHookSecret() == null) {
+      return;
+    }
     if (featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, trigger.getAccountId())) {
       if (webHookTriggerCondition.getWebHookSecret() != null
           && !GITHUB.equals(webHookTriggerCondition.getWebhookSource())) {
@@ -1623,6 +1626,10 @@ public class TriggerServiceImpl implements TriggerService {
           wingsPersistence.get(EncryptedData.class, webHookTriggerCondition.getWebHookSecret());
       notNullCheck(
           "No encrypted record found for webhook secret in Trigger: " + trigger.getName(), encryptedData, USER);
+    } else {
+      if (webHookTriggerCondition.getWebHookSecret() != null) {
+        throw new InvalidRequestException("Please enable feature flag to authenticate your webhook sources");
+      }
     }
   }
 

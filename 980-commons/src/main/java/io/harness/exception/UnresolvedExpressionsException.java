@@ -22,10 +22,9 @@ public class UnresolvedExpressionsException extends WingsException {
   public static final String EXPRESSIONS_ARG = "expressions";
 
   public UnresolvedExpressionsException(List<String> expressions) {
-    super(null, null, UNRESOLVED_EXPRESSIONS_ERROR, Level.ERROR, null, null);
-    super.param(EXPRESSIONS_ARG,
-        expressions == null ? NULL_STR
-                            : expressions.stream().filter(Objects::nonNull).collect(Collectors.joining(", ")));
+    super(String.format("Unresolved expressions: %s", prepareExpressionsString(expressions)), null,
+        UNRESOLVED_EXPRESSIONS_ERROR, Level.ERROR, null, null);
+    super.param(EXPRESSIONS_ARG, prepareExpressionsString(expressions));
   }
 
   public Collection<String> fetchExpressions() {
@@ -37,5 +36,10 @@ public class UnresolvedExpressionsException extends WingsException {
         .map(String::trim)
         .filter(s -> !s.isEmpty())
         .collect(Collectors.toSet());
+  }
+
+  private static String prepareExpressionsString(List<String> expressions) {
+    return expressions == null ? NULL_STR
+                               : expressions.stream().filter(Objects::nonNull).collect(Collectors.joining(", "));
   }
 }

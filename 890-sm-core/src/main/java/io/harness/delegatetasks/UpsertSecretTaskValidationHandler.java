@@ -1,14 +1,18 @@
 package io.harness.delegatetasks;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
+import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultConnectorDTO;
+import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultValidationParams;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultValidationParams;
 import io.harness.delegate.task.ConnectorValidationHandler;
@@ -20,12 +24,14 @@ import io.harness.ng.SecretManagerConfigDTOMapper;
 import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 
+import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.VaultConfig;
 
 import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
 
+@OwnedBy(PL)
 public class UpsertSecretTaskValidationHandler implements ConnectorValidationHandler {
   @Inject VaultEncryptorsRegistry vaultEncryptorsRegistry;
   @Inject NGErrorHelper ngErrorHelper;
@@ -68,6 +74,22 @@ public class UpsertSecretTaskValidationHandler implements ConnectorValidationHan
           .encryptionConfig(SecretManagerConfigMapper.fromDTO(secretManagerConfigDTO))
           .taskType(UpsertSecretTaskType.CREATE)
           .name(VaultConfig.VAULT_VAILDATION_URL)
+          .plaintext(Boolean.TRUE.toString())
+          .existingRecord(null)
+          .build();
+    } else if (ConnectorType.AZURE_KEY_VAULT.equals(connectorValidationParams.getConnectorType())) {
+      AzureKeyVaultConnectorDTO azureKeyVaultConnectorDTO =
+          ((AzureKeyVaultValidationParams) connectorValidationParams).getAzurekeyvaultConnectorDTO();
+      ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder()
+                                              .connectorConfig(azureKeyVaultConnectorDTO)
+                                              .connectorType(ConnectorType.AZURE_KEY_VAULT)
+                                              .build();
+      SecretManagerConfigDTO secretManagerConfigDTO = SecretManagerConfigDTOMapper.fromConnectorDTO(
+          accountIdentifier, ConnectorDTO.builder().connectorInfo(connectorInfoDTO).build(), azureKeyVaultConnectorDTO);
+      return UpsertSecretTaskParameters.builder()
+          .encryptionConfig(SecretManagerConfigMapper.fromDTO(secretManagerConfigDTO))
+          .taskType(UpsertSecretTaskType.CREATE)
+          .name(AzureVaultConfig.AZURE_VAULT_VALIDATION_URL)
           .plaintext(Boolean.TRUE.toString())
           .existingRecord(null)
           .build();

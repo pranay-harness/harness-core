@@ -7,6 +7,9 @@ import static io.harness.beans.SecretManagerCapabilities.CREATE_INLINE_SECRET;
 import static io.harness.beans.SecretManagerCapabilities.TRANSITION_SECRET_FROM_SM;
 import static io.harness.beans.SecretManagerCapabilities.TRANSITION_SECRET_TO_SM;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialType.ASSUME_IAM_ROLE;
+import static io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialType.ASSUME_STS_ROLE;
+import static io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialType.MANUAL_CONFIG;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.helpers.GlobalSecretManagerUtils.GLOBAL_ACCOUNT_ID;
 import static io.harness.security.encryption.SecretManagerType.KMS;
@@ -23,7 +26,9 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.mappers.SecretManagerConfigMapper;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.awskms.AwsKmsConfigDTO;
+import io.harness.secretmanagerclient.dto.awskms.AwsKmsIamCredentialConfig;
 import io.harness.secretmanagerclient.dto.awskms.AwsKmsManualCredentialConfig;
+import io.harness.secretmanagerclient.dto.awskms.AwsKmsStsCredentialConfig;
 import io.harness.secretmanagerclient.dto.awskms.BaseAwsKmsConfigDTO;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.security.encryption.SecretManagerType;
@@ -145,15 +150,35 @@ public class KmsConfig extends SecretManagerConfig {
     BaseAwsKmsConfigDTO baseAwsKmsConfigDTO = populateBaseAwsKmsConfigDTO();
 
     SecretManagerConfigMapper.updateNGSecretManagerMetadata(getNgMetadata(), awsKmsConfigDTO);
+
+    if (isAssumeIamRoleOnDelegate()) {
+      baseAwsKmsConfigDTO.setCredentialType(ASSUME_IAM_ROLE);
+      baseAwsKmsConfigDTO.setCredential(
+          AwsKmsIamCredentialConfig.builder().delegateSelectors(getDelegateSelectors()).build());
+    } else if (isAssumeStsRoleOnDelegate()) {
+      baseAwsKmsConfigDTO.setCredentialType(ASSUME_STS_ROLE);
+      baseAwsKmsConfigDTO.setCredential(AwsKmsStsCredentialConfig.builder()
+                                            .delegateSelectors(getDelegateSelectors())
+                                            .roleArn(getRoleArn())
+                                            .externalName(getExternalName())
+                                            .assumeStsRoleDuration(getAssumeStsRoleDuration())
+                                            .build());
+    } else {
+      baseAwsKmsConfigDTO.setCredentialType(MANUAL_CONFIG);
+      AwsKmsManualCredentialConfig manualCredentialConfig = AwsKmsManualCredentialConfig.builder().build();
+      if (!maskSecrets) {
+        if (isNotEmpty(getAccessKey()) && isNotEmpty(getSecretKey())) {
+          manualCredentialConfig.setAccessKey(getAccessKey());
+          manualCredentialConfig.setSecretKey(getSecretKey());
+        }
+      }
+      baseAwsKmsConfigDTO.setCredential(manualCredentialConfig);
+    }
+
     if (!maskSecrets) {
       baseAwsKmsConfigDTO.setKmsArn(getKmsArn());
-      if (isNotEmpty(getAccessKey()) && isNotEmpty(getSecretKey())) {
-        AwsKmsManualCredentialConfig manualCredential =
-            (AwsKmsManualCredentialConfig) baseAwsKmsConfigDTO.getCredential();
-        manualCredential.setAccessKey(getAccessKey());
-        manualCredential.setSecretKey(getSecretKey());
-      }
     }
+
     awsKmsConfigDTO.setBaseAwsKmsConfigDTO(baseAwsKmsConfigDTO);
     return awsKmsConfigDTO;
   }

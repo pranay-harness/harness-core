@@ -49,6 +49,7 @@ func Test_Open_Success(t *testing.T) {
 		newLogProxyClient = oldLogProxyClient
 	}()
 	mGrpcClient := NewMockGrpcLogProxyClient(nil)
+	mGrpcClient.wg.Add(1)
 	mEngineClient := mclient.NewMockLogProxyClient(ctrl)
 	mEngineClient.EXPECT().Client().Return(mGrpcClient)
 
@@ -58,6 +59,8 @@ func Test_Open_Success(t *testing.T) {
 	gc, err := NewGrpcRemoteClient()
 	assert.Nil(t, err)
 	err = gc.Open(ctx, key)
+
+	mGrpcClient.wg.Wait() // wait for the Open call
 	assert.Nil(t, err)
 	assert.Equal(t, len(mGrpcClient.ops), 1)
 	assert.Equal(t, mGrpcClient.ops[0], "open")

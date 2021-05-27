@@ -132,16 +132,17 @@ public class SkipPreFacilitationCheckerTest extends OrchestrationTestBase {
         .handleStepResponse(nodeExecution.getUuid(),
             StepResponseProto.newBuilder()
                 .setStatus(FAILED)
-                .setFailureInfo(FailureInfo.newBuilder()
-                                    .setErrorMessage("Skip Condition Evaluation failed : TestException")
-                                    .addFailureTypes(FailureType.APPLICATION_FAILURE)
-                                    .addFailureData(FailureData.newBuilder()
-                                                        .setMessage("Skip Condition Evaluation failed : TestException")
-                                                        .setLevel(Level.ERROR.name())
-                                                        .setCode(ErrorCode.DEFAULT_ERROR_CODE.name())
-                                                        .addFailureTypes(FailureType.APPLICATION_FAILURE)
-                                                        .build())
-                                    .build())
+                .setFailureInfo(
+                    FailureInfo.newBuilder()
+                        .setErrorMessage("Skip Condition Evaluation failed : INVALID_REQUEST")
+                        .addFailureTypes(FailureType.APPLICATION_FAILURE)
+                        .addFailureData(FailureData.newBuilder()
+                                            .setMessage("Skip Condition Evaluation failed : INVALID_REQUEST")
+                                            .setLevel(Level.ERROR.name())
+                                            .setCode(ErrorCode.DEFAULT_ERROR_CODE.name())
+                                            .addFailureTypes(FailureType.APPLICATION_FAILURE)
+                                            .build())
+                        .build())
                 .build());
   }
 }

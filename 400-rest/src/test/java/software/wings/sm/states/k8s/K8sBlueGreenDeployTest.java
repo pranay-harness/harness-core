@@ -38,6 +38,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.helm.HelmChartInfo;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.k8s.model.K8sPod;
 import io.harness.rule.Owner;
@@ -84,6 +85,8 @@ public class K8sBlueGreenDeployTest extends CategoryTest {
   @Mock private VariableProcessor variableProcessor;
   @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private ActivityService activityService;
+  @Mock private FeatureFlagService featureFlagService;
+
   @InjectMocks
   private K8sBlueGreenDeploy k8sBlueGreenDeploy = spy(new K8sBlueGreenDeploy(K8S_BLUE_GREEN_DEPLOY.name()));
 
@@ -180,7 +183,7 @@ public class K8sBlueGreenDeployTest extends CategoryTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testCommandUnitList() {
-    List<CommandUnit> blueGreenCommandUnits = k8sBlueGreenDeploy.commandUnitList(true);
+    List<CommandUnit> blueGreenCommandUnits = k8sBlueGreenDeploy.commandUnitList(true, "accountId");
     assertThat(blueGreenCommandUnits).isNotEmpty();
     assertThat(blueGreenCommandUnits.get(0).getName()).isEqualTo(K8sCommandUnitConstants.FetchFiles);
     assertThat(blueGreenCommandUnits.get(1).getName()).isEqualTo(K8sCommandUnitConstants.Init);

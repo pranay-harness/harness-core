@@ -1014,6 +1014,9 @@ public class EcsStateHelper {
                             .taskId(instanceElement.getEcsContainerDetails() != null
                                     ? instanceElement.getEcsContainerDetails().getTaskId()
                                     : null)
+                            .taskArn(instanceElement.getEcsContainerDetails() != null
+                                    ? instanceElement.getEcsContainerDetails().getTaskArn()
+                                    : null)
                             .containerInstanceId(instanceElement.getEcsContainerDetails() != null
                                     ? instanceElement.getEcsContainerDetails().getContainerInstanceId()
                                     : null)

@@ -1,10 +1,12 @@
 package io.harness.cvng.cdng.entities;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -14,6 +16,7 @@ import io.harness.persistence.UuidAware;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.time.OffsetDateTime;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import lombok.Builder;
@@ -29,6 +32,7 @@ import org.mongodb.morphia.annotations.Id;
 @EqualsAndHashCode
 @Entity(value = "cvngStepTasks", noClassnameStored = true)
 @HarnessEntity(exportable = true)
+@StoreIn(DbAliases.CVNG)
 public class CVNGStepTask
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, PersistentRegularIterable {
   public static List<MongoIndex> mongoIndexes() {
@@ -69,6 +73,10 @@ public class CVNGStepTask
       return this.asyncTaskIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  public static List<Status> getNonFinalStatues() {
+    return Collections.singletonList(Status.IN_PROGRESS);
   }
   public void validate() {
     Preconditions.checkNotNull(accountId);

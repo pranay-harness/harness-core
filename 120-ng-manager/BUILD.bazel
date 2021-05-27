@@ -1,7 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:macros.bzl", "run_analysis")
-load("//:macros.bzl", "test_targets_list")
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
@@ -16,9 +15,10 @@ shared_dependencies = [
     "@maven//:io_grpc_grpc_protobuf",
     "@maven//:io_grpc_grpc_services",
     "@maven//:io_grpc_grpc_stub",
-    "@maven//:io_grpc_grpc_testing",
 ] + [
     "//:lombok",
+    "//121-access-control-migration:module",
+    "//122-ng-core-user:module",
     "//125-cd-nextgen:module",
     "//136-git-sync-manager:module",
     "//400-rest:module",
@@ -66,7 +66,6 @@ shared_dependencies = [
     "//440-connector-nextgen:module",
     "//955-filters-sdk:module",
     "//955-outbox-sdk:module",
-    "//958-migration-sdk:module",
     "//958-ng-file-service-sdk:module",
     "//960-notification-beans:module",
     "//960-persistence:module",
@@ -366,7 +365,6 @@ shared_dependencies = [
     "@maven//:io_fabric8_kubernetes_api",
     "@maven//:io_fabric8_kubernetes_client",
     "@maven//:io_fabric8_kubernetes_model",
-    "@maven//:io_fabric8_kubernetes_server_mock",
     "@maven//:io_fabric8_openshift_client",
     "@maven//:io_fabric8_zjsonpatch",
     "@maven//:io_github_resilience4j_resilience4j_circuitbreaker",

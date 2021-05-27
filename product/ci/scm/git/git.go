@@ -6,6 +6,7 @@ import (
 
 	"github.com/drone/go-scm/scm"
 	"github.com/wings-software/portal/commons/go/lib/utils"
+	"github.com/wings-software/portal/product/ci/scm/converter"
 	"github.com/wings-software/portal/product/ci/scm/gitclient"
 	pb "github.com/wings-software/portal/product/ci/scm/proto"
 	"go.uber.org/zap"
@@ -61,6 +62,32 @@ func FindFilesInPR(ctx context.Context, request *pb.FindFilesInPRRequest, log *z
 
 	out = &pb.FindFilesInPRResponse{
 		Files: convertChangesList(changes),
+		Pagination: &pb.PageResponse{
+			Next: int32(response.Page.Next),
+		},
+	}
+	return out, nil
+}
+
+func ListCommitsInPR(ctx context.Context, request *pb.ListCommitsInPRRequest, log *zap.SugaredLogger) (out *pb.ListCommitsInPRResponse, err error) {
+	start := time.Now()
+	log.Infow("ListCommitsInPR starting", "slug", request.GetSlug())
+
+	client, err := gitclient.GetGitClient(*request.GetProvider(), log)
+	if err != nil {
+		log.Errorw("ListCommitsInPR failure", "bad provider", request.GetProvider(), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		return nil, err
+	}
+
+	commits, response, err := client.PullRequests.ListCommits(ctx, request.GetSlug(), int(request.GetNumber()), scm.ListOptions{Page: int(request.GetPagination().GetPage())})
+	if err != nil {
+		log.Errorw("ListCommitsInPR failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "number", request.GetNumber(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		return nil, err
+	}
+	log.Infow("ListCommitsInPR success", "slug", request.GetSlug(), "number", request.GetNumber(), "elapsed_time_ms", utils.TimeSince(start))
+
+	out = &pb.ListCommitsInPRResponse{
+		Commits: convertCommitsList(commits),
 		Pagination: &pb.PageResponse{
 			Next: int32(response.Page.Next),
 		},
@@ -194,6 +221,14 @@ func ListCommits(ctx context.Context, request *pb.ListCommitsRequest, log *zap.S
 func convertChangesList(from []*scm.Change) (to []*pb.PRFile) {
 	for _, v := range from {
 		to = append(to, convertChange(v))
+	}
+	return to
+}
+
+func convertCommitsList(from []*scm.Commit) (to []*pb.Commit) {
+	for _, v := range from {
+		convertedCommit, _ := converter.ConvertCommit(v)
+		to = append(to, convertedCommit)
 	}
 	return to
 }

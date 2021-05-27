@@ -10,20 +10,16 @@ import re
 from botocore.config import Config
 from google.cloud import bigquery
 
-from util import create_dataset, if_tbl_exists, createTable, print_
+from util import create_dataset, if_tbl_exists, createTable, print_, TABLE_NAME_FORMAT
 from aws_util import assumed_role_session, STATIC_REGION, get_secret_key
 
 """
 {
 	"accountId": "vZYBQdFRSlesqo3CMB90Ag",
 	"roleArn": "arn:aws:iam::448640225317:role/harnessContinuousEfficiencyRole",
-	"externalId": "harness:891928451355:wFHXHD0RRQWoO8tIZT5YVw",
-	"linkedAccountId": "448640225317"
+	"externalId": "harness:891928451355:wFHXHD0RRQWoO8tIZT5YVw"
 }
 """
-
-TABLE_NAME_FORMAT = "%s.BillingReport_%s.%s"
-
 
 def main(event, context):
     """Triggered from a message on a Cloud Pub/Sub topic.
@@ -47,26 +43,27 @@ def main(event, context):
     jsonData["datasetName"] = "BillingReport_%s" % jsonData["accountIdBQ"]
     create_dataset(client, jsonData["datasetName"])
     dataset = client.dataset(jsonData["datasetName"])
-
+    jsonData["linkedAccountId"] = jsonData["roleArn"].split(":")[4]
     awsEc2InventoryTableRef = dataset.table("awsEc2Inventory")
-    awsEc2InventoryTableRefTemp = dataset.table("awsEc2InventoryTemp")
+    awsEc2InventoryTableRefTemp = dataset.table("awsEc2Inventory_%s" % jsonData.get("linkedAccountId"))
     awsEc2InventoryTableName = TABLE_NAME_FORMAT % (jsonData["projectName"], jsonData["accountIdBQ"], "awsEc2Inventory")
     awsEc2InventoryTableNameTemp = TABLE_NAME_FORMAT % (
-        jsonData["projectName"], jsonData["accountIdBQ"], "awsEc2InventoryTemp")
+        jsonData["projectName"], jsonData["accountIdBQ"], "awsEc2Inventory_%s" % jsonData.get("linkedAccountId"))
 
     if not if_tbl_exists(client, awsEc2InventoryTableRef):
         print_("%s table does not exists, creating table..." % awsEc2InventoryTableRef)
         createTable(client, awsEc2InventoryTableName)
     else:
-        alterTable(client, jsonData)
+        pass
+        #alterTable(client, jsonData)
     if not if_tbl_exists(client, awsEc2InventoryTableRefTemp):
         print_("%s table does not exists, creating table..." % awsEc2InventoryTableRefTemp)
         createTable(client, awsEc2InventoryTableNameTemp)
         # Add alter table in else clause if needed
 
-    ec2_data_map = get_ec2_data(jsonData)
+    ec2_data_map, uniqueinstanceids = get_ec2_data(jsonData)
     print_(ec2_data_map)
-
+    uniqueinstanceids = ", ".join(f"'{w}'" for w in uniqueinstanceids)
     print_("Total instances for which describe-instance data was fetched: %s" % len(ec2_data_map))
     if len(ec2_data_map) == 0:
         print_("No EC2s found")
@@ -83,24 +80,12 @@ def main(event, context):
     job = client.load_table_from_file(data_as_file, awsEc2InventoryTableNameTemp, job_config=job_config)
     print_(job.job_id)
     job.result()
-    lastUpdatedAt = datetime.datetime.utcnow()
-    query = """
-    MERGE %s T
-    USING %s S
-    ON T.InstanceId = S.InstanceId
-    WHEN MATCHED THEN
-      UPDATE SET publicIpAddress = s.publicIpAddress, state = s.state, lastUpdatedAt = '%s', 
-        stateTransitionReason = s.stateTransitionReason, volumeIds = s.volumeIds
-    WHEN NOT MATCHED THEN
-      INSERT (linkedAccountId, instanceId, instanceType, 
-        region, availabilityZone, tenancy, publicIpAddress, state, labels, cpuAvg, cpuMin, 
-        cpuMax, lastUpdatedAt, instanceLaunchedAt, instanceLifeCycle, volumeIds, reservationId, stateTransitionReason) 
-      VALUES(linkedAccountId, instanceId, instanceType, 
-        region, availabilityZone, tenancy, publicIpAddress, state, labels, cpuAvg, cpuMin, 
-        cpuMax, lastUpdatedAt, instanceLaunchedAt, instanceLifeCycle, volumeIds, reservationId, stateTransitionReason) 
-    """ % (awsEc2InventoryTableName, awsEc2InventoryTableNameTemp, lastUpdatedAt)
-    print_(query)
 
+    query = """ DELETE FROM `%s` WHERE InstanceId IN (%s) AND linkedAccountIdPartition = MOD(%s,10000);
+                INSERT INTO `%s` SELECT * FROM `%s` WHERE linkedAccountIdPartition = MOD(%s,10000);
+                """ % (awsEc2InventoryTableName, uniqueinstanceids, jsonData["linkedAccountId"],
+                       awsEc2InventoryTableName, awsEc2InventoryTableNameTemp, jsonData["linkedAccountId"])
+    print_(query)
     query_job = client.query(query)
     query_job.result()  # wait for job to complete
     update_ec2_state(client, jsonData)
@@ -136,6 +121,7 @@ def get_ec2_data(jsonData):
         print_("Using static region list")
         REGIONS = STATIC_REGION
 
+    uniqueinstanceids = set()
     for region in REGIONS:
         instance_count = 0
         ec2 = boto3.client('ec2', region_name=region, aws_access_key_id=key,
@@ -146,17 +132,20 @@ def get_ec2_data(jsonData):
         try:
             # Start iterating over the paginator. Populate EC2_DATA_MAP
             for instances in page_iterator:
-                instance_count += prepare_ec2_data_map(instances, EC2_DATA_MAP, region)
+                uniqueinstanceids_region = prepare_ec2_data_map(instances, EC2_DATA_MAP, region)
+                instance_count += len(uniqueinstanceids_region)
+                uniqueinstanceids = uniqueinstanceids.union(uniqueinstanceids_region)
         except Exception as e:
-            print_(e, "ERROR")
-            print_("Error calling describe instances for %s" % region)
+            print_(e)
+            print_("Error calling describe instances for %s" % region, "ERROR")
             continue
 
         print_("Found %s instances in region %s" % (instance_count, region))
-    return EC2_DATA_MAP
+    return EC2_DATA_MAP, uniqueinstanceids
+
 
 def prepare_ec2_data_map(allinstances, EC2_DATA_MAP, region):
-    instance_count = 0
+    uniqueinstanceids_region = set()
     for instances_ in allinstances["Reservations"]:
         owner_account = instances_["OwnerId"]
         reservation_id = instances_.get("ReservationId")
@@ -175,21 +164,20 @@ def prepare_ec2_data_map(allinstances, EC2_DATA_MAP, region):
                     "publicIpAddress": instance.get("PublicIpAddress"),
                     "state": instance["State"]["Name"],
                     "labels": instance.get("Tags"),
-                    "cpuAvg": "",  # will be updated by CF2
-                    "cpuMin": "",
-                    "cpuMax": "",
                     "lastUpdatedAt": datetime.datetime.utcnow().__str__(),
                     "instanceLaunchedAt": launchTime,
                     "volumeIds": get_volume_ids(instance.get("BlockDeviceMappings", [])),
                     "reservationId": reservation_id,
-                    "instanceLifeCycle": instance.get("InstanceLifecycle"),
-                    "stateTransitionReason": instance.get("StateTransitionReason")
+                    "instanceLifeCycle": instance.get("InstanceLifecycle", "scheduled"),
+                    "stateTransitionReason": instance.get("StateTransitionReason"),
+                    "linkedAccountIdPartition": int(owner_account) % 10000
                 })
-                instance_count += 1
+                uniqueinstanceids_region.add(instance["InstanceId"])
             except Exception as e:
                 print_("Error in instance data :\n %s" % instance, 'ERROR')
                 print_(e)
-    return instance_count
+    return uniqueinstanceids_region
+
 
 def get_volume_ids(blockdevicemapping):
     volume_ids = []
@@ -209,13 +197,14 @@ def alterTable(client, jsonData):
     :return: none
     """
     ds = "%s.%s" % (jsonData["projectName"], jsonData["datasetName"])
-    for table in ['awsEc2Inventory', 'awsEc2InventoryTemp']:
+    for table in ['awsEc2Inventory', "awsEc2Inventory_%s" % jsonData.get("linkedAccountId")]:
         print_("Altering %s Data Table" % table)
         query = "ALTER TABLE `%s.%s` " \
                 "ADD COLUMN IF NOT EXISTS volumeIds ARRAY<STRING>, " \
                 "ADD COLUMN IF NOT EXISTS instanceLifeCycle STRING, " \
                 "ADD COLUMN IF NOT EXISTS reservationId STRING," \
-                "ADD COLUMN IF NOT EXISTS stateTransitionReason STRING;" % (ds, table)
+                "ADD COLUMN IF NOT EXISTS stateTransitionReason STRING, " \
+                "ADD COLUMN IF NOT EXISTS linkedAccountIdPartition INT64;" % (ds, table)
 
         try:
             query_job = client.query(query)
@@ -233,8 +222,8 @@ def update_ec2_state(client, jsonData):
     """
     lastUpdatedAt = datetime.date.today()  # - timedelta(days = 1)
     ds = "%s.%s" % (jsonData["projectName"], jsonData["datasetName"])
-    query = "UPDATE `%s.awsEc2Inventory` set state='terminated' WHERE state='running' and lastUpdatedAt < '%s' ;" % (
-        ds, lastUpdatedAt)
+    query = "UPDATE `%s.awsEc2Inventory` set state='terminated' WHERE state='running' and lastUpdatedAt < '%s' and linkedAccountIdPartition=MOD(%s,10000);" % (
+        ds, lastUpdatedAt, jsonData["linkedAccountId"])
 
     try:
         query_job = client.query(query)

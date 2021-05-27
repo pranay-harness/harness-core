@@ -359,7 +359,7 @@
             "count": {
               "oneOf": [
                 {
-                  "$ref": "#/definitions/ParameterFieldInteger"
+                  "$ref": "#/definitions/ParameterFieldString"
                 },
                 {
                   "type": "string"
@@ -1537,8 +1537,7 @@
           "required": [
             "approvalCriteria",
             "connectorRef",
-            "issueKey",
-            "rejectionCriteria"
+            "issueKey"
           ],
           "properties": {
             "approvalCriteria": {
@@ -1640,6 +1639,11 @@
         },
         {
           "type": "object",
+          "required": [
+            "connectorRef",
+            "namespace",
+            "releaseName"
+          ],
           "properties": {
             "connectorRef": {
               "type": "string"
@@ -1829,6 +1833,12 @@
         },
         {
           "type": "object",
+          "required": [
+            "cluster",
+            "connectorRef",
+            "namespace",
+            "releaseName"
+          ],
           "properties": {
             "cluster": {
               "type": "string"
@@ -2370,6 +2380,10 @@
               "type": "number",
               "format": "double"
             },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+            },
             "type": {
               "type": "string",
               "enum": [
@@ -2617,34 +2631,6 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "ParameterFieldInteger": {
-      "type": "object",
-      "properties": {
-        "expression": {
-          "type": "boolean"
-        },
-        "expressionValue": {
-          "type": "string"
-        },
-        "inputSetValidator": {
-          "$ref": "#/definitions/InputSetValidator"
-        },
-        "jsonResponseField": {
-          "type": "boolean"
-        },
-        "responseField": {
-          "type": "string"
-        },
-        "typeString": {
-          "type": "boolean"
-        },
-        "value": {
-          "type": "integer",
-          "format": "int32"
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
     "ParameterFieldListTaskSelectorYaml": {
       "type": "object",
       "properties": {
@@ -2671,6 +2657,33 @@
           "items": {
             "$ref": "#/definitions/TaskSelectorYaml"
           }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParameterFieldString": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -2703,7 +2716,7 @@
             "percentage": {
               "oneOf": [
                 {
-                  "$ref": "#/definitions/ParameterFieldInteger"
+                  "$ref": "#/definitions/ParameterFieldString"
                 },
                 {
                   "type": "string"
@@ -3070,6 +3083,10 @@
           "properties": {
             "default": {
               "type": "string"
+            },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
             },
             "type": {
               "type": "string",
@@ -3602,10 +3619,12 @@
           }
         },
         "identifier": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
         },
         "timeout": {
           "type": "string"
@@ -3971,10 +3990,12 @@
           }
         },
         "identifier": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
         },
         "rollbackSteps": {
           "type": "array",
@@ -4187,6 +4208,10 @@
           "properties": {
             "default": {
               "type": "string"
+            },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
             },
             "type": {
               "type": "string",

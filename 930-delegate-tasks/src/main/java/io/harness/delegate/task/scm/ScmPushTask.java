@@ -11,6 +11,7 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.exception.UnknownEnumTypeException;
 import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
@@ -54,7 +55,7 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
         ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
             createFileResponse.getStatus(), createFileResponse.getError());
         return ScmPushTaskResponseData.builder()
-            .createFileResponse(createFileResponse)
+            .createFileResponse(createFileResponse.toByteArray())
             .changeType(scmPushTaskParams.getChangeType())
             .build();
       }
@@ -69,7 +70,7 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
         ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
             deleteFileResponse.getStatus(), deleteFileResponse.getError());
         return ScmPushTaskResponseData.builder()
-            .deleteFileResponse(deleteFileResponse)
+            .deleteFileResponse(deleteFileResponse.toByteArray())
             .changeType(scmPushTaskParams.getChangeType())
             .build();
       }
@@ -80,7 +81,7 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
         ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
             updateFileResponse.getStatus(), updateFileResponse.getError());
         return ScmPushTaskResponseData.builder()
-            .updateFileResponse(updateFileResponse)
+            .updateFileResponse(updateFileResponse.toByteArray())
             .changeType(scmPushTaskParams.getChangeType())
             .build();
       }
@@ -88,7 +89,7 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
       case NONE:
         throw new NotImplementedException("Not Implemented");
       default: {
-        throw new NotImplementedException("Not Implemented");
+        throw new UnknownEnumTypeException("ChangeType", scmPushTaskParams.getChangeType().toString());
       }
     }
   }

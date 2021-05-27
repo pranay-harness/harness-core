@@ -41,6 +41,7 @@ import io.harness.cdng.k8s.K8sScaleStepParameter;
 import io.harness.cdng.k8s.K8sStepPassThroughData;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
 import io.harness.cdng.manifest.yaml.BitbucketStore;
 import io.harness.cdng.manifest.yaml.GcsStoreConfig;
 import io.harness.cdng.manifest.yaml.GitLabStore;
@@ -198,5 +199,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(NativeHelmServiceSpec.class, 12542);
     kryo.register(TerraformPlanStepInfo.class, 12543);
     kryo.register(HelmValuesFetchResponsePassThroughData.class, 12544);
+    kryo.register(StepExceptionPassThroughData.class, 12545);
   }
 }

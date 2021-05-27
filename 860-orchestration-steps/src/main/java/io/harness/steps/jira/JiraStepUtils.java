@@ -7,6 +7,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.jira.beans.JiraField;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,7 +18,7 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(HarnessTeam.CDC)
 @UtilityClass
 public class JiraStepUtils {
-  public Map<String, ParameterField<String>> prepareFieldMap(List<JiraField> fields) {
+  public Map<String, ParameterField<String>> processJiraFieldsList(List<JiraField> fields) {
     if (fields == null) {
       return null;
     }
@@ -37,5 +38,26 @@ public class JiraStepUtils {
           String.format("Duplicate jira fields: [%s]", String.join(", ", duplicateFields)));
     }
     return fieldsMap;
+  }
+
+  public Map<String, String> processJiraFieldsInParameters(Map<String, ParameterField<String>> fields) {
+    if (EmptyPredicate.isEmpty(fields)) {
+      return Collections.emptyMap();
+    }
+
+    Map<String, String> finalMap = new HashMap<>();
+    for (Map.Entry<String, ParameterField<String>> entry : fields.entrySet()) {
+      if (EmptyPredicate.isEmpty(entry.getKey()) || ParameterField.isNull(entry.getValue())) {
+        continue;
+      }
+      if (entry.getValue().isExpression()) {
+        throw new InvalidRequestException(String.format("Field [%s] has invalid jira field value", entry.getKey()));
+      }
+      if (entry.getValue().getValue() == null) {
+        continue;
+      }
+      finalMap.put(entry.getKey(), entry.getValue().getValue());
+    }
+    return finalMap;
   }
 }

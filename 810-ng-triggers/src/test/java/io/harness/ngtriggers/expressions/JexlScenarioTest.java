@@ -16,6 +16,8 @@ import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 import io.harness.product.ci.scm.proto.PullRequest;
 import io.harness.product.ci.scm.proto.PullRequestHook;
 import io.harness.product.ci.scm.proto.PushHook;
+import io.harness.product.ci.scm.proto.Repository;
+import io.harness.product.ci.scm.proto.User;
 import io.harness.rule.Owner;
 
 import java.util.Arrays;
@@ -68,11 +70,19 @@ public class JexlScenarioTest extends CategoryTest {
                                                            .setSource("source")
                                                            .setSha("123")
                                                            .build())
+                                                .setRepo(Repository.newBuilder().setLink("https://github.com").build())
+                                                .setSender(User.newBuilder().setLogin("user").build())
                                                 .build())
                                      .build();
 
   ParseWebhookResponse pushEvent =
-      ParseWebhookResponse.newBuilder().setPush(PushHook.newBuilder().setAfter("456").build()).build();
+      ParseWebhookResponse.newBuilder()
+          .setPush(PushHook.newBuilder()
+                       .setAfter("456")
+                       .setRepo(Repository.newBuilder().setLink("https://github.com").build())
+                       .setSender(User.newBuilder().setLogin("user").build())
+                       .build())
+          .build();
 
   @Test
   @Owner(developers = MATT)
@@ -162,9 +172,13 @@ public class JexlScenarioTest extends CategoryTest {
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.type>")).isEqualTo("WEBHOOK");
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.commitSha>")).isEqualTo("123");
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.prNumber>")).isEqualTo("1");
+    assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.repoUrl>")).isEqualTo("https://github.com");
+    assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.gitUser>")).isEqualTo("user");
 
     triggerExpressionEvaluator = new TriggerExpressionEvaluator(pushEvent, emptyList(), json);
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.commitSha>")).isEqualTo("456");
+    assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.repoUrl>")).isEqualTo("https://github.com");
+    assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.gitUser>")).isEqualTo("user");
   }
 
   // If there's a way to parse a string to json using jexl, we can read the message to parse nested json

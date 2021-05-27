@@ -1,13 +1,17 @@
 package io.harness.pms.inputset.helpers;
 
 import static io.harness.rule.OwnerRule.NAMAN;
+import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.pms.merger.PipelineYamlConfig;
 import io.harness.pms.merger.fqn.FQN;
+import io.harness.pms.merger.helpers.FQNUtils;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.rule.Owner;
 
@@ -88,5 +92,44 @@ public class FQNUtilsTest extends CategoryTest {
     assertThat(config).isNotNull();
     PipelineYamlConfig configRes = new PipelineYamlConfig(config.getFqnToValueMap(), config.getYamlMap());
     assertThat(configRes.getYaml().replace("\"", "")).isEqualTo(yaml);
+  }
+
+  private String toYaml(String fileName) throws IOException {
+    ClassLoader classLoader = getClass().getClassLoader();
+    return Resources.toString(Objects.requireNonNull(classLoader.getResource(fileName)), StandardCharsets.UTF_8);
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testUniqueFQN() throws IOException {
+    String ValidFqnYaml = "fqnUniqueTest1.yaml";
+    String yaml1 = toYaml(ValidFqnYaml);
+    assertThat(FQNUtils.generateFQNMap(YamlUtils.readTree(yaml1).getNode().getCurrJsonNode()))
+        .isNotInstanceOf(InvalidRequestException.class);
+
+    String sameVariableYaml = "fqnUniqueSameVariableNameTest.yaml";
+    String yaml2 = toYaml(sameVariableYaml);
+    assertThatThrownBy(() -> FQNUtils.generateFQNMap(YamlUtils.readTree(yaml2).getNode().getCurrJsonNode()))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(" This element is coming twice in yaml a.d.h.[name:name1]");
+
+    String sameStageIdentifierYaml = "fqnUniqueSameStageIdentifierTest.yaml";
+    String yaml3 = toYaml(sameStageIdentifierYaml);
+    assertThatThrownBy(() -> FQNUtils.generateFQNMap(YamlUtils.readTree(yaml3).getNode().getCurrJsonNode()))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(" This element is coming twice in yaml a.d.stage[identifier:id1]");
+
+    String sameBarrierIdentifierYaml = "fqnUniqueSameBarrierIdentifierTest.yaml";
+    String yaml4 = toYaml(sameBarrierIdentifierYaml);
+    assertThatThrownBy(() -> FQNUtils.generateFQNMap(YamlUtils.readTree(yaml4).getNode().getCurrJsonNode()))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(
+            " This element is coming twice in yaml a.d.stage[identifier:id1].h.execution.step[identifier:barr1]");
+
+    String failureStrategyYaml = "fqnUniqueFailureStrategyTest.yaml";
+    String yaml5 = toYaml(failureStrategyYaml);
+    assertThat(FQNUtils.generateFQNMap(YamlUtils.readTree(yaml5).getNode().getCurrJsonNode()))
+        .isNotInstanceOf(InvalidRequestException.class);
   }
 }

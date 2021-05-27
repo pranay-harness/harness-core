@@ -8,7 +8,7 @@ trigger:
   source:
     type: Webhook
     spec:
-      type: AWS CodeCommit
+      type: AwsCodeCommit
       spec:
         type: Push
         spec:
@@ -16,11 +16,26 @@ trigger:
           repoName: myrepo
           payloadConditions:
             - key: k1
-              operator: equals
+              operator: Equals
               value: v1
             - key: k2
-              operator: in
+              operator: NotEquals
               value: v2
+            - key: k3
+              operator: In
+              value: v3,c
+            - key: k4
+              operator: NotIn
+              value: v4
+            - key: k5
+              operator: StartsWith
+              value: v5
+            - key: k6
+              operator: EndsWith
+              value: v6
+            - key: k7
+              operator: Contains
+              value: v7
           jexlCondition: true
   inputYaml: |
     pipeline:

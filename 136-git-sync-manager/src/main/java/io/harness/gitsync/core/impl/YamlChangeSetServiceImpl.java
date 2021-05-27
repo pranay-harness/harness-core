@@ -4,36 +4,36 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.gitsync.common.beans.YamlChangeSet.MAX_RETRY_COUNT_EXCEEDED_CODE;
-import static io.harness.gitsync.common.beans.YamlChangeSet.Status.QUEUED;
-import static io.harness.gitsync.common.beans.YamlChangeSet.Status.RUNNING;
-import static io.harness.gitsync.common.beans.YamlChangeSet.Status.SKIPPED;
-
-import static java.lang.String.format;
+import static io.harness.gitsync.common.beans.YamlChangeSetStatus.SKIPPED;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.git.YamlGitConfigDTO;
-import io.harness.exception.NoResultFoundException;
 import io.harness.exception.WingsException;
 import io.harness.gitsync.common.beans.YamlChangeSet;
-import io.harness.gitsync.common.beans.YamlChangeSet.Status;
 import io.harness.gitsync.common.beans.YamlChangeSet.YamlChangeSetKeys;
-import io.harness.gitsync.core.beans.GitSyncMetadata;
+import io.harness.gitsync.common.beans.YamlChangeSetStatus;
+import io.harness.gitsync.core.dtos.YamlChangeSetDTO;
+import io.harness.gitsync.core.dtos.YamlChangeSetSaveDTO;
+import io.harness.gitsync.core.runnable.ChangeSetGroupingKey;
+import io.harness.gitsync.core.runnable.ChangeSetGroupingKey.ChangeSetGroupingKeyKeys;
 import io.harness.gitsync.core.service.YamlChangeSetService;
-import io.harness.gitsync.core.service.YamlGitService;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 import io.harness.logging.ExceptionLogger;
 import io.harness.repositories.yamlChangeSet.YamlChangeSetRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.client.result.UpdateResult;
+import java.time.Duration;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import javax.validation.constraints.NotNull;
+import java.util.stream.Collectors;
+import javax.validation.constraints.Size;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -41,167 +41,75 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
-@ValidateOnExecution
 @Slf4j
 @OwnedBy(DX)
+@ValidateOnExecution
 public class YamlChangeSetServiceImpl implements YamlChangeSetService {
-  @Inject private YamlGitService yamlGitService;
   @Inject private YamlChangeSetRepository yamlChangeSetRepository;
-
-  private static final Integer MAX_RETRY_COUNT = 3;
-
-  @Override
-  public YamlChangeSet save(YamlChangeSet yamlChangeSet) {
-    populateGitSyncMetadata(yamlChangeSet);
-    return yamlChangeSetRepository.save(yamlChangeSet);
-  }
+  @Inject private PersistentLocker persistentLocker;
 
   @Override
-  public void populateGitSyncMetadata(YamlChangeSet yamlChangeSet) {
-    if (StringUtils.isBlank(yamlChangeSet.getQueueKey()) || yamlChangeSet.getGitSyncMetadata() == null) {
-      try {
-        final YamlGitConfigDTO yamlGitConfig = getYamlGitConfig(yamlChangeSet).get(0);
-
-        yamlChangeSet.setGitSyncMetadata(buildGitSyncMetadata(yamlGitConfig));
-
-        yamlChangeSet.setQueueKey(buildQueueKey(yamlGitConfig));
-      } catch (Exception e) {
-        log.warn("unable to populate git sync metadata. ignoring these fields", e);
-      }
-    }
+  public YamlChangeSetDTO save(YamlChangeSetSaveDTO yamlChangeSet) {
+    final YamlChangeSet changeSet = getYamlChangesetFromSaveDTO(yamlChangeSet);
+    final YamlChangeSet savedChangeSet = yamlChangeSetRepository.save(changeSet);
+    return YamlChangeSetMapper.getYamlChangeSetDto(savedChangeSet);
   }
 
-  private GitSyncMetadata buildGitSyncMetadata(YamlGitConfigDTO yamlGitConfig) {
-    return GitSyncMetadata.builder()
-        .gitConnectorId(yamlGitConfig.getGitConnectorRef())
-        .branchName(yamlGitConfig.getBranch())
-        .repoName(yamlGitConfig.getRepo())
-        .yamlGitConfigId(yamlGitConfig.getIdentifier())
+  private YamlChangeSet getYamlChangesetFromSaveDTO(YamlChangeSetSaveDTO yamlChangeSet) {
+    return YamlChangeSet.builder()
+        .repoUrl(yamlChangeSet.getRepoUrl())
+        .accountId(yamlChangeSet.getAccountId())
+        .branch(yamlChangeSet.getBranch())
+        .status(YamlChangeSetStatus.QUEUED.name())
+        .queueKey(buildQueueKey(yamlChangeSet))
+        .gitWebhookRequestAttributes(yamlChangeSet.getGitWebhookRequestAttributes())
+        .eventMetadata(yamlChangeSet.getEventMetadata())
+        .eventType(yamlChangeSet.getEventType())
+        .queuedOn(System.currentTimeMillis())
         .build();
   }
 
-  @NotNull
-  private List<YamlGitConfigDTO> getYamlGitConfig(YamlChangeSet yamlChangeSet) {
-    return getYamlGitConfigForGitToHarness(yamlChangeSet);
-  }
-
-  private String buildQueueKey(YamlGitConfigDTO yamlGitConfig) {
-    return format("%s:%s:%s", yamlGitConfig.getAccountIdentifier(), yamlGitConfig.getGitConnectorRef(),
-        yamlGitConfig.getBranch());
-  }
-
-  @NotNull
-  private List<YamlGitConfigDTO> getYamlGitConfigForGitToHarness(YamlChangeSet yamlChangeSet) {
-    final List<YamlGitConfigDTO> yamlGitConfigs =
-        yamlGitService.getYamlGitConfigsForGitToHarnessChangeSet(yamlChangeSet);
-    if (isEmpty(yamlGitConfigs)) {
-      throw NoResultFoundException.newBuilder()
-          .message(format(
-              "unable to find yamlGitConfig for git to harness changeset for account =[%s], git connector id =[%s], branch=[%s]. Git Sync might not have been configured",
-              yamlChangeSet.getAccountId(), yamlChangeSet.getGitWebhookRequestAttributes().getGitConnectorId(),
-              yamlChangeSet.getGitWebhookRequestAttributes().getBranchName()))
-          .build();
-    }
-    return yamlGitConfigs;
-  }
-
-  private boolean isGitSyncConfiguredForChangeSet(YamlChangeSet yamlChangeSet) {
-    return yamlChangeSet.getGitSyncMetadata() != null;
+  private String buildQueueKey(YamlChangeSetSaveDTO yamlChangeSet) {
+    return String.format(
+        "%s:%s:%s", yamlChangeSet.getAccountId(), yamlChangeSet.getRepoUrl(), yamlChangeSet.getBranch());
   }
 
   @Override
-  public Optional<YamlChangeSet> get(String accountId, String changeSetId) {
-    return yamlChangeSetRepository.findById(changeSetId);
+  public Optional<YamlChangeSetDTO> get(String accountId, String changeSetId) {
+    final Optional<YamlChangeSet> changeSet = yamlChangeSetRepository.findById(changeSetId);
+    return changeSet.map(YamlChangeSetMapper::getYamlChangeSetDto);
   }
 
   @Override
-  public YamlChangeSet update(YamlChangeSet yamlChangeSet) {
-    Objects.requireNonNull(yamlChangeSet.getUuid());
-    return Optional.of(yamlChangeSetRepository.save(yamlChangeSet)).orElse(null);
+  public Optional<YamlChangeSetDTO> peekQueueHead(
+      String accountId, String queueKey, YamlChangeSetStatus yamlChangeSetStatus) {
+    final Optional<YamlChangeSet> changeSet =
+        yamlChangeSetRepository.findFirstByAccountIdAndQueueKeyAndStatusOrderByQueuedOn(
+            accountId, queueKey, yamlChangeSetStatus.name());
+    return changeSet.map(YamlChangeSetMapper::getYamlChangeSetDto);
+  }
+
+  public boolean changeSetExistsFoQueueKey(
+      String accountId, String queueKey, List<YamlChangeSetStatus> yamlChangeSetStatuses) {
+    final List<String> statuses = getStatus(yamlChangeSetStatuses);
+    return yamlChangeSetRepository.countByAccountIdAndStatusInAndQueueKey(accountId, statuses, queueKey) > 0;
+  }
+
+  private List<String> getStatus(@Size(min = 1) List<YamlChangeSetStatus> yamlChangeSetStatuses) {
+    return yamlChangeSetStatuses.stream().map(Enum::name).collect(Collectors.toList());
   }
 
   @Override
-  public synchronized YamlChangeSet getQueuedChangeSetForWaitingQueueKey(
-      String accountId, String queueKey, int maxRunningChangesetsForAccount) {
-    // TODO(abhinav): add persistent locker
-    if (anyChangeSetRunningFoQueueKey(accountId, queueKey)) {
-      log.info("Found running changeset for queuekey. Returning null");
-      return null;
-    }
-
-    if (accountQuotaMaxedOut(accountId, maxRunningChangesetsForAccount)) {
-      log.info("Account quota has been reached. Returning null");
-      return null;
-    }
-
-    final YamlChangeSet selectedChangeSet = selectQueuedChangeSetWithPriority(accountId, queueKey);
-
-    if (selectedChangeSet == null) {
-      log.info("No change set found in queued state");
-    }
-
-    return selectedChangeSet;
+  public int countByAccountIdAndStatus(String accountId, List<YamlChangeSetStatus> yamlChangeSetStatuses) {
+    return yamlChangeSetRepository.countByAccountIdAndStatusIn(accountId, getStatus(yamlChangeSetStatuses));
   }
 
-  private boolean accountQuotaMaxedOut(String accountId, int maxRunningChangesetsForAccount) {
-    return yamlChangeSetRepository.countByAccountIdAndStatus(accountId, RUNNING) >= maxRunningChangesetsForAccount;
-  }
-
-  private YamlChangeSet selectQueuedChangeSetWithPriority(String accountId, String queueKey) {
-    //      find the head of the queue
-    YamlChangeSet selectedYamlChangeSet = null;
-
-    final Optional<YamlChangeSet> headChangeSet = peekQueueHead(accountId, queueKey);
-    if (headChangeSet.isPresent() && isFullSync(headChangeSet.get())) {
-      selectedYamlChangeSet = headChangeSet.get();
-    }
-
-    if (selectedYamlChangeSet == null) {
-      final Optional<YamlChangeSet> oldestGitToHarnessChangeSet = getOldestGitToHarnessChangeSet(accountId, queueKey);
-      if (oldestGitToHarnessChangeSet.isPresent()) {
-        selectedYamlChangeSet = oldestGitToHarnessChangeSet.get();
-      }
-    }
-
-    if (selectedYamlChangeSet == null && headChangeSet.isPresent()) {
-      selectedYamlChangeSet = headChangeSet.get();
-    }
-
-    if (selectedYamlChangeSet != null) {
-      final boolean updateStatus = updateStatus(accountId, selectedYamlChangeSet.getUuid(), Status.RUNNING);
-      if (updateStatus) {
-        return get(accountId, selectedYamlChangeSet.getUuid()).orElse(null);
-      } else {
-        log.error("error while updating status of yaml change set Id = [{}]. Skipping selection",
-            selectedYamlChangeSet.getUuid());
-      }
-    }
-    return null;
-  }
-
-  private boolean isFullSync(YamlChangeSet yamlChangeSet) {
-    return yamlChangeSet.isFullSync();
-  }
-
-  private Optional<YamlChangeSet> peekQueueHead(String accountId, String queueKey) {
-    return yamlChangeSetRepository.findFirstByAccountIdAndQueueKeyAndStatusOrderByCreatedAt(
-        accountId, queueKey, QUEUED);
-  }
-
-  private Optional<YamlChangeSet> getOldestGitToHarnessChangeSet(String accountId, String queueKey) {
-    return yamlChangeSetRepository.findFirstByAccountIdAndQueueKeyAndStatusOrderByCreatedAt(
-        accountId, queueKey, QUEUED);
-  }
-
-  private boolean anyChangeSetRunningFoQueueKey(String accountId, String queueKey) {
-    return yamlChangeSetRepository.countByAccountIdAndStatusAndQueueKey(accountId, RUNNING, queueKey) > 0;
-  }
   @Override
-  public boolean updateStatus(String accountId, String changeSetId, Status newStatus) {
-    Optional<YamlChangeSet> yamlChangeSet = get(accountId, changeSetId);
+  public boolean updateStatus(String accountId, String changeSetId, YamlChangeSetStatus newStatus) {
+    Optional<YamlChangeSetDTO> yamlChangeSet = get(accountId, changeSetId);
     if (yamlChangeSet.isPresent()) {
       UpdateResult updateResult =
-          yamlChangeSetRepository.updateYamlChangeSetStatus(newStatus, yamlChangeSet.get().getUuid());
+          yamlChangeSetRepository.updateYamlChangeSetStatus(newStatus, yamlChangeSet.get().getChangesetId());
       return updateResult.getModifiedCount() != 0;
     } else {
       log.warn("No YamlChangeSet found");
@@ -210,65 +118,70 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   }
 
   @Override
-  public void markQueuedYamlChangeSetsWithMaxRetriesAsSkipped(String accountId) {
-    // TODO(abhinav): add persistent locker
-    Update update = new Update()
-                        .set(YamlChangeSetKeys.status, SKIPPED)
-                        .set(YamlChangeSetKeys.messageCode, MAX_RETRY_COUNT_EXCEEDED_CODE);
-    Query query = new Query().addCriteria(new Criteria()
-                                              .and(YamlChangeSetKeys.accountId)
-                                              .is(accountId)
-                                              .and(YamlChangeSetKeys.status)
-                                              .is(SKIPPED)
-                                              .and(YamlChangeSetKeys.retryCount)
-                                              .gt(MAX_RETRY_COUNT));
-    UpdateResult status = yamlChangeSetRepository.update(query, update);
-    log.info(
-        "Updated the status of [{}] YamlChangeSets to Skipped. Max retry count exceeded", status.getModifiedCount());
+  public void markQueuedYamlChangeSetsWithMaxRetriesAsSkipped(String accountId, int maxRetryCount) {
+    try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
+             YamlChangeSet.class, accountId, Duration.ofMinutes(2), Duration.ofSeconds(10))) {
+      Update update = new Update()
+                          .set(YamlChangeSetKeys.status, SKIPPED)
+                          .set(YamlChangeSetKeys.messageCode, MAX_RETRY_COUNT_EXCEEDED_CODE);
+      Query query = new Query().addCriteria(new Criteria()
+                                                .and(YamlChangeSetKeys.accountId)
+                                                .is(accountId)
+                                                .and(YamlChangeSetKeys.status)
+                                                .is(SKIPPED)
+                                                .and(YamlChangeSetKeys.retryCount)
+                                                .gt(maxRetryCount));
+      UpdateResult status = yamlChangeSetRepository.update(query, update);
+      log.info(
+          "Updated the status of [{}] YamlChangeSets to Skipped. Max retry count exceeded", status.getModifiedCount());
+    }
   }
 
   @Override
-  public boolean updateStatusAndIncrementRetryCountForYamlChangeSets(
-      String accountId, Status newStatus, List<Status> currentStatuses, List<String> yamlChangeSetIds) {
-    // TODO(abhinav): add persistent locker
-    if (isEmpty(yamlChangeSetIds)) {
-      return true;
+  public boolean updateStatusAndIncrementRetryCountForYamlChangeSets(String accountId, YamlChangeSetStatus newStatus,
+      List<YamlChangeSetStatus> currentStatuses, List<String> yamlChangeSetIds) {
+    try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
+             YamlChangeSet.class, accountId, Duration.ofMinutes(2), Duration.ofSeconds(10))) {
+      if (isEmpty(yamlChangeSetIds)) {
+        return true;
+      }
+
+      Update updateOps = new Update().set(YamlChangeSetKeys.status, newStatus);
+      updateOps.inc(YamlChangeSetKeys.retryCount);
+
+      Query query = new Query(new Criteria()
+                                  .and(YamlChangeSetKeys.accountId)
+                                  .is(accountId)
+                                  .and(YamlChangeSetKeys.status)
+                                  .in(currentStatuses)
+                                  .and(YamlChangeSetKeys.uuid)
+                                  .in(yamlChangeSetIds));
+
+      return updateYamlChangeSets(accountId, query, updateOps);
     }
-
-    Update updateOps = new Update().set(YamlChangeSetKeys.status, newStatus);
-    updateOps.inc(YamlChangeSetKeys.retryCount);
-
-    Query query = new Query(new Criteria()
-                                .and(YamlChangeSetKeys.accountId)
-                                .is(accountId)
-                                .and(YamlChangeSetKeys.status)
-                                .in(currentStatuses)
-                                .and(YamlChangeSetKeys.uuid)
-                                .in(yamlChangeSetIds));
-
-    return updateYamlChangeSets(accountId, query, updateOps);
   }
 
   @Override
-  public boolean updateStatusForGivenYamlChangeSets(
-      String accountId, Status newStatus, List<Status> currentStatuses, List<String> yamlChangeSetIds) {
-    // TODO(abhinav): add persistent locker
+  public boolean updateStatusForGivenYamlChangeSets(String accountId, YamlChangeSetStatus newStatus,
+      List<YamlChangeSetStatus> currentStatuses, List<String> yamlChangeSetIds) {
+    try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
+             YamlChangeSet.class, accountId, Duration.ofMinutes(2), Duration.ofSeconds(10))) {
+      if (isEmpty(yamlChangeSetIds)) {
+        return true;
+      }
 
-    if (isEmpty(yamlChangeSetIds)) {
-      return true;
+      Query query = new Query().addCriteria(new Criteria()
+                                                .and(YamlChangeSetKeys.accountId)
+                                                .is(accountId)
+                                                .and(YamlChangeSetKeys.status)
+                                                .in(currentStatuses)
+                                                .and(YamlChangeSetKeys.uuid)
+                                                .in(yamlChangeSetIds));
+
+      Update updateOps = new Update().set(YamlChangeSetKeys.status, newStatus);
+
+      return updateYamlChangeSets(accountId, query, updateOps);
     }
-
-    Query query = new Query().addCriteria(new Criteria()
-                                              .and(YamlChangeSetKeys.accountId)
-                                              .is(accountId)
-                                              .and(YamlChangeSetKeys.status)
-                                              .in(currentStatuses)
-                                              .and(YamlChangeSetKeys.uuid)
-                                              .in(yamlChangeSetIds));
-
-    Update updateOps = new Update().set(YamlChangeSetKeys.status, newStatus);
-
-    return updateYamlChangeSets(accountId, query, updateOps);
   }
 
   private boolean updateYamlChangeSets(String accountId, Query query, Update updateOperations) {
@@ -285,26 +198,49 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   }
 
   @Override
-  public List<YamlChangeSet> findByAccountIdsStatusLastUpdatedAtLessThan(
-      List<String> runningAccountIdList, long timeout) {
-    return yamlChangeSetRepository.findByAccountIdAndStatusAndLastUpdatedAtLessThan(
-        runningAccountIdList, Status.RUNNING, System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(timeout));
+  public List<YamlChangeSetDTO> findByAccountIdsStatusLastUpdatedAtLessThan(
+      List<String> runningAccountIdList, @Size(min = 1) List<YamlChangeSetStatus> yamlChangeSetStatuses, long timeout) {
+    final List<String> statuses = getStatus(yamlChangeSetStatuses);
+    final List<YamlChangeSet> changeSets = yamlChangeSetRepository.findByAccountIdAndStatusInAndLastUpdatedAtLessThan(
+        runningAccountIdList, statuses, System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(timeout));
+    return changeSets.stream().map(YamlChangeSetMapper::getYamlChangeSetDto).collect(Collectors.toList());
   }
 
   @Override
-  public List<String> findDistinctAccountIdsByStatus(Status status) {
-    return yamlChangeSetRepository.findDistinctAccountIdByStatus(status);
+  public List<String> findDistinctAccountIdsByStatus(List<YamlChangeSetStatus> status) {
+    return yamlChangeSetRepository.findDistinctAccountIdByStatusIn(status);
   }
 
   @Override
   public UpdateResult updateYamlChangeSetsToNewStatusWithMessageCodeAndCreatedAtLessThan(
-      Status oldStatus, Status newStatus, long timeout, String messageCode) {
-    return yamlChangeSetRepository.updateYamlChangeSetsToNewStatusWithMessageCodeAndCreatedAtLessThan(
-        oldStatus, newStatus, System.currentTimeMillis() - timeout, messageCode);
+      YamlChangeSetStatus oldStatus, YamlChangeSetStatus newStatus, long timeout, String messageCode) {
+    return yamlChangeSetRepository.updateYamlChangeSetsToNewStatusWithMessageCodeAndQueuedAtLessThan(
+        oldStatus, newStatus, timeout, messageCode);
+  }
+
+  private <C> AggregationResults aggregate(Aggregation aggregation, Class<C> castClass) {
+    return yamlChangeSetRepository.aggregate(aggregation, castClass);
   }
 
   @Override
-  public <C> AggregationResults aggregate(Aggregation aggregation, Class<C> castClass) {
-    return yamlChangeSetRepository.aggregate(aggregation, castClass);
+  public Set<ChangeSetGroupingKey> getChangesetGroupingKeys(Criteria criteria) {
+    Aggregation aggregation = Aggregation.newAggregation(Aggregation.match(criteria),
+        Aggregation.group(YamlChangeSetKeys.accountId, YamlChangeSetKeys.queueKey)
+            .first(YamlChangeSetKeys.accountId)
+            .as(YamlChangeSetKeys.accountId)
+            .first(YamlChangeSetKeys.queueKey)
+            .as(YamlChangeSetKeys.queueKey)
+            .count()
+            .as(ChangeSetGroupingKeyKeys.count));
+    AggregationResults<ChangeSetGroupingKey> aggregationResults = aggregate(aggregation, ChangeSetGroupingKey.class);
+
+    final Set<ChangeSetGroupingKey> keys = new HashSet<>();
+    aggregationResults.iterator().forEachRemaining(keys::add);
+    return keys;
+  }
+
+  @Override
+  public List<YamlChangeSet> list(String queueKey, String accountId, YamlChangeSetStatus status) {
+    return yamlChangeSetRepository.findByAccountIdAndQueueKeyAndStatus(accountId, queueKey, status.name());
   }
 }

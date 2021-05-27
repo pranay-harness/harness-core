@@ -218,7 +218,7 @@ public class K8sCanaryDeploy extends AbstractK8sState {
   public void handleAbortEvent(ExecutionContext context) {}
 
   @Override
-  public List<CommandUnit> commandUnitList(boolean remoteStoreType) {
+  public List<CommandUnit> commandUnitList(boolean remoteStoreType, String accountId) {
     List<CommandUnit> canaryCommandUnits = new ArrayList<>();
 
     if (remoteStoreType) {

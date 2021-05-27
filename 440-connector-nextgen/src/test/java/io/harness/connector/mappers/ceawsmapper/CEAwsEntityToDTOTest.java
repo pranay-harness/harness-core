@@ -42,11 +42,12 @@ public class CEAwsEntityToDTOTest extends CategoryTest {
   public void testCreateConnectorDTOWithCURDisabled() {
     final CEAwsConfig ceAwsConfig = AWSConnectorTestHelper.createCEAwsConfigEntity();
     ceAwsConfig.setCurAttributes(null);
-    ceAwsConfig.setFeaturesEnabled(ImmutableList.of(CEAwsFeatures.EVENTS, CEAwsFeatures.OPTIMIZATION));
+    ceAwsConfig.setFeaturesEnabled(ImmutableList.of(CEAwsFeatures.VISIBILITY, CEAwsFeatures.OPTIMIZATION));
 
     final CEAwsConnectorDTO expectedCeAwsConnectorDTO = AWSConnectorTestHelper.createCEAwsConnectorDTO();
     expectedCeAwsConnectorDTO.setCurAttributes(null);
-    expectedCeAwsConnectorDTO.setFeaturesEnabled(ImmutableList.of(CEAwsFeatures.EVENTS, CEAwsFeatures.OPTIMIZATION));
+    expectedCeAwsConnectorDTO.setFeaturesEnabled(
+        ImmutableList.of(CEAwsFeatures.VISIBILITY, CEAwsFeatures.OPTIMIZATION));
 
     assertThat(ceAwsEntityToDTO.createConnectorDTO(ceAwsConfig)).isEqualTo(expectedCeAwsConnectorDTO);
   }

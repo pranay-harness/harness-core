@@ -88,6 +88,7 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
           log.info("Nothing to process.");
           break;
         } else {
+          ;
           log.info("Next tasks to process: {}", dataCollectionTasks);
           List<Callable<Void>> callables = new ArrayList<>();
           dataCollectionTasks.forEach(dataCollectionTaskDTO -> callables.add(() -> {
@@ -133,6 +134,7 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
               dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(), timeSeriesRecords);
 
           break;
+
         case LOG:
           List<LogDataRecord> logDataRecords = (List<LogDataRecord>) dataCollectionDSLService.execute(
               dataCollectionInfo.getDataCollectionDsl(), runtimeParameters,

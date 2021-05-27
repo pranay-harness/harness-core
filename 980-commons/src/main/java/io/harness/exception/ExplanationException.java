@@ -23,6 +23,7 @@ public class ExplanationException extends WingsException {
   public static String REGISTRY_ACCESS_DENIED =
       "Failed to fetch artifact metadata using connector %s with given credentials.";
   public static String COMMAND_TRIED_FOR_ARTIFACT = "Commands tried %s but no metadata was returned";
+  public static String ILLEGAL_IMAGE_FORMAT = "Provided image path [%s] does not satisfy ECR image path format";
   public ExplanationException(String message, Throwable cause) {
     super(message, cause, EXPLANATION, INFO, USER_SRE, null);
     super.excludeReportTarget(EXPLANATION, EnumSet.of(ReportTarget.LOG_SYSTEM));

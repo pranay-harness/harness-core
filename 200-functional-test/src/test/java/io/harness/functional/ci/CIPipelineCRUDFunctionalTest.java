@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.UUID;
 import org.apache.commons.io.IOUtils;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -36,6 +37,7 @@ public class CIPipelineCRUDFunctionalTest extends CategoryTest {
   @Test
   @Owner(developers = ALEKSANDAR, intermittent = true)
   @Category({FunctionalTests.class})
+  @Ignore("Not required Anymore as we have Rest Assured")
   public void shouldTestCRUDPipelineFlow() throws IOException {
     String pipelineTemplate = IOUtils.toString(
         CIPipelineCRUDFunctionalTest.class.getResourceAsStream("pipeline.yml"), StandardCharsets.UTF_8);

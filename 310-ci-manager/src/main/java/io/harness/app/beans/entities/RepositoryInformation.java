@@ -9,6 +9,7 @@ import lombok.Value;
 public class RepositoryInformation {
   private List<String> repoName;
   private List<String> status;
-  private List<String> time;
+  private List<Long> startTime;
+  private List<Long> endTime;
   private List<String> commitMessage;
 }

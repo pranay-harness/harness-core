@@ -18,9 +18,9 @@ import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
 import io.harness.interrupts.Interrupt;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
-import io.harness.pms.contracts.advisers.InterruptConfig;
-import io.harness.pms.contracts.advisers.IssuedBy;
-import io.harness.pms.contracts.advisers.ManualIssuer;
+import io.harness.pms.contracts.interrupts.InterruptConfig;
+import io.harness.pms.contracts.interrupts.IssuedBy;
+import io.harness.pms.contracts.interrupts.ManualIssuer;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.filter.utils.ModuleInfoFilterUtils;
@@ -34,6 +34,7 @@ import io.harness.pms.plan.execution.beans.dto.PipelineExecutionFilterProperties
 import io.harness.pms.utils.PmsConstants;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 import io.harness.serializer.JsonUtils;
+import io.harness.serializer.ProtoUtils;
 import io.harness.service.GraphGenerationService;
 
 import com.google.inject.Inject;
@@ -106,18 +107,21 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
           Criteria.where(PlanExecutionSummaryKeys.modules).in(moduleName),
           Criteria.where(String.format("moduleInfo.%s", moduleName)).exists(true));
     }
+
+    Criteria searchCriteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(searchTerm)) {
-      Criteria searchCriteria =
-          new Criteria().orOperator(where(PlanExecutionSummaryKeys.pipelineIdentifier)
-                                        .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-              where(PlanExecutionSummaryKeys.name)
-                  .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-              where(PlanExecutionSummaryKeys.tags + "." + NGTagKeys.key)
-                  .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-              where(PlanExecutionSummaryKeys.tags + "." + NGTagKeys.value)
-                  .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
-      criteria.andOperator(searchCriteria);
+      searchCriteria.orOperator(where(PlanExecutionSummaryKeys.pipelineIdentifier)
+                                    .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(PlanExecutionSummaryKeys.name)
+              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(PlanExecutionSummaryKeys.tags + "." + NGTagKeys.key)
+              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(PlanExecutionSummaryKeys.tags + "." + NGTagKeys.value)
+              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
     }
+
+    criteria.andOperator(searchCriteria);
+
     return criteria;
   }
 
@@ -196,7 +200,10 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
             .nodeExecutionId(nodeExecutionId)
             .interruptConfig(
                 InterruptConfig.newBuilder()
-                    .setIssuedBy(IssuedBy.newBuilder().setManualIssuer(ManualIssuer.newBuilder().build()).build())
+                    .setIssuedBy(IssuedBy.newBuilder()
+                                     .setManualIssuer(ManualIssuer.newBuilder().build())
+                                     .setIssueTime(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
+                                     .build())
                     .build())
             .metadata(getMetadata(executionInterruptType))
             .build();

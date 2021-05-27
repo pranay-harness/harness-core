@@ -153,12 +153,15 @@ public class PipelineServiceModule extends AbstractModule {
     install(PipelineServiceGrpcModule.getInstance());
     install(new PipelinePersistenceModule());
     install(DelegateServiceDriverModule.getInstance(true));
-    install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
-                                                .serviceName("PIPELINE")
-                                                .expressionEvaluatorProvider(new PMSExpressionEvaluatorProvider())
-                                                .withPMS(false)
-                                                .isPipelineService(true)
-                                                .build()));
+    install(OrchestrationModule.getInstance(
+        OrchestrationModuleConfig.builder()
+            .serviceName("PIPELINE")
+            .expressionEvaluatorProvider(new PMSExpressionEvaluatorProvider())
+            .withPMS(false)
+            .isPipelineService(true)
+            .eventsFrameworkConfiguration(configuration.getEventsFrameworkConfiguration())
+            .useRedisForInterrupts(configuration.getUseRedisForInterrupts())
+            .build()));
     install(OrchestrationStepsModule.getInstance(configuration.getOrchestrationStepConfig()));
     install(OrchestrationVisualizationModule.getInstance());
     install(PrimaryVersionManagerModule.getInstance());

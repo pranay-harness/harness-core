@@ -8,9 +8,9 @@ rules_pmd_dependencies()
 
 http_archive(
     name = "com_github_bazelbuild_buildtools",
-    sha256 = "58bbb9b06e14d71c620b7e2206a6d83668b602e1d51374b7bd264f9cc462d4de",
-    strip_prefix = "buildtools-master",
-    url = "https://github.com/bazelbuild/buildtools/archive/master.zip",
+    sha256 = "932160d5694e688cb7a05ac38efba4b9a90470c75f39716d85fb1d2f95eec96d",
+    strip_prefix = "buildtools-4.0.1",
+    url = "https://github.com/bazelbuild/buildtools/archive/refs/tags/4.0.1.zip",
 )
 
 # Download the Go rules
@@ -98,7 +98,7 @@ load("@io_grpc_grpc_java//:repositories.bzl", "grpc_java_repositories")
 grpc_java_repositories(
     omit_bazel_skylib = True,
     omit_com_google_protobuf = True,
-    omit_com_google_protobuf_javalite = True,
+    omit_com_google_protobuf_javalite = False,
     omit_net_zlib = True,
 )
 
@@ -960,8 +960,8 @@ go_repository(
 go_repository(
     name = "com_github_drone_go_scm",
     importpath = "github.com/drone/go-scm",
-    sum = "h1:L6g6wUzM6pV90S0VFQL/HjcTmW5JoaSGAX8VDiN76g4=",
-    version = "v1.13.1",
+    sum = "h1:G+0P1jC425/Uk+7SYYfUIZ933YcvEEYg9zEPuvyO0+g=",
+    version = "v1.14.1",
 )
 
 go_repository(
@@ -982,7 +982,6 @@ go_repository(
 # ######################################   Java code ######################################
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_jar")
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 RULES_JVM_EXTERNAL_TAG = "3.3"
 
@@ -1005,6 +1004,7 @@ http_jar(
 
 load("@rules_jvm_external//:defs.bzl", "maven_install")
 load("@rules_jvm_external//:specs.bzl", "maven")
+load("//:macros.bzl", "maven_test_artifact")
 
 plain_artifacts = [
     "aopalliance:aopalliance:1.0",
@@ -1100,7 +1100,7 @@ plain_artifacts = [
     "com.google.auth:google-auth-library-credentials:0.18.0",
     "com.google.auth:google-auth-library-oauth2-http:0.20.0",
     "com.google.auto.service:auto-service:1.0-rc6",
-    "com.google.auto.value:auto-value-annotations:1.7",
+    "com.google.auto.value:auto-value-annotations:1.7.4",
     "com.google.cloud.datastore:datastore-v1-proto-client:1.6.0",
     "com.google.cloud:google-cloud-bigquery:1.106.0",
     "com.google.cloud:google-cloud-bigquerydatatransfer:0.126.0-beta",
@@ -1145,7 +1145,6 @@ plain_artifacts = [
     "com.hierynomus:smbj:0.9.0",
     "com.hierynomus:sshj:0.26.0",
     "com.hubspot.jackson:jackson-datatype-protobuf:0.9.11-jackson2.7",
-    "com.icegreen:greenmail:1.5.0",
     "com.intellij:annotations:12.0",
     "com.j256.two-factor-auth:two-factor-auth:1.0",
     "com.jakewharton.retrofit:retrofit1-okhttp3-client:1.1.0",
@@ -1310,7 +1309,6 @@ plain_artifacts = [
     "io.fabric8:kubernetes-api:3.0.11",
     "io.fabric8:kubernetes-client:3.1.12",
     "io.fabric8:kubernetes-model:2.0.8",
-    "io.fabric8:kubernetes-server-mock:3.1.12",
     "io.fabric8:openshift-client:3.0.3",
     "io.fabric8:zjsonpatch:0.3.0",
     "io.github.benas:random-beans:3.7.0",
@@ -1331,9 +1329,8 @@ plain_artifacts = [
     "io.grpc:grpc-protobuf:1.33.1",
     "io.grpc:grpc-services:1.33.1",
     "io.grpc:grpc-stub:1.33.1",
-    "io.grpc:grpc-testing:1.33.1",
     "io.gsonfire:gson-fire:1.8.3",
-    "io.harness:ff-java-server-sdk:0.0.7",
+    "io.harness:ff-java-server-sdk:0.0.8",
     "io.jsonwebtoken:jjwt:0.9.1",
     "io.kubernetes:client-java-api:9.0.2",
     "io.kubernetes:client-java-extended:9.0.2",
@@ -1398,7 +1395,6 @@ plain_artifacts = [
     "javax.xml.ws:jaxws-api:2.3.1",
     "jaxen:jaxen:1.1.6",
     "joda-time:joda-time:2.10.1",
-    "junit:junit:4.12",
     "me.snowdrop:istio-client-uberjar:1.0.1",
     "me.snowdrop:istio-client:1.0.1",
     "me.snowdrop:istio-common:1.0.1",
@@ -1494,7 +1490,6 @@ plain_artifacts = [
     "org.apache.sshd:sshd-core:1.7.0",
     "org.apache.velocity:velocity:1.7",
     "org.apache.ws.xmlschema:xmlschema-core:2.2.5",
-    "org.assertj:assertj-core:3.16.1",
     "org.atmosphere:atmosphere-hazelcast:2.4.3",
     "org.atmosphere:atmosphere-runtime:2.4.32",
     "org.atmosphere:wasync:2.1.7",
@@ -1686,7 +1681,6 @@ plain_artifacts = [
     "org.xmlunit:xmlunit-matchers:2.3.0",
     "org.yaml:snakeyaml:1.26",
     "org.zeroturnaround:zt-exec:1.9",
-    "pl.pragmatists:JUnitParams:1.0.4",
     "ru.vyarus:guice-validator:1.2.0",
     "software.amazon.awssdk:athena:2.10.18",
     "software.amazon.awssdk:auth:2.10.18",
@@ -1823,54 +1817,23 @@ maven_install(
                 "org.clojure:clojure",
             ],
         ),
-        maven.artifact(
-            group = "com.github.tomakehurst",
-            artifact = "wiremock-jre8-standalone",
-            version = "2.27.2",
-            testonly = True,
-        ),
-        maven.artifact(
-            group = "org.glassfish.jersey.test-framework.providers",
-            artifact = "jersey-test-framework-provider-grizzly2",
-            version = "2.23.1",
-            testonly = True,
-        ),
-        maven.artifact(
-            group = "org.glassfish.jersey.test-framework.providers",
-            artifact = "jersey-test-framework-provider-inmemory",
-            version = "2.23.1",
-            testonly = True,
-        ),
-        maven.artifact(
-            group = "io.dropwizard",
-            artifact = "dropwizard-testing",
-            version = "1.3.24",
-            testonly = True,
-        ),
-        maven.artifact(
-            group = "de.flapdoodle.embed",
-            artifact = "de.flapdoodle.embed.mongo",
-            version = "2.0.3",
-            testonly = True,
-        ),
-        maven.artifact(
-            group = "de.flapdoodle.embed",
-            artifact = "de.flapdoodle.embed.process",
-            version = "2.0.3",
-            testonly = True,
-        ),
-        maven.artifact(
-            group = "org.mockito",
-            artifact = "mockito-core",
-            version = "1.10.19",
-            testonly = True,
-        ),
-        maven.artifact(
-            group = "org.springframework.boot",
-            artifact = "spring-boot-starter-test",
-            version = "2.1.6.RELEASE",
-            testonly = True,
-        ),
+        maven_test_artifact("com.github.tomakehurst:wiremock-jre8-standalone:2.27.2"),
+        maven_test_artifact("com.icegreen:greenmail:1.5.0"),
+        maven_test_artifact("com.squareup.okhttp3:mockwebxxxxxxxx3.6.0"),
+        maven_test_artifact("de.flapdoodle.embed:de.flapdoodle.embed.mongo:2.0.3"),
+        maven_test_artifact("de.flapdoodle.embed:de.flapdoodle.embed.process:2.0.3"),
+        maven_test_artifact("io.dropwizard:dropwizard-testing:1.3.24"),
+        maven_test_artifact("io.fabric8:kubernetes-server-mock:3.1.12"),
+        maven_test_artifact("io.fabric8:mockwebxxxxxxxx0.1.0"),
+        maven_test_artifact("io.grpc:grpc-testing:1.33.1"),
+        maven_test_artifact("junit:junit:4.12"),
+        maven_test_artifact("org.assertj:assertj-core:3.16.1"),
+        maven_test_artifact("org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-grizzly2:2.23.1"),
+        maven_test_artifact("org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-inmemory:2.23.1"),
+        maven_test_artifact("org.glassfish.jersey.test-framework:jersey-test-framework-core:2.23.1"),
+        maven_test_artifact("org.mockito:mockito-core:1.10.19"),
+        maven_test_artifact("org.springframework.boot:spring-boot-starter-test:2.1.6.RELEASE"),
+        maven_test_artifact("pl.pragmatists:JUnitParams:1.0.4"),
     ],
     excluded_artifacts = [
         "org.clojure:clojure",
@@ -1879,10 +1842,10 @@ maven_install(
     maven_install_json = "//project:main_maven_install.json",
     override_targets = {
         "org.apache.commons:commons-io": "@maven//:commons_io_commons_io",
+        "com.jcraft:jsch": "@maven//:com_jcraft_harness_jsch_0_1_54_harness_patch",
     },
     repositories = [
         "https://repo1.maven.org/maven2",
-        "https://harness.jfrog.io/harness/thirdparty-annonymous",
         "https://dl.bintray.com/michaelklishin/maven",
         "https://repo.spring.io/plugins-release",
         "https://palantir.bintray.com/releases",
@@ -1890,8 +1853,8 @@ maven_install(
         "https://jitpack.io",
         "https://jcenter.bintray.com",
         "https://github.com/bkper/mvn-repo/raw/master/releases",
-        "https://harness.jfrog.io/harness/datacollection-dsl",
         "http://packages.confluent.io/maven",
+        "https://harness.jfrog.io/harness/thirdparty-annonymous",
     ],
     version_conflict_policy = "pinned",
 )
@@ -1911,7 +1874,7 @@ load("//:bazel-credentials.bzl", "JFROG_PASSWORD", "JFROG_USERNAME")
 maven_install(
     name = "maven_harness",
     artifacts = [
-        "io.harness.cv:data-collection-dsl:0.21-RELEASE",
+        "io.harness.cv:data-collection-dsl:0.23-RELEASE",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",
@@ -4614,8 +4577,6 @@ go_repository(
     version = "v4.0.0",
 )
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
 http_archive(
     name = "rules_rust",
     sha256 = "e6d835ee673f388aa5b62dc23d82db8fc76497e93fa47d8a4afe97abaf09b10d",
@@ -5302,6 +5263,42 @@ go_repository(
     version = "v1.3.1",
 )
 
+#========== Python Configuration Begin=========================
+
+# Special logic for building python interpreter with OpenSSL from homebrew.
+# See https://devguide.python.org/setup/#macos-and-os-x
+_py_configure = """
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    ./configure --prefix=$(pwd)/bazel_install --with-openssl=$(brew --prefix openssl)
+else
+    ./configure --prefix=$(pwd)/bazel_install
+fi
+"""
+
+http_archive(
+    name = "python_interpreter",
+    build_file_content = """
+exports_files(["python_bin"])
+filegroup(
+    name = "files",
+    srcs = glob(["bazel_install/**"], exclude = ["**/* *"]),
+    visibility = ["//visibility:public"],
+)
+""",
+    patch_cmds = [
+        "mkdir $(pwd)/bazel_install",
+        _py_configure,
+        "make",
+        "make install",
+        "ln -s bazel_install/bin/python3 python_bin",
+    ],
+    sha256 = "991c3f8ac97992f3d308fefeb03a64db462574eadbff34ce8bc5bb583d9903ff",
+    strip_prefix = "Python-3.9.1",
+    urls = ["https://www.python.org/ftp/python/3.9.1/Python-3.9.1.tar.xz"],
+)
+
+register_toolchains("//:py_toolchain")
+
 #========== Docker Rules Configuration Begin=========================
 
 http_archive(
@@ -5332,6 +5329,14 @@ container_pull(
     tag = "safe-alpine3.12-sec1096-apm",
 )
 
+container_pull(
+    name = "platform_ubuntu",
+    digest = "sha256:8540a3afd5c6d43a9f6549f19f56abff42c7010265426c3c39ccc64d1d88a1c2",
+    registry = "us.gcr.io",
+    repository = "platform-205701/ubuntu",
+    tag = "safe-ubuntu18.04-sec1096",
+)
+
 load(
     "@io_bazel_rules_docker//repositories:repositories.bzl",
     container_repositories = "repositories",
@@ -5340,3 +5345,35 @@ load(
 container_repositories()
 
 #========== Docker Rules Configuration End=========================
+
+http_archive(
+    name = "rules_pkg",
+    sha256 = "038f1caa773a7e35b3663865ffb003169c6a71dc995e39bf4815792f385d837d",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_pkg/releases/download/0.4.0/rules_pkg-0.4.0.tar.gz",
+        "https://github.com/bazelbuild/rules_pkg/releases/download/0.4.0/rules_pkg-0.4.0.tar.gz",
+    ],
+)
+
+load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
+
+rules_pkg_dependencies()
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+
+http_archive(
+    name = "jre_x64_linux_8u242b08",
+    build_file_content = """
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
+
+pkg_tar(
+    name = "jre_x64_linux_8u242b08",
+    package_dir = "/opt/harness-delegate",
+    srcs = glob(["jdk8u242-b08-jre/**"]),
+    strip_prefix = '.',
+    visibility = ["//visibility:public"],
+)
+""",
+    sha256 = "5edfaefdbb0469d8b24d61c8aef80c076611053b1738029c0232b9a632fe2708",
+    urls = ["https://app.harness.io/storage/wingsdelegates/jre/openjdk-8u242/jre_x64_linux_8u242b08.tar.gz"],
+)

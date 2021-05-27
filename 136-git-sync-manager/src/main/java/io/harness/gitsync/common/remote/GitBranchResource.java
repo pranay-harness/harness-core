@@ -61,7 +61,7 @@ public class GitBranchResource {
       @QueryParam(NGCommonEntityConstants.PAGE) @DefaultValue("0") int pageNum,
       @QueryParam(NGCommonEntityConstants.SIZE) @Max(100) int pageSize,
       @QueryParam(NGCommonEntityConstants.SEARCH_TERM) @DefaultValue("") String searchTerm,
-      BranchSyncStatus branchSyncStatus) {
+      @QueryParam("branchSyncStatus") BranchSyncStatus branchSyncStatus) {
     return ResponseDTO.newResponse(gitBranchService.listBranchesWithStatus(accountIdentifier, orgIdentifier,
         projectIdentifier, yamlGitConfigIdentifier, PageRequest.builder().pageIndex(pageNum).pageSize(pageSize).build(),
         searchTerm, branchSyncStatus));

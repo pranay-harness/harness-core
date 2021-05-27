@@ -20,5 +20,5 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
     })
 public interface CriteriaSpec {
   @JsonIgnore CriteriaSpecType getType();
-  @JsonIgnore CriteriaSpecDTO toCriteriaSpecDTO();
+  @JsonIgnore CriteriaSpecDTO toCriteriaSpecDTO(boolean skipEmpty);
 }

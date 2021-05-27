@@ -909,6 +909,10 @@ public class DelegateServiceImpl implements DelegateService {
     if (newProfileApplied) {
       delegateProfileSubject.fireInform(DelegateProfileObxxxxxxxx:onProfileApplied, delegate.getAccountId(),
           delegate.getUuid(), delegate.getDelegateProfileId());
+      auditServiceHelper.reportForAuditingUsingAccountId(
+          delegate.getAccountId(), originalDelegate, updatedDelegate, Type.UPDATE);
+      DelegateProfile profile = delegateProfileService.get(delegate.getAccountId(), delegate.getDelegateProfileId());
+      auditServiceHelper.reportForAuditingUsingAccountId(delegate.getAccountId(), null, profile, Type.APPLY);
     }
 
     return updatedDelegate;

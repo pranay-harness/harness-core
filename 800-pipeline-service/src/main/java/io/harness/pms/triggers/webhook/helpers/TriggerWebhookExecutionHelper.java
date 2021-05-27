@@ -90,8 +90,8 @@ public class TriggerWebhookExecutionHelper {
       runtimeInputYaml =
           ((PipelineTargetSpec) triggerDetails.getNgTriggerConfig().getTarget().getSpec()).getRuntimeInputYaml();
 
-      PlanExecution response =
-          triggerExecutionHelper.resolveRuntimeInputAndSubmitExecutionRequest(triggerDetails, triggerPayload);
+      PlanExecution response = triggerExecutionHelper.resolveRuntimeInputAndSubmitExecutionRequest(
+          triggerDetails, triggerPayload, triggerWebhookEvent);
       TargetExecutionSummary targetExecutionSummary =
           WebhookEventResponseHelper.prepareTargetExecutionSummary(response, triggerDetails, runtimeInputYaml);
 

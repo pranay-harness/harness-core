@@ -13,6 +13,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
 import io.harness.expression.SecretString;
+import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptionType;
@@ -61,6 +62,19 @@ public abstract class AbstractSecretServiceImpl {
         .encryptedValue(encryptChars)
         .encryptionType(EncryptionType.LOCAL)
         .build();
+  }
+
+  static NGEncryptedDataMetadata getNgEncryptedDataMetadata(SecretManagerConfig secretManagerConfig) {
+    NGEncryptedDataMetadata metadata = null;
+    if (secretManagerConfig != null && secretManagerConfig.getNgMetadata() != null) {
+      metadata = NGEncryptedDataMetadata.builder()
+                     .identifier(secretManagerConfig.getNgMetadata().getIdentifier())
+                     .accountIdentifier(secretManagerConfig.getNgMetadata().getAccountIdentifier())
+                     .orgIdentifier(secretManagerConfig.getNgMetadata().getOrgIdentifier())
+                     .projectIdentifier(secretManagerConfig.getNgMetadata().getProjectIdentifier())
+                     .build();
+    }
+    return metadata;
   }
 
   static char[] decryptLocal(EncryptedData data) {

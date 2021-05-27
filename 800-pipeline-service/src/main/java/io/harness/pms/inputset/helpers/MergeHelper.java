@@ -6,13 +6,13 @@ import static io.harness.pms.merger.helpers.MergeHelper.getPipelineComponent;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.inputset.InputSetErrorDTOPMS;
+import io.harness.pms.inputset.InputSetErrorResponseDTOPMS;
+import io.harness.pms.inputset.InputSetErrorWrapperDTOPMS;
 import io.harness.pms.merger.PipelineYamlConfig;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
-import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetErrorDTOPMS;
-import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetErrorResponseDTOPMS;
-import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetErrorWrapperDTOPMS;
 import io.harness.pms.yaml.YamlUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;

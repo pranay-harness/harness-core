@@ -114,6 +114,7 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
       if (ssoSetting.getType().equals(SSOType.SAML)) {
         SamlSettings samlSettings = (SamlSettings) ssoSetting;
         result.add(SAMLSettings.builder()
+                       .identifier(samlSettings.getUuid())
                        .groupMembershipAttr(samlSettings.getGroupMembershipAttr())
                        .logoutUrl(samlSettings.getLogoutUrl())
                        .origin(samlSettings.getOrigin())
@@ -130,6 +131,7 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
       } else if (ssoSetting.getType().equals(SSOType.LDAP)) {
         LdapSettings ldapSettings = (LdapSettings) ssoSetting;
         result.add(LDAPSettings.builder()
+                       .identifier(ldapSettings.getUuid())
                        .connectionSettings(ldapSettings.getConnectionSettings())
                        .userSettingsList(ldapSettings.getUserSettingsList())
                        .groupSettingsList(ldapSettings.getGroupSettingsList())
