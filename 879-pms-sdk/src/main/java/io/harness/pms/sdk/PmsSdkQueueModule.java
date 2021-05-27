@@ -16,6 +16,7 @@ import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.execution.listeners.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.interrupt.InterruptEventListener;
 import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
+import io.harness.pms.utils.PmsConstants;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
@@ -68,7 +69,7 @@ public class PmsSdkQueueModule extends AbstractModule {
           injector, NodeExecutionEvent.class, ofSeconds(5), topicExpressions, publisherConfiguration, sdkTemplate);
     }
     MongoTemplate mongoTemplate = injector.getInstance(MongoTemplate.class);
-    List<List<String>> topicExpressions = ImmutableList.of(singletonList("_pms_"));
+    List<List<String>> topicExpressions = ImmutableList.of(singletonList(PmsConstants.INTERNAL_SERVICE_NAME));
     return QueueFactory.createNgQueueConsumer(
         injector, NodeExecutionEvent.class, ofSeconds(3), topicExpressions, publisherConfiguration, mongoTemplate);
   }
@@ -92,7 +93,7 @@ public class PmsSdkQueueModule extends AbstractModule {
           injector, InterruptEvent.class, ofSeconds(5), topicExpressions, publisherConfiguration, sdkTemplate);
     }
     MongoTemplate mongoTemplate = injector.getInstance(MongoTemplate.class);
-    List<List<String>> topicExpressions = ImmutableList.of(singletonList("_pms_"));
+    List<List<String>> topicExpressions = ImmutableList.of(singletonList(PmsConstants.INTERNAL_SERVICE_NAME));
     return QueueFactory.createNgQueueConsumer(
         injector, InterruptEvent.class, ofSeconds(3), topicExpressions, publisherConfiguration, mongoTemplate);
   }

@@ -2,7 +2,6 @@ package io.harness.engine.events;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.StepTypeLookupService;
 import io.harness.logging.AutoLogContext;
 import io.harness.observer.Subject;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
@@ -32,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 public class OrchestrationEventEmitter {
   @Inject private OrchestrationEventHandlerRegistry handlerRegistry;
   @Inject private QueuePublisher<OrchestrationEvent> orchestrationEventQueue;
-  @Inject(optional = true) private StepTypeLookupService stepTypeLookupService;
   @Inject private OrchestrationEventLogRepository orchestrationEventLogRepository;
   @Getter @Setter Subject<OrchestrationEventLogHandler> orchestrationEventLogSubjectSubject = new Subject<>();
 
@@ -43,7 +41,7 @@ public class OrchestrationEventEmitter {
       subject.registerAll(handlers);
       subject.handleEventSync(event);
       populateEventLog(event);
-      if (stepTypeLookupService == null || event.getNodeExecutionProto() == null) {
+      if (event.getNodeExecutionProto() == null) {
         orchestrationEventQueue.send(Collections.singletonList(PmsConstants.INTERNAL_SERVICE_NAME), event);
       } else {
         String serviceName = event.getNodeExecutionProto().getNode().getServiceName();
