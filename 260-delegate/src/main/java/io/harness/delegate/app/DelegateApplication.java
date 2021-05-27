@@ -24,6 +24,7 @@ import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.service.DelegateAgentService;
 import io.harness.delegate.task.citasks.CITaskFactoryModule;
+import io.harness.delegate.task.citasks.cik8handler.helper.DelegateServiceTokenHelper;
 import io.harness.delegate.task.k8s.apiclient.KubernetesApiClientFactoryModule;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.client.impl.EventPublisherConstants;
@@ -38,6 +39,7 @@ import io.harness.grpc.pingpong.PingPongModule;
 import io.harness.logstreaming.LogStreamingModule;
 import io.harness.managerclient.DelegateManagerClientModule;
 import io.harness.perpetualtask.PerpetualTaskWorkerModule;
+import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
@@ -206,6 +208,17 @@ public class DelegateApplication {
       modules.add(
           new DelegateGrpcServiceModule(configuration.getGrpcServiceConnectorPort(), configuration.getAccountSecret()));
     }
+
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(DelegateServiceTokenHelper.class)
+            .toInstance(DelegateServiceTokenHelper.builder()
+                            .serviceTokenGenerator(new ServiceTokenGenerator())
+                            .accountSecret(configuration.getAccountSecret())
+                            .build());
+      }
+    });
 
     Injector injector = Guice.createInjector(modules);
     MessageService messageService = injector.getInstance(MessageService.class);
