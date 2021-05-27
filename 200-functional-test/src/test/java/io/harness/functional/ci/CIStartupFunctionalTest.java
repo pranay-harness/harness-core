@@ -11,6 +11,7 @@ import io.harness.testframework.framework.CIManagerExecutor;
 
 import io.restassured.RestAssured;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -23,6 +24,7 @@ public class CIStartupFunctionalTest extends CategoryTest {
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(FunctionalTests.class)
+  @Ignore("Not required Anymore as we have Rest Assured")
   public void shouldEnsureCIManagerStartsUp() {
     assertThatCode(() -> CIManagerExecutor.ensureCIManager(getClass())).doesNotThrowAnyException();
   }
