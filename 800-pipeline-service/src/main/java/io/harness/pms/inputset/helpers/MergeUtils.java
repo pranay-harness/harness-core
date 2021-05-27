@@ -27,16 +27,16 @@ import java.util.Set;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class MergeHelper {
+public class MergeUtils {
   public InputSetErrorWrapperDTOPMS getErrorMap(String pipelineYaml, String inputSetYaml) throws IOException {
     String pipelineComp = getPipelineComponent(inputSetYaml);
     String templateYaml = createTemplateFromPipeline(pipelineYaml);
-    Set<FQN> invalidFQNs = getInvalidFQNsInInputSet(templateYaml, pipelineComp);
+    Map<FQN, String> invalidFQNs = getInvalidFQNsInInputSet(templateYaml, pipelineComp);
     if (EmptyPredicate.isEmpty(invalidFQNs)) {
       return null;
     }
 
-    String errorPipelineYaml = getErrorPipelineYaml(invalidFQNs, pipelineYaml);
+    String errorPipelineYaml = getErrorPipelineYaml(invalidFQNs.keySet(), pipelineYaml);
     Map<String, InputSetErrorResponseDTOPMS> uuidToErrorResponseMap =
         getUuidToErrorResponseMap(invalidFQNs, getInputSetIdentifier(inputSetYaml));
     return InputSetErrorWrapperDTOPMS.builder()
@@ -54,13 +54,13 @@ public class MergeHelper {
   }
 
   private Map<String, InputSetErrorResponseDTOPMS> getUuidToErrorResponseMap(
-      Set<FQN> invalidFQNs, String inputSetIdentifier) {
+      Map<FQN, String> invalidFQNs, String inputSetIdentifier) {
     Map<String, InputSetErrorResponseDTOPMS> res = new LinkedHashMap<>();
-    invalidFQNs.forEach(fqn -> {
+    invalidFQNs.keySet().forEach(fqn -> {
       String uuid = fqn.display();
       InputSetErrorDTOPMS errorDTOPMS = InputSetErrorDTOPMS.builder()
                                             .fieldName(fqn.getFieldName())
-                                            .message("Field either not present in pipeline or not a runtime input")
+                                            .message(invalidFQNs.get(fqn))
                                             .identifierOfErrorSource(inputSetIdentifier)
                                             .build();
       InputSetErrorResponseDTOPMS errorResponseDTOPMS =
