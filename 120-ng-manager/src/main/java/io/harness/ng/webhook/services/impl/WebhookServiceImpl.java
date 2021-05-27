@@ -12,7 +12,6 @@ import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.connector.impl.ConnectorErrorMessagesHelper;
 import io.harness.connector.services.ConnectorService;
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.task.scm.GitWebhookTaskType;
 import io.harness.delegate.task.scm.ScmGitWebhookTaskParams;
@@ -86,8 +85,7 @@ public class WebhookServiceImpl implements WebhookService {
                                                   .taskParameters(gitWebhookTaskParams)
                                                   .executionTimeout(Duration.ofMinutes(2))
                                                   .build();
-    DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
-    return (ScmGitWebhookTaskResponseData) responseData;
+    return (ScmGitWebhookTaskResponseData) delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
   }
 
   private List<EncryptedDataDetail> getEncryptedDataDetails(
