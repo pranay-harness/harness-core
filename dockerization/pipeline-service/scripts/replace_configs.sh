@@ -140,12 +140,12 @@ if [[ "" != "$CI_MANAGER_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE grpcClientConfigs.ci.authority $CI_MANAGER_AUTHORITY
 fi
 
-if [[ "" != "$NG_MANAGER_GRPC_TARGET" ]]; then
-  yq write -i $CONFIG_FILE gitSdkConfiguration.gitManagerGrpcClientConfig.target $NG_MANAGER_GRPC_TARGET
+if [[ "" != "$NG_MANAGER_GIT_SYNC_TARGET" ]]; then
+  yq write -i $CONFIG_FILE gitSdkConfiguration.gitManagerGrpcClientConfig.target $NG_MANAGER_GIT_SYNC_TARGET
 fi
 
-if [[ "" != "$NG_MANAGER_GRPC_AUTHORITY" ]]; then
-  yq write -i $CONFIG_FILE gitSdkConfiguration.gitManagerGrpcClientConfig.authority $NG_MANAGER_GRPC_AUTHORITY
+if [[ "" != "$NG_MANAGER_GIT_SYNC_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE gitSdkConfiguration.gitManagerGrpcClientConfig.authority $NG_MANAGER_GIT_SYNC_AUTHORITY
 fi
 
 if [[ "" != "$SCM_SERVICE_URI" ]]; then
