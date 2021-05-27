@@ -131,6 +131,12 @@ message IssueCommentHook {
   Comment comment = 5;
 }
 
+message CreateBranchHook {
+  Action action = 1;
+  Repository repo = 2;
+  User sender = 3;
+}
+
 message Comment {
   int32 id = 1;
   string body = 2;
@@ -184,6 +190,7 @@ message ParseWebhookResponse {
     PullRequestHook pr = 1;
     PushHook push = 2;
     IssueCommentHook comment = 3;
+    CreateBranchHook createBranch = 4;
   }
 }
 
