@@ -1,6 +1,7 @@
 package io.harness.ng.webhook.services.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.ng.NextGenModule.CONNECTOR_DECORATOR_SERVICE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
@@ -48,7 +49,7 @@ public class WebhookServiceImpl implements WebhookService {
   @Inject
   public WebhookServiceImpl(WebhookEventRepository webhookEventRepository,
       DelegateGrpcClientWrapper delegateGrpcClientWrapper, SecretManagerClientService secretManagerClientService,
-      @Named("defaultConnectorService") ConnectorService connectorService,
+      @Named(CONNECTOR_DECORATOR_SERVICE) ConnectorService connectorService,
       ConnectorErrorMessagesHelper connectorErrorMessagesHelper) {
     this.webhookEventRepository = webhookEventRepository;
     this.delegateGrpcClientWrapper = delegateGrpcClientWrapper;
@@ -110,7 +111,8 @@ public class WebhookServiceImpl implements WebhookService {
         .projectIdentifier(projectIdentifier)
         .build();
   }
-  ScmConnector getScmConnector(IdentifierRef connectorIdentifierRef) {
+
+  private ScmConnector getScmConnector(IdentifierRef connectorIdentifierRef) {
     final ConnectorResponseDTO connectorResponseDTO =
         connectorService
             .get(connectorIdentifierRef.getAccountIdentifier(), connectorIdentifierRef.getOrgIdentifier(),
@@ -123,7 +125,7 @@ public class WebhookServiceImpl implements WebhookService {
     return (ScmConnector) connectorResponseDTO.getConnector().getConnectorConfig();
   }
 
-  IdentifierRef getConnectorIdentifierRef(
+  private IdentifierRef getConnectorIdentifierRef(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifierRef) {
     return IdentifierRefHelper.getIdentifierRef(
         connectorIdentifierRef, accountIdentifier, orgIdentifier, projectIdentifier);
