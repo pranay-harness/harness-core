@@ -1,5 +1,6 @@
 package io.harness.cdng.pipeline.executions;
 
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -17,6 +18,8 @@ import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Deprecated
+@ToBeDeleted
 public class PipelineExecutionStartEventHandler implements SyncOrchestrationEventHandler {
   @Inject private NgPipelineExecutionService ngPipelineExecutionService;
   @Inject private PlanExecutionService planExecutionService;

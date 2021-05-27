@@ -1,4 +1,4 @@
-package io.harness.pms.sdk.execution;
+package io.harness.pms.sdk.core.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -27,7 +27,6 @@ import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.execution.SdkResponseEvent;
-import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.io.ResponseDataMapper;

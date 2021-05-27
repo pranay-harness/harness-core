@@ -4,10 +4,16 @@ import static io.harness.pms.events.PmsEventFrameworkConstants.INTERRUPT_LISTENE
 
 import io.harness.ng.core.event.MessageListener;
 import io.harness.pms.sdk.PmsSdkModuleUtils;
+import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
+import io.harness.pms.sdk.core.execution.SdkNodeExecutionServiceImpl;
 import io.harness.pms.sdk.core.interrupt.InterruptEventMessageListener;
 import io.harness.pms.sdk.core.interrupt.InterruptRedisConsumerService;
 import io.harness.pms.sdk.core.interrupt.PMSInterruptService;
 import io.harness.pms.sdk.core.interrupt.PMSInterruptServiceGrpcImpl;
+import io.harness.pms.sdk.core.resolver.outcome.OutcomeGrpcServiceImpl;
+import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingGrpcOutputService;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.utils.PmsManagedService;
 
 import com.google.common.util.concurrent.ServiceManager;
@@ -43,7 +49,12 @@ public class PmsSdkCoreModule extends AbstractModule {
     } else {
       install(PmsSdkDummyGrpcModule.getInstance());
     }
+
+    install(PmsSdkQueueModule.getInstance(config));
     bind(PMSInterruptService.class).to(PMSInterruptServiceGrpcImpl.class).in(Singleton.class);
+    bind(OutcomeService.class).to(OutcomeGrpcServiceImpl.class).in(Singleton.class);
+    bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingGrpcOutputService.class).in(Singleton.class);
+    bind(SdkNodeExecutionService.class).to(SdkNodeExecutionServiceImpl.class).in(Singleton.class);
 
     bind(MessageListener.class).annotatedWith(Names.named(INTERRUPT_LISTENER)).to(InterruptEventMessageListener.class);
     Multibinder<PmsManagedService> serviceBinder =

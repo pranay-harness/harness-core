@@ -314,7 +314,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         .executionSummaryModuleInfoProviderClass(CIModuleInfoProvider.class)
         .engineAdvisers(ExecutionAdvisers.getEngineAdvisers())
         .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
-        .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(remote))
+        .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())
         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
         .build();
   }
