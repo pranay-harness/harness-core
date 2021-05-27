@@ -8,7 +8,7 @@ import re
 
 from datetime import datetime, date, time, timedelta
 from google.cloud import bigquery
-from util import create_dataset, if_tbl_exists, createTable, print_
+from util import create_dataset, if_tbl_exists, createTable, print_, TABLE_NAME_FORMAT
 from aws_util import assumed_role_session, STATIC_REGION, get_secret_key
 
 """
@@ -16,11 +16,8 @@ from aws_util import assumed_role_session, STATIC_REGION, get_secret_key
 	"accountId": "vZYBQdFRSlesqo3CMB90Ag",
 	"roleArn": "arn:aws:iam::448640225317:role/harnessContinuousEfficiencyRole",
 	"externalId": "harness:891928451355:wFHXHD0RRQWoO8tIZT5YVw",
-	"linkedAccountId": "448640225317"
 }
 """
-
-TABLE_NAME_FORMAT = "%s.BillingReport_%s.%s"
 
 
 def main(event, context):
@@ -47,14 +44,13 @@ def main(event, context):
     create_dataset(client, jsonData["datasetName"])
     dataset = client.dataset(jsonData["datasetName"])
 
-    awsEc2InventoryCPUTableRef = dataset.table("awsEc2InventoryCPU")
-    awsEc2InventoryCPUTableName = TABLE_NAME_FORMAT % (
-        jsonData["projectName"], jsonData["accountIdBQ"], "awsEc2InventoryCPU")
-    awsEc2InventoryTableName = TABLE_NAME_FORMAT % (jsonData["projectName"], jsonData["accountIdBQ"], "awsEc2Inventory")
+    awsEc2InventoryMetricTableRef = dataset.table("awsEc2InventoryMetric")
+    awsEc2InventoryMetricTableName = TABLE_NAME_FORMAT % (
+        jsonData["projectName"], jsonData["accountIdBQ"], "awsEc2InventoryMetric")
 
-    if not if_tbl_exists(client, awsEc2InventoryCPUTableRef):
-        print_("%s table does not exists, creating table..." % awsEc2InventoryCPUTableRef)
-        createTable(client, awsEc2InventoryCPUTableName)
+    if not if_tbl_exists(client, awsEc2InventoryMetricTableRef):
+        print_("%s table does not exists, creating table..." % awsEc2InventoryMetricTableRef)
+        createTable(client, awsEc2InventoryMetricTableName)
 
     ec2_data_map, added_at = get_ec2_cpu_data(jsonData)
     print_("Total instances for which CPU data was fetched: %s" % len(ec2_data_map))
@@ -67,20 +63,9 @@ def main(event, context):
     )
     b = u'%s' % ('\n'.join([json.dumps(ec2_data_map[record]) for record in ec2_data_map]))
     data_as_file = io.StringIO(b)
-    job = client.load_table_from_file(data_as_file, awsEc2InventoryCPUTableName, job_config=job_config)
+    job = client.load_table_from_file(data_as_file, awsEc2InventoryMetricTableName, job_config=job_config)
     print_(job.job_id)
     job.result()
-
-    query = """
-        MERGE %s T
-        USING %s S
-        ON T.instanceId = S.instanceId AND S.addedAt = '%s'
-        WHEN MATCHED THEN
-          UPDATE SET cpuAvg = s.average, cpuMin = s.minimum, cpuMax = s.maximum, lastUpdatedAt = '%s'
-    """ % (awsEc2InventoryTableName, awsEc2InventoryCPUTableName, added_at, datetime.utcnow())
-    print_(query)
-    query_job = client.query(query)
-    query_job.result()  # wait for job to complete
 
     print_("Completed")
 
@@ -191,7 +176,8 @@ def get_ec2_cpu_data(jsonData):
                     }])
             else:
                 # We have close to 500 MetricDataQueries. Fire the api call
-                get_metric_data(cloudwatch, MetricDataQueries, metric_start_time, metric_end_time, ec2_data_map, added_at)
+                get_metric_data(cloudwatch, MetricDataQueries, metric_start_time, metric_end_time, ec2_data_map,
+                                added_at)
                 # reset to 0
                 MetricDataQueries = []
         else:
@@ -234,6 +220,8 @@ def get_metric_data(cloudwatch, MetricDataQueries, metric_start_time, metric_end
     except Exception as e:
         print_(e)
         raise e
+
+
 """
 get_metric_data response:
 

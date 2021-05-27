@@ -11,6 +11,7 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"io"
 )
 
 var (
@@ -22,12 +23,13 @@ var (
 
 // handler is used to implement EngineServer
 type engineHandler struct {
-	log *zap.SugaredLogger
+	log        *zap.SugaredLogger
+	procWriter io.Writer
 }
 
 // NewEngineHandler returns a GRPC handler that implements pb.EngineServer
-func NewEngineHandler(log *zap.SugaredLogger) pb.LiteEngineServer {
-	return &engineHandler{log}
+func NewEngineHandler(log *zap.SugaredLogger, procWriter io.Writer) pb.LiteEngineServer {
+	return &engineHandler{log, procWriter}
 }
 
 // UpdateState updates the execution state.
@@ -109,6 +111,6 @@ func (h *engineHandler) Ping(ctx context.Context, in *pb.PingRequest) (*pb.PingR
 
 // Asynchronous RPC that starts execution of a step.
 func (h *engineHandler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*pb.ExecuteStepResponse, error) {
-	executeStepInAsync(ctx, in, h.log)
+	executeStepInAsync(ctx, in, h.log, h.procWriter)
 	return &pb.ExecuteStepResponse{}, nil
 }

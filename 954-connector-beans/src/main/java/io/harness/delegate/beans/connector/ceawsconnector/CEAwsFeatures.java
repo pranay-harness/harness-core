@@ -6,7 +6,7 @@ import lombok.Getter;
 @ApiModel("CEAwsFeatures")
 public enum CEAwsFeatures {
   CUR("Cost And Usage Report Billing"),
-  EVENTS("Receive Events For Cloud Accounts"),
+  VISIBILITY("Receive Events For Cloud Accounts"),
   OPTIMIZATION("Lightwing Cost Optimization");
 
   @Getter private final String description;

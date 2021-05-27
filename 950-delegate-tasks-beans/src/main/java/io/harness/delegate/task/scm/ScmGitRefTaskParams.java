@@ -21,6 +21,7 @@ public class ScmGitRefTaskParams implements TaskParameters, ExecutionCapabilityD
   ScmConnector scmConnector;
   String branch;
   GitRefType gitRefType;
+  long prNumber;
   List<EncryptedDataDetail> encryptedDataDetails;
 
   @Override

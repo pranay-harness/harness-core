@@ -11,9 +11,13 @@ import io.harness.secrets.remote.SecretNGManagerHttpClientFactory;
 import io.harness.secrets.services.NonPrivilegedSecretNGManagerClientServiceImpl;
 import io.harness.secrets.services.PrivilegedSecretNGManagerClientServiceImpl;
 import io.harness.security.ServiceTokenGenerator;
+import io.harness.serializer.kryo.KryoConverterFactory;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Key;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
 @OwnedBy(PL)
@@ -29,25 +33,30 @@ public class SecretNGManagerClientModule extends AbstractModule {
     this.clientId = clientId;
   }
 
-  private SecretNGManagerHttpClientFactory privilegedSecretNGManagerHttpClientFactory() {
-    return new SecretNGManagerHttpClientFactory(
-        serviceHttpClientConfig, serviceSecret, new ServiceTokenGenerator(), null, clientId, ClientMode.PRIVILEGED);
+  @Provides
+  @Named("PRIVILEGED")
+  private SecretNGManagerHttpClientFactory privilegedSecretNGManagerHttpClientFactory(
+      KryoConverterFactory kryoConverterFactory) {
+    return new SecretNGManagerHttpClientFactory(serviceHttpClientConfig, serviceSecret, new ServiceTokenGenerator(),
+        kryoConverterFactory, clientId, ClientMode.PRIVILEGED);
   }
 
-  private SecretNGManagerHttpClientFactory nonPrivilegedSecretNGManagerHttpClientFactory() {
-    return new SecretNGManagerHttpClientFactory(
-        serviceHttpClientConfig, serviceSecret, new ServiceTokenGenerator(), null, clientId, ClientMode.NON_PRIVILEGED);
+  @Provides
+  @Named("NON_PRIVILEGED")
+  private SecretNGManagerHttpClientFactory nonPrivilegedSecretNGManagerHttpClientFactory(
+      KryoConverterFactory kryoConverterFactory) {
+    return new SecretNGManagerHttpClientFactory(serviceHttpClientConfig, serviceSecret, new ServiceTokenGenerator(),
+        kryoConverterFactory, clientId, ClientMode.NON_PRIVILEGED);
   }
 
   @Override
   protected void configure() {
     bind(SecretNGManagerClient.class)
         .annotatedWith(Names.named(ClientMode.PRIVILEGED.name()))
-        .toProvider(privilegedSecretNGManagerHttpClientFactory())
+        .toProvider(Key.get(SecretNGManagerHttpClientFactory.class, Names.named(ClientMode.PRIVILEGED.name())))
         .in(Scopes.SINGLETON);
     bind(SecretNGManagerClient.class)
-        .annotatedWith(Names.named(ClientMode.NON_PRIVILEGED.name()))
-        .toProvider(nonPrivilegedSecretNGManagerHttpClientFactory())
+        .toProvider(Key.get(SecretNGManagerHttpClientFactory.class, Names.named(ClientMode.NON_PRIVILEGED.name())))
         .in(Scopes.SINGLETON);
 
     bind(SecretManagerClientService.class).to(NonPrivilegedSecretNGManagerClientServiceImpl.class).in(Scopes.SINGLETON);
@@ -55,9 +64,6 @@ public class SecretNGManagerClientModule extends AbstractModule {
         .annotatedWith(Names.named(ClientMode.PRIVILEGED.name()))
         .to(PrivilegedSecretNGManagerClientServiceImpl.class)
         .in(Scopes.SINGLETON);
-    bind(SecretManagerClientService.class)
-        .annotatedWith(Names.named(ClientMode.NON_PRIVILEGED.name()))
-        .to(NonPrivilegedSecretNGManagerClientServiceImpl.class)
-        .in(Scopes.SINGLETON);
+    bind(SecretManagerClientService.class).to(NonPrivilegedSecretNGManagerClientServiceImpl.class).in(Scopes.SINGLETON);
   }
 }

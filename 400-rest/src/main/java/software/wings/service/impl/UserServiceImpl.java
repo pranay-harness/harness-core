@@ -43,6 +43,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mindrot.jbcrypt.BCrypt.checkpw;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
@@ -86,6 +87,8 @@ import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.ng.core.common.beans.Generation;
 import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.invites.InviteOperationResponse;
+import io.harness.ng.core.user.PasswordChangeDTO;
+import io.harness.ng.core.user.PasswordChangeResponse;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.UuidAware;
@@ -1899,16 +1902,43 @@ public class UserServiceImpl implements UserService {
       verifier.verify(resetPasswordToken);
       JWT decode = JWT.decode(resetPasswordToken);
       String email = decode.getClaim("email").asString();
-      User user = resetUserPassword(email, password, decode.getIssuedAt().getTime());
-      sendPasswordChangeEmail(user);
-      user.getAccounts().forEach(account
-          -> auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Type.RESET_PASSWORD));
+      User user = validateTokenAndGetUser(email, decode.getIssuedAt().getTime());
+      updatePasswordAndPostSteps(user, password);
     } catch (UnsupportedEncodingException exception) {
       throw new GeneralException("Invalid reset password link");
     } catch (JWTVerificationException exception) {
       throw new UnauthorizedException("Token has expired", USER);
     }
     return true;
+  }
+
+  @Override
+  public PasswordChangeResponse changePassword(String userId, PasswordChangeDTO passwordChangeDTO) {
+    User user = get(userId);
+    boolean correctUserPassword = checkpw(passwordChangeDTO.getCurrentPassword(), user.getPasswordHash());
+    if (!correctUserPassword) {
+      return PasswordChangeResponse.INCORRECT_CURRENT_PASSWORD;
+    }
+    try {
+      updatePasswordAndPostSteps(user, passwordChangeDTO.getNewPassword().toCharArray());
+    } catch (WingsException e) {
+      if (e.getMessage().matches("(.*)Password violates strength policy(.*)")) {
+        return PasswordChangeResponse.PASSWORD_STRENGTH_VIOLATED;
+      } else {
+        throw e;
+      }
+    }
+    return PasswordChangeResponse.PASSWORD_CHANGED;
+  }
+
+  private User validateTokenAndGetUser(String email, long tokenIssuedAt) {
+    User user = getUserByEmail(email);
+    if (user == null) {
+      throw new InvalidRequestException("Email doesn't exist");
+    } else if (user.getPasswordChangedAt() > tokenIssuedAt) {
+      throw new UnauthorizedException("Token has expired", USER);
+    }
+    return user;
   }
 
   @Override
@@ -1940,13 +1970,14 @@ public class UserServiceImpl implements UserService {
     return logoutResponse;
   }
 
-  private User resetUserPassword(String email, char[] password, long tokenIssuedAt) {
-    User user = getUserByEmail(email);
-    if (user == null) {
-      throw new InvalidRequestException("Email doesn't exist");
-    } else if (user.getPasswordChangedAt() > tokenIssuedAt) {
-      throw new UnauthorizedException("Token has expired", USER);
-    }
+  private void updatePasswordAndPostSteps(User existingUser, char[] password) {
+    User user = resetUserPassword(existingUser, password);
+    sendPasswordChangeEmail(user);
+    user.getAccounts().forEach(account
+        -> auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Type.RESET_PASSWORD));
+  }
+
+  private User resetUserPassword(User user, char[] password) {
     loginSettingsService.verifyPasswordStrength(accountService.get(user.getDefaultAccountId()), password);
     String hashed = hashpw(new String(password), BCrypt.gensalt());
     wingsPersistence.update(user,

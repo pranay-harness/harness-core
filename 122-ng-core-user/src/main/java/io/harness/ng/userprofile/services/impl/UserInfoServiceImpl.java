@@ -2,6 +2,8 @@ package io.harness.ng.userprofile.services.impl;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.core.user.PasswordChangeDTO;
+import io.harness.ng.core.user.PasswordChangeResponse;
 import io.harness.ng.core.user.TwoFactorAuthMechanismInfo;
 import io.harness.ng.core.user.TwoFactorAuthSettingsInfo;
 import io.harness.ng.core.user.UserInfo;
@@ -79,6 +81,12 @@ public class UserInfoServiceImpl implements UserInfoService {
     } else {
       throw new IllegalStateException("user login required");
     }
+  }
+
+  @Override
+  public PasswordChangeResponse changeUserPassword(PasswordChangeDTO passwordChangeDTO) {
+    UserInfo user = getCurrentUser();
+    return RestClientUtils.getResponse(userClient.changeUserPassword(user.getUuid(), passwordChangeDTO));
   }
 
   private Optional<String> getUserEmail() {

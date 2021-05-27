@@ -1,7 +1,6 @@
 package io.harness.pms.sdk.core.resolver.outputs;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -14,12 +13,13 @@ import io.harness.pms.contracts.service.SweepingOutputResolveBlobResponse;
 import io.harness.pms.contracts.service.SweepingOutputServiceGrpc.SweepingOutputServiceBlockingStub;
 import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
+import io.harness.pms.sdk.core.grpc.client.PmsSdkGrpcClientUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-@OwnedBy(CDC)
+@OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 public class ExecutionSweepingGrpcOutputService implements ExecutionSweepingOutputService {
   private final SweepingOutputServiceBlockingStub sweepingOutputServiceBlockingStub;
@@ -31,9 +31,13 @@ public class ExecutionSweepingGrpcOutputService implements ExecutionSweepingOutp
 
   @Override
   public ExecutionSweepingOutput resolve(Ambiance ambiance, RefObject refObject) {
-    SweepingOutputResolveBlobResponse resolve = sweepingOutputServiceBlockingStub.resolve(
-        SweepingOutputResolveBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
-    return RecastOrchestrationUtils.fromDocumentJson(resolve.getStepTransput(), ExecutionSweepingOutput.class);
+    try {
+      SweepingOutputResolveBlobResponse resolve = sweepingOutputServiceBlockingStub.resolve(
+          SweepingOutputResolveBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
+      return RecastOrchestrationUtils.fromDocumentJson(resolve.getStepTransput(), ExecutionSweepingOutput.class);
+    } catch (Exception ex) {
+      throw PmsSdkGrpcClientUtils.processException(ex);
+    }
   }
 
   @Override
@@ -49,18 +53,26 @@ public class ExecutionSweepingGrpcOutputService implements ExecutionSweepingOutp
     if (EmptyPredicate.isNotEmpty(groupName)) {
       builder.setGroupName(groupName);
     }
-    SweepingOutputConsumeBlobResponse sweepingOutputConsumeBlobResponse =
-        sweepingOutputServiceBlockingStub.consume(builder.build());
-    return sweepingOutputConsumeBlobResponse.getResponse();
+    try {
+      SweepingOutputConsumeBlobResponse sweepingOutputConsumeBlobResponse =
+          sweepingOutputServiceBlockingStub.consume(builder.build());
+      return sweepingOutputConsumeBlobResponse.getResponse();
+    } catch (Exception ex) {
+      throw PmsSdkGrpcClientUtils.processException(ex);
+    }
   }
 
   @Override
   public OptionalSweepingOutput resolveOptional(Ambiance ambiance, RefObject refObject) {
-    OptionalSweepingOutputResolveBlobResponse resolve = sweepingOutputServiceBlockingStub.resolveOptional(
-        SweepingOutputResolveBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
-    return OptionalSweepingOutput.builder()
-        .output(RecastOrchestrationUtils.fromDocumentJson(resolve.getStepTransput(), ExecutionSweepingOutput.class))
-        .found(resolve.getFound())
-        .build();
+    try {
+      OptionalSweepingOutputResolveBlobResponse resolve = sweepingOutputServiceBlockingStub.resolveOptional(
+          SweepingOutputResolveBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
+      return OptionalSweepingOutput.builder()
+          .output(RecastOrchestrationUtils.fromDocumentJson(resolve.getStepTransput(), ExecutionSweepingOutput.class))
+          .found(resolve.getFound())
+          .build();
+    } catch (Exception ex) {
+      throw PmsSdkGrpcClientUtils.processException(ex);
+    }
   }
 }

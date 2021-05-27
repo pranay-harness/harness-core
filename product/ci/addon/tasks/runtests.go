@@ -208,25 +208,29 @@ func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) (string, error) {
 	if !r.runOnlySelectedTests {
 		// Run all the tests
 		// TODO -- Aman - check if instumentation is required here too.
-		return fmt.Sprintf("%s %s -am -DargLine=%s", mvnCmd, r.args, instrArg), nil
+		return strings.TrimSpace(fmt.Sprintf("%s -am -DargLine=%s %s", mvnCmd, instrArg, r.args)), nil
 	}
 	if len(tests) == 0 {
 		return fmt.Sprintf("echo \"Skipping test run, received no tests to execute\""), nil
 	}
-	// Use only unique classes
-	// TODO: Figure out how to incorporate package information in this
-	set := make(map[string]interface{})
+	// Use only unique <package, class> tuples
+	set := make(map[types.RunnableTest]interface{})
 	ut := []string{}
 	for _, t := range tests {
-		if _, ok := set[t.Class]; ok {
-			// The class has already been added
+		w := types.RunnableTest{Pkg: t.Pkg, Class: t.Class}
+		if _, ok := set[w]; ok {
+			// The test has already been added
 			continue
 		}
-		set[t.Class] = struct{}{}
-		ut = append(ut, t.Class)
+		set[w] = struct{}{}
+		if t.Pkg != "" {
+			ut = append(ut, t.Pkg+"."+t.Class) // We should always have a package name. If not, use class to run
+		} else {
+			ut = append(ut, t.Class)
+		}
 	}
 	testStr := strings.Join(ut, ",")
-	return fmt.Sprintf("%s %s -Dtest=%s -am -DargLine=%s", mvnCmd, r.args, testStr, instrArg), nil
+	return strings.TrimSpace(fmt.Sprintf("%s -Dtest=%s -am -DargLine=%s %s", mvnCmd, testStr, instrArg, r.args)), nil
 }
 
 func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTest) (string, error) {

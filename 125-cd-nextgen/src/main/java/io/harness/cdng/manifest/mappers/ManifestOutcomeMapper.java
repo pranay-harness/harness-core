@@ -76,7 +76,7 @@ public class ManifestOutcomeMapper {
     K8sManifest k8sManifest = (K8sManifest) manifestAttributes;
     boolean skipResourceVersioning = !ParameterField.isNull(k8sManifest.getSkipResourceVersioning())
         && k8sManifest.getSkipResourceVersioning().getValue();
-    validateManifestStoreConfig(k8sManifest.getStoreConfig(), k8sManifest.getIdentifier());
+    validateManifestStoreConfig(k8sManifest.getStoreConfig(), manifestAttributes);
 
     return K8sManifestOutcome.builder()
         .identifier(k8sManifest.getIdentifier())
@@ -87,7 +87,7 @@ public class ManifestOutcomeMapper {
 
   private ValuesManifestOutcome getValuesOutcome(ManifestAttributes manifestAttributes) {
     ValuesManifest attributes = (ValuesManifest) manifestAttributes;
-    validateManifestStoreConfig(attributes.getStoreConfig(), attributes.getIdentifier());
+    validateManifestStoreConfig(attributes.getStoreConfig(), manifestAttributes);
     return ValuesManifestOutcome.builder()
         .identifier(attributes.getIdentifier())
         .store(attributes.getStoreConfig())
@@ -125,7 +125,7 @@ public class ManifestOutcomeMapper {
       chartVersion = helmChartManifest.getChartVersion().getValue();
     }
 
-    validateManifestStoreConfig(helmChartManifest.getStoreConfig(), helmChartManifest.getIdentifier());
+    validateManifestStoreConfig(helmChartManifest.getStoreConfig(), manifestAttributes);
 
     return HelmChartManifestOutcome.builder()
         .identifier(helmChartManifest.getIdentifier())
@@ -144,7 +144,7 @@ public class ManifestOutcomeMapper {
         && kustomizeManifest.getSkipResourceVersioning().getValue();
     String pluginPath =
         !ParameterField.isNull(kustomizeManifest.getPluginPath()) ? kustomizeManifest.getPluginPath().getValue() : null;
-    validateManifestStoreConfig(kustomizeManifest.getStoreConfig(), kustomizeManifest.getIdentifier());
+    validateManifestStoreConfig(kustomizeManifest.getStoreConfig(), manifestAttributes);
     return KustomizeManifestOutcome.builder()
         .identifier(kustomizeManifest.getIdentifier())
         .store(kustomizeManifest.getStoreConfig())
@@ -157,7 +157,7 @@ public class ManifestOutcomeMapper {
     OpenshiftManifest openshiftManifest = (OpenshiftManifest) manifestAttributes;
     boolean skipResourceVersioning = !ParameterField.isNull(openshiftManifest.getSkipResourceVersioning())
         && openshiftManifest.getSkipResourceVersioning().getValue();
-    validateManifestStoreConfig(openshiftManifest.getStoreConfig(), openshiftManifest.getIdentifier());
+    validateManifestStoreConfig(openshiftManifest.getStoreConfig(), manifestAttributes);
 
     return OpenshiftManifestOutcome.builder()
         .identifier(openshiftManifest.getIdentifier())
@@ -168,7 +168,7 @@ public class ManifestOutcomeMapper {
 
   private OpenshiftParamManifestOutcome getOpenshiftParamOutcome(ManifestAttributes manifestAttributes) {
     OpenshiftParamManifest attributes = (OpenshiftParamManifest) manifestAttributes;
-    validateManifestStoreConfig(attributes.getStoreConfig(), attributes.getIdentifier());
+    validateManifestStoreConfig(attributes.getStoreConfig(), attributes);
 
     return OpenshiftParamManifestOutcome.builder()
         .identifier(attributes.getIdentifier())
@@ -176,7 +176,7 @@ public class ManifestOutcomeMapper {
         .build();
   }
 
-  private void validateManifestStoreConfig(StoreConfig storeConfig, String manifestIdentifier) {
+  private void validateManifestStoreConfig(StoreConfig storeConfig, ManifestAttributes manifest) {
     if (ManifestStoreType.isInGitSubset(storeConfig.getKind())) {
       GitStoreConfig gitStoreConfig = (GitStoreConfig) storeConfig;
 
@@ -184,7 +184,27 @@ public class ManifestOutcomeMapper {
           || isEmpty(getParameterFieldValue(gitStoreConfig.getConnectorRef()))) {
         throw new InvalidArgumentsException(
             format("Missing or empty connectorRef in %s store spec for manifest with identifier: %s",
-                storeConfig.getKind(), manifestIdentifier));
+                storeConfig.getKind(), manifest.getIdentifier()));
+      }
+
+      switch (manifest.getKind()) {
+        case HelmChart:
+        case Kustomize:
+          if (ParameterField.isNull(gitStoreConfig.getFolderPath())
+              || isEmpty(getParameterFieldValue(gitStoreConfig.getFolderPath()))) {
+            throw new InvalidArgumentsException(Pair.of("folderPath",
+                format("is required for store type '%s' and manifest type '%s' in manifest with identifier: %s",
+                    storeConfig.getKind(), manifest.getKind(), manifest.getIdentifier())));
+          }
+          break;
+
+        default:
+          if (ParameterField.isNull(gitStoreConfig.getPaths())
+              || isEmpty(getParameterFieldValue(gitStoreConfig.getPaths()))) {
+            throw new InvalidArgumentsException(Pair.of("paths",
+                format("is required for store type '%s' and manifest type '%s' in manifest with identifier: %s",
+                    storeConfig.getKind(), manifest.getKind(), manifest.getIdentifier())));
+          }
       }
 
       if (FetchType.BRANCH == gitStoreConfig.getGitFetchType()) {
@@ -217,8 +237,9 @@ public class ManifestOutcomeMapper {
 
       if (ParameterField.isNull(s3StoreConfig.getConnectorRef())
           || isEmpty(getParameterFieldValue(s3StoreConfig.getConnectorRef()))) {
-        throw new InvalidArgumentsException(format(
-            "Missing or empty connectorRef in S3 store spec for manifest with identifier: %s", manifestIdentifier));
+        throw new InvalidArgumentsException(
+            format("Missing or empty connectorRef in S3 store spec for manifest with identifier: %s",
+                manifest.getIdentifier()));
       }
 
       if (ParameterField.isNull(s3StoreConfig.getRegion())
@@ -239,8 +260,9 @@ public class ManifestOutcomeMapper {
 
       if (ParameterField.isNull(gcsStoreConfig.getConnectorRef())
           || isEmpty(getParameterFieldValue(gcsStoreConfig.getConnectorRef()))) {
-        throw new InvalidArgumentsException(format(
-            "Missing or empty connectorRef in Gcs store spec for manifest with identifier: %s", manifestIdentifier));
+        throw new InvalidArgumentsException(
+            format("Missing or empty connectorRef in Gcs store spec for manifest with identifier: %s",
+                manifest.getIdentifier()));
       }
 
       if (ParameterField.isNull(gcsStoreConfig.getBucketName())

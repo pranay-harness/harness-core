@@ -44,18 +44,25 @@ public class InstanceRepositoryCustomImpl implements InstanceRepositoryCustom {
     return null;
   }
 
+  /*
+    Returns instances that are active at a given timestamp for specified orgId, projectId and orgId
+   */
   @Override
-  public List<Instance> getActiveInstances(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    Criteria criteria = Criteria.where(InstanceKeys.accountIdentifier)
-                            .is(accountIdentifier)
-                            .where(InstanceKeys.orgIdentifier)
-                            .is(orgIdentifier)
-                            .where(InstanceKeys.projectIdentifier)
-                            .is(projectIdentifier)
-                            .where(InstanceKeys.isDeleted)
-                            .is(false);
+  public List<Instance> getActiveInstances(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, long timestampInMs) {
+    Criteria baseCriteria = Criteria.where(InstanceKeys.accountIdentifier)
+                                .is(accountIdentifier)
+                                .where(InstanceKeys.orgIdentifier)
+                                .is(orgIdentifier)
+                                .where(InstanceKeys.projectIdentifier)
+                                .is(projectIdentifier);
 
-    Query query = new Query().addCriteria(criteria);
+    Criteria filterCreatedAt = Criteria.where(InstanceKeys.createdAt).lte(timestampInMs);
+    Criteria filterDeletedAt = Criteria.where(InstanceKeys.deletedAt).gte(timestampInMs);
+    Criteria filterNotDeleted = Criteria.where(InstanceKeys.isDeleted).is(false);
+
+    Query query = new Query().addCriteria(
+        baseCriteria.andOperator(filterCreatedAt.orOperator(filterNotDeleted, filterDeletedAt)));
     return mongoTemplate.find(query, Instance.class);
   }
 }

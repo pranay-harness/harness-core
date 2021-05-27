@@ -1,0 +1,12 @@
+a:
+  b: 12
+  c: 22
+  d:
+    e: ${input}
+    f: harness
+    g: default
+    h:
+      - name: name1
+        type: string
+      - name: name1
+        type: int

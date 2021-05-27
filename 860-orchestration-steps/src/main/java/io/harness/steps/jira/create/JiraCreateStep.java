@@ -21,14 +21,13 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.jira.JiraStepHelperService;
+import io.harness.steps.jira.JiraStepUtils;
 import io.harness.supplier.ThrowingSupplier;
 import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @OwnedBy(CDC)
 public class JiraCreateStep extends TaskExecutableWithRollbackAndRbac<JiraTaskNGResponse> {
@@ -61,10 +60,7 @@ public class JiraCreateStep extends TaskExecutableWithRollbackAndRbac<JiraTaskNG
             .action(JiraActionNG.CREATE_ISSUE)
             .projectKey(specParameters.getProjectKey().getValue())
             .issueType(specParameters.getIssueType().getValue())
-            .fields(specParameters.getFields() == null
-                    ? null
-                    : specParameters.getFields().entrySet().stream().collect(
-                        Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getValue())));
+            .fields(JiraStepUtils.processJiraFieldsInParameters(specParameters.getFields()));
     return jiraStepHelperService.prepareTaskRequest(paramsBuilder, ambiance,
         specParameters.getConnectorRef().getValue(), stepParameters.getTimeout().getValue(), "Jira Task: Create Issue");
   }

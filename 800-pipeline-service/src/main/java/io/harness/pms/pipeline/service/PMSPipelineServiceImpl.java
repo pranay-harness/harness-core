@@ -190,7 +190,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
         continue;
       }
       stepCategory.addStepCategory(
-          PMSPipelineServiceStepHelper.calculateStepsForCategory(entry.getKey(), entry.getValue()));
+          pmsPipelineServiceStepHelper.calculateStepsForCategory(entry.getKey(), entry.getValue(), accountId));
     }
     return stepCategory;
   }

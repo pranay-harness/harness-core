@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.morphia.NgUserGroupMorphiaRegistrar;
 import io.harness.serializer.morphia.NgUserMembershipMorphiaRegistrar;
+import io.harness.serializer.morphia.NgUserProfileMorphiaRegistrars;
 
 import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
@@ -18,6 +19,7 @@ public class NgUserCoreRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .add(NgUserGroupMorphiaRegistrar.class)
           .add(NgUserMembershipMorphiaRegistrar.class)
+          .add(NgUserProfileMorphiaRegistrars.class)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

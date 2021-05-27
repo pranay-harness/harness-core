@@ -100,6 +100,7 @@ import io.harness.delegate.beans.connector.azureconnector.AzureContainerRegistry
 import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultValidationParams;
 import io.harness.delegate.beans.connector.cvconnector.CVConnectorTaskParams;
 import io.harness.delegate.beans.connector.cvconnector.CVConnectorTaskResponse;
+import io.harness.delegate.beans.connector.cvconnector.CVConnectorValidationParams;
 import io.harness.delegate.beans.connector.docker.DockerTestConnectionTaskParams;
 import io.harness.delegate.beans.connector.docker.DockerTestConnectionTaskResponse;
 import io.harness.delegate.beans.connector.docker.DockerValidationParams;
@@ -294,10 +295,13 @@ import io.harness.delegate.task.manifests.request.CustomManifestFetchConfig;
 import io.harness.delegate.task.manifests.request.CustomManifestValuesFetchParams;
 import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
+import io.harness.delegate.task.scm.GitFileTaskResponseData;
+import io.harness.delegate.task.scm.GitFileTaskType;
 import io.harness.delegate.task.scm.GitPRTaskType;
 import io.harness.delegate.task.scm.GitRefType;
 import io.harness.delegate.task.scm.GitWebhookTaskType;
 import io.harness.delegate.task.scm.PushTaskType;
+import io.harness.delegate.task.scm.ScmGitFileTaskParams;
 import io.harness.delegate.task.scm.ScmGitRefTaskParams;
 import io.harness.delegate.task.scm.ScmGitRefTaskResponseData;
 import io.harness.delegate.task.scm.ScmGitWebhookTaskParams;
@@ -761,5 +765,10 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(GitWebhookTaskType.class, 543319);
     kryo.register(ScmGitWebhookTaskParams.class, 543320);
     kryo.register(ScmGitWebhookTaskResponseData.class, 543321);
+
+    kryo.register(ScmGitFileTaskParams.class, 543122);
+    kryo.register(GitFileTaskResponseData.class, 543123);
+    kryo.register(GitFileTaskType.class, 543124);
+    kryo.register(CVConnectorValidationParams.class, 543322);
   }
 }

@@ -57,7 +57,7 @@ public class GitSyncConnectorHelper {
             gitSyncConfigDTO.getProjectIdentifier(), gitSyncConfigDTO.getOrganizationIdentifier());
       }
       throw new UnexpectedException(
-          String.format("The connector with thhe  id %s, accountId %s, orgId %s, projectId %s is not a scm connector",
+          String.format("The connector with the  id %s, accountId %s, orgId %s, projectId %s is not a scm connector",
               gitSyncConfigDTO.getIdentifier(), accountId, gitSyncConfigDTO.getOrganizationIdentifier(),
               gitSyncConfigDTO.getProjectIdentifier()));
     } else {

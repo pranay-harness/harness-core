@@ -5,6 +5,9 @@ load("//:macros.bzl", "run_analysis")
 HarnessTeam = "CI"
 
 shared_dependencies = [
+    "@maven//:com_google_guava_guava",
+    "@maven//:io_netty_netty_all",
+] + [
     "//320-ci-execution:module",
     "//330-ci-beans:module",
     "//870-cg-orchestration:module",
@@ -101,7 +104,6 @@ shared_dependencies = [
     "@maven//:com_google_code_findbugs_jsr305",
     "@maven//:com_google_code_gson_gson",
     "@maven//:com_google_errorprone_error_prone_annotations",
-    "@maven//:com_google_guava_guava",
     "@maven//:com_google_http_client_google_http_client",
     "@maven//:com_google_http_client_google_http_client_appengine",
     "@maven//:com_google_http_client_google_http_client_jackson",
