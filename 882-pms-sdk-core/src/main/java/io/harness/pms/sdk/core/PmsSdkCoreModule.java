@@ -1,13 +1,15 @@
 package io.harness.pms.sdk.core;
 
 import static io.harness.pms.events.PmsEventFrameworkConstants.INTERRUPT_LISTENER;
+import static io.harness.pms.events.PmsEventFrameworkConstants.ORCHESTRATION_EVENT_LISTENER;
 
 import io.harness.ng.core.event.MessageListener;
 import io.harness.pms.sdk.PmsSdkModuleUtils;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionServiceImpl;
+import io.harness.pms.sdk.core.execution.events.orchestration.SdkOrchestrationEventMessageListener;
 import io.harness.pms.sdk.core.interrupt.InterruptEventMessageListener;
-import io.harness.pms.sdk.core.interrupt.InterruptRedisConsumerService;
+import io.harness.pms.sdk.core.interrupt.SdkRedisConsumerService;
 import io.harness.pms.sdk.core.interrupt.PMSInterruptService;
 import io.harness.pms.sdk.core.interrupt.PMSInterruptServiceGrpcImpl;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeGrpcServiceImpl;
@@ -57,6 +59,10 @@ public class PmsSdkCoreModule extends AbstractModule {
     bind(SdkNodeExecutionService.class).to(SdkNodeExecutionServiceImpl.class).in(Singleton.class);
 
     bind(MessageListener.class).annotatedWith(Names.named(INTERRUPT_LISTENER)).to(InterruptEventMessageListener.class);
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(ORCHESTRATION_EVENT_LISTENER))
+        .to(SdkOrchestrationEventMessageListener.class);
+
     Multibinder<PmsManagedService> serviceBinder =
         Multibinder.newSetBinder(binder(), PmsManagedService.class, Names.named("pmsManagedServices"));
     serviceBinder.addBinding().to(Key.get(PmsManagedService.class, Names.named("pmsManagedServices")));
@@ -68,7 +74,7 @@ public class PmsSdkCoreModule extends AbstractModule {
   @Singleton
   @Named("pmsManagedServices")
   public PmsManagedService serviceManager(Injector injector) {
-    return injector.getInstance(InterruptRedisConsumerService.class);
+    return injector.getInstance(SdkRedisConsumerService.class);
   }
 
   @Provides

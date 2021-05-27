@@ -3,6 +3,9 @@ package io.harness.pms.sdk.core;
 import static io.harness.pms.events.PmsEventFrameworkConstants.INTERRUPT_BATCH_SIZE;
 import static io.harness.pms.events.PmsEventFrameworkConstants.INTERRUPT_CONSUMER;
 import static io.harness.pms.events.PmsEventFrameworkConstants.INTERRUPT_TOPIC;
+import static io.harness.pms.events.PmsEventFrameworkConstants.ORCHESTRATION_EVENT_BATCH_SIZE;
+import static io.harness.pms.events.PmsEventFrameworkConstants.ORCHESTRATION_EVENT_CONSUMER;
+import static io.harness.pms.events.PmsEventFrameworkConstants.ORCHESTRATION_EVENT_TOPIC;
 
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.eventsframework.EventsFrameworkConstants;
@@ -41,11 +44,21 @@ public class PmsSdkCoreEventsFrameworkModule extends AbstractModule {
           .annotatedWith(Names.named(INTERRUPT_CONSUMER))
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
+
+      bind(Consumer.class)
+          .annotatedWith(Names.named(ORCHESTRATION_EVENT_CONSUMER))
+          .toInstance(
+              NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
     } else {
       bind(Consumer.class)
           .annotatedWith(Names.named(INTERRUPT_CONSUMER))
           .toInstance(RedisConsumer.of(
-              INTERRUPT_TOPIC, serviceName, redisConfig, Duration.ofSeconds(30), INTERRUPT_BATCH_SIZE));
+              INTERRUPT_TOPIC, serviceName, redisConfig, Duration.ofSeconds(10), INTERRUPT_BATCH_SIZE));
+
+      bind(Consumer.class)
+          .annotatedWith(Names.named(ORCHESTRATION_EVENT_CONSUMER))
+          .toInstance(RedisConsumer.of(ORCHESTRATION_EVENT_TOPIC, serviceName, redisConfig, Duration.ofSeconds(10),
+              ORCHESTRATION_EVENT_BATCH_SIZE));
     }
   }
 }

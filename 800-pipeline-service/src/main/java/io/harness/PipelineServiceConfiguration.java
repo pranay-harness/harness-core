@@ -72,6 +72,7 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("orchestrationStepConfig") private OrchestrationStepConfig orchestrationStepConfig;
   @JsonProperty("enableDashboardTimescale") private Boolean enableDashboardTimescale;
   @JsonProperty("useRedisForInterrupts") private Boolean useRedisForInterrupts;
+  @JsonProperty("useRedisForOrchestrationEvents") private Boolean useRedisForOrchestrationEvents;
 
   private String managerServiceSecret;
   private String managerTarget;

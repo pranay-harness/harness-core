@@ -178,4 +178,5 @@ timescaledb:
   logUnclosedConnections: false
   loggerLevel: OFF
 
-useRedisForInterrupts: false
+useRedisForInterrupts: true
+useRedisForOrchestrationEvents: true
