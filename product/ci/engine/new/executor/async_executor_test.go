@@ -1,7 +1,9 @@
 package executor
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -30,7 +32,7 @@ func TestExecuteStepInAsync(t *testing.T) {
 	}
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	ExecuteStepInAsync(ctx, arg, log.Sugar())
+	ExecuteStepInAsync(ctx, arg, log.Sugar(), new(bytes.Buffer))
 }
 
 func TestExecuteStepSuccess(t *testing.T) {
@@ -56,10 +58,10 @@ func TestExecuteStepSuccess(t *testing.T) {
 
 	oldStepExecutor := newStepExecutor
 	defer func() { newStepExecutor = oldStepExecutor }()
-	newStepExecutor = func(tmpFilePath, delegateSvcEndpoint string, log *zap.SugaredLogger) StepExecutor {
+	newStepExecutor = func(tmpFilePath, delegateSvcEndpoint string, log *zap.SugaredLogger, buf io.Writer) StepExecutor {
 		return mockStepExecutor
 	}
-	executeStep(arg, log.Sugar())
+	executeStep(arg, log.Sugar(), new(bytes.Buffer))
 }
 
 func TestExecuteStepFail(t *testing.T) {
@@ -85,8 +87,8 @@ func TestExecuteStepFail(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	oldStepExecutor := newStepExecutor
 	defer func() { newStepExecutor = oldStepExecutor }()
-	newStepExecutor = func(tmpFilePath, delegateSvcEndpoint string, log *zap.SugaredLogger) StepExecutor {
+	newStepExecutor = func(tmpFilePath, delegateSvcEndpoint string, log *zap.SugaredLogger, buf io.Writer) StepExecutor {
 		return mockStepExecutor
 	}
-	executeStep(arg, log.Sugar())
+	executeStep(arg, log.Sugar(), new(bytes.Buffer))
 }

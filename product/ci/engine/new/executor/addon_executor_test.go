@@ -1,6 +1,7 @@
 package executor
 
 import (
+	"bytes"
 	"context"
 	"testing"
 
@@ -52,7 +53,7 @@ func TestAddonExecuteClientErr(t *testing.T) {
 		return nil, errors.New("client create error")
 	}
 
-	_, _, err := ExecuteStepOnAddon(ctx, step, tmpPath, log.Sugar())
+	_, _, err := ExecuteStepOnAddon(ctx, step, tmpPath, log.Sugar(), new(bytes.Buffer))
 	assert.NotNil(t, err)
 }
 
@@ -87,7 +88,7 @@ func TestAddonExecuteServerErr(t *testing.T) {
 		return mClient, nil
 	}
 
-	_, _, err := ExecuteStepOnAddon(ctx, step, tmpPath, log.Sugar())
+	_, _, err := ExecuteStepOnAddon(ctx, step, tmpPath, log.Sugar(), new(bytes.Buffer))
 	assert.NotNil(t, err)
 }
 
@@ -124,7 +125,7 @@ func TestAddonExecuteSuccess(t *testing.T) {
 		return mClient, nil
 	}
 
-	_, _, err := ExecuteStepOnAddon(ctx, step, tmpPath, log.Sugar())
+	_, _, err := ExecuteStepOnAddon(ctx, step, tmpPath, log.Sugar(), new(bytes.Buffer))
 	assert.Nil(t, err)
 }
 
