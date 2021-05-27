@@ -55,29 +55,11 @@ go_repository(
 )
 
 http_archive(
-    name = "com_google_protobuf",
-    sha256 = "9748c0d90e54ea09e5e75fb7fac16edce15d2028d4356f32211cfa3c0e956564",
-    strip_prefix = "protobuf-3.11.4",
-    urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.11.4.zip"],
-)
-
-load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
-
-protobuf_deps()
-
-http_archive(
     name = "rules_proto_grpc",
     sha256 = "5f0f2fc0199810c65a2de148a52ba0aff14d631d4e8202f41aff6a9d590a471b",
     strip_prefix = "rules_proto_grpc-1.0.2",
     urls = ["https://github.com/rules-proto-grpc/rules_proto_grpc/archive/1.0.2.tar.gz"],
 )
-
-#git_repository(
-#    name = "rules_proto_grpc",
-#    remote = "https://github.com/wings-software/rules_proto_grpc.git",
-#    commit = "7508bee4e4c09edc5934098e65ef6ea4e4aa5bff",
-#    shallow_since = "1590812925 -0700",
-#)
 
 load("@rules_proto_grpc//:repositories.bzl", "rules_proto_grpc_repos", "rules_proto_grpc_toolchains")
 
@@ -89,18 +71,9 @@ load("@rules_proto_grpc//java:repositories.bzl", rules_proto_grpc_java_repos = "
 
 rules_proto_grpc_java_repos()
 
-load("@io_grpc_grpc_java//:repositories.bzl", "com_google_guava")
-
-com_google_guava()
-
 load("@io_grpc_grpc_java//:repositories.bzl", "grpc_java_repositories")
 
-grpc_java_repositories(
-    omit_bazel_skylib = True,
-    omit_com_google_protobuf = True,
-    omit_com_google_protobuf_javalite = False,
-    omit_net_zlib = True,
-)
+grpc_java_repositories()
 
 go_repository(
     name = "co_honnef_go_tools",
