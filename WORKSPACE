@@ -982,7 +982,6 @@ go_repository(
 # ######################################   Java code ######################################
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_jar")
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 RULES_JVM_EXTERNAL_TAG = "3.3"
 
@@ -4578,8 +4577,6 @@ go_repository(
     version = "v4.0.0",
 )
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
 http_archive(
     name = "rules_rust",
     sha256 = "e6d835ee673f388aa5b62dc23d82db8fc76497e93fa47d8a4afe97abaf09b10d",
@@ -5348,3 +5345,35 @@ load(
 container_repositories()
 
 #========== Docker Rules Configuration End=========================
+
+http_archive(
+    name = "rules_pkg",
+    sha256 = "038f1caa773a7e35b3663865ffb003169c6a71dc995e39bf4815792f385d837d",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_pkg/releases/download/0.4.0/rules_pkg-0.4.0.tar.gz",
+        "https://github.com/bazelbuild/rules_pkg/releases/download/0.4.0/rules_pkg-0.4.0.tar.gz",
+    ],
+)
+
+load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
+
+rules_pkg_dependencies()
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+
+http_archive(
+    name = "jre_x64_linux_8u242b08",
+    build_file_content = """
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
+
+pkg_tar(
+    name = "jre_x64_linux_8u242b08",
+    package_dir = "/opt/harness-delegate",
+    srcs = glob(["jdk8u242-b08-jre/**"]),
+    strip_prefix = '.',
+    visibility = ["//visibility:public"],
+)
+""",
+    sha256 = "5edfaefdbb0469d8b24d61c8aef80c076611053b1738029c0232b9a632fe2708",
+    urls = ["https://app.harness.io/storage/wingsdelegates/jre/openjdk-8u242/jre_x64_linux_8u242b08.tar.gz"],
+)
