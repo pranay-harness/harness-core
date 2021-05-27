@@ -117,6 +117,11 @@ public class MongoPersistentLocker implements PersistentLocker, HealthMonitor, M
   }
 
   @Override
+  public AcquiredLock tryToAcquireInfiniteLockWithPeriodicRefresh(String name, Duration waitTime) {
+    throw new UnsupportedOperationException("Unsupported.");
+  }
+
+  @Override
   public AcquiredLock tryToAcquireEphemeralLock(String name, Duration timeout) {
     try {
       return acquireEphemeralLock(name, timeout);

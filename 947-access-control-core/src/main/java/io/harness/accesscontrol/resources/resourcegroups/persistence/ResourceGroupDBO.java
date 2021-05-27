@@ -76,8 +76,8 @@ public class ResourceGroupDBO implements PersistentRegularIterable, AccessContro
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
                  .name("uniqueResourceGroupPrimaryKey")
-                 .field(ResourceGroupDBOKeys.scopeIdentifier)
                  .field(ResourceGroupDBOKeys.identifier)
+                 .field(ResourceGroupDBOKeys.scopeIdentifier)
                  .unique(true)
                  .build())
         .build();
