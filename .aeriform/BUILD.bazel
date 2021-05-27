@@ -392,6 +392,8 @@ aeriform("//955-setup-usage-sdk:module")
 
 aeriform("//955-setup-usage-sdk:tests")
 
+aeriform("//956-feature-flag-beans:module")
+
 aeriform("//958-migration-sdk:module")
 
 aeriform("//958-migration-sdk:tests")

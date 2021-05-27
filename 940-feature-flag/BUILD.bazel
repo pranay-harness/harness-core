@@ -11,8 +11,8 @@ java_library(
     deps = [
         "//:lombok",
         "//953-events-api:module",
+        "//956-feature-flag-beans:module",
         "//960-continuous-features:module",
-        "//960-persistence:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_google_code_findbugs_annotations",
         "@maven//:com_google_guava_guava",
@@ -33,6 +33,7 @@ java_library(
     deps = [
         "module",
         "//:lombok",
+        "//956-feature-flag-beans:module",
         "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:junit_junit",

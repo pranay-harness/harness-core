@@ -18,7 +18,7 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.redis.RedisConfig;
-import io.harness.serializer.FeatureFlagRegistrars;
+import io.harness.serializer.FeatureFlagBeansRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
@@ -67,7 +67,7 @@ public class FeatureFlagRule implements MethodRule, InjectorRuleMixin, MongoRule
       @Singleton
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-            .addAll(FeatureFlagRegistrars.kryoRegistrars)
+            .addAll(FeatureFlagBeansRegistrars.kryoRegistrars)
             .build();
       }
 
@@ -75,7 +75,7 @@ public class FeatureFlagRule implements MethodRule, InjectorRuleMixin, MongoRule
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-            .addAll(FeatureFlagRegistrars.morphiaRegistrars)
+            .addAll(FeatureFlagBeansRegistrars.morphiaRegistrars)
             .build();
       }
 

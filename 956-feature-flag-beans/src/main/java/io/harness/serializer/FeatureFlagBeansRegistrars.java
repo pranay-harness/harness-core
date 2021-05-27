@@ -7,7 +7,7 @@ import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class FeatureFlagRegistrars {
+public class FeatureFlagBeansRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(PersistenceRegistrars.kryoRegistrars).build();
 
