@@ -1,5 +1,7 @@
 package io.harness.ff;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static java.time.Duration.ofMinutes;
 import static org.joda.time.Minutes.minutes;
 
@@ -43,6 +45,7 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 @OwnedBy(HarnessTeam.CF)
 public class CfMigrationService {
+  private static final String STATIC_ACCOUNT_ID = "CF-STATIC-ACCOUNT-ID";
   @Inject @Named("cfMigrationAPI") private CFApi cfAdminApi;
   @Inject private CfMigrationConfig cfMigrationConfig;
   @Inject private CfClient cfClient;
@@ -50,13 +53,19 @@ public class CfMigrationService {
 
   void verifyBehaviorWithCF(FeatureName featureName, boolean featureValue, String accountId) {
     if (cfMigrationConfig.isEnabled()) {
+      if (isEmpty(accountId)) {
+        /**
+         * If accountID is null or empty, use a static accountID
+         */
+        accountId = STATIC_ACCOUNT_ID;
+      }
       Target target = Target.builder().identifier(accountId).name(accountId).build();
       boolean cfFeatureValue = cfClient.boolVariation(featureName.name(), target, false);
       if (cfFeatureValue != featureValue) {
-        log.error("CF MISMATCH WITH HARNESS FF -> FEATURE [{}], HARNESS FF [{}], CF [{}]", featureName.name(),
-            featureValue, cfFeatureValue);
+        log.error("CF MISMATCH WITH HARNESS FF -> FEATURE [{}], HARNESS FF [{}], CF [{}], target [{}]",
+            featureName.name(), featureValue, cfFeatureValue, target.getIdentifier());
       } else {
-        log.info("CF MATCH with Harness FF -> Feature[{}], value = {}]", featureName.name(), cfFeatureValue);
+        log.debug("CF MATCH with Harness FF -> Feature[{}], value = {}]", featureName.name(), cfFeatureValue);
       }
     }
   }
