@@ -12,6 +12,8 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.mappers.AccountMapper;
+import io.harness.ng.core.user.PasswordChangeDTO;
+import io.harness.ng.core.user.PasswordChangeResponse;
 import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
@@ -127,6 +129,13 @@ public class UserResourceNG {
   public RestResponse<Boolean> getUserByEmailId(
       @QueryParam("accountId") String accountId, @QueryParam("emailId") String emailId) {
     return new RestResponse<>(userService.isUserPasswordPresent(accountId, emailId));
+  }
+
+  @PUT
+  @Path("password")
+  public RestResponse<PasswordChangeResponse> changeUserPassword(
+      @QueryParam("userId") String userId, PasswordChangeDTO passwordChangeDTO) {
+    return new RestResponse<>(userService.changePassword(userId, passwordChangeDTO));
   }
 
   @POST
