@@ -34,10 +34,14 @@ public class ScmDelegateClientImpl implements ScmDelegateClient {
         final ManagedChannel channel = scmUnixManager.getChannel();
         return functor.apply(channel);
       } catch (StatusRuntimeException e) {
-        if (!e.getStatus().getCode().equals(Status.Code.UNAVAILABLE) || ++retryCount > 20) {
-          throw new InvalidRequestException("Cannot start Scm Unix Manager", e);
+        if (e.getStatus().getCode().equals(Status.Code.UNAVAILABLE)) {
+          if (++retryCount > 20) {
+            throw new InvalidRequestException("Cannot start Scm Unix Manager", e);
+          }
+          Thread.sleep(100);
+        } else {
+          throw e;
         }
-        Thread.sleep(10);
       } finally {
         scmUnixManager.close();
       }
