@@ -298,7 +298,7 @@ helper shell scripts:
       mvn -f tools/ clean install -DskipTests
       ```
 
-   1. Setup Checkstyle plugin. In `Preferences -> Other settings -> Checkstyle` add `tools/config/target/config-0.0.1-SNAPSHOT-jar-with-dependencies.jar` and `tools/checkstyle/target/checkstyle-0.0.1-SNAPSHOT.jar` jars in the repo to the 3rd party checks classpath. Add configuration file `harness_checks.xml` (Choose the option to resolve the file from the 3rd party checks classpath - it's within the config jar) and choose it as the default active. Set scan scope to  `java sources including tests`.
+   1. Setup Checkstyle plugin. In `Preferences -> Other settings -> Checkstyle` add `tools/config/target/config-0.0.1-SNAPSHOT-jar-with-dependencies.jar` and `tools/checkstyle/target/checkstyle-0.0.1-SNAPSHOT.jar` jars in the repo to the 3rd party checks classpath. Add configuration file `harness_checks.xml` (Choose the option to resolve the file from the 3rd party checks classpath - it's within the config jar) and choose it as the default active. Set scan scope to  `java sources including tests`. In case Intellij complains about missing Harness rule files add following jar to Third-Party Checks `tools/checkstyle/target/checkstyle-0.0.1-SNAPSHOT.jar`. Additionally check version of Checkstyle plugin to be 8.20 `Preferences > Tools > Checkstyle > Checkstyle Version:`    
    *  ![config image](img/checkstyle-config-pre.png).
    *  ![config image](img/checkstyle-config.png).
 7. Change settings to mark injected fields as assigned. (Settings > Editor > Inspections > Java > Declaration Redundancy > Unused Declarations>Entry Points >
@@ -339,6 +339,9 @@ Alternatively, use Fish shell: `brew install fish` then set iterms command to `/
 1. Make sure your mongodb is running first.
 
 2. Run API Server (WingsApplication): [Run > Run... > WingsApplication]
+    * If you get ALPN processor missing at start of WingsApp execute following maven command 
+     
+        `mvn dependency:get -Dartifact=org.mortbay.jetty.alpn:alpn-boot:8.1.13.v20181017`
 
 3. Run DataGenApp: [Run > Run... > DataGenApp]. Add HARNESS_GENERATION_PASSPHRASE environment variable to DataGenApp config in intellij. 
 
@@ -360,6 +363,9 @@ The admin username and password are in BaseIntegrationTest.java.
     * If you have `jsse.jar` but still getting that error, then make sure the default JDK for your maven module is set correctly in IntelliJ. Right Click Module in left sidebar > Open Module Settings > Platform Settings > SDKs)
 * If you go to https://localhost:8000/#/login and don't see content, go to https://localhost:8181/#/login to enable the certificate then try again.
 * If still face not able to login then got to https://localhost:9090/api/version and enable certificate and try again.
+* If you get ALPN processor missing at start of WingsApp execute following maven command 
+ 
+    `mvn dependency:get -Dartifact=org.mortbay.jetty.alpn:alpn-boot:8.1.13.v20181017`
 
 ### Python
 
