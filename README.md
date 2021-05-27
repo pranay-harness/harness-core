@@ -207,7 +207,7 @@ cd to `portal` directory
 
    or, preferably, with this command from bash console:
 
-   * `bazel run 160-model-gen-tool:module --jvmopt="-Xbootclasspath/p:${HOME}/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar” server <portal project location>/160-model-gen-tool/config-datagen.yml`
+   * `bazel run 160-model-gen-tool:module --jvmopt="-Xbootclasspath/p:${HOME}/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar" server <portal project location>/160-model-gen-tool/config-datagen.yml`
 
    After command finishes, you might confirm in the mongodb account table that accountKey value is properly set.
 
@@ -298,7 +298,7 @@ helper shell scripts:
       mvn -f tools/ clean install -DskipTests
       ```
 
-   1. Setup Checkstyle plugin. In `Preferences -> Other settings -> Checkstyle` add `tools/config/target/config-0.0.1-SNAPSHOT-jar-with-dependencies.jar` and `tools/checkstyle/target/checkstyle-0.0.1-SNAPSHOT.jar` jars in the repo to the 3rd party checks classpath. Add configuration file `harness_checks.xml` (Choose the option to resolve the file from the 3rd party checks classpath - it's within the config jar) and choose it as the default active. Set scan scope to  `java sources including tests`. In case Intellij complains about missing Harness rule files add following jar to Third-Party Checks `tools/checkstyle/target/checkstyle-0.0.1-SNAPSHOT.jar`. Additionally check version of Checkstyle plugin to be 8.20 `Preferences > Tools > Checkstyle > Checkstyle Version:`    
+   1. Setup Checkstyle plugin. In `Preferences -> Other settings -> Checkstyle` add `tools/config/target/config-0.0.1-SNAPSHOT-jar-with-dependencies.jar` and `tools/checkstyle/target/checkstyle-0.0.1-SNAPSHOT.jar` jars in the repo to the 3rd party checks classpath. Add configuration file `harness_checks.xml` (Choose the option to resolve the file from the 3rd party checks classpath - it's within the config jar) and choose it as the default active. Set scan scope to  `java sources including tests`. In case Intellij complains about missing Harness rule files add following jar to Third-Party Checks `tools/checkstyle/target/checkstyle-0.0.1-SNAPSHOT.jar`. Additionally, check version of Checkstyle plugin to be 8.20 `Preferences > Tools > Checkstyle > Checkstyle Version:`    
    *  ![config image](img/checkstyle-config-pre.png).
    *  ![config image](img/checkstyle-config.png).
 7. Change settings to mark injected fields as assigned. (Settings > Editor > Inspections > Java > Declaration Redundancy > Unused Declarations>Entry Points >
