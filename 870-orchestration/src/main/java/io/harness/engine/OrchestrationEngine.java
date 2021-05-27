@@ -24,7 +24,6 @@ import io.harness.engine.facilitation.RunPreFacilitationChecker;
 import io.harness.engine.facilitation.SkipPreFacilitationChecker;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.pms.EngineAdviseCallback;
-import io.harness.engine.pms.EngineFacilitationCallback;
 import io.harness.engine.resume.EngineWaitResumeCallback;
 import io.harness.engine.utils.TransactionUtils;
 import io.harness.eraro.ResponseMessage;
@@ -183,9 +182,6 @@ public class OrchestrationEngine {
                                        .build();
         transactionUtils.performTransaction(() -> {
           nodeExecutionEventQueuePublisher.send(event);
-          waitNotifyEngine.waitForAllOn(publisherName,
-              EngineFacilitationCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build(),
-              event.getNotifyId());
           return null;
         });
       } else {

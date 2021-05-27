@@ -6,4 +6,5 @@ import io.harness.annotations.dev.OwnedBy;
 @OwnedBy(HarnessTeam.PIPELINE)
 public interface QueueListenerObserver<T extends Queuable> {
   void onListenerEnd(T message);
+  void onListenerStart(T message);
 }
