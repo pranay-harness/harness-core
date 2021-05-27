@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 import io.dropwizard.lifecycle.Managed;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @Singleton
 @OwnedBy(HarnessTeam.PL)
@@ -29,5 +30,12 @@ public class AggregatorService implements Managed {
   }
 
   @Override
-  public void stop() {}
+  public void stop() {
+    executorService.shutdown();
+    try {
+      executorService.awaitTermination(1, TimeUnit.MINUTES);
+    } catch (InterruptedException interruptedException) {
+      Thread.currentThread().interrupt();
+    }
+  }
 }
