@@ -25,6 +25,8 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.invites.dto.UserMetadataDTO;
+import io.harness.ng.core.user.PasswordChangeDTO;
+import io.harness.ng.core.user.PasswordChangeResponse;
 import io.harness.ng.core.user.TwoFactorAuthMechanismInfo;
 import io.harness.ng.core.user.TwoFactorAuthSettingsInfo;
 import io.harness.ng.core.user.UserInfo;
@@ -199,6 +201,13 @@ public class UserResource {
   @ApiOperation(value = "update user information", nickname = "updateUserInfo")
   public ResponseDTO<UserInfo> updateUserInfo(@Body UserInfo userInfo) {
     return ResponseDTO.newResponse(userInfoService.update(userInfo));
+  }
+
+  @PUT
+  @Path("password")
+  @ApiOperation(value = "Change user password", nickname = "changeUserPassword")
+  public ResponseDTO<PasswordChangeResponse> changeUserPassword(PasswordChangeDTO passwordChangeDTO) {
+    return ResponseDTO.newResponse(userInfoService.changeUserPassword(passwordChangeDTO));
   }
 
   @PUT
