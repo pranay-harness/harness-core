@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 @OwnedBy(DX)
 public enum HarnessModule {
   UNDEFINED,
+  _001_MICROSERVICE_INTERFACE_TOOL,
   _270_VERIFICATION,
   _280_BATCH_PROCESSING,
   _310_CI_MANAGER,
