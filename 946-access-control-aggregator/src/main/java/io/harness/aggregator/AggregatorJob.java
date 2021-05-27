@@ -31,6 +31,7 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
@@ -190,14 +191,15 @@ public class AggregatorJob implements Runnable {
       log.info("waiting for debezium failure to release lock...");
       while (!debeziumEngineFuture.isDone()) {
         try {
-          Thread.sleep(60000);
+          TimeUnit.SECONDS.sleep(60);
         } catch (InterruptedException e) {
           try {
             debeziumEngine.close();
           } catch (IOException exception) {
-            // ignore
+            log.error("Failed to close debezium engine", exception);
           }
           Thread.currentThread().interrupt();
+          return;
         }
       }
     } finally {
