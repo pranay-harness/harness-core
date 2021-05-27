@@ -96,14 +96,14 @@ public class GitChangeSetRunnableQueueHelper {
       {
         put(YamlChangeSetEventType.BRANCH_CREATE.name(), 1);
         put(YamlChangeSetEventType.BRANCH_SYNC.name(), 2);
-        put(YamlChangeSetEventType.GIT_TO_HARNESS_PUSH.name(), 3);
+        put(YamlChangeSetEventType.BRANCH_PUSH.name(), 3);
       }
     };
 
     @Override
     public int compare(YamlChangeSet o1, YamlChangeSet o2) {
-      final String eventType1 = o1.getEventType();
-      final String eventType2 = o2.getEventType();
+      final YamlChangeSetEventType eventType1 = o1.getEventType();
+      final YamlChangeSetEventType eventType2 = o2.getEventType();
 
       return statusOrder.get(eventType1) - statusOrder.get(eventType2);
     }

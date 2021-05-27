@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.Trimmed;
 import io.harness.gitsync.common.beans.EventMetadata;
+import io.harness.gitsync.common.beans.YamlChangeSetEventType;
 import io.harness.gitsync.core.beans.GitWebhookRequestAttributes;
 
 import javax.validation.Valid;
@@ -22,7 +23,7 @@ public class YamlChangeSetDTO {
   @NotNull String status;
   // todo: replace/modify with whatever comes from webhook svc
   @Valid GitWebhookRequestAttributes gitWebhookRequestAttributes;
-  @NotNull String eventType;
+  @NotNull YamlChangeSetEventType eventType;
   @NotNull String repoUrl;
   @NotNull String branch;
 

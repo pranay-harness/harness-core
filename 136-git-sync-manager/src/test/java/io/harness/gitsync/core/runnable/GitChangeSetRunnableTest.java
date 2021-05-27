@@ -47,13 +47,12 @@ public class GitChangeSetRunnableTest extends GitSyncTestBase {
   public void testRun() {
     YamlChangeSetSaveDTOBuilder yamlChangeSetBuilder =
         YamlChangeSetSaveDTO.builder().accountId(accountId).branch(branch).repoUrl(repo);
-    yamlChangeSetService.save(yamlChangeSetBuilder.eventType(YamlChangeSetEventType.BRANCH_CREATE.name()).build());
+    yamlChangeSetService.save(yamlChangeSetBuilder.eventType(YamlChangeSetEventType.BRANCH_CREATE).build());
     ArgumentCaptor<YamlChangeSetDTO> argumentCaptor = ArgumentCaptor.forClass(YamlChangeSetDTO.class);
     gitChangeSetRunnable.run();
     verify(gitChangeSetRunnable).processChangeSet(argumentCaptor.capture());
     assertThat(argumentCaptor.getAllValues().size()).isEqualTo(1);
-    assertThat(argumentCaptor.getAllValues().get(0).getEventType())
-        .isEqualTo(YamlChangeSetEventType.BRANCH_CREATE.name());
+    assertThat(argumentCaptor.getAllValues().get(0).getEventType()).isEqualTo(YamlChangeSetEventType.BRANCH_CREATE);
   }
 
   @Test
@@ -63,16 +62,14 @@ public class GitChangeSetRunnableTest extends GitSyncTestBase {
     YamlChangeSetSaveDTOBuilder yamlChangeSetBuilder =
         YamlChangeSetSaveDTO.builder().accountId(accountId).repoUrl(repo);
     yamlChangeSetService.save(
-        yamlChangeSetBuilder.eventType(YamlChangeSetEventType.BRANCH_SYNC.name()).branch(branch).build());
+        yamlChangeSetBuilder.eventType(YamlChangeSetEventType.BRANCH_SYNC).branch(branch).build());
     yamlChangeSetService.save(
-        yamlChangeSetBuilder.eventType(YamlChangeSetEventType.GIT_TO_HARNESS_PUSH.name()).branch("branch1").build());
+        yamlChangeSetBuilder.eventType(YamlChangeSetEventType.BRANCH_PUSH).branch("branch1").build());
     ArgumentCaptor<YamlChangeSetDTO> argumentCaptor = ArgumentCaptor.forClass(YamlChangeSetDTO.class);
     gitChangeSetRunnable.run();
     verify(gitChangeSetRunnable, times(2)).processChangeSet(argumentCaptor.capture());
     assertThat(argumentCaptor.getAllValues().size()).isEqualTo(2);
-    assertThat(argumentCaptor.getAllValues().get(0).getEventType())
-        .isEqualTo(YamlChangeSetEventType.BRANCH_SYNC.name());
-    assertThat(argumentCaptor.getAllValues().get(1).getEventType())
-        .isEqualTo(YamlChangeSetEventType.GIT_TO_HARNESS_PUSH.name());
+    assertThat(argumentCaptor.getAllValues().get(0).getEventType()).isEqualTo(YamlChangeSetEventType.BRANCH_SYNC);
+    assertThat(argumentCaptor.getAllValues().get(1).getEventType()).isEqualTo(YamlChangeSetEventType.BRANCH_PUSH);
   }
 }
