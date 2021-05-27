@@ -1,6 +1,7 @@
 package io.harness.repositories.service.custom;
 
 import io.harness.ng.core.service.entity.ServiceEntity;
+import io.harness.ng.core.service.entity.ServiceEntity.ServiceEntityKeys;
 import io.harness.ng.core.service.mappers.ServiceFilterHelper;
 
 import com.google.inject.Inject;
@@ -70,6 +71,25 @@ public class ServiceRepositoryCustomImpl implements ServiceRepositoryCustom {
         "[Retrying]: Failed deleting Service; attempt: {}", "[Failed]: Failed deleting Service; attempt: {}");
     return Failsafe.with(retryPolicy)
         .get(() -> mongoTemplate.updateFirst(query, updateOperationsForDelete, ServiceEntity.class));
+  }
+
+  @Override
+  public Long findActiveServiceCountAtGivenTimestamp(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, long timestampInMs) {
+    Criteria baseCriteria = Criteria.where(ServiceEntityKeys.accountId)
+                                .is(accountIdentifier)
+                                .where(ServiceEntityKeys.orgIdentifier)
+                                .is(orgIdentifier)
+                                .where(ServiceEntityKeys.projectIdentifier)
+                                .is(projectIdentifier);
+
+    Criteria filterCreatedAt = Criteria.where(ServiceEntityKeys.createdAt).lte(timestampInMs);
+    Criteria filterDeletedAt = Criteria.where(ServiceEntityKeys.deletedAt).gte(timestampInMs);
+    Criteria filterDeleted = Criteria.where(ServiceEntityKeys.deleted).is(false);
+
+    Query query =
+        new Query().addCriteria(baseCriteria.andOperator(filterCreatedAt.orOperator(filterDeleted, filterDeletedAt)));
+    return mongoTemplate.count(query, ServiceEntity.class);
   }
 
   private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {

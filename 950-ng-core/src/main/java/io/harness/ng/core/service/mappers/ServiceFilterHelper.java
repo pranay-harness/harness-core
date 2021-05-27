@@ -3,6 +3,7 @@ package io.harness.ng.core.service.mappers;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import static java.lang.System.currentTimeMillis;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.NGResourceFilterConstants;
@@ -48,6 +49,7 @@ public class ServiceFilterHelper {
   public Update getUpdateOperationsForDelete() {
     Update update = new Update();
     update.set(ServiceEntityKeys.deleted, true);
+    update.set(ServiceEntityKeys.deletedAt, currentTimeMillis());
     return update;
   }
 }
