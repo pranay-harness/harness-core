@@ -205,20 +205,19 @@ roles:
       name: Feature Flag Admin
       description: Can perform all actions for feature flags in a existing project
       permissions:
-        - ff_featureflag_create
         - ff_featureflag_delete
         - ff_featureflag_edit
         - ff_featureflag_view
-        - ff_targetgroup_view
-        - ff_targetgroup_create
-        - ff_targetgroup_edit
         - ff_targetgroup_delete
-        - ff_environment_ffTargetGroupEdit
+        - ff_targetgroup_view
+        - ff_targetgroup_edit
+        - ff_environment_targetGroupEdit
         - ff_target_view
-        - ff_environment_ffApiKeyView
-        - ff_environment_ffApiKeyCreate
-        - ff_environment_ffApiKeyDelete
-        - ff_environment_ffEdit
+        - ff_environment_apiKeyView
+        - ff_environment_apiKeyCreate
+        - ff_environment_apiKeyDelete
+        - ff_environment_edit
+        - ff_environment_view
       managed: true
       allowedScopeLevels:
         - account
@@ -228,8 +227,9 @@ roles:
       name: Feature Flag View Only Role
       description: Can view existing feature flags
       permissions:
-        - ff_featureflag_create
-        - ff_environment_ffApiKeyView
+        - ff_featureflag_view
+        - ff_environment_view
+        - ff_environment_apiKeyView
         - ff_targetgroup_view
         - ff_target_view
       managed: true
@@ -241,12 +241,13 @@ roles:
       name: Feature Flag Manage Role
       description: Can edit and view existing feature flags
       permissions:
-        - ff_environment_ffEdit
+        - ff_environment_edit
+        - ff_environment_view
         - ff_featureflag_view
         - ff_targetgroup_view
         - ff_targetgroup_edit
         - ff_target_view
-        - ff_environment_ffApiKeyView
+        - ff_environment_apiKeyView
       managed: true
       allowedScopeLevels:
         - account
