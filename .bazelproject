@@ -6,6 +6,7 @@ directories:
   120-ng-manager
   121-instance
   121-access-control-migration
+  122-ng-authentication-settings
   122-ng-core-user
   125-cd-nextgen
   136-git-sync-manager

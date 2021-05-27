@@ -1,0 +1,20 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//:macros.bzl", "run_analysis")
+load("//:macros.bzl", "test_targets_list")
+
+shared_dependencies = [
+    "//:lombok",
+    "//122-ng-core-user:module",
+]
+
+java_library(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    resources = [
+    ],
+    visibility = ["//visibility:public"],
+    deps = shared_dependencies,
+)
+
+run_analysis()
