@@ -53,6 +53,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
   @InjectMocks private PMSPipelineServiceImpl pmsPipelineService;
   @Inject private PMSPipelineRepository pmsPipelineRepository;
   StepCategory library;
+  StepCategory cv;
 
   private final String accountId = RandomStringUtils.randomAlphanumeric(6);
   private final String ORG_IDENTIFIER = "orgId";
@@ -80,6 +81,21 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
     List<StepCategory> list = new ArrayList<>();
     list.add(libraryDouble);
     library = StepCategory.builder().name("Library").stepsData(new ArrayList<>()).stepCategories(list).build();
+
+    StepCategory testStepCV =
+        StepCategory.builder()
+            .name("Single")
+            .stepsData(Collections.singletonList(StepData.builder().name("testStepCV").type("testStepCV").build()))
+            .stepCategories(Collections.emptyList())
+            .build();
+    StepCategory libraryDoubleCV = StepCategory.builder()
+                                       .name("Double")
+                                       .stepsData(Collections.emptyList())
+                                       .stepCategories(Collections.singletonList(testStepCV))
+                                       .build();
+    List<StepCategory> listCV = new ArrayList<>();
+    listCV.add(libraryDoubleCV);
+    cv = StepCategory.builder().name("cv").stepsData(new ArrayList<>()).stepCategories(listCV).build();
 
     ClassLoader classLoader = this.getClass().getClassLoader();
     String filename = "failure-strategy.yaml";
@@ -126,7 +142,10 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
         .when(pmsPipelineServiceStepHelper.calculateStepsForModuleBasedOnCategory(
             null, serviceInstanceNameToSupportedSteps.get("cd"), accountId))
         .thenReturn(library);
-
+    Mockito
+        .when(pmsPipelineServiceStepHelper.calculateStepsForCategory(
+            "cv", serviceInstanceNameToSupportedSteps.get("cv"), accountId))
+        .thenReturn(cv);
     StepCategory stepCategory = pmsPipelineService.getSteps("cd", null, accountId);
     String expected =
         "StepCategory(name=Library, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCD, type=testStepCD)], stepCategories=[])]), StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV)], stepCategories=[])])])])";
@@ -162,6 +181,10 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
                         .stepsData(new ArrayList<>())
                         .stepCategories(new ArrayList<>())
                         .build());
+    Mockito
+        .when(pmsPipelineServiceStepHelper.calculateStepsForCategory(
+            "cv", serviceInstanceNameToSupportedSteps.get("cv"), accountId))
+        .thenReturn(cv);
 
     StepCategory stepCategory = pmsPipelineService.getSteps("cd", "Terraform", accountId);
     String expected =

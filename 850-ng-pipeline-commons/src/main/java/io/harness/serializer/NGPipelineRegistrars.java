@@ -42,7 +42,7 @@ public class NGPipelineRegistrars {
           .addAll(PmsCommonsModuleRegistrars.morphiaRegistrars)
           .add(NGPipelineMorphiaRegistrar.class)
           .add(PmsSdkCoreMorphiaRegistrar.class)
-          .addAll(FeatureFlagRegistrars.morphiaRegistrars)
+          .addAll(FeatureFlagBeansRegistrars.morphiaRegistrars)
           .build();
 
   public static ImmutableList<? extends Class<? extends Converter<?, ?>>> springConverters =

@@ -8,6 +8,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.FeatureFlag;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
@@ -27,12 +28,14 @@ import software.wings.beans.User;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -66,6 +69,7 @@ import retrofit2.http.Body;
 public class UserResourceNG {
   private final UserService userService;
   private final TwoFactorAuthenticationManager twoFactorAuthenticationManager;
+  private final AccountService accountService;
   private static final String ACCOUNT_ADMINISTRATOR_USER_GROUP = "Account Administrator";
   private static final String CONFIRM_URL = "confirm";
   private static final String VERIFY_URL = "verify";
@@ -335,5 +339,11 @@ public class UserResourceNG {
     else {
       return new RestResponse(twoFactorAuthenticationManager.overrideTwoFactorAuthentication(accountId, settings));
     }
+  }
+
+  @GET
+  @Path("feature-flags/{accountId}")
+  public RestResponse<Collection<FeatureFlag>> getFeatureFlags(@PathParam("accountId") String accountId) {
+    return new RestResponse<>(accountService.getFeatureFlags(accountId));
   }
 }
