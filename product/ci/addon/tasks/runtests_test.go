@@ -132,7 +132,7 @@ instrPackages: p1, p2, p3`
 			name:                 "run all tests with non-empty test list and -Duser parameters",
 			args:                 "clean test -Duser.timezone=US/Mountain -Duser.locale=en/US",
 			runOnlySelectedTests: false,
-			want:                 "mvn clean test   -am -DargLine=\"-Duser.timezone=US/Mountain -Duser.locale=en/US -javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini\"",
+			want:                 "mvn -am -DargLine=\"-Duser.timezone=US/Mountain -Duser.locale=en/US -javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini\" clean test",
 			expectedErr:          false,
 			tests:                []types.RunnableTest{t1, t2},
 		},
@@ -140,7 +140,7 @@ instrPackages: p1, p2, p3`
 			name:                 "run all tests with empty test list and no -Duser parameters",
 			args:                 "clean test",
 			runOnlySelectedTests: false,
-			want:                 "mvn clean test -am -DargLine=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini",
+			want:                 "mvn -am -DargLine=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini clean test",
 			expectedErr:          false,
 			tests:                []types.RunnableTest{},
 		},
@@ -148,7 +148,7 @@ instrPackages: p1, p2, p3`
 			name:                 "run selected tests with given test list and -Duser parameters",
 			args:                 "clean test -Duser.timezone=US/Mountain -Duser.locale=en/US",
 			runOnlySelectedTests: true,
-			want:                 "mvn clean test   -Dtest=cls1,cls2 -am -DargLine=\"-Duser.timezone=US/Mountain -Duser.locale=en/US -javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini\"",
+			want:                 "mvn -Dtest=pkg1.cls1,pkg2.cls2 -am -DargLine=\"-Duser.timezone=US/Mountain -Duser.locale=en/US -javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini\" clean test",
 			expectedErr:          false,
 			tests:                []types.RunnableTest{t1, t2},
 		},
@@ -162,17 +162,17 @@ instrPackages: p1, p2, p3`
 		},
 		{
 			name:                 "run selected tests with repeating test list and -Duser parameters",
-			args:                 "clean test -Duser.timezone=US/Mountain -Duser.locale=en/US",
+			args:                 "clean test -B -2C-Duser.timezone=US/Mountain -Duser.locale=en/US",
 			runOnlySelectedTests: true,
-			want:                 "mvn clean test   -Dtest=cls1,cls2 -am -DargLine=\"-Duser.timezone=US/Mountain -Duser.locale=en/US -javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini\"",
+			want:                 "mvn -Dtest=pkg1.cls1,pkg2.cls2 -am -DargLine=\"-Duser.timezone=US/Mountain -Duser.locale=en/US -javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini\" clean test -B -2C",
 			expectedErr:          false,
 			tests:                []types.RunnableTest{t1, t2, t1, t2},
 		},
 		{
-			name:                 "run selected tests with single test and -Duser parameters",
-			args:                 "clean test -Duser.timezone=US/Mountain -Duser.locale=en/US",
+			name:                 "run selected tests with single test and -Duser parameters and or condition",
+			args:                 "clean test -B -2C -Duser.timezone=US/Mountain -Duser.locale=en/US || true",
 			runOnlySelectedTests: true,
-			want:                 "mvn clean test   -Dtest=cls2 -am -DargLine=\"-Duser.timezone=US/Mountain -Duser.locale=en/US -javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini\"",
+			want:                 "mvn -Dtest=pkg2.cls2 -am -DargLine=\"-Duser.timezone=US/Mountain -Duser.locale=en/US -javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini\" clean test -B -2C   || true",
 			expectedErr:          false,
 			tests:                []types.RunnableTest{t2},
 		},
@@ -211,7 +211,7 @@ func TestGetCmd(t *testing.T) {
 	fs := filesystem.NewMockFileSystem(ctrl)
 
 	t1 := types.RunnableTest{Pkg: "pkg1", Class: "cls1", Method: "m1"}
-	t2 := types.RunnableTest{Pkg: "pkg2", Class: "cls2", Method: "m2"}
+	t2 := types.RunnableTest{Pkg: "pkg2", Class: "cls1", Method: "m2"}
 
 	tmpFilePath := "/test/tmp"
 	packages := "p1, p2, p3"
@@ -257,7 +257,7 @@ instrPackages: p1, p2, p3`
 	want, err := utils.GetLoggableCmd(`set -e
 export TMPDIR=/test/tmp
 echo x
-mvn clean test -Dtest=cls1,cls2 -am -DargLine=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini
+mvn -Dtest=pkg1.cls1,pkg2.cls1 -am -DargLine=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini clean test
 echo y`)
 	if err != nil {
 		t.Fatalf("could not get loggable cmd for %s", want)
@@ -322,7 +322,7 @@ instrPackages: p1, p2, p3`
 	want, err := utils.GetLoggableCmd(`set -e
 export TMPDIR=/test/tmp
 echo x
-mvn clean test -am -DargLine=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini
+mvn -am -DargLine=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini clean test
 echo y`)
 	if err != nil {
 		t.Fatalf("could not get loggable cmd for %s", want)
@@ -382,7 +382,7 @@ instrPackages: p1, p2, p3`
 	want, err := utils.GetLoggableCmd(`set -e
 export TMPDIR=/test/tmp
 echo x
-mvn clean test -am -DargLine=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini
+mvn -am -DargLine=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini clean test
 echo y`)
 	if err != nil {
 		t.Fatalf("could not get loggable cmd for %s", want)
