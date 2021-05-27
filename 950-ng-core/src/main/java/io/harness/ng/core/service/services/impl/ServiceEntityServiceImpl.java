@@ -205,6 +205,17 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
     return getAllServices(accountIdentifier, orgIdentifier, projectIdentifier, QUERY_PAGE_SIZE);
   }
 
+  @Override
+  public Integer findActiveServicesCountAtGivenTimestamp(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, long timestampInMs) {
+    if (timestampInMs <= 0) {
+      throw new InvalidRequestException("Invalid timestamp while fetching active services count : " + timestampInMs);
+    }
+    return serviceRepository
+        .findActiveServiceCountAtGivenTimestamp(accountIdentifier, orgIdentifier, projectIdentifier, timestampInMs)
+        .intValue();
+  }
+
   @VisibleForTesting
   String getDuplicateServiceExistsErrorMessage(String exceptionString) {
     String errorMessageToBeReturned = null;
