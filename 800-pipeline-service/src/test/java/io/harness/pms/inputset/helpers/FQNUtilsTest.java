@@ -131,5 +131,15 @@ public class FQNUtilsTest extends CategoryTest {
     String yaml5 = toYaml(failureStrategyYaml);
     assertThat(FQNUtils.generateFQNMap(YamlUtils.readTree(yaml5).getNode().getCurrJsonNode()))
         .isNotInstanceOf(InvalidRequestException.class);
+
+    String ValidApprovalCriteriaFqnYaml = "fqnUniqueApprovalCriteriaTest.yaml";
+    String yaml6 = toYaml(ValidApprovalCriteriaFqnYaml);
+    assertThat(FQNUtils.generateFQNMap(YamlUtils.readTree(yaml6).getNode().getCurrJsonNode()))
+        .isNotInstanceOf(InvalidRequestException.class);
+
+    String ValidRejectionCriteriaFqnYaml = "fqnUniqueRejectionCriteriaTest.yaml";
+    String yaml7 = toYaml(ValidRejectionCriteriaFqnYaml);
+    assertThat(FQNUtils.generateFQNMap(YamlUtils.readTree(yaml7).getNode().getCurrJsonNode()))
+        .isNotInstanceOf(InvalidRequestException.class);
   }
 }

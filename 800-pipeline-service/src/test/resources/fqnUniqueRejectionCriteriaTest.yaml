@@ -1,0 +1,33 @@
+a:
+  b: 12
+  c: 22
+  d:
+    - stage:
+        identifier: id1
+        name: name1
+        f: harness
+        g: default
+        h:
+          execution:
+            - step:
+                type: JiraApproval
+                name: jira1
+                identifier: jira1
+                spec:
+                  connectorRef: <+input>
+                  issueKey: <+input>
+                  rejectionCriteria:
+                    type: KeyValues
+                    spec:
+                      matchAnyCondition: true
+                      conditions:
+                        - key: Status
+                          operator: equals
+                          value: SUCCESS
+                        - key: Status
+                          operator: equals
+                          value: FAILE
+
+
+
+

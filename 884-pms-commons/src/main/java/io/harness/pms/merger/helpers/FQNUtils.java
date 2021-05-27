@@ -19,10 +19,15 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class FQNUtils {
+  private List<String> execeptionUniqueFqnList =
+      Stream.of("approvalCriteria", "rejectionCriteria").collect(Collectors.toList());
+
   public Map<FQN, Object> getSubMap(Map<FQN, Object> fullMap, FQN baseFQN) {
     Map<FQN, Object> res = new LinkedHashMap<>();
     fullMap.keySet().forEach(key -> {
@@ -48,12 +53,21 @@ public class FQNUtils {
   }
 
   private void validateUniqueFqn(FQN fqn, Object value, Map<FQN, Object> res) {
-    if (res.containsKey(fqn)) {
+    if (res.containsKey(fqn) && !checkIfFqnNotInExeceptionList(fqn)) {
       String fqnDisplay = fqn.display();
       throw new InvalidRequestException(String.format(" This element is coming twice in yaml %s",
           fqn.display().substring(0, fqnDisplay.lastIndexOf('.', fqnDisplay.length() - 2))));
     }
     res.put(fqn, value);
+  }
+
+  private boolean checkIfFqnNotInExeceptionList(FQN fqn) {
+    for (String exceptionString : execeptionUniqueFqnList) {
+      if (fqn.display().contains(exceptionString)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private void generateFQNMap(JsonNode map, FQN baseFQN, Map<FQN, Object> res) {
