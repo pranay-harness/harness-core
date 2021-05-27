@@ -1,5 +1,8 @@
 package io.harness.registrars;
 
+import static io.harness.pms.contracts.execution.events.OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE;
+import static io.harness.pms.contracts.execution.events.OrchestrationEventType.ORCHESTRATION_START;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
@@ -9,8 +12,8 @@ import io.harness.steps.barriers.event.BarrierDropper;
 import io.harness.steps.barriers.event.BarrierPositionHelperEventHandler;
 import io.harness.steps.resourcerestraint.ResourceRestraintInitializer;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import lombok.experimental.UtilityClass;
@@ -19,14 +22,10 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class OrchestrationStepsModuleEventHandlerRegistrar {
   public Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> getEngineEventHandlers() {
-    Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap =
-        new HashMap<>();
-    engineEventHandlersMap.put(OrchestrationEventType.ORCHESTRATION_START,
-        Sets.newHashSet(BarrierInitializer.class, ResourceRestraintInitializer.class));
-    engineEventHandlersMap.put(OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE,
-        Sets.newHashSet(BarrierPositionHelperEventHandler.class, BarrierDropper.class));
-    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
-        engineEventHandlersMap, OrchestrationModuleEventHandlerRegistrar.getEngineEventHandlers());
-    return engineEventHandlersMap;
+    return ImmutableMap.<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>>builder()
+        .put(ORCHESTRATION_START, Sets.newHashSet(BarrierInitializer.class, ResourceRestraintInitializer.class))
+        .put(NODE_EXECUTION_STATUS_UPDATE,
+            Sets.newHashSet(BarrierPositionHelperEventHandler.class, BarrierDropper.class))
+        .build();
   }
 }
