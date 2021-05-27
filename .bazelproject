@@ -2,6 +2,7 @@ import .bazelproject-config
 
 directories:
   .aeriform
+  001-microservice-intfc-tool
   110-change-data-capture
   120-ng-manager
   121-instance

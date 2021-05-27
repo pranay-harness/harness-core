@@ -1,5 +1,7 @@
 load("//:tools/bazel/aeriform.bzl", "aeriform")
 
+aeriform("//001-microservice-intfc-tool:module")
+
 aeriform("//110-change-data-capture:module")
 
 aeriform("//120-ng-manager:module")
