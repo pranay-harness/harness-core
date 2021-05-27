@@ -1165,8 +1165,8 @@ public class AccountExportImportResource {
       while (isNotEmpty(batchJson)) {
         batchZipEntryName = collectionName + "_" + i + JSON_FILE_SUFFIX;
         batchJson = zipDataMap.get(batchZipEntryName);
-        batchJson = replaceClashedUserIds(batchJson, clashedUserIdMapping);
         if (isNotEmpty(batchJson)) {
+          batchJson = replaceClashedUserIds(batchJson, clashedUserIdMapping);
           jsonArrayList.add((JsonArray) jsonParser.parse(batchJson));
         }
         i++;
