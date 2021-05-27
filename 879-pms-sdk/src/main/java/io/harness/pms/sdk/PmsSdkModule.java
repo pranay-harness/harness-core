@@ -59,7 +59,6 @@ public class PmsSdkModule extends AbstractModule {
                                                  .build()));
     modules.add(PmsSdkRegistryModule.getInstance(config));
     modules.add(PmsSdkProviderModule.getInstance(config));
-    modules.add(PmsSdkQueueModule.getInstance(config));
     modules.add(SdkMonitoringModule.getInstance());
     return modules;
   }

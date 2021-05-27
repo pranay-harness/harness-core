@@ -1,11 +1,11 @@
-package io.harness.pms.sdk;
+package io.harness.pms.sdk.core;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotation.HarnessRepo;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.MongoConfig;
-import io.harness.serializer.PmsSdkModuleRegistrars;
+import io.harness.serializer.PmsSdkCoreModuleRegistrars;
 import io.harness.springdata.HMongoTemplate;
 
 import com.google.common.collect.ImmutableList;
@@ -52,7 +52,7 @@ public class PmsSdkPersistenceConfig extends AbstractMongoConfiguration {
     this.injector = injector;
     this.mongoConfig = injector.getInstance(Key.get(MongoConfig.class, Names.named("pmsSdkMongoConfig")));
     this.springConverters = ImmutableList.<Class<? extends Converter<?, ?>>>builder()
-                                .addAll(PmsSdkModuleRegistrars.springConverters)
+                                .addAll(PmsSdkCoreModuleRegistrars.springConverters)
                                 .build();
   }
 
