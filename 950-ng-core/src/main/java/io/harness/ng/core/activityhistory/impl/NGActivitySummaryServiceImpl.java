@@ -5,6 +5,7 @@ import static io.harness.ng.core.activityhistory.NGActivityStatus.SUCCESS;
 import static io.harness.ng.core.activityhistory.NGActivityType.CONNECTIVITY_CHECK;
 import static io.harness.ng.core.activityhistory.dto.TimeGroupType.DAY;
 import static io.harness.ng.core.activityhistory.dto.TimeGroupType.HOUR;
+import static io.harness.ng.core.activityhistory.dto.TimeGroupType.WEEK;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.bucket;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
@@ -54,6 +55,7 @@ public class NGActivitySummaryServiceImpl implements NGActivitySummaryService {
   private static final String isConnectivityFailureField = "isConnectivityFailure";
   private static final long HOUR_IN_MS = 60 * 60 * 1000;
   private static final long DAY_IN_MS = 24 * HOUR_IN_MS;
+  private static final long WEEK_IN_MS = 7 * DAY_IN_MS;
 
   @Override
   public Page<NGActivitySummaryDTO> listActivitySummary(String accountIdentifier, String orgIdentifier,
@@ -145,6 +147,8 @@ public class NGActivitySummaryServiceImpl implements NGActivitySummaryService {
       return DAY_IN_MS;
     } else if (timeGroupType == HOUR) {
       return HOUR_IN_MS;
+    } else if (timeGroupType == WEEK) {
+      return WEEK_IN_MS;
     } else {
       throw new UnknownEnumTypeException("Time Group Type", String.valueOf(timeGroupType));
     }

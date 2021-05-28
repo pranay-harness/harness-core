@@ -22,6 +22,7 @@ import io.harness.cdng.Deployment.DeploymentDateAndCount;
 import io.harness.cdng.Deployment.DeploymentInfo;
 import io.harness.cdng.Deployment.DeploymentStatusInfo;
 import io.harness.cdng.Deployment.DeploymentStatusInfoList;
+import io.harness.cdng.Deployment.EntityStatusDetails;
 import io.harness.cdng.Deployment.ExecutionDeployment;
 import io.harness.cdng.Deployment.ExecutionDeploymentInfo;
 import io.harness.cdng.Deployment.HealthDeploymentDashboard;
@@ -35,13 +36,17 @@ import io.harness.cdng.Deployment.ServiceDetailsDTO;
 import io.harness.cdng.Deployment.ServiceDetailsInfoDTO;
 import io.harness.cdng.Deployment.ServicePipelineInfo;
 import io.harness.cdng.Deployment.TimeAndStatusDeployment;
+import io.harness.cdng.Deployment.TimeValuePairListDTO;
 import io.harness.cdng.Deployment.TotalDeploymentInfo;
 import io.harness.cdng.Deployment.WorkloadCountInfo;
 import io.harness.cdng.Deployment.WorkloadDateCountInfo;
 import io.harness.cdng.Deployment.WorkloadDeploymentInfo;
+import io.harness.cdng.service.util.GrowthTrendEvaluator;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.ng.core.activityhistory.dto.TimeGroupType;
 import io.harness.ng.core.environment.beans.EnvironmentType;
+import io.harness.ng.core.service.entity.ServiceEntity;
+import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -69,6 +74,7 @@ import org.apache.commons.lang3.tuple.Pair;
 @Slf4j
 public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardService {
   @Inject TimeScaleDBService timeScaleDBService;
+  @Inject ServiceEntityService serviceEntityService;
 
   private String tableNameCD = "pipeline_execution_summary_cd";
   private String tableNameServiceAndInfra = "service_infra_info";
@@ -735,6 +741,35 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         .frequencyChangeRate(frequencyChangeRate)
         .serviceDeploymentList(serviceDeploymentList)
         .build();
+  }
+
+  /**
+   * This API processes all services for given combination of identifiers and produces list of data points
+   * determining the active number of services at particular timestamps, distanced by equal quantity
+   * determined by the groupBy param
+   * @param accountIdentifier
+   * @param orgIdentifier
+   * @param projectIdentifier
+   * @param startTimeInMs start time of the search interval
+   * @param endTimeInMs end time of the search interval
+   * @param timeGroupType groupBy param to determine the discreteness of the growth trend
+   * @return
+   */
+  @Override
+  public TimeValuePairListDTO<Integer> getServicesGrowthTrend(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, long startTimeInMs, long endTimeInMs, TimeGroupType timeGroupType) {
+    // Fetch all services for given accId + orgId + projectId including deleted ones in ASC order of creation time
+    List<ServiceEntity> serviceEntities =
+        serviceEntityService.getAllServices(accountIdentifier, orgIdentifier, projectIdentifier);
+
+    // Create List<EntityStatusDetails> out of service entity list to create growth trend out of it
+    List<EntityStatusDetails> entities = new ArrayList<>();
+    serviceEntities.forEach(serviceEntity
+        -> entities.add(new EntityStatusDetails(
+            serviceEntity.getCreatedAt(), serviceEntity.getDeleted(), serviceEntity.getDeletedAt())));
+
+    return new TimeValuePairListDTO<>(
+        GrowthTrendEvaluator.getGrowthTrend(entities, startTimeInMs, endTimeInMs, timeGroupType));
   }
 
   private double getFailureRateChangeRate(
