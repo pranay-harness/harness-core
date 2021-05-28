@@ -46,12 +46,12 @@ public class SampleBean1EntityGitPersistenceHelperServiceImpl
   }
 
   @Override
-  public SampleBean1 save(SampleBean1 yaml, String accountIdentifier) {
+  public SampleBean1 save(String accountIdentifier, String yaml) {
     return null;
   }
 
   @Override
-  public SampleBean1 update(SampleBean1 yaml, String accountIdentifier) {
+  public SampleBean1 update(String accountIdentifier, String yaml) {
     return null;
   }
 

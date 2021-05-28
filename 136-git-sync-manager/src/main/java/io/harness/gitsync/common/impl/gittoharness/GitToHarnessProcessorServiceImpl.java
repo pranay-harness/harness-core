@@ -20,6 +20,7 @@ import io.harness.gitsync.ChangeType;
 import io.harness.gitsync.GitToHarnessInfo;
 import io.harness.gitsync.GitToHarnessProcessRequest;
 import io.harness.gitsync.GitToHarnessServiceGrpc;
+import io.harness.gitsync.ProcessingResponse;
 import io.harness.gitsync.common.beans.GitFileLocation;
 import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
 import io.harness.gitsync.common.helper.GitSyncUtils;
@@ -56,8 +57,11 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
       String defaultBranch, String filePathToBeExcluded) {
     ScmConnector connectorAssociatedWithGitSyncConfig =
         gitSyncConnectorHelper.getDecryptedConnector(yamlGitConfig, accountId);
+    log.info("Getting files for the branch {}", branchName);
     FileBatchContentResponse harnessFilesOfBranch =
         getFilesBelongingToThisBranch(connectorAssociatedWithGitSyncConfig, accountId, branchName, yamlGitConfig);
+    log.info("Got files for the branch {} {}", branchName,
+        emptyIfNull(harnessFilesOfBranch.getFileContentsList()).stream().map(FileContent::getPath).collect(toList()));
     List<FileContent> filteredFileList = removeTheExcludedFile(harnessFilesOfBranch, filePathToBeExcluded);
     processTheChangesWeGotFromGit(filteredFileList, yamlGitConfig, branchName, accountId);
   }
@@ -116,7 +120,10 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
                                                                   .setChangeSets(changeSets)
                                                                   .setGitToHarnessBranchInfo(gitToHarnessInfo)
                                                                   .build();
-      gitToHarnessServiceBlockingStub.process(gitToHarnessProcessRequest);
+      log.info("Sending to microservice {}", entry.getKey());
+      ProcessingResponse processingResponse = gitToHarnessServiceBlockingStub.process(gitToHarnessProcessRequest);
+      log.info("Got the processing response for the microservice {}, response {}", entry.getKey(), processingResponse);
+      log.info("Completed for microservice {}", entry.getKey());
     }
   }
 

@@ -65,8 +65,10 @@ import com.google.inject.name.Named;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 
+@Slf4j
 @Singleton
 @OwnedBy(DX)
 public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService {
@@ -289,7 +291,9 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
           yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountId, gitSyncConfigId);
       gitToHarnessProcessorService.readFilesFromBranchAndProcess(
           yamlGitConfigDTO, branch, accountId, yamlGitConfigDTO.getBranch(), filePathToBeExcluded);
+      log.info("Branch sync completed {}", branch);
       gitBranchService.updateBranchSyncStatus(accountId, repoURL, branch, SYNCED);
+      log.info("Branch sync status updated completed {}", branch);
     }
   }
 

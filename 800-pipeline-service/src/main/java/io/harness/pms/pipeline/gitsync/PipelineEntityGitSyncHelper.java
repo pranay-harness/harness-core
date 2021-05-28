@@ -14,6 +14,7 @@ import io.harness.ng.core.EntityDetail;
 import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
+import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
 import io.harness.pms.pipeline.mappers.PipelineYamlDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 
@@ -63,14 +64,15 @@ public class PipelineEntityGitSyncHelper implements GitSdkEntityHandlerInterface
   }
 
   @Override
-  public PipelineConfig save(PipelineConfig dto, String accountIdentifier) {
-    PipelineEntity entity = PipelineYamlDtoMapper.toEntity(dto, accountIdentifier);
-    return PipelineYamlDtoMapper.toDto(entity);
+  public PipelineConfig save(String accountIdentifier, String yaml) {
+    PipelineEntity entity = PMSPipelineDtoMapper.toPipelineEntity(accountIdentifier, yaml);
+    PipelineEntity pipelineEntity = pmsPipelineService.create(entity);
+    return PipelineYamlDtoMapper.toDto(pipelineEntity);
   }
 
   @Override
-  public PipelineConfig update(PipelineConfig dto, String accountIdentifier) {
-    return save(dto, accountIdentifier);
+  public PipelineConfig update(String accountIdentifier, String yaml) {
+    return save(accountIdentifier, yaml);
   }
 
   @Override

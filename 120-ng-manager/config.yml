@@ -248,7 +248,7 @@ accessControlAdminClient:
 
 gitGrpcClientConfigs:
   pms:
-    target: localhost:12011
+    target: localhost:14001
     authority: localhost
   core:
     target: localhost:13001
