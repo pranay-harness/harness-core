@@ -16,6 +16,7 @@ import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 import static software.wings.core.ssh.executors.WinRmExecutorHelper.constructPSScriptWithCommands;
 import static software.wings.core.ssh.executors.WinRmExecutorHelper.constructPSScriptWithCommandsBulk;
+import static software.wings.core.ssh.executors.WinRmExecutorHelper.getScriptExecutingCommand;
 import static software.wings.core.ssh.executors.WinRmExecutorHelper.psWrappedCommandWithEncoding;
 
 import static java.lang.Math.min;
@@ -177,8 +178,8 @@ public class FileBasedWinRmExecutor implements FileBasedScriptExecutor {
           ? WINDOWS_TEMPFILE_LOCATION
           : config.getWorkingDirectory() + "harness-" + this.config.getExecutionId() + ".ps1";
       command = getCopyConfigCommandBehindFF(configFileMetaData, fileBytes);
-      exitCode = session.executeCommandsList(
-          constructPSScriptWithCommands(command, psScriptFile, powershell), outputWriter, errorWriter, false);
+      exitCode = session.executeCommandsList(constructPSScriptWithCommands(command, psScriptFile, powershell),
+          outputWriter, errorWriter, false, getScriptExecutingCommand(psScriptFile, powershell));
     } else {
       String encodedFile = EncodingUtils.encodeBase64(fileBytes);
       command = getCopyConfigCommand(configFileMetaData, encodedFile);
@@ -296,8 +297,8 @@ public class FileBasedWinRmExecutor implements FileBasedScriptExecutor {
         }
       }
     } else {
-      exitCode = session.executeCommandsList(
-          constructPSScriptWithCommands(command, psScriptFile, powershell), outputWriter, errorWriter, false);
+      exitCode = session.executeCommandsList(constructPSScriptWithCommands(command, psScriptFile, powershell),
+          outputWriter, errorWriter, false, getScriptExecutingCommand(psScriptFile, powershell));
     }
     return exitCode;
   }

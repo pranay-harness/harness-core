@@ -57,8 +57,8 @@ public class CIDashboardOverviewResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @NotNull @QueryParam(NGResourceFilterConstants.START) long startInterval,
-      @NotNull @QueryParam(NGResourceFilterConstants.END) long endInterval) {
+      @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
     log.info("Getting build health");
     long previousInterval = startInterval - (endInterval - startInterval + DAY_IN_MS);
 
@@ -73,8 +73,8 @@ public class CIDashboardOverviewResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @NotNull @QueryParam(NGResourceFilterConstants.START) long startInterval,
-      @NotNull @QueryParam(NGResourceFilterConstants.END) long endInterval) {
+      @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
     log.info("Getting build execution");
     return ResponseDTO.newResponse(ciOverviewDashboardService.getBuildExecutionBetweenIntervals(
         accountIdentifier, orgIdentifier, projectIdentifier, startInterval, endInterval));
@@ -87,8 +87,8 @@ public class CIDashboardOverviewResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @NotNull @QueryParam(NGResourceFilterConstants.START) long startInterval,
-      @NotNull @QueryParam(NGResourceFilterConstants.END) long endInterval) {
+      @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
     log.info("Getting build repository");
     long previousInterval = startInterval - (endInterval - startInterval + DAY_IN_MS);
     return ResponseDTO.newResponse(ciOverviewDashboardService.getDashboardBuildRepository(

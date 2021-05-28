@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.cdng.visitor.helpers.cdstepinfo.K8sApplyStepInfoVisitorHelper;
 import io.harness.executions.steps.StepSpecTypeConstants;
+import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
@@ -36,8 +37,8 @@ public class K8sApplyStepInfo extends K8sApplyBaseStepInfo implements CDStepInfo
 
   @Builder(builderMethodName = "infoBuilder")
   public K8sApplyStepInfo(ParameterField<Boolean> skipDryRun, ParameterField<Boolean> skipSteadyStateCheck,
-      ParameterField<List<String>> filePaths) {
-    super(skipDryRun, skipSteadyStateCheck, filePaths);
+      ParameterField<List<String>> filePaths, ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
+    super(skipDryRun, skipSteadyStateCheck, filePaths, delegateSelectors);
   }
 
   @Override
@@ -56,6 +57,7 @@ public class K8sApplyStepInfo extends K8sApplyBaseStepInfo implements CDStepInfo
         .filePaths(this.getFilePaths())
         .skipDryRun(this.getSkipDryRun())
         .skipSteadyStateCheck(skipSteadyStateCheck)
+        .delegateSelectors(delegateSelectors)
         .build();
   }
 }

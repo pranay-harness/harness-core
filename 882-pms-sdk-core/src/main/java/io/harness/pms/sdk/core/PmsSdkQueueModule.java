@@ -1,4 +1,4 @@
-package io.harness.pms.sdk;
+package io.harness.pms.sdk.core;
 
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
@@ -11,11 +11,10 @@ import io.harness.mongo.queue.QueueFactory;
 import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.execution.SdkResponseEvent;
 import io.harness.pms.interrupts.InterruptEvent;
-import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.pms.sdk.core.execution.SdkOrchestrationEventListener;
 import io.harness.pms.sdk.core.execution.listeners.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.interrupt.InterruptEventListener;
-import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
@@ -34,18 +33,18 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class PmsSdkQueueModule extends AbstractModule {
-  private final PmsSdkConfiguration config;
+  private final PmsSdkCoreConfig config;
 
   private static PmsSdkQueueModule instance;
 
-  public static PmsSdkQueueModule getInstance(PmsSdkConfiguration config) {
+  public static PmsSdkQueueModule getInstance(PmsSdkCoreConfig config) {
     if (instance == null) {
       instance = new PmsSdkQueueModule(config);
     }
     return instance;
   }
 
-  private PmsSdkQueueModule(PmsSdkConfiguration config) {
+  private PmsSdkQueueModule(PmsSdkCoreConfig config) {
     this.config = config;
   }
 
@@ -61,7 +60,7 @@ public class PmsSdkQueueModule extends AbstractModule {
   @Singleton
   public QueueConsumer<NodeExecutionEvent> nodeExecutionEventQueueConsumer(
       Injector injector, PublisherConfiguration publisherConfiguration) {
-    if (this.config.getDeploymentMode().isNonLocal()) {
+    if (this.config.getSdkDeployMode().isNonLocal()) {
       MongoTemplate sdkTemplate = getMongoTemplate(injector);
       List<List<String>> topicExpressions = singletonList(singletonList(config.getServiceName()));
       return QueueFactory.createNgQueueConsumer(
@@ -85,7 +84,7 @@ public class PmsSdkQueueModule extends AbstractModule {
   @Singleton
   public QueueConsumer<InterruptEvent> interruptEventQueueConsumer(
       Injector injector, PublisherConfiguration publisherConfiguration) {
-    if (this.config.getDeploymentMode().isNonLocal()) {
+    if (this.config.getSdkDeployMode().isNonLocal()) {
       MongoTemplate sdkTemplate = getMongoTemplate(injector);
       List<List<String>> topicExpressions = singletonList(singletonList(config.getServiceName()));
       return QueueFactory.createNgQueueConsumer(
@@ -101,7 +100,7 @@ public class PmsSdkQueueModule extends AbstractModule {
   @Singleton
   public QueueConsumer<OrchestrationEvent> orchestrationEventQueueConsumer(
       Injector injector, PublisherConfiguration publisherConfiguration) {
-    if (this.config.getDeploymentMode().isNonLocal()) {
+    if (this.config.getSdkDeployMode().isNonLocal()) {
       MongoTemplate sdkTemplate = getMongoTemplate(injector);
       List<List<String>> topicExpressions = singletonList(singletonList(config.getServiceName()));
       return QueueFactory.createNgQueueConsumer(
@@ -113,7 +112,7 @@ public class PmsSdkQueueModule extends AbstractModule {
   }
 
   private MongoTemplate getMongoTemplate(Injector injector) {
-    if (config.getDeploymentMode() == SdkDeployMode.REMOTE_IN_PROCESS) {
+    if (config.getSdkDeployMode() == SdkDeployMode.REMOTE_IN_PROCESS) {
       return injector.getInstance(MongoTemplate.class);
     } else {
       return injector.getInstance(Key.get(MongoTemplate.class, Names.named("pmsSdkMongoTemplate")));

@@ -8,6 +8,7 @@ import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.pms.serializer.kryo.PmsContractsKryoRegistrar;
+import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
@@ -19,6 +20,7 @@ import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
@@ -76,6 +78,23 @@ public class PmsSdkCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleM
       @Singleton
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder().build();
+      }
+    });
+
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(QueueController.class).toInstance(new QueueController() {
+          @Override
+          public boolean isPrimary() {
+            return true;
+          }
+
+          @Override
+          public boolean isNotPrimary() {
+            return false;
+          }
+        });
       }
     });
     return modules;

@@ -48,6 +48,8 @@ public class ScmDelegateGitHelper implements ScmGitHelper {
                                               .scmConnector(infoForPush.getScmConnector())
                                               .gitFileDetails(gitFileDetails.build())
                                               .encryptedDataDetails(infoForPush.getEncryptedDataDetailList())
+                                              .isNewBranch(infoForPush.isNewBranch())
+                                              .baseBranch(gitBranchInfo.getBaseBranch())
                                               .build();
     DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                   .accountId(infoForPush.getAccountId())

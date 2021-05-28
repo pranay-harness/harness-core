@@ -145,7 +145,7 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
         .engineSteps(ExecutionRegistrar.getEngineSteps())
         .engineAdvisers(ExecutionAdvisers.getEngineAdvisers())
         .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
-        .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(false))
+        .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())
         .build();
   }
 
