@@ -19,7 +19,6 @@ import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.facilitator.Facilitator;
 import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
 import io.harness.pms.sdk.core.facilitator.FacilitatorUtils;
-import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.utils.PmsConstants;
@@ -36,8 +35,10 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 public class ResourceRestraintFacilitator implements Facilitator {
+  public static final String RESOURCE_RESTRAINT = "RESOURCE_RESTRAINT";
+
   public static final FacilitatorType FACILITATOR_TYPE =
-      FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.RESOURCE_RESTRAINT).build();
+      FacilitatorType.newBuilder().setType(RESOURCE_RESTRAINT).build();
 
   @Inject private ResourceRestraintService resourceRestraintService;
   @Inject private RestraintService restraintService;
