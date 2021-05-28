@@ -4,7 +4,6 @@ load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar")
 load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
 load("@io_bazel_rules_docker//docker/util:run.bzl", "container_run_and_commit")
 load("@rules_java//java:defs.bzl", "java_binary")
-load("@rules_spring//springboot:springboot.bzl", "springboot")
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
@@ -656,27 +655,15 @@ shared_dependencies = [
     "//:lombok",
 ]
 
-java_library(
+java_binary(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
+    main_class = "io.harness.delegate.app.DelegateApplication",
     resources = [
         "//260-delegate/src/main/resources:resource",
     ],
     visibility = ["//visibility:public"],
-    deps = ["@maven//:org_springframework_boot_spring_boot_loader"] + shared_dependencies,
-)
-
-java_binary(
-    name = "execute",
-    main_class = "io.harness.delegate.app.DelegateApplication",
-    runtime_deps = [":module"],
-)
-
-springboot(
-    name = "module_deploy",
-    boot_app_class = "io.harness.delegate.app.DelegateApplication",
-    java_library = ":module",
-    visibility = ["//visibility:public"],
+    deps = shared_dependencies,
 )
 
 java_library(

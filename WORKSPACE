@@ -194,14 +194,6 @@ go_repository(
     version = "v0.2.0",
 )
 
-http_archive(
-    name = "rules_spring",
-    sha256 = "2178aa714516fe3ba8e88663aef8e183e6ab28c8bf1f9da96f76533ee86a47b4",
-    urls = [
-        "https://github.com/salesforce/rules_spring/releases/download/2.1.0/rules-spring-2.1.0.zip",
-    ],
-)
-
 go_repository(
     name = "com_github_stretchr_testify",
     importpath = "github.com/stretchr/testify",
@@ -1628,7 +1620,6 @@ plain_artifacts = [
     "org.sonatype.nexus.plugins:nexus-restlet1x-model:2.14.18-01",
     "org.springframework.batch:spring-batch-core:4.2.2.RELEASE",
     "org.springframework.boot:spring-boot-autoconfigure:2.1.6.RELEASE",
-    "org.springframework.boot:spring-boot-loader:2.4.5",
     "org.springframework.boot:spring-boot-starter-batch:2.1.6.RELEASE",
     "org.springframework.boot:spring-boot:2.3.2.RELEASE",
     "org.springframework.data:spring-data-commons:2.2.7.RELEASE",
