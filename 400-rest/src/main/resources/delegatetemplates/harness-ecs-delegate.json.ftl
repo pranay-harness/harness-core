@@ -101,10 +101,6 @@
         {
            "name": "KUBECTL_PATH",
            "value": ""
-        },
-        {
-          "name": "MANAGER_SERVICE_SECRET",
-          "value": "${managerServiceSecret}"
         }
       ],
       "memory": 6144,
