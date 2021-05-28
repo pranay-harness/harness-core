@@ -23,17 +23,11 @@ public class InterruptRedisConsumerService extends PmsManagedService {
     interruptConsumerExecutorService =
         Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat(INTERRUPT_CONSUMER).build());
     interruptConsumerExecutorService.execute(interruptEventRedisConsumer);
-
-    orchestrationEventConsumerExecutorService = Executors.newFixedThreadPool(2);
-    orchestrationEventConsumerExecutorService.execute(sdkOrchestrationEventRedisConsumer);
   }
 
   @Override
   protected void shutDown() throws Exception {
     interruptConsumerExecutorService.shutdown();
     interruptConsumerExecutorService.awaitTermination(Duration.ofSeconds(10).getSeconds(), TimeUnit.SECONDS);
-
-    orchestrationEventConsumerExecutorService.shutdown();
-    orchestrationEventConsumerExecutorService.awaitTermination(Duration.ofSeconds(10).getSeconds(), TimeUnit.SECONDS);
   }
 }
