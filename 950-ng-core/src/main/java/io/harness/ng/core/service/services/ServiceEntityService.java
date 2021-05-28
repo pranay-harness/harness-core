@@ -29,4 +29,7 @@ public interface ServiceEntityService {
 
   // Find all services for given accountId + orgId + projectId including deleted services in asc order of creation
   List<ServiceEntity> getAllServices(String accountIdentifier, String orgIdentifier, String projectIdentifier);
+
+  Integer findActiveServicesCountAtGivenTimestamp(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, long timestampInMs);
 }
