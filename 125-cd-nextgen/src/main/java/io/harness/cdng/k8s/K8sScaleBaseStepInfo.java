@@ -14,12 +14,14 @@ import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDP)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldNameConstants(innerTypeName = "K8sScaleBaseStepInfoKeys")
 @TypeAlias("K8sScaleBaseStepInfo")
 public class K8sScaleBaseStepInfo {
   @NotNull InstanceSelectionWrapper instanceSelection;

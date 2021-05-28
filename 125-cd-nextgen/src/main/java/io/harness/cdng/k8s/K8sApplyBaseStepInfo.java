@@ -15,6 +15,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(HarnessTeam.CDC)
@@ -23,6 +24,7 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @AllArgsConstructor
 @TypeAlias("K8sApplyBaseStepInfo")
+@FieldNameConstants(innerTypeName = "K8sApplyBaseStepInfoKeys")
 public class K8sApplyBaseStepInfo {
   @YamlSchemaTypes({string, bool}) ParameterField<Boolean> skipDryRun;
   @YamlSchemaTypes({string, bool}) ParameterField<Boolean> skipSteadyStateCheck;

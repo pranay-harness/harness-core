@@ -1,12 +1,11 @@
 package io.harness.pms.plan.execution.registrar;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.contracts.execution.events.OrchestrationEventType.ORCHESTRATION_START;
 import static io.harness.pms.contracts.execution.events.OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
-import io.harness.pms.notification.orchestration.NotificationOrchestrationRegistrar;
 import io.harness.pms.plan.execution.handlers.ExecutionInfoUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.ExecutionSummaryCreateEventHandler;
 import io.harness.pms.plan.execution.handlers.PipelineStatusUpdateEventHandler;
@@ -23,7 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import lombok.experimental.UtilityClass;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 @UtilityClass
 public class PmsOrchestrationEventRegistrar {
   public Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> getEngineEventHandlers() {
@@ -33,8 +32,6 @@ public class PmsOrchestrationEventRegistrar {
     engineEventHandlersMap.put(PLAN_EXECUTION_STATUS_UPDATE,
         Sets.newHashSet(ExecutionInfoUpdateEventHandler.class, PlanStatusEventEmitterHandler.class,
             PipelineStatusUpdateEventHandler.class));
-    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
-        engineEventHandlersMap, NotificationOrchestrationRegistrar.getEngineEventHandlers());
     OrchestrationModuleRegistrarHelper.mergeEventHandlers(
         engineEventHandlersMap, OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers());
     OrchestrationModuleRegistrarHelper.mergeEventHandlers(

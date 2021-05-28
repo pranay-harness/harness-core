@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.k8s.K8sApplyBaseStepInfo.K8sApplyBaseStepInfoKeys;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
@@ -26,7 +27,6 @@ import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.supplier.ThrowingSupplier;
 import io.harness.tasks.ResponseData;
 
@@ -69,10 +69,11 @@ public class K8sApplyStep extends TaskChainExecutableWithRollback implements K8s
       InfrastructureOutcome infrastructure, boolean shouldOpenFetchFilesLogStream) {
     String releaseName = k8sStepHelper.getReleaseName(infrastructure);
     K8sApplyStepParameters k8sApplyStepParameters = (K8sApplyStepParameters) stepElementParameters.getSpec();
-    boolean skipDryRun = !ParameterField.isNull(k8sApplyStepParameters.getSkipDryRun())
-        && k8sApplyStepParameters.getSkipDryRun().getValue();
-    boolean skipSteadyStateCheck = !ParameterField.isNull(k8sApplyStepParameters.getSkipSteadyStateCheck())
-        && k8sApplyStepParameters.getSkipSteadyStateCheck().getValue();
+    boolean skipDryRun = K8sStepHelper.getParameterFieldBooleanValue(
+        k8sApplyStepParameters.getSkipDryRun(), K8sApplyBaseStepInfoKeys.skipDryRun, stepElementParameters);
+    boolean skipSteadyStateCheck =
+        K8sStepHelper.getParameterFieldBooleanValue(k8sApplyStepParameters.getSkipSteadyStateCheck(),
+            K8sApplyBaseStepInfoKeys.skipSteadyStateCheck, stepElementParameters);
 
     final String accountId = AmbianceHelper.getAccountId(ambiance);
     K8sApplyRequest k8sApplyRequest =

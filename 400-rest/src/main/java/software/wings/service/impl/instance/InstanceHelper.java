@@ -738,13 +738,14 @@ public class InstanceHelper {
           infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
       String errorMsg = getErrorMsg(ex);
 
-      boolean stopSync = instanceService.handleSyncFailure(infrastructureMapping.getAppId(),
+      boolean continueSync = instanceService.handleSyncFailure(infrastructureMapping.getAppId(),
           infrastructureMapping.getServiceId(), infrastructureMapping.getEnvId(), infrastructureMapping.getUuid(),
           infrastructureMapping.getDisplayName(), System.currentTimeMillis(), errorMsg);
 
-      if (stopSync) {
-        log.info("Sync Failure. Deleting Perpetual Tasks. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
-            infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
+      if (!continueSync) {
+        log.info(
+            "Sync Status Failure for Infrastructure Mapping : [{}], Deleting all perpetual tasks for given infrastructure mapping",
+            infrastructureMapping.getUuid());
         instanceSyncPerpetualTaskService.deletePerpetualTasks(infrastructureMapping);
       }
 

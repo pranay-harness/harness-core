@@ -977,7 +977,7 @@ http_jar(
 
 load("@rules_jvm_external//:defs.bzl", "maven_install")
 load("@rules_jvm_external//:specs.bzl", "maven")
-load("//:macros.bzl", "maven_test_artifact")
+load("//:tools/bazel/macros.bzl", "maven_test_artifact")
 
 plain_artifacts = [
     "aopalliance:aopalliance:1.0",

@@ -2334,11 +2334,15 @@ public class UserServiceImpl implements UserService {
     });
 
     users.forEach(user -> {
-      Collection<UserGroup> userGroups = userUserGroupMap.get(user.getUuid());
       if (isUserInvitedToAccount(user, accountId)) {
-        user.setUserGroups(
-            userGroupService.getUserGroupSummary(getInviteFromEmail(accountId, user.getEmail()).getUserGroups()));
+        UserInvite userInvite = getInviteFromEmail(accountId, user.getEmail());
+        if (userInvite == null) {
+          user.setUserGroups(new ArrayList<>());
+        } else {
+          user.setUserGroups(userGroupService.getUserGroupSummary(userInvite.getUserGroups()));
+        }
       } else {
+        Collection<UserGroup> userGroups = userUserGroupMap.get(user.getUuid());
         if (isEmpty(userGroups)) {
           user.setUserGroups(new ArrayList<>());
         } else {

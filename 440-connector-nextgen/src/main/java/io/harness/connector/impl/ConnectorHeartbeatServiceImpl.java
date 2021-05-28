@@ -20,6 +20,7 @@ import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.exception.InvalidRequestException;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.perpetualtask.PerpetualTaskClientContextDetails;
+import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.TaskClientParams;
@@ -28,6 +29,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.util.Durations;
+import io.grpc.StatusRuntimeException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -125,5 +127,16 @@ public class ConnectorHeartbeatServiceImpl implements ConnectorHeartbeatService 
         .orElseThrow(()
                          -> new InvalidRequestException(String.format(CONNECTOR_STRING, connectorIdentifier,
                              accountIdentifier, orgIdentifier, projectIdentifier)));
+  }
+
+  @Override
+  public void resetPerpetualTask(String accountIdentifier, String perpetualTaskId) {
+    try {
+      delegateServiceGrpcClient.resetPerpetualTask(AccountId.newBuilder().setId(accountIdentifier).build(),
+          PerpetualTaskId.newBuilder().setId(perpetualTaskId).build(),
+          PerpetualTaskExecutionBundle.getDefaultInstance());
+    } catch (StatusRuntimeException ex) {
+      log.error("Unable to reset perpetual task {} while updating connector with exception - {}", perpetualTaskId, ex);
+    }
   }
 }
