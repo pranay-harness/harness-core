@@ -71,6 +71,8 @@ public class WebhookEventUtils {
   public static final String X_GIT_LAB_EVENT = "X-Gitlab-Event";
   public static final String X_BIT_BUCKET_EVENT = "X-Event-Key";
 
+  public static final String X_HUB_SIGNATURE_256 = "X-Hub-Signature-256";
+
   @Inject private ManagerExpressionEvaluator expressionEvaluator;
 
   public static final List<String> eventHeaders =

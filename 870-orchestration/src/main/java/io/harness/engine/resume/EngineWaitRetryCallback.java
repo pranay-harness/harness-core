@@ -6,11 +6,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.pms.contracts.advisers.AdviseType;
-import io.harness.pms.contracts.advisers.AdviserIssuer;
-import io.harness.pms.contracts.advisers.InterruptConfig;
-import io.harness.pms.contracts.advisers.IssuedBy;
-import io.harness.pms.contracts.advisers.RetryInterruptConfig;
+import io.harness.pms.contracts.interrupts.AdviserIssuer;
+import io.harness.pms.contracts.interrupts.InterruptConfig;
 import io.harness.pms.contracts.interrupts.InterruptType;
+import io.harness.pms.contracts.interrupts.IssuedBy;
+import io.harness.pms.contracts.interrupts.RetryInterruptConfig;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.OldNotifyCallback;
 

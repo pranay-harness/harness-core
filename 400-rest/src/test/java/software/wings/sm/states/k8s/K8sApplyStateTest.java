@@ -222,7 +222,7 @@ public class K8sApplyStateTest extends CategoryTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testCommandUnitList() {
-    List<CommandUnit> applyCommandUnits = k8sApplyState.commandUnitList(true);
+    List<CommandUnit> applyCommandUnits = k8sApplyState.commandUnitList(true, "accountId");
     assertThat(applyCommandUnits).isNotEmpty();
     assertThat(applyCommandUnits.get(0).getName()).isEqualTo(K8sCommandUnitConstants.FetchFiles);
     assertThat(applyCommandUnits.get(1).getName()).isEqualTo(K8sCommandUnitConstants.Init);

@@ -11,6 +11,7 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.PARDHA;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -144,6 +145,7 @@ import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
+import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
@@ -155,6 +157,7 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.kustomize.KustomizeHelper;
 import software.wings.helpers.ext.openshift.OpenShiftManagerService;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
+import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.GitFileConfigHelperService;
@@ -1078,6 +1081,41 @@ public class AbstractK8SStateTest extends WingsBaseTest {
       assertThat(ex.getMessage())
           .isEqualTo("Application Manifest not found while preparing helm values fetch task params");
     }
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testHelmValueFetchParamInExecuteHelmValuesFetchTask() {
+    ApplicationManifest appManifest = ApplicationManifest.builder().storeType(Remote).build();
+    appManifest.setStoreType(HelmChartRepo);
+    HelmChartConfigParams helmChartConfigParams = HelmChartConfigParams.builder().build();
+    DirectKubernetesInfrastructureMapping infrastructureMapping =
+        DirectKubernetesInfrastructureMapping.builder().build();
+    infrastructureMapping.setUuid(INFRA_MAPPING_ID);
+
+    when(infrastructureMappingService.get(APP_ID, null)).thenReturn(infrastructureMapping);
+    when(applicationManifestUtils.getAppManifestByApplyingHelmChartOverride(context)).thenReturn(appManifest);
+    when(helmChartConfigHelperService.getHelmChartConfigTaskParams(context, appManifest))
+        .thenReturn(helmChartConfigParams);
+    when(containerDeploymentManagerHelper.getContainerServiceParams(any(), any(), any()))
+        .thenReturn(ContainerServiceParams.builder().clusterName("us-east-1").build());
+    when(featureFlagService.isEnabled(FeatureName.BIND_FETCH_FILES_TASK_TO_DELEGATE, ACCOUNT_ID)).thenReturn(true);
+
+    abstractK8SState.executeHelmValuesFetchTask(context, ACTIVITY_ID, "commandName", 10 * 60 * 1000L);
+
+    verify(applicationManifestUtils, times(1)).getAppManifestByApplyingHelmChartOverride(context);
+    verify(helmChartConfigHelperService, times(1)).getHelmChartConfigTaskParams(context, appManifest);
+    verify(containerDeploymentManagerHelper, times(1)).getContainerServiceParams(infrastructureMapping, "", context);
+
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+    HelmValuesFetchTaskParameters helmValuesFetchTaskParameters =
+        (HelmValuesFetchTaskParameters) delegateTask.getData().getParameters()[0];
+
+    assertThat(helmValuesFetchTaskParameters.isBindTaskFeatureSet()).isTrue();
+    assertThat(helmValuesFetchTaskParameters.getContainerServiceParams().getClusterName()).isEqualTo("us-east-1");
   }
 
   @Test

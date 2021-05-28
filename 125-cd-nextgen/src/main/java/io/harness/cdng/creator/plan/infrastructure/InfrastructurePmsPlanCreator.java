@@ -32,7 +32,7 @@ import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.PlanNode.PlanNodeBuilder;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.utilities.ResourceConstraintUtility;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -72,15 +72,8 @@ public class InfrastructurePmsPlanCreator {
       YamlField resourceConstraintField) {
     PipelineInfrastructure actualInfraConfig = getActualInfraConfig(infrastructure, infraField);
 
-    if (!ParameterField.isNull(infrastructure.getAllowSimultaneousDeployments())
-        && infrastructure.getAllowSimultaneousDeployments().isExpression()) {
-      throw new InvalidRequestException(
-          "AllowedSimultaneous Deployment field is not a fixed value during execution of pipeline.");
-    }
-    boolean allowSimultaneousDeployments = false;
-    if (!ParameterField.isNull(infrastructure.getAllowSimultaneousDeployments())) {
-      allowSimultaneousDeployments = infrastructure.getAllowSimultaneousDeployments().getValue();
-    }
+    boolean allowSimultaneousDeployments = ResourceConstraintUtility.isSimultaneousDeploymentsAllowed(
+        infrastructure.getAllowSimultaneousDeployments(), resourceConstraintField);
 
     PlanNodeBuilder planNodeBuilder =
         PlanNode.builder()
@@ -93,8 +86,8 @@ public class InfrastructurePmsPlanCreator {
             .facilitatorObtainment(
                 FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
             .adviserObtainments(allowSimultaneousDeployments
-                    ? getAdviserObtainmentFromMetaDataToResourceConstraint(resourceConstraintField, kryoSerializer)
-                    : getAdviserObtainmentFromMetaDataToExecution(infraSectionNode, kryoSerializer));
+                    ? getAdviserObtainmentFromMetaDataToExecution(infraSectionNode, kryoSerializer)
+                    : getAdviserObtainmentFromMetaDataToResourceConstraint(resourceConstraintField, kryoSerializer));
 
     if (!isProvisionerConfigured(actualInfraConfig)) {
       planNodeBuilder.skipGraphType(SkipType.SKIP_NODE);
@@ -239,7 +232,7 @@ public class InfrastructurePmsPlanCreator {
     return provisionerYamlField.getNode().getUuid();
   }
 
-  public boolean areSimultaneousDeploymentsAllowed(YamlNode infraNode) {
-    return infraNode.getCurrJsonNode().get("allowSimultaneousDeployments") != null;
+  public boolean areSimultaneousDeploymentsAllowed(boolean allowSimultaneousDeployments, YamlField rcField) {
+    return !(allowSimultaneousDeployments || rcField == null);
   }
 }

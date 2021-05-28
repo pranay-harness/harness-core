@@ -38,13 +38,16 @@ go_test(
     srcs = [
         "plugin_test.go",
         "run_test.go",
+        "runtests_test.go",
     ],
     embed = [":go_default_library"],
     deps = [
         "//commons/go/lib/exec:go_default_library",
         "//commons/go/lib/filesystem:go_default_library",
         "//commons/go/lib/logs:go_default_library",
+        "//commons/go/lib/utils:go_default_library",
         "//product/ci/engine/proto:go_default_library",
+        "//product/ci/ti-service/types:go_default_library",
         "@com_github_golang_mock//gomock:go_default_library",
         "@com_github_stretchr_testify//assert:go_default_library",
         "@org_uber_go_zap//:go_default_library",

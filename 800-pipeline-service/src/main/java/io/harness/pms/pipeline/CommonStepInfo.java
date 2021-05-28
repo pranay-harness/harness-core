@@ -38,57 +38,46 @@ public class CommonStepInfo {
           .setName("Harness Approval")
           .setType("HarnessApproval")
           .setStepMetaData(StepMetaData.newBuilder().addCategory("Approval").setFolderPath("Approval").build())
+          .setFeatureFlag(FeatureName.NG_HARNESS_APPROVAL.name())
           .build();
   StepInfo jiraApprovalStepInfo =
       StepInfo.newBuilder()
           .setName("Jira Approval")
           .setType("JiraApproval")
           .setStepMetaData(StepMetaData.newBuilder().addCategory("Approval").setFolderPath("Approval").build())
+          .setFeatureFlag(FeatureName.NG_HARNESS_APPROVAL.name())
           .build();
   StepInfo jiraCreateStepInfo =
       StepInfo.newBuilder()
           .setName("Jira Create")
           .setType(StepSpecTypeConstants.JIRA_CREATE)
           .setStepMetaData(StepMetaData.newBuilder().addCategory("Jira").setFolderPath("Jira").build())
+          .setFeatureFlag(FeatureName.NG_HARNESS_APPROVAL.name())
           .build();
   StepInfo jiraUpdateStepInfo =
       StepInfo.newBuilder()
           .setName("Jira Update")
           .setType(StepSpecTypeConstants.JIRA_UPDATE)
           .setStepMetaData(StepMetaData.newBuilder().addCategory("Jira").setFolderPath("Jira").build())
+          .setFeatureFlag(FeatureName.NG_HARNESS_APPROVAL.name())
           .build();
   StepInfo barrierStepInfo =
       StepInfo.newBuilder()
           .setName("Barrier")
           .setType("Barrier")
           .setStepMetaData(StepMetaData.newBuilder().setFolderPath("FlowControl/Barrier").build())
+          .setFeatureFlag(FeatureName.NG_BARRIERS.name())
           .build();
 
-  public List<StepInfo> getCommonSteps(String accountId) {
+  public List<StepInfo> getCommonSteps() {
     List<StepInfo> stepInfos = new ArrayList<>();
     stepInfos.add(shellScriptStepInfo);
     stepInfos.add(httpStepInfo);
-    addIfFeatureFlagEnabled(stepInfos, accountId);
+    stepInfos.add(harnessApprovalStepInfo);
+    stepInfos.add(jiraApprovalStepInfo);
+    stepInfos.add(jiraCreateStepInfo);
+    stepInfos.add(jiraUpdateStepInfo);
+    stepInfos.add(barrierStepInfo);
     return stepInfos;
-  }
-
-  private void addIfFeatureFlagEnabled(List<StepInfo> stepInfos, String accountId) {
-    String featureName = null;
-    try {
-      featureName = FeatureName.NG_HARNESS_APPROVAL.name();
-      if (pmsFeatureFlagHelper.isEnabled(accountId, FeatureName.NG_HARNESS_APPROVAL)) {
-        stepInfos.add(harnessApprovalStepInfo);
-        stepInfos.add(jiraApprovalStepInfo);
-        stepInfos.add(jiraCreateStepInfo);
-        stepInfos.add(jiraUpdateStepInfo);
-      }
-
-      featureName = FeatureName.NG_BARRIERS.name();
-      if (pmsFeatureFlagHelper.isEnabled(accountId, FeatureName.NG_BARRIERS)) {
-        stepInfos.add(barrierStepInfo);
-      }
-    } catch (Exception ex) {
-      log.warn("Exception While checking Feature Flag. accountId: {} flag: {}", accountId, featureName, ex);
-    }
   }
 }

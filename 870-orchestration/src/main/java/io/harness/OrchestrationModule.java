@@ -19,6 +19,9 @@ import io.harness.engine.expressions.EngineExpressionServiceImpl;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.InterruptServiceImpl;
+import io.harness.engine.interrupts.handlers.publisher.InterruptEventPublisher;
+import io.harness.engine.interrupts.handlers.publisher.MongoInterruptEventPublisher;
+import io.harness.engine.interrupts.handlers.publisher.RedisInterruptEventPublisher;
 import io.harness.engine.pms.data.PmsEngineExpressionServiceImpl;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.pms.data.PmsOutcomeServiceImpl;
@@ -112,6 +115,13 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     Provider<KryoSerializer> kryoSerializerProvider = getProvider(Key.get(KryoSerializer.class));
     testExecutionMapBinder.addBinding("Callback Kryo Registration")
         .toInstance(() -> OrchestrationComponentTester.testKryoRegistration(kryoSerializerProvider));
+
+    install(new OrchestrationEventsFrameworkModule(config.getEventsFrameworkConfiguration()));
+    if (config.isUseRedisForInterrupts()) {
+      bind(InterruptEventPublisher.class).to(RedisInterruptEventPublisher.class);
+    } else {
+      bind(InterruptEventPublisher.class).to(MongoInterruptEventPublisher.class);
+    }
   }
 
   @Provides

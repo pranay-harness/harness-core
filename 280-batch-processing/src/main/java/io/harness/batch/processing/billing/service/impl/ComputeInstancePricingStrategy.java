@@ -60,8 +60,8 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
   }
 
   @Override
-  public PricingData getPricePerHour(
-      InstanceData instanceData, Instant startTime, Instant endTime, double instanceActiveSeconds) {
+  public PricingData getPricePerHour(InstanceData instanceData, Instant startTime, Instant endTime,
+      double instanceActiveSeconds, double parentInstanceActiveSecond) {
     Map<String, String> instanceMetaData = instanceData.getMetaData();
     CloudProvider cloudProvider = CloudProvider.valueOf(instanceMetaData.get(InstanceMetaDataConstants.CLOUD_PROVIDER));
     String zone = instanceMetaData.get(InstanceMetaDataConstants.ZONE);
@@ -72,22 +72,22 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
         InstanceMetaDataConstants.COMPUTE_TYPE, instanceMetaData);
     String region = instanceMetaData.get(InstanceMetaDataConstants.REGION);
     PricingData customVMPricing = getCustomVMPricing(
-        instanceData, startTime, endTime, instanceActiveSeconds, instanceFamily, region, cloudProvider);
+        instanceData, startTime, endTime, parentInstanceActiveSecond, instanceFamily, region, cloudProvider);
 
     if (null == customVMPricing) {
       if (GCPCustomInstanceDetailProvider.isCustomGCPInstance(instanceFamily, cloudProvider)) {
         return GCPCustomInstanceDetailProvider.getGCPCustomInstancePricingData(instanceFamily, instanceCategory);
       } else if (ImmutableList.of(CloudProvider.ON_PREM, CloudProvider.IBM).contains(cloudProvider)) {
-        return getUserCustomInstancePricingData(instanceData);
+        return getUserCustomInstancePricingData(instanceData, instanceCategory);
       } else if (cloudProvider == CloudProvider.AWS && K8sCCMConstants.AWS_FARGATE_COMPUTE_TYPE.equals(computeType)) {
         return ecsFargateInstancePricingStrategy.getPricePerHour(
-            instanceData, startTime, endTime, instanceActiveSeconds);
+            instanceData, startTime, endTime, instanceActiveSeconds, parentInstanceActiveSecond);
       }
 
       VMComputePricingInfo vmComputePricingInfo =
           vmPricingService.getComputeVMPricingInfo(instanceFamily, region, cloudProvider);
       if (null == vmComputePricingInfo) {
-        return getUserCustomInstancePricingData(instanceData);
+        return getUserCustomInstancePricingData(instanceData, instanceCategory);
       }
       return PricingData.builder()
           .pricePerHour(getPricePerHour(zone, instanceCategory, vmComputePricingInfo))
@@ -98,8 +98,9 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
     return customVMPricing;
   }
 
-  private PricingData getUserCustomInstancePricingData(InstanceData instanceData) {
-    PricingProfile profileData = pricingProfileService.fetchPricingProfile(instanceData.getAccountId());
+  private PricingData getUserCustomInstancePricingData(InstanceData instanceData, InstanceCategory instanceCategory) {
+    PricingProfile profileData =
+        pricingProfileService.fetchPricingProfile(instanceData.getAccountId(), instanceCategory);
     double cpuPricePerHr = profileData.getVCpuPricePerHr();
     double memoryPricePerHr = profileData.getMemoryGbPricePerHr();
     Double cpuUnits = instanceData.getTotalResource().getCpuUnits();
@@ -132,7 +133,7 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
   }
 
   private PricingData getCustomVMPricing(InstanceData instanceData, Instant startTime, Instant endTime,
-      double instanceActiveSeconds, String instanceFamily, String region, CloudProvider cloudProvider) {
+      double parentInstanceActiveSecond, String instanceFamily, String region, CloudProvider cloudProvider) {
     PricingData pricingData = null;
     VMInstanceBillingData vmInstanceBillingData = null;
     if (instanceFamily == null || region == null || cloudProvider == null) {
@@ -154,7 +155,7 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
       vmInstanceBillingData = azureCustomBillingService.getComputeVMPricingInfo(instanceData, startTime, endTime);
     }
     if (null != vmInstanceBillingData && !Double.isNaN(vmInstanceBillingData.getComputeCost())) {
-      double pricePerHr = (vmInstanceBillingData.getComputeCost() * 3600) / instanceActiveSeconds;
+      double pricePerHr = (vmInstanceBillingData.getComputeCost() * 3600) / parentInstanceActiveSecond;
       pricingData = PricingData.builder()
                         .pricePerHour(pricePerHr)
                         .networkCost(vmInstanceBillingData.getNetworkCost())

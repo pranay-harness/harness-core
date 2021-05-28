@@ -15,19 +15,41 @@ trigger:
           connectorRef: conn
           repoName: myrepo
           payloadConditions:
-            - key: sourceBranch
-              operator: equals
-              value: dev
-            - key: targetBranch
-              operator: in
-              value: master, on-prem
-            - key: <+trigger.payload.pull_request.number>
-              operator: regex
-              value: ^pr-[0-9a-f]{7}$
+            - key: k1
+              operator: Equals
+              value: v1
+            - key: k2
+              operator: NotEquals
+              value: v2
+            - key: k3
+              operator: In
+              value: v3,c
+            - key: k4
+              operator: NotIn
+              value: v4
+            - key: k5
+              operator: StartsWith
+              value: v5
+            - key: k6
+              operator: EndsWith
+              value: v6
+            - key: k7
+              operator: Contains
+              value: v7
           headerConditions:
-            - key: header
-              operator: equals
-              value: val
+            - key: h1
+              operator: Equals
+              value: v1
           jexlCondition: true
           autoAbortPreviousExecutions: true
-  inputYaml: input
+  inputYaml: |
+    pipeline:
+      identifier: secrethttp1
+      stages:
+        - stage:
+            identifier: qaStage
+            spec:
+              infrastructure:
+                infrastructureDefinition:
+                  spec:
+                    releaseName: releaseName1

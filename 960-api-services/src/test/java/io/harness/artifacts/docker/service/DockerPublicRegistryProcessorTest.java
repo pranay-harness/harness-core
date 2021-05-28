@@ -47,7 +47,8 @@ public class DockerPublicRegistryProcessorTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Rule
   public WireMockRule wireMockRule = new WireMockRule(
-      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("960-api-services/src/test/resources").port(0));
+      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("960-api-services/src/test/resources").port(0),
+      false);
 
   @Mock private DockerRestClientFactory dockerRestClientFactory;
   @Mock private DockerRegistryUtils dockerRegistryUtils;
@@ -99,12 +100,12 @@ public class DockerPublicRegistryProcessorTest extends CategoryTest {
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testGetBuildsWithNotFoundException() throws IOException {
+  public void testGetBuildsWithNotFoundException() {
     try {
       doReturn(dockerRegistryRestClient).when(dockerRestClientFactory).getDockerRegistryRestClient(dockerConfig);
       dockerPublicRegistryProcessor.getBuilds(dockerConfig, "image-1", 10);
       fail("Should not reach here");
-    } catch (InvalidArtifactServerException ex) {
+    } catch (IOException | InvalidArtifactServerException ex) {
       assertThat(getMessage(ex)).isEqualTo("Not Found");
     }
   }
@@ -118,7 +119,7 @@ public class DockerPublicRegistryProcessorTest extends CategoryTest {
       dockerPublicRegistryProcessor.getBuilds(dockerConfig, "image-paginated", 1);
       fail("Should not reach here");
     } catch (InvalidArtifactServerException ex) {
-      assertThat(getMessage(ex)).isEqualTo("Bad Request");
+      assertThat(getMessage(ex)).isEqualTo("Server Error");
     }
   }
 

@@ -174,8 +174,9 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
-  public Page<PipelineEntity> list(Criteria criteria, Pageable pageable) {
-    return pmsPipelineRepository.findAll(criteria, pageable);
+  public Page<PipelineEntity> list(
+      Criteria criteria, Pageable pageable, String accountId, String orgIdentifier, String projectIdentifier) {
+    return pmsPipelineRepository.findAll(criteria, pageable, accountId, orgIdentifier, projectIdentifier);
   }
 
   @Override
@@ -189,7 +190,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
         continue;
       }
       stepCategory.addStepCategory(
-          PMSPipelineServiceStepHelper.calculateStepsForCategory(entry.getKey(), entry.getValue()));
+          pmsPipelineServiceStepHelper.calculateStepsForCategory(entry.getKey(), entry.getValue(), accountId));
     }
     return stepCategory;
   }
@@ -226,25 +227,27 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     } else if (EmptyPredicate.isEmpty(filterIdentifier) && filterProperties != null) {
       PMSPipelineServiceHelper.populateFilter(criteria, filterProperties);
     }
+
+    Criteria moduleCriteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(module)) {
       // Check for pipeline with no filters also - empty pipeline or pipelines with only approval stage
       // criteria = { "$or": [ { "filters": {} } , { "filters.MODULE": { $exists: true } } ] }
-      Criteria moduleCriteria = new Criteria().orOperator(where(PipelineEntityKeys.filters).is(new Document()),
+      moduleCriteria.orOperator(where(PipelineEntityKeys.filters).is(new Document()),
           where(String.format("%s.%s", PipelineEntityKeys.filters, module)).exists(true));
-      criteria.andOperator(moduleCriteria);
     }
 
+    Criteria searchCriteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(searchTerm)) {
-      Criteria searchCriteria = new Criteria().orOperator(
-          where(PipelineEntityKeys.identifier)
-              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+      searchCriteria.orOperator(where(PipelineEntityKeys.identifier)
+                                    .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
           where(PipelineEntityKeys.name).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
           where(PipelineEntityKeys.tags + "." + NGTagKeys.key)
               .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
           where(PipelineEntityKeys.tags + "." + NGTagKeys.value)
               .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
-      criteria.andOperator(searchCriteria);
     }
+
+    criteria.andOperator(moduleCriteria, searchCriteria);
 
     return criteria;
   }

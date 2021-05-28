@@ -20,15 +20,19 @@ func TestCreateAndDeleteWebhookGitlab(t *testing.T) {
 		Name:   "drone",
 		Target: "https://example.com",
 		Secret: "topsecret",
-		Events: &pb.HookEvents{
-			PullRequest: true,
+		NativeEvents: &pb.NativeEvents{
+			NativeEvents: &pb.NativeEvents_Gitlab{
+				Gitlab: &pb.GitlabWebhookEvents{
+					Events: []pb.GitlabWebhookEvent{pb.GitlabWebhookEvent_GITLAB_TAG, pb.GitlabWebhookEvent_GITLAB_PUSH},
+				},
+			},
 		},
 		SkipVerify: true,
 		Provider: &pb.Provider{
 			Hook: &pb.Provider_Gitlab{
 				Gitlab: &pb.GitlabProvider{
 					Provider: &pb.GitlabProvider_AccessToken{
-						AccessToken: os.Getenv("GITLAB_ACCESS_TOKEN"),
+						AccessToken: "CsbqS3Kyhz7qeP_ejz3_",
 					},
 				},
 			},
@@ -37,6 +41,7 @@ func TestCreateAndDeleteWebhookGitlab(t *testing.T) {
 	}
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	got, err := CreateWebhook(context.Background(), in, log.Sugar())
+	assert.Equal(t, 2, len(got.GetWebhook().GetNativeEvents().GetGitlab().GetEvents()), "created a webhook with 2 events")
 
 	assert.Nil(t, err, "no errors")
 	assert.Equal(t, int32(201), got.Status, "Correct http response")
@@ -47,7 +52,7 @@ func TestCreateAndDeleteWebhookGitlab(t *testing.T) {
 			Hook: &pb.Provider_Gitlab{
 				Gitlab: &pb.GitlabProvider{
 					Provider: &pb.GitlabProvider_AccessToken{
-						AccessToken: os.Getenv("GITLAB_ACCESS_TOKEN"),
+						AccessToken: "CsbqS3Kyhz7qeP_ejz3_",
 					},
 				},
 			},
@@ -61,12 +66,12 @@ func TestCreateAndDeleteWebhookGitlab(t *testing.T) {
 
 	del := &pb.DeleteWebhookRequest{
 		Slug: "tphoney/test_repo",
-		Id:   got.Id,
+		Id:   got.Webhook.Id,
 		Provider: &pb.Provider{
 			Hook: &pb.Provider_Gitlab{
 				Gitlab: &pb.GitlabProvider{
 					Provider: &pb.GitlabProvider_AccessToken{
-						AccessToken: os.Getenv("GITLAB_ACCESS_TOKEN"),
+						AccessToken: "CsbqS3Kyhz7qeP_ejz3_",
 					},
 				},
 			},

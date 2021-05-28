@@ -1,6 +1,6 @@
 package io.harness.pms.sample.cv;
 
-import io.harness.pms.sdk.PmsSdkPersistenceConfig;
+import io.harness.pms.sdk.core.PmsSdkPersistenceConfig;
 import io.harness.springdata.SpringPersistenceConfig;
 import io.harness.springdata.SpringPersistenceModule;
 

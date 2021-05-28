@@ -16,13 +16,15 @@ public class CEAwsEntityToDTO implements ConnectorEntityToDTOMapper<CEAwsConnect
   @Override
   public CEAwsConnectorDTO createConnectorDTO(CEAwsConfig ceAwsConfig) {
     CEAwsConnectorDTOBuilder ceAwsConnectorDTOBuilder = CEAwsConnectorDTO.builder();
-
+    ceAwsConnectorDTOBuilder.awsAccountId(ceAwsConfig.getAwsAccountId());
     List<CEAwsFeatures> ceAwsFeaturesList = ceAwsConfig.getFeaturesEnabled();
     if (ceAwsFeaturesList.contains(CEAwsFeatures.CUR)) {
       final CURAttributes curAttributes = ceAwsConfig.getCurAttributes();
       ceAwsConnectorDTOBuilder.curAttributes(AwsCurAttributesDTO.builder()
                                                  .s3BucketName(curAttributes.getS3BucketDetails().getS3BucketName())
                                                  .reportName(curAttributes.getReportName())
+                                                 .region(curAttributes.getS3BucketDetails().getRegion())
+                                                 .s3Prefix(curAttributes.getS3BucketDetails().getS3Prefix())
                                                  .build());
     }
 

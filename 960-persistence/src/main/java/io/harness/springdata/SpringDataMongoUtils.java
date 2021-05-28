@@ -47,6 +47,12 @@ public class SpringDataMongoUtils {
     }
   }
 
+  public void populateAllFilter(Criteria criteria, String fieldName, List<?> values) {
+    if (isNotEmpty(values)) {
+      criteria.and(fieldName).all(values);
+    }
+  }
+
   public static <T> Page<T> getPaginatedResult(
       Criteria criteria, Pageable pageable, Class<T> clazz, MongoTemplate mongoTemplate) {
     Query query = new Query(criteria).with(pageable);

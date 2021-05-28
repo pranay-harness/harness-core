@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.common.beans.YamlChangeSet;
+import io.harness.gitsync.common.beans.YamlChangeSetStatus;
 
 import com.mongodb.client.result.UpdateResult;
 import java.util.List;
@@ -17,13 +18,13 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(DX)
 public interface YamlChangeSetRepositoryCustom {
-  UpdateResult updateYamlChangeSetStatus(YamlChangeSet.Status status, String yamlChangeSetId);
+  UpdateResult updateYamlChangeSetStatus(YamlChangeSetStatus status, String yamlChangeSetId);
 
   UpdateResult updateYamlChangeSetsStatus(
-      YamlChangeSet.Status oldStatus, YamlChangeSet.Status newStatus, String accountId);
+      YamlChangeSetStatus oldStatus, YamlChangeSetStatus newStatus, String accountId);
 
-  UpdateResult updateYamlChangeSetsToNewStatusWithMessageCodeAndCreatedAtLessThan(
-      YamlChangeSet.Status oldStatus, YamlChangeSet.Status newStatus, long cutOffCreatedAt, String message);
+  UpdateResult updateYamlChangeSetsToNewStatusWithMessageCodeAndQueuedAtLessThan(
+      YamlChangeSetStatus oldStatus, YamlChangeSetStatus newStatus, long cutOffCreatedAt, String message);
 
   UpdateResult update(Query query, Update update);
 
@@ -31,5 +32,5 @@ public interface YamlChangeSetRepositoryCustom {
 
   <C> AggregationResults aggregate(Aggregation aggregation, Class<C> castClass);
 
-  List<String> findDistinctAccountIdByStatus(YamlChangeSet.Status status);
+  List<String> findDistinctAccountIdByStatusIn(List<YamlChangeSetStatus> yamlChangeSetStatuses);
 }

@@ -20,7 +20,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Persistent
 @TypeAlias("io.harness.license.entities.module.CFModuleLicense")
 public class CFModuleLicense extends ModuleLicense {
-  private int numberOfUsers;
-  private int numberOfClientMAUs;
+  private Integer numberOfUsers;
+  private Integer numberOfClientMAUs;
   private List<UpdateChannel> updateChannels;
 }

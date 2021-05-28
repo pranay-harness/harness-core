@@ -10,8 +10,10 @@ import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.OrchestrationVisualizationEventLogHandlerAsync;
 import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.delay.DelayEventListener;
+import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -56,9 +58,9 @@ import io.harness.pms.plan.execution.PmsExecutionServiceInfoProvider;
 import io.harness.pms.plan.execution.observers.PipelineExecutionSummaryDeleteObserver;
 import io.harness.pms.plan.execution.registrar.PmsOrchestrationEventRegistrar;
 import io.harness.pms.sdk.PmsSdkConfiguration;
-import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.pms.triggers.scheduled.ScheduledTriggerHandler;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
@@ -74,7 +76,6 @@ import io.harness.serializer.jackson.PipelineServiceJacksonModule;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
-import io.harness.service.impl.GraphGenerationServiceImpl;
 import io.harness.steps.barriers.service.BarrierServiceImpl;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintPersistenceMonitor;
 import io.harness.threading.ExecutorModule;
@@ -243,7 +244,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     injector.getInstance(BarrierServiceImpl.class).registerIterators();
     injector.getInstance(ApprovalInstanceHandler.class).registerIterators();
     injector.getInstance(ResourceRestraintPersistenceMonitor.class).registerIterators();
-    injector.getInstance(GraphGenerationServiceImpl.class).registerIterators();
     injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
 
     log.info("Initializing gRPC servers...");
@@ -276,6 +276,11 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     pmsPipelineService.getPipelineSubject().register(
         injector.getInstance(Key.get(PipelineExecutionSummaryDeleteObserver.class)));
     pmsPipelineService.getPipelineSubject().register(injector.getInstance(Key.get(InputSetsDeleteObserver.class)));
+
+    OrchestrationEventEmitter orchestrationEventEmitter =
+        injector.getInstance(Key.get(OrchestrationEventEmitter.class));
+    orchestrationEventEmitter.getOrchestrationEventLogSubjectSubject().register(
+        injector.getInstance(Key.get(OrchestrationVisualizationEventLogHandlerAsync.class)));
 
     NodeExecutionServiceImpl nodeExecutionService =
         (NodeExecutionServiceImpl) injector.getInstance(Key.get(NodeExecutionService.class));
@@ -322,7 +327,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
   private PmsSdkConfiguration getPmsSdkConfiguration(PipelineServiceConfiguration config) {
     return PmsSdkConfiguration.builder()
-        .deploymentMode(DeployMode.REMOTE_IN_PROCESS)
+        .deploymentMode(SdkDeployMode.REMOTE_IN_PROCESS)
         .serviceName(PmsConstants.INTERNAL_SERVICE_NAME)
         .mongoConfig(config.getMongoConfig())
         .pipelineServiceInfoProviderClass(PipelineServiceInternalInfoProvider.class)
@@ -379,8 +384,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   private void registerEventListeners(Injector injector) {
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(SdkResponseEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(PmsNotifyEventListener.class), 5);
+    queueListenerController.register(injector.getInstance(SdkResponseEventListener.class), 3);
+    queueListenerController.register(injector.getInstance(PmsNotifyEventListener.class), 3);
   }
 
   private void registerWaitEnginePublishers(Injector injector) {

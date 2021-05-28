@@ -1,10 +1,12 @@
 package io.harness.cvng.analysis.entities;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -16,6 +18,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -37,6 +40,7 @@ import org.mongodb.morphia.annotations.Id;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "learningEngineTasks")
 @HarnessEntity(exportable = true)
+@StoreIn(DbAliases.CVNG)
 public abstract class LearningEngineTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -87,5 +91,14 @@ public abstract class LearningEngineTask implements PersistentEntity, UuidAware,
     TIME_SERIES_LOAD_TEST
   }
 
-  public enum ExecutionStatus { QUEUED, RUNNING, FAILED, SUCCESS, TIMEOUT }
+  public enum ExecutionStatus {
+    QUEUED,
+    RUNNING,
+    FAILED,
+    SUCCESS,
+    TIMEOUT;
+    public static List<ExecutionStatus> getNonFinalStatues() {
+      return Arrays.asList(QUEUED, RUNNING);
+    }
+  }
 }

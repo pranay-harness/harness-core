@@ -10,11 +10,11 @@ import lombok.Builder;
 import lombok.Value;
 
 @Value
-@Builder
+@Builder(toBuilder = true)
 public class WebhookPayloadData {
-  private WebhookGitUser webhookGitUser;
-  private Repository repository;
-  private WebhookEvent webhookEvent;
-  private TriggerWebhookEvent originalEvent;
-  private ParseWebhookResponse parseWebhookResponse;
+  WebhookGitUser webhookGitUser;
+  Repository repository;
+  WebhookEvent webhookEvent;
+  TriggerWebhookEvent originalEvent;
+  ParseWebhookResponse parseWebhookResponse;
 }

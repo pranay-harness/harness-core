@@ -23,7 +23,7 @@ import java.util.Map;
 import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
-@OwnedBy(HarnessTeam.CDC)
+@OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 public class OrchestrationServiceImpl implements OrchestrationService {
   @Inject private OrchestrationEngine orchestrationEngine;

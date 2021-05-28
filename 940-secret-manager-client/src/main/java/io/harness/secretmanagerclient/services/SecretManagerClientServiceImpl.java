@@ -17,15 +17,14 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
-import lombok.AllArgsConstructor;
 
 @OwnedBy(PL)
 @Singleton
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class SecretManagerClientServiceImpl implements SecretManagerClientService {
-  private final RestClientExecutor restClientExecutor;
-  private final SecretManagerClient secretManagerClient;
+  @Inject private RestClientExecutor restClientExecutor;
+  @Inject private SecretManagerClient secretManagerClient;
 
+  // TODO: improve the error messages(https://harness.atlassian.net/browse/CDNG-5674)
   @Override
   public List<EncryptedDataDetail> getEncryptionDetails(NGAccess ngAccess, DecryptableEntity consumer) {
     BaseNGAccess baseNGAccess = BaseNGAccess.builder()

@@ -5,7 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.persistance.GitSyncablePersistenceConfig;
 import io.harness.ng.accesscontrol.migrations.AccessControlMigrationPersistenceConfig;
 import io.harness.notification.NotificationChannelPersistenceConfig;
-import io.harness.pms.sdk.PmsSdkPersistenceConfig;
+import io.harness.pms.sdk.core.PmsSdkPersistenceConfig;
 import io.harness.springdata.SpringPersistenceConfig;
 import io.harness.springdata.SpringPersistenceModule;
 

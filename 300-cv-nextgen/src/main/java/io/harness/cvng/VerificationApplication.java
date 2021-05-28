@@ -49,6 +49,7 @@ import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.exception.BadRequestExceptionMapper;
 import io.harness.cvng.exception.ConstraintViolationExceptionMapper;
 import io.harness.cvng.exception.NotFoundExceptionMapper;
+import io.harness.cvng.metrics.services.impl.CVNGMetricsPublisher;
 import io.harness.cvng.migration.CVNGSchemaHandler;
 import io.harness.cvng.migration.beans.CVNGSchema;
 import io.harness.cvng.migration.beans.CVNGSchema.CVNGSchemaKeys;
@@ -91,6 +92,7 @@ import io.harness.persistence.UserProvider;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.remote.client.ServiceHttpClientConfig;
@@ -367,7 +369,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
 
   public void registerPipelineSDK(VerificationConfiguration configuration, Injector injector) {
     PmsSdkConfiguration sdkConfig = getPmsSdkConfiguration(configuration);
-    if (sdkConfig.getDeploymentMode().equals(PmsSdkConfiguration.DeployMode.REMOTE)) {
+    if (sdkConfig.getDeploymentMode().equals(SdkDeployMode.REMOTE)) {
       try {
         PmsSdkInitHelper.initializeSDKInstance(injector, sdkConfig);
         if (configuration.getShouldConfigureWithPMS()) {
@@ -388,7 +390,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     }
 
     return PmsSdkConfiguration.builder()
-        .deploymentMode(remote ? PmsSdkConfiguration.DeployMode.REMOTE : PmsSdkConfiguration.DeployMode.LOCAL)
+        .deploymentMode(remote ? SdkDeployMode.REMOTE : SdkDeployMode.LOCAL)
         .serviceName("cvng")
         .mongoConfig(config.getPmsMongoConfig())
         .pipelineServiceInfoProviderClass(CVNGPipelineServiceInfoProvider.class)
@@ -399,11 +401,13 @@ public class VerificationApplication extends Application<VerificationConfigurati
         .engineFacilitators(new HashMap<>())
         .filterCreationResponseMerger(new CVNGFilterCreationResponseMerger())
         .executionSummaryModuleInfoProviderClass(CVNGModuleInfoProvider.class)
+        .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
         .build();
   }
 
   private void initMetrics(Injector injector) {
-    injector.getInstance(MetricService.class).initializeMetrics();
+    injector.getInstance(MetricService.class)
+        .initializeMetrics(Arrays.asList(injector.getInstance(CVNGMetricsPublisher.class)));
     injector.getInstance(RecordMetricsJob.class).scheduleMetricsTasks();
   }
 

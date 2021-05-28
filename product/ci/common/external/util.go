@@ -3,6 +3,7 @@ package external
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -39,9 +40,10 @@ const (
 
 // GetChangedFiles executes a shell command and returns a list of files changed in the PR
 // along with their corresponding status
-func GetChangedFiles(ctx context.Context, workspace string, log *zap.SugaredLogger) ([]types.File, error) {
+func GetChangedFiles(ctx context.Context, workspace string, log *zap.SugaredLogger, procWriter io.Writer) ([]types.File, error) {
 	cmdContextFactory := exec.OsCommandContextGracefulWithLog(log)
-	cmd := cmdContextFactory.CmdContext(ctx, "sh", "-c", fmt.Sprintf(diffFilesCmd, gitBin)).WithDir(workspace)
+	cmd := cmdContextFactory.CmdContext(ctx, "sh", "-c", fmt.Sprintf(diffFilesCmd, gitBin)).
+		WithDir(workspace).WithStdout(procWriter).WithStderr(procWriter)
 	out, err := cmd.Output()
 	if err != nil {
 		return nil, err

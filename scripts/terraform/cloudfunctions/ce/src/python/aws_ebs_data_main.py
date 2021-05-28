@@ -7,56 +7,9 @@ from google.cloud import secretmanager
 from botocore.config import Config
 import datetime
 import boto3
-from util import create_dataset, if_tbl_exists, createTable, print_, ACCOUNTID_LOG
+from util import create_dataset, if_tbl_exists, createTable, print_, ACCOUNTID_LOG, TABLE_NAME_FORMAT
+from aws_util import assumed_role_session, STATIC_REGION, get_secret_key
 
-TABLE_NAME_FORMAT = "%s.BillingReport_%s.%s"
-EBS_VOLUMES_DATA_MAP = []
-
-# Todo: Move this to util
-STATIC_REGION = ['af-south-1',
-                 'ap-east-1',
-                 'ap-northeast-1',
-                 'ap-northeast-2',
-                 'ap-northeast-3',
-                 'ap-south-1',
-                 'ap-southeast-1',
-                 'ap-southeast-2',
-                 'ca-central-1',
-                 'eu-central-1',
-                 'eu-north-1',
-                 'eu-south-1',
-                 'eu-west-1',
-                 'eu-west-2',
-                 'eu-west-3',
-                 'me-south-1',
-                 'sa-east-1',
-                 'us-east-1',
-                 'us-east-2',
-                 'us-west-1',
-                 'us-west-2']
-
-# Todo: Move this to util
-def get_secret_key(jsonData, key):
-    client = secretmanager.SecretManagerServiceClient()
-    secret_name = key
-    project_id = jsonData["projectName"]
-    request = {"name": f"projects/{project_id}/secrets/{secret_name}/versions/latest"}
-    response = client.access_secret_version(request)
-    secret_string = response.payload.data.decode("UTF-8")
-    return secret_string
-
-# Todo: Move this to util
-def assumed_role_session(jsonData):
-    roleArn, roleSessionName, externalId = jsonData["roleArn"], jsonData["accountIdOrig"], jsonData["externalId"]
-    sts_client = boto3.client('sts', aws_access_key_id=get_secret_key(jsonData, "CE_AWS_ACCESS_KEY_GCPSM"),
-                              aws_secret_access_key=get_secret_key(jsonData, "CE_AWS_SECRET_ACCESS_KEY_GCPSM"))
-    assumed_role_object = sts_client.assume_role(
-        RoleArn=roleArn,  # "arn:aws:iam::448640225317:role/harnessContinuousEfficiencyRole",
-        RoleSessionName=roleSessionName,  # "wFHXHD0RRQWoO8tIZT5YVw",
-        ExternalId=externalId,  # "harness:891928451355:wFHXHD0RRQWoO8tIZT5YVw",
-    )
-    credentials = assumed_role_object['Credentials']
-    return credentials['AccessKeyId'], credentials['SecretAccessKey'], credentials['SessionToken']
 
 def getEbsVolumesData(jsonData):
     my_config = Config(
@@ -66,7 +19,7 @@ def getEbsVolumesData(jsonData):
             'mode': 'standard'
         }
     )
-
+    EBS_VOLUMES_DATA_MAP = []
     try:
         print_("Assuming role")
         key, secret, token = assumed_role_session(jsonData)

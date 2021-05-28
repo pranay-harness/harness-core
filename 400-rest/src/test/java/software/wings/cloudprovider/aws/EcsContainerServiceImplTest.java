@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.PRAKHAR;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -26,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -729,6 +731,29 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
     assertThat(containerInfo.getIp()).isEqualTo("1.0.0.1");
     assertThat(containerInfo.getContainerId()).isEqualTo("123456789abc");
     assertThat(containerInfo.getEc2Instance()).isEqualTo(ec2Instance);
+  }
+
+  @Test
+  @Owner(developers = PRAKHAR)
+  @Category(UnitTests.class)
+  public void testWaitForServiceToReachStableState() {
+    ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
+    String region = "REGION";
+    int serviceSteadyStateTimeout = 10;
+    ArrayList<EncryptedDataDetail> encryptionDetails = new ArrayList<>();
+
+    doNothing().when(logCallback).saveExecutionLog(anyString(), any());
+    doNothing().when(logCallback).saveExecutionLog(anyString(), any());
+    doNothing()
+        .when(awsHelperService)
+        .waitTillECSServiceIsStable(anyString(), anyObject(), anyList(), anyObject(), anyInt(), anyObject());
+
+    ecsContainerService.waitForServiceToReachStableState(
+        region, awsConfig, encryptionDetails, CLUSTER_NAME, SERVICE_NAME, logCallback, serviceSteadyStateTimeout);
+
+    verify(awsHelperService, times(1))
+        .waitTillECSServiceIsStable(eq(region), eq(awsConfig), eq(encryptionDetails),
+            any(DescribeServicesRequest.class), eq(serviceSteadyStateTimeout), eq(logCallback));
   }
 
   private Task generateTask(Container container, Container containerSideCar, String containerInstanceArn) {

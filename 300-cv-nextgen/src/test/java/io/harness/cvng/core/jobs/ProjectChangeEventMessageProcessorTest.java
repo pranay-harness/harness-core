@@ -83,8 +83,8 @@ public class ProjectChangeEventMessageProcessorTest extends CvNextGenTestBase {
     cvConfigService.save(cvConfig2);
     VerificationJobDTO verificationJobDTO1 = createVerificationJobDTO(orgIdentifier, "project1");
     VerificationJobDTO verificationJobDTO2 = createVerificationJobDTO(orgIdentifier, "project2");
-    verificationJobService.upsert(accountId, verificationJobDTO1);
-    verificationJobService.upsert(accountId, verificationJobDTO2);
+    verificationJobService.create(accountId, verificationJobDTO1);
+    verificationJobService.create(accountId, verificationJobDTO2);
     projectChangeEventMessageProcessor.processDeleteAction(ProjectEntityChangeDTO.newBuilder()
                                                                .setAccountIdentifier(accountId)
                                                                .setOrgIdentifier(orgIdentifier)
@@ -131,8 +131,8 @@ public class ProjectChangeEventMessageProcessorTest extends CvNextGenTestBase {
     cvConfigService.save(cvConfig2);
     VerificationJobDTO verificationJobDTO1 = createVerificationJobDTO(orgIdentifier, "project1");
     VerificationJobDTO verificationJobDTO2 = createVerificationJobDTO(orgIdentifier, "project2");
-    verificationJobService.upsert(accountId, verificationJobDTO1);
-    verificationJobService.upsert(accountId, verificationJobDTO2);
+    verificationJobService.create(accountId, verificationJobDTO1);
+    verificationJobService.create(accountId, verificationJobDTO2);
     projectChangeEventMessageProcessor.processDeleteAction(
         ProjectEntityChangeDTO.newBuilder().setAccountIdentifier(accountId).setOrgIdentifier(orgIdentifier).build());
 

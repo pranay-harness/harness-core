@@ -1,21 +1,27 @@
 package io.harness.ccm.graphql.query.recommendation;
 
 import static io.harness.rule.OwnerRule.UTSAV;
+import static io.harness.timescaledb.Tables.CE_RECOMMENDATIONS;
 
 import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.CPU_HISTOGRAM_FIRST_BUCKET_SIZE;
 import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.HISTOGRAM_BUCKET_SIZE_GROWTH;
 import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.MEMORY_HISTOGRAM_FIRST_BUCKET_SIZE;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.offset;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
 import io.harness.ccm.graphql.core.recommendation.RecommendationService;
 import io.harness.ccm.graphql.dto.recommendation.ContainerHistogramDTO;
 import io.harness.ccm.graphql.dto.recommendation.ContainerHistogramDTO.HistogramExp;
+import io.harness.ccm.graphql.dto.recommendation.FilterStatsDTO;
 import io.harness.ccm.graphql.dto.recommendation.RecommendationDetailsDTO;
 import io.harness.ccm.graphql.dto.recommendation.RecommendationItemDTO;
 import io.harness.ccm.graphql.dto.recommendation.RecommendationsDTO;
@@ -32,11 +38,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import org.jooq.Condition;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -64,6 +72,8 @@ public class RecommendationsOverviewQueryTest extends CategoryTest {
   private static final Cost cost =
       Cost.builder().memory(BigDecimal.valueOf(0.116)).cpu(BigDecimal.valueOf(0.4678)).build();
 
+  private ArgumentCaptor<Condition> conditionCaptor;
+
   @Mock private GraphQLUtils graphQLUtils;
   @Mock private RecommendationService recommendationService;
   @InjectMocks private RecommendationsOverviewQuery overviewQuery;
@@ -73,6 +83,8 @@ public class RecommendationsOverviewQueryTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
 
     when(graphQLUtils.getAccountIdentifier(any())).thenReturn(ACCOUNT_ID);
+
+    conditionCaptor = ArgumentCaptor.forClass(Condition.class);
   }
 
   @Test
@@ -185,6 +197,96 @@ public class RecommendationsOverviewQueryTest extends CategoryTest {
         overviewQuery.recommendationDetails(ID, ResourceType.WORKLOAD, null, null, null);
 
     assertWorkloadRecommendationByIdNotFound(recommendationDetails);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testRecommendationFilterStats() {
+    String columnName = "resourceType";
+    List<String> columns = Collections.singletonList(columnName);
+    List<FilterStatsDTO> actualResponse =
+        ImmutableList.of(FilterStatsDTO.builder().key(columnName).values(ImmutableList.of("WORKLOAD", "NODE")).build());
+
+    when(recommendationService.getFilterStats(eq(ACCOUNT_ID), any(), eq(columns), eq(CE_RECOMMENDATIONS)))
+        .thenReturn(actualResponse);
+
+    List<FilterStatsDTO> result =
+        overviewQuery.recommendationFilterStats(columns, null, null, null, null, null, null, null);
+
+    verify(recommendationService, times(1)).getFilterStats(any(), conditionCaptor.capture(), any(), any());
+
+    assertThat(result).isNotNull().hasSize(1);
+    assertThat(result.get(0).getKey()).isEqualTo(columnName);
+    assertThat(result.get(0).getValues()).containsExactlyInAnyOrder("WORKLOAD", "NODE");
+
+    assertCommonCondition(conditionCaptor.getValue());
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testRecommendationFilterStatsWithPreselectedFilters() {
+    String columnName = "resourceType";
+    List<String> columns = Collections.singletonList(columnName);
+    List<FilterStatsDTO> actualResponse =
+        ImmutableList.of(FilterStatsDTO.builder().key(columnName).values(ImmutableList.of("WORKLOAD")).build());
+
+    when(recommendationService.getFilterStats(eq(ACCOUNT_ID), any(), eq(columns), eq(CE_RECOMMENDATIONS)))
+        .thenReturn(actualResponse);
+
+    List<FilterStatsDTO> result = overviewQuery.recommendationFilterStats(
+        columns, "name0", "namespace0", "clusterName0", ResourceType.WORKLOAD, 200D, 100D, null);
+
+    verify(recommendationService, times(1)).getFilterStats(any(), conditionCaptor.capture(), any(), any());
+
+    assertThat(result).isNotNull().hasSize(1);
+    assertThat(result.get(0).getKey()).isEqualTo(columnName);
+    assertThat(result.get(0).getValues()).containsExactly("WORKLOAD");
+
+    Condition condition = conditionCaptor.getValue();
+    assertCommonCondition(condition);
+
+    assertThat(condition.toString())
+        .contains(CE_RECOMMENDATIONS.NAME.getQualifiedName().toString())
+        .contains("name0")
+        .contains(CE_RECOMMENDATIONS.NAMESPACE.getQualifiedName().toString())
+        .contains("namespace0")
+        .contains(CE_RECOMMENDATIONS.CLUSTERNAME.getQualifiedName().toString())
+        .contains("clusterName0")
+        .contains(CE_RECOMMENDATIONS.RESOURCETYPE.getQualifiedName().toString())
+        .contains("WORKLOAD")
+        .contains(CE_RECOMMENDATIONS.MONTHLYCOST.getQualifiedName().toString())
+        .contains("100")
+        .contains(CE_RECOMMENDATIONS.MONTHLYSAVING.getQualifiedName().toString())
+        .contains("200");
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testRecommendationStats() {
+    when(recommendationService.getStats(eq(ACCOUNT_ID), any()))
+        .thenReturn(RecommendationOverviewStats.builder().totalMonthlyCost(100D).totalMonthlySaving(100D).build());
+
+    RecommendationOverviewStats stats =
+        overviewQuery.recommendationStats(null, null, null, null, null, null, null, null);
+
+    verify(recommendationService, times(1)).getStats(any(), conditionCaptor.capture());
+
+    assertThat(stats).isNotNull();
+    assertThat(stats.getTotalMonthlyCost()).isCloseTo(100D, offset(0.5D));
+    assertThat(stats.getTotalMonthlySaving()).isCloseTo(100D, offset(0.5D));
+
+    assertCommonCondition(conditionCaptor.getValue());
+  }
+
+  private void assertCommonCondition(Condition condition) {
+    assertThat(condition).isNotNull();
+    assertThat(condition.toString())
+        .contains(CE_RECOMMENDATIONS.ISVALID.getQualifiedName().toString())
+        .contains("true")
+        .contains(CE_RECOMMENDATIONS.LASTPROCESSEDAT.getQualifiedName().toString());
   }
 
   private void assertRecommendationOverviewListResponse(final RecommendationsDTO recommendationsDTO) {

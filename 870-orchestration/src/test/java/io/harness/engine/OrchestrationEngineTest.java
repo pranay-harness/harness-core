@@ -1,10 +1,13 @@
 package io.harness.engine;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static io.harness.pms.contracts.execution.failure.FailureType.APPLICATION_FAILURE;
 import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.SAHIL;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
@@ -17,6 +20,7 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
@@ -36,9 +40,11 @@ import java.util.concurrent.ExecutorService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
+import org.springframework.transaction.CannotCreateTransactionException;
 
 public class OrchestrationEngineTest extends OrchestrationTestBase {
   @Mock @Named("EngineExecutorService") ExecutorService executorService;
@@ -60,7 +66,9 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
                                                         .build();
 
   @Before
-  public void setUp() {}
+  public void setUp() {
+    initializeLogging();
+  }
 
   @Test
   @Owner(developers = SAHIL)
@@ -97,6 +105,29 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
             .build();
     orchestrationEngine.triggerExecution(ambiance, planNode);
     verify(executorService).submit(any(ExecutionEngineDispatcher.class));
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldTestHandleErrorWithExceptionManager() {
+    ArgumentCaptor<NodeExecution> nExCaptor = ArgumentCaptor.forClass(NodeExecution.class);
+    ArgumentCaptor<StepResponseProto> sCaptor = ArgumentCaptor.forClass(StepResponseProto.class);
+    NodeExecution nodeExecution = NodeExecution.builder().uuid(generateUuid()).build();
+    when(nodeExecutionService.get(nodeExecution.getUuid())).thenReturn(nodeExecution);
+    String planExecutionId = generateUuid();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .setPlanExecutionId(planExecutionId)
+                            .putAllSetupAbstractions(prepareInputArgs())
+                            .addLevels(Level.newBuilder().setRuntimeId(nodeExecution.getUuid()).build())
+                            .build();
+    CannotCreateTransactionException ex = new CannotCreateTransactionException("Cannot Create Transaction");
+    orchestrationEngine.handleError(ambiance, ex);
+    verify(orchestrationEngine).handleStepResponseInternal(nExCaptor.capture(), sCaptor.capture());
+    assertThat(nExCaptor.getValue().getUuid()).isEqualTo(nodeExecution.getUuid());
+    assertThat(sCaptor.getValue().getFailureInfo()).isNotNull();
+    assertThat(sCaptor.getValue().getFailureInfo().getErrorMessage()).isEqualTo("Cannot Create Transaction");
+    assertThat(sCaptor.getValue().getFailureInfo().getFailureTypesList().get(0)).isEqualTo(APPLICATION_FAILURE);
   }
 
   private static Map<String, String> prepareInputArgs() {

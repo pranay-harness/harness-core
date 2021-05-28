@@ -2,9 +2,12 @@ import .bazelproject-config
 
 directories:
   .aeriform
+  001-microservice-intfc-tool
   110-change-data-capture
   120-ng-manager
   121-instance
+  121-access-control-migration
+  122-ng-core-user
   125-cd-nextgen
   136-git-sync-manager
   160-model-gen-tool
@@ -116,6 +119,7 @@ directories:
   955-filters-sdk
   955-outbox-sdk
   955-setup-usage-sdk
+  956-feature-flag-beans
   958-migration-sdk
   958-ng-file-service-sdk
   959-file-service-commons

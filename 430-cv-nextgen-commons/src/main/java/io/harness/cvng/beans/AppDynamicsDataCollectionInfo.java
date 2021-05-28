@@ -1,7 +1,7 @@
 package io.harness.cvng.beans;
 
-import io.harness.cvng.beans.appd.AppDynamicsUtils;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
+import io.harness.delegate.beans.cvng.appd.AppDynamicsUtils;
 
 import java.util.Collections;
 import java.util.List;

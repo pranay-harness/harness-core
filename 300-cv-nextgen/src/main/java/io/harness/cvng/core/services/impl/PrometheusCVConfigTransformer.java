@@ -29,6 +29,8 @@ public class PrometheusCVConfigTransformer implements CVConfigTransformer<Promet
                   .isManualQuery(metricInfo.isManualQuery())
                   .query(metricInfo.getQuery())
                   .metricName(metricInfo.getMetricName())
+                  .prometheusMetric(metricInfo.getPrometheusMetricName())
+                  .aggregation(metricInfo.getAggregation())
                   .serviceInstanceFieldName(metricInfo.getServiceInstanceFieldName())
                   .riskProfile(RiskProfile.builder()
                                    .category(prometheusCVConfig.getMetricPack().getCategory())

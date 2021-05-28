@@ -23,7 +23,7 @@ import io.harness.accesscontrol.commons.events.FeatureFlagEventListenerService;
 import io.harness.accesscontrol.commons.events.UserMembershipEventListenerService;
 import io.harness.accesscontrol.principals.usergroups.iterators.UserGroupReconciliationIterator;
 import io.harness.accesscontrol.resources.resourcegroups.iterators.ResourceGroupReconciliationIterator;
-import io.harness.aggregator.AggregatorApplication;
+import io.harness.aggregator.AggregatorService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.exception.ConstraintViolationExceptionMapper;
@@ -114,8 +114,6 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     Injector injector =
         Guice.createInjector(AccessControlModule.getInstance(appConfig), new MetricRegistryModule(metricRegistry));
     injector.getInstance(HPersistence.class);
-    AggregatorApplication aggregatorApplication = injector.getInstance(AggregatorApplication.class);
-    aggregatorApplication.run();
     registerCorsFilter(appConfig, environment);
     registerResources(environment, injector);
     registerJerseyProviders(environment);
@@ -130,6 +128,10 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     registerHealthCheck(environment, injector);
     AccessControlManagementJob accessControlManagementJob = injector.getInstance(AccessControlManagementJob.class);
     accessControlManagementJob.run();
+
+    if (appConfig.getAggregatorConfiguration().isEnabled()) {
+      environment.lifecycle().manage(injector.getInstance(AggregatorService.class));
+    }
 
     MaintenanceController.forceMaintenance(false);
   }

@@ -31,6 +31,7 @@ java_library(
     name = "tests",
     testonly = True,
     srcs = glob(["src/test/**/*.java"]),
+    resources = ["//878-pipeline-service-utilities/src/test/resources:resource"],
     visibility = ["//visibility:public"],
     deps = [
         "module",
@@ -40,6 +41,7 @@ java_library(
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_mockito_mockito_core",
+        "@maven//:org_powermock_powermock_api_mockito",
     ],
 )
 

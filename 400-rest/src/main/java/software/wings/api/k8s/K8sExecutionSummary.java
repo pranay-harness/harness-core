@@ -6,10 +6,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.helm.HelmChartInfo;
+import io.harness.k8s.model.KubernetesResourceId;
 
 import software.wings.sm.StepExecutionSummary;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.List;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
@@ -30,4 +32,5 @@ public class K8sExecutionSummary extends StepExecutionSummary {
   private HelmChartInfo helmChartInfo;
   private String blueGreenStageColor;
   private Set<String> delegateSelectors;
+  private List<KubernetesResourceId> prunedResourcesIds;
 }

@@ -4,9 +4,12 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.Deployment.DashboardDeploymentActiveFailedRunningInfo;
 import io.harness.cdng.Deployment.DashboardWorkloadDeployment;
-import io.harness.cdng.Deployment.ExecutionDeploymentDetailInfo;
 import io.harness.cdng.Deployment.ExecutionDeploymentInfo;
 import io.harness.cdng.Deployment.HealthDeploymentDashboard;
+import io.harness.cdng.Deployment.ServiceDeploymentInfoDTO;
+import io.harness.cdng.Deployment.ServiceDeploymentListInfo;
+import io.harness.cdng.Deployment.ServiceDetailsInfoDTO;
+import io.harness.ng.core.environment.beans.EnvironmentType;
 
 @OwnedBy(HarnessTeam.CDC)
 public interface CDOverviewDashboardService {
@@ -20,8 +23,16 @@ public interface CDOverviewDashboardService {
       String accountId, String orgId, String projectId, long days);
 
   DashboardWorkloadDeployment getDashboardWorkloadDeployment(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, long startInterval, long endInterval, long previousStartInterval);
+      String projectIdentifier, long startInterval, long endInterval, long previousStartInterval,
+      EnvironmentType envType);
 
-  ExecutionDeploymentDetailInfo getDeploymentsExecutionInfo(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, long startTime, long endTime);
+  ServiceDeploymentListInfo getServiceDeploymentsInfo(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, long startTime, long endTime, String serviceIdentifier, long bucketSizeInDays)
+      throws Exception;
+
+  ServiceDeploymentInfoDTO getServiceDeployments(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, long startTime, long endTime, String serviceIdentifier, long bucketSizeInDays);
+
+  ServiceDetailsInfoDTO getServiceDetailsList(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      long startTime, long endTime) throws Exception;
 }

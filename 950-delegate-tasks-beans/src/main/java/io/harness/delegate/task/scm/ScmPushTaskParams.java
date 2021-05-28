@@ -24,6 +24,8 @@ public class ScmPushTaskParams implements TaskParameters, ExecutionCapabilityDem
   GitFileDetails gitFileDetails;
   ChangeType changeType;
   List<EncryptedDataDetail> encryptedDataDetails;
+  boolean isNewBranch;
+  String baseBranch;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

@@ -12,4 +12,6 @@ public interface ServiceRepositoryCustom {
   ServiceEntity upsert(Criteria criteria, ServiceEntity serviceEntity);
   ServiceEntity update(Criteria criteria, ServiceEntity serviceEntity);
   UpdateResult delete(Criteria criteria);
+  Long findActiveServiceCountAtGivenTimestamp(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, long timestampInMs);
 }

@@ -11,7 +11,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.cvng.HoverflyTestBase;
 import io.harness.cvng.beans.SplunkDataCollectionInfo;
-import io.harness.cvng.beans.splunk.SplunkConnectorValidationInfo;
 import io.harness.cvng.beans.splunk.SplunkSavedSearchRequest;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.datacollection.DataCollectionDSLService;
@@ -19,6 +18,7 @@ import io.harness.datacollection.entity.LogDataRecord;
 import io.harness.datacollection.entity.RuntimeParameters;
 import io.harness.datacollection.impl.DataCollectionServiceImpl;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
+import io.harness.delegate.beans.cvng.splunk.SplunkConnectorValidationInfo;
 import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 

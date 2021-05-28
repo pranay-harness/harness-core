@@ -1,5 +1,6 @@
 package io.harness.k8s.model;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static io.harness.k8s.manifest.ManifestHelper.processYaml;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
@@ -19,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.fail;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidRequestException;
@@ -42,6 +44,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDP)
 public class KubernetesResourceTest extends CategoryTest {
   @Before
   public void setup() {
@@ -681,5 +684,20 @@ public class KubernetesResourceTest extends CategoryTest {
         new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
 
     assertThat(yaml.dump(k8sResource)).isEqualTo(resultContents);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testSkipPruningAnnotation() throws Exception {
+    URL url = this.getClass().getResource("/podWithSkipPruneAnnotation.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resourceWithAnnotation = processYaml(fileContents).get(0);
+    assertThat(resourceWithAnnotation.isSkipPruning()).isTrue();
+
+    url = this.getClass().getResource("/pod.yaml");
+    fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resourceWithoutAnnotation = processYaml(fileContents).get(0);
+    assertThat(resourceWithoutAnnotation.isSkipPruning()).isFalse();
   }
 }

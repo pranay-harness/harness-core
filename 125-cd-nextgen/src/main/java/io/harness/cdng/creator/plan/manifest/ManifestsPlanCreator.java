@@ -110,6 +110,10 @@ public class ManifestsPlanCreator {
       if (EmptyPredicate.isNotEmpty(manifestConfigList)) {
         manifestConfigList.forEach(mcw -> {
           ManifestConfig mc = mcw.getManifest();
+          if (manifests.containsKey(mc.getIdentifier())) {
+            throw new InvalidRequestException(
+                String.format("Duplicate identifier: [%s] in manifests", mc.getIdentifier()));
+          }
           this.manifests.put(mc.getIdentifier(),
               new ManifestInfoBuilder(mc.getUuid(),
                   ManifestStepParameters.builder()

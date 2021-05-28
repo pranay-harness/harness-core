@@ -19,6 +19,10 @@ import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TAS
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.ARMResourceType;
 import io.harness.azure.model.ARMScopeType;
 import io.harness.azure.model.AzureConstants;
@@ -79,6 +83,8 @@ import org.apache.commons.io.FilenameUtils;
 
 @Slf4j
 @FieldNameConstants(innerTypeName = "ARMProvisionStateKeys")
+@OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
 public class ARMProvisionState extends State {
   private static final String TEMPLATE_KEY = "TEMPLATE";
   private static final String VARIABLES_KEY = "VARIABLES";
@@ -94,6 +100,7 @@ public class ARMProvisionState extends State {
   @Getter @Setter protected String subscriptionExpression;
   @Getter @Setter protected String resourceGroupExpression;
   @Getter @Setter private String managementGroupExpression;
+  @Getter @Setter private String assignmentNameExpression;
 
   @Getter @Setter private String inlineParametersExpression;
   @Getter @Setter private GitFileConfig parametersGitFileConfig;
@@ -285,6 +292,7 @@ public class ARMProvisionState extends State {
             .accountId(context.getAccountId())
             .activityId(activityId)
             .assignmentJson(assignmentJson)
+            .assignmentName(context.renderExpression(assignmentNameExpression))
             .blueprintJson(blueprintJson)
             .artifacts(artifacts)
             .commandName(ARMStateHelper.AZURE_BLUEPRINT_COMMAND_UNIT_TYPE)
@@ -304,6 +312,7 @@ public class ARMProvisionState extends State {
       builder.fetchFilesResult(stateExecutionData.getFetchFilesResult());
     }
 
+    cloudProviderId = context.renderExpression(cloudProviderId);
     AzureConfig azureConfig = azureVMSSStateHelper.getAzureConfig(cloudProviderId);
     List<EncryptedDataDetail> azureEncryptionDetails =
         azureVMSSStateHelper.getEncryptedDataDetails(context, cloudProviderId);

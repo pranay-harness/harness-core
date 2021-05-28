@@ -43,6 +43,7 @@ java_binary(
         "//955-alert-beans:module",
         "//955-delegate-beans:module",
         "//955-filters-sdk:module",
+        "//956-feature-flag-beans:module",
         "//960-ng-core-beans:module",
         "//960-notification-beans:module",
         "//960-persistence:module",

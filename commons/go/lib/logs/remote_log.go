@@ -39,9 +39,6 @@ func NewRemoteLogger(writer StreamWriter) (*RemoteLogger, error) {
 	log := logger.Sugar()
 	rl := &RemoteLogger{log, writer}
 	// Try to open the stream. Continue using the writer even if it's unsuccessful
-	err := rl.Writer.Open()
-	if err != nil {
-		log.Errorw("Unable to open log stream", zap.Error(err))
-	}
+	go rl.Writer.Open()
 	return rl, nil
 }

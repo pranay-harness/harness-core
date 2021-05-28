@@ -15,6 +15,7 @@ java_library(
 
 java_library(
     name = "module",
+    testonly = True,
     srcs = glob(["src/main/**/*.java"]),
     resource_jars = [
         ":abstract-module",
@@ -52,4 +53,6 @@ java_library(
 
 run_tests()
 
-run_analysis()
+run_analysis(
+    run_sonar = False,
+)

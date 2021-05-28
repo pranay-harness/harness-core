@@ -11,6 +11,7 @@ import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.product.ci.scm.proto.ListBranchesResponse;
+import io.harness.product.ci.scm.proto.ListCommitsInPRResponse;
 import io.harness.product.ci.scm.proto.ListCommitsResponse;
 import io.harness.product.ci.scm.proto.SCMGrpc;
 import io.harness.security.encryption.SecretDecryptionService;
@@ -47,14 +48,26 @@ public class ScmGitRefTask extends AbstractDelegateRunnableTask {
       case BRANCH:
         ListBranchesResponse listBranchesResponse = scmDelegateClient.processScmRequest(
             c -> scmServiceClient.listBranches(scmGitRefTaskParams.getScmConnector(), SCMGrpc.newBlockingStub(c)));
-        return ScmGitRefTaskResponseData.builder().listBranchesResponse(listBranchesResponse).build();
+        return ScmGitRefTaskResponseData.builder()
+            .gitRefType(scmGitRefTaskParams.getGitRefType())
+            .listBranchesResponse(listBranchesResponse.toByteArray())
+            .build();
       case COMMIT:
         ListCommitsResponse listCommitsResponse = scmDelegateClient.processScmRequest(c
             -> scmServiceClient.listCommits(
                 scmGitRefTaskParams.getScmConnector(), scmGitRefTaskParams.getBranch(), SCMGrpc.newBlockingStub(c)));
         return ScmGitRefTaskResponseData.builder()
+            .gitRefType(scmGitRefTaskParams.getGitRefType())
             .branch(scmGitRefTaskParams.getBranch())
-            .listCommitsResponse(listCommitsResponse)
+            .listCommitsResponse(listCommitsResponse.toByteArray())
+            .build();
+      case PULL_REQUEST:
+        ListCommitsInPRResponse listCommitsInPRResponse = scmDelegateClient.processScmRequest(c
+            -> scmServiceClient.listCommitsInPR(
+                scmGitRefTaskParams.getScmConnector(), scmGitRefTaskParams.getPrNumber(), SCMGrpc.newBlockingStub(c)));
+        return ScmGitRefTaskResponseData.builder()
+            .gitRefType(scmGitRefTaskParams.getGitRefType())
+            .listCommitsInPRResponse(listCommitsInPRResponse.toByteArray())
             .build();
       default:
         throw new UnknownEnumTypeException("GitRefType", scmGitRefTaskParams.getGitRefType().toString());

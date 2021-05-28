@@ -151,6 +151,10 @@ public class YamlNode implements Visitable {
     return Optional.ofNullable(getName()).orElse(getIdentifier());
   }
 
+  public String getArrayUniqueIdentifier() {
+    return Optional.ofNullable(getIdentifier()).orElse(Optional.ofNullable(getName()).orElse(getKey()));
+  }
+
   public String getStringValue(String name) {
     JsonNode value = getValueInternal(name);
     return (value == null || !value.isTextual()) ? null : value.asText();

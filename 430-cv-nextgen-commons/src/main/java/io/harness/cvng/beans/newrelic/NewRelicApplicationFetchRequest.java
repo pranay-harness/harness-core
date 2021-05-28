@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CV;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
+import io.harness.delegate.beans.cvng.newrelic.NewRelicUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.HashMap;

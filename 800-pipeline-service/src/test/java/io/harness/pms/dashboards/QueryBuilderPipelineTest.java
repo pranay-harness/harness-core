@@ -20,9 +20,9 @@ public class QueryBuilderPipelineTest {
   @Category(UnitTests.class)
   public void testQueryBuilderSelectStatusAndTime() {
     String expectedQueryResult =
-        "select status,startts from pipeline_execution_summary_ci where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and pipelineidentifier='pipelineId' and startts between '2021-04-21' and '2021-04-26';";
+        "select status,startts from pipeline_execution_summary_ci where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and pipelineidentifier='pipelineId' and startts>=10 and startts<13;";
     String queryResult = new PipelineDashboardServiceImpl().queryBuilderSelectStatusAndTime(
-        "accountId", "orgId", "projectId", "pipelineId", "2021-04-21", "2021-04-26", "pipeline_execution_summary_ci");
+        "accountId", "orgId", "projectId", "pipelineId", 10L, 13L, "pipeline_execution_summary_ci");
     assertThat(queryResult).isEqualTo(expectedQueryResult);
   }
 
@@ -31,12 +31,9 @@ public class QueryBuilderPipelineTest {
   @Category(UnitTests.class)
   public void testQueryBuilderMedian() {
     String expectedQueryResult =
-        "select PERCENTILE_DISC(0.5) within group (order by ((DATE_PART('day', endts::timestamp - startts::timestamp) * 24 + \n"
-        + "                DATE_PART('hour', endts::timestamp - startts::timestamp)) * 60 +\n"
-        + "                DATE_PART('minute', endts::timestamp - startts::timestamp)) * 60 +\n"
-        + "                DATE_PART('second', endts::timestamp - startts::timestamp)) from pipeline_execution_summary_ci where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and pipelineidentifier='pipelineId' and startts between '2021-04-21' and '2021-04-26' and endts is not null;";
+        "select PERCENTILE_DISC(0.5) within group (order by (endts-startts)) as percentile_disc from pipeline_execution_summary_ci where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and pipelineidentifier='pipelineId' and startts>=10 and startts<13 and endts is not null;";
     String queryResult = new PipelineDashboardServiceImpl().queryBuilderMedian(
-        "accountId", "orgId", "projectId", "pipelineId", "2021-04-21", "2021-04-26", "pipeline_execution_summary_ci");
+        "accountId", "orgId", "projectId", "pipelineId", 10L, 13L, "pipeline_execution_summary_ci");
     assertThat(queryResult).isEqualTo(expectedQueryResult);
   }
 
@@ -45,11 +42,9 @@ public class QueryBuilderPipelineTest {
   @Category(UnitTests.class)
   public void testQueryBuilderMean() {
     String expectedQueryResult =
-        "select avg(((DATE_PART('day', endts::timestamp - startts::timestamp) * 24 +                                                                                                                                                                                      DATE_PART('hour', endts::timestamp - startts::timestamp)) * 60 +\n"
-        + "                DATE_PART('minute', endts::timestamp - startts::timestamp)) * 60 +\n"
-        + "                DATE_PART('second', endts::timestamp - startts::timestamp)) from pipeline_execution_summary_ci where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and pipelineidentifier='pipelineId' and startts between '2021-04-21' and '2021-04-26' and endts is not null;";
+        "select avg(endts-startts)/1000 as avg from pipeline_execution_summary_ci where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and pipelineidentifier='pipelineId' and startts>=10 and startts<13 and endts is not null;";
     String queryResult = new PipelineDashboardServiceImpl().queryBuilderMean(
-        "accountId", "orgId", "projectId", "pipelineId", "2021-04-21", "2021-04-26", "pipeline_execution_summary_ci");
+        "accountId", "orgId", "projectId", "pipelineId", 10L, 13L, "pipeline_execution_summary_ci");
     assertThat(queryResult).isEqualTo(expectedQueryResult);
   }
 

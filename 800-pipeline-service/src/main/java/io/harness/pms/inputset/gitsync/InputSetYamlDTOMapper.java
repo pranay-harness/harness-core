@@ -24,9 +24,10 @@ public class InputSetYamlDTOMapper {
   }
 
   public InputSetEntity toEntity(InputSetYamlDTO dto, String accountIdentifier) {
+    // todo(naman): look how to not use getYamlstring
     InputSetYamlInfoDTO inputSetInfo = dto.getInputSetInfo();
     return PMSInputSetElementMapper.toInputSetEntity(accountIdentifier, inputSetInfo.getOrgIdentifier(),
-        inputSetInfo.getProjectIdentifier(), inputSetInfo.getPipeline().getPipelineInfoConfig().getIdentifier(),
+        inputSetInfo.getProjectIdentifier(), inputSetInfo.getPipelineInfoConfig().getIdentifier(),
         NGYamlUtils.getYamlString(dto));
   }
 }

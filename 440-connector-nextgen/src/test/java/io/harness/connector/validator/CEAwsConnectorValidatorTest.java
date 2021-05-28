@@ -93,7 +93,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testValidateEventsSuccess() {
-    ceAwsConnectorDTO.setFeaturesEnabled(Collections.singletonList(CEAwsFeatures.EVENTS));
+    ceAwsConnectorDTO.setFeaturesEnabled(Collections.singletonList(CEAwsFeatures.VISIBILITY));
     ceAwsConnectorDTO.setCurAttributes(null);
 
     ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
@@ -107,7 +107,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testValidateEventsPermissionMissing() {
-    ceAwsConnectorDTO.setFeaturesEnabled(Collections.singletonList(CEAwsFeatures.EVENTS));
+    ceAwsConnectorDTO.setFeaturesEnabled(Collections.singletonList(CEAwsFeatures.VISIBILITY));
     ceAwsConnectorDTO.setCurAttributes(null);
 
     doReturn(Collections.singletonList(DENY_EVALUATION_RESULT))

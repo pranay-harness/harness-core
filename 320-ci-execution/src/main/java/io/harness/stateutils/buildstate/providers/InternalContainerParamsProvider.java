@@ -3,7 +3,6 @@ package io.harness.stateutils.buildstate.providers;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ID_VARIABLE_VALUE;
-import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_LOG_PREFIX_VARIABLE;
@@ -71,15 +70,14 @@ public class InternalContainerParamsProvider {
   }
 
   public CIK8ContainerParams getLiteEngineContainerParams(ConnectorDetails containerImageConnectorDetails,
-      Map<String, ConnectorDetails> publishArtifactConnectors, K8PodDetails k8PodDetails, String serviceToken,
-      Integer stageCpuRequest, Integer stageMemoryRequest, List<Integer> serviceGrpcPortList,
-      Map<String, String> logEnvVars, Map<String, String> tiEnvVars, Map<String, String> volumeToMountPath,
-      String workDirPath, String logPrefix, Ambiance ambiance) {
+      Map<String, ConnectorDetails> publishArtifactConnectors, K8PodDetails k8PodDetails, Integer stageCpuRequest,
+      Integer stageMemoryRequest, List<Integer> serviceGrpcPortList, Map<String, String> logEnvVars,
+      Map<String, String> tiEnvVars, Map<String, String> volumeToMountPath, String workDirPath, String logPrefix,
+      Ambiance ambiance) {
     return CIK8ContainerParams.builder()
         .name(LITE_ENGINE_CONTAINER_NAME)
         .containerResourceParams(getLiteEngineResourceParams(stageCpuRequest, stageMemoryRequest))
-        .envVars(
-            getLiteEngineEnvVars(k8PodDetails, serviceToken, logEnvVars, tiEnvVars, workDirPath, logPrefix, ambiance))
+        .envVars(getLiteEngineEnvVars(k8PodDetails, logEnvVars, tiEnvVars, workDirPath, logPrefix, ambiance))
         .containerType(CIContainerType.LITE_ENGINE)
         .containerSecrets(ContainerSecrets.builder().connectorDetailsMap(publishArtifactConnectors).build())
         .imageDetailsWithConnector(
@@ -92,9 +90,8 @@ public class InternalContainerParamsProvider {
         .build();
   }
 
-  private Map<String, String> getLiteEngineEnvVars(K8PodDetails k8PodDetails, String serviceToken,
-      Map<String, String> logEnvVars, Map<String, String> tiEnvVars, String workDirPath, String logPrefix,
-      Ambiance ambiance) {
+  private Map<String, String> getLiteEngineEnvVars(K8PodDetails k8PodDetails, Map<String, String> logEnvVars,
+      Map<String, String> tiEnvVars, String workDirPath, String logPrefix, Ambiance ambiance) {
     Map<String, String> envVars = new HashMap<>();
     final String accountID = AmbianceHelper.getAccountId(ambiance);
     final String orgID = AmbianceHelper.getOrgIdentifier(ambiance);
@@ -111,7 +108,6 @@ public class InternalContainerParamsProvider {
 
     // Add environment variables that need to be used inside the lite engine container
     envVars.put(HARNESS_WORKSPACE, workDirPath);
-    envVars.put(DELEGATE_SERVICE_TOKEN_VARIABLE, serviceToken);
     envVars.put(DELEGATE_SERVICE_ENDPOINT_VARIABLE, ciExecutionServiceConfig.getDelegateServiceEndpointVariableValue());
     envVars.put(DELEGATE_SERVICE_ID_VARIABLE, DELEGATE_SERVICE_ID_VARIABLE_VALUE);
     envVars.put(HARNESS_ACCOUNT_ID_VARIABLE, accountID);

@@ -92,7 +92,6 @@ func (h *logProxyHandler) UploadUsingLink(stream pb.LogProxy_UploadUsingLinkServ
 		link = msg.GetLink()
 		for _, line := range msg.GetLines() {
 			data.Write([]byte(line))
-			data.Write([]byte("\n"))
 		}
 	}
 
@@ -141,7 +140,7 @@ func (h *logProxyHandler) Close(ctx context.Context, in *pb.CloseRequest) (*pb.C
 	}
 	err = lc.Close(ctx, in.GetKey())
 	if err != nil {
-		h.log.Errorw("Could not close log stream", zap.Error(err))
+		h.log.Errorw("Could not close log stream", "key", in.GetKey(), zap.Error(err))
 		return &pb.CloseResponse{}, err
 	}
 	return &pb.CloseResponse{}, nil

@@ -6,12 +6,15 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitFileDetails;
 import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.beans.gitsync.GitPRCreateRequest;
+import io.harness.beans.gitsync.GitWebhookDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.impl.jgit.JgitGitServiceImpl;
 import io.harness.impl.scm.SCMServiceGitClientImpl;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
+import io.harness.product.ci.scm.proto.CreateWebhookResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
+import io.harness.product.ci.scm.proto.DeleteWebhookResponse;
 import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.product.ci.scm.proto.FindFilesInBranchResponse;
@@ -19,7 +22,9 @@ import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
 import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
 import io.harness.product.ci.scm.proto.IsLatestFileResponse;
 import io.harness.product.ci.scm.proto.ListBranchesResponse;
+import io.harness.product.ci.scm.proto.ListCommitsInPRResponse;
 import io.harness.product.ci.scm.proto.ListCommitsResponse;
+import io.harness.product.ci.scm.proto.ListWebhooksResponse;
 import io.harness.product.ci.scm.proto.UpdateFileResponse;
 import io.harness.service.ScmOrchestratorService;
 
@@ -100,6 +105,11 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
   }
 
   @Override
+  public ListCommitsInPRResponse listCommitsInPR(ScmConnector scmConnector, int prNumber) {
+    return scmServiceGitClient.listCommitsInPR(scmConnector, prNumber);
+  }
+
+  @Override
   public FileBatchContentResponse listFiles(ScmConnector connector, List<String> foldersList, String branchName) {
     return scmServiceGitClient.listFiles(connector, foldersList, branchName);
   }
@@ -107,6 +117,26 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
   @Override
   public void createNewBranch(ScmConnector scmConnector, String branch, String defaultBranchName) {
     scmServiceGitClient.createNewBranch(scmConnector, branch, defaultBranchName);
+  }
+
+  @Override
+  public CreateWebhookResponse createWebhook(ScmConnector scmConnector, GitWebhookDetails gitWebhookDetails) {
+    return scmServiceGitClient.createWebhook(scmConnector, gitWebhookDetails);
+  }
+
+  @Override
+  public DeleteWebhookResponse deleteWebhook(ScmConnector scmConnector, String id) {
+    return scmServiceGitClient.deleteWebhook(scmConnector, id);
+  }
+
+  @Override
+  public ListWebhooksResponse listWebhook(ScmConnector scmConnector) {
+    return scmServiceGitClient.listWebhook(scmConnector);
+  }
+
+  @Override
+  public CreateWebhookResponse upsertWebhook(ScmConnector scmConnector, GitWebhookDetails gitWebhookDetails) {
+    return scmServiceGitClient.upsertWebhook(scmConnector, gitWebhookDetails);
   }
 
   @Override

@@ -1,7 +1,6 @@
 package io.harness.beans.steps.stepinfo;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
-import static io.harness.beans.common.SwaggerConstants.INTEGER_CLASSPATH;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.environment.BuildJobEnvInfo;
@@ -24,7 +23,6 @@ import io.harness.yaml.schema.YamlSchemaIgnoreSubtype;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.swagger.annotations.ApiModelProperty;
 import java.beans.ConstructorProperties;
 import java.util.HashMap;
 import java.util.Map;
@@ -67,15 +65,13 @@ public class LiteEngineTaskStepInfo implements CIStepInfo, WithConnectorRef {
   CodeBase ciCodebase;
   @NotNull boolean skipGitClone;
   @NotNull Infrastructure infrastructure;
-  @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
 
   @Builder
   @ConstructorProperties({"accountId", "identifier", "name", "retry", "buildJobEnvInfo", "steps",
       "executionElementConfig", "usePVC", "ciCodebase", "skipGitClone", "infrastructure", "runAsUser"})
   public LiteEngineTaskStepInfo(String accountId, String identifier, String name, Integer retry,
       BuildJobEnvInfo buildJobEnvInfo, ExecutionElement steps, ExecutionElementConfig executionElementConfig,
-      boolean usePVC, CodeBase ciCodebase, boolean skipGitClone, Infrastructure infrastructure,
-      ParameterField<Integer> runAsUser) {
+      boolean usePVC, CodeBase ciCodebase, boolean skipGitClone, Infrastructure infrastructure) {
     this.accountId = accountId;
     this.identifier = identifier;
     this.name = name;
@@ -88,7 +84,6 @@ public class LiteEngineTaskStepInfo implements CIStepInfo, WithConnectorRef {
     this.ciCodebase = ciCodebase;
     this.skipGitClone = skipGitClone;
     this.infrastructure = infrastructure;
-    this.runAsUser = runAsUser;
   }
 
   @Override

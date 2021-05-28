@@ -122,8 +122,9 @@ public class PMSInputSetServiceImpl implements PMSInputSetService {
   }
 
   @Override
-  public Page<InputSetEntity> list(Criteria criteria, Pageable pageable) {
-    return inputSetRepository.findAll(criteria, pageable);
+  public Page<InputSetEntity> list(
+      Criteria criteria, Pageable pageable, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return inputSetRepository.findAll(criteria, pageable, accountIdentifier, orgIdentifier, projectIdentifier);
   }
 
   @Override

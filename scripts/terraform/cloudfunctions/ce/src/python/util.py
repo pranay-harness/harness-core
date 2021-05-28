@@ -1,13 +1,11 @@
 import json
 from google.cloud import bigquery
 from google.cloud.exceptions import NotFound
-from clusterdata_schema import clusterDataTableFields
-from unified_schema import unifiedTableTableSchema
-from preaggregated_schema import preAggreagtedTableSchema
-from aws_ec2_inventory_schema import awsEc2InventorySchema, awsEc2InventoryCPUSchema
-from aws_ebs_inventory_schema import awsEbsInventorySchema, awsEbsInventoryMetricsSchema
+from bq_schema import awsEc2InventorySchema, awsEc2InventoryCPUSchema, preAggreagtedTableSchema, \
+    unifiedTableTableSchema, clusterDataTableFields, awsEbsInventoryMetricsSchema, awsEbsInventorySchema
 
 ACCOUNTID_LOG = ""
+TABLE_NAME_FORMAT = "%s.BillingReport_%s.%s"
 
 def print_(message, severity="INFO"):
     # Set account id in the beginning of your CF call
@@ -20,7 +18,7 @@ def create_dataset(client, datasetName):
     dataset_id = "{}.{}".format(client.project, datasetName)
     dataset = bigquery.Dataset(dataset_id)
     dataset.location = "US"
-    dataset.description = "Data set for [ AccountId: %s ]" % (ACCOUNTID_LOG)
+    dataset.description = "Dataset for [ AccountId: %s ]" % (ACCOUNTID_LOG)
 
     # Send the dataset to the API for creation, with an explicit timeout.
     # Raises google.api_core.exceptions.Conflict if the Dataset already
@@ -47,7 +45,7 @@ def createTable(client, tableName):
         fieldset = clusterDataTableFields
     elif tableName.endswith("preAggregated"):
         fieldset = preAggreagtedTableSchema
-    elif tableName.endswith("awsEc2Inventory") or tableName.endswith("awsEc2InventoryTemp"):
+    elif tableName.split(".")[-1].startswith("awsEc2Inventory"):
         fieldset = awsEc2InventorySchema
     elif tableName.endswith("awsEc2InventoryCPU"):
         fieldset = awsEc2InventoryCPUSchema
@@ -76,11 +74,10 @@ def createTable(client, tableName):
             type_=bigquery.TimePartitioningType.DAY,
             field="startTime"  # name of column to use for partitioning
         )
-
-    elif tableName.endswith("awsEc2Inventory") or tableName.endswith("awsEc2InventoryTemp") or tableName.endswith("awsEbsInventory") or tableName.endswith("awsEbsInventoryTemp"):
-        table.time_partitioning = bigquery.TimePartitioning(
-            type_=bigquery.TimePartitioningType.DAY,
-            field="lastUpdatedAt"
+    elif tableName.split(".")[-1].startswith("awsEc2Inventory") or tableName.endswith("awsEbsInventory") or tableName.endswith("awsEbsInventoryTemp"):
+        table.range_partitioning = bigquery.RangePartitioning(
+            range_=bigquery.PartitionRange(start=0, end=10000, interval=1),
+            field="linkedAccountIdPartition"
         )
     elif tableName.endswith("awsEc2InventoryCPU") or tableName.endswith("awsEbsInventoryMetrics"):
         table.time_partitioning = bigquery.TimePartitioning(

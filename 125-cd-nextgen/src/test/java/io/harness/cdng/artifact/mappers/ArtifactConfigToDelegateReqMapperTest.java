@@ -5,6 +5,8 @@ import static io.harness.rule.OwnerRule.ARCHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
@@ -19,6 +21,7 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class ArtifactConfigToDelegateReqMapperTest extends CategoryTest {
   @Test
   @Owner(developers = ARCHIT)
@@ -30,7 +33,7 @@ public class ArtifactConfigToDelegateReqMapperTest extends CategoryTest {
     List<EncryptedDataDetail> encryptedDataDetailList = Collections.emptyList();
 
     DockerArtifactDelegateRequest dockerDelegateRequest = ArtifactConfigToDelegateReqMapper.getDockerDelegateRequest(
-        dockerHubArtifactConfig, connectorDTO, encryptedDataDetailList);
+        dockerHubArtifactConfig, connectorDTO, encryptedDataDetailList, "");
 
     assertThat(dockerDelegateRequest.getDockerConnectorDTO()).isEqualTo(connectorDTO);
     assertThat(dockerDelegateRequest.getEncryptedDataDetails()).isEqualTo(encryptedDataDetailList);
@@ -38,6 +41,7 @@ public class ArtifactConfigToDelegateReqMapperTest extends CategoryTest {
     assertThat(dockerDelegateRequest.getSourceType()).isEqualTo(ArtifactSourceType.DOCKER_REGISTRY);
     assertThat(dockerDelegateRequest.getTagsList()).isNull();
     assertThat(dockerDelegateRequest.getTag()).isEqualTo("");
+    assertThat(dockerDelegateRequest.getConnectorRef()).isEqualTo("");
     assertThat(dockerDelegateRequest.getTagRegex()).isEqualTo("\\*");
   }
 }

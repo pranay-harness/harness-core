@@ -128,7 +128,7 @@ func convertSignature(s *scm.Signature) (*pb.Signature, error) {
 }
 
 // convertCommit converts scm.Commit to protobuf object
-func convertCommit(c *scm.Commit) (*pb.Commit, error) {
+func ConvertCommit(c *scm.Commit) (*pb.Commit, error) {
 	author, err := convertSignature(&c.Author)
 	if err != nil {
 		return nil, err

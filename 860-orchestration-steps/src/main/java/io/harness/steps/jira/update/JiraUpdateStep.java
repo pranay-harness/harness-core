@@ -21,14 +21,13 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.jira.JiraStepHelperService;
+import io.harness.steps.jira.JiraStepUtils;
 import io.harness.supplier.ThrowingSupplier;
 import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @OwnedBy(CDC)
 public class JiraUpdateStep extends TaskExecutableWithRollbackAndRbac<JiraTaskNGResponse> {
@@ -66,10 +65,7 @@ public class JiraUpdateStep extends TaskExecutableWithRollbackAndRbac<JiraTaskNG
             .transitionName(specParameters.getTransitionTo() == null
                     ? null
                     : (String) specParameters.getTransitionTo().getTransitionName().fetchFinalValue())
-            .fields(specParameters.getFields() == null
-                    ? null
-                    : specParameters.getFields().entrySet().stream().collect(
-                        Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue().fetchFinalValue())));
+            .fields(JiraStepUtils.processJiraFieldsInParameters(specParameters.getFields()));
     return jiraStepHelperService.prepareTaskRequest(paramsBuilder, ambiance,
         specParameters.getConnectorRef().getValue(), stepParameters.getTimeout().getValue(), "Jira Task: Update Issue");
   }

@@ -10,13 +10,13 @@ import io.harness.pms.contracts.plan.InitializeSdkRequest;
 import io.harness.pms.contracts.plan.PmsServiceGrpc;
 import io.harness.pms.contracts.plan.Types;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.execution.SdkOrchestrationEventListener;
 import io.harness.pms.sdk.core.execution.listeners.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.interrupt.InterruptEventListener;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
-import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.queue.QueueListenerController;
 
 import com.google.common.util.concurrent.ServiceManager;
@@ -80,6 +80,12 @@ public class PmsSdkInitHelper {
           injector.getInstance(Key.get(ServiceManager.class, Names.named("pmsSDKServiceManager"))).startAsync();
       serviceManager.awaitHealthy();
       Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
+
+      ServiceManager pmsManagedServiceManager =
+          injector.getInstance(Key.get(ServiceManager.class, Names.named("pmsManagedServiceManager"))).startAsync();
+      pmsManagedServiceManager.awaitHealthy();
+      Runtime.getRuntime().addShutdownHook(new Thread(() -> pmsManagedServiceManager.stopAsync().awaitStopped()));
+
       PipelineServiceInfoProvider pipelineServiceInfoProvider = config.getPipelineServiceInfoProviderClass() == null
           ? null
           : injector.getInstance(config.getPipelineServiceInfoProviderClass());
@@ -106,8 +112,8 @@ public class PmsSdkInitHelper {
 
   private static void registerQueueListeners(Injector injector) {
     QueueListenerController queueListenerController = injector.getInstance(Key.get(QueueListenerController.class));
-    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 3);
+    queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 2);
     queueListenerController.register(injector.getInstance(InterruptEventListener.class), 1);
   }
 

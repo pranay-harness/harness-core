@@ -68,6 +68,7 @@ import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -92,7 +93,7 @@ public class ConnectorUtils {
 
   @Inject
   public ConnectorUtils(ConnectorResourceClient connectorResourceClient, SecretUtils secretUtils,
-      SecretManagerClientService secretManagerClientService) {
+      @Named("PRIVILEGED") SecretManagerClientService secretManagerClientService) {
     this.connectorResourceClient = connectorResourceClient;
     this.secretUtils = secretUtils;
     this.secretManagerClientService = secretManagerClientService;

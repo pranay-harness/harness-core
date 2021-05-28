@@ -41,7 +41,7 @@ public class AWSConnectorTestHelper {
   private final String RESOURCES = "RESOURCES";
 
   public final List<CEAwsFeatures> CE_AWS_FEATURES_ENABLED =
-      ImmutableList.of(CEAwsFeatures.CUR, CEAwsFeatures.EVENTS, CEAwsFeatures.OPTIMIZATION);
+      ImmutableList.of(CEAwsFeatures.CUR, CEAwsFeatures.VISIBILITY, CEAwsFeatures.OPTIMIZATION);
 
   public Connector createAWSConnector(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, Scope scope) {
@@ -68,10 +68,15 @@ public class AWSConnectorTestHelper {
   }
 
   public CEAwsConnectorDTO createCEAwsConnectorDTO() {
-    AwsCurAttributesDTO awsCurAttributesDTO =
-        AwsCurAttributesDTO.builder().reportName(REPORT_NAME).s3BucketName(S3_BUCKET_NAME).build();
+    AwsCurAttributesDTO awsCurAttributesDTO = AwsCurAttributesDTO.builder()
+                                                  .reportName(REPORT_NAME)
+                                                  .s3BucketName(S3_BUCKET_NAME)
+                                                  .region(DEFAULT_REGION)
+                                                  .s3Prefix(PREFIX_NAME)
+                                                  .build();
     return CEAwsConnectorDTO.builder()
         .curAttributes(awsCurAttributesDTO)
+        .awsAccountId(AWS_ACCOUNT_ID)
         .crossAccountAccess(createCrossAccountAccessDTO())
         .featuresEnabled(CE_AWS_FEATURES_ENABLED)
         .build();
