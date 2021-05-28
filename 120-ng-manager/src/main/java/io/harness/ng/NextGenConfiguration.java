@@ -14,6 +14,7 @@ import io.harness.file.FileServiceConfiguration;
 import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
+import io.harness.lock.DistributedLockImplementation;
 import io.harness.logstreaming.LogStreamingServiceConfiguration;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.NextGenConfig;
@@ -101,6 +102,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
   @JsonProperty("enableDashboardTimescale") private Boolean enableDashboardTimescale;
   @JsonProperty("yamlSchemaClientConfig") private YamlSchemaClientConfig yamlSchemaClientConfig;
+  @JsonProperty("distributedLockImplementation") private DistributedLockImplementation distributedLockImplementation;
   @JsonProperty("signupNotificationConfiguration")
   private SignupNotificationConfiguration signupNotificationConfiguration;
 

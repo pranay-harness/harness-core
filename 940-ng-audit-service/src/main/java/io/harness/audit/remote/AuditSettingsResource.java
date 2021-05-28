@@ -10,6 +10,7 @@ import io.harness.audit.beans.AuditSettingsDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.security.annotations.InternalApi;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
@@ -41,6 +42,7 @@ public class AuditSettingsResource {
 
   @PUT
   @ApiOperation(value = "Update Audit Settings for an account", nickname = "putAuditSettings")
+  @InternalApi
   public ResponseDTO<AuditSettingsDTO> update(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY)
                                               String accountIdentifier, @NotNull AuditSettingsDTO auditSettingsDTO) {
     AuditSettingsDTO updatedAuditSettingsDTO =
