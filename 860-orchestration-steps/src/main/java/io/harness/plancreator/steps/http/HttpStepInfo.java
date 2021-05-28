@@ -3,6 +3,7 @@ package io.harness.plancreator.steps.http;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.http.HttpHeaderConfig;
 import io.harness.plancreator.steps.TaskSelectorYaml;
@@ -46,6 +47,7 @@ public class HttpStepInfo extends HttpBaseStepInfo implements PMSStepInfo, Visit
 
   List<NGVariable> outputVariables;
   List<HttpHeaderConfig> headers;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
   ParameterField<List<TaskSelectorYaml>> delegateSelectors;
 
   @Builder(builderMethodName = "infoBuilder")
