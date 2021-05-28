@@ -67,8 +67,7 @@ public class ScmManagerGitHelper implements ScmGitHelper {
   }
 
   private void createNewBranchInGit(InfoForGitPush infoForPush, GitEntityInfo gitBranchInfo) {
-    scmClient.createNewBranch(
-        infoForPush.getScmConnector(), infoForPush.getBranch(), infoForPush.getDefaultBranchName());
+    scmClient.createNewBranch(infoForPush.getScmConnector(), infoForPush.getBranch(), gitBranchInfo.getBaseBranch());
   }
 
   private DeleteFileResponse doScmDeleteFile(GitEntityInfo gitBranchInfo, InfoForGitPush infoForPush) {

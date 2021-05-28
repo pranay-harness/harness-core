@@ -114,6 +114,7 @@ public class GitToHarnessProcessorImpl implements GitToHarnessProcessor {
                   .setStatus(FileProcessingStatus.SUCCESS)
                   .build());
         } catch (Exception e) {
+          log.error("Exception {}", changeSet.getFilePath(), e);
           updateFileProcessingResponse(
               FileProcessingStatus.FAILURE, e.getMessage(), processingResponseMap, changeSet.getId());
         }

@@ -1,6 +1,7 @@
 package io.harness.cdng.k8s;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -27,6 +28,7 @@ import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.supplier.ThrowingSupplier;
 import io.harness.tasks.ResponseData;
 
@@ -50,10 +52,25 @@ public class K8sApplyStep extends TaskChainExecutableWithRollback implements K8s
   public TaskChainResponse startChainLink(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     K8sApplyStepParameters k8sApplyStepParameters = (K8sApplyStepParameters) stepElementParameters.getSpec();
-    if (k8sApplyStepParameters.getFilePaths() == null || isEmpty(k8sApplyStepParameters.getFilePaths().getValue())) {
+    validateFilePaths(k8sApplyStepParameters);
+    return k8sStepHelper.startChainLink(this, ambiance, stepElementParameters);
+  }
+
+  private void validateFilePaths(K8sApplyStepParameters k8sApplyStepParameters) {
+    if (ParameterField.isNull(k8sApplyStepParameters.getFilePaths())) {
       throw new InvalidRequestException("File/Folder path must be present");
     }
-    return k8sStepHelper.startChainLink(this, ambiance, stepElementParameters);
+
+    if (isEmpty(getParameterFieldValue(k8sApplyStepParameters.getFilePaths()))) {
+      throw new InvalidRequestException("File/Folder path must be present");
+    }
+
+    List<String> filePaths = getParameterFieldValue(k8sApplyStepParameters.getFilePaths());
+    for (String filePath : filePaths) {
+      if (isEmpty(filePath)) {
+        throw new InvalidRequestException("File/Folder path must be present");
+      }
+    }
   }
 
   @Override

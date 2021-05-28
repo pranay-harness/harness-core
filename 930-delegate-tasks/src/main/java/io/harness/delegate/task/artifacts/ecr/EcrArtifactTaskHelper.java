@@ -91,6 +91,13 @@ public class EcrArtifactTaskHelper {
           artifactTaskResponse = getSuccessTaskResponse(ecrArtifactTaskHandler.getAmazonEcrAuthToken(attributes));
           saveLogs(executionLogCallback, "fetched Authentication token ***");
           break;
+        case GET_IMAGES:
+          saveLogs(executionLogCallback, "Fetching artifact images");
+          artifactTaskResponse = getSuccessTaskResponse(ecrArtifactTaskHandler.getImages(attributes));
+          saveLogs(executionLogCallback,
+              "Fetched " + artifactTaskResponse.getArtifactTaskExecutionResponse().getArtifactImages().size()
+                  + " images");
+          break;
         default:
           saveLogs(executionLogCallback,
               "No corresponding Ecr artifact task type [{}]: " + artifactTaskParameters.toString());

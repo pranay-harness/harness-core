@@ -14,6 +14,7 @@ import static io.harness.ng.core.user.UserMembershipUpdateSource.SYSTEM;
 import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
+import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
 
 import static java.lang.Boolean.FALSE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -57,10 +58,8 @@ import io.harness.resourcegroupclient.ResourceGroupResponse;
 import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.dto.PrincipalType;
-import io.harness.utils.RetryUtils;
 import io.harness.utils.ScopeUtils;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -93,7 +92,6 @@ import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
 import org.springframework.data.mongodb.core.aggregation.SortOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @OwnedBy(PL)
@@ -110,8 +108,7 @@ public class ProjectServiceImpl implements ProjectService {
   private final NgUserService ngUserService;
   private final ResourceGroupClient resourceGroupClient;
   private final AccessControlClient accessControlClient;
-  private final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
-      "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
+  private final RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
 
   @Inject
   public ProjectServiceImpl(ProjectRepository projectRepository, OrganizationService organizationService,

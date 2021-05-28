@@ -6,6 +6,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.user.UserMembershipUpdateSource.SYSTEM;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.remote.client.NGRestUtils.getResponse;
+import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import static java.util.stream.Collectors.toList;
@@ -48,15 +49,12 @@ import io.harness.security.dto.PrincipalType;
 import io.harness.user.remote.UserClient;
 import io.harness.user.remote.UserFilterNG;
 import io.harness.utils.PageUtils;
-import io.harness.utils.RetryUtils;
 import io.harness.utils.ScopeUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.mongodb.MongoCommandException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -73,10 +71,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @Singleton
@@ -98,10 +94,7 @@ public class NgUserServiceImpl implements NgUserService {
   private final OutboxService outboxService;
   private final UserGroupService userGroupService;
 
-  private final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
-      "[Failed] attempt: {}",
-      ImmutableList.of(TransactionException.class, UncategorizedMongoDbException.class, MongoCommandException.class),
-      Duration.ofSeconds(1), 3, log);
+  private final RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
 
   @Inject
   public NgUserServiceImpl(UserClient userClient, UserMembershipRepository userMembershipRepository,

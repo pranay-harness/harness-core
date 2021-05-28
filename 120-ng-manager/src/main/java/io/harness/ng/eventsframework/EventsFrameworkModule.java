@@ -2,6 +2,8 @@ package io.harness.ng.eventsframework;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.eventsframework.EventsFrameworkConstants.GIT_CREATE_BRANCH_EVENT_STREAM;
+import static io.harness.eventsframework.EventsFrameworkConstants.GIT_CREATE_BRANCH_EVENT_STREAM_MAX_TOPIC_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_PR_EVENT_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_PR_EVENT_STREAM_MAX_TOPIC_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_PUSH_EVENT_STREAM;
@@ -81,6 +83,9 @@ public class EventsFrameworkModule extends AbstractModule {
       bind(Producer.class)
           .annotatedWith(Names.named(GIT_PR_EVENT_STREAM))
           .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
+      bind(Producer.class)
+          .annotatedWith(Names.named(GIT_CREATE_BRANCH_EVENT_STREAM))
+          .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
     } else {
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
@@ -150,6 +155,10 @@ public class EventsFrameworkModule extends AbstractModule {
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.SAML_AUTHORIZATION_ASSERTION, NG_MANAGER.getServiceId(),
               redisConfig, EventsFrameworkConstants.DEFAULT_MAX_PROCESSING_TIME,
               EventsFrameworkConstants.DEFAULT_READ_BATCH_SIZE));
+      bind(Producer.class)
+          .annotatedWith(Names.named(GIT_CREATE_BRANCH_EVENT_STREAM))
+          .toInstance(RedisProducer.of(GIT_CREATE_BRANCH_EVENT_STREAM, redisConfig,
+              GIT_CREATE_BRANCH_EVENT_STREAM_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
     }
   }
 }
