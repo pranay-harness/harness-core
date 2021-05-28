@@ -11,6 +11,7 @@ import io.harness.yaml.YamlSchemaTypes;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDP)
@@ -18,6 +19,7 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @AllArgsConstructor
 @TypeAlias("K8sBlueGreenBaseStepInfo")
+@FieldNameConstants(innerTypeName = "K8sBlueGreenBaseStepInfoKeys")
 public class K8sBlueGreenBaseStepInfo {
   @YamlSchemaTypes({string, bool}) ParameterField<Boolean> skipDryRun;
 }

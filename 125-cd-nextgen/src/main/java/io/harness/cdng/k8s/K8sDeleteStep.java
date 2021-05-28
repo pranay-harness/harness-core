@@ -3,6 +3,7 @@ package io.harness.cdng.k8s;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.k8s.DeleteReleaseNameSpec.DeleteReleaseNameSpecKeys;
 import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
@@ -92,7 +93,9 @@ public class K8sDeleteStep extends TaskChainExecutableWithRollback implements K8
             .deleteResourcesType(deleteStepParameters.getDeleteResources().getType())
             .resources(
                 isResourceName ? deleteStepParameters.getDeleteResources().getSpec().getResourceNamesValue() : "")
-            .deleteNamespacesForRelease(deleteStepParameters.deleteResources.getSpec().getDeleteNamespaceValue())
+            .deleteNamespacesForRelease(K8sStepHelper.getParameterFieldBooleanValue(
+                deleteStepParameters.getDeleteResources().getSpec().getDeleteNamespaceParameterField(),
+                DeleteReleaseNameSpecKeys.deleteNamespace, stepParameters))
             .filePaths(
                 isManifestFiles ? deleteStepParameters.getDeleteResources().getSpec().getManifestPathsValue() : "")
             .valuesYamlList(k8sManifestOutcome != null

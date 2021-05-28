@@ -461,7 +461,17 @@
           "type": "object",
           "properties": {
             "deleteNamespace": {
-              "type": "boolean"
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldBoolean"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
             }
           }
         }

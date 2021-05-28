@@ -14,6 +14,7 @@ import static io.harness.k8s.manifest.ManifestHelper.getValuesYamlGitFilePath;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.UnitStatus.RUNNING;
+import static io.harness.ngpipeline.common.ParameterFieldHelper.getBooleanParameterFieldValue;
 import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
 import static io.harness.steps.StepUtils.prepareTaskRequest;
 import static io.harness.validation.Validator.notEmptyCheck;
@@ -94,6 +95,7 @@ import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.delegate.task.k8s.OpenshiftManifestDelegateConfig;
 import io.harness.eraro.Level;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.StepConstants;
 import io.harness.git.model.FetchFilesResult;
@@ -1235,5 +1237,16 @@ public class K8sStepHelper {
 
   public LogCallback getLogCallback(String commandUnitName, Ambiance ambiance, boolean shouldOpenStream) {
     return new NGLogCallback(logStreamingStepClientFactory, ambiance, commandUnitName, shouldOpenStream);
+  }
+
+  public static boolean getParameterFieldBooleanValue(
+      ParameterField<?> fieldValue, String fieldName, StepElementParameters stepElement) {
+    try {
+      return getBooleanParameterFieldValue(fieldValue);
+    } catch (Exception e) {
+      String message = String.format("%s for field %s in %s step with identifier: %s", e.getMessage(), fieldName,
+          stepElement.getType(), stepElement.getIdentifier());
+      throw new InvalidArgumentsException(message);
+    }
   }
 }
