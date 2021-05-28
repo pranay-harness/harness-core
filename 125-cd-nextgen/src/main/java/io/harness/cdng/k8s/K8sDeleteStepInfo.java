@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.executions.steps.StepSpecTypeConstants;
+import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
@@ -14,6 +15,7 @@ import io.harness.walktree.visitor.Visitable;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -33,8 +35,9 @@ public class K8sDeleteStepInfo extends K8sDeleteBaseStepInfo implements CDStepIn
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Builder(builderMethodName = "infoBuilder")
-  public K8sDeleteStepInfo(DeleteResourcesWrapper deleteResources, ParameterField<Boolean> skipDryRun) {
-    super(deleteResources, skipDryRun);
+  public K8sDeleteStepInfo(DeleteResourcesWrapper deleteResources, ParameterField<Boolean> skipDryRun,
+      ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
+    super(deleteResources, skipDryRun, delegateSelectors);
   }
 
   @Override
@@ -52,6 +55,7 @@ public class K8sDeleteStepInfo extends K8sDeleteBaseStepInfo implements CDStepIn
     return K8sDeleteStepParameters.infoBuilder()
         .deleteResources(this.getDeleteResources())
         .skipDryRun(this.getSkipDryRun())
+        .delegateSelectors(this.getDelegateSelectors())
         .build();
   }
 }

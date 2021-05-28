@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.cdng.visitor.helpers.cdstepinfo.K8sScaleStepInfoVisitorHelper;
 import io.harness.executions.steps.StepSpecTypeConstants;
+import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
@@ -15,6 +16,7 @@ import io.harness.walktree.visitor.Visitable;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -35,8 +37,9 @@ public class K8sScaleStepInfo extends K8sScaleBaseStepInfo implements CDStepInfo
 
   @Builder(builderMethodName = "infoBuilder")
   public K8sScaleStepInfo(ParameterField<Boolean> skipDryRun, ParameterField<Boolean> skipSteadyStateCheck,
-      InstanceSelectionWrapper instanceSelection, ParameterField<String> workload) {
-    super(instanceSelection, workload, skipDryRun, skipSteadyStateCheck);
+      InstanceSelectionWrapper instanceSelection, ParameterField<String> workload,
+      ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
+    super(instanceSelection, workload, skipDryRun, skipSteadyStateCheck, delegateSelectors);
   }
 
   @Override
@@ -56,6 +59,7 @@ public class K8sScaleStepInfo extends K8sScaleBaseStepInfo implements CDStepInfo
         .workload(workload)
         .skipDryRun(skipDryRun)
         .skipSteadyStateCheck(skipSteadyStateCheck)
+        .delegateSelectors(delegateSelectors)
         .build();
   }
 }
