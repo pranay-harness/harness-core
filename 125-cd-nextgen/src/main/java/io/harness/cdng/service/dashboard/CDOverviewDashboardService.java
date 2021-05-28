@@ -9,6 +9,8 @@ import io.harness.cdng.Deployment.HealthDeploymentDashboard;
 import io.harness.cdng.Deployment.ServiceDeploymentInfoDTO;
 import io.harness.cdng.Deployment.ServiceDeploymentListInfo;
 import io.harness.cdng.Deployment.ServiceDetailsInfoDTO;
+import io.harness.cdng.Deployment.TimeValuePairListDTO;
+import io.harness.ng.core.activityhistory.dto.TimeGroupType;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 
 @OwnedBy(HarnessTeam.CDC)
@@ -35,4 +37,7 @@ public interface CDOverviewDashboardService {
 
   ServiceDetailsInfoDTO getServiceDetailsList(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       long startTime, long endTime) throws Exception;
+
+  TimeValuePairListDTO<Integer> getServicesGrowthTrend(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, long startTimeInMs, long endTimeInMs, TimeGroupType timeGroupType);
 }
