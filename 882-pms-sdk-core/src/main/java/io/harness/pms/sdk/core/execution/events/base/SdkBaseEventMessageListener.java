@@ -5,22 +5,20 @@ import static io.harness.pms.events.PmsEventFrameworkConstants.SERVICE_NAME;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.event.MessageListener;
-import io.harness.observer.Subject;
 import io.harness.pms.sdk.PmsSdkModuleUtils;
-import io.harness.queue.QueueListenerObserver;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
-import lombok.Getter;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class SdkBaseEventMessageListener<T extends com.google.protobuf.Message> implements MessageListener {
   @Inject @Named(PmsSdkModuleUtils.SDK_SERVICE_NAME) String serviceName;
-  @Getter private final Subject<QueueListenerObserver> queueListenerObserverSubject = new Subject<>();
 
   private final Class<T> entityClass;
 
@@ -41,7 +39,8 @@ public abstract class SdkBaseEventMessageListener<T extends com.google.protobuf.
     return true;
   }
 
-  private T extractEntity(Message message) {
+  @VisibleForTesting
+  T extractEntity(@NonNull Message message) {
     try {
       return (T) entityClass.getMethod("parseFrom", ByteString.class).invoke(null, message.getMessage().getData());
     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
