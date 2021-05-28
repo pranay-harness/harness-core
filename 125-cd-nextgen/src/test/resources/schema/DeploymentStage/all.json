@@ -257,6 +257,10 @@
         },
         {
           "type": "object",
+          "required": [
+            "connectorRef",
+            "gitFetchType"
+          ],
           "properties": {
             "branch": {
               "type": "string"
@@ -889,6 +893,10 @@
         },
         {
           "type": "object",
+          "required": [
+            "connectorRef",
+            "gitFetchType"
+          ],
           "properties": {
             "branch": {
               "type": "string"
@@ -961,6 +969,10 @@
         },
         {
           "type": "object",
+          "required": [
+            "connectorRef",
+            "gitFetchType"
+          ],
           "properties": {
             "branch": {
               "type": "string"
@@ -1040,6 +1052,10 @@
         },
         {
           "type": "object",
+          "required": [
+            "connectorRef",
+            "gitFetchType"
+          ],
           "properties": {
             "branch": {
               "type": "string"
