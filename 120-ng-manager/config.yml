@@ -152,6 +152,8 @@ eventsFramework:
       CATrustStorePath: "/tmp/ca_trust_store"
       CATrustStorePassword: ""
 
+distributedLockImplementation: MONGO
+
 redisLockConfig:
   sentinel: false
   masterName: "test"
@@ -164,6 +166,7 @@ redisLockConfig:
   readMode: MASTER
   nettyThreads: 16
   useScriptCache: true
+  userName: ""
   password: ""
 
 pmsSdkGrpcServerConfig:
@@ -221,6 +224,7 @@ outboxPollConfig:
   initialDelayInSeconds: 5
   pollingIntervalInSeconds: 5
   maximumRetryAttemptsForAnEvent: 7
+  lockId: NextGenManager
 
 segmentConfiguration:
   enabled: false
