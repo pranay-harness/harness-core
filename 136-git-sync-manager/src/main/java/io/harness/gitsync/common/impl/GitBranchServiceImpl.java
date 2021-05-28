@@ -82,6 +82,7 @@ public class GitBranchServiceImpl implements GitBranchService {
         yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, yamlGitConfigIdentifier);
     checkBranchIsNotAlreadyShortlisted(yamlGitConfig.getRepo(), accountIdentifier, branchName);
     updateBranchSyncStatus(accountIdentifier, yamlGitConfig.getRepo(), branchName, SYNCING);
+    log.info("Branch sync started {}", branchName);
     executorService.submit(
         ()
             -> harnessToGitHelperService.processFilesInBranch(accountIdentifier, yamlGitConfigIdentifier,
