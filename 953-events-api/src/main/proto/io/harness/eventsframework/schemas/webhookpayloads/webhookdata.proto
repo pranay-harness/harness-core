@@ -27,6 +27,7 @@ enum WebhookEventType {
   PUSH = 0;
   PR = 1;
   ISSUE_COMMENT = 2;
+  CREATE_BRANCH = 3;
 }
 
 enum WebhookTriggerType {
