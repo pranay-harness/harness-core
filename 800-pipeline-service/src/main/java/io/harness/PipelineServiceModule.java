@@ -159,6 +159,7 @@ public class PipelineServiceModule extends AbstractModule {
             .isPipelineService(true)
             .eventsFrameworkConfiguration(configuration.getEventsFrameworkConfiguration())
             .useRedisForInterrupts(configuration.getUseRedisForInterrupts())
+            .useRedisForEvents(configuration.getUseRedisForOrchestrationEvents())
             .build()));
     install(OrchestrationStepsModule.getInstance(configuration.getOrchestrationStepConfig()));
     install(OrchestrationVisualizationModule.getInstance());

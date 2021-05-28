@@ -12,7 +12,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class SdkRedisConsumerService extends PmsManagedService {
+public class InterruptRedisConsumerService extends PmsManagedService {
   private ExecutorService interruptConsumerExecutorService;
   private ExecutorService orchestrationEventConsumerExecutorService;
   @Inject private InterruptEventRedisConsumer interruptEventRedisConsumer;
@@ -31,9 +31,9 @@ public class SdkRedisConsumerService extends PmsManagedService {
   @Override
   protected void shutDown() throws Exception {
     interruptConsumerExecutorService.shutdown();
-    interruptConsumerExecutorService.awaitTermination(Duration.ofSeconds(30).getSeconds(), TimeUnit.SECONDS);
+    interruptConsumerExecutorService.awaitTermination(Duration.ofSeconds(10).getSeconds(), TimeUnit.SECONDS);
 
     orchestrationEventConsumerExecutorService.shutdown();
-    orchestrationEventConsumerExecutorService.awaitTermination(Duration.ofSeconds(30).getSeconds(), TimeUnit.SECONDS);
+    orchestrationEventConsumerExecutorService.awaitTermination(Duration.ofSeconds(10).getSeconds(), TimeUnit.SECONDS);
   }
 }

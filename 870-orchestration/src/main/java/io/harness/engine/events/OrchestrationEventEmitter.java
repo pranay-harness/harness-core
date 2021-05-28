@@ -3,7 +3,7 @@ package io.harness.engine.events;
 import static io.harness.pms.events.PmsEventFrameworkConstants.ORCHESTRATION_EVENT_PRODUCER;
 import static io.harness.pms.events.PmsEventFrameworkConstants.SERVICE_NAME;
 
-import io.harness.PipelineServiceConfiguration;
+import io.harness.OrchestrationModuleConfig;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Producer;
@@ -39,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class OrchestrationEventEmitter {
-  @Inject private PipelineServiceConfiguration configuration;
+  @Inject private OrchestrationModuleConfig configuration;
 
   @Inject private OrchestrationEventHandlerRegistry handlerRegistry;
   @Inject private QueuePublisher<OrchestrationEvent> orchestrationEventQueue;
@@ -59,7 +59,7 @@ public class OrchestrationEventEmitter {
           ? PmsConstants.INTERNAL_SERVICE_NAME
           : event.getNodeExecutionProto().getNode().getServiceName();
 
-      if (configuration.getUseRedisForOrchestrationEvents()) {
+      if (configuration.isUseRedisForEvents()) {
         eventProducer.send(Message.newBuilder()
                                .putAllMetadata(ImmutableMap.of(SERVICE_NAME, serviceName))
                                .setData(buildProtoEvent(event))

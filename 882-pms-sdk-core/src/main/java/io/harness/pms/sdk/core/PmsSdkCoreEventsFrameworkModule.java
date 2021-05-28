@@ -2,9 +2,11 @@ package io.harness.pms.sdk.core;
 
 import static io.harness.pms.events.PmsEventFrameworkConstants.INTERRUPT_BATCH_SIZE;
 import static io.harness.pms.events.PmsEventFrameworkConstants.INTERRUPT_CONSUMER;
+import static io.harness.pms.events.PmsEventFrameworkConstants.INTERRUPT_LISTENER;
 import static io.harness.pms.events.PmsEventFrameworkConstants.INTERRUPT_TOPIC;
 import static io.harness.pms.events.PmsEventFrameworkConstants.ORCHESTRATION_EVENT_BATCH_SIZE;
 import static io.harness.pms.events.PmsEventFrameworkConstants.ORCHESTRATION_EVENT_CONSUMER;
+import static io.harness.pms.events.PmsEventFrameworkConstants.ORCHESTRATION_EVENT_LISTENER;
 import static io.harness.pms.events.PmsEventFrameworkConstants.ORCHESTRATION_EVENT_TOPIC;
 
 import io.harness.eventsframework.EventsFrameworkConfiguration;
@@ -12,9 +14,18 @@ import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
+import io.harness.ng.core.event.MessageListener;
+import io.harness.pms.sdk.core.execution.events.orchestration.SdkOrchestrationEventEventRedisConsumerService;
+import io.harness.pms.sdk.core.execution.events.orchestration.SdkOrchestrationEventMessageListener;
+import io.harness.pms.sdk.core.interrupt.InterruptEventMessageListener;
+import io.harness.pms.sdk.core.interrupt.InterruptRedisConsumerService;
+import io.harness.pms.utils.PmsManagedService;
 import io.harness.redis.RedisConfig;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Key;
+import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import java.time.Duration;
 
@@ -60,5 +71,15 @@ public class PmsSdkCoreEventsFrameworkModule extends AbstractModule {
           .toInstance(RedisConsumer.of(ORCHESTRATION_EVENT_TOPIC, serviceName, redisConfig, Duration.ofSeconds(10),
               ORCHESTRATION_EVENT_BATCH_SIZE));
     }
+
+    bind(MessageListener.class).annotatedWith(Names.named(INTERRUPT_LISTENER)).to(InterruptEventMessageListener.class);
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(ORCHESTRATION_EVENT_LISTENER))
+        .to(SdkOrchestrationEventMessageListener.class);
+
+    Multibinder<PmsManagedService> serviceBinder =
+        Multibinder.newSetBinder(binder(), PmsManagedService.class, Names.named("pmsManagedServices"));
+    serviceBinder.addBinding().to(Key.get(InterruptRedisConsumerService.class)).in(Singleton.class);
+    serviceBinder.addBinding().to(Key.get(SdkOrchestrationEventEventRedisConsumerService.class)).in(Singleton.class);
   }
 }
