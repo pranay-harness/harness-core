@@ -10,7 +10,7 @@ import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
