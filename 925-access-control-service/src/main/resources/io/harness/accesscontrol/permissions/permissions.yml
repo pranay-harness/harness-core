@@ -321,3 +321,94 @@ permissions:
     includeInAllRoles: false
     allowedScopeLevels:
       - account
+  - identifier: ff_featureflag_edit
+    name: Create or edit Feature Flags
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_featureflag_delete
+    name: Delete Feature Flags
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_featureflag_view
+    name: View Feature Flags
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_targetgroup_view
+    name: View Target Groups
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_targetgroup_edit
+    name: Create or Edit Target Groups
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_targetgroup_delete
+    name: Delete Target Groups
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_environment_targetGroupEdit
+    name: Edit Target Groups
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_target_view
+    name: View Targets
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_environment_apiKeyView
+    name: View Feature Flag Environment API Keys
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_environment_apiKeyCreate
+    name: Create Feature Flag Environment API Keys
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_environment_apiKeyDelete
+    name: Delete Feature Flag API Keys
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_environment_edit
+    name: Edit Feature Flag Environment Configuration
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: ff_environment_view
+    name: View Feature Flag Environment Configuration
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
