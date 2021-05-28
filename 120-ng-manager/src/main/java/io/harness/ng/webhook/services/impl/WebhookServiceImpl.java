@@ -73,8 +73,9 @@ public class WebhookServiceImpl implements WebhookService {
       String repoURL) {
     final ScmConnector scmConnector =
         getScmConnector(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifierRef);
-    if (!isEmpty(repoURL))
+    if (!isEmpty(repoURL)) {
       scmConnector.setUrl(repoURL);
+    }
     final List<EncryptedDataDetail> encryptionDetails =
         getEncryptedDataDetails(accountIdentifier, orgIdentifier, projectIdentifier, scmConnector);
     final ScmGitWebhookTaskParams gitWebhookTaskParams =
