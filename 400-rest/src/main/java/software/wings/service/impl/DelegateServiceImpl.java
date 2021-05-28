@@ -1417,7 +1417,6 @@ public class DelegateServiceImpl implements DelegateService {
       } else {
         params.put("grpcServiceConnectorPort", String.valueOf(0));
       }
-      params.put("managerServiceSecret", String.valueOf(mainConfiguration.getPortal().getJwtNextGenManagerSecret()));
 
       params.put("useCdn", String.valueOf(useCDN));
       params.put("cdnUrl", cdnConfig.getUrl());
