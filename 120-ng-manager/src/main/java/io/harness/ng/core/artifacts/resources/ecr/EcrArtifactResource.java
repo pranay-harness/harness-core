@@ -1,8 +1,12 @@
 package io.harness.ng.core.artifacts.resources.ecr;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
 import io.harness.NGCommonEntityConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.artifact.resources.ecr.dtos.EcrBuildDetailsDTO;
+import io.harness.cdng.artifact.resources.ecr.dtos.EcrListImagesDTO;
 import io.harness.cdng.artifact.resources.ecr.dtos.EcrRequestDTO;
 import io.harness.cdng.artifact.resources.ecr.dtos.EcrResponseDTO;
 import io.harness.cdng.artifact.resources.ecr.service.EcrResourceService;
@@ -47,6 +51,7 @@ import lombok.extern.slf4j.Slf4j;
     })
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(PIPELINE)
 public class EcrArtifactResource {
   private final EcrResourceService ecrResourceService;
   private final PipelineServiceClient pipelineServiceClient;
@@ -174,5 +179,20 @@ public class EcrArtifactResource {
       }
     }
     return ResponseDTO.newResponse(isValidArtifact);
+  }
+
+  @GET
+  @Path("getImages")
+  @ApiOperation(value = "Gets ecr images", nickname = "getImagesListForEcr")
+  public ResponseDTO<EcrListImagesDTO> getImages(@NotNull @QueryParam("region") String region,
+      @NotNull @QueryParam("connectorRef") String ecrConnectorIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    IdentifierRef connectorRef =
+        IdentifierRefHelper.getIdentifierRef(ecrConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);
+    EcrListImagesDTO ecrListImagesDTO =
+        ecrResourceService.getImages(connectorRef, region, orgIdentifier, projectIdentifier);
+    return ResponseDTO.newResponse(ecrListImagesDTO);
   }
 }
