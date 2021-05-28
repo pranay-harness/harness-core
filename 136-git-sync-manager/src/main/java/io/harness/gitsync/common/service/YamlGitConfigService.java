@@ -38,4 +38,8 @@ public interface YamlGitConfigService {
   boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String identifier);
 
   Boolean isGitSyncEnabled(String accountIdentifier, String organizationIdentifier, String projectIdentifier);
+
+  Boolean isRepoExists(String repo);
+
+  Boolean isRepoAndBranchExists(String repo, String branch);
 }

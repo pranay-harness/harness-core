@@ -366,4 +366,14 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     return yamlGitConfigRepository.existsByAccountIdAndOrgIdentifierAndProjectIdentifier(
         accountIdentifier, nullIfEmpty(organizationIdentifier), nullIfEmpty(projectIdentifier));
   }
+
+  @Override
+  public Boolean isRepoExists(String repo) {
+    return yamlGitConfigRepository.existsByRepo(repo);
+  }
+
+  @Override
+  public Boolean isRepoAndBranchExists(String repo, String branch) {
+    return yamlGitConfigRepository.existsByRepoAndBranch(repo, branch);
+  }
 }

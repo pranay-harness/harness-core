@@ -31,4 +31,8 @@ public interface YamlGitConfigRepository extends CrudRepository<YamlGitConfig, S
 
   List<YamlGitConfig> findByAccountIdAndOrgIdentifierAndProjectIdentifierAndScopeOrderByCreatedAtDesc(
       String accountId, String orgIdentifier, String projectIdentifier, Scope scope);
+
+  Boolean existsByRepo(String repo);
+
+  Boolean existsByRepoAndBranch(String repo, String branch);
 }
