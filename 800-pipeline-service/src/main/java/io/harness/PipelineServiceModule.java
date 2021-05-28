@@ -385,4 +385,12 @@ public class PipelineServiceModule extends AbstractModule {
     return configuration.getIteratorsConfig() == null ? PipelineServiceIteratorsConfig.builder().build()
                                                       : configuration.getIteratorsConfig();
   }
+
+  @Provides
+  @Singleton
+  @Named("PipelineExecutorService")
+  public ExecutorService pipelineExecutorService() {
+    return ThreadPool.create(
+        5, 10, 10, TimeUnit.SECONDS, new ThreadFactoryBuilder().setNameFormat("PipelineExecutorService-%d").build());
+  }
 }
