@@ -118,7 +118,8 @@ public interface InstanceService
    * @param infraMappingName the infra mapping name
    * @param timestamp        failure sync timestamp
    * @param errorMsg         failure reason
-   * @return
+   * @return false if it is repetitive failures and sync should be stopped
+   *         true if it is not repetitive failures and sync should continue
    */
   boolean handleSyncFailure(String appId, String serviceId, String envId, String infraMappingId,
       String infraMappingName, long timestamp, String errorMsg);
