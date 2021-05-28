@@ -8,9 +8,9 @@ rules_pmd_dependencies()
 
 http_archive(
     name = "com_github_bazelbuild_buildtools",
-    sha256 = "58bbb9b06e14d71c620b7e2206a6d83668b602e1d51374b7bd264f9cc462d4de",
-    strip_prefix = "buildtools-master",
-    url = "https://github.com/bazelbuild/buildtools/archive/master.zip",
+    sha256 = "932160d5694e688cb7a05ac38efba4b9a90470c75f39716d85fb1d2f95eec96d",
+    strip_prefix = "buildtools-4.0.1",
+    url = "https://github.com/bazelbuild/buildtools/archive/refs/tags/4.0.1.zip",
 )
 
 # Download the Go rules
@@ -219,14 +219,6 @@ go_repository(
     importpath = "github.com/stretchr/objx",
     sum = "h1:Hbg2NidpLE8veEBkEZTL3CvlkUIVzuU9jDplZO54c48=",
     version = "v0.2.0",
-)
-
-http_archive(
-    name = "rules_spring",
-    sha256 = "2178aa714516fe3ba8e88663aef8e183e6ab28c8bf1f9da96f76533ee86a47b4",
-    urls = [
-        "https://github.com/salesforce/rules_spring/releases/download/2.1.0/rules-spring-2.1.0.zip",
-    ],
 )
 
 go_repository(
@@ -1943,7 +1935,6 @@ maven_install(
         "org.slf4j:log4j-over-slf4j:1.7.29",
         "org.slf4j:slf4j-api:1.7.29",
         "org.sonatype.nexus.plugins:nexus-restlet1x-model:2.14.18-01",
-        "org.springframework.boot:spring-boot-loader:2.4.5",
         "org.springframework.data:spring-data-commons:2.2.7.RELEASE",
         "org.springframework.data:spring-data-mongodb:2.2.7.RELEASE",
         "org.springframework.guice:spring-guice:1.1.3.RELEASE",
