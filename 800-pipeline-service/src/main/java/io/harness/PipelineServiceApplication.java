@@ -358,6 +358,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .engineAdvisers(PipelineServiceUtilAdviserRegistrar.getEngineAdvisers())
         .engineEventHandlersMap(PmsOrchestrationEventRegistrar.getEngineEventHandlers())
         .executionSummaryModuleInfoProviderClass(PmsExecutionServiceInfoProvider.class)
+        .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
         .build();
   }
 

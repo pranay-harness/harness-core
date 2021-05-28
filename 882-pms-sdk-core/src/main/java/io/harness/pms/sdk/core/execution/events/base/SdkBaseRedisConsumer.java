@@ -22,12 +22,12 @@ public abstract class SdkBaseRedisConsumer implements Runnable {
   @Override
   public void run() {
     log.info("Started the Consumer {}", this.getClass().getSimpleName());
-    try {
-      while (!Thread.currentThread().isInterrupted()) {
+    while (!Thread.currentThread().isInterrupted()) {
+      try {
         pollAndProcessMessages();
+      } catch (Exception ex) {
+        log.error("Consumer {} unexpectedly stopped", this.getClass().getSimpleName(), ex);
       }
-    } catch (Exception ex) {
-      log.error("Consumer {} unexpectedly stopped", this.getClass().getSimpleName(), ex);
     }
   }
 

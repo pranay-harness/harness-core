@@ -243,3 +243,4 @@ replace_key_value orchestrationStepConfig.ffServerBaseUrl "$FF_SERVER_BASE_URL"
 replace_key_value shouldDeployWithGitSync "$ENABLE_GIT_SYNC"
 
 replace_key_value useRedisForInterrupts "$USE_REDIS_FOR_INTERRUPTS"
+replace_key_value useRedisForOrchestrationEvents "$USE_REDIS_FOR_ORCHESTRATION_EVENTS"
