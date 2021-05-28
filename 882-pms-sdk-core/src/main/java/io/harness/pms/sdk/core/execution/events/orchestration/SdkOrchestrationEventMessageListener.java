@@ -45,7 +45,7 @@ public class SdkOrchestrationEventMessageListener extends SdkBaseEventMessageLis
     if (message != null && message.hasMessage()) {
       Map<String, String> metadataMap = message.getMessage().getMetadataMap();
       if (metadataMap != null && metadataMap.get(SERVICE_NAME) != null) {
-        if (metadataMap.get(SERVICE_NAME).equals(PmsConstants.INTERNAL_SERVICE_NAME)) {
+        if (serviceName.equals(PmsConstants.INTERNAL_SERVICE_NAME)) {
           return true;
         }
         return serviceName.equals(metadataMap.get(SERVICE_NAME));

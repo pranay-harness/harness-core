@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SdkOrchestrationEventRedisConsumer extends SdkBaseRedisConsumer {
   @Inject
   public SdkOrchestrationEventRedisConsumer(@Named(ORCHESTRATION_EVENT_CONSUMER) Consumer redisConsumer,
-      @Named(ORCHESTRATION_EVENT_LISTENER) MessageListener interruptEventMessageListener) {
-    super(redisConsumer, interruptEventMessageListener);
+      @Named(ORCHESTRATION_EVENT_LISTENER) MessageListener sdkOrchestrationEventMessageListener) {
+    super(redisConsumer, sdkOrchestrationEventMessageListener);
   }
 }
