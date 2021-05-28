@@ -286,16 +286,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     newConnector.setCreatedAt(existingConnector.getCreatedAt());
     newConnector.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
     newConnector.setActivityDetails(existingConnector.getActivityDetails());
-    if (existingConnector.getHeartbeatPerpetualTaskId() == null
-        && !harnessManagedConnectorHelper.isHarnessManagedSecretManager(connector)) {
-      PerpetualTaskId connectorHeartbeatTaskId =
-          connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier, existingConnector.getOrgIdentifier(),
-              existingConnector.getProjectIdentifier(), existingConnector.getIdentifier());
-      newConnector.setHeartbeatPerpetualTaskId(
-          connectorHeartbeatTaskId == null ? null : connectorHeartbeatTaskId.getId());
-    } else {
-      newConnector.setHeartbeatPerpetualTaskId(existingConnector.getHeartbeatPerpetualTaskId());
-    }
+
     Connector updatedConnector;
     try {
       updatedConnector = connectorRepository.save(newConnector, connectorRequest, ChangeType.MODIFY);
@@ -303,6 +294,22 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(format("Connector [%s] already exists", existingConnector.getIdentifier()));
     }
+
+    if (existingConnector.getIsFromDefaultBranch() == null || existingConnector.getIsFromDefaultBranch()) {
+      if (existingConnector.getHeartbeatPerpetualTaskId() == null
+          && !harnessManagedConnectorHelper.isHarnessManagedSecretManager(connector)) {
+        PerpetualTaskId connectorHeartbeatTaskId = connectorHeartbeatService.createConnectorHeatbeatTask(
+            accountIdentifier, existingConnector.getOrgIdentifier(), existingConnector.getProjectIdentifier(),
+            existingConnector.getIdentifier());
+        newConnector.setHeartbeatPerpetualTaskId(
+            connectorHeartbeatTaskId == null ? null : connectorHeartbeatTaskId.getId());
+      } else {
+        connectorHeartbeatService.resetPerpetualTask(
+            accountIdentifier, existingConnector.getHeartbeatPerpetualTaskId());
+        newConnector.setHeartbeatPerpetualTaskId(existingConnector.getHeartbeatPerpetualTaskId());
+      }
+    }
+
     return connectorMapper.writeDTO(updatedConnector);
   }
 
