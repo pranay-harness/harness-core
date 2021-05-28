@@ -12,6 +12,7 @@ import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDP)
@@ -19,6 +20,7 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @AllArgsConstructor
 @TypeAlias("K8sCanaryBaseStepInfo")
+@FieldNameConstants(innerTypeName = "K8sCanaryBaseStepInfoKeys")
 public class K8sCanaryBaseStepInfo {
   @NotNull InstanceSelectionWrapper instanceSelection;
   @YamlSchemaTypes({string, bool}) ParameterField<Boolean> skipDryRun;
