@@ -15,6 +15,7 @@ import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.ConfigurationType;
 import io.harness.cvng.client.CVNGServiceClient;
+import io.harness.delegate.authenticator.DelegateTokenAuthenticatorImpl;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
@@ -45,6 +46,7 @@ import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rest.RestResponse;
 import io.harness.scm.ScmSecret;
 import io.harness.security.AsymmetricDecryptor;
+import io.harness.security.DelegateTokenAuthenticator;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
@@ -290,6 +292,14 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
         bind(CVNGServiceClient.class).toInstance(mockCVNGServiceClient);
       }
     });
+
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(DelegateTokenAuthenticator.class).to(DelegateTokenAuthenticatorImpl.class).in(Singleton.class);
+      }
+    });
+
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
     modules.add(new CapabilityModule());
