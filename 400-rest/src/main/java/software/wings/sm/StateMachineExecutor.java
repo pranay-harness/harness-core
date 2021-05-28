@@ -114,6 +114,7 @@ import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DelegateTaskServiceClassic;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.StateExecutionService;
@@ -192,6 +193,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   @Inject private AppService appService;
   @Inject private DelayEventHelper delayEventHelper;
   @Inject private DelegateService delegateService;
+  @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
   @Inject private ExecutionInterruptManager executionInterruptManager;
   @Inject @Named("stateMachineExecutor-handler") private ExecutorService stateMachineExecutor;
   @Inject private ExecutorService executorService;
@@ -1505,7 +1507,7 @@ public class StateMachineExecutor implements StateInspectionListener {
         notNullCheck("context.getApp()", context.getApp());
         if (finalStatus == ABORTED) {
           try {
-            delegateService.abortTask(context.getApp().getAccountId(), delegateTaskId);
+            delegateTaskServiceClassic.abortTask(context.getApp().getAccountId(), delegateTaskId);
           } catch (Exception e) {
             log.error(
                 "[AbortInstance] Error in ABORTING WorkflowExecution {}. Error in aborting delegate task : {}. Reason : {}",
@@ -1513,7 +1515,7 @@ public class StateMachineExecutor implements StateInspectionListener {
           }
         } else {
           try {
-            String errorMsg = delegateService.expireTask(context.getApp().getAccountId(), delegateTaskId);
+            String errorMsg = delegateTaskServiceClassic.expireTask(context.getApp().getAccountId(), delegateTaskId);
             if (isNotBlank(errorMsg)) {
               errorMsgBuilder.append(errorMsg);
             }

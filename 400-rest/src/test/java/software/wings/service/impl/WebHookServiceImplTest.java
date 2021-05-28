@@ -1249,7 +1249,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = INDER)
   @Category(UnitTests.class)
-  public void shouldValidateGithubWebHook_WebHookAuthenticationFailed() {
+  public void shouldValidateGithubWebHook_WebHookAuthenticationFailed() throws InterruptedException {
     Trigger webhookTrigger = getGithubTriggerWithSecret();
     doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
     doReturn("x-hub-signature-256").when(httpHeaders).getHeaderString(X_HUB_SIGNATURE_256);
@@ -1274,7 +1274,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = INDER)
   @Category(UnitTests.class)
-  public void shouldValidateGithubWebHook_WebHookSecretsMismatch() {
+  public void shouldValidateGithubWebHook_WebHookSecretsMismatch() throws InterruptedException {
     Trigger webhookTrigger = getGithubTriggerWithSecret();
     doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
     doReturn("x-hub-signature-256").when(httpHeaders).getHeaderString(X_HUB_SIGNATURE_256);

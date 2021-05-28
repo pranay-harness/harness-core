@@ -30,6 +30,7 @@ import io.harness.persistence.HPersistence;
 import software.wings.service.impl.DelegateObserver;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DelegateTaskServiceClassic;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -57,6 +58,7 @@ public class BlockingCapabilityPermissionsRecordHandler
   @Inject private AssignDelegateService assignDelegateService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private CapabilityService capabilityService;
+  @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
 
   PersistenceIterator<CapabilityTaskSelectionDetails> capSubjectPermissionIterator;
 
@@ -119,7 +121,7 @@ public class BlockingCapabilityPermissionsRecordHandler
                 persistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
 
             if (processingPermission != null) {
-              delegateService.executeBatchCapabilityCheckTask(taskSelectionDetails.getAccountId(),
+              delegateTaskServiceClassic.executeBatchCapabilityCheckTask(taskSelectionDetails.getAccountId(),
                   capabilitySubjectPermission.getDelegateId(), Arrays.asList(capabilitySubjectPermission),
                   taskSelectionDetails.getUuid());
 
