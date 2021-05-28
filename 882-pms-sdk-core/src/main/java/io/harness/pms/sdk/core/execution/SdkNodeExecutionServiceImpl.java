@@ -76,8 +76,10 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
     SdkResponseEvent sdkResponseEvent =
         SdkResponseEvent.builder()
             .sdkResponseEventType(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE)
-            .sdkResponseEventRequest(
-                SdkResponseEventRequest.newBuilder().setAddExecutableResponseRequest(builder.build()).build())
+            .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
+                                         .setNodeExecutionId(nodeExecutionId)
+                                         .setAddExecutableResponseRequest(builder.build())
+                                         .build())
             .build();
     sdkResponseEventPublisher.send(sdkResponseEvent);
   }
@@ -88,12 +90,13 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
                                                     .setNodeExecutionId(nodeExecutionId)
                                                     .setStepResponse(stepResponse)
                                                     .build();
-    SdkResponseEvent sdkResponseEvent =
-        SdkResponseEvent.builder()
-            .sdkResponseEventType(SdkResponseEventType.HANDLE_STEP_RESPONSE)
-            .sdkResponseEventRequest(
-                SdkResponseEventRequest.newBuilder().setHandleStepResponseRequest(responseRequest).build())
-            .build();
+    SdkResponseEvent sdkResponseEvent = SdkResponseEvent.builder()
+                                            .sdkResponseEventType(SdkResponseEventType.HANDLE_STEP_RESPONSE)
+                                            .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
+                                                                         .setNodeExecutionId(nodeExecutionId)
+                                                                         .setHandleStepResponseRequest(responseRequest)
+                                                                         .build())
+                                            .build();
 
     sdkResponseEventPublisher.send(sdkResponseEvent);
   }
@@ -109,8 +112,10 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
     SdkResponseEvent sdkResponseEvent =
         SdkResponseEvent.builder()
             .sdkResponseEventType(SdkResponseEventType.RESUME_NODE_EXECUTION)
-            .sdkResponseEventRequest(
-                SdkResponseEventRequest.newBuilder().setResumeNodeExecutionRequest(resumeNodeExecutionRequest).build())
+            .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
+                                         .setNodeExecutionId(nodeExecutionId)
+                                         .setResumeNodeExecutionRequest(resumeNodeExecutionRequest)
+                                         .build())
             .build();
 
     sdkResponseEventPublisher.send(sdkResponseEvent);
@@ -133,8 +138,10 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
 
     sdkResponseEventPublisher.send(
         SdkResponseEvent.builder()
-            .sdkResponseEventRequest(
-                SdkResponseEventRequest.newBuilder().setFacilitatorResponseRequest(facilitatorResponseRequest).build())
+            .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
+                                         .setNodeExecutionId(nodeExecutionId)
+                                         .setFacilitatorResponseRequest(facilitatorResponseRequest)
+                                         .build())
             .sdkResponseEventType(SdkResponseEventType.HANDLE_FACILITATE_RESPONSE)
             .build());
   }
@@ -146,6 +153,7 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
         SdkResponseEvent.builder()
             .sdkResponseEventType(SdkResponseEventType.HANDLE_ADVISER_RESPONSE)
             .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
+                                         .setNodeExecutionId(nodeExecutionId)
                                          .setAdviserResponseRequest(AdviserResponseRequest.newBuilder()
                                                                         .setAdviserResponse(adviserResponse)
                                                                         .setNodeExecutionId(nodeExecutionId)

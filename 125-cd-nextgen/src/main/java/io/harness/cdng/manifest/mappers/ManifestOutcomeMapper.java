@@ -9,6 +9,7 @@ import static io.harness.cdng.manifest.ManifestType.OpenshiftTemplate;
 import static io.harness.cdng.manifest.ManifestType.VALUES;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.ngpipeline.common.ParameterFieldHelper.getBooleanParameterFieldValue;
 import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
 
 import static java.lang.String.format;
@@ -28,9 +29,13 @@ import io.harness.cdng.manifest.yaml.S3StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.cdng.manifest.yaml.kinds.HelmChartManifest;
+import io.harness.cdng.manifest.yaml.kinds.HelmChartManifest.HelmChartManifestKeys;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
+import io.harness.cdng.manifest.yaml.kinds.K8sManifest.K8sManifestKeys;
 import io.harness.cdng.manifest.yaml.kinds.KustomizeManifest;
+import io.harness.cdng.manifest.yaml.kinds.KustomizeManifest.KustomizeManifestKeys;
 import io.harness.cdng.manifest.yaml.kinds.OpenshiftManifest;
+import io.harness.cdng.manifest.yaml.kinds.OpenshiftManifest.OpenshiftManifestKeys;
 import io.harness.cdng.manifest.yaml.kinds.OpenshiftParamManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
 import io.harness.delegate.beans.storeconfig.FetchType;
@@ -74,8 +79,8 @@ public class ManifestOutcomeMapper {
 
   private K8sManifestOutcome getK8sOutcome(ManifestAttributes manifestAttributes) {
     K8sManifest k8sManifest = (K8sManifest) manifestAttributes;
-    boolean skipResourceVersioning = !ParameterField.isNull(k8sManifest.getSkipResourceVersioning())
-        && k8sManifest.getSkipResourceVersioning().getValue();
+    boolean skipResourceVersioning = getBooleanFieldValue(k8sManifest.getSkipResourceVersioning(),
+        K8sManifestKeys.skipResourceVersioning, manifestAttributes.getIdentifier());
     validateManifestStoreConfig(k8sManifest.getStoreConfig(), manifestAttributes);
 
     return K8sManifestOutcome.builder()
@@ -96,8 +101,8 @@ public class ManifestOutcomeMapper {
 
   private HelmChartManifestOutcome getHelmChartOutcome(ManifestAttributes manifestAttributes) {
     HelmChartManifest helmChartManifest = (HelmChartManifest) manifestAttributes;
-    boolean skipResourceVersioning = !ParameterField.isNull(helmChartManifest.getSkipResourceVersioning())
-        && helmChartManifest.getSkipResourceVersioning().getValue();
+    boolean skipResourceVersioning = getBooleanFieldValue(helmChartManifest.getSkipResourceVersioning(),
+        HelmChartManifestKeys.skipResourceVersioning, manifestAttributes.getIdentifier());
     String manifestStoreKind = helmChartManifest.getStoreConfig().getKind();
     String chartName = null;
     String chartVersion = null;
@@ -140,8 +145,8 @@ public class ManifestOutcomeMapper {
 
   private KustomizeManifestOutcome getKustomizeOutcome(ManifestAttributes manifestAttributes) {
     KustomizeManifest kustomizeManifest = (KustomizeManifest) manifestAttributes;
-    boolean skipResourceVersioning = !ParameterField.isNull(kustomizeManifest.getSkipResourceVersioning())
-        && kustomizeManifest.getSkipResourceVersioning().getValue();
+    boolean skipResourceVersioning = getBooleanFieldValue(kustomizeManifest.getSkipResourceVersioning(),
+        KustomizeManifestKeys.skipResourceVersioning, manifestAttributes.getIdentifier());
     String pluginPath =
         !ParameterField.isNull(kustomizeManifest.getPluginPath()) ? kustomizeManifest.getPluginPath().getValue() : null;
     validateManifestStoreConfig(kustomizeManifest.getStoreConfig(), manifestAttributes);
@@ -155,8 +160,8 @@ public class ManifestOutcomeMapper {
 
   private OpenshiftManifestOutcome getOpenshiftOutcome(ManifestAttributes manifestAttributes) {
     OpenshiftManifest openshiftManifest = (OpenshiftManifest) manifestAttributes;
-    boolean skipResourceVersioning = !ParameterField.isNull(openshiftManifest.getSkipResourceVersioning())
-        && openshiftManifest.getSkipResourceVersioning().getValue();
+    boolean skipResourceVersioning = getBooleanFieldValue(openshiftManifest.getSkipResourceVersioning(),
+        OpenshiftManifestKeys.skipResourceVersioning, manifestAttributes.getIdentifier());
     validateManifestStoreConfig(openshiftManifest.getStoreConfig(), manifestAttributes);
 
     return OpenshiftManifestOutcome.builder()
@@ -269,6 +274,16 @@ public class ManifestOutcomeMapper {
           || isEmpty(getParameterFieldValue(gcsStoreConfig.getBucketName()))) {
         throw new InvalidArgumentsException(Pair.of("bucketName", "Cannot be empty or null for Gcs store"));
       }
+    }
+  }
+
+  private boolean getBooleanFieldValue(ParameterField<?> fieldValue, String fieldName, String manifestId) {
+    try {
+      return getBooleanParameterFieldValue(fieldValue);
+    } catch (Exception e) {
+      String message =
+          String.format("%s for field %s in manifest with identifier: %s", e.getMessage(), fieldName, manifestId);
+      throw new InvalidArgumentsException(message);
     }
   }
 }

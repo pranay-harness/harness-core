@@ -11,6 +11,7 @@ import static software.wings.beans.LogColor.Gray;
 import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
+import static software.wings.core.ssh.executors.WinRmExecutorHelper.getScriptExecutingCommand;
 import static software.wings.sm.StateExecutionData.SECRET_MASK;
 
 import static java.lang.String.format;
@@ -106,7 +107,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
         psScriptFile = getPSScriptFile();
         exitCode = session.executeCommandsList(
             WinRmExecutorHelper.constructPSScriptWithCommands(command, psScriptFile, powershell), outputWriter,
-            errorWriter, false);
+            errorWriter, false, getScriptExecutingCommand(psScriptFile, powershell));
       } else {
         exitCode = session.executeCommandString(
             WinRmExecutorHelper.psWrappedCommandWithEncoding(command, powershell), outputWriter, errorWriter, false);
@@ -191,7 +192,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
 
         exitCode = session.executeCommandsList(
             WinRmExecutorHelper.constructPSScriptWithCommands(command, psScriptFile, powershell), outputWriter,
-            errorWriter, false);
+            errorWriter, false, getScriptExecutingCommand(psScriptFile, powershell));
       } else {
         exitCode = session.executeCommandString(
             WinRmExecutorHelper.psWrappedCommandWithEncoding(command, powershell), outputWriter, errorWriter, false);
@@ -245,7 +246,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
         psScriptFile = getPSScriptFile();
         exitCode = session.executeCommandsList(
             WinRmExecutorHelper.constructPSScriptWithCommands(commandWithoutEncoding, psScriptFile, powershell),
-            outputAccumulator, errorAccumulator, true);
+            outputAccumulator, errorAccumulator, true, getScriptExecutingCommand(psScriptFile, powershell));
       } else {
         exitCode = session.executeCommandString(WinRmExecutorHelper.psWrappedCommandWithEncoding(command, powershell),
             outputAccumulator, errorAccumulator, true);

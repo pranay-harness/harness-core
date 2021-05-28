@@ -5,6 +5,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.notification.PipelineEventType;
 import io.harness.notification.bean.NotificationChannelWrapper;
@@ -13,7 +14,6 @@ import io.harness.notification.bean.PipelineEvent;
 import io.harness.notification.channeldetails.NotificationChannel;
 import io.harness.notification.notificationclient.NotificationClient;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.utils.AmbianceUtils;
@@ -41,27 +41,26 @@ public class NotificationHelper {
   @Inject PlanExecutionService planExecutionService;
   @Inject PipelineServiceConfiguration pipelineServiceConfiguration;
 
-  public Optional<io.harness.notification.PipelineEventType> getEventTypeForStage(
-      NodeExecutionProto nodeExecutionProto) {
-    if (!isStageNode(nodeExecutionProto)) {
+  public Optional<PipelineEventType> getEventTypeForStage(NodeExecution nodeExecution) {
+    if (!isStageNode(nodeExecution)) {
       return Optional.empty();
     }
-    if (nodeExecutionProto.getStatus() == Status.SUCCEEDED) {
+    if (nodeExecution.getStatus() == Status.SUCCEEDED) {
       return Optional.of(io.harness.notification.PipelineEventType.STAGE_SUCCESS);
     }
-    if (StatusUtils.brokeStatuses().contains(nodeExecutionProto.getStatus())) {
+    if (StatusUtils.brokeStatuses().contains(nodeExecution.getStatus())) {
       return Optional.of(io.harness.notification.PipelineEventType.STAGE_FAILED);
     }
     return Optional.empty();
   }
 
-  public boolean isStageNode(NodeExecutionProto nodeExecutionProto) {
-    return Objects.equals(nodeExecutionProto.getNode().getGroup(), StepOutcomeGroup.STAGE.name());
+  public boolean isStageNode(NodeExecution nodeExecution) {
+    return Objects.equals(nodeExecution.getNode().getGroup(), StepOutcomeGroup.STAGE.name());
   }
 
-  public void sendNotification(Ambiance ambiance, io.harness.notification.PipelineEventType pipelineEventType,
-      NodeExecutionProto nodeExecutionProto) {
-    String identifier = nodeExecutionProto != null ? nodeExecutionProto.getNode().getIdentifier() : "";
+  public void sendNotification(
+      Ambiance ambiance, io.harness.notification.PipelineEventType pipelineEventType, NodeExecution nodeExecution) {
+    String identifier = nodeExecution != null ? nodeExecution.getNode().getIdentifier() : "";
     String accountId = AmbianceUtils.getAccountId(ambiance);
     String orgIdentifier = AmbianceUtils.getOrgIdentifier(ambiance);
     String projectIdentifier = AmbianceUtils.getProjectIdentifier(ambiance);
@@ -82,13 +81,13 @@ public class NotificationHelper {
     }
 
     sendNotificationInternal(notificationRules, pipelineEventType, identifier, accountId,
-        constructDummyTemplateData(ambiance, pipelineEventType, nodeExecutionProto, identifier), orgIdentifier,
+        constructDummyTemplateData(ambiance, pipelineEventType, nodeExecution, identifier), orgIdentifier,
         projectIdentifier);
   }
 
   private void sendNotificationInternal(List<NotificationRules> notificationRulesList,
-      io.harness.notification.PipelineEventType pipelineEventType, String identifier, String accountIdentifier,
-      String notificationContent, String orgIdentifier, String projectIdentifier) {
+      PipelineEventType pipelineEventType, String identifier, String accountIdentifier, String notificationContent,
+      String orgIdentifier, String projectIdentifier) {
     for (NotificationRules notificationRules : notificationRulesList) {
       if (!notificationRules.isEnabled()) {
         continue;
@@ -134,8 +133,8 @@ public class NotificationHelper {
     return basicPipeline.getNotificationRules();
   }
 
-  private String constructDummyTemplateData(Ambiance ambiance, PipelineEventType pipelineEventType,
-      NodeExecutionProto nodeExecutionProto, String identifier) {
+  private String constructDummyTemplateData(
+      Ambiance ambiance, PipelineEventType pipelineEventType, NodeExecution nodeExecution, String identifier) {
     PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
     String projectId = AmbianceUtils.getProjectIdentifier(ambiance);
     String pipelineId = ambiance.getMetadata().getPipelineIdentifier();
@@ -150,12 +149,12 @@ public class NotificationHelper {
             .append("\nStarted At: ")
             .append(new SimpleDateFormat(DEFAULT_TIME_FORMAT).format(new Date(planExecution.getStartTs())));
 
-    if (pipelineEventType.getLevel().equals("Stage") && nodeExecutionProto != null) {
+    if (pipelineEventType.getLevel().equals("Stage") && nodeExecution != null) {
       sb.append("\nStage: ").append(identifier);
-      sb.append("\nStatus: ").append(ExecutionStatus.getExecutionStatus(nodeExecutionProto.getStatus()));
-    } else if (pipelineEventType.getLevel().equals("Step") && nodeExecutionProto != null) {
+      sb.append("\nStatus: ").append(ExecutionStatus.getExecutionStatus(nodeExecution.getStatus()));
+    } else if (pipelineEventType.getLevel().equals("Step") && nodeExecution != null) {
       sb.append("\nStep: ").append(identifier);
-      sb.append("\nStatus: ").append(ExecutionStatus.getExecutionStatus(nodeExecutionProto.getStatus()));
+      sb.append("\nStatus: ").append(ExecutionStatus.getExecutionStatus(nodeExecution.getStatus()));
     } else {
       sb.append("\nStatus: ").append(ExecutionStatus.getExecutionStatus(planExecution.getStatus()));
     }

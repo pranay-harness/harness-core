@@ -3,6 +3,7 @@ package io.harness.cdng.k8s;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.k8s.K8sBlueGreenBaseStepInfo.K8sBlueGreenBaseStepInfoKeys;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
@@ -28,7 +29,6 @@ import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.supplier.ThrowingSupplier;
 import io.harness.tasks.ResponseData;
 
@@ -70,8 +70,8 @@ public class K8sBlueGreenStep extends TaskChainExecutableWithRollback implements
     String releaseName = k8sStepHelper.getReleaseName(infrastructure);
     K8sBlueGreenStepParameters k8sBlueGreenStepParameters =
         (K8sBlueGreenStepParameters) stepElementParameters.getSpec();
-    boolean skipDryRun = !ParameterField.isNull(k8sBlueGreenStepParameters.getSkipDryRun())
-        && k8sBlueGreenStepParameters.getSkipDryRun().getValue();
+    boolean skipDryRun = K8sStepHelper.getParameterFieldBooleanValue(
+        k8sBlueGreenStepParameters.getSkipDryRun(), K8sBlueGreenBaseStepInfoKeys.skipDryRun, stepElementParameters);
     List<String> manifestFilesContents = k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents);
     boolean isOpenshiftTemplate = ManifestType.OpenshiftTemplate.equals(k8sManifestOutcome.getType());
 

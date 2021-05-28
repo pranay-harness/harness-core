@@ -257,6 +257,10 @@
         },
         {
           "type": "object",
+          "required": [
+            "connectorRef",
+            "gitFetchType"
+          ],
           "properties": {
             "branch": {
               "type": "string"
@@ -461,7 +465,17 @@
           "type": "object",
           "properties": {
             "deleteNamespace": {
-              "type": "boolean"
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldBoolean"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
             }
           }
         }
@@ -879,6 +893,10 @@
         },
         {
           "type": "object",
+          "required": [
+            "connectorRef",
+            "gitFetchType"
+          ],
           "properties": {
             "branch": {
               "type": "string"
@@ -951,6 +969,10 @@
         },
         {
           "type": "object",
+          "required": [
+            "connectorRef",
+            "gitFetchType"
+          ],
           "properties": {
             "branch": {
               "type": "string"
@@ -1030,6 +1052,10 @@
         },
         {
           "type": "object",
+          "required": [
+            "connectorRef",
+            "gitFetchType"
+          ],
           "properties": {
             "branch": {
               "type": "string"
@@ -1667,6 +1693,12 @@
         {
           "type": "object",
           "properties": {
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
             "filePaths": {
               "type": "array",
               "items": {
@@ -1712,6 +1744,12 @@
         {
           "type": "object",
           "properties": {
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
             "skipDryRun": {
               "type": "boolean"
             }
@@ -1728,6 +1766,12 @@
         {
           "type": "object",
           "properties": {
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
             "skipDryRun": {
               "oneOf": [
                 {
@@ -1754,6 +1798,12 @@
         {
           "type": "object",
           "properties": {
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
             "skipDryRun": {
               "type": "boolean"
             }
@@ -1773,6 +1823,12 @@
             "instanceSelection"
           ],
           "properties": {
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
             "instanceSelection": {
               "$ref": "#/definitions/InstanceSelectionWrapper"
             },
@@ -1805,6 +1861,12 @@
             "deleteResources"
           ],
           "properties": {
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
             "deleteResources": {
               "$ref": "#/definitions/DeleteResourcesWrapper"
             },
@@ -1900,6 +1962,12 @@
         {
           "type": "object",
           "properties": {
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
             "skipDryRun": {
               "oneOf": [
                 {
@@ -1926,6 +1994,12 @@
         {
           "type": "object",
           "properties": {
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
             "skipDryRun": {
               "oneOf": [
                 {
@@ -1955,6 +2029,12 @@
             "instanceSelection"
           ],
           "properties": {
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
             "instanceSelection": {
               "$ref": "#/definitions/InstanceSelectionWrapper"
             },
