@@ -15,6 +15,7 @@ import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.product.ci.scm.proto.Commit;
 import io.harness.product.ci.scm.proto.CreateBranchRequest;
+import io.harness.product.ci.scm.proto.CreateBranchResponse;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.CreatePRRequest;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
@@ -389,7 +390,9 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     String slug = scmGitProviderHelper.getSlug(scmConnector);
     Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
     String latestShaOfBranch = getLatestShaOfBranch(slug, gitProvider, defaultBranchName, scmBlockingStub);
-    createNewBranchFromDefault(slug, gitProvider, branch, latestShaOfBranch, scmBlockingStub);
+    final CreateBranchResponse createBranchResponse =
+        createNewBranchFromDefault(slug, gitProvider, branch, latestShaOfBranch, scmBlockingStub);
+    ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(createBranchResponse.getStatus(), null);
   }
 
   @Override
@@ -491,14 +494,14 @@ public class ScmServiceClientImpl implements ScmServiceClient {
         .build();
   }
 
-  private void createNewBranchFromDefault(String slug, Provider gitProvider, String branch, String latestShaOfBranch,
-      SCMGrpc.SCMBlockingStub scmBlockingStub) {
-    scmBlockingStub.createBranch(CreateBranchRequest.newBuilder()
-                                     .setName(branch)
-                                     .setCommitId(latestShaOfBranch)
-                                     .setProvider(gitProvider)
-                                     .setSlug(slug)
-                                     .build());
+  private CreateBranchResponse createNewBranchFromDefault(String slug, Provider gitProvider, String branch,
+      String latestShaOfBranch, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    return scmBlockingStub.createBranch(CreateBranchRequest.newBuilder()
+                                            .setName(branch)
+                                            .setCommitId(latestShaOfBranch)
+                                            .setProvider(gitProvider)
+                                            .setSlug(slug)
+                                            .build());
   }
 
   private String getLatestShaOfBranch(

@@ -11,11 +11,11 @@ import lombok.Value;
 @Builder
 @OwnedBy(DX)
 public class GitFileDetails {
-  private String filePath;
-  private String branch;
-  private String fileContent;
-  private String commitMessage;
-  private String oldFileSha; // Needed only in case of update file.
-  private String userEmail;
-  private String userName;
+  String filePath;
+  String branch;
+  String fileContent;
+  String commitMessage;
+  String oldFileSha; // Needed only in case of update file.
+  String userEmail;
+  String userName;
 }
