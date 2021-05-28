@@ -74,9 +74,10 @@ public class NgWebhookResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.CONNECTOR_IDENTIFIER_REF) String connectorIdenfiierRef,
       @NotNull @QueryParam(WebhookConstants.TARGET) String target,
-      @NotNull @QueryParam(WebhookConstants.HOOK_EVENT_TYPE) HookEventType hookEventType) {
+      @NotNull @QueryParam(WebhookConstants.HOOK_EVENT_TYPE) HookEventType hookEventType,
+      @QueryParam(NGCommonEntityConstants.REPO_URL) String repoURL) {
     final ScmGitWebhookTaskResponseData scmGitWebhookTaskResponseData = webhookService.upsertWebhook(
-        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdenfiierRef, target, hookEventType);
+        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdenfiierRef, target, hookEventType, repoURL);
     return ResponseDTO.newResponse(scmGitWebhookTaskResponseData);
   }
 }

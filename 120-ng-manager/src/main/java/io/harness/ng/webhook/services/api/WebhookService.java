@@ -11,5 +11,5 @@ import io.harness.ng.webhook.entities.WebhookEvent;
 public interface WebhookService {
   WebhookEvent addEventToQueue(WebhookEvent webhookEvent);
   ScmGitWebhookTaskResponseData upsertWebhook(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      String connectorIdentifierRef, String target, HookEventType hookEventType);
+      String connectorIdentifierRef, String target, HookEventType hookEventType, String repoURL);
 }

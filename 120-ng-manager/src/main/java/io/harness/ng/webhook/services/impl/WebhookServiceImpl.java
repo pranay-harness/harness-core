@@ -1,6 +1,7 @@
 package io.harness.ng.webhook.services.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.NextGenModule.CONNECTOR_DECORATOR_SERVICE;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -68,9 +69,12 @@ public class WebhookServiceImpl implements WebhookService {
   }
 
   public ScmGitWebhookTaskResponseData upsertWebhook(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String connectorIdentifierRef, String target, HookEventType hookEventType) {
+      String projectIdentifier, String connectorIdentifierRef, String target, HookEventType hookEventType,
+      String repoURL) {
     final ScmConnector scmConnector =
         getScmConnector(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifierRef);
+    if (!isEmpty(repoURL))
+      scmConnector.setUrl(repoURL);
     final List<EncryptedDataDetail> encryptionDetails =
         getEncryptedDataDetails(accountIdentifier, orgIdentifier, projectIdentifier, scmConnector);
     final ScmGitWebhookTaskParams gitWebhookTaskParams =
