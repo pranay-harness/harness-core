@@ -7,7 +7,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
-public class SdkResponseEventPublisher {
+public class SdkResponseEventQueuePublisher {
   @Inject private QueuePublisher<SdkResponseEvent> pmsExecutionResponseEventQueuePublisher;
 
   public void send(SdkResponseEvent event) {

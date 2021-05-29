@@ -52,6 +52,7 @@ public class VerificationConfiguration extends Configuration {
   @JsonProperty("shouldConfigureWithPMS") private Boolean shouldConfigureWithPMS;
   @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
   @JsonProperty("cfMigrationConfig") private CfMigrationConfig cfMigrationConfig;
+  @JsonProperty("useRedisForSdkResponseEvents") private Boolean useRedisForSdkResponseEvents;
 
   private String portalUrl;
   /**

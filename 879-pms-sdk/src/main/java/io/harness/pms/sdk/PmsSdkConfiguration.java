@@ -44,4 +44,5 @@ public class PmsSdkConfiguration {
       EventsFrameworkConfiguration.builder()
           .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
           .build();
+  boolean useRedisForSdkResponseEvents;
 }

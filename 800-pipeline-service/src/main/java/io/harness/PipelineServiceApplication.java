@@ -21,6 +21,7 @@ import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.GeneralException;
 import io.harness.execution.SdkResponseEventListener;
+import io.harness.execution.consumers.SdkResponseEventRedisConsumerService;
 import io.harness.gitsync.AbstractGitSyncSdkModule;
 import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.gitsync.GitSyncEntitiesConfiguration;
@@ -272,6 +273,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
   private void createConsumerThreadsToListenToEvents(Environment environment, Injector injector) {
     environment.lifecycle().manage(injector.getInstance(PMSEventConsumerService.class));
+    environment.lifecycle().manage(injector.getInstance(SdkResponseEventRedisConsumerService.class));
   }
 
   private static void registerObservers(Injector injector) {
@@ -359,6 +361,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .engineEventHandlersMap(PmsOrchestrationEventRegistrar.getEngineEventHandlers())
         .executionSummaryModuleInfoProviderClass(PmsExecutionServiceInfoProvider.class)
         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
+        .useRedisForSdkResponseEvents(config.getUseRedisForSdkResponseEvents())
         .build();
   }
 

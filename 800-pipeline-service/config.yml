@@ -180,3 +180,4 @@ timescaledb:
 
 useRedisForInterrupts: false
 useRedisForOrchestrationEvents: false
+useRedisForSdkResponseEvents: false
