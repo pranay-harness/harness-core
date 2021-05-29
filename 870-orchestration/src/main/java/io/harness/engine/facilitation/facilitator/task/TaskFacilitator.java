@@ -1,32 +1,34 @@
-package io.harness.pms.sdk.core.facilitator.task;
+package io.harness.engine.facilitation.facilitator.task;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.facilitation.facilitator.CoreFacilitator;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutionMode;
+import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.facilitator.Facilitator;
-import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
-import io.harness.pms.sdk.core.facilitator.FacilitatorUtils;
-import io.harness.pms.sdk.core.steps.io.StepInputPackage;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.execution.facilitator.FacilitatorUtils;
+import io.harness.serializer.ProtoUtils;
 
 import com.google.inject.Inject;
 import java.time.Duration;
 
 @OwnedBy(CDC)
-public class TaskFacilitator implements Facilitator {
+public class TaskFacilitator implements CoreFacilitator {
   public static final FacilitatorType FACILITATOR_TYPE =
       FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build();
 
   @Inject private FacilitatorUtils facilitatorUtils;
 
   @Override
-  public FacilitatorResponse facilitate(
-      Ambiance ambiance, StepParameters stepParameters, byte[] parameters, StepInputPackage inputPackage) {
+  public FacilitatorResponseProto facilitate(Ambiance ambiance, byte[] parameters) {
     Duration waitDuration = facilitatorUtils.extractWaitDurationFromDefaultParams(parameters);
-    return FacilitatorResponse.builder().executionMode(ExecutionMode.TASK).initialWait(waitDuration).build();
+    return FacilitatorResponseProto.newBuilder()
+        .setExecutionMode(ExecutionMode.TASK)
+        .setInitialWait(ProtoUtils.javaDurationToDuration(waitDuration))
+        .setIsSuccessful(true)
+        .build();
   }
 }

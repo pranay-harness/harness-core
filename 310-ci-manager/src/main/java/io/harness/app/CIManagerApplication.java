@@ -40,7 +40,6 @@ import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.registrars.ExecutionAdvisers;
 import io.harness.registrars.ExecutionRegistrar;
-import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.resource.VersionInfoResource;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -313,7 +312,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         .engineSteps(ExecutionRegistrar.getEngineSteps())
         .executionSummaryModuleInfoProviderClass(CIModuleInfoProvider.class)
         .engineAdvisers(ExecutionAdvisers.getEngineAdvisers())
-        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
         .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())
         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
         .build();

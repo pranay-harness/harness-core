@@ -1,4 +1,4 @@
-package io.harness.pms.sdk.core.facilitator;
+package io.harness.pms.execution.facilitator;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
