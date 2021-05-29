@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.INVALID_RUNTIME_INPUT_YAML;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TARGET_EXECUTION_REQUESTED;
-import static io.harness.pms.contracts.triggers.Type.CUSTOM;
 import static io.harness.pms.contracts.triggers.Type.GIT;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -22,8 +21,10 @@ import io.harness.ngtriggers.beans.target.pipeline.PipelineTargetSpec;
 import io.harness.ngtriggers.helpers.WebhookEventMapperHelper;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.pms.contracts.triggers.ParsedPayload;
+import io.harness.pms.contracts.triggers.SourceType;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.contracts.triggers.TriggerPayload.Builder;
+import io.harness.pms.contracts.triggers.Type;
 import io.harness.pms.triggers.TriggerExecutionHelper;
 import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 
@@ -53,7 +54,7 @@ public class TriggerWebhookExecutionHelper {
       if (isNotEmpty(webhookEventMappingResponse.getTriggers())) {
         for (TriggerDetails triggerDetails : webhookEventMappingResponse.getTriggers()) {
           eventResponses.add(triggerPipelineExecution(triggerWebhookEvent, triggerDetails,
-              getTriggerPayload(webhookEventMappingResponse, triggerWebhookEvent.getPayload())));
+              getTriggerPayloadForWebhookTrigger(webhookEventMappingResponse, triggerWebhookEvent)));
         }
       }
     } else {
@@ -64,12 +65,19 @@ public class TriggerWebhookExecutionHelper {
     return resultBuilder.responses(eventResponses).build();
   }
 
-  private TriggerPayload getTriggerPayload(
-      WebhookEventMappingResponse webhookEventMappingResponse, String jsonPayload) {
-    Builder builder = TriggerPayload.newBuilder().setJsonPayload(jsonPayload);
+  private TriggerPayload getTriggerPayloadForWebhookTrigger(
+      WebhookEventMappingResponse webhookEventMappingResponse, TriggerWebhookEvent triggerWebhookEvent) {
+    Builder builder =
+        TriggerPayload.newBuilder().setJsonPayload(triggerWebhookEvent.getPayload()).setType(Type.WEBHOOK);
 
-    if (webhookEventMappingResponse.isCustomTrigger()) {
-      return builder.setType(CUSTOM).build();
+    if ("CUSTOM".equalsIgnoreCase(triggerWebhookEvent.getSourceRepoType())) {
+      builder.setSourceType(SourceType.CUSTOM_REPO);
+    } else if ("GITHUB".equalsIgnoreCase(triggerWebhookEvent.getSourceRepoType())) {
+      builder.setSourceType(SourceType.GITHUB_REPO);
+    } else if ("GITLAB".equalsIgnoreCase(triggerWebhookEvent.getSourceRepoType())) {
+      builder.setSourceType(SourceType.GITLAB_REPO);
+    } else if ("BITBUCKET".equalsIgnoreCase(triggerWebhookEvent.getSourceRepoType())) {
+      builder.setSourceType(SourceType.BITBUCKET_REPO);
     }
 
     ParseWebhookResponse parseWebhookResponse = webhookEventMappingResponse.getParseWebhookResponse();
