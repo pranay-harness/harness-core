@@ -251,3 +251,4 @@ signupNotificationConfiguration:
       templateId: "signup_confirmation"
   expireDurationInMinutes: 60
 
+useRedisForSdkResponseEvents: false

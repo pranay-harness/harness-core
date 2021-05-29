@@ -1,5 +1,8 @@
 package io.harness.pms.sdk.core;
 
+import io.harness.AuthorizationServiceHeader;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
@@ -11,6 +14,7 @@ import lombok.Value;
 
 @Value
 @Builder
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PmsSdkCoreConfig {
   String serviceName;
   SdkDeployMode sdkDeployMode;
@@ -21,5 +25,6 @@ public class PmsSdkCoreConfig {
       EventsFrameworkConfiguration.builder()
           .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
           .build();
-  ;
+  AuthorizationServiceHeader serviceHeader;
+  boolean useRedisForSdkResponseEvents;
 }

@@ -73,6 +73,7 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("enableDashboardTimescale") private Boolean enableDashboardTimescale;
   @JsonProperty("useRedisForInterrupts") private Boolean useRedisForInterrupts;
   @JsonProperty("useRedisForOrchestrationEvents") private Boolean useRedisForOrchestrationEvents;
+  @JsonProperty("useRedisForSdkResponseEvents") private Boolean useRedisForSdkResponseEvents;
 
   private String managerServiceSecret;
   private String managerTarget;

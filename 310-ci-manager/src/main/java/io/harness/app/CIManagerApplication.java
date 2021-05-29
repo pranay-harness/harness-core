@@ -314,6 +314,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         .engineAdvisers(ExecutionAdvisers.getEngineAdvisers())
         .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())
         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
+        .useRedisForSdkResponseEvents(config.getUseRedisForSdkResponseEvents())
         .build();
   }
 

@@ -16,4 +16,10 @@ public class PmsEventFrameworkConstants {
   public static final int ORCHESTRATION_EVENT_BATCH_SIZE = 20;
 
   public static final String SERVICE_NAME = "SERVICE_NAME";
+
+  public static final String SDK_RESPONSE_EVENT_PRODUCER = "SDK_RESPONSE_EVENT_PRODUCER";
+  public static final String SDK_RESPONSE_EVENT_CONSUMER = "SDK_RESPONSE_EVENT_CONSUMER";
+  public static final String SDK_RESPONSE_EVENT_TOPIC = "SDK_RESPONSE_EVENT_TOPIC";
+  public static final String SDK_RESPONSE_EVENT_LISTENER = "SDK_RESPONSE_EVENT_LISTENER";
+  public static final int SDK_RESPONSE_EVENT_BATCH_SIZE = 10;
 }

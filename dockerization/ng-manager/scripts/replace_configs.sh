@@ -306,3 +306,5 @@ replace_key_value enableDefaultResourceGroupCreation "${ENABLE_DEFAULT_RESOURCE_
 replace_key_value yamlSchemaClientConfig.yamlSchemaHttpClientMap.cvng.secret "$CVNG_SERVICE_SECRET"
 
 replace_key_value yamlSchemaClientConfig.yamlSchemaHttpClientMap.cvng.serviceHttpClientConfig.baseUrl $CVNG_BASE_URL
+
+replace_key_value useRedisForSdkResponseEvents "$USE_REDIS_FOR_SDK_RESPONSE_EVENTS"
