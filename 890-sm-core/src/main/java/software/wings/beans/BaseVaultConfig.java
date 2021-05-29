@@ -4,9 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.SecretString.SECRET_MASK;
 
+import static software.wings.service.impl.DelegateServiceImpl.TASK_SELECTORS;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import io.harness.expression.ExpressionEvaluator;
@@ -17,8 +20,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -50,6 +55,10 @@ public abstract class BaseVaultConfig extends SecretManagerConfig {
   @Attributes(title = "Namespace") private String namespace;
   @JsonIgnore @SchemaIgnore boolean isCertValidationRequired;
   private long renewedAt;
+
+  @Attributes(title = "useVaultAgent") private boolean useVaultAgent;
+  @Attributes(title = "delegateSelectors") private Set<String> delegateSelectors;
+  @Attributes(title = "sinkPath") private String sinkPath;
 
   public boolean isCertValidationRequired() {
     return isCertValidationRequired;
@@ -83,7 +92,12 @@ public abstract class BaseVaultConfig extends SecretManagerConfig {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return Collections.singletonList(
-        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(vaultUrl, maskingEvaluator));
+    List<ExecutionCapability> executionCapabilities = new ArrayList<>(Arrays.asList(
+        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(vaultUrl, maskingEvaluator)));
+    if (isNotEmpty(delegateSelectors)) {
+      executionCapabilities.add(
+          SelectorCapability.builder().selectors(delegateSelectors).selectorOrigin(TASK_SELECTORS).build());
+    }
+    return executionCapabilities;
   }
 }
