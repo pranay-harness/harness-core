@@ -16,6 +16,7 @@ public abstract class QueueListenerWithObservers<T extends Queuable> extends Que
 
   @Override
   public void onMessage(T message) {
+    queueListenerObserverSubject.fireInform(QueueListenerObxxxxxxxx:onListenerStart, message);
     try {
       onMessageInternal(message);
     } finally {
