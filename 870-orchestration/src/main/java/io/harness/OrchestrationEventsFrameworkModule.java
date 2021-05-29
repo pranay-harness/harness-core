@@ -3,6 +3,9 @@ package io.harness;
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.pms.events.PmsEventFrameworkConstants.INTERRUPT_PRODUCER;
 import static io.harness.pms.events.PmsEventFrameworkConstants.INTERRUPT_TOPIC;
+import static io.harness.pms.events.PmsEventFrameworkConstants.MAX_TOPIC_SIZE;
+import static io.harness.pms.events.PmsEventFrameworkConstants.ORCHESTRATION_EVENT_PRODUCER;
+import static io.harness.pms.events.PmsEventFrameworkConstants.ORCHESTRATION_EVENT_TOPIC;
 
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.eventsframework.EventsFrameworkConstants;
@@ -28,11 +31,18 @@ public class OrchestrationEventsFrameworkModule extends AbstractModule {
       bind(Producer.class)
           .annotatedWith(Names.named(INTERRUPT_PRODUCER))
           .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
+      bind(Producer.class)
+          .annotatedWith(Names.named(ORCHESTRATION_EVENT_PRODUCER))
+          .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
     } else {
       bind(Producer.class)
           .annotatedWith(Names.named(INTERRUPT_PRODUCER))
-          .toInstance(RedisProducer.of(INTERRUPT_TOPIC, redisConfig,
-              EventsFrameworkConstants.SETUP_USAGE_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId()));
+          .toInstance(RedisProducer.of(INTERRUPT_TOPIC, redisConfig, MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId()));
+
+      bind(Producer.class)
+          .annotatedWith(Names.named(ORCHESTRATION_EVENT_PRODUCER))
+          .toInstance(RedisProducer.of(
+              ORCHESTRATION_EVENT_TOPIC, redisConfig, MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId()));
     }
   }
 }

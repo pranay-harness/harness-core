@@ -179,3 +179,4 @@ timescaledb:
   loggerLevel: OFF
 
 useRedisForInterrupts: false
+useRedisForOrchestrationEvents: false
