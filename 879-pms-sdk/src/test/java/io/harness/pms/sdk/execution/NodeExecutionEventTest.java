@@ -21,7 +21,7 @@ import io.harness.pms.sdk.PmsSdkTestBase;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionServiceImpl;
-import io.harness.pms.sdk.core.execution.listeners.NodeExecutionEventListener;
+import io.harness.pms.sdk.core.execution.events.node.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.facilitator.sync.SyncFacilitator;
 import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
 import io.harness.pms.sdk.core.registries.StepRegistry;
