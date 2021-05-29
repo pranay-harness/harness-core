@@ -21,6 +21,6 @@ public interface ScmClientFacilitatorService {
   GitFileContent getFileContent(String yamlGitConfigIdentifier, String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String filePath, String branch, String commitId);
 
-  Boolean createPullRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+  boolean createPullRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String yamlGitConfigRef, GitPRCreateRequest gitCreatePRRequest);
 }

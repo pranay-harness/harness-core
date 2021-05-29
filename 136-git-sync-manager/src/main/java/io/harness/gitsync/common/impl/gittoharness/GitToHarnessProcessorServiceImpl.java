@@ -85,6 +85,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
                                    .stream()
                                    .map(YamlGitConfigDTO.RootFolder::getRootFolder)
                                    .collect(toList());
+    connector.setUrl(yamlGitConfig.getRepo());
     return scmClient.listFiles(connector, foldersList, branchName);
   }
 
