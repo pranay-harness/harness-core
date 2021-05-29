@@ -191,7 +191,13 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     }
     final ConnectorResponseDTO connector = connectorResponseDTO.get();
     setConnectorDetailsFromUserProfile(yamlGitConfig, userPrincipal, connector);
+    setRepoUrlInConnector(yamlGitConfig, connector);
     return Optional.of(connector);
+  }
+
+  private void setRepoUrlInConnector(YamlGitConfigDTO yamlGitConfig, ConnectorResponseDTO connector) {
+    final ScmConnector connectorConfigDTO = (ScmConnector) connector.getConnector().getConnectorConfig();
+    connectorConfigDTO.setUrl(yamlGitConfig.getRepo());
   }
 
   private void setConnectorDetailsFromUserProfile(
