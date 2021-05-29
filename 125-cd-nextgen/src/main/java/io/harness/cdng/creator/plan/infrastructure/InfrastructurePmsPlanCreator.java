@@ -22,12 +22,12 @@ import io.harness.plancreator.utils.CommonPlanCreatorUtils;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.steps.SkipType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
-import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
-import io.harness.pms.sdk.core.facilitator.sync.SyncFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.PlanNode.PlanNodeBuilder;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
@@ -63,7 +63,10 @@ public class InfrastructurePmsPlanCreator {
         .stepType(InfrastructureStep.STEP_TYPE)
         .skipExpressionChain(true)
         .stepParameters(InfraStepParameters.builder().pipelineInfrastructure(actualInfraConfig).build())
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(SyncFacilitator.FACILITATOR_TYPE).build())
+        .facilitatorObtainment(
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                .build())
         .build();
   }
 
@@ -84,7 +87,9 @@ public class InfrastructurePmsPlanCreator {
             .stepType(InfrastructureSectionStep.STEP_TYPE)
             .stepParameters(InfraSectionStepParameters.getStepParameters(actualInfraConfig, infraStepNodeUuid))
             .facilitatorObtainment(
-                FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+                FacilitatorObtainment.newBuilder()
+                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                    .build())
             .adviserObtainments(allowSimultaneousDeployments
                     ? getAdviserObtainmentFromMetaDataToExecution(infraSectionNode, kryoSerializer)
                     : getAdviserObtainmentFromMetaDataToResourceConstraint(resourceConstraintField, kryoSerializer));
@@ -215,7 +220,10 @@ public class InfrastructurePmsPlanCreator {
         .stepType(NGSectionStep.STEP_TYPE)
         .name(YAMLFieldNameConstants.PROVISIONER)
         .stepParameters(stepParameters)
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+        .facilitatorObtainment(
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                .build())
         .adviserObtainment(
             AdviserObtainment.newBuilder()
                 .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
