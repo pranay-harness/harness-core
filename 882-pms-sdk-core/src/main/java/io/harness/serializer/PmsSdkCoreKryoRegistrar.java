@@ -13,7 +13,6 @@ import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
 import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.pms.sdk.core.execution.AsyncSdkProgressCallback;
 import io.harness.pms.sdk.core.execution.AsyncSdkResumeCallback;
-import io.harness.pms.sdk.core.facilitator.DefaultFacilitatorParams;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StatusNotifyResponseData;
@@ -27,7 +26,6 @@ public class PmsSdkCoreKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
     kryo.register(StatusNotifyResponseData.class, 2502);
-    kryo.register(DefaultFacilitatorParams.class, 2515);
     kryo.register(StepOutcome.class, 2521);
     kryo.register(PassThroughData.class, 2535);
     kryo.register(StepResponseNotifyData.class, 2519);

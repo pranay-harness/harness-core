@@ -35,7 +35,6 @@ import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueController;
 import io.harness.registrars.CDServiceAdviserRegistrar;
-import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.CDNGRegistrars;
@@ -212,7 +211,6 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
         .serviceName("cd")
         .engineSteps(NgStepRegistrar.getEngineSteps())
         .engineAdvisers(CDServiceAdviserRegistrar.getEngineAdvisers())
-        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
         .build();
   }
 

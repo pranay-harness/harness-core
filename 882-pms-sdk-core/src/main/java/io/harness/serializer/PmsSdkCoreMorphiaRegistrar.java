@@ -12,7 +12,6 @@ import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.OrchestrationEventLog;
 import io.harness.pms.sdk.core.execution.AsyncSdkProgressCallback;
 import io.harness.pms.sdk.core.execution.AsyncSdkResumeCallback;
-import io.harness.pms.sdk.core.facilitator.DefaultFacilitatorParams;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.PipelineViewObject;
 
@@ -33,7 +32,6 @@ public class PmsSdkCoreMorphiaRegistrar implements MorphiaRegistrar {
 
   @Override
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
-    h.put("facilitator.DefaultFacilitatorParams", DefaultFacilitatorParams.class);
     h.put("pms.sdk.core.execution.AsyncSdkResumeCallback", AsyncSdkResumeCallback.class);
     h.put("pms.sdk.core.execution.AsyncSdkProgressCallback", AsyncSdkProgressCallback.class);
   }

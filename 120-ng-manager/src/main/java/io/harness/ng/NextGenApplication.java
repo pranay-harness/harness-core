@@ -68,7 +68,6 @@ import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.registrars.CDServiceAdviserRegistrar;
-import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.request.RequestContextFilter;
 import io.harness.resource.VersionInfoResource;
 import io.harness.security.InternalApiAuthFilter;
@@ -385,7 +384,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .filterCreationResponseMerger(new CDNGFilterCreationResponseMerger())
         .engineSteps(NgStepRegistrar.getEngineSteps())
         .engineAdvisers(CDServiceAdviserRegistrar.getEngineAdvisers())
-        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
         .executionSummaryModuleInfoProviderClass(CDNGModuleInfoProvider.class)
         .eventsFrameworkConfiguration(appConfig.getEventsFrameworkConfiguration())
         .build();

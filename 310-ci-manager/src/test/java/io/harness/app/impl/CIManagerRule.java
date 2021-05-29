@@ -22,7 +22,6 @@ import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.registrars.ExecutionAdvisers;
 import io.harness.registrars.ExecutionRegistrar;
-import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.CiBeansRegistrars;
@@ -163,7 +162,6 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
         .serviceName("ci")
         .engineSteps(ExecutionRegistrar.getEngineSteps())
         .engineAdvisers(ExecutionAdvisers.getEngineAdvisers())
-        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
         .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())
         .build();
   }
