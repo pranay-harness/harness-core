@@ -51,7 +51,7 @@ public class ConnectorSetup {
   }
 
   @GET
-  @Path("/getKubernetesReferenceConnectors")
+  @Path("/getk8sreferenceconnectors")
   @ApiOperation(value = "Get List of Possible Base K8s Ref Connectors", nickname = "getBaseK8sRefConnectors")
   public ResponseDTO<PageResponse<ConnectorResponseDTO>> getBaseK8sReferenceConnectorsList(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
