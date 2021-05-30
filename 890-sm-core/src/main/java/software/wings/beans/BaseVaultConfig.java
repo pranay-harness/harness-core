@@ -4,8 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.SecretString.SECRET_MASK;
 
-import static software.wings.service.impl.DelegateServiceImpl.TASK_SELECTORS;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -44,6 +42,7 @@ import lombok.experimental.SuperBuilder;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "BaseVaultConfigKeys")
 public abstract class BaseVaultConfig extends SecretManagerConfig {
+  private static final String TASK_SELECTORS = "Task Selectors";
   @Attributes(title = "Name", required = true) public String name;
   @Attributes(title = "Vault Url", required = true) @FdIndex public String vaultUrl;
   @Attributes(title = "Auth token") @Encrypted(fieldName = "auth_token") public String authToken;
