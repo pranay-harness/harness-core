@@ -51,6 +51,7 @@ import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
 import io.harness.config.PipelineConfig;
 import io.harness.configuration.DeployMode;
 import io.harness.connector.ConnectorResourceClientModule;
+import io.harness.cv.CVCommonsServiceModule;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
 import io.harness.cvng.client.CVNGService;
 import io.harness.cvng.client.CVNGServiceImpl;
@@ -1339,6 +1340,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(HelmChartService.class).to(HelmChartServiceImpl.class);
     bind(LogStreamingServiceRestClient.class).toProvider(LogStreamingServiceClientFactory.class);
     bind(IInstanceReconService.class).to(InstanceReconServiceImpl.class);
+    install(new CVCommonsServiceModule());
   }
 
   private void bindFeatures() {

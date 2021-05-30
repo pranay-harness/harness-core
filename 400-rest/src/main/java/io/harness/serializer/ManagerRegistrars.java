@@ -57,6 +57,7 @@ public class ManagerRegistrars {
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(CvNextGenCommonsRegistrars.morphiaRegistrars)
+          .addAll(VerificationCommonsRegistrars.morphiaRegistrars)
           .addAll(DelegateTasksBeansRegistrars.morphiaRegistrars)
           .addAll(FeatureFlagBeansRegistrars.morphiaRegistrars)
           .addAll(NGCommonsRegistrars.morphiaRegistrars)
