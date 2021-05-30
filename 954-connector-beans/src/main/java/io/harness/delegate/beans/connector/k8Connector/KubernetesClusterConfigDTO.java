@@ -18,6 +18,7 @@ import lombok.EqualsAndHashCode;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Entity(value = "gitProcessRequestSdk", noClassnameStored = true)
 public class KubernetesClusterConfigDTO extends ConnectorConfigDTO implements DelegateSelectable {
   @Valid @NotNull KubernetesCredentialDTO credential;
   Set<String> delegateSelectors;
