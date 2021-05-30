@@ -52,7 +52,9 @@ public class OrchestrationEventEmitter {
       Set<OrchestrationEventHandler> handlers = handlerRegistry.obtain(event.getEventType());
       subject.registerAll(handlers);
       subject.handleEventSync(event);
-      populateEventLog(event);
+      populateEventLog(event.getEventType(),
+          event.getNodeExecutionProto() == null ? null : event.getNodeExecutionProto().getUuid(),
+          event.getAmbiance().getPlanExecutionId());
       String serviceName = event.getNodeExecutionProto() == null
           ? PmsConstants.INTERNAL_SERVICE_NAME
           : event.getNodeExecutionProto().getNode().getServiceName();
@@ -104,16 +106,16 @@ public class OrchestrationEventEmitter {
     return protoEvent.build().toByteString();
   }
 
-  private void populateEventLog(OrchestrationEvent event) {
-    if (event.getEventType() == OrchestrationEventType.NODE_EXECUTION_UPDATE
-        || event.getEventType() == OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE
-        || event.getEventType() == OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE) {
+  public void populateEventLog(OrchestrationEventType eventType, String nodeExecutionId, String planExecutionId) {
+    if (eventType == OrchestrationEventType.NODE_EXECUTION_UPDATE
+        || eventType == OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE
+        || eventType == OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE) {
       OrchestrationEventLog orchestrationEventLog = orchestrationEventLogRepository.save(
           OrchestrationEventLog.builder()
               .createdAt(System.currentTimeMillis())
-              .nodeExecutionId(event.getNodeExecutionProto() == null ? null : event.getNodeExecutionProto().getUuid())
-              .orchestrationEventType(event.getEventType())
-              .planExecutionId(event.getAmbiance().getPlanExecutionId())
+              .nodeExecutionId(nodeExecutionId)
+              .orchestrationEventType(eventType)
+              .planExecutionId(planExecutionId)
               .validUntil(Date.from(OffsetDateTime.now().plus(Duration.ofDays(14)).toInstant()))
               .build());
       orchestrationEventLogSubjectSubject.fireInform(OrchestrationEventLogHandler::handleLog, orchestrationEventLog);

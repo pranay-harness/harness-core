@@ -21,6 +21,7 @@ import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.observers.OrchestrationLogPublisher;
 import io.harness.exception.GeneralException;
 import io.harness.execution.SdkResponseEventListener;
 import io.harness.execution.consumers.SdkResponseEventRedisConsumerService;
@@ -68,6 +69,7 @@ import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
 import io.harness.pms.plan.creation.PipelineServiceFilterCreationResponseMerger;
 import io.harness.pms.plan.creation.PipelineServiceInternalInfoProvider;
 import io.harness.pms.plan.execution.PmsExecutionServiceInfoProvider;
+import io.harness.pms.plan.execution.handlers.ExecutionSummaryUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.PlanStatusEventEmitterHandler;
 import io.harness.pms.plan.execution.observers.PipelineExecutionSummaryDeleteObserver;
 import io.harness.pms.plan.execution.registrar.PmsOrchestrationEventRegistrar;
@@ -304,6 +306,15 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         injector.getInstance(Key.get(StageStatusUpdateNotificationEventHandler.class)));
     nodeExecutionService.getNodeExecutionStartSubject().register(
         injector.getInstance(Key.get(StageStartNotificationHandler.class)));
+    nodeExecutionService.getNodeUpdateObserverSubject().register(
+        injector.getInstance(Key.get(ExecutionSummaryUpdateEventHandler.class)));
+    nodeExecutionService.getNodeUpdateObserverSubject().register(
+        injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
+
+    OrchestrationLogPublisher orchestrationLogPublisher =
+        (OrchestrationLogPublisher) injector.getInstance(Key.get(OrchestrationLogPublisher.class));
+    orchestrationLogPublisher.getOrchestrationEventLogSubjectSubject().register(
+        injector.getInstance(Key.get(OrchestrationVisualizationEventLogHandlerAsync.class)));
 
     PlanStatusEventEmitterHandler planStatusEventEmitterHandler =
         injector.getInstance(Key.get(PlanStatusEventEmitterHandler.class));
