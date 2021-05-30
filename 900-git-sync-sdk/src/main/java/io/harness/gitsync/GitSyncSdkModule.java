@@ -9,8 +9,8 @@ import io.harness.gitsync.events.GitSyncConfigEventMessageListener;
 import io.harness.gitsync.gittoharness.ChangeSetHelperServiceImpl;
 import io.harness.gitsync.gittoharness.ChangeSetInterceptorService;
 import io.harness.gitsync.gittoharness.GitSdkInterface;
-import io.harness.gitsync.gittoharness.GitToHarnessProcessor;
-import io.harness.gitsync.gittoharness.GitToHarnessProcessorImpl;
+import io.harness.gitsync.gittoharness.GitToHarnessSdkProcessor;
+import io.harness.gitsync.gittoharness.GitToHarnessSdkProcessorImpl;
 import io.harness.gitsync.gittoharness.NoOpChangeSetInterceptorServiceImpl;
 import io.harness.gitsync.persistance.EntityKeySource;
 import io.harness.gitsync.persistance.EntityLookupHelper;
@@ -49,7 +49,7 @@ public class GitSyncSdkModule extends AbstractModule {
     install(SCMJavaClientModule.getInstance());
     //    bind(new TypeLiteral<GitAwareRepository<?, ?, ?>>() {}).to(new TypeLiteral<GitAwareRepositoryImpl<?, ?, ?>>()
     //    {});
-    bind(GitToHarnessProcessor.class).to(GitToHarnessProcessorImpl.class);
+    bind(GitToHarnessSdkProcessor.class).to(GitToHarnessSdkProcessorImpl.class);
     bind(ChangeSetInterceptorService.class).to(NoOpChangeSetInterceptorServiceImpl.class);
     bind(EntityKeySource.class).to(EntityLookupHelper.class);
     bind(GitSdkInterface.class).to(ChangeSetHelperServiceImpl.class);

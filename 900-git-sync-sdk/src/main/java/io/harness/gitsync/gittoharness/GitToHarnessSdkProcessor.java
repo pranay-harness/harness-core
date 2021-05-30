@@ -7,6 +7,6 @@ import io.harness.gitsync.GitToHarnessProcessRequest;
 import io.harness.gitsync.ProcessingResponse;
 
 @OwnedBy(DX)
-public interface GitToHarnessProcessor {
+public interface GitToHarnessSdkProcessor {
   ProcessingResponse gitToHarnessProcessingRequest(GitToHarnessProcessRequest changeSets);
 }

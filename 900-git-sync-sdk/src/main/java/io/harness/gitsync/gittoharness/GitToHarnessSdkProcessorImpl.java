@@ -36,14 +36,14 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 @OwnedBy(DX)
-public class GitToHarnessProcessorImpl implements GitToHarnessProcessor {
+public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
   ChangeSetInterceptorService changeSetInterceptorService;
   GitSdkInterface changeSetHelperService;
   Supplier<List<EntityType>> sortOrder;
   GitSyncThreadDecorator gitSyncThreadDecorator;
 
   @Inject
-  public GitToHarnessProcessorImpl(ChangeSetInterceptorService changeSetInterceptorService,
+  public GitToHarnessSdkProcessorImpl(ChangeSetInterceptorService changeSetInterceptorService,
       GitSdkInterface changeSetHelperService, @Named("GitSyncSortOrder") Supplier<List<EntityType>> sortOrder,
       GitSyncThreadDecorator gitSyncThreadDecorator) {
     this.changeSetInterceptorService = changeSetInterceptorService;

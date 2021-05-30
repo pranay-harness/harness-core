@@ -16,6 +16,7 @@ import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
+import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.service.ScmClient;
 import io.harness.tasks.DecryptGitApiAccessHelper;
@@ -84,5 +85,13 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
       throw new ScmException(PR_CREATION_ERROR);
     }
     return true;
+  }
+
+  @Override
+  public FileBatchContentResponse listFilesOfBranches(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String yamlGitConfigIdentifier, List<String> foldersList, String branchName) {
+    final ScmConnector decryptedConnector = gitSyncConnectorHelper.getDecryptedConnector(
+        yamlGitConfigIdentifier, projectIdentifier, orgIdentifier, accountIdentifier);
+    return scmClient.listFiles(decryptedConnector, foldersList, branchName);
   }
 }
