@@ -39,9 +39,10 @@ public class GitSyncConnectorHelper {
 
   @Inject
   public GitSyncConnectorHelper(@Named("connectorDecoratorService") ConnectorService connectorService,
-      DecryptGitApiAccessHelper decryptGitApiAccessHelper) {
+      DecryptGitApiAccessHelper decryptGitApiAccessHelper, YamlGitConfigService yamlGitConfigService) {
     this.connectorService = connectorService;
     this.decryptGitApiAccessHelper = decryptGitApiAccessHelper;
+    this.yamlGitConfigService = yamlGitConfigService;
   }
 
   public ScmConnector getDecryptedConnector(
@@ -70,6 +71,7 @@ public class GitSyncConnectorHelper {
         final ScmConnector scmConnector = decryptGitApiAccessHelper.decryptScmApiAccess(gitConnectorConfig, accountId,
             gitSyncConfigDTO.getProjectIdentifier(), gitSyncConfigDTO.getOrganizationIdentifier());
         scmConnector.setUrl(gitSyncConfigDTO.getRepo());
+        return scmConnector;
       }
       throw new UnexpectedException(
           String.format("The connector with the  id %s, accountId %s, orgId %s, projectId %s is not a scm connector",
