@@ -4,8 +4,8 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-// TODO (sahil): Rename this to EventListenerObserver and move it out of Persistence
-public interface QueueListenerObserver<T extends Queuable> {
+// Todo(sahil): Move out of persistence
+public interface EventListenerObserver<T> {
   void onListenerEnd(T message);
   void onListenerStart(T message);
 }

@@ -6,19 +6,21 @@ import static io.harness.pms.sdk.PmsSdkModuleUtils.SDK_SERVICE_NAME;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.contracts.execution.events.OrchestrationEvent;
-import io.harness.pms.events.base.PmsAbstractMessageListener;
+import io.harness.pms.events.base.PmsAbstractBaseMessageListenerWithObservers;
 import io.harness.pms.execution.utils.OrchestrationEventUtils;
 import io.harness.pms.sdk.core.execution.events.orchestration.SdkOrchestrationEventListenerHelper;
 import io.harness.pms.utils.PmsConstants;
 import io.harness.serializer.ProtoUtils;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class OrchestrationEventMessageListener extends PmsAbstractMessageListener<OrchestrationEvent> {
+@Singleton
+public class OrchestrationEventMessageListener extends PmsAbstractBaseMessageListenerWithObservers<OrchestrationEvent> {
   private final SdkOrchestrationEventListenerHelper helper;
 
   @Inject
@@ -28,7 +30,7 @@ public class OrchestrationEventMessageListener extends PmsAbstractMessageListene
     this.helper = helper;
   }
 
-  public boolean processMessage(OrchestrationEvent event) {
+  public boolean processMessageInternal(OrchestrationEvent event) {
     try (AutoLogContext ignore = OrchestrationEventUtils.obtainLogContext(event)) {
       log.error("Orchestration Event Processing Starting for event type {}", event.getEventType());
       helper.handleEvent(io.harness.pms.sdk.core.events.OrchestrationEvent.builder()

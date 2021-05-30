@@ -6,6 +6,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.logging.AutoLogContext.OverrideBehavior;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.execution.SdkResponseEvent;
+import io.harness.serializer.ProtoUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +37,7 @@ public class SdkResponseEventUtils {
     return SdkResponseEventProto.newBuilder()
         .setSdkResponseEventRequest(sdkResponseEvent.getSdkResponseEventRequest())
         .setSdkResponseEventType(sdkResponseEvent.getSdkResponseEventType())
+        .setCreatedAt(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
         .build();
   }
 }
