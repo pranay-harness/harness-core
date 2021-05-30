@@ -176,4 +176,14 @@ public class GitBranchServiceImpl implements GitBranchService {
           String.format("The branch %s in repo %s is already %s", branch, repoURL, gitBranch.getBranchSyncStatus()));
     }
   }
+
+  @Override
+  public boolean isBranchExists(
+      String accountIdentifier, String repoURL, String branch, BranchSyncStatus branchSyncStatus) {
+    GitBranch gitBranch = get(accountIdentifier, repoURL, branch);
+    if (gitBranch != null) {
+      return gitBranch.getBranchSyncStatus().equals(branchSyncStatus);
+    }
+    return false;
+  }
 }

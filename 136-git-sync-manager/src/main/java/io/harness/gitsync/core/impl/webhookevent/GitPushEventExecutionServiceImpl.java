@@ -5,7 +5,9 @@ import static io.harness.gitsync.common.WebhookEventConstants.GIT_PUSH_EVENT;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.webhookpayloads.webhookdata.WebhookDTO;
+import io.harness.gitsync.common.beans.BranchSyncStatus;
 import io.harness.gitsync.common.beans.YamlChangeSetEventType;
+import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.beans.GitWebhookRequestAttributes;
 import io.harness.gitsync.core.dtos.YamlChangeSetSaveDTO;
@@ -24,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 public class GitPushEventExecutionServiceImpl implements GitPushEventExecutionService {
   @Inject YamlGitConfigService yamlGitConfigService;
   @Inject YamlChangeSetService yamlChangeSetService;
+  @Inject GitBranchService gitBranchService;
 
   @Override
   public void processEvent(WebhookDTO webhookDTO) {
@@ -35,9 +38,17 @@ public class GitPushEventExecutionServiceImpl implements GitPushEventExecutionSe
       }
 
       Repository repository = scmParsedWebhookResponse.getPush().getRepo();
+
       if (Boolean.TRUE.equals(yamlGitConfigService.isRepoExists(repository.getLink()))) {
-        // create queue event and pass it to the git queue
-        yamlChangeSetService.save(prepareQueueEvent(webhookDTO));
+        // if unsynced branch exists in this repo, then ignore the event
+        if (gitBranchService.isBranchExists(
+                webhookDTO.getAccountId(), repository.getLink(), repository.getBranch(), BranchSyncStatus.UNSYNCED)) {
+          log.info("{} : Branch {} exists in UNSYNCED state, ignoring the event : {}", GIT_PUSH_EVENT,
+              repository.getBranch(), webhookDTO);
+        } else {
+          // create queue event and pass it to the git queue
+          yamlChangeSetService.save(prepareQueueEvent(webhookDTO));
+        }
       } else {
         log.info("{} : Repository doesn't exist, ignoring the event : {}", GIT_PUSH_EVENT, repository);
       }
