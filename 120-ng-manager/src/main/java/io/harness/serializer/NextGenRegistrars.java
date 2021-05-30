@@ -10,7 +10,7 @@ import io.harness.serializer.morphia.MockRoleAssignmentMorphiaRegistrar;
 import io.harness.serializer.morphia.NgAccessControlMigrationMorphiaRegistrar;
 import io.harness.serializer.morphia.NgUserGroupMorphiaRegistrar;
 import io.harness.serializer.morphia.NgUserMembershipMorphiaRegistrar;
-import io.harness.serializer.morphia.UserProfileMorphiaRegistrars;
+import io.harness.serializer.morphia.NgUserProfileMorphiaRegistrars;
 import io.harness.serializer.morphia.WebhookMorphiaRegistrars;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
@@ -39,7 +39,7 @@ public class NextGenRegistrars {
           .add(NgUserGroupMorphiaRegistrar.class)
           .add(NgAccessControlMigrationMorphiaRegistrar.class)
           .add(NgUserMembershipMorphiaRegistrar.class)
-          .add(UserProfileMorphiaRegistrars.class)
+          .add(NgUserProfileMorphiaRegistrars.class)
           .add(WebhookMorphiaRegistrars.class)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .addAll(OutboxEventRegistrars.morphiaRegistrars)

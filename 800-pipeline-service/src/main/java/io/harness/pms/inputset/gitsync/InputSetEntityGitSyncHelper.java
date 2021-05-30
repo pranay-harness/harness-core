@@ -58,14 +58,14 @@ public class InputSetEntityGitSyncHelper implements GitSdkEntityHandlerInterface
 
   // confirm this impl from Garvit
   @Override
-  public InputSetYamlDTO save(InputSetYamlDTO yaml, String accountIdentifier) {
-    InputSetEntity entity = InputSetYamlDTOMapper.toEntity(yaml, accountIdentifier);
+  public InputSetYamlDTO save(String accountIdentifier, String yaml) {
+    InputSetEntity entity = InputSetYamlDTOMapper.toEntity(null, accountIdentifier);
     return InputSetYamlDTOMapper.toDTO(entity);
   }
 
   @Override
-  public InputSetYamlDTO update(InputSetYamlDTO yaml, String accountIdentifier) {
-    return save(yaml, accountIdentifier);
+  public InputSetYamlDTO update(String accountIdentifier, String yaml) {
+    return save(accountIdentifier, yaml);
   }
 
   @Override

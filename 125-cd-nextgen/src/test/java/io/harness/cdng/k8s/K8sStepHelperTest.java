@@ -1282,4 +1282,21 @@ public class K8sStepHelperTest extends CategoryTest {
     assertThat(failureData.getCode()).isEqualTo(GENERAL_ERROR.name());
     assertThat(failureData.getMessage()).isEqualTo("Something went wrong");
   }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetParameterFieldBooleanValue() {
+    assertThat(K8sStepHelper.getParameterFieldBooleanValue(
+                   ParameterField.createValueField("true"), "testField", StepElementParameters.builder().build()))
+        .isTrue();
+    assertThat(K8sStepHelper.getParameterFieldBooleanValue(
+                   ParameterField.createValueField("false"), "testField", StepElementParameters.builder().build()))
+        .isFalse();
+
+    assertThatThrownBy(()
+                           -> K8sStepHelper.getParameterFieldBooleanValue(ParameterField.createValueField("absad"),
+                               "testField", StepElementParameters.builder().identifier("test").type("Test").build()))
+        .hasMessageContaining("for field testField in Test step with identifier: test");
+  }
 }

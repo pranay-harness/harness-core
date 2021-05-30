@@ -66,6 +66,7 @@ public class JexlScenarioTest extends CategoryTest {
                                      .setPr(PullRequestHook.newBuilder()
                                                 .setPr(PullRequest.newBuilder()
                                                            .setNumber(1)
+                                                           .setTitle("This is Title")
                                                            .setTarget("target")
                                                            .setSource("source")
                                                            .setSha("123")
@@ -169,11 +170,12 @@ public class JexlScenarioTest extends CategoryTest {
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.sourceBranch>")).isEqualTo("source");
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.targetBranch>")).isEqualTo("target");
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.event>")).isEqualTo("PR");
-    assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.type>")).isEqualTo("WEBHOOK");
+    assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.type>")).isEqualTo("Webhook");
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.commitSha>")).isEqualTo("123");
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.prNumber>")).isEqualTo("1");
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.repoUrl>")).isEqualTo("https://github.com");
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.gitUser>")).isEqualTo("user");
+    assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.prTitle>")).isEqualTo("This is Title");
 
     triggerExpressionEvaluator = new TriggerExpressionEvaluator(pushEvent, emptyList(), json);
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.commitSha>")).isEqualTo("456");

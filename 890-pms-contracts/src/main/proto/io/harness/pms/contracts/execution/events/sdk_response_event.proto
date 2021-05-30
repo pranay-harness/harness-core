@@ -13,6 +13,11 @@ import "io/harness/pms/contracts/advisers/advise.proto";
 
 option java_multiple_files = true;
 
+message SdkResponseEventProto {
+  SdkResponseEventType sdkResponseEventType = 1;
+  SdkResponseEventRequest sdkResponseEventRequest = 2;
+}
+
 message SdkResponseEventRequest {
   oneof request {
     QueueTaskRequest queueTaskRequest = 1;

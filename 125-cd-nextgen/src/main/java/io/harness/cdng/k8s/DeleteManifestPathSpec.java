@@ -38,11 +38,6 @@ public class DeleteManifestPathSpec implements DeleteResourcesBaseSpec {
   }
 
   @Override
-  public Boolean getDeleteNamespaceValue() {
-    return Boolean.FALSE;
-  }
-
-  @Override
   public Boolean getAllManifestPathsValue() {
     return allManifestPaths != null && allManifestPaths.getValue() != null && allManifestPaths.getValue();
   }

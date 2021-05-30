@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.k8s.K8sScaleBaseStepInfo.K8sScaleBaseStepInfoKeys;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
@@ -45,9 +46,8 @@ public class K8sScaleStep extends TaskExecutableWithRollback<K8sDeployResponse> 
     K8sScaleStepParameter scaleStepParameter = (K8sScaleStepParameter) stepElementParameters.getSpec();
     Integer instances = scaleStepParameter.getInstanceSelection().getSpec().getInstances();
 
-    boolean skipSteadyCheck = scaleStepParameter.getSkipSteadyStateCheck() != null
-        && scaleStepParameter.getSkipSteadyStateCheck().getValue() != null
-        && scaleStepParameter.getSkipSteadyStateCheck().getValue();
+    boolean skipSteadyCheck = K8sStepHelper.getParameterFieldBooleanValue(scaleStepParameter.getSkipSteadyStateCheck(),
+        K8sScaleBaseStepInfoKeys.skipSteadyStateCheck, stepElementParameters);
 
     K8sScaleRequest request =
         K8sScaleRequest.builder()

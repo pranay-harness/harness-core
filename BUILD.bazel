@@ -84,6 +84,7 @@ modules = [
     "//410-cg-rest",
     "//420-delegate-agent",
     "//420-delegate-service",
+    "//425-cv-commons",
     "//430-cv-nextgen-commons",
     "//440-connector-nextgen",
     "//445-cg-connectors",

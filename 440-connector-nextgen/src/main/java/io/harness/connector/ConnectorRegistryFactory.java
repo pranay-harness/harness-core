@@ -8,6 +8,7 @@ import io.harness.connector.heartbeat.AwsKmsConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.AwsValidationParamsProvider;
 import io.harness.connector.heartbeat.AzureKeyVaultConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.CEK8sConnectorValidationParamsProvider;
+import io.harness.connector.heartbeat.CVConnectorParamsProvider;
 import io.harness.connector.heartbeat.ConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.DockerConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.GcpKmsConnectorValidationParamsProvider;
@@ -116,19 +117,19 @@ public class ConnectorRegistryFactory {
             ScmConnectorValidationParamsProvider.class, GitDTOToEntity.class, GitEntityToDTO.class));
     registrar.put(ConnectorType.APP_DYNAMICS,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
-            NoOpConnectorValidationParamsProvider.class, AppDynamicsDTOToEntity.class, AppDynamicsEntityToDTO.class));
+            CVConnectorParamsProvider.class, AppDynamicsDTOToEntity.class, AppDynamicsEntityToDTO.class));
     registrar.put(ConnectorType.NEW_RELIC,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
-            NoOpConnectorValidationParamsProvider.class, NewRelicDTOToEntity.class, NewRelicEntityToDTO.class));
+            CVConnectorParamsProvider.class, NewRelicDTOToEntity.class, NewRelicEntityToDTO.class));
     registrar.put(ConnectorType.DATADOG,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
-            NoOpConnectorValidationParamsProvider.class, DatadogDTOToEntity.class, DatadogEntityToDTO.class));
+            CVConnectorParamsProvider.class, DatadogDTOToEntity.class, DatadogEntityToDTO.class));
     registrar.put(ConnectorType.SPLUNK,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
-            NoOpConnectorValidationParamsProvider.class, SplunkDTOToEntity.class, SplunkEntityToDTO.class));
+            CVConnectorParamsProvider.class, SplunkDTOToEntity.class, SplunkEntityToDTO.class));
     registrar.put(ConnectorType.PROMETHEUS,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
-            NoOpConnectorValidationParamsProvider.class, PrometheusDTOToEntity.class, PrometheusEntityToDTO.class));
+            CVConnectorParamsProvider.class, PrometheusDTOToEntity.class, PrometheusEntityToDTO.class));
     registrar.put(ConnectorType.VAULT,
         new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, SecretManagerConnectorValidator.class,
             VaultConnectorValidationParamsProvider.class, VaultDTOToEntity.class, VaultEntityToDTO.class));

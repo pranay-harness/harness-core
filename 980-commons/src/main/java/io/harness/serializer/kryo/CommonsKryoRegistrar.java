@@ -20,6 +20,7 @@ import io.harness.exception.ImageNotFoundException;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.InvalidTagException;
+import io.harness.exception.InvalidThirdPartyCredentialsException;
 import io.harness.exception.KryoHandlerNotFoundException;
 import io.harness.exception.SecretNotFoundException;
 import io.harness.exception.ServiceNowException;
@@ -73,6 +74,7 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(SecretNotFoundException.class, 31021);
     kryo.register(DelegateNotAvailableException.class, 31022);
     kryo.register(IllegalArgumentException.class, 31023);
+    kryo.register(InvalidThirdPartyCredentialsException.class, 31024);
 
     kryo.register(PrincipalContextData.class, 980001);
     kryo.register(UserPrincipal.class, 980002);

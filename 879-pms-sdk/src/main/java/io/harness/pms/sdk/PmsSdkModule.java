@@ -56,10 +56,10 @@ public class PmsSdkModule extends AbstractModule {
                                                  .grpcServerConfig(config.getGrpcServerConfig())
                                                  .sdkDeployMode(config.getDeploymentMode())
                                                  .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
+                                                 .useRedisForSdkResponseEvents(config.isUseRedisForSdkResponseEvents())
                                                  .build()));
     modules.add(PmsSdkRegistryModule.getInstance(config));
     modules.add(PmsSdkProviderModule.getInstance(config));
-    modules.add(PmsSdkQueueModule.getInstance(config));
     modules.add(SdkMonitoringModule.getInstance());
     return modules;
   }

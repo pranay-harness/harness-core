@@ -13,6 +13,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.interrupts.statusupdate.StepStatusUpdate;
 import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
+import io.harness.engine.observers.NodeExecutionStartObserver;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.execution.NodeExecution;
@@ -51,6 +52,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Inject private OrchestrationEventEmitter eventEmitter;
 
   @Getter private final Subject<StepStatusUpdate> stepStatusUpdateSubject = new Subject<>();
+  @Getter private final Subject<NodeExecutionStartObserver> nodeExecutionStartSubject = new Subject<>();
 
   @Override
   public NodeExecution get(String nodeExecutionId) {
@@ -175,6 +177,9 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
                                  .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
                                  .eventType(OrchestrationEventType.NODE_EXECUTION_START)
                                  .build());
+
+      nodeExecutionStartSubject.fireInform(
+          NodeExecutionStartObxxxxxxxx:onNodeStart, OrchestrationEventType.NODE_EXECUTION_START, nodeExecution);
       return mongoTemplate.insert(nodeExecution);
     } else {
       return mongoTemplate.save(nodeExecution);

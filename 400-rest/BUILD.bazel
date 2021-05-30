@@ -1,6 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_package_tests")
-load("//:macros.bzl", "run_analysis")
+load("//:tools/bazel/macros.bzl", "run_analysis")
 
 Deprecated = True
 
@@ -10,6 +10,7 @@ shared_dependencies = [
 ] + [
     "//:lombok",
     "//420-delegate-service:module",
+    "//425-verification-commons:module",
     "//430-cv-nextgen-commons:module",
     "//450-ce-views:module",
     "//460-capability:module",

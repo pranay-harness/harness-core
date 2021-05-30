@@ -52,7 +52,7 @@ public class ServiceFilterHelperTest extends CategoryTest {
     Set<String> stringSet = ((Document) updateOperations.getUpdateObject().get("$set")).keySet();
     PropertyDescriptor[] propertyDescriptors = BeanUtils.getPropertyDescriptors(ServiceEntity.class);
     Set<String> excludedFields = new HashSet<>(Arrays.asList(ServiceEntityKeys.id, ServiceEntityKeys.createdAt,
-        ServiceEntityKeys.lastModifiedAt, ServiceEntityKeys.version, "class"));
+        ServiceEntityKeys.lastModifiedAt, ServiceEntityKeys.deletedAt, ServiceEntityKeys.version, "class"));
 
     for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
       boolean shouldExist =
@@ -65,13 +65,14 @@ public class ServiceFilterHelperTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testGetUpdateOperationsForDelete() {
-    ServiceEntity serviceEntity = ServiceEntity.builder().build();
     Update updateOperations = ServiceFilterHelper.getUpdateOperationsForDelete();
     Set<String> stringSet = ((Document) updateOperations.getUpdateObject().get("$set")).keySet();
     PropertyDescriptor[] propertyDescriptors = BeanUtils.getPropertyDescriptors(ServiceEntity.class);
 
     for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
       if (propertyDescriptor.getName().equals("deleted")) {
+        assertThat(stringSet.contains(propertyDescriptor.getName())).isTrue();
+      } else if (propertyDescriptor.getName().equals("deletedAt")) {
         assertThat(stringSet.contains(propertyDescriptor.getName())).isTrue();
       } else {
         assertThat(stringSet.contains(propertyDescriptor.getName())).isFalse();

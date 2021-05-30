@@ -207,7 +207,7 @@ cd to `portal` directory
 
    or, preferably, with this command from bash console:
 
-   * `bazel run 160-model-gen-tool:module --jvmopt="-Xbootclasspath/p:${HOME}/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar” server <portal project location>/160-model-gen-tool/config-datagen.yml`
+   * `bazel run 160-model-gen-tool:module --jvmopt="-Xbootclasspath/p:${HOME}/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar" server <portal project location>/160-model-gen-tool/config-datagen.yml`
 
    After command finishes, you might confirm in the mongodb account table that accountKey value is properly set.
 
@@ -298,7 +298,7 @@ helper shell scripts:
       mvn -f tools/ clean install -DskipTests
       ```
 
-   1. Setup Checkstyle plugin. In `Preferences -> Other settings -> Checkstyle` add `tools/config/target/config-0.0.1-SNAPSHOT-jar-with-dependencies.jar` and `tools/checkstyle/target/checkstyle-0.0.1-SNAPSHOT.jar` jars in the repo to the 3rd party checks classpath. Add configuration file `harness_checks.xml` (Choose the option to resolve the file from the 3rd party checks classpath - it's within the config jar) and choose it as the default active. Set scan scope to  `java sources including tests`.
+   1. Setup Checkstyle plugin. In `Preferences -> Other settings -> Checkstyle` add `tools/config/target/config-0.0.1-SNAPSHOT-jar-with-dependencies.jar` and `tools/checkstyle/target/checkstyle-0.0.1-SNAPSHOT.jar` jars in the repo to the 3rd party checks classpath. Add configuration file `harness_checks.xml` (Choose the option to resolve the file from the 3rd party checks classpath - it's within the config jar) and choose it as the default active. Set scan scope to  `java sources including tests`. In case Intellij complains about missing Harness rule files add following jar to Third-Party Checks `tools/checkstyle/target/checkstyle-0.0.1-SNAPSHOT.jar`. Additionally, check version of Checkstyle plugin to be 8.20 `Preferences > Tools > Checkstyle > Checkstyle Version:`    
    *  ![config image](img/checkstyle-config-pre.png).
    *  ![config image](img/checkstyle-config.png).
 7. Change settings to mark injected fields as assigned. (Settings > Editor > Inspections > Java > Declaration Redundancy > Unused Declarations>Entry Points >
@@ -339,6 +339,9 @@ Alternatively, use Fish shell: `brew install fish` then set iterms command to `/
 1. Make sure your mongodb is running first.
 
 2. Run API Server (WingsApplication): [Run > Run... > WingsApplication]
+    * If you get ALPN processor missing at start of WingsApp execute following maven command 
+     
+        `mvn dependency:get -Dartifact=org.mortbay.jetty.alpn:alpn-boot:8.1.13.v20181017`
 
 3. Run DataGenApp: [Run > Run... > DataGenApp]. Add HARNESS_GENERATION_PASSPHRASE environment variable to DataGenApp config in intellij. 
 
@@ -360,6 +363,9 @@ The admin username and password are in BaseIntegrationTest.java.
     * If you have `jsse.jar` but still getting that error, then make sure the default JDK for your maven module is set correctly in IntelliJ. Right Click Module in left sidebar > Open Module Settings > Platform Settings > SDKs)
 * If you go to https://localhost:8000/#/login and don't see content, go to https://localhost:8181/#/login to enable the certificate then try again.
 * If still face not able to login then got to https://localhost:9090/api/version and enable certificate and try again.
+* If you get ALPN processor missing at start of WingsApp execute following maven command 
+ 
+    `mvn dependency:get -Dartifact=org.mortbay.jetty.alpn:alpn-boot:8.1.13.v20181017`
 
 ### Python
 
@@ -518,6 +524,17 @@ bazel run //commons/go/lib/logs:go_default_test # an example
 ```
 
 ## Running docker builds with bazel
+
+### Install gcloud
+1. `brew install --cask google-cloud-sdk`
+1. Add gcloud to your PATH
+   1. Either, manually follow the onscreen instructions from brew
+   1. Or, run the SDKs installer `/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/install.sh`
+1. Run `gcloud init` to configure your installation
+1. Please select `platform` project in GCP during the configuration.
+1. Once all configurations done then you should be able to pull images from gcr registry.
+
+### Build images
 We have added flexibilities of building docker images with bazel. <br/>
 Docker rule reference: https://github.com/bazelbuild/rules_docker. <br/>
 To build docker images through bazel locally(i.e. access private images, push etc) we need to configure gcloud auth for docker. You can run these 
@@ -527,13 +544,6 @@ gcloud components install docker-credential-gcr
 gcloud auth login
 gcloud auth configure-docker
 ```
-
-#### Note:
-1. gcloud needs to installed in your system.
-2. You need to provide permission to gcloud sdk to access Google account, which is associated with your Harness Google cloud account.
-3. Please select `platform` project in GCP during the configuration.
-4. Once all configurations done then you should be able to pull images from gcr registry.
-5. All these previous steps are necessary to build docker images with bazel.
 
 ## Managing Build Configuration
 

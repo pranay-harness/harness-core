@@ -5,6 +5,9 @@ import static io.harness.constants.Constants.UNRECOGNIZED_WEBHOOK;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.HookEventType;
+import io.harness.delegate.task.scm.ScmGitWebhookTaskResponseData;
+import io.harness.gitsync.common.impl.ScmDelegateFacilitatorServiceImpl;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -44,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 public class NgWebhookResource {
   private WebhookService webhookService;
   private WebhookHelper webhookHelper;
+  private ScmDelegateFacilitatorServiceImpl scmDelegateFacilitatorService;
 
   @POST
   @ApiOperation(value = "accept webhook event", nickname = "webhookEndpoint")
@@ -58,5 +62,22 @@ public class NgWebhookResource {
     } else {
       return ResponseDTO.newResponse(UNRECOGNIZED_WEBHOOK);
     }
+  }
+
+  @POST
+  @Path("UpsertWebhook")
+  @ApiOperation(value = "Upsert a webhook event", nickname = "webhookUpsert")
+  @PublicApi
+  public ResponseDTO<ScmGitWebhookTaskResponseData> upsertWebhook(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.CONNECTOR_IDENTIFIER_REF) String connectorIdenfiierRef,
+      @NotNull @QueryParam(WebhookConstants.TARGET) String target,
+      @NotNull @QueryParam(WebhookConstants.HOOK_EVENT_TYPE) HookEventType hookEventType,
+      @QueryParam(NGCommonEntityConstants.REPO_URL) String repoURL) {
+    final ScmGitWebhookTaskResponseData scmGitWebhookTaskResponseData = webhookService.upsertWebhook(
+        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdenfiierRef, target, hookEventType, repoURL);
+    return ResponseDTO.newResponse(scmGitWebhookTaskResponseData);
   }
 }

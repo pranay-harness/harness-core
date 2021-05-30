@@ -2,14 +2,12 @@ package io.harness.delegate.app;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.delegate.task.citasks.cik8handler.helper.DelegateServiceTokenHelper;
 import io.harness.expression.app.ExpressionServiceModule;
 import io.harness.expression.service.ExpressionEvaulatorServiceGrpc;
 import io.harness.expression.service.ExpressionServiceImpl;
 import io.harness.grpc.auth.ServiceInfo;
 import io.harness.grpc.server.Connector;
 import io.harness.grpc.server.GrpcServerModule;
-import io.harness.security.ServiceTokenGenerator;
 import io.harness.task.service.TaskServiceGrpc;
 import io.harness.task.service.impl.TaskServiceImpl;
 
@@ -54,12 +52,6 @@ public class DelegateGrpcServiceModule extends AbstractModule {
         .toInstance(ServiceInfo.builder().id(SERVICE_ID).secret(serviceSecret).build());
     stringServiceInfoMapBinder.addBinding(TaskServiceGrpc.SERVICE_NAME)
         .toInstance(ServiceInfo.builder().id(SERVICE_ID).secret(serviceSecret).build());
-
-    bind(DelegateServiceTokenHelper.class)
-        .toInstance(DelegateServiceTokenHelper.builder()
-                        .serviceTokenGenerator(new ServiceTokenGenerator())
-                        .accountSecret(serviceSecret)
-                        .build());
 
     install(new GrpcServerModule(getConnectors(), getProvider(Key.get(new TypeLiteral<Set<BindableService>>() {})),
         getProvider(Key.get(new TypeLiteral<Set<ServerInterceptor>>() {}))));

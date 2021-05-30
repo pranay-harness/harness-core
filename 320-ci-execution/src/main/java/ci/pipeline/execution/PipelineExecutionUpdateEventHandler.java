@@ -8,7 +8,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.delegate.beans.ci.CIK8CleanupTaskParams;
-import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecutionMapper;
 import io.harness.ngpipeline.common.AmbianceHelper;
@@ -29,7 +28,6 @@ import net.jodah.failsafe.RetryPolicy;
 @Slf4j
 @OwnedBy(HarnessTeam.CI)
 public class PipelineExecutionUpdateEventHandler implements AsyncOrchestrationEventHandler {
-  @Inject private NodeExecutionService nodeExecutionService;
   @Inject private GitBuildStatusUtility gitBuildStatusUtility;
   @Inject private PodCleanupUtility podCleanupUtility;
 

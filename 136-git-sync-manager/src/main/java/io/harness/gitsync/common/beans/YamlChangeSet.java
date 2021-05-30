@@ -45,7 +45,7 @@ public class YamlChangeSet implements PersistentEntity, UuidAware, CreatedAtAwar
   private GitWebhookRequestAttributes gitWebhookRequestAttributes;
   @Default private Integer retryCount = 0;
   @NotNull private String queueKey;
-  @NotNull private String eventType;
+  @NotNull private YamlChangeSetEventType eventType;
   private String messageCode;
   private String repoUrl;
   private String branch;
@@ -58,9 +58,9 @@ public class YamlChangeSet implements PersistentEntity, UuidAware, CreatedAtAwar
 
   @Builder
   public YamlChangeSet(String uuid, String accountId, String status, long queuedOn,
-      GitWebhookRequestAttributes gitWebhookRequestAttributes, Integer retryCount, String queueKey, String eventType,
-      String messageCode, String repoUrl, String branch, EventMetadata eventMetadata, long createdAt,
-      long lastUpdatedAt) {
+      GitWebhookRequestAttributes gitWebhookRequestAttributes, Integer retryCount, String queueKey,
+      YamlChangeSetEventType eventType, String messageCode, String repoUrl, String branch, EventMetadata eventMetadata,
+      long createdAt, long lastUpdatedAt) {
     this.uuid = uuid;
     this.accountId = accountId;
     this.status = status;

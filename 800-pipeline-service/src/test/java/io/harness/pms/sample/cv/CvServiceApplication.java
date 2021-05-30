@@ -11,8 +11,7 @@ import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
-import io.harness.pms.sdk.core.execution.listeners.NodeExecutionEventListener;
-import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
+import io.harness.pms.sdk.core.execution.events.node.NodeExecutionEventListener;
 import io.harness.queue.QueueListenerController;
 
 import com.google.inject.Guice;
@@ -97,7 +96,6 @@ public class CvServiceApplication extends Application<CvServiceConfiguration> {
     log.info("Initializing queue listeners...");
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
   }
 
   private void registerJerseyProviders(Environment environment, Injector injector) {

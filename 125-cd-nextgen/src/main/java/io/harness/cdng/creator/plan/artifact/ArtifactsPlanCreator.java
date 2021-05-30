@@ -20,8 +20,8 @@ import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
-import io.harness.pms.sdk.core.facilitator.chilidren.ChildrenFacilitator;
-import io.harness.pms.sdk.core.facilitator.task.TaskFacilitator;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.yaml.ParameterField;
@@ -77,7 +77,9 @@ public class ArtifactsPlanCreator {
             .identifier(YamlTypes.ARTIFACT_LIST_CONFIG)
             .stepParameters(stepParameters)
             .facilitatorObtainment(
-                FacilitatorObtainment.newBuilder().setType(ChildrenFacilitator.FACILITATOR_TYPE).build())
+                FacilitatorObtainment.newBuilder()
+                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
+                    .build())
             .skipExpressionChain(false)
             .build();
     planNodes.add(artifactsNode);
@@ -106,7 +108,9 @@ public class ArtifactsPlanCreator {
             .identifier(YamlTypes.SIDECARS_ARTIFACT_CONFIG)
             .stepParameters(stepParameters)
             .facilitatorObtainment(
-                FacilitatorObtainment.newBuilder().setType(ChildrenFacilitator.FACILITATOR_TYPE).build())
+                FacilitatorObtainment.newBuilder()
+                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
+                    .build())
             .skipExpressionChain(false)
             .build();
     planNodes.add(sidecarsNode);
@@ -120,7 +124,10 @@ public class ArtifactsPlanCreator {
         .name(PlanCreatorConstants.ARTIFACT_NODE_NAME)
         .identifier(identifier)
         .stepParameters(artifactInfo.getParams())
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(TaskFacilitator.FACILITATOR_TYPE).build())
+        .facilitatorObtainment(
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                .build())
         .skipExpressionChain(false)
         .build();
   }

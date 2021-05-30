@@ -51,8 +51,8 @@ public class PipelineDashboardOverviewResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
       @NotNull @QueryParam("moduleInfo") String moduleInfo,
-      @NotNull @QueryParam(NGResourceFilterConstants.START) long startInterval,
-      @NotNull @QueryParam(NGResourceFilterConstants.END) long endInterval) {
+      @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
     log.info("Getting pipeline health");
     long previousInterval = startInterval - (endInterval - startInterval + DAY_IN_MS);
 
@@ -70,8 +70,8 @@ public class PipelineDashboardOverviewResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
       @NotNull @QueryParam("moduleInfo") String moduleInfo,
-      @NotNull @QueryParam(NGResourceFilterConstants.START) long startInterval,
-      @NotNull @QueryParam(NGResourceFilterConstants.END) long endInterval) {
+      @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
     log.info("getting pipeline execution");
     return ResponseDTO.newResponse(pipelineDashboardService.getDashboardPipelineExecutionInfo(accountIdentifier,
         orgIdentifier, projectIdentifier, pipelineIdentifier, startInterval, endInterval, moduleInfo));

@@ -6,6 +6,7 @@ import static io.harness.constants.Constants.X_BIT_BUCKET_EVENT;
 import static io.harness.constants.Constants.X_GIT_HUB_EVENT;
 import static io.harness.constants.Constants.X_GIT_LAB_EVENT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.eventsframework.EventsFrameworkConstants.GIT_CREATE_BRANCH_EVENT_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_PR_EVENT_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_PUSH_EVENT_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM;
@@ -14,6 +15,7 @@ import static io.harness.eventsframework.webhookpayloads.webhookdata.SourceRepoT
 import static io.harness.eventsframework.webhookpayloads.webhookdata.SourceRepoType.GITHUB;
 import static io.harness.eventsframework.webhookpayloads.webhookdata.SourceRepoType.GITLAB;
 import static io.harness.eventsframework.webhookpayloads.webhookdata.SourceRepoType.UNRECOGNIZED;
+import static io.harness.eventsframework.webhookpayloads.webhookdata.WebhookEventType.CREATE_BRANCH;
 import static io.harness.eventsframework.webhookpayloads.webhookdata.WebhookEventType.ISSUE_COMMENT;
 import static io.harness.eventsframework.webhookpayloads.webhookdata.WebhookEventType.PR;
 import static io.harness.eventsframework.webhookpayloads.webhookdata.WebhookEventType.PUSH;
@@ -30,7 +32,6 @@ import io.harness.eventsframework.webhookpayloads.webhookdata.EventHeader;
 import io.harness.eventsframework.webhookpayloads.webhookdata.GitDetails;
 import io.harness.eventsframework.webhookpayloads.webhookdata.SourceRepoType;
 import io.harness.eventsframework.webhookpayloads.webhookdata.WebhookDTO;
-import io.harness.eventsframework.webhookpayloads.webhookdata.WebhookEventType;
 import io.harness.ng.webhook.entities.WebhookEvent;
 import io.harness.ng.webhook.entities.WebhookEvent.WebhookEventBuilder;
 import io.harness.product.ci.scm.proto.ParseWebhookResponse;
@@ -51,6 +52,7 @@ public class WebhookHelper {
   @Inject @Named(WEBHOOK_EVENTS_STREAM) private Producer webhookEventProducer;
   @Inject @Named(GIT_PUSH_EVENT_STREAM) private Producer gitPushEventProducer;
   @Inject @Named(GIT_PR_EVENT_STREAM) private Producer gitPrEventProducer;
+  @Inject @Named(GIT_CREATE_BRANCH_EVENT_STREAM) private Producer gitCreateBranchEventProducer;
 
   public WebhookEvent toNGTriggerWebhookEvent(String accountIdentifier, String payload, HttpHeaders httpHeaders) {
     List<HeaderConfig> headerConfigs = new ArrayList<>();
@@ -111,6 +113,8 @@ public class WebhookHelper {
       builder.setEvent(PR);
     } else if (parseWebhookResponse.hasComment()) {
       builder.setEvent(ISSUE_COMMENT);
+    } else if (parseWebhookResponse.hasCreateBranch()) {
+      builder.setEvent(CREATE_BRANCH);
     }
 
     return builder.build();
@@ -139,10 +143,12 @@ public class WebhookHelper {
     producers.add(webhookEventProducer);
 
     if (webhookDTO.hasParsedResponse() && webhookDTO.hasGitDetails()) {
-      if (WebhookEventType.PUSH == webhookDTO.getGitDetails().getEvent()) {
+      if (PUSH == webhookDTO.getGitDetails().getEvent()) {
         producers.add(gitPushEventProducer);
       } else if (PR == webhookDTO.getGitDetails().getEvent()) {
         producers.add(gitPrEventProducer);
+      } else if (CREATE_BRANCH == webhookDTO.getGitDetails().getEvent()) {
+        producers.add(gitCreateBranchEventProducer);
       }
 
       // Here we can add more logic if need to add more event topics.

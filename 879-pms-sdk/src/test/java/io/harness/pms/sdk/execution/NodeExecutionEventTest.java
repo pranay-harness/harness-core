@@ -12,19 +12,21 @@ import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.NodeExecutionEvent;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.sdk.PmsSdkTestBase;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
-import io.harness.pms.sdk.core.execution.listeners.NodeExecutionEventListener;
-import io.harness.pms.sdk.core.facilitator.sync.SyncFacilitator;
+import io.harness.pms.sdk.core.execution.SdkNodeExecutionServiceImpl;
+import io.harness.pms.sdk.core.execution.events.node.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
 import io.harness.pms.sdk.core.registries.StepRegistry;
-import io.harness.pms.sdk.response.events.SdkResponseEventPublisher;
+import io.harness.pms.sdk.response.events.SdkResponseEventQueuePublisher;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
@@ -43,7 +45,7 @@ public class NodeExecutionEventTest extends PmsSdkTestBase {
   @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
   @Mock private EngineObtainmentHelper engineObtainmentHelper;
-  @Mock private SdkResponseEventPublisher sdkResponseEventPublisher;
+  @Mock private SdkResponseEventQueuePublisher sdkResponseEventQueuePublisher;
   @Mock private PmsGitSyncHelper pmsGitSyncHelper;
   @Inject private FacilitatorRegistry facilitatorRegistry;
   @Inject private StepRegistry stepRegistry;
@@ -59,7 +61,7 @@ public class NodeExecutionEventTest extends PmsSdkTestBase {
 
     SdkNodeExecutionService sdkNodeExecutionService = new SdkNodeExecutionServiceImpl();
     on(sdkNodeExecutionService).set("stepRegistry", stepRegistry);
-    on(sdkNodeExecutionService).set("sdkResponseEventPublisher", sdkResponseEventPublisher);
+    on(sdkNodeExecutionService).set("sdkResponseEventQueuePublisher", sdkResponseEventQueuePublisher);
     on(eventListener).set("sdkNodeExecutionService", sdkNodeExecutionService);
   }
 
@@ -78,9 +80,12 @@ public class NodeExecutionEventTest extends PmsSdkTestBase {
                                 Ambiance.newBuilder().setMetadata(ExecutionMetadata.newBuilder().build()).build())
                             .setUuid(NODE_EXECUTION_ID)
                             .setNode(PlanNodeProto.newBuilder()
-                                         .addFacilitatorObtainments(FacilitatorObtainment.newBuilder()
-                                                                        .setType(SyncFacilitator.FACILITATOR_TYPE)
-                                                                        .build())
+                                         .addFacilitatorObtainments(
+                                             FacilitatorObtainment.newBuilder()
+                                                 .setType(FacilitatorType.newBuilder()
+                                                              .setType(OrchestrationFacilitatorType.SYNC)
+                                                              .build())
+                                                 .build())
                                          .build())
                             .build())
                     .build()))

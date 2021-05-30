@@ -12,9 +12,11 @@ import io.harness.cdng.Deployment.HealthDeploymentDashboard;
 import io.harness.cdng.Deployment.ServiceDeploymentInfoDTO;
 import io.harness.cdng.Deployment.ServiceDeploymentListInfo;
 import io.harness.cdng.Deployment.ServiceDetailsInfoDTO;
+import io.harness.cdng.Deployment.TimeValuePairListDTO;
 import io.harness.cdng.service.dashboard.CDOverviewDashboardService;
 import io.harness.ng.core.OrgIdentifier;
 import io.harness.ng.core.ProjectIdentifier;
+import io.harness.ng.core.activityhistory.dto.TimeGroupType;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -64,8 +66,8 @@ public class CDDashboardOverviewResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @NotNull @QueryParam(NGResourceFilterConstants.START) long startInterval,
-      @NotNull @QueryParam(NGResourceFilterConstants.END) long endInterval) {
+      @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
     log.info("Getting deployment health");
     startInterval = epochShouldBeOfStartOfDay(startInterval);
     endInterval = epochShouldBeOfStartOfDay(endInterval);
@@ -112,8 +114,8 @@ public class CDDashboardOverviewResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @NotNull @QueryParam(NGResourceFilterConstants.START) long startInterval,
-      @NotNull @QueryParam(NGResourceFilterConstants.END) long endInterval) {
+      @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
     log.info("Getting deployment execution");
     startInterval = epochShouldBeOfStartOfDay(startInterval);
     endInterval = epochShouldBeOfStartOfDay(endInterval);
@@ -142,8 +144,8 @@ public class CDDashboardOverviewResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @NotNull @QueryParam(NGResourceFilterConstants.START) long startInterval,
-      @NotNull @QueryParam(NGResourceFilterConstants.END) long endInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval,
       @QueryParam(NGServiceConstants.ENVIRONMENT_TYPE) EnvironmentType envType) {
     log.info("Getting workloads");
     startInterval = epochShouldBeOfStartOfDay(startInterval);
@@ -162,9 +164,23 @@ public class CDDashboardOverviewResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @NotNull @QueryParam(NGResourceFilterConstants.START) long startTime,
-      @NotNull @QueryParam(NGResourceFilterConstants.END) long endTime) throws Exception {
+      @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startTime,
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endTime) throws Exception {
     return ResponseDTO.newResponse(cdOverviewDashboardService.getServiceDetailsList(
         accountIdentifier, orgIdentifier, projectIdentifier, startTime, endTime));
+  }
+
+  @GET
+  @Path("/getServicesGrowthTrend")
+  @ApiOperation(value = "Get service growth trend", nickname = "getServicesGrowthTrend")
+  public ResponseDTO<TimeValuePairListDTO<Integer>> getServicesGrowthTrend(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.TIME_GROUP_BY_TYPE) TimeGroupType timeGroupType) {
+    return ResponseDTO.newResponse(cdOverviewDashboardService.getServicesGrowthTrend(
+        accountIdentifier, orgIdentifier, projectIdentifier, startInterval, endInterval, timeGroupType));
   }
 }

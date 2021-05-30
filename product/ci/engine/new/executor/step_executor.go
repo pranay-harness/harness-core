@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"time"
 
 	statuspb "github.com/wings-software/portal/910-delegate-task-grpc-service/src/main/proto/io/harness/task/service"
@@ -31,15 +32,17 @@ type stepExecutor struct {
 	tmpFilePath         string // File path to store generated temporary files
 	delegateSvcEndpoint string // Delegate service endpoint
 	log                 *zap.SugaredLogger
+	procWriter          io.Writer
 }
 
 // NewStepExecutor creates a unit step executor
 func NewStepExecutor(tmpFilePath, delegateSvcEndpoint string,
-	log *zap.SugaredLogger) StepExecutor {
+	log *zap.SugaredLogger, procWriter io.Writer) StepExecutor {
 	return &stepExecutor{
 		tmpFilePath:         tmpFilePath,
 		delegateSvcEndpoint: delegateSvcEndpoint,
 		log:                 log,
+		procWriter:          procWriter,
 	}
 }
 
@@ -97,7 +100,7 @@ func (e *stepExecutor) execute(ctx context.Context, step *pb.UnitStep) (
 		return nil, nil, err
 	}
 
-	return executeStepOnAddon(ctx, step, e.tmpFilePath, e.log)
+	return executeStepOnAddon(ctx, step, e.tmpFilePath, e.log, e.procWriter)
 }
 
 func (e *stepExecutor) updateStepStatus(ctx context.Context, step *pb.UnitStep,

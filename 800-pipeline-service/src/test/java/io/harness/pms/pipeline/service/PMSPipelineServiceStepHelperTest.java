@@ -2,6 +2,7 @@ package io.harness.pms.pipeline.service;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.NAMAN;
+import static io.harness.rule.OwnerRule.SAMARTH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -10,6 +11,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
+import io.harness.pms.helpers.PmsFeatureFlagHelper;
 import io.harness.pms.pipeline.CommonStepInfo;
 import io.harness.pms.pipeline.StepCategory;
 import io.harness.rule.Owner;
@@ -28,11 +30,34 @@ import org.mockito.MockitoAnnotations;
 public class PMSPipelineServiceStepHelperTest extends CategoryTest {
   @InjectMocks private PMSPipelineServiceStepHelper pmsPipelineServiceStepHelper;
   @Mock private CommonStepInfo commonStepInfo;
+  @Mock private PmsFeatureFlagHelper pmsFeatureFlagHelper;
 
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
-    pmsPipelineServiceStepHelper = new PMSPipelineServiceStepHelper(commonStepInfo);
+    pmsPipelineServiceStepHelper = new PMSPipelineServiceStepHelper(pmsFeatureFlagHelper, commonStepInfo);
+  }
+
+  @Test
+  @Owner(developers = SAMARTH)
+  @Category(UnitTests.class)
+  public void testFilterStepsOnFeatureFlag() {
+    List<StepInfo> expectedStepInfoList = new ArrayList<>();
+    expectedStepInfoList.add(StepInfo.newBuilder()
+                                 .setName("testStepCV")
+                                 .setType("testStepCV")
+                                 .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
+                                 .build());
+    expectedStepInfoList.add(StepInfo.newBuilder()
+                                 .setName("testStepCV1")
+                                 .setType("testStepCV1")
+                                 .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
+                                 .build());
+
+    List<StepInfo> actualStepInfoList =
+        pmsPipelineServiceStepHelper.filterStepsOnFeatureFlag(expectedStepInfoList, "accountId");
+
+    assertThat(actualStepInfoList).isEqualTo(expectedStepInfoList);
   }
 
   @Test
@@ -51,7 +76,8 @@ public class PMSPipelineServiceStepHelperTest extends CategoryTest {
                          .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
                          .build());
     String module = "cv";
-    StepCategory stepCategory = PMSPipelineServiceStepHelper.calculateStepsForCategory(module, stepInfoList);
+    StepCategory stepCategory =
+        pmsPipelineServiceStepHelper.calculateStepsForCategory(module, stepInfoList, "accountId");
     assertThat(stepCategory).isNotNull();
     assertThat(stepCategory.toString())
         .isEqualTo(
@@ -62,7 +88,7 @@ public class PMSPipelineServiceStepHelperTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testCalculateStepsForModuleBasedOnCategory() {
-    Mockito.when(commonStepInfo.getCommonSteps("account")).thenReturn(new ArrayList<>());
+    Mockito.when(commonStepInfo.getCommonSteps()).thenReturn(new ArrayList<>());
     List<StepInfo> stepInfoList = new ArrayList<>();
     stepInfoList.add(
         StepInfo.newBuilder()
@@ -93,7 +119,7 @@ public class PMSPipelineServiceStepHelperTest extends CategoryTest {
                             .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
                             .build();
     StepCategory stepCategory = StepCategory.builder().name("cv").build();
-    PMSPipelineServiceStepHelper.addToTopLevel(stepCategory, stepInfo);
+    pmsPipelineServiceStepHelper.addToTopLevel(stepCategory, stepInfo);
     assertThat(stepCategory.toString())
         .isEqualTo(
             "StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV)], stepCategories=[])])])");

@@ -51,6 +51,7 @@ import io.harness.exception.WingsException;
 import io.harness.exception.ngexception.ConnectorValidationException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.persistance.GitSyncSdkService;
+import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
@@ -286,16 +287,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     newConnector.setCreatedAt(existingConnector.getCreatedAt());
     newConnector.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
     newConnector.setActivityDetails(existingConnector.getActivityDetails());
-    if (existingConnector.getHeartbeatPerpetualTaskId() == null
-        && !harnessManagedConnectorHelper.isHarnessManagedSecretManager(connector)) {
-      PerpetualTaskId connectorHeartbeatTaskId =
-          connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier, existingConnector.getOrgIdentifier(),
-              existingConnector.getProjectIdentifier(), existingConnector.getIdentifier());
-      newConnector.setHeartbeatPerpetualTaskId(
-          connectorHeartbeatTaskId == null ? null : connectorHeartbeatTaskId.getId());
-    } else {
-      newConnector.setHeartbeatPerpetualTaskId(existingConnector.getHeartbeatPerpetualTaskId());
-    }
+    setGitDetails(existingConnector, newConnector);
     Connector updatedConnector;
     try {
       updatedConnector = connectorRepository.save(newConnector, connectorRequest, ChangeType.MODIFY);
@@ -303,7 +295,26 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(format("Connector [%s] already exists", existingConnector.getIdentifier()));
     }
+
+    if (existingConnector.getIsFromDefaultBranch() == null || existingConnector.getIsFromDefaultBranch()) {
+      if (existingConnector.getHeartbeatPerpetualTaskId() == null
+          && !harnessManagedConnectorHelper.isHarnessManagedSecretManager(connector)) {
+        PerpetualTaskId connectorHeartbeatTaskId = connectorHeartbeatService.createConnectorHeatbeatTask(
+            accountIdentifier, existingConnector.getOrgIdentifier(), existingConnector.getProjectIdentifier(),
+            existingConnector.getIdentifier());
+        newConnector.setHeartbeatPerpetualTaskId(
+            connectorHeartbeatTaskId == null ? null : connectorHeartbeatTaskId.getId());
+      } else {
+        connectorHeartbeatService.resetPerpetualTask(
+            accountIdentifier, existingConnector.getHeartbeatPerpetualTaskId());
+        newConnector.setHeartbeatPerpetualTaskId(existingConnector.getHeartbeatPerpetualTaskId());
+      }
+    }
     return connectorMapper.writeDTO(updatedConnector);
+  }
+
+  private void setGitDetails(Connector existingConnector, Connector newConnector) {
+    EntityGitDetailsMapper.copyEntityGitDetails(existingConnector, newConnector);
   }
 
   private void validateTheUpdateRequestIsValid(

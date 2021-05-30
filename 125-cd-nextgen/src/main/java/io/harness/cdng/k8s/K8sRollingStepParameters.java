@@ -3,8 +3,10 @@ package io.harness.cdng.k8s;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.pms.yaml.ParameterField;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -18,7 +20,8 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("k8sRollingStepParameters")
 public class K8sRollingStepParameters extends K8sRollingBaseStepInfo implements K8sSpecParameters {
   @Builder(builderMethodName = "infoBuilder")
-  public K8sRollingStepParameters(ParameterField<Boolean> skipDryRun) {
-    super(skipDryRun);
+  public K8sRollingStepParameters(
+      ParameterField<Boolean> skipDryRun, ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
+    super(skipDryRun, delegateSelectors);
   }
 }

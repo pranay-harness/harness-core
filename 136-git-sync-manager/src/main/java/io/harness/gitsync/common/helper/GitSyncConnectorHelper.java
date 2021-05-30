@@ -18,6 +18,7 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
+import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.tasks.DecryptGitApiAccessHelper;
 import io.harness.utils.IdentifierRefHelper;
 
@@ -34,12 +35,25 @@ import org.apache.commons.lang3.NotImplementedException;
 public class GitSyncConnectorHelper {
   ConnectorService connectorService;
   DecryptGitApiAccessHelper decryptGitApiAccessHelper;
+  YamlGitConfigService yamlGitConfigService;
 
   @Inject
   public GitSyncConnectorHelper(@Named("connectorDecoratorService") ConnectorService connectorService,
       DecryptGitApiAccessHelper decryptGitApiAccessHelper) {
     this.connectorService = connectorService;
     this.decryptGitApiAccessHelper = decryptGitApiAccessHelper;
+  }
+
+  public ScmConnector getDecryptedConnector(
+      String yamlGitConfigIdentifier, String projectIdentifier, String orgIdentifier, String accountId) {
+    final YamlGitConfigDTO yamlGitConfigDTO =
+        yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountId, yamlGitConfigIdentifier);
+    if (yamlGitConfigDTO == null) {
+      throw new InvalidRequestException(String.format(
+          "Git sync configuration not found for identifier: [%s], projectIdentifier: [%s], orgIdentifier: [%s]",
+          projectIdentifier, orgIdentifier, yamlGitConfigIdentifier));
+    }
+    return getDecryptedConnector(yamlGitConfigDTO, accountId);
   }
 
   public ScmConnector getDecryptedConnector(YamlGitConfigDTO gitSyncConfigDTO, String accountId) {
@@ -53,8 +67,9 @@ public class GitSyncConnectorHelper {
       ConnectorConfigDTO connectorConfig = connector.getConnectorConfig();
       if (connectorConfig instanceof ScmConnector) {
         ScmConnector gitConnectorConfig = (ScmConnector) connector.getConnectorConfig();
-        return decryptGitApiAccessHelper.decryptScmApiAccess(gitConnectorConfig, accountId,
+        final ScmConnector scmConnector = decryptGitApiAccessHelper.decryptScmApiAccess(gitConnectorConfig, accountId,
             gitSyncConfigDTO.getProjectIdentifier(), gitSyncConfigDTO.getOrganizationIdentifier());
+        scmConnector.setUrl(gitSyncConfigDTO.getRepo());
       }
       throw new UnexpectedException(
           String.format("The connector with the  id %s, accountId %s, orgId %s, projectId %s is not a scm connector",

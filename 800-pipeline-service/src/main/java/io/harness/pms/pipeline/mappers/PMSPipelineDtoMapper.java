@@ -73,6 +73,27 @@ public class PMSPipelineDtoMapper {
         .build();
   }
 
+  public PipelineEntity toPipelineEntity(String accountId, String yaml) {
+    try {
+      BasicPipeline basicPipeline = YamlUtils.read(yaml, BasicPipeline.class);
+      if (NGExpressionUtils.matchesInputSetPattern(basicPipeline.getIdentifier())) {
+        throw new InvalidRequestException("Pipeline identifier cannot be runtime input");
+      }
+      return PipelineEntity.builder()
+          .yaml(yaml)
+          .accountId(accountId)
+          .orgIdentifier(basicPipeline.getOrgIdentifier())
+          .projectIdentifier(basicPipeline.getProjectIdentifier())
+          .name(basicPipeline.getName())
+          .identifier(basicPipeline.getIdentifier())
+          .description(basicPipeline.getDescription())
+          .tags(TagMapper.convertToList(basicPipeline.getTags()))
+          .build();
+    } catch (IOException e) {
+      throw new InvalidRequestException("Cannot create pipeline entity due to " + e.getMessage());
+    }
+  }
+
   private ExecutionSummaryInfoDTO getExecutionSummaryInfoDTO(PipelineEntity pipelineEntity) {
     return ExecutionSummaryInfoDTO.builder()
         .deployments(getNumberOfDeployments(pipelineEntity))

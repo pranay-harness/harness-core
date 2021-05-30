@@ -28,13 +28,12 @@ import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.steps.SkipType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
-import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
-import io.harness.pms.sdk.core.facilitator.chilidren.ChildrenFacilitator;
-import io.harness.pms.sdk.core.facilitator.sync.SyncFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.yaml.YamlField;
@@ -112,7 +111,9 @@ public class ServicePMSPlanCreator {
             .identifier(YamlTypes.SERVICE_CONFIG)
             .stepParameters(serviceConfigStepParameters)
             .facilitatorObtainment(
-                FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+                FacilitatorObtainment.newBuilder()
+                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                    .build())
             .adviserObtainments(getAdviserObtainmentFromMetaData(serviceNode, kryoSerializer))
             .skipExpressionChain(false)
             .build();
@@ -130,7 +131,10 @@ public class ServicePMSPlanCreator {
             .name(PlanCreatorConstants.SERVICE_NODE_NAME)
             .identifier(YamlTypes.SERVICE_ENTITY)
             .stepParameters(stepParameters)
-            .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(SyncFacilitator.FACILITATOR_TYPE).build())
+            .facilitatorObtainment(
+                FacilitatorObtainment.newBuilder()
+                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                    .build())
             .adviserObtainment(
                 AdviserObtainment.newBuilder()
                     .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
@@ -152,17 +156,20 @@ public class ServicePMSPlanCreator {
                                                          .type(actualServiceConfig.getServiceDefinition().getType())
                                                          .childNodeId(serviceSpecNodeId)
                                                          .build();
-    PlanNode node = PlanNode.builder()
-                        .uuid("service-definition-" + serviceNodeId)
-                        .stepType(ServiceDefinitionStep.STEP_TYPE)
-                        .name(PlanCreatorConstants.SERVICE_DEFINITION_NODE_NAME)
-                        .identifier(YamlTypes.SERVICE_DEFINITION)
-                        .stepParameters(stepParameters)
-                        .facilitatorObtainment(
-                            FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
-                        .skipExpressionChain(false)
-                        .skipGraphType(SkipType.SKIP_TREE)
-                        .build();
+    PlanNode node =
+        PlanNode.builder()
+            .uuid("service-definition-" + serviceNodeId)
+            .stepType(ServiceDefinitionStep.STEP_TYPE)
+            .name(PlanCreatorConstants.SERVICE_DEFINITION_NODE_NAME)
+            .identifier(YamlTypes.SERVICE_DEFINITION)
+            .stepParameters(stepParameters)
+            .facilitatorObtainment(
+                FacilitatorObtainment.newBuilder()
+                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                    .build())
+            .skipExpressionChain(false)
+            .skipGraphType(SkipType.SKIP_TREE)
+            .build();
     planNodes.put(node.getUuid(), node);
     return node.getUuid();
   }
@@ -196,19 +203,21 @@ public class ServicePMSPlanCreator {
                             overrideSet.getOverrideSet()))))
             .childrenNodeIds(serviceSpecChildrenIds)
             .build();
-    PlanNode node = PlanNode.builder()
-                        .uuid("service-spec-" + serviceNodeId)
-                        .stepType(ServiceSpecStep.STEP_TYPE)
-                        .name(PlanCreatorConstants.SERVICE_SPEC_NODE_NAME)
-                        .identifier(YamlTypes.SERVICE_SPEC)
-                        .stepParameters(stepParameters)
-                        .facilitatorObtainment(FacilitatorObtainment.newBuilder()
-                                                   .setType(EmptyPredicate.isEmpty(serviceSpecChildrenIds)
-                                                           ? SyncFacilitator.FACILITATOR_TYPE
-                                                           : ChildrenFacilitator.FACILITATOR_TYPE)
-                                                   .build())
-                        .skipExpressionChain(false)
-                        .build();
+    PlanNode node =
+        PlanNode.builder()
+            .uuid("service-spec-" + serviceNodeId)
+            .stepType(ServiceSpecStep.STEP_TYPE)
+            .name(PlanCreatorConstants.SERVICE_SPEC_NODE_NAME)
+            .identifier(YamlTypes.SERVICE_SPEC)
+            .stepParameters(stepParameters)
+            .facilitatorObtainment(
+                FacilitatorObtainment.newBuilder()
+                    .setType(EmptyPredicate.isEmpty(serviceSpecChildrenIds)
+                            ? FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build()
+                            : FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
+                    .build())
+            .skipExpressionChain(false)
+            .build();
     planNodes.put(node.getUuid(), node);
     return node.getUuid();
   }

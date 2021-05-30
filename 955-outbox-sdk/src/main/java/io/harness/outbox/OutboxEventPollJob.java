@@ -2,7 +2,6 @@ package io.harness.outbox;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.outbox.OutboxSDKConstants.DEFAULT_MAX_EVENTS_POLLED;
-import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
 import static io.harness.outbox.OutboxSDKConstants.DEFAULT_UNBLOCK_RETRY_INTERVAL_IN_MINUTES;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -21,7 +20,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
@@ -34,15 +32,16 @@ public class OutboxEventPollJob implements Runnable {
   private final OutboxEventFilter outboxEventFilter;
   private final Retry retry;
   private static final String OUTBOX_POLL_JOB_LOCK = "OUTBOX_POLL_JOB_LOCK";
+  private final String outboxLockId;
 
   @Inject
   public OutboxEventPollJob(OutboxService outboxService, OutboxEventHandler outboxEventHandler,
-      PersistentLocker persistentLocker, @Nullable OutboxPollConfiguration outboxPollConfiguration) {
+      PersistentLocker persistentLocker, OutboxPollConfiguration outboxPollConfiguration) {
     this.outboxService = outboxService;
     this.outboxEventHandler = outboxEventHandler;
     this.persistentLocker = persistentLocker;
-    this.outboxPollConfiguration =
-        outboxPollConfiguration == null ? DEFAULT_OUTBOX_POLL_CONFIGURATION : outboxPollConfiguration;
+    this.outboxPollConfiguration = outboxPollConfiguration;
+    this.outboxLockId = OUTBOX_POLL_JOB_LOCK + "_" + this.outboxPollConfiguration.getLockId();
     this.outboxEventFilter = OutboxEventFilter.builder().maximumEventsPolled(DEFAULT_MAX_EVENTS_POLLED).build();
     RetryConfig retryConfig = RetryConfig.custom()
                                   .intervalFunction(IntervalFunction.ofExponentialBackoff(1000, 1.5))
@@ -61,9 +60,9 @@ public class OutboxEventPollJob implements Runnable {
   }
 
   private void pollAndHandleOutboxEvents() {
-    try (AcquiredLock<?> lock = persistentLocker.tryToAcquireLock(OUTBOX_POLL_JOB_LOCK, Duration.ofMinutes(2))) {
+    try (AcquiredLock<?> lock = persistentLocker.tryToAcquireLock(outboxLockId, Duration.ofMinutes(2))) {
       if (lock == null) {
-        log.error("Could not acquire lock for outbox poll job");
+        log.warn("Could not acquire lock for outbox poll job");
         return;
       }
       List<OutboxEvent> outboxEvents;
