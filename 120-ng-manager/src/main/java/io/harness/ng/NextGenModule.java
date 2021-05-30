@@ -91,8 +91,6 @@ import io.harness.ng.core.event.OrganizationEntityCRUDStreamListener;
 import io.harness.ng.core.event.OrganizationFeatureFlagStreamListener;
 import io.harness.ng.core.event.ProjectEntityCRUDStreamListener;
 import io.harness.ng.core.event.UserMembershipStreamListener;
-import io.harness.ng.core.gitsync.GitChangeProcessorService;
-import io.harness.ng.core.gitsync.YamlHandler;
 import io.harness.ng.core.impl.OrganizationServiceImpl;
 import io.harness.ng.core.impl.ProjectServiceImpl;
 import io.harness.ng.core.outbox.NextGenOutboxEventHandler;
@@ -103,8 +101,6 @@ import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.user.service.impl.NgUserServiceImpl;
 import io.harness.ng.core.user.service.impl.UserEntityCrudStreamListener;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
-import io.harness.ng.gitsync.NgCoreGitChangeSetProcessorServiceImpl;
-import io.harness.ng.gitsync.handlers.ConnectorYamlHandler;
 import io.harness.ng.userprofile.commons.SCMType;
 import io.harness.ng.userprofile.entities.AwsCodeCommitSCM.AwsCodeCommitSCMMapper;
 import io.harness.ng.userprofile.entities.AzureDevOpsSCM.AzureDevOpsSCMMapper;
@@ -164,7 +160,6 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
-import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.dropwizard.jackson.Jackson;
@@ -462,8 +457,6 @@ public class NextGenModule extends AbstractModule {
         .to(SecretManagerConnectorServiceImpl.class);
     bind(NgUserService.class).to(NgUserServiceImpl.class);
     bind(UserGroupService.class).to(UserGroupServiceImpl.class);
-    bind(GitChangeProcessorService.class).to(NgCoreGitChangeSetProcessorServiceImpl.class);
-    bindYamlHandlers();
     bind(YamlBaseUrlService.class).to(YamlBaseUrlServiceImpl.class);
     bind(DelegateProfileManagerNgService.class).to(DelegateProfileManagerNgServiceImpl.class);
     bind(UserInfoService.class).to(UserInfoServiceImpl.class);
@@ -537,10 +530,5 @@ public class NextGenModule extends AbstractModule {
         .configure()
         .parameterNameProvider(new ReflectionParameterNameProvider())
         .buildValidatorFactory();
-  }
-
-  private void bindYamlHandlers() {
-    final Multibinder<YamlHandler> yamlHandlerMultiBinder = Multibinder.newSetBinder(binder(), YamlHandler.class);
-    yamlHandlerMultiBinder.addBinding().to(ConnectorYamlHandler.class);
   }
 }
