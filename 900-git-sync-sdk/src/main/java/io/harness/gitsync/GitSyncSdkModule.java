@@ -5,6 +5,8 @@ import static io.harness.eventsframework.EventsFrameworkConstants.GIT_CONFIG_STR
 
 import io.harness.SCMJavaClientModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.dao.GitProcessingRequestService;
+import io.harness.gitsync.dao.GitProcessingRequestServiceImpl;
 import io.harness.gitsync.events.GitSyncConfigEventMessageListener;
 import io.harness.gitsync.gittoharness.ChangeSetHelperServiceImpl;
 import io.harness.gitsync.gittoharness.ChangeSetInterceptorService;
@@ -60,6 +62,7 @@ public class GitSyncSdkModule extends AbstractModule {
     bind(ScmGitHelper.class).annotatedWith(Names.named(SCM_ON_MANAGER)).to(ScmManagerGitHelper.class);
     bind(ScmGitHelper.class).annotatedWith(Names.named(SCM_ON_DELEGATE)).to(ScmDelegateGitHelper.class);
     bind(GitSyncSdkService.class).to(GitSyncSdkServiceImpl.class);
+    bind(GitProcessingRequestService.class).to(GitProcessingRequestServiceImpl.class);
     //    AnnotationConfigApplicationContext context =
     //            new AnnotationConfigApplicationContext(GitAwarePersistenceBean.class);
     //    Injector injector = new SpringInjector(context);
