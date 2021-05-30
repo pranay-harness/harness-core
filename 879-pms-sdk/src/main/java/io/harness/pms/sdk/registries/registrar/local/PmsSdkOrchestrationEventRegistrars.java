@@ -16,8 +16,6 @@ public class PmsSdkOrchestrationEventRegistrars {
     Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> handlerHashMap = new HashMap<>();
     handlerHashMap.put(
         OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE, Sets.newHashSet(ExecutionSummaryUpdateEventHandler.class));
-    handlerHashMap.put(
-        OrchestrationEventType.NODE_EXECUTION_UPDATE, Sets.newHashSet(ExecutionSummaryUpdateEventHandler.class));
     return handlerHashMap;
   }
 }
