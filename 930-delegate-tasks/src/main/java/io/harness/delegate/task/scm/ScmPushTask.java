@@ -52,8 +52,8 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
         CreateFileResponse createFileResponse = scmDelegateClient.processScmRequest(c -> {
           final SCMGrpc.SCMBlockingStub scmBlockingStub = SCMGrpc.newBlockingStub(c);
           if (scmPushTaskParams.isNewBranch()) {
-            scmServiceClient.createNewBranch(scmPushTaskParams.getScmConnector(), scmPushTaskParams.getBaseBranch(),
-                scmPushTaskParams.getGitFileDetails().getBranch(), scmBlockingStub);
+            scmServiceClient.createNewBranch(scmPushTaskParams.getScmConnector(),
+                scmPushTaskParams.getGitFileDetails().getBranch(), scmPushTaskParams.getBaseBranch(), scmBlockingStub);
           }
           return scmServiceClient.createFile(
               scmPushTaskParams.getScmConnector(), scmPushTaskParams.getGitFileDetails(), scmBlockingStub);
