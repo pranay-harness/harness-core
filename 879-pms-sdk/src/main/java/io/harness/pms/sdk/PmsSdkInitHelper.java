@@ -5,7 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.metrics.jobs.RecordMetricsJob;
 import io.harness.metrics.service.api.MetricService;
-import io.harness.monitoring.MonitoringQueueObserver;
+import io.harness.monitoring.MonitoringEventObserver;
 import io.harness.pms.contracts.plan.ConsumerConfig;
 import io.harness.pms.contracts.plan.InitializeSdkRequest;
 import io.harness.pms.contracts.plan.PmsServiceGrpc;
@@ -99,12 +99,12 @@ public class PmsSdkInitHelper {
 
   private static void registerObserversForEvents(Injector injector) {
     NodeExecutionEventListener nodeExecutionEventListener = injector.getInstance(NodeExecutionEventListener.class);
-    nodeExecutionEventListener.getQueueListenerObserverSubject().register(
-        injector.getInstance(Key.get(MonitoringQueueObserver.class)));
+    nodeExecutionEventListener.getEventListenerObserverSubject().register(
+        injector.getInstance(Key.get(MonitoringEventObserver.class)));
     SdkOrchestrationEventListener sdkOrchestrationEventListener =
         injector.getInstance(SdkOrchestrationEventListener.class);
-    sdkOrchestrationEventListener.getQueueListenerObserverSubject().register(
-        injector.getInstance(Key.get(MonitoringQueueObserver.class)));
+    sdkOrchestrationEventListener.getEventListenerObserverSubject().register(
+        injector.getInstance(Key.get(MonitoringEventObserver.class)));
   }
 
   private static void registerQueueListeners(Injector injector) {

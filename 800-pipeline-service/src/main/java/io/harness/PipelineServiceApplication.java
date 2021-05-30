@@ -24,6 +24,7 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.observers.OrchestrationLogPublisher;
 import io.harness.exception.GeneralException;
 import io.harness.execution.SdkResponseEventListener;
+import io.harness.execution.consumers.SdkResponseEventMessageListener;
 import io.harness.execution.consumers.SdkResponseEventRedisConsumerService;
 import io.harness.gitsync.AbstractGitSyncSdkModule;
 import io.harness.gitsync.GitSdkConfiguration;
@@ -38,7 +39,8 @@ import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
-import io.harness.monitoring.MonitoringQueueObserver;
+import io.harness.monitoring.MonitoringEventObserver;
+import io.harness.monitoring.MonitoringRedisEventObserver;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.notification.module.NotificationClientModule;
@@ -257,6 +259,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerAuthFilters(appConfig, environment, injector);
     registerHealthCheck(environment, injector);
     registerObservers(injector);
+    EventObserverUtils.registerObservers(injector);
 
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     injector.getInstance(TriggerWebhookExecutionService.class).registerIterators();
@@ -327,8 +330,13 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         injector.getInstance(Key.get(PipelineStartNotificationHandler.class)));
 
     SdkResponseEventListener sdkResponseEventListener = injector.getInstance(SdkResponseEventListener.class);
-    sdkResponseEventListener.getQueueListenerObserverSubject().register(
-        injector.getInstance(Key.get(MonitoringQueueObserver.class)));
+    sdkResponseEventListener.getEventListenerObserverSubject().register(
+        injector.getInstance(Key.get(MonitoringEventObserver.class)));
+
+    SdkResponseEventMessageListener sdkResponseEventMessageListener =
+        injector.getInstance(SdkResponseEventMessageListener.class);
+    sdkResponseEventMessageListener.getEventListenerObserverSubject().register(
+        injector.getInstance(Key.get(MonitoringRedisEventObserver.class)));
   }
 
   private void registerCorrelationFilter(Environment environment, Injector injector) {

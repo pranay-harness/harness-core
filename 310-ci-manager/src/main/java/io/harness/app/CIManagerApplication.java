@@ -10,6 +10,7 @@ import static io.harness.pms.listener.PmsUtilityConsumerConstants.ORCHESTRATION_
 import static java.util.Collections.singletonList;
 
 import io.harness.AuthorizationServiceHeader;
+import io.harness.EventObserverUtils;
 import io.harness.PipelineServiceUtilityModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ci.app.InspectCommand;
@@ -259,6 +260,8 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     registerYamlSdk(injector);
     scheduleJobs(injector);
     registerQueueListener(injector);
+    EventObserverUtils.registerObservers(injector);
+
     log.info("Starting app done");
     MaintenanceController.forceMaintenance(false);
     LogManager.shutdown();

@@ -10,12 +10,14 @@ import "io/harness/pms/contracts/facilitators/facilitators.proto";
 import "io/harness/pms/contracts/service/node_execution_event.proto";
 import "io/harness/pms/contracts/execution/failure/failure_info.proto";
 import "io/harness/pms/contracts/advisers/advise.proto";
+import "google/protobuf/timestamp.proto";
 
 option java_multiple_files = true;
 
 message SdkResponseEventProto {
   SdkResponseEventType sdkResponseEventType = 1;
   SdkResponseEventRequest sdkResponseEventRequest = 2;
+  google.protobuf.Timestamp createdAt = 3;
 }
 
 message SdkResponseEventRequest {

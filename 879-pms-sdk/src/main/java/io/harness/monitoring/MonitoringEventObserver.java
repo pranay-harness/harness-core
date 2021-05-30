@@ -5,8 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.metrics.ThreadAutoLogContext;
 import io.harness.metrics.service.api.MetricService;
 import io.harness.observer.AsyncInformObserver;
-import io.harness.queue.Queuable;
-import io.harness.queue.QueueListenerObserver;
+import io.harness.queue.EventListenerObserver;
 import io.harness.queue.WithMonitoring;
 
 import com.google.inject.Inject;
@@ -14,7 +13,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class MonitoringQueueObserver<T extends Queuable> implements QueueListenerObserver<T>, AsyncInformObserver {
+public class MonitoringEventObserver<T> implements EventListenerObserver<T>, AsyncInformObserver {
   public static String LISTENER_END_METRIC = "%s_queue_time";
   public static String LISTENER_START_METRIC = "%s_time_in_queue";
 

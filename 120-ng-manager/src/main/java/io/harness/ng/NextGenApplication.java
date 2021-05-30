@@ -14,6 +14,7 @@ import static io.harness.pms.listener.PmsUtilityConsumerConstants.ORCHESTRATION_
 import static com.google.common.collect.ImmutableMap.of;
 
 import io.harness.EntityType;
+import io.harness.EventObserverUtils;
 import io.harness.Microservice;
 import io.harness.PipelineServiceUtilityModule;
 import io.harness.SCMGrpcClientModule;
@@ -265,6 +266,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerJobs(injector);
     registerMigrations(injector);
     registerQueueListeners(injector);
+    EventObserverUtils.registerObservers(injector);
 
     intializeGitSync(injector, appConfig);
     //  This is ordered below health registration so that kubernetes deployment readiness check passes under 10 minutes
