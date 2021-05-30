@@ -22,6 +22,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("AwsConnector")
+@Entity(value = "random", noClassnameStored = true)
 public class AwsConnectorDTO extends ConnectorConfigDTO implements DelegateSelectable {
   @Valid @NotNull AwsCredentialDTO credential;
   Set<String> delegateSelectors;
