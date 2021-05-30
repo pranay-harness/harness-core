@@ -19,6 +19,7 @@ import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.helper.GitFileLocationHelper;
 import io.harness.gitsync.core.beans.ChangeWithErrorMsg;
 import io.harness.gitsync.core.beans.GitCommit;
+import io.harness.gitsync.core.beans.GitCommit.GitCommitProcessingStatus;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity.GitFileActivityBuilder;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity.GitFileActivityKeys;
@@ -315,7 +316,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   }
 
   private GitFileActivitySummaryBuilder buildBaseGitFileActivitySummary(
-      GitFileActivity gitFileActivity, boolean gitToHarness, GitCommit.Status status) {
+      GitFileActivity gitFileActivity, boolean gitToHarness, GitCommitProcessingStatus status) {
     return GitFileActivitySummary.builder()
         .accountId(gitFileActivity.getAccountId())
         .organizationId(gitFileActivity.getOrganizationId())
@@ -331,12 +332,12 @@ public class GitSyncServiceImpl implements GitSyncService {
 
   private GitFileActivitySummaryBuilder buildBaseGitFileActivitySummary(GitCommit gitCommit, boolean gitToHarness) {
     return GitFileActivitySummary.builder()
-        .accountId(gitCommit.getAccountId())
-        .organizationId(gitCommit.getOrganizationId())
-        .projectId(gitCommit.getProjectId())
+        .accountId(gitCommit.getAccountIdentifier())
+        //        .organizationId(gitCommit.getOrganizationId())
+        //        .projectId(gitCommit.getProjectId())
         .commitId(gitCommit.getCommitId())
         .branchName(gitCommit.getBranchName())
-        .repo(gitCommit.getRepo())
+        .repo(gitCommit.getRepoURL())
         .gitConnectorId(gitCommit.getGitConnectorId())
         .commitMessage(gitCommit.getCommitMessage())
         .gitToHarness(gitToHarness)
@@ -362,7 +363,7 @@ public class GitSyncServiceImpl implements GitSyncService {
 
   @Override
   public GitFileActivitySummary createGitFileActivitySummaryForCommit(final String commitId, final String accountId,
-      Boolean gitToHarness, GitCommit.Status status, YamlGitConfigDTO yamlGitConfig) {
+      Boolean gitToHarness, GitCommitProcessingStatus status, YamlGitConfigDTO yamlGitConfig) {
     try {
       List<GitFileActivity> gitFileActivities = getFileActivitesForCommit(commitId, accountId);
       if (isEmpty(gitFileActivities)) {
@@ -381,7 +382,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   }
 
   private GitFileActivitySummary createGitFileActivitySummary(
-      List<GitFileActivity> gitFileActivities, Boolean gitToHarness, GitCommit.Status status) {
+      List<GitFileActivity> gitFileActivities, Boolean gitToHarness, GitCommitProcessingStatus status) {
     if (isEmpty(gitFileActivities)) {
       return null;
     }
