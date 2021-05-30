@@ -1,6 +1,6 @@
 package io.harness.execution.consumers;
 
-import io.harness.pms.events.PmsEventFrameworkConstants;
+import io.harness.OrchestrationEventsFrameworkConstants;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
@@ -16,14 +16,16 @@ public class SdkResponseEventRedisConsumerService implements Managed {
 
   @Override
   public void start() throws Exception {
-    consumerExecutorService = Executors.newSingleThreadExecutor(
-        new ThreadFactoryBuilder().setNameFormat(PmsEventFrameworkConstants.SDK_RESPONSE_EVENT_CONSUMER).build());
+    consumerExecutorService = Executors.newFixedThreadPool(2,
+        new ThreadFactoryBuilder()
+            .setNameFormat(OrchestrationEventsFrameworkConstants.SDK_RESPONSE_EVENT_CONSUMER + "-%d")
+            .build());
     consumerExecutorService.execute(redisConsumer);
   }
 
   @Override
   public void stop() throws Exception {
     consumerExecutorService.shutdown();
-    consumerExecutorService.awaitTermination(Duration.ofSeconds(30).getSeconds(), TimeUnit.SECONDS);
+    consumerExecutorService.awaitTermination(Duration.ofSeconds(10).getSeconds(), TimeUnit.SECONDS);
   }
 }

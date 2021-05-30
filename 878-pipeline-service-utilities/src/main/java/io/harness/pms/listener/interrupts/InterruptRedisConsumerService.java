@@ -1,32 +1,28 @@
-package io.harness.pms.sdk.core.interrupt;
+package io.harness.pms.listener.interrupts;
 
-import static io.harness.pms.events.PmsEventFrameworkConstants.INTERRUPT_CONSUMER;
-
-import io.harness.pms.sdk.core.execution.events.orchestration.SdkOrchestrationEventRedisConsumer;
-import io.harness.pms.utils.PmsManagedService;
+import static io.harness.pms.listener.PmsUtilityConsumerConstants.INTERRUPT_CONSUMER;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import io.dropwizard.lifecycle.Managed;
 import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class InterruptRedisConsumerService extends PmsManagedService {
+public class InterruptRedisConsumerService implements Managed {
   private ExecutorService interruptConsumerExecutorService;
-  private ExecutorService orchestrationEventConsumerExecutorService;
   @Inject private InterruptEventRedisConsumer interruptEventRedisConsumer;
-  @Inject private SdkOrchestrationEventRedisConsumer sdkOrchestrationEventRedisConsumer;
 
   @Override
-  protected void startUp() {
+  public void start() throws Exception {
     interruptConsumerExecutorService =
         Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat(INTERRUPT_CONSUMER).build());
     interruptConsumerExecutorService.execute(interruptEventRedisConsumer);
   }
 
   @Override
-  protected void shutDown() throws Exception {
+  public void stop() throws Exception {
     interruptConsumerExecutorService.shutdown();
     interruptConsumerExecutorService.awaitTermination(Duration.ofSeconds(10).getSeconds(), TimeUnit.SECONDS);
   }

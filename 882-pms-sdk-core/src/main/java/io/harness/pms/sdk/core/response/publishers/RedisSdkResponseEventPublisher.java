@@ -1,6 +1,6 @@
-package io.harness.pms.sdk.response.publishers;
+package io.harness.pms.sdk.core.response.publishers;
 
-import static io.harness.pms.events.PmsEventFrameworkConstants.SDK_RESPONSE_EVENT_PRODUCER;
+import static io.harness.pms.sdk.core.PmsSdkCoreEventsFrameworkConstants.SDK_RESPONSE_EVENT_PRODUCER;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;

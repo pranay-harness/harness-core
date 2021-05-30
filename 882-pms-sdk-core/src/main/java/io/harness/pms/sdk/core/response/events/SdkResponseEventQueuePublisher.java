@@ -1,4 +1,4 @@
-package io.harness.pms.sdk.response.events;
+package io.harness.pms.sdk.core.response.events;
 
 import io.harness.pms.execution.SdkResponseEvent;
 import io.harness.queue.QueuePublisher;

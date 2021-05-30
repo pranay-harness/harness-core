@@ -7,6 +7,7 @@ import io.harness.mongo.MongoConfig;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.contracts.plan.ConsumerConfig;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.sdk.core.adviser.Adviser;
@@ -45,4 +46,6 @@ public class PmsSdkConfiguration {
           .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
           .build();
   boolean useRedisForSdkResponseEvents;
+  ConsumerConfig interruptConsumerConfig;
+  ConsumerConfig orchestrationEventConsumerConfig;
 }

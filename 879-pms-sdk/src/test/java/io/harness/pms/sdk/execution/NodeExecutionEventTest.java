@@ -26,7 +26,7 @@ import io.harness.pms.sdk.core.execution.SdkNodeExecutionServiceImpl;
 import io.harness.pms.sdk.core.execution.events.node.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
 import io.harness.pms.sdk.core.registries.StepRegistry;
-import io.harness.pms.sdk.response.events.SdkResponseEventQueuePublisher;
+import io.harness.pms.sdk.core.response.publishers.SdkResponseEventPublisher;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
@@ -45,7 +45,7 @@ public class NodeExecutionEventTest extends PmsSdkTestBase {
   @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
   @Mock private EngineObtainmentHelper engineObtainmentHelper;
-  @Mock private SdkResponseEventQueuePublisher sdkResponseEventQueuePublisher;
+  @Mock private SdkResponseEventPublisher sdkResponseEventPublisher;
   @Mock private PmsGitSyncHelper pmsGitSyncHelper;
   @Inject private FacilitatorRegistry facilitatorRegistry;
   @Inject private StepRegistry stepRegistry;
@@ -61,7 +61,7 @@ public class NodeExecutionEventTest extends PmsSdkTestBase {
 
     SdkNodeExecutionService sdkNodeExecutionService = new SdkNodeExecutionServiceImpl();
     on(sdkNodeExecutionService).set("stepRegistry", stepRegistry);
-    on(sdkNodeExecutionService).set("sdkResponseEventQueuePublisher", sdkResponseEventQueuePublisher);
+    on(sdkNodeExecutionService).set("sdkResponseEventPublisher", sdkResponseEventPublisher);
     on(eventListener).set("sdkNodeExecutionService", sdkNodeExecutionService);
   }
 

@@ -1,11 +1,11 @@
 package io.harness.engine.events;
 
-import static io.harness.pms.events.PmsEventFrameworkConstants.ORCHESTRATION_EVENT_PRODUCER;
 import static io.harness.pms.events.PmsEventFrameworkConstants.SERVICE_NAME;
 
 import io.harness.OrchestrationModuleConfig;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.utils.OrchestrationEventsFrameworkUtils;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.logging.AutoLogContext;
@@ -24,7 +24,6 @@ import io.harness.serializer.ProtoUtils;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import java.sql.Date;
 import java.time.Duration;
@@ -40,11 +39,10 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class OrchestrationEventEmitter {
   @Inject private OrchestrationModuleConfig configuration;
-
+  @Inject private OrchestrationEventsFrameworkUtils eventsFrameworkUtils;
   @Inject private OrchestrationEventHandlerRegistry handlerRegistry;
   @Inject private QueuePublisher<OrchestrationEvent> orchestrationEventQueue;
   @Inject private OrchestrationEventLogRepository orchestrationEventLogRepository;
-  @Inject @Named(ORCHESTRATION_EVENT_PRODUCER) private Producer eventProducer;
 
   @Getter @Setter Subject<OrchestrationEventLogHandler> orchestrationEventLogSubjectSubject = new Subject<>();
 
@@ -60,10 +58,7 @@ public class OrchestrationEventEmitter {
           : event.getNodeExecutionProto().getNode().getServiceName();
 
       if (configuration.isUseRedisForEvents()) {
-        eventProducer.send(Message.newBuilder()
-                               .putAllMetadata(ImmutableMap.of(SERVICE_NAME, serviceName))
-                               .setData(buildProtoEvent(event))
-                               .build());
+        emitViaEventsFramework(event, serviceName);
         return;
       }
 
@@ -85,6 +80,14 @@ public class OrchestrationEventEmitter {
       log.error("Failed to create orchestration event", ex);
       throw ex;
     }
+  }
+
+  private void emitViaEventsFramework(OrchestrationEvent event, String serviceName) {
+    Producer producer = eventsFrameworkUtils.obtainProducerForOrchestrationEvent(serviceName);
+    producer.send(Message.newBuilder()
+                      .putAllMetadata(ImmutableMap.of(SERVICE_NAME, serviceName))
+                      .setData(buildProtoEvent(event))
+                      .build());
   }
 
   private ByteString buildProtoEvent(OrchestrationEvent event) {
