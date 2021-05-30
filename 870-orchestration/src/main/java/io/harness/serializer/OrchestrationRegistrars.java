@@ -36,6 +36,8 @@ import io.harness.serializer.spring.converters.advisers.type.AdviserTypeReadConv
 import io.harness.serializer.spring.converters.advisers.type.AdviserTypeWriteConverter;
 import io.harness.serializer.spring.converters.ambiance.AmbianceReadConverter;
 import io.harness.serializer.spring.converters.ambiance.AmbianceWriteConverter;
+import io.harness.serializer.spring.converters.consumerconfig.ConsumerConfigReadConverter;
+import io.harness.serializer.spring.converters.consumerconfig.ConsumerConfigWriteConverter;
 import io.harness.serializer.spring.converters.errorInfo.ExecutionErrorInfoReadConverter;
 import io.harness.serializer.spring.converters.errorInfo.ExecutionErrorInfoWriteConverter;
 import io.harness.serializer.spring.converters.executableresponse.ExecutableResponseReadConverter;
@@ -174,7 +176,7 @@ public class OrchestrationRegistrars {
       SdkResponseEventRequestReadConverter.class, SdkResponseEventRequestWriteConverter.class,
       NodeRunInfoReadConverter.class, NodeRunInfoWriteConverter.class, ExecutionPrincipalInfoReadConverter.class,
       ExecutionPrincipalInfoWriteConverter.class, InterruptEffectReadConverter.class,
-      InterruptEffectWriteConverter.class);
+      InterruptEffectWriteConverter.class, ConsumerConfigReadConverter.class, ConsumerConfigWriteConverter.class);
 
   public static final List<Class<? extends Converter<?, ?>>> springConverters =
       ImmutableList.<Class<? extends Converter<?, ?>>>builder()

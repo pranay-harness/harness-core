@@ -3,6 +3,7 @@ package io.harness.repositories.sdk;
 import static org.springframework.data.mongodb.core.query.Query.query;
 import static org.springframework.data.mongodb.core.query.Update.update;
 
+import io.harness.pms.contracts.plan.ConsumerConfig;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.PmsSdkInstance;
@@ -35,11 +36,14 @@ public class PmsSdkInstanceRepositoryCustomImpl implements PmsSdkInstanceReposit
 
   @Override
   public void updatePmsSdkInstance(String name, Map<String, Set<String>> supportedTypes, List<StepInfo> supportedSteps,
-      List<StepType> supportedStepTypes) {
+      List<StepType> supportedStepTypes, ConsumerConfig interruptConsumerConfig,
+      ConsumerConfig orchestrationEventConsumerConfig) {
     Query query = query(Criteria.where(PmsSdkInstanceKeys.name).is(name));
     Update update = update(PmsSdkInstanceKeys.supportedTypes, supportedTypes)
                         .set(PmsSdkInstanceKeys.supportedSteps, supportedSteps)
                         .set(PmsSdkInstanceKeys.supportedStepTypes, supportedStepTypes)
+                        .set(PmsSdkInstanceKeys.interruptConsumerConfig, interruptConsumerConfig)
+                        .set(PmsSdkInstanceKeys.orchestrationEventConsumerConfig, orchestrationEventConsumerConfig)
                         .set(PmsSdkInstanceKeys.lastUpdatedAt, System.currentTimeMillis());
     RetryPolicy<Object> retryPolicy = getRetryPolicy("[Retrying]: Failed updating PMS SDK instance; attempt: {}",
         "[Failed]: Failed updating PMS SDK instance; attempt: {}");

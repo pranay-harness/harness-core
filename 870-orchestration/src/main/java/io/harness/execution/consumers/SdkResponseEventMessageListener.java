@@ -1,39 +1,45 @@
 package io.harness.execution.consumers;
 
+import static io.harness.pms.sdk.PmsSdkModuleUtils.SDK_SERVICE_NAME;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.consumer.Message;
-import io.harness.exception.InvalidRequestException;
 import io.harness.execution.utils.SdkResponseListenerHelper;
-import io.harness.ng.core.event.MessageListener;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
-import io.harness.pms.execution.SdkResponseEvent;
+import io.harness.pms.events.base.PmsAbstractMessageListener;
 import io.harness.pms.execution.utils.SdkResponseEventUtils;
 
 import com.google.inject.Inject;
-import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.inject.name.Named;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class SdkResponseEventMessageListener implements MessageListener {
-  @Inject private SdkResponseListenerHelper sdkResponseListenerHelper;
+@Slf4j
+public class SdkResponseEventMessageListener extends PmsAbstractMessageListener<SdkResponseEventProto> {
+  private final SdkResponseListenerHelper sdkResponseListenerHelper;
 
-  @Override
-  public boolean handleMessage(Message message) {
-    if (message != null && message.hasMessage()) {
-      SdkResponseEvent sdkResponseEvent;
-      try {
-        SdkResponseEventProto sdkResponseEventProto = SdkResponseEventProto.parseFrom(message.getMessage().getData());
-        sdkResponseEvent = SdkResponseEventUtils.fromProtoToSdkResponseEvent(sdkResponseEventProto);
-      } catch (InvalidProtocolBufferException e) {
-        throw new InvalidRequestException(
-            String.format("Exception in unpacking SdkResponseEvent Proto for key %s", message.getId()), e);
-      }
-      processMessage(sdkResponseEvent);
-    }
-    return true;
+  @Inject
+  public SdkResponseEventMessageListener(
+      @Named(SDK_SERVICE_NAME) String serviceName, SdkResponseListenerHelper sdkResponseListenerHelper) {
+    super(serviceName, SdkResponseEventProto.class);
+    this.sdkResponseListenerHelper = sdkResponseListenerHelper;
   }
 
-  private void processMessage(SdkResponseEvent sdkResponseEvent) {
-    sdkResponseListenerHelper.handleEvent(sdkResponseEvent);
+  @Override
+  public boolean processMessage(SdkResponseEventProto sdkResponseEventProto) {
+    try {
+      sdkResponseListenerHelper.handleEvent(SdkResponseEventUtils.fromProtoToSdkResponseEvent(sdkResponseEventProto));
+      return true;
+    } catch (Exception ex) {
+      // TODO (prashant) : Handle Failure should we retry here. Currently acknowledging the message ?
+      log.error("Processing failed for SdkResponseEvent", ex);
+      return true;
+    }
+  }
+
+  @Override
+  public boolean isProcessable(Message message) {
+    return true;
   }
 }

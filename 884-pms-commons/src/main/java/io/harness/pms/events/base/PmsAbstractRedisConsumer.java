@@ -1,4 +1,4 @@
-package io.harness.pms.sdk.core.execution.events.base;
+package io.harness.pms.events.base;
 
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.consumer.Message;
@@ -10,11 +10,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class SdkBaseRedisConsumer implements Runnable {
+public abstract class PmsAbstractRedisConsumer implements Runnable {
   private final Consumer redisConsumer;
   private final MessageListener messageListener;
 
-  public SdkBaseRedisConsumer(Consumer redisConsumer, MessageListener messageListener) {
+  public PmsAbstractRedisConsumer(Consumer redisConsumer, MessageListener messageListener) {
     this.redisConsumer = redisConsumer;
     this.messageListener = messageListener;
   }

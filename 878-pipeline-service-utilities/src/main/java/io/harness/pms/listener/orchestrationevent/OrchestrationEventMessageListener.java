@@ -1,13 +1,14 @@
-package io.harness.pms.sdk.core.execution.events.orchestration;
+package io.harness.pms.listener.orchestrationevent;
 
 import static io.harness.pms.events.PmsEventFrameworkConstants.SERVICE_NAME;
+import static io.harness.pms.sdk.PmsSdkModuleUtils.SDK_SERVICE_NAME;
 
 import io.harness.eventsframework.consumer.Message;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.contracts.execution.events.OrchestrationEvent;
+import io.harness.pms.events.base.PmsAbstractMessageListener;
 import io.harness.pms.execution.utils.OrchestrationEventUtils;
-import io.harness.pms.sdk.PmsSdkModuleUtils;
-import io.harness.pms.sdk.core.execution.events.base.SdkBaseEventMessageListener;
+import io.harness.pms.sdk.core.execution.events.orchestration.SdkOrchestrationEventListenerHelper;
 import io.harness.pms.utils.PmsConstants;
 import io.harness.serializer.ProtoUtils;
 
@@ -17,17 +18,19 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SdkOrchestrationEventMessageListener extends SdkBaseEventMessageListener<OrchestrationEvent> {
-  @Inject @Named(PmsSdkModuleUtils.SDK_SERVICE_NAME) String serviceName;
-  @Inject private SdkOrchestrationEventListenerHelper helper;
+public class OrchestrationEventMessageListener extends PmsAbstractMessageListener<OrchestrationEvent> {
+  private final SdkOrchestrationEventListenerHelper helper;
 
-  public SdkOrchestrationEventMessageListener() {
-    super(OrchestrationEvent.class);
+  @Inject
+  public OrchestrationEventMessageListener(
+      @Named(SDK_SERVICE_NAME) String serviceName, SdkOrchestrationEventListenerHelper helper) {
+    super(serviceName, OrchestrationEvent.class);
+    this.helper = helper;
   }
 
   public boolean processMessage(OrchestrationEvent event) {
     try (AutoLogContext ignore = OrchestrationEventUtils.obtainLogContext(event)) {
-      log.error("[PMS_SDK] Orchestration Event Processing Starting for event type {}", event.getEventType());
+      log.error("Orchestration Event Processing Starting for event type {}", event.getEventType());
       helper.handleEvent(io.harness.pms.sdk.core.events.OrchestrationEvent.builder()
                              .eventType(event.getEventType())
                              .ambiance(event.getAmbiance())
@@ -36,7 +39,7 @@ public class SdkOrchestrationEventMessageListener extends SdkBaseEventMessageLis
                              .build());
       return true;
     } catch (Exception ex) {
-      log.error("[PMS_SDK] Orchestration Event Processing failed for event type {}", event.getEventType(), ex);
+      log.error("Orchestration Event Processing failed for event type {}", event.getEventType(), ex);
       return true;
     }
   }

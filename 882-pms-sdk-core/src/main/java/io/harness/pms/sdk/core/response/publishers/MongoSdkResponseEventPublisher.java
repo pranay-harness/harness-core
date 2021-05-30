@@ -1,4 +1,4 @@
-package io.harness.pms.sdk.response.publishers;
+package io.harness.pms.sdk.core.response.publishers;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;

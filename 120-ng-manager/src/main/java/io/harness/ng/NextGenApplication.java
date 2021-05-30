@@ -8,11 +8,14 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.getResourceClasses;
 import static io.harness.pms.listener.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
+import static io.harness.pms.listener.PmsUtilityConsumerConstants.INTERRUPT_TOPIC;
+import static io.harness.pms.listener.PmsUtilityConsumerConstants.ORCHESTRATION_EVENT_TOPIC;
 
 import static com.google.common.collect.ImmutableMap.of;
 
 import io.harness.EntityType;
 import io.harness.Microservice;
+import io.harness.PipelineServiceUtilityModule;
 import io.harness.SCMGrpcClientModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.CDNGModuleInfoProvider;
@@ -59,7 +62,11 @@ import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.contracts.plan.ConsumerConfig;
+import io.harness.pms.contracts.plan.Redis;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
+import io.harness.pms.listener.interrupts.InterruptRedisConsumerService;
+import io.harness.pms.listener.orchestrationevent.OrchestrationEventEventConsumerService;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
@@ -141,6 +148,7 @@ import org.glassfish.jersey.server.model.Resource;
 public class NextGenApplication extends Application<NextGenConfiguration> {
   private static final SecureRandom random = new SecureRandom();
   private static final String APPLICATION_NAME = "CD NextGen Application";
+  public static final String PMS_SERVICE_NAME = "cd";
 
   private final MetricRegistry metricRegistry = new MetricRegistry();
 
@@ -202,7 +210,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     });
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(NGMigrationSdkModule.getInstance());
-    modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(appConfig)));
     modules.add(new LogStreamingModule(appConfig.getLogStreamingServiceConfig().getBaseUrl()));
     modules.add(new AbstractCfModule() {
       @Override
@@ -227,6 +234,13 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     } else {
       modules.add(new SCMGrpcClientModule(appConfig.getGitSdkConfiguration().getScmConnectionConfig()));
     }
+
+    // Pipeline Service Modules
+    PmsSdkConfiguration pmsSdkConfiguration = getPmsSdkConfiguration(appConfig);
+    modules.add(PmsSdkModule.getInstance(pmsSdkConfiguration));
+    modules.add(PipelineServiceUtilityModule.getInstance(
+        appConfig.getEventsFrameworkConfiguration(), pmsSdkConfiguration.getServiceName()));
+
     Injector injector = Guice.createInjector(modules);
     if (appConfig.getShouldDeployWithGitSync()) {
       GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, getGitSyncConfiguration(appConfig));
@@ -346,6 +360,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void createConsumerThreadsToListenToEvents(Environment environment, Injector injector) {
     environment.lifecycle().manage(injector.getInstance(NGEventConsumerService.class));
+    environment.lifecycle().manage(injector.getInstance(InterruptRedisConsumerService.class));
+    environment.lifecycle().manage(injector.getInstance(OrchestrationEventEventConsumerService.class));
   }
 
   private void registerYamlSdk(Injector injector) {
@@ -376,7 +392,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     }
     return PmsSdkConfiguration.builder()
         .deploymentMode(remote ? SdkDeployMode.REMOTE : SdkDeployMode.LOCAL)
-        .serviceName("cd")
+        .serviceName(PMS_SERVICE_NAME)
         .mongoConfig(appConfig.getPmsMongoConfig())
         .grpcServerConfig(appConfig.getPmsSdkGrpcServerConfig())
         .pmsGrpcClientConfig(appConfig.getPmsGrpcClientConfig())
@@ -387,6 +403,12 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .executionSummaryModuleInfoProviderClass(CDNGModuleInfoProvider.class)
         .eventsFrameworkConfiguration(appConfig.getEventsFrameworkConfiguration())
         .useRedisForSdkResponseEvents(appConfig.getUseRedisForSdkResponseEvents())
+        .interruptConsumerConfig(
+            ConsumerConfig.newBuilder().setRedis(Redis.newBuilder().setTopicName(INTERRUPT_TOPIC).build()).build())
+        .orchestrationEventConsumerConfig(
+            ConsumerConfig.newBuilder()
+                .setRedis(Redis.newBuilder().setTopicName(ORCHESTRATION_EVENT_TOPIC).build())
+                .build())
         .build();
   }
 

@@ -1,11 +1,13 @@
 syntax = "proto3";
 
+// TODO: Rename io.harness.pms.contracts.sdk.registration and move this out of this directory
 package io.harness.pms.contracts.plan;
 
 option java_multiple_files = true;
 
 import "io/harness/pms/contracts/steps/step_type.proto";
 
+// TODO : Rename this PmsSdkRegistrationService
 service PmsService {
   rpc initializeSdk(InitializeSdkRequest) returns (InitializeSdkResponse);
 }
@@ -15,10 +17,23 @@ message InitializeSdkRequest {
   map<string, Types> supportedTypes = 2;
   repeated io.harness.pms.contracts.steps.StepInfo supportedSteps = 3;
   repeated io.harness.pms.contracts.steps.StepType supportedStepTypes = 4;
+  ConsumerConfig interruptConsumerConfig = 5;
+  ConsumerConfig orchestrationEventConsumerConfig = 6;
 }
 
 message InitializeSdkResponse {}
 
 message Types {
   repeated string types = 1;
+}
+
+message ConsumerConfig {
+  oneof config {
+    Redis redis = 1;
+  }
+}
+
+message Redis {
+  string topicName = 1;
+  // We should add more redis config details here but for now assuming the redis config is same for all omitting this
 }

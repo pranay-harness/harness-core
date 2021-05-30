@@ -8,6 +8,8 @@ import java.time.Duration;
 
 @OwnedBy(PL)
 public final class EventsFrameworkConstants {
+  public static final String DUMMY_REDIS_URL = "dummyRedisUrl";
+
   public static final String ENTITY_CRUD = "entity_crud";
   public static final String FEATURE_FLAG_STREAM = "harness_internal_feature_flags";
   public static final String SETUP_USAGE = "setup_usage";

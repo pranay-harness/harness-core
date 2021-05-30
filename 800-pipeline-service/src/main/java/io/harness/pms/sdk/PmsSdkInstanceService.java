@@ -71,14 +71,17 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
 
     Optional<PmsSdkInstance> instanceOptional = pmsSdkInstanceRepository.findByName(request.getName());
     if (instanceOptional.isPresent()) {
-      pmsSdkInstanceRepository.updatePmsSdkInstance(
-          request.getName(), supportedTypes, request.getSupportedStepsList(), request.getSupportedStepTypesList());
+      pmsSdkInstanceRepository.updatePmsSdkInstance(request.getName(), supportedTypes, request.getSupportedStepsList(),
+          request.getSupportedStepTypesList(), request.getInterruptConsumerConfig(),
+          request.getOrchestrationEventConsumerConfig());
     } else {
       pmsSdkInstanceRepository.save(PmsSdkInstance.builder()
                                         .name(request.getName())
                                         .supportedTypes(supportedTypes)
                                         .supportedSteps(request.getSupportedStepsList())
                                         .supportedStepTypes(request.getSupportedStepTypesList())
+                                        .interruptConsumerConfig(request.getInterruptConsumerConfig())
+                                        .orchestrationEventConsumerConfig(request.getOrchestrationEventConsumerConfig())
                                         .build());
     }
   }
