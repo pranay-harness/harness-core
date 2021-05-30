@@ -2,6 +2,7 @@ package io.harness.gitsync.common.impl.gittoharness;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -23,6 +24,7 @@ import io.harness.gitsync.common.service.gittoharness.GitToHarnessProcessorServi
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.StringValue;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,24 +52,25 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
       Microservice microservice = entry.getKey();
       GitToHarnessServiceGrpc.GitToHarnessServiceBlockingStub gitToHarnessServiceBlockingStub =
           gitToHarnessServiceGrpcClient.get(microservice);
-      ChangeSets changeSetForThisMicroservice =
-          ChangeSets.newBuilder().addAllChangeSet(entry.getValue()).setAccountId(accountId).build();
-      GitToHarnessInfo.Builder gitToHarnessInfo =
-          GitToHarnessInfo.newBuilder()
-              .setAccountIdentifier(accountId)
-              .setYamlGitConfigProjectIdentifier(yamlGitConfigDTO.getProjectIdentifier())
-              .setYamlGitConfigId(yamlGitConfigDTO.getIdentifier())
-              .setBranch(branchName);
+      ChangeSets changeSetForThisMicroservice = ChangeSets.newBuilder().addAllChangeSet(entry.getValue()).build();
+      GitToHarnessInfo.Builder gitToHarnessInfo = GitToHarnessInfo.newBuilder()
+                                                      .setRepoUrl(yamlGitConfigDTO.getRepo())
+                                                      .setYamlGitConfigId(yamlGitConfigDTO.getIdentifier())
+                                                      .setBranch(branchName);
       if (isNotBlank(yamlGitConfigDTO.getOrganizationIdentifier())) {
         gitToHarnessInfo.setYamlGitConfigOrgIdentifier(yamlGitConfigDTO.getOrganizationIdentifier());
       }
       if (isNotBlank(yamlGitConfigDTO.getProjectIdentifier())) {
         gitToHarnessInfo.setYamlGitConfigOrgIdentifier(yamlGitConfigDTO.getProjectIdentifier());
       }
-      GitToHarnessProcessRequest gitToHarnessProcessRequest = GitToHarnessProcessRequest.newBuilder()
-                                                                  .setChangeSets(changeSetForThisMicroservice)
-                                                                  .setGitToHarnessBranchInfo(gitToHarnessInfo)
-                                                                  .build();
+      // todo(abhinav): set commit id to actual value of commitid
+      GitToHarnessProcessRequest gitToHarnessProcessRequest =
+          GitToHarnessProcessRequest.newBuilder()
+              .setChangeSets(changeSetForThisMicroservice)
+              .setGitToHarnessBranchInfo(gitToHarnessInfo)
+              .setAccountId(yamlGitConfigDTO.getAccountIdentifier())
+              .setCommitId(StringValue.of("commitId" + generateUuid()))
+              .build();
       log.info("Sending to microservice {}", entry.getKey());
       ProcessingResponse processingResponse = gitToHarnessServiceBlockingStub.process(gitToHarnessProcessRequest);
       log.info("Got the processing response for the microservice {}, response {}", entry.getKey(), processingResponse);

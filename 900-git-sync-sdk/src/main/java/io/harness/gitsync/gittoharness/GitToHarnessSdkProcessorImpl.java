@@ -3,6 +3,7 @@ package io.harness.gitsync.gittoharness;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.HarnessStringUtils.emptyIfNull;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
@@ -15,18 +16,21 @@ import io.harness.gitsync.GitToHarnessInfo;
 import io.harness.gitsync.GitToHarnessProcessRequest;
 import io.harness.gitsync.ProcessingFailureStage;
 import io.harness.gitsync.ProcessingResponse;
+import io.harness.gitsync.dao.GitProcessingRequestService;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.gitsync.interceptor.GitSyncConstants;
 import io.harness.gitsync.interceptor.GitSyncThreadDecorator;
+import io.harness.gitsync.logger.GitProcessingLogContext;
+import io.harness.logging.AutoLogContext;
 import io.harness.manage.GlobalContextManager;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.protobuf.StringValue;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -41,15 +45,17 @@ public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
   GitSdkInterface changeSetHelperService;
   Supplier<List<EntityType>> sortOrder;
   GitSyncThreadDecorator gitSyncThreadDecorator;
+  GitProcessingRequestService gitProcessingRequestDao;
 
   @Inject
   public GitToHarnessSdkProcessorImpl(ChangeSetInterceptorService changeSetInterceptorService,
       GitSdkInterface changeSetHelperService, @Named("GitSyncSortOrder") Supplier<List<EntityType>> sortOrder,
-      GitSyncThreadDecorator gitSyncThreadDecorator) {
+      GitSyncThreadDecorator gitSyncThreadDecorator, GitProcessingRequestService gitProcessingRequestDao) {
     this.changeSetInterceptorService = changeSetInterceptorService;
     this.changeSetHelperService = changeSetHelperService;
     this.sortOrder = sortOrder;
     this.gitSyncThreadDecorator = gitSyncThreadDecorator;
+    this.gitProcessingRequestDao = gitProcessingRequestDao;
   }
 
   /**
@@ -62,35 +68,40 @@ public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
   @Override
   public ProcessingResponse gitToHarnessProcessingRequest(GitToHarnessProcessRequest gitToHarnessRequest) {
     ChangeSets changeSets = gitToHarnessRequest.getChangeSets();
-    Map<String, FileProcessingResponse> processingResponseMap = initializeProcessingResponse(changeSets);
-    String accountId = changeSets.getAccountId();
+    String accountId = gitToHarnessRequest.getAccountId();
+    String commitId = gitToHarnessRequest.getCommitId().getValue();
+    try (AutoLogContext ignore1 = new GitProcessingLogContext(accountId, commitId, OVERRIDE_ERROR)) {
+      final Map<String, FileProcessingResponse> fileProcessingStatusMap =
+          initializeProcessingResponse(gitToHarnessRequest);
 
-    if (isEmpty(changeSets.getChangeSetList())) {
-      return ProcessingResponse.newBuilder().setAccountId(accountId).build();
-    }
-    if (preProcessStage(changeSets, processingResponseMap)) {
-      return flattenProcessingResponse(processingResponseMap, accountId, ProcessingFailureStage.RECEIVE_STAGE);
-    }
+      if (isEmpty(changeSets.getChangeSetList())) {
+        return ProcessingResponse.newBuilder().setAccountId(gitToHarnessRequest.getAccountId()).build();
+      }
 
-    if (sortStage(changeSets, processingResponseMap)) {
-      return flattenProcessingResponse(processingResponseMap, accountId, ProcessingFailureStage.SORT_STAGE);
-    }
-    if (processStage(changeSets, processingResponseMap, gitToHarnessRequest)) {
-      return flattenProcessingResponse(processingResponseMap, accountId, ProcessingFailureStage.PROCESS_STAGE);
-    }
+      if (preProcessStage(changeSets, fileProcessingStatusMap, commitId, accountId)) {
+        return flattenProcessingResponse(fileProcessingStatusMap, accountId, ProcessingFailureStage.RECEIVE_STAGE);
+      }
 
-    if (postProcessStage(changeSets, processingResponseMap, accountId)) {
-      return flattenProcessingResponse(processingResponseMap, accountId, ProcessingFailureStage.PROCESS_STAGE);
-    }
+      if (sortStage(changeSets, fileProcessingStatusMap, commitId, accountId)) {
+        return flattenProcessingResponse(fileProcessingStatusMap, accountId, ProcessingFailureStage.SORT_STAGE);
+      }
+      if (processStage(changeSets, fileProcessingStatusMap, gitToHarnessRequest, commitId, accountId)) {
+        return flattenProcessingResponse(fileProcessingStatusMap, accountId, ProcessingFailureStage.PROCESS_STAGE);
+      }
 
-    return flattenProcessingResponse(processingResponseMap, accountId, null);
+      if (postProcessStage(changeSets, fileProcessingStatusMap, commitId, accountId)) {
+        return flattenProcessingResponse(fileProcessingStatusMap, accountId, ProcessingFailureStage.PROCESS_STAGE);
+      }
+
+      return flattenProcessingResponse(fileProcessingStatusMap, accountId, null);
+    }
   }
 
-  private boolean postProcessStage(
-      ChangeSets changeSets, Map<String, FileProcessingResponse> processingResponseMap, String accountId) {
+  private boolean postProcessStage(ChangeSets changeSets, Map<String, FileProcessingResponse> processingResponseMap,
+      String commitId, String accountId) {
     try {
       final ProcessingResponse processingResponse = flattenProcessingResponse(processingResponseMap, accountId, null);
-      changeSetInterceptorService.postChangeSetProcessing(processingResponse, changeSets.getAccountId());
+      changeSetInterceptorService.postChangeSetProcessing(processingResponse, accountId);
     } catch (Exception e) {
       return true;
     }
@@ -98,25 +109,24 @@ public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
   }
 
   private boolean processStage(ChangeSets changeSets, Map<String, FileProcessingResponse> processingResponseMap,
-      GitToHarnessProcessRequest gitToHarnessRequest) {
+      GitToHarnessProcessRequest gitToHarnessRequest, String commitId, String accountId) {
     try {
       // todo(abhinav): Do parallel processing.
       for (ChangeSet changeSet : changeSets.getChangeSetList()) {
+        final FileProcessingStatus status = processingResponseMap.get(changeSet.getFilePath()).getStatus();
+        if (!status.equals(FileProcessingStatus.UNPROCESSED)) {
+          continue;
+        }
         try (GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
           GlobalContextManager.upsertGlobalContextRecord(
               createGitEntityInfo(gitToHarnessRequest.getGitToHarnessBranchInfo(), changeSet));
           changeSetHelperService.process(changeSet);
-          updateFileProcessingResponse(FileProcessingStatus.SUCCESS, null, processingResponseMap, changeSet.getId());
-          processingResponseMap.put(changeSet.getId(),
-              FileProcessingResponse.newBuilder()
-                  .setAccountId(changeSet.getAccountId())
-                  .setId(changeSet.getId())
-                  .setStatus(FileProcessingStatus.SUCCESS)
-                  .build());
+          updateFileProcessingResponse(
+              FileProcessingStatus.SUCCESS, null, processingResponseMap, changeSet.getFilePath(), commitId, accountId);
         } catch (Exception e) {
           log.error("Exception {}", changeSet.getFilePath(), e);
-          updateFileProcessingResponse(
-              FileProcessingStatus.FAILURE, e.getMessage(), processingResponseMap, changeSet.getId());
+          updateFileProcessingResponse(FileProcessingStatus.FAILURE, e.getMessage(), processingResponseMap,
+              changeSet.getFilePath(), commitId, accountId);
         }
       }
     } catch (Exception e) {
@@ -146,22 +156,26 @@ public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
         .build();
   }
 
-  private boolean sortStage(ChangeSets changeSets, Map<String, FileProcessingResponse> processingResponseMap) {
+  private boolean sortStage(ChangeSets changeSets, Map<String, FileProcessingResponse> processingResponseMap,
+      String commitId, String accountId) {
     try {
       final List<ChangeSet> sortedChangeSets = sortChangeSets(sortOrder, changeSets.getChangeSetList());
-      changeSetInterceptorService.postChangeSetSort(sortedChangeSets, changeSets.getAccountId());
+      changeSetInterceptorService.postChangeSetSort(sortedChangeSets, accountId);
     } catch (Exception e) {
-      updateFileProcessingResponseForAllChangeSets(processingResponseMap, FileProcessingStatus.SKIPPED, e.getMessage());
+      updateFileProcessingResponseForAllChangeSets(
+          processingResponseMap, FileProcessingStatus.SKIPPED, e.getMessage(), commitId, accountId);
       return true;
     }
     return false;
   }
 
-  private boolean preProcessStage(ChangeSets changeSets, Map<String, FileProcessingResponse> processingResponseMap) {
+  private boolean preProcessStage(ChangeSets changeSets, Map<String, FileProcessingResponse> processingResponseMap,
+      String commitId, String accountId) {
     try {
-      changeSetInterceptorService.onChangeSetReceive(changeSets, changeSets.getAccountId());
+      changeSetInterceptorService.onChangeSetReceive(changeSets, accountId);
     } catch (Exception e) {
-      updateFileProcessingResponseForAllChangeSets(processingResponseMap, FileProcessingStatus.SKIPPED, e.getMessage());
+      updateFileProcessingResponseForAllChangeSets(
+          processingResponseMap, FileProcessingStatus.SKIPPED, e.getMessage(), commitId, accountId);
       return true;
     }
     return false;
@@ -178,35 +192,27 @@ public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
     return processingResponseBuilder.build();
   }
 
-  private void updateFileProcessingResponseForAllChangeSets(
-      Map<String, FileProcessingResponse> processingResponseMap, FileProcessingStatus status, String message) {
-    processingResponseMap.forEach(
-        (key, value) -> updateFileProcessingResponse(status, message, processingResponseMap, key));
+  private void updateFileProcessingResponseForAllChangeSets(Map<String, FileProcessingResponse> gitProcessRequest,
+      FileProcessingStatus status, String message, String commitId, String accountId) {
+    gitProcessRequest.forEach(
+        (key, value) -> updateFileProcessingResponse(status, message, gitProcessRequest, key, commitId, accountId));
   }
 
-  private void updateFileProcessingResponse(
-      FileProcessingStatus status, String message, Map<String, FileProcessingResponse> response, String key) {
-    final FileProcessingResponse responseValue = response.get(key);
-    final FileProcessingResponse.Builder fileProcessingResponseBuilder = FileProcessingResponse.newBuilder()
-                                                                             .setStatus(status)
-                                                                             .setAccountId(responseValue.getAccountId())
-                                                                             .setId(responseValue.getId());
+  private void updateFileProcessingResponse(FileProcessingStatus status, String message,
+      Map<String, FileProcessingResponse> responseMap, String filePath, String commitId, String accountId) {
+    gitProcessingRequestDao.updateFileStatus(commitId, filePath, status, message, accountId);
+    final FileProcessingResponse responseValue = responseMap.get(filePath);
+    final FileProcessingResponse.Builder fileProcessingResponseBuilder =
+        FileProcessingResponse.newBuilder().setStatus(status).setFilePath(responseValue.getFilePath());
     if (!isEmpty(message)) {
-      fileProcessingResponseBuilder.setErrorMsg(message);
+      fileProcessingResponseBuilder.setErrorMsg(StringValue.of(message));
     }
-    response.put(key, fileProcessingResponseBuilder.build());
+    responseMap.put(filePath, fileProcessingResponseBuilder.build());
   }
 
-  private Map<String, FileProcessingResponse> initializeProcessingResponse(ChangeSets changeSets) {
-    Map<String, FileProcessingResponse> processingResponseMap = new HashMap<>();
-    changeSets.getChangeSetList().forEach(changeSet
-        -> processingResponseMap.put(changeSet.getId(),
-            FileProcessingResponse.newBuilder()
-                .setId(changeSet.getId())
-                .setAccountId(changeSet.getAccountId())
-                .setStatus(FileProcessingStatus.UNPROCESSED)
-                .build()));
-    return processingResponseMap;
+  private Map<String, FileProcessingResponse> initializeProcessingResponse(
+      GitToHarnessProcessRequest gitToHarnessProcessRequest) {
+    return gitProcessingRequestDao.upsert(gitToHarnessProcessRequest);
   }
 
   private List<ChangeSet> sortChangeSets(Supplier<List<EntityType>> sortOrder, List<ChangeSet> changeSetList) {

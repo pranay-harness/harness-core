@@ -2,7 +2,6 @@ package io.harness.gitsync.common.helper;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -38,15 +37,10 @@ public class GitChangeSetMapper {
                                     .setAccountId(accountId)
                                     .setChangeType(changeType)
                                     .setEntityType(EntityToEntityProtoHelper.getEntityTypeFromProto(entityType))
-                                    .setId(generateUuid())
-                                    .setObjectId(StringValue.of(fileContent.getBlobId()))
                                     .setYaml(fileContent.getContent())
                                     .setFilePath(fileContent.getPath());
     if (isNotBlank(fileContent.getBlobId())) {
       builder.setObjectId(StringValue.of(fileContent.getBlobId()));
-    }
-    if (isNotBlank(fileContent.getCommitId())) {
-      builder.setObjectId(StringValue.of(fileContent.getCommitId()));
     }
     return builder.build();
   }
