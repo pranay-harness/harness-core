@@ -29,6 +29,7 @@ import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.persistence.HPersistence;
 
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DelegateTaskServiceClassic;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -54,6 +55,7 @@ public class DelegateCapabilitiesRecordHandler implements MongoPersistenceIterat
   @Inject private DelegateService delegateService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private CapabilityService capabilityService;
+  @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
 
   public void registerIterators() {
     PumpExecutorOptions options = PumpExecutorOptions.builder()
@@ -106,7 +108,7 @@ public class DelegateCapabilitiesRecordHandler implements MongoPersistenceIterat
                 .collect(Collectors.toList());
 
         if (isNotEmpty(capabilitySubjectPermissions)) {
-          delegateService.executeBatchCapabilityCheckTask(
+          delegateTaskServiceClassic.executeBatchCapabilityCheckTask(
               delegate.getAccountId(), delegate.getUuid(), capabilitySubjectPermissions, null);
         } else {
           log.warn("No capability records found for delegate.");

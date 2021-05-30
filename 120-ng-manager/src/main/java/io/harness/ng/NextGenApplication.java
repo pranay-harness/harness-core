@@ -51,7 +51,6 @@ import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.NotFoundExceptionMapper;
 import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapper;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
-import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.user.service.impl.UserMembershipMigrationService;
 import io.harness.ng.core.user.service.impl.UserProjectMigrationService;
 import io.harness.ng.migration.NGCoreMigrationProvider;
@@ -69,12 +68,10 @@ import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.registrars.CDServiceAdviserRegistrar;
-import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.request.RequestContextFilter;
 import io.harness.resource.VersionInfoResource;
 import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
-import io.harness.security.UserPrincipalVerificationFilter;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.PublicApi;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
@@ -387,9 +384,9 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .filterCreationResponseMerger(new CDNGFilterCreationResponseMerger())
         .engineSteps(NgStepRegistrar.getEngineSteps())
         .engineAdvisers(CDServiceAdviserRegistrar.getEngineAdvisers())
-        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
         .executionSummaryModuleInfoProviderClass(CDNGModuleInfoProvider.class)
         .eventsFrameworkConfiguration(appConfig.getEventsFrameworkConfiguration())
+        .useRedisForSdkResponseEvents(appConfig.getUseRedisForSdkResponseEvents())
         .build();
   }
 
@@ -475,8 +472,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     if (configuration.isEnableAuth()) {
       registerNextGenAuthFilter(configuration, environment);
       registerInternalApiAuthFilter(configuration, environment);
-      environment.jersey().register(new UserPrincipalVerificationFilter(
-          getAuthFilterPredicate(PublicApi.class).negate(), injector.getInstance(NgUserService.class)));
     }
   }
 

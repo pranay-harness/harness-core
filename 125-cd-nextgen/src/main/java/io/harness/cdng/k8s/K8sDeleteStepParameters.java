@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.k8s.K8sCommandUnitConstants;
+import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -22,8 +23,9 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("k8sDeleteStepParameters")
 public class K8sDeleteStepParameters extends K8sDeleteBaseStepInfo implements K8sSpecParameters {
   @Builder(builderMethodName = "infoBuilder")
-  public K8sDeleteStepParameters(DeleteResourcesWrapper deleteResources, ParameterField<Boolean> skipDryRun) {
-    super(deleteResources, skipDryRun);
+  public K8sDeleteStepParameters(DeleteResourcesWrapper deleteResources, ParameterField<Boolean> skipDryRun,
+      ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
+    super(deleteResources, skipDryRun, delegateSelectors);
   }
 
   @Nonnull

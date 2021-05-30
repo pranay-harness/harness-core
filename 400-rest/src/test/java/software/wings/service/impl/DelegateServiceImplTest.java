@@ -140,6 +140,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Mock private DelegateProfileService delegateProfileService;
   @Mock private DelegateCache delegateCache;
   @InjectMocks @Inject private DelegateServiceImpl delegateService;
+  @InjectMocks @Inject private DelegateTaskServiceClassicImpl delegateTaskServiceClassic;
   @InjectMocks @Inject private DelegateSyncServiceImpl delegateSyncService;
   @InjectMocks @Inject private DelegateTaskServiceImpl delegateTaskService;
 
@@ -149,6 +150,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
 
   @InjectMocks @Spy private DelegateServiceImpl spydelegateService;
+  @InjectMocks @Spy private DelegateTaskServiceClassicImpl spydelegateTaskServiceClassic;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private VersionInfoManager versionInfoManager;
   @Mock private Subject<DelegateTaskRetryObserver> retryObserverSubject;
@@ -177,7 +179,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     String accountId = generateUuid();
 
     try {
-      delegateService.retrieveLogStreamingAccountToken(accountId);
+      delegateTaskServiceClassic.retrieveLogStreamingAccountToken(accountId);
       fail("Should have failed while retrieving log streaming token");
     } catch (Exception ignored) {
     }
@@ -214,7 +216,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
       new Thread(delegateSyncService).start();
     });
     thread.start();
-    DelegateResponseData responseData = delegateService.executeTask(delegateTask);
+    DelegateResponseData responseData = delegateTaskServiceClassic.executeTask(delegateTask);
     assertThat(responseData).isInstanceOf(HttpStateExecutionResponse.class);
     HttpStateExecutionResponse httpResponse = (HttpStateExecutionResponse) responseData;
     assertThat(httpResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
@@ -226,7 +228,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   public void shouldSaveDelegateTaskWithPreAssignedDelegateId_Sync() {
     DelegateTask delegateTask = getDelegateTask();
     delegateTask.getData().setAsync(false);
-    delegateService.saveDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
+    delegateTaskServiceClassic.saveDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
     assertThat(delegateTask.getBroadcastCount()).isZero();
     verify(broadcastHelper, times(0)).rebroadcastDelegateTask(any());
   }
@@ -237,7 +239,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   public void shouldSaveDelegateTaskWithPreAssignedDelegateId_Async() {
     DelegateTask delegateTask = getDelegateTask();
     delegateTask.getData().setAsync(true);
-    delegateService.saveDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
+    delegateTaskServiceClassic.saveDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
     assertThat(delegateTask.getBroadcastCount()).isZero();
     verify(broadcastHelper, times(0)).rebroadcastDelegateTask(any());
   }
@@ -254,7 +256,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     delegateTask.setMustExecuteOnDelegateId(delegateId);
     delegateTask.setUuid(taskId);
 
-    delegateService.saveDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
+    delegateTaskServiceClassic.saveDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
     assertThat(persistence.get(DelegateTask.class, taskId).getPreAssignedDelegateId()).isEqualTo(delegateId);
   }
 
@@ -269,7 +271,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     delegateTask.getData().setAsync(false);
     delegateTask.setUuid(taskId);
 
-    delegateService.saveDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
+    delegateTaskServiceClassic.saveDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
     assertThat(persistence.get(DelegateTask.class, taskId).getPreAssignedDelegateId()).isNotEqualTo(delegateId);
   }
 
@@ -312,10 +314,12 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     doReturn(delegate).when(delegateCache).get(ACCOUNT_ID, delegate.getUuid(), false);
 
     DelegateTask delegateTask = getDelegateTask();
-    doReturn(delegateTask).when(spydelegateService).getUnassignedDelegateTask(ACCOUNT_ID, "XYZ", delegate.getUuid());
+    doReturn(delegateTask)
+        .when(spydelegateTaskServiceClassic)
+        .getUnassignedDelegateTask(ACCOUNT_ID, "XYZ", delegate.getUuid());
 
     doReturn(getDelegateTaskPackage())
-        .when(spydelegateService)
+        .when(spydelegateTaskServiceClassic)
         .assignTask(anyString(), anyString(), any(DelegateTask.class));
 
     when(assignDelegateService.canAssign(any(), anyString(), any())).thenReturn(true);
@@ -324,9 +328,9 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().build();
     when(delegateSelectionLogsService.createBatch(delegateTask)).thenReturn(batch);
 
-    spydelegateService.acquireDelegateTask(ACCOUNT_ID, delegate.getUuid(), "XYZ");
+    spydelegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, delegate.getUuid(), "XYZ");
 
-    verify(spydelegateService, times(1)).assignTask(anyString(), anyString(), any(DelegateTask.class));
+    verify(spydelegateTaskServiceClassic, times(1)).assignTask(anyString(), anyString(), any(DelegateTask.class));
     verify(delegateSelectionLogsService).save(batch);
   }
 
@@ -336,8 +340,8 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   public void shouldNotAcquireDelegateTaskIfTaskIsNull() {
     Delegate delegate = createDelegateBuilder().build();
     doReturn(delegate).when(delegateCache).get(ACCOUNT_ID, delegate.getUuid(), false);
-    doReturn(null).when(spydelegateService).getUnassignedDelegateTask(ACCOUNT_ID, "XYZ", delegate.getUuid());
-    assertThat(spydelegateService.acquireDelegateTask(ACCOUNT_ID, delegate.getUuid(), "XYZ")).isNull();
+    doReturn(null).when(spydelegateTaskServiceClassic).getUnassignedDelegateTask(ACCOUNT_ID, "XYZ", delegate.getUuid());
+    assertThat(spydelegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, delegate.getUuid(), "XYZ")).isNull();
   }
 
   private DelegateTaskPackage getDelegateTaskPackage() {
@@ -429,13 +433,13 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     DelegateTaskResponse delegateTaskResponse =
         DelegateTaskResponse.builder().response(DelegateStringResponseData.builder().data("OK").build()).build();
 
-    delegateService.handleDriverResponse(null, delegateTaskResponse);
+    delegateTaskServiceClassic.handleDriverResponse(null, delegateTaskResponse);
     verify(delegateCallbackRegistry, never()).obtainDelegateCallbackService(any());
 
-    delegateService.handleDriverResponse(delegateTask, null);
+    delegateTaskServiceClassic.handleDriverResponse(delegateTask, null);
     verify(delegateCallbackRegistry, never()).obtainDelegateCallbackService(any());
 
-    delegateService.handleDriverResponse(null, null);
+    delegateTaskServiceClassic.handleDriverResponse(null, null);
     verify(delegateCallbackRegistry, never()).obtainDelegateCallbackService(any());
   }
 
@@ -448,7 +452,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
     when(delegateCallbackRegistry.obtainDelegateCallbackService(delegateTask.getDriverId())).thenReturn(null);
 
-    delegateService.handleDriverResponse(delegateTask, delegateTaskResponse);
+    delegateTaskServiceClassic.handleDriverResponse(delegateTask, delegateTaskResponse);
 
     verify(delegateTask, never()).getUuid();
   }
@@ -472,7 +476,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
         .thenReturn(delegateCallbackService);
     byte[] responseData = kryoSerializer.asDeflatedBytes(delegateTaskResponse.getResponse());
 
-    delegateService.handleDriverResponse(delegateTask, delegateTaskResponse);
+    delegateTaskServiceClassic.handleDriverResponse(delegateTask, delegateTaskResponse);
 
     verify(delegateCallbackService).publishSyncTaskResponse(delegateTask.getUuid(), responseData);
   }
@@ -496,7 +500,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
         .thenReturn(delegateCallbackService);
     byte[] responseData = kryoSerializer.asDeflatedBytes(delegateTaskResponse.getResponse());
 
-    delegateService.handleDriverResponse(delegateTask, delegateTaskResponse);
+    delegateTaskServiceClassic.handleDriverResponse(delegateTask, delegateTaskResponse);
 
     verify(delegateCallbackService).publishAsyncTaskResponse(delegateTask.getUuid(), responseData);
   }
@@ -700,7 +704,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     EncryptionConfig encryptionConfig = VaultConfig.builder().vaultUrl(HTTP_VAUTL_URL).build();
     encryptionConfigs.add(encryptionConfig);
 
-    DelegateServiceImpl.embedCapabilitiesInDelegateTask(task, encryptionConfigs, null);
+    DelegateTaskServiceClassicImpl.embedCapabilitiesInDelegateTask(task, encryptionConfigs, null);
     assertThat(task.getExecutionCapabilities()).isNotNull();
     assertThat(task.getExecutionCapabilities()).hasSize(2);
 
@@ -721,7 +725,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     EncryptionConfig encryptionConfig = KmsConfig.builder().region(US_EAST_2).build();
     encryptionConfigs.add(encryptionConfig);
 
-    DelegateServiceImpl.embedCapabilitiesInDelegateTask(task, encryptionConfigs, null);
+    DelegateTaskServiceClassicImpl.embedCapabilitiesInDelegateTask(task, encryptionConfigs, null);
     assertThat(task.getExecutionCapabilities()).isNotNull();
     assertThat(task.getExecutionCapabilities()).hasSize(2);
 
@@ -740,7 +744,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
     Collection<EncryptionConfig> encryptionConfigs = new ArrayList<>();
 
-    DelegateServiceImpl.embedCapabilitiesInDelegateTask(
+    DelegateTaskServiceClassicImpl.embedCapabilitiesInDelegateTask(
         task, encryptionConfigs, new ManagerPreviewExpressionEvaluator());
     assertThat(task.getExecutionCapabilities()).isNotNull().hasSize(1);
 

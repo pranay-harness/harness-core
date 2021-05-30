@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.k8s.K8sCommandUnitConstants;
+import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -21,8 +22,9 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("k8sRollingRollbackStepParameters")
 public class K8sRollingRollbackStepParameters extends K8sRollingRollbackBaseStepInfo implements K8sSpecParameters {
   @Builder(builderMethodName = "infoBuilder")
-  public K8sRollingRollbackStepParameters(ParameterField<Boolean> skipDryRun) {
-    super(skipDryRun);
+  public K8sRollingRollbackStepParameters(
+      ParameterField<Boolean> skipDryRun, ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
+    super(skipDryRun, delegateSelectors);
   }
 
   @Nonnull

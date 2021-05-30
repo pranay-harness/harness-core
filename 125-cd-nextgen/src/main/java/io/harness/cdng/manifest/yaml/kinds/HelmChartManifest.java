@@ -31,12 +31,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.FieldNameConstants;
 import lombok.experimental.Wither;
 import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
 @Data
 @Builder
+@FieldNameConstants(innerTypeName = "HelmChartManifestKeys")
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(ManifestType.HelmChart)
 @FieldDefaults(level = AccessLevel.PRIVATE)

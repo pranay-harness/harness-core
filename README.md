@@ -524,6 +524,17 @@ bazel run //commons/go/lib/logs:go_default_test # an example
 ```
 
 ## Running docker builds with bazel
+
+### Install gcloud
+1. `brew install --cask google-cloud-sdk`
+1. Add gcloud to your PATH
+   1. Either, manually follow the onscreen instructions from brew
+   1. Or, run the SDKs installer `/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/install.sh`
+1. Run `gcloud init` to configure your installation
+1. Please select `platform` project in GCP during the configuration.
+1. Once all configurations done then you should be able to pull images from gcr registry.
+
+### Build images
 We have added flexibilities of building docker images with bazel. <br/>
 Docker rule reference: https://github.com/bazelbuild/rules_docker. <br/>
 To build docker images through bazel locally(i.e. access private images, push etc) we need to configure gcloud auth for docker. You can run these 
@@ -533,13 +544,6 @@ gcloud components install docker-credential-gcr
 gcloud auth login
 gcloud auth configure-docker
 ```
-
-#### Note:
-1. gcloud needs to installed in your system.
-2. You need to provide permission to gcloud sdk to access Google account, which is associated with your Harness Google cloud account.
-3. Please select `platform` project in GCP during the configuration.
-4. Once all configurations done then you should be able to pull images from gcr registry.
-5. All these previous steps are necessary to build docker images with bazel.
 
 ## Managing Build Configuration
 

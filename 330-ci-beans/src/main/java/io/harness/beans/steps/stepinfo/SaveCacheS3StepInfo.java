@@ -15,7 +15,7 @@ import io.harness.beans.yaml.extended.ArchiveFormat;
 import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.filters.WithConnectorRef;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.yaml.YamlSchemaTypes;

@@ -14,8 +14,8 @@ import io.harness.exception.ExplanationException;
 import io.harness.exception.HintException;
 import io.harness.exception.IllegalArgumentException;
 import io.harness.exception.ImageNotFoundException;
-import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.InvalidThirdPartyCredentialsException;
 import io.harness.exception.WingsException;
 import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionHandler;
 import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionMetadataKeys;
@@ -106,7 +106,7 @@ public class AmazonServiceExceptionHandler implements ExceptionHandler {
                                             imageDetails.get(ExceptionMetadataKeys.CONNECTOR.name())),
             new HintException(String.format(HintException.HINT_INVALID_CONNECTOR,
                                   imageDetails.get(ExceptionMetadataKeys.CONNECTOR.name())),
-                new InvalidCredentialsException(ex.getMessage(), USER)));
+                new InvalidThirdPartyCredentialsException(ex.getMessage(), USER)));
       }
       return new HintException(
           HintException.HINT_AWS_ACCESS_DENIED, new InvalidRequestException(ex.getMessage(), AWS_ACCESS_DENIED, USER));

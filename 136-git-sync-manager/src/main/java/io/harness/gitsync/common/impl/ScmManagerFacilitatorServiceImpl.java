@@ -10,9 +10,9 @@ import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.connector.impl.ConnectorErrorMessagesHelper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.ScmException;
 import io.harness.gitsync.common.dtos.GitFileContent;
+import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
@@ -30,15 +30,17 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(DX)
 public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitatorServiceImpl {
   private ScmClient scmClient;
+  private GitSyncConnectorHelper gitSyncConnectorHelper;
   private DecryptGitApiAccessHelper decryptGitApiAccessHelper;
 
   @Inject
   public ScmManagerFacilitatorServiceImpl(ScmClient scmClient,
       @Named("connectorDecoratorService") ConnectorService connectorService,
       ConnectorErrorMessagesHelper connectorErrorMessagesHelper, YamlGitConfigService yamlGitConfigService,
-      DecryptGitApiAccessHelper decryptGitApiAccessHelper) {
+      DecryptGitApiAccessHelper decryptGitApiAccessHelper, GitSyncConnectorHelper gitSyncConnectorHelper) {
     super(connectorService, connectorErrorMessagesHelper, yamlGitConfigService);
     this.scmClient = scmClient;
+    this.gitSyncConnectorHelper = gitSyncConnectorHelper;
     this.decryptGitApiAccessHelper = decryptGitApiAccessHelper;
   }
 
@@ -59,23 +61,20 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
   public GitFileContent getFileContent(String yamlGitConfigIdentifier, String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String filePath, String branch, String commitId) {
     validateFileContentParams(branch, commitId);
-    final ScmConnector scmConnector =
-        getScmConnector(yamlGitConfigIdentifier, accountIdentifier, orgIdentifier, projectIdentifier);
+    final ScmConnector decryptedConnector = gitSyncConnectorHelper.getDecryptedConnector(
+        yamlGitConfigIdentifier, projectIdentifier, orgIdentifier, accountIdentifier);
     final GitFilePathDetails gitFilePathDetails = getGitFilePathDetails(filePath, branch, commitId);
-    final FileContent fileContent = scmClient.getFileContent(decryptGitApiAccessHelper.decryptScmApiAccess(scmConnector,
-                                                                 accountIdentifier, projectIdentifier, orgIdentifier),
-        gitFilePathDetails);
+    final FileContent fileContent = scmClient.getFileContent(decryptedConnector, gitFilePathDetails);
     return validateAndGetGitFileContent(fileContent);
   }
 
   @Override
-  public Boolean createPullRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+  public boolean createPullRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String yamlGitConfigRef, GitPRCreateRequest gitCreatePRRequest) {
-    final ScmConnector scmConnector =
-        getScmConnector(yamlGitConfigRef, accountIdentifier, orgIdentifier, projectIdentifier);
-    ScmConnector decryptScmConnector = decryptGitApiAccessHelper.decryptScmApiAccess(
-        scmConnector, accountIdentifier, projectIdentifier, orgIdentifier);
-    CreatePRResponse createPRResponse = null;
+    // since project level ref = ref
+    ScmConnector decryptScmConnector = gitSyncConnectorHelper.getDecryptedConnector(
+        yamlGitConfigRef, projectIdentifier, orgIdentifier, accountIdentifier);
+    CreatePRResponse createPRResponse;
     try {
       createPRResponse = scmClient.createPullRequest(decryptScmConnector, gitCreatePRRequest);
       ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(createPRResponse.getStatus(),
@@ -85,15 +84,5 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
       throw new ScmException(PR_CREATION_ERROR);
     }
     return true;
-  }
-
-  private ScmConnector getScmConnector(
-      String yamlGitConfigIdentifier, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    final YamlGitConfigDTO yamlGitConfigDTO =
-        getYamlGitConfigDTO(accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigIdentifier);
-    final IdentifierRef gitConnectorIdentifierRef =
-        getConnectorIdentifierRef(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
-            yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getGitConnectorRef());
-    return getScmConnector(gitConnectorIdentifierRef);
   }
 }

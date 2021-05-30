@@ -521,7 +521,12 @@ public class WebHookServiceImpl implements WebHookService {
                       .build())
             .build();
 
-    WebHookTriggerResponseData webHookTriggerResponseData = delegateService.executeTask(delegateTask);
+    WebHookTriggerResponseData webHookTriggerResponseData = null;
+    try {
+      webHookTriggerResponseData = delegateService.executeTask(delegateTask);
+    } catch (InterruptedException e) {
+      log.error("Delegate Service executre task : validateWebHookSecret" + e);
+    }
 
     if (ExecutionStatus.FAILED.equals(webHookTriggerResponseData.getExecutionStatus())) {
       throw new InvalidRequestException(

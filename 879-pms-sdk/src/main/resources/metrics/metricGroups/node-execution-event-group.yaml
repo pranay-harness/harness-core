@@ -5,7 +5,5 @@ labels:
   - orgIdentifier
   - projectIdentifier
   - planExecutionId
-  - runtimeId
-  - stepType
   - module
   - pipelineIdentifier

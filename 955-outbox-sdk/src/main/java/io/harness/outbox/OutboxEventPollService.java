@@ -1,7 +1,6 @@
 package io.harness.outbox;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
 
 import io.harness.annotations.dev.OwnedBy;
 
@@ -12,7 +11,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Nullable;
 
 @OwnedBy(PL)
 public class OutboxEventPollService implements Managed {
@@ -23,12 +21,12 @@ public class OutboxEventPollService implements Managed {
 
   @Inject
   public OutboxEventPollService(
-      OutboxEventPollJob outboxEventPollJob, @Nullable OutboxPollConfiguration outboxPollConfiguration) {
+      OutboxEventPollJob outboxEventPollJob, OutboxPollConfiguration outboxPollConfiguration) {
     this.outboxEventPollJob = outboxEventPollJob;
-    this.outboxPollConfiguration =
-        outboxPollConfiguration == null ? DEFAULT_OUTBOX_POLL_CONFIGURATION : outboxPollConfiguration;
-    this.executorService = Executors.newSingleThreadScheduledExecutor(
-        new ThreadFactoryBuilder().setNameFormat("outbox-poll-service-thread").build());
+    this.outboxPollConfiguration = outboxPollConfiguration;
+    String threadName = "outbox-poll-service-thread-" + outboxPollConfiguration.getLockId();
+    this.executorService =
+        Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat(threadName).build());
   }
 
   @Override

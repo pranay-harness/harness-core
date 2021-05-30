@@ -7,6 +7,7 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.task.k8s.DeleteResourcesType;
+import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -17,6 +18,9 @@ public interface DeleteResourcesBaseSpec {
   @JsonIgnore DeleteResourcesType getType();
   @JsonIgnore String getResourceNamesValue();
   @JsonIgnore String getManifestPathsValue();
-  @JsonIgnore Boolean getDeleteNamespaceValue();
   @JsonIgnore Boolean getAllManifestPathsValue();
+  @JsonIgnore
+  default ParameterField<Boolean> getDeleteNamespaceParameterField() {
+    return null;
+  }
 }

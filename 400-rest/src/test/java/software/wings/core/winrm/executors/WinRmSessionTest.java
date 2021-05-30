@@ -2,11 +2,19 @@ package software.wings.core.winrm.executors;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.SAHIL;
+import static io.harness.rule.OwnerRule.TMACARI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.spy;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -20,8 +28,17 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.WinRmConnectionAttributes;
 
 import com.jcraft.jsch.JSchException;
+import io.cloudsoft.winrm4j.client.ShellCommand;
+import io.cloudsoft.winrm4j.client.WinRmClient;
+import io.cloudsoft.winrm4j.client.WinRmClientBuilder;
+import io.cloudsoft.winrm4j.winrm.WinRmTool;
+import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
+import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -34,7 +51,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({software.wings.utils.SshHelperUtils.class, io.harness.ssh.SshHelperUtils.class, WinRmSession.class,
-    InstallUtils.class})
+    InstallUtils.class, WinRmClient.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
 @OwnedBy(CDP)
 public class WinRmSessionTest extends WingsBaseTest {
@@ -145,5 +162,63 @@ public class WinRmSessionTest extends WingsBaseTest {
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> new WinRmSession(winRmSessionConfig, logCallback))
         .withMessageContaining("Username or domain cannot be null");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExecuteCommandsListWithScriptExecCommand() throws JSchException, IOException {
+    List<List<String>> commandsList = new ArrayList<>();
+    List<String> commands = Collections.singletonList("command");
+    commandsList.add(commands);
+    ShellCommand shell = mock(ShellCommand.class);
+    WinRmTool winRmTool = mock(WinRmTool.class);
+
+    setupMocks(commands, shell, winRmTool);
+
+    winRmSession.executeCommandsList(commandsList, writer, error, false, "executeCommand");
+    verify(winRmTool).executeCommand(commands);
+    verify(shell).execute("executeCommand", writer, error);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExecuteCommandsListWithoutScriptExecCommand() throws JSchException, IOException {
+    List<List<String>> commandsList = new ArrayList<>();
+    List<String> commands = Collections.singletonList("command");
+    commandsList.add(commands);
+    ShellCommand shell = mock(ShellCommand.class);
+    WinRmTool winRmTool = mock(WinRmTool.class);
+
+    setupMocks(commands, shell, winRmTool);
+
+    winRmSession.executeCommandsList(commandsList, writer, error, false, null);
+    verify(winRmTool).executeCommand(commands);
+    verifyZeroInteractions(shell);
+  }
+
+  private void setupMocks(List<String> commands, ShellCommand shell, WinRmTool winRmTool) throws JSchException {
+    WinRmClientBuilder winRmClientBuilder = spy(WinRmClient.builder("http://localhost"));
+    PowerMockito.mockStatic(SshHelperUtils.class);
+    PowerMockito.mockStatic(WinRmClient.class);
+    WinRmClient winRmClient = mock(WinRmClient.class);
+
+    when(WinRmClient.builder(anyString())).thenReturn(winRmClientBuilder);
+    doReturn(winRmClient).when(winRmClientBuilder).build();
+    when(winRmClient.createShell()).thenReturn(shell);
+    winRmSessionConfig = WinRmSessionConfig.builder()
+                             .skipCertChecks(true)
+                             .username("TestUser")
+                             .password("password")
+                             .environment(new HashMap<>())
+                             .hostname("localhost")
+                             .workingDirectory("workingDirectory")
+                             .authenticationScheme(WinRmConnectionAttributes.AuthenticationScheme.NTLM)
+                             .build();
+    winRmSession = new WinRmSession(winRmSessionConfig, logCallback);
+    on(winRmSession).set("shell", shell);
+    on(winRmSession).set("winRmTool", winRmTool);
+    when(winRmTool.executeCommand(commands)).thenReturn(new WinRmToolResponse("", "", 0));
   }
 }

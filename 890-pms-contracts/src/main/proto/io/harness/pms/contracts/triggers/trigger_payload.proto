@@ -11,6 +11,7 @@ message TriggerPayload {
   ParsedPayload parsedPayload = 2;
   Type type = 3;
   map<string, string> headers = 4;
+  SourceType sourceType = 5;
 }
 
 message ParsedPayload {
@@ -24,4 +25,12 @@ enum Type {
   CUSTOM = 0;
   GIT = 1;
   SCHEDULED = 2;
+  WEBHOOK = 3;
+}
+
+enum SourceType {
+  CUSTOM_REPO = 0;
+  GITHUB_REPO = 1;
+  GITLAB_REPO = 2;
+  BITBUCKET_REPO = 3;
 }

@@ -24,7 +24,7 @@ import io.harness.version.VersionInfoManager;
 import software.wings.WingsBaseTest;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.DelegateTaskBroadcastHelper;
-import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DelegateTaskServiceClassic;
 
 import com.google.inject.Inject;
 import java.util.Set;
@@ -37,7 +37,7 @@ import org.mockito.Mock;
 public class DelegateQueueTaskTest extends WingsBaseTest {
   @Mock private DelegateTaskBroadcastHelper broadcastHelper;
   @Mock private FeatureFlagService featureFlagService;
-  @Mock private DelegateService delegateService;
+  @Mock private DelegateTaskServiceClassic delegateService;
   @InjectMocks @Inject DelegateQueueTask delegateQueueTask;
 
   @Inject HPersistence persistence;

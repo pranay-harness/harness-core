@@ -6,3 +6,7 @@ metrics:
     metricDefinition: Time for which Sdk Response Event was in the queue.
     type: LastValue
     unit: count
+  - metricName: sdk_response_event_time_in_queue
+    metricDefinition: Time for which Sdk Response Event was in the queue.
+    type: LastValue
+    unit: count

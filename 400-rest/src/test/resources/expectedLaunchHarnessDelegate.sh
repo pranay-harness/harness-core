@@ -33,5 +33,4 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f) \
 -e KUSTOMIZE_PATH= \
 -e OC_PATH= \
 -e KUBECTL_PATH= \
--e MANAGER_SERVICE_SECRET=********** \
 harness/delegate:latest

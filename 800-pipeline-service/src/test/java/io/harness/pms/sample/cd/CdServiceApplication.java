@@ -11,7 +11,7 @@ import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
-import io.harness.pms.sdk.core.execution.listeners.NodeExecutionEventListener;
+import io.harness.pms.sdk.core.execution.events.node.NodeExecutionEventListener;
 import io.harness.queue.QueueListenerController;
 
 import com.google.inject.Guice;
