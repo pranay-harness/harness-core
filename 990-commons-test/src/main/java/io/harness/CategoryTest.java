@@ -38,7 +38,7 @@ public class CategoryTest {
    */
   @Before
   public void logTestCaseName() {
-    StringBuilder sb = new StringBuilder("Running test ").append(testName.getMethodName());
+    StringBuilder sb = new StringBuilder("Running test abcde ").append(testName.getMethodName());
 
     int repetition = repeatRule.getRepetition();
     if (repetition > 0) {
