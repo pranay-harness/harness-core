@@ -7,7 +7,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>980-java-agent</module>
-        <!-- module>250-watcher</module -->
+        <module>260-delegate</module>
     </modules>
     <scm>
         <connection>scm:git:git://github.com/wings-software/portal.git</connection>
