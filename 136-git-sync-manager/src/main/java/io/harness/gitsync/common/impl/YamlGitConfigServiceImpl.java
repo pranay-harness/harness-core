@@ -367,9 +367,4 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   public Boolean isRepoExists(String repo) {
     return yamlGitConfigRepository.existsByRepo(repo);
   }
-
-  @Override
-  public Boolean isRepoAndBranchExists(String repo, String branch) {
-    return yamlGitConfigRepository.existsByRepoAndBranch(repo, branch);
-  }
 }
