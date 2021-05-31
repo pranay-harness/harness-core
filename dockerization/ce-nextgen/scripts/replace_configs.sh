@@ -40,6 +40,8 @@ replace_key_with_value eventsFramework.redis.sslConfig.enabled $EVENTS_FRAMEWORK
 replace_key_with_value eventsFramework.redis.sslConfig.CATrustStorePath $EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PATH
 replace_key_with_value eventsFramework.redis.sslConfig.CATrustStorePassword $EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PASSWORD
 
+replace_key_with_value gcpConfig.gcpProjectId "$GCP_PROJECT_ID"
+
 if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
   IFS=',' read -ra SENTINEL_URLS <<< "$EVENTS_FRAMEWORK_REDIS_SENTINELS"
   INDEX=0
