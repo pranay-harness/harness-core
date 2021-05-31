@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.ng.beans.PageRequest;
+import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 
 import java.util.List;
 
@@ -21,6 +22,9 @@ public interface ScmClientFacilitatorService {
   GitFileContent getFileContent(String yamlGitConfigIdentifier, String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String filePath, String branch, String commitId);
 
-  Boolean createPullRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+  boolean createPullRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String yamlGitConfigRef, GitPRCreateRequest gitCreatePRRequest);
+
+  FileBatchContentResponse listFilesOfBranches(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String yamlGitConfigIdentifier, List<String> foldersList, String branchName);
 }

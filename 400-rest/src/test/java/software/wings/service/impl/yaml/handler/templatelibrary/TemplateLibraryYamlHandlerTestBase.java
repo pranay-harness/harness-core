@@ -5,6 +5,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -65,6 +66,7 @@ public abstract class TemplateLibraryYamlHandlerTestBase extends YamlHandlerTest
                                       .withAccountId(ACCOUNT_ID)
                                       .withFilePath(yamlFilePath)
                                       .withFileContent(yamlContent)
+                                      .withSyncFromGit(true)
                                       .build();
 
     ChangeContext<Y> changeContext = new ChangeContext();
@@ -96,5 +98,6 @@ public abstract class TemplateLibraryYamlHandlerTestBase extends YamlHandlerTest
 
     assertThatThrownBy(() -> yamlHandler.upsertFromYaml(changeContext1, asList(changeContext1)))
         .isInstanceOf(NullPointerException.class);
+    assertThat(changeContext.getChange().isSyncFromGit()).isEqualTo(true);
   }
 }

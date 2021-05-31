@@ -39,4 +39,11 @@ public interface JiraRestClient {
 
   @PUT("issue/{issueKey}")
   Call<Void> updateIssue(@Path("issueKey") String issueKey, @Body JiraUpdateIssueRequestNG updateIssueRequest);
+
+  @POST("issue/{issueKey}/comment")
+  Call<Void> addIssueComment(
+      @Path("issueKey") String issueKey, @Body JiraAddIssueCommentRequestNG addIssueCommentRequest);
+
+  @POST("issue/{issueKey}/transitions")
+  Call<Void> transitionIssue(@Path("issueKey") String issueKey, @Body JiraUpdateIssueRequestNG updateIssueRequest);
 }

@@ -433,9 +433,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
       GitWebhookDetails gitWebhookDetails, ScmConnector scmConnector, WebhookResponse identicalTarget) {
     final CreateWebhookRequest.Builder createWebhookRequestBuilder = CreateWebhookRequest.newBuilder()
                                                                          .setSlug(slug)
-                                                                         .setName(gitWebhookDetails.getName())
                                                                          .setProvider(gitProvider)
-                                                                         .setSecret(gitWebhookDetails.getSecret())
                                                                          .setTarget(gitWebhookDetails.getTarget());
     return ScmGitWebhookHelper.getCreateWebhookRequest(
         createWebhookRequestBuilder, gitWebhookDetails, scmConnector, identicalTarget);

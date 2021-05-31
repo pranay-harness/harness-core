@@ -47,7 +47,7 @@ public class MergeUtils {
 
   private String getErrorPipelineYaml(Set<FQN> invalidFQNs, String pipelineYaml) throws IOException {
     Map<FQN, Object> map = new LinkedHashMap<>();
-    invalidFQNs.forEach(fqn -> map.put(fqn, fqn.display()));
+    invalidFQNs.forEach(fqn -> map.put(fqn, fqn.getExpressionFqn()));
     PipelineYamlConfig config = new PipelineYamlConfig(pipelineYaml);
     PipelineYamlConfig res = new PipelineYamlConfig(map, config.getYamlMap());
     return res.getYaml();
@@ -57,7 +57,7 @@ public class MergeUtils {
       Map<FQN, String> invalidFQNs, String inputSetIdentifier) {
     Map<String, InputSetErrorResponseDTOPMS> res = new LinkedHashMap<>();
     invalidFQNs.keySet().forEach(fqn -> {
-      String uuid = fqn.display();
+      String uuid = fqn.getExpressionFqn();
       InputSetErrorDTOPMS errorDTOPMS = InputSetErrorDTOPMS.builder()
                                             .fieldName(fqn.getFieldName())
                                             .message(invalidFQNs.get(fqn))
@@ -74,6 +74,9 @@ public class MergeUtils {
     try {
       JsonNode node = YamlUtils.readTree(inputSetYaml).getNode().getCurrJsonNode();
       ObjectNode innerMap = (ObjectNode) node.get("inputSet");
+      if (innerMap == null) {
+        return "<runtime input yaml>";
+      }
       JsonNode identifier = innerMap.get("identifier");
       return identifier.asText();
     } catch (IOException e) {

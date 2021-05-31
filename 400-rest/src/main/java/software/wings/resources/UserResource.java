@@ -1143,6 +1143,7 @@ public class UserResource {
                                     .email(userInvite.getEmail())
                                     .password(String.valueOf(userInvite.getPassword()))
                                     .name(userInvite.getName())
+                                    .token(inviteId)
                                     .build();
       return new RestResponse<>(userService.completeNGInviteAndSignIn(inviteDTO));
     } else {

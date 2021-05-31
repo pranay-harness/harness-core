@@ -14,6 +14,8 @@ import io.harness.serializer.spring.converters.nodeexecution.NodeExecutionReadCo
 import io.harness.serializer.spring.converters.nodeexecution.NodeExecutionWriteConverter;
 import io.harness.serializer.spring.converters.plannode.PlanNodeProtoReadConverter;
 import io.harness.serializer.spring.converters.plannode.PlanNodeProtoWriteConverter;
+import io.harness.serializer.spring.converters.sdk.SdkModuleInfoReadConverter;
+import io.harness.serializer.spring.converters.sdk.SdkModuleInfoWriteConverter;
 import io.harness.serializer.spring.converters.steps.SdkResponseEventRequestReadConverter;
 import io.harness.serializer.spring.converters.steps.SdkResponseEventRequestWriteConverter;
 import io.harness.serializer.spring.converters.steptype.StepTypeReadConverter;
@@ -37,5 +39,6 @@ public class PmsCommonsModuleRegistrars {
       StepTypeReadConverter.class, StepTypeWriteConverter.class, SdkResponseEventRequestReadConverter.class,
       SdkResponseEventRequestWriteConverter.class, AmbianceWriteConverter.class, AmbianceReadConverter.class,
       FacilitatorResponseReadConverter.class, FacilitatorResponseWriteConverter.class, PlanNodeProtoReadConverter.class,
-      PlanNodeProtoWriteConverter.class, NodeExecutionReadConverter.class, NodeExecutionWriteConverter.class);
+      PlanNodeProtoWriteConverter.class, NodeExecutionReadConverter.class, NodeExecutionWriteConverter.class,
+      SdkModuleInfoReadConverter.class, SdkModuleInfoWriteConverter.class);
 }

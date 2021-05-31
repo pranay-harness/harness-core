@@ -1,8 +1,8 @@
 package io.harness.connector.entities.embedded.ceawsconnector;
 
 import io.harness.connector.entities.Connector;
+import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
-import io.harness.delegate.beans.connector.ceawsconnector.CEAwsFeatures;
 
 import java.util.List;
 import lombok.Builder;
@@ -21,7 +21,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Persistent
 @TypeAlias("io.harness.connector.entities.embedded.ceawsconnector.CEAwsConfig")
 public class CEAwsConfig extends Connector {
-  List<CEAwsFeatures> featuresEnabled;
+  List<CEFeatures> featuresEnabled;
   String awsAccountId;
   CURAttributes curAttributes;
   CrossAccountAccessDTO crossAccountAccess;

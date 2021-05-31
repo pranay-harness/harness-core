@@ -30,6 +30,7 @@ import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
+import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.product.ci.scm.proto.ListBranchesResponse;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
@@ -101,6 +102,7 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     final ScmConnector scmConnector =
         getScmConnector(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
             yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getGitConnectorRef());
+    scmConnector.setUrl(yamlGitConfigDTO.getRepo());
     final List<EncryptedDataDetail> encryptionDetails =
         getEncryptedDataDetails(accountIdentifier, orgIdentifier, projectIdentifier, scmConnector);
     final GitFilePathDetails gitFilePathDetails = getGitFilePathDetails(filePath, branch, commitId);
@@ -110,7 +112,6 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
         getDelegateTaskRequest(accountIdentifier, scmGitFileTaskParams, TaskType.SCM_GIT_FILE_TASK);
     final DelegateResponseData delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
     GitFileTaskResponseData gitFileTaskResponseData = (GitFileTaskResponseData) delegateResponseData;
-    gitFileTaskResponseData.getFileContent();
     try {
       return validateAndGetGitFileContent(FileContent.parseFrom(gitFileTaskResponseData.getFileContent()));
     } catch (InvalidProtocolBufferException e) {
@@ -145,7 +146,7 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
   }
 
   @Override
-  public Boolean createPullRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+  public boolean createPullRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String yamlGitConfigRef, GitPRCreateRequest gitCreatePRRequest) {
     YamlGitConfigDTO yamlGitConfigDTO =
         getYamlGitConfigDTO(accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigRef);
@@ -153,6 +154,7 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
         getConnectorIdentifierRef(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
             yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getGitConnectorRef());
     final ScmConnector scmConnector = getScmConnector(gitConnectorIdentifierRef);
+    scmConnector.setUrl(yamlGitConfigDTO.getRepo());
     final BaseNGAccess baseNGAccess = getBaseNGAccess(accountIdentifier, orgIdentifier, projectIdentifier);
     final DecryptableEntity apiAccessDecryptableEntity =
         GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(scmConnector);
@@ -178,6 +180,12 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
           gitCreatePRRequest.getTargetBranch());
     }
     return createPRResponse.getStatus() == 200 || createPRResponse.getStatus() == 201;
+  }
+
+  @Override
+  public FileBatchContentResponse listFilesOfBranches(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String yamlGitConfigRef, List<String> foldersList, String branchName) {
+    return null;
   }
 
   DelegateTaskRequest getDelegateTaskRequest(

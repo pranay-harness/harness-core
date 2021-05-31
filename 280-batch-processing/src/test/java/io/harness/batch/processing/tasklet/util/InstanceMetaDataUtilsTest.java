@@ -5,9 +5,9 @@ import static io.harness.rule.OwnerRule.UTSAV;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.batch.processing.BatchProcessingTestBase;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableMap;

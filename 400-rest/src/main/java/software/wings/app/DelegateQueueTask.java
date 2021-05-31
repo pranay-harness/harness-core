@@ -42,6 +42,7 @@ import software.wings.service.impl.DelegateTaskBroadcastHelper;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DelegateTaskServiceClassic;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -77,6 +78,7 @@ public class DelegateQueueTask implements Runnable {
   @Inject private DelegateTaskService delegateTaskService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private DelegateSelectionLogsService delegateSelectionLogsService;
+  @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
 
   @Override
   public void run() {
@@ -267,7 +269,8 @@ public class DelegateQueueTask implements Runnable {
           }
 
           setUnset(updateOperations, DelegateTaskKeys.preAssignedDelegateId,
-              delegateService.obtainCapableDelegateId(delegateTask, delegateTask.getAlreadyTriedDelegates()));
+              delegateTaskServiceClassic.obtainCapableDelegateId(
+                  delegateTask, delegateTask.getAlreadyTriedDelegates()));
         }
 
         delegateTask = persistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);

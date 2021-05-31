@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.execution.events;
+
+import "io/harness/pms/contracts/ambiance/ambiance.proto";
+import "io/harness/pms/contracts/execution/events/orchestration_event_type.proto";
+import "io/harness/pms/contracts/execution/node_execution_proto.proto";
+import "google/protobuf/timestamp.proto";
+
+option java_multiple_files = true;
+
+message OrchestrationEvent {
+  io.harness.pms.contracts.ambiance.Ambiance ambiance = 1;
+  OrchestrationEventType eventType = 2;
+  google.protobuf.Timestamp createdAt = 3;
+  io.harness.pms.contracts.execution.NodeExecutionProto nodeExecution = 4;
+}

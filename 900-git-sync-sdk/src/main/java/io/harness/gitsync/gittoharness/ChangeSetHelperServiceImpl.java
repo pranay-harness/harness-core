@@ -50,7 +50,7 @@ public class ChangeSetHelperServiceImpl implements GitSdkInterface {
       case UNRECOGNIZED:
       default:
         throw new UnexpectedException(
-            String.format("Got unrecognized change set type for changeset [%s]", changeSet.getId()));
+            String.format("Got unrecognized change set type for changeset [%s]", changeSet.getFilePath()));
     }
   }
 }

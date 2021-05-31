@@ -4,11 +4,11 @@ import io.harness.aws.AwsClient;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.entities.embedded.ceawsconnector.S3BucketDetails;
+import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.AwsCurAttributesDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
-import io.harness.delegate.beans.connector.ceawsconnector.CEAwsFeatures;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.ng.core.dto.ErrorDetail;
@@ -72,7 +72,7 @@ public class CEAwsConnectorValidator extends AbstractConnectorValidator {
   public ConnectorValidationResult validate(ConnectorConfigDTO connectorDTO, String accountIdentifier,
       String orgIdentifier, String projectIdentifier, String identifier) {
     final CEAwsConnectorDTO ceAwsConnectorDTO = (CEAwsConnectorDTO) connectorDTO;
-    final List<CEAwsFeatures> featuresEnabled = ceAwsConnectorDTO.getFeaturesEnabled();
+    final List<CEFeatures> featuresEnabled = ceAwsConnectorDTO.getFeaturesEnabled();
     final CrossAccountAccessDTO crossAccountAccessDTO = ceAwsConnectorDTO.getCrossAccountAccess();
     final AwsCurAttributesDTO awsCurAttributesDTO = ceAwsConnectorDTO.getCurAttributes();
 
@@ -81,24 +81,24 @@ public class CEAwsConnectorValidator extends AbstractConnectorValidator {
     try {
       final AWSCredentialsProvider credentialsProvider = getCredentialProvider(crossAccountAccessDTO);
 
-      if (featuresEnabled.contains(CEAwsFeatures.VISIBILITY)) {
+      if (featuresEnabled.contains(CEFeatures.VISIBILITY)) {
         final Policy eventsPolicy = getRequiredEventsPolicy();
-        errorList.addAll(validateIfPolicyIsCorrect(credentialsProvider, crossAccountAccessDTO.getCrossAccountRoleArn(),
-            CEAwsFeatures.VISIBILITY, eventsPolicy));
+        errorList.addAll(validateIfPolicyIsCorrect(
+            credentialsProvider, crossAccountAccessDTO.getCrossAccountRoleArn(), CEFeatures.VISIBILITY, eventsPolicy));
       }
 
-      if (featuresEnabled.contains(CEAwsFeatures.OPTIMIZATION)) {
+      if (featuresEnabled.contains(CEFeatures.OPTIMIZATION)) {
         final Policy optimizationPolicy = getRequiredOptimizationPolicy();
         errorList.addAll(validateIfPolicyIsCorrect(credentialsProvider, crossAccountAccessDTO.getCrossAccountRoleArn(),
-            CEAwsFeatures.OPTIMIZATION, optimizationPolicy));
+            CEFeatures.OPTIMIZATION, optimizationPolicy));
       }
 
-      if (featuresEnabled.contains(CEAwsFeatures.CUR)) {
+      if (featuresEnabled.contains(CEFeatures.BILLING)) {
         log.info("Destination bucket: {}", ceAwsSetupConfig.getDestinationBucket());
         final Policy curPolicy =
             getRequiredCurPolicy(awsCurAttributesDTO.getS3BucketName(), ceAwsSetupConfig.getDestinationBucket());
         errorList.addAll(validateIfPolicyIsCorrect(
-            credentialsProvider, crossAccountAccessDTO.getCrossAccountRoleArn(), CEAwsFeatures.CUR, curPolicy));
+            credentialsProvider, crossAccountAccessDTO.getCrossAccountRoleArn(), CEFeatures.BILLING, curPolicy));
 
         errorList.addAll(validateResourceExists(credentialsProvider, awsCurAttributesDTO, errorList));
       }
@@ -158,7 +158,7 @@ public class CEAwsConnectorValidator extends AbstractConnectorValidator {
   }
 
   private Collection<ErrorDetail> validateIfPolicyIsCorrect(AWSCredentialsProvider credentialsProvider,
-      String crossAccountRoleArn, CEAwsFeatures feature, @NotNull Policy policy) {
+      String crossAccountRoleArn, CEFeatures feature, @NotNull Policy policy) {
     List<ErrorDetail> errorDetails = new ArrayList<>();
 
     for (Statement statement : policy.getStatements()) {

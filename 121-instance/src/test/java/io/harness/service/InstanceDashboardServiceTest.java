@@ -3,21 +3,24 @@ package io.harness.service;
 import static io.harness.rule.OwnerRule.JASMEET;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.doReturn;
 
 import io.harness.InstancesTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.entities.ArtifactDetails;
 import io.harness.entities.instance.Instance;
 import io.harness.models.BuildsByEnvironment;
+import io.harness.models.EnvBuildInstanceCount;
 import io.harness.models.InstancesByBuild;
 import io.harness.repositories.instance.InstanceRepository;
 import io.harness.rule.Owner;
 import io.harness.service.instancedashboardservice.InstanceDashboardService;
 
 import com.google.inject.Inject;
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
@@ -25,33 +28,37 @@ import org.mockito.Mock;
 public class InstanceDashboardServiceTest extends InstancesTestBase {
   @Inject private InstanceDashboardService instanceDashboardService;
   @Inject @Mock private InstanceRepository instanceRepository;
-  private static final String ACCOUNT_ID = "ACCOUNT_ID";
-  private static final String ORG_ID = "ORG_ID";
-  private static final String PROJECT_ID = "PROJECT_ID";
+  private static final String ACCOUNT_IDENTIFIER = "ACCOUNT_IDENTIFIER";
+  private static final String ORG_IDENTIFIER = "ORG_IDENTIFIER";
+  private static final String PROJECT_IDENTIFIER = "PROJECT_IDENTIFIER";
+  private static final String SERVICE_IDENTIFIER = "SERVICE_IDENTIFIER";
+
+  private Instance createDummyInstance(String envId, String tag) {
+    return Instance.builder()
+        .accountIdentifier(ACCOUNT_IDENTIFIER)
+        .orgIdentifier(ORG_IDENTIFIER)
+        .projectIdentifier(PROJECT_IDENTIFIER)
+        .serviceId(SERVICE_IDENTIFIER)
+        .envId(envId)
+        .envName("envName")
+        .primaryArtifact(ArtifactDetails.builder().tag(tag).build())
+        .createdAt(0L)
+        .deletedAt(10L)
+        .build();
+  }
 
   @Test
   @Owner(developers = JASMEET)
   @Category(UnitTests.class)
   public void getActiveInstancesGroupedByEnvironmentAndBuild() {
-    List<Instance> instanceListMock = new ArrayList<>();
-    long currentTimestampInMs = 1621900807817L;
+    long currentTimestampInMs = 5L;
     for (int i = 0; i < 40; i++) {
-      Instance instance = Instance.builder()
-                              .accountIdentifier(ACCOUNT_ID)
-                              .orgIdentifier(ORG_ID)
-                              .projectIdentifier(PROJECT_ID)
-                              .envId(String.valueOf(i % 5))
-                              .primaryArtifact(ArtifactDetails.builder().tag(String.valueOf((i / 5) % 4)).build())
-                              .build();
-      instanceListMock.add(instance);
+      instanceRepository.save(createDummyInstance(String.valueOf(i % 5), String.valueOf((i / 5) % 4)));
     }
 
-    doReturn(instanceListMock)
-        .when(instanceRepository)
-        .getActiveInstances(ACCOUNT_ID, ORG_ID, PROJECT_ID, currentTimestampInMs);
-
-    List<BuildsByEnvironment> environments = instanceDashboardService.getActiveInstancesGroupedByEnvironmentAndBuild(
-        ACCOUNT_ID, ORG_ID, PROJECT_ID, currentTimestampInMs);
+    List<BuildsByEnvironment> environments =
+        instanceDashboardService.getActiveInstancesByServiceIdGroupedByEnvironmentAndBuild(
+            ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SERVICE_IDENTIFIER, currentTimestampInMs);
 
     assertThat(environments.size()).isEqualTo(5);
     for (BuildsByEnvironment buildsByEnv : environments) {
@@ -61,5 +68,39 @@ public class InstanceDashboardServiceTest extends InstancesTestBase {
         assertThat(instanceByBuild.getInstances().size()).isEqualTo(2);
       }
     }
+  }
+
+  @Test
+  @Owner(developers = JASMEET)
+  @Category(UnitTests.class)
+  public void getUniqueEnvIdBuildIdCombinationsWithInstanceCount() {
+    Map<String, Map<String, Integer>> mock = new HashMap<>();
+    List<Pair<Pair<String, String>, Integer>> mockList = Arrays.asList(Pair.of(Pair.of("envId1", "buildId1"), 3),
+        Pair.of(Pair.of("envId1", "buildId2"), 2), Pair.of(Pair.of("envId2", "buildId1"), 2),
+        Pair.of(Pair.of("envId2", "buildId2"), 5), Pair.of(Pair.of("envId3", "buildId3"), 3));
+
+    mockList.forEach(mockListItem -> {
+      final String envId = mockListItem.getLeft().getLeft();
+      final String buildId = mockListItem.getLeft().getRight();
+      final Integer count = mockListItem.getRight();
+      if (!mock.containsKey(envId)) {
+        mock.put(envId, new HashMap<>());
+      }
+      mock.get(envId).put(buildId, count);
+      for (int i = 0; i < count; i++) {
+        instanceRepository.save(createDummyInstance(envId, buildId));
+      }
+    });
+
+    List<EnvBuildInstanceCount> uniqueEnvIdBuildIdCombinationsWithInstanceCounts =
+        instanceDashboardService.getEnvBuildInstanceCountByServiceId(
+            ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SERVICE_IDENTIFIER, 5);
+    uniqueEnvIdBuildIdCombinationsWithInstanceCounts.forEach(uniqueEnvIdBuildIdCombinationsWithInstanceCount -> {
+      final String envId = uniqueEnvIdBuildIdCombinationsWithInstanceCount.getEnvId();
+      final String buildId = uniqueEnvIdBuildIdCombinationsWithInstanceCount.getTag();
+      final int count = uniqueEnvIdBuildIdCombinationsWithInstanceCount.getCount();
+      final int expectedCount = mock.getOrDefault(envId, new HashMap<>()).getOrDefault(buildId, 0);
+      assertThat(count).isEqualTo(expectedCount);
+    });
   }
 }

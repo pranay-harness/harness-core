@@ -78,9 +78,9 @@ public class ServiceRepositoryCustomImpl implements ServiceRepositoryCustom {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, long timestampInMs) {
     Criteria baseCriteria = Criteria.where(ServiceEntityKeys.accountId)
                                 .is(accountIdentifier)
-                                .where(ServiceEntityKeys.orgIdentifier)
+                                .and(ServiceEntityKeys.orgIdentifier)
                                 .is(orgIdentifier)
-                                .where(ServiceEntityKeys.projectIdentifier)
+                                .and(ServiceEntityKeys.projectIdentifier)
                                 .is(projectIdentifier);
 
     Criteria filterCreatedAt = Criteria.where(ServiceEntityKeys.createdAt).lte(timestampInMs);

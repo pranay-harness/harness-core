@@ -109,7 +109,7 @@ public class MetricServiceImpl implements MetricService {
   @Override
   public void initializeMetrics(List<MetricDefinitionInitializer> metricDefinitionInitializes) {
     if (isNotEmpty(System.getenv("GOOGLE_APPLICATION_CREDENTIALS"))) {
-      WILL_PUBLISH_METRICS = true;
+      WILL_PUBLISH_METRICS = false;
     }
 
     if (!WILL_PUBLISH_METRICS) {
