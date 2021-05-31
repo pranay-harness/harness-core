@@ -66,13 +66,6 @@ public class CIManagerServiceModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Named("serviceSecret")
-  String serviceSecret() {
-    return ciManagerConfiguration.getManagerServiceSecret();
-  }
-
-  @Provides
-  @Singleton
   Supplier<DelegateCallbackToken> getDelegateCallbackTokenSupplier(
       DelegateServiceGrpcClient delegateServiceGrpcClient) {
     return (Supplier<DelegateCallbackToken>) Suppliers.memoize(

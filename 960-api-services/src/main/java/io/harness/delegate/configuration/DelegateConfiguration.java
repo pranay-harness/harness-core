@@ -37,7 +37,5 @@ public class DelegateConfiguration {
   private boolean grpcServiceEnabled;
   private Integer grpcServiceConnectorPort;
 
-  private String managerServiceSecret;
-
   private String logStreamingServiceBaseUrl;
 }

@@ -257,10 +257,6 @@ export DELEGATE_NAME=harness-delegate
 export DELEGATE_PROFILE=QFWin33JRlKWKBzpzE5A9A
 export DELEGATE_TYPE=SHELL_SCRIPT
 
-if [[ -z "$MANAGER_SERVICE_SECRET" || "$MANAGER_SERVICE_SECRET" == "null" ]]; then
-  export MANAGER_SERVICE_SECRET=**********
-fi
-
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"
 
