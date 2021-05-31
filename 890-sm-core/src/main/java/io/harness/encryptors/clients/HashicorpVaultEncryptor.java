@@ -211,7 +211,7 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
   private String getToken(VaultConfig vaultConfig) {
     if (vaultConfig.isUseVaultAgent()) {
       try {
-        byte[] content = Files.readAllBytes(Paths.get(URI.create("file://"+vaultConfig.getSinkPath())));
+        byte[] content = Files.readAllBytes(Paths.get(URI.create("file://" + vaultConfig.getSinkPath())));
         return new String(content);
       } catch (IOException e) {
         throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR,

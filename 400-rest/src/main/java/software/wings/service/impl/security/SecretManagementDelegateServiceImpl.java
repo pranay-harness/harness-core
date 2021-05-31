@@ -43,7 +43,6 @@ import software.wings.beans.VaultConfig;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 import com.google.inject.Singleton;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -92,7 +91,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       Response<SignedSSHVaultResponse> response =
           restClient
               .fetchSignedPublicKey(sshVaultConfig.getSecretEngineName(), hostConnectionAttributes.getRole(),
-                      vaultToken, signedSSHVaultRequest)
+                  vaultToken, signedSSHVaultRequest)
               .execute();
       if (response.isSuccessful() && response.body().getSignedSSHVaultResult() != null) {
         hostConnectionAttributes.setSignedPublicKey(response.body().getSignedSSHVaultResult().getSignedPublicKey());
@@ -138,10 +137,9 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     String encryptedDataId = encryptedData.getUuid();
 
     try {
-      VaultSecretMetadata secretMetadata =
-          VaultRestClientFactory.create(vaultConfig)
-              .readSecretMetadata(getToken(vaultConfig), vaultConfig.getNamespace(),
-                  vaultConfig.getSecretEngineName(), encryptedData.getPath());
+      VaultSecretMetadata secretMetadata = VaultRestClientFactory.create(vaultConfig)
+                                               .readSecretMetadata(getToken(vaultConfig), vaultConfig.getNamespace(),
+                                                   vaultConfig.getSecretEngineName(), encryptedData.getPath());
       if (secretMetadata != null && isNotEmpty(secretMetadata.getVersions())) {
         for (Entry<Integer, VersionMetadata> entry : secretMetadata.getVersions().entrySet()) {
           int version = entry.getKey();
@@ -227,8 +225,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       VaultSysAuthRestClient restClient =
           VaultRestClientFactory.getVaultRetrofit(vaultConfig.getVaultUrl(), vaultConfig.isCertValidationRequired())
               .create(VaultSysAuthRestClient.class);
-      Response<SysMountsResponse> response =
-          restClient.getAllMounts(vaultToken, vaultConfig.getNamespace()).execute();
+      Response<SysMountsResponse> response = restClient.getAllMounts(vaultToken, vaultConfig.getNamespace()).execute();
       if (response.isSuccessful()) {
         Map<String, SysMount> sysMountMap = response.body().getData();
         log.info("Found Vault sys mount points: {}", sysMountMap.keySet());
@@ -338,11 +335,11 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   private String getToken(BaseVaultConfig vaultConfig) {
     if (vaultConfig.isUseVaultAgent()) {
       try {
-        byte[] content = Files.readAllBytes(Paths.get(URI.create("file://"+vaultConfig.getSinkPath())));
+        byte[] content = Files.readAllBytes(Paths.get(URI.create("file://" + vaultConfig.getSinkPath())));
         return new String(content);
       } catch (IOException e) {
         throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR,
-                "Using Vault Agent Cannot read Token From Sink Path:" + vaultConfig.getSinkPath(), e, USER);
+            "Using Vault Agent Cannot read Token From Sink Path:" + vaultConfig.getSinkPath(), e, USER);
       }
     } else {
       return vaultConfig.getAuthToken();
