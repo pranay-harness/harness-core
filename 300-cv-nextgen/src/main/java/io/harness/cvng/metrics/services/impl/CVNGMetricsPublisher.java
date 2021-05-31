@@ -4,17 +4,12 @@ import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Group.id;
 
-import io.harness.cvng.analysis.entities.LearningEngineTask;
-import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskKeys;
 import io.harness.cvng.beans.DataCollectionExecutionStatus;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskKeys;
 import io.harness.cvng.core.entities.DataCollectionTask;
 import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
 import io.harness.cvng.metrics.beans.CVNGMetricContext;
-import io.harness.cvng.statemachine.beans.AnalysisStatus;
-import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
-import io.harness.cvng.statemachine.entities.AnalysisStateMachine.AnalysisStateMachineKeys;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceKeys;
@@ -64,18 +59,18 @@ public class CVNGMetricsPublisher implements MetricsPublisher, MetricDefinitionI
             .statusField(VerificationJobInstanceKeys.executionStatus)
             .name("verification_job_instance")
             .build());
-    TASKS_INFO.put(LearningEngineTask.class,
+    /*TASKS_INFO.put(LearningEngineTask.class, // TODO: add accountId to collection to make this work.
         QueryParams.builder()
             .nonFinalStatuses(LearningEngineTask.ExecutionStatus.getNonFinalStatues())
             .statusField(LearningEngineTaskKeys.taskStatus)
             .name("learning_engine_task")
-            .build());
-    TASKS_INFO.put(AnalysisStateMachine.class,
+            .build());*/
+    /*TASKS_INFO.put(AnalysisStateMachine.class,
         QueryParams.builder()
             .nonFinalStatuses(AnalysisStatus.getNonFinalStatuses())
             .statusField(AnalysisStateMachineKeys.status)
             .name("analysis_state_machine")
-            .build());
+            .build());*/
   }
   @Inject private OrchestrationService orchestrationService;
   @Inject private MetricService metricService;
@@ -127,20 +122,20 @@ public class CVNGMetricsPublisher implements MetricsPublisher, MetricDefinitionI
       metrics.add(MetricConfiguration.Metric.builder()
                       .metricName(getNonFinalStatusMetricName(queryParam.getName()))
                       .type("LastValue")
-                      .unit("count")
+                      .unit("1")
                       .metricDefinition(clazz.getSimpleName() + " non final status count")
                       .build());
       queryParam.getNonFinalStatuses().forEach(status -> {
         metrics.add(MetricConfiguration.Metric.builder()
                         .metricName(getStatusMetricName(queryParam, status.toString()))
                         .type("LastValue")
-                        .unit("count")
+                        .unit("1")
                         .metricDefinition(clazz.getSimpleName() + " " + status + " count")
                         .build());
       });
     });
     MetricConfiguration metricConfiguration = MetricConfiguration.builder()
-                                                  .metricGroup("CVNG tasks status counts")
+                                                  .metricGroup("account")
                                                   .identifier("cvng_tasks_status_counts")
                                                   .name("CVNG tasks status count")
                                                   .metrics(metrics)

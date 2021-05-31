@@ -167,7 +167,7 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
       stepResponseBuilder.failureInfo(FailureInfo.newBuilder()
                                           .addFailureData(FailureData.newBuilder()
                                                               .setCode(ErrorCode.DEFAULT_ERROR_CODE.name())
-                                                              .setLevel(Level.INFO.name())
+                                                              .setLevel(Level.ERROR.name())
                                                               .addFailureTypes(FailureType.VERIFICATION_FAILURE)
                                                               .setMessage("Verification failed")
                                                               .build())

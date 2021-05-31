@@ -157,7 +157,7 @@ public class CVNGStepTest extends CvNextGenTestBase {
         .isEqualTo(FailureInfo.newBuilder()
                        .addFailureData(FailureData.newBuilder()
                                            .setCode(ErrorCode.DEFAULT_ERROR_CODE.name())
-                                           .setLevel(io.harness.eraro.Level.INFO.name())
+                                           .setLevel(io.harness.eraro.Level.ERROR.name())
                                            .addFailureTypes(FailureType.VERIFICATION_FAILURE)
                                            .setMessage("Verification failed")
                                            .build())
