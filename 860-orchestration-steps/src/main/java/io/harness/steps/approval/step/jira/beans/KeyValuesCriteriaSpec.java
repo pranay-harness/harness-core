@@ -38,7 +38,7 @@ public class KeyValuesCriteriaSpec implements CriteriaSpec {
   }
 
   @Override
-  public CriteriaSpecDTO toCriteriaSpecDTO() {
-    return KeyValuesCriteriaSpecDTO.fromKeyValueCriteria(this);
+  public CriteriaSpecDTO toCriteriaSpecDTO(boolean skipEmpty) {
+    return KeyValuesCriteriaSpecDTO.fromKeyValueCriteria(this, skipEmpty);
   }
 }

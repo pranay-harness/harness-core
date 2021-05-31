@@ -79,6 +79,7 @@ ENV JAVA_HOME /etc/alternatives/java_sdk_1.8.0_openjdk
 RUN yum group install -y "Development Tools" \
     && yum install -y centos-release-scl \
     && yum install -y devtoolset-7-gcc* \
+    && yum install -y zlib-devel \
     && scl enable devtoolset-7 bash
 
 ENV CC /usr/bin/gcc
@@ -102,9 +103,6 @@ RUN cd /tmp \
     && cd / \
     && rm -rf /tmp/*
 
-RUN curl -fsSL https://get.docker.com/ | sh \
-    && yum -y install epel-release \
-    && yum -y install python-pip \
-    && python --version
+RUN curl -fsSL https://get.docker.com/ | sh
 
 ENTRYPOINT ["jenkins-slave"]

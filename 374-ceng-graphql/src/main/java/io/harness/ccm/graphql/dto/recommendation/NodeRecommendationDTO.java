@@ -7,4 +7,11 @@ import lombok.Value;
 @Builder
 public class NodeRecommendationDTO implements RecommendationDetailsDTO {
   String id;
+  // TODO(UTSAV): Integer or int
+  Integer sumCpu;
+  Integer sumMemory;
+  Integer maxCpu;
+  Integer maxMemory;
+  String currentCloudProvider; // gcp/google, azure, aws
+  String currentService; // gke, aks, eks
 }

@@ -39,11 +39,14 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
   private final GitAwarePersistence gitAwarePersistence;
 
   @Override
-  public Page<PipelineEntity> findAll(Criteria criteria, Pageable pageable) {
-    Query query = new Query(criteria).with(pageable);
-    List<PipelineEntity> projects = mongoTemplate.find(query, PipelineEntity.class);
-    return PageableExecutionUtils.getPage(
-        projects, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), PipelineEntity.class));
+  public Page<PipelineEntity> findAll(
+      Criteria criteria, Pageable pageable, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    List<PipelineEntity> pipelineEntities = gitAwarePersistence.find(
+        criteria, pageable, projectIdentifier, orgIdentifier, accountIdentifier, PipelineEntity.class);
+    return PageableExecutionUtils.getPage(pipelineEntities, pageable,
+        ()
+            -> gitAwarePersistence.count(
+                criteria, projectIdentifier, orgIdentifier, accountIdentifier, PipelineEntity.class));
   }
 
   @Override

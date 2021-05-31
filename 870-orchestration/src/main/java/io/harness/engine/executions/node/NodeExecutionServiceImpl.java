@@ -13,6 +13,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.interrupts.statusupdate.StepStatusUpdate;
 import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
+import io.harness.engine.observers.NodeExecutionStartObserver;
+import io.harness.engine.observers.NodeUpdateInfo;
+import io.harness.engine.observers.NodeUpdateObserver;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.execution.NodeExecution;
@@ -51,6 +54,8 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Inject private OrchestrationEventEmitter eventEmitter;
 
   @Getter private final Subject<StepStatusUpdate> stepStatusUpdateSubject = new Subject<>();
+  @Getter private final Subject<NodeExecutionStartObserver> nodeExecutionStartSubject = new Subject<>();
+  @Getter private final Subject<NodeUpdateObserver> nodeUpdateObserverSubject = new Subject<>();
 
   @Override
   public NodeExecution get(String nodeExecutionId) {
@@ -153,8 +158,11 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       throw new NodeExecutionUpdateFailedException(
           "Node Execution Cannot be updated with provided operations" + nodeExecutionId);
     }
-
-    emitEvent(updated, OrchestrationEventType.NODE_EXECUTION_UPDATE);
+    nodeUpdateObserverSubject.fireInform(NodeUpdateObxxxxxxxx:onNodeUpdate,
+        NodeUpdateInfo.builder()
+            .nodeExecutionId(nodeExecutionId)
+            .planExecutionId(updated.getAmbiance().getPlanExecutionId())
+            .build());
     return updated;
   }
 
@@ -175,6 +183,9 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
                                  .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
                                  .eventType(OrchestrationEventType.NODE_EXECUTION_START)
                                  .build());
+
+      nodeExecutionStartSubject.fireInform(
+          NodeExecutionStartObxxxxxxxx:onNodeStart, OrchestrationEventType.NODE_EXECUTION_START, nodeExecution);
       return mongoTemplate.insert(nodeExecution);
     } else {
       return mongoTemplate.save(nodeExecution);
@@ -252,7 +263,11 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       log.error("Failed to mark node as retry");
       return false;
     }
-    emitEvent(nodeExecution, OrchestrationEventType.NODE_EXECUTION_UPDATE);
+    nodeUpdateObserverSubject.fireInform(NodeUpdateObxxxxxxxx:onNodeUpdate,
+        NodeUpdateInfo.builder()
+            .nodeExecutionId(nodeExecutionId)
+            .planExecutionId(nodeExecution.getAmbiance().getPlanExecutionId())
+            .build());
     return true;
   }
 

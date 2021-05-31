@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.remote.client.AbstractHttpClientFactory;
+import io.harness.remote.client.ClientMode;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
@@ -19,7 +20,7 @@ import lombok.experimental.FieldDefaults;
 public class AuditClientFactory extends AbstractHttpClientFactory implements Provider<AuditClient> {
   public AuditClientFactory(ServiceHttpClientConfig auditConfig, String serviceSecret,
       ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId) {
-    super(auditConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId);
+    super(auditConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId, false, ClientMode.PRIVILEGED);
   }
 
   @Override

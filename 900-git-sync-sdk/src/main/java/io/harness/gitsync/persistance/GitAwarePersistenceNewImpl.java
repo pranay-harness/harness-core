@@ -1,11 +1,9 @@
 package io.harness.gitsync.persistance;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.gitsync.interceptor.GitSyncConstants.DEFAULT;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.beans.YamlDTO;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
@@ -17,15 +15,15 @@ import io.harness.manage.GlobalContextManager;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.utils.NGYamlUtils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.protobuf.StringValue;
+import com.google.inject.name.Named;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -34,14 +32,26 @@ import org.springframework.data.mongodb.core.query.Query;
 
 @Singleton
 @OwnedBy(DX)
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
   private MongoTemplate mongoTemplate;
-  private EntityKeySource entityKeySource;
+  private GitSyncSdkService gitSyncSdkService;
   private Map<String, GitSdkEntityHandlerInterface> gitPersistenceHelperServiceMap;
   private SCMGitSyncHelper scmGitSyncHelper;
   private GitSyncMsvcHelper gitSyncMsvcHelper;
+  private ObjectMapper objectMapper;
+
+  @Inject
+  public GitAwarePersistenceNewImpl(MongoTemplate mongoTemplate, GitSyncSdkService gitSyncSdkService,
+      Map<String, GitSdkEntityHandlerInterface> gitPersistenceHelperServiceMap, SCMGitSyncHelper scmGitSyncHelper,
+      GitSyncMsvcHelper gitSyncMsvcHelper, @Named("GitSyncObjectMapper") ObjectMapper objectMapper) {
+    this.mongoTemplate = mongoTemplate;
+    this.gitSyncSdkService = gitSyncSdkService;
+    this.gitPersistenceHelperServiceMap = gitPersistenceHelperServiceMap;
+    this.scmGitSyncHelper = scmGitSyncHelper;
+    this.gitSyncMsvcHelper = gitSyncMsvcHelper;
+    this.objectMapper = objectMapper;
+  }
 
   @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> B save(
@@ -53,7 +63,7 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
         && isGitSyncEnabled(entityDetail.getEntityRef().getProjectIdentifier(),
             entityDetail.getEntityRef().getOrgIdentifier(), entityDetail.getEntityRef().getAccountIdentifier())) {
       final GitEntityInfo gitBranchInfo = getGitEntityInfo();
-      final String yamlString = NGYamlUtils.getYamlString(yaml);
+      final String yamlString = NGYamlUtils.getYamlString(yaml, objectMapper);
       final ScmPushResponse scmPushResponse =
           scmGitSyncHelper.pushToGit(gitBranchInfo, yamlString, changeType, entityDetail);
 
@@ -63,7 +73,9 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
       gitSyncMsvcHelper.postPushInformationToGitMsvc(entityDetail, scmPushResponse, gitBranchInfo);
       return savedObjectInMongo;
     }
-    objectToSave.setIsFromDefaultBranch(true);
+    if (changeType == ChangeType.ADD) {
+      objectToSave.setIsFromDefaultBranch(true);
+    }
     return mongoTemplate.save(objectToSave);
   }
 
@@ -147,23 +159,7 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
   }
 
   private boolean isGitSyncEnabled(String projectIdentifier, String orgIdentifier, String accountIdentifier) {
-    try {
-      return entityKeySource.fetchKey(buildEntityScopeInfo(projectIdentifier, orgIdentifier, accountIdentifier));
-    } catch (Exception ex) {
-      log.error("Exception while communicating to the git sync service", ex);
-      return false;
-    }
-  }
-
-  private EntityScopeInfo buildEntityScopeInfo(String projectIdentifier, String orgIdentifier, String accountId) {
-    final EntityScopeInfo.Builder entityScopeInfoBuilder = EntityScopeInfo.newBuilder().setAccountId(accountId);
-    if (!isEmpty(projectIdentifier)) {
-      entityScopeInfoBuilder.setProjectId(StringValue.of(projectIdentifier));
-    }
-    if (!isEmpty(orgIdentifier)) {
-      entityScopeInfoBuilder.setOrgId(StringValue.of(orgIdentifier));
-    }
-    return entityScopeInfoBuilder.build();
+    return gitSyncSdkService.isGitSyncEnabled(accountIdentifier, orgIdentifier, projectIdentifier);
   }
 
   private Criteria updateCriteriaIfGitSyncEnabled(

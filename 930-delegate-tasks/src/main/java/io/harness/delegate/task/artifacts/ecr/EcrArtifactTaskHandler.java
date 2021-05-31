@@ -1,6 +1,6 @@
 package io.harness.delegate.task.artifacts.ecr;
 
-import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.delegate.beans.connector.awsconnector.AwsCredentialType.INHERIT_FROM_DELEGATE;
 import static io.harness.delegate.beans.connector.awsconnector.AwsCredentialType.MANUAL_CREDENTIALS;
 import static io.harness.utils.FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef;
@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 
 @Singleton
-@OwnedBy(CDP)
+@OwnedBy(PIPELINE)
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @Slf4j
 public class EcrArtifactTaskHandler extends DelegateArtifactTaskHandler<EcrArtifactDelegateRequest> {
@@ -128,6 +128,13 @@ public class EcrArtifactTaskHandler extends DelegateArtifactTaskHandler<EcrArtif
     List<EcrArtifactDelegateResponse> ecrArtifactDelegateResponseList = new ArrayList<>();
     ecrArtifactDelegateResponseList.add(EcrArtifactDelegateResponse.builder().authToken(authToken).build());
     return getSuccessTaskExecutionResponse(ecrArtifactDelegateResponseList);
+  }
+
+  @Override
+  public ArtifactTaskExecutionResponse getImages(EcrArtifactDelegateRequest attributesRequest) {
+    AwsInternalConfig awsInternalConfig = getAwsInternalConfig(attributesRequest);
+    List<String> repoNames = ecrService.listEcrRegistry(awsInternalConfig, attributesRequest.getRegion());
+    return ArtifactTaskExecutionResponse.builder().artifactImages(repoNames).build();
   }
 
   private AwsInternalConfig getAwsInternalConfig(EcrArtifactDelegateRequest attributesRequest) {

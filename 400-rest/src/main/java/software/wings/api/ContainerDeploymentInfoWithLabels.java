@@ -26,7 +26,8 @@ import lombok.EqualsAndHashCode;
 public class ContainerDeploymentInfoWithLabels extends BaseContainerDeploymentInfo {
   private List<Label> labels;
   private String newVersion;
-  private String namespace;
+  @Deprecated private String namespace;
+  private List<String> namespaces;
   private HelmChartInfo helmChartInfo;
   private List<ContainerInfo> containerInfoList;
   /*
@@ -36,7 +37,7 @@ public class ContainerDeploymentInfoWithLabels extends BaseContainerDeploymentIn
 
   @Builder
   public ContainerDeploymentInfoWithLabels(String clusterName, List<Label> labels, String newVersion, String namespace,
-      HelmChartInfo helmChartInfo, List<ContainerInfo> containerInfoList, String releaseName) {
+      HelmChartInfo helmChartInfo, List<ContainerInfo> containerInfoList, String releaseName, List<String> namespaces) {
     super(clusterName);
     this.labels = labels;
     this.newVersion = newVersion;
@@ -44,5 +45,6 @@ public class ContainerDeploymentInfoWithLabels extends BaseContainerDeploymentIn
     this.helmChartInfo = helmChartInfo;
     this.containerInfoList = containerInfoList;
     this.releaseName = releaseName;
+    this.namespaces = namespaces;
   }
 }

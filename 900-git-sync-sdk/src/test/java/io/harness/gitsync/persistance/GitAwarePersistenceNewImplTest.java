@@ -1,6 +1,7 @@
 package io.harness.gitsync.persistance;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.remote.NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
 import static io.harness.rule.OwnerRule.ABHINAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,7 +42,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(DX)
 public class GitAwarePersistenceNewImplTest extends GitSdkTestBase {
-  @Mock io.harness.gitsync.persistance.EntityKeySource entityKeySource;
+  @Mock GitSyncSdkService gitSyncSdkService;
   @Mock Map<String, GitSdkEntityHandlerInterface> gitPersistenceHelperServiceMap;
   @Mock SCMGitSyncHelper scmGitSyncHelper;
   @Mock io.harness.gitsync.persistance.GitSyncMsvcHelper gitSyncMsvcHelper;
@@ -72,8 +73,9 @@ public class GitAwarePersistenceNewImplTest extends GitSdkTestBase {
   @Before
   public void setup() {
     initMocks(this);
-    gitAwarePersistence = new io.harness.gitsync.persistance.GitAwarePersistenceNewImpl(
-        mongoTemplate, entityKeySource, gitPersistenceHelperServiceMap, scmGitSyncHelper, gitSyncMsvcHelper);
+    gitAwarePersistence =
+        new io.harness.gitsync.persistance.GitAwarePersistenceNewImpl(mongoTemplate, gitSyncSdkService,
+            gitPersistenceHelperServiceMap, scmGitSyncHelper, gitSyncMsvcHelper, NG_DEFAULT_OBJECT_MAPPER);
     doNothing().when(gitSyncMsvcHelper).postPushInformationToGitMsvc(any(), any(), any());
   }
 
@@ -120,7 +122,7 @@ public class GitAwarePersistenceNewImplTest extends GitSdkTestBase {
                  .build())
         .when(scmGitSyncHelper)
         .pushToGit(any(), anyString(), any(), any());
-    doReturn(isGitSyncEnabled).when(entityKeySource).fetchKey(any());
+    doReturn(isGitSyncEnabled).when(gitSyncSdkService).isGitSyncEnabled(anyString(), anyString(), anyString());
     return gitAwarePersistence.save(sampleBean, sampleBean, ChangeType.ADD, SampleBean.class);
   }
 

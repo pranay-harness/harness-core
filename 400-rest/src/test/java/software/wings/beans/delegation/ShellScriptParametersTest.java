@@ -38,7 +38,7 @@ public class ShellScriptParametersTest extends CategoryTest {
   @Test
   @Owner(developers = PARDHA)
   @Category(UnitTests.class)
-  public void fetchRequiredExecutionCapabilities() {
+  public void fetchRequiredExecutionCapabilitiesWithoutInfraSelectors() {
     SettingAttribute settingAttribute = new SettingAttribute();
     settingAttribute.setValue(KubernetesClusterConfig.builder().useKubernetesDelegate(true).build());
     when(containerServiceParams.getSettingAttribute()).thenReturn(settingAttribute);
@@ -48,8 +48,31 @@ public class ShellScriptParametersTest extends CategoryTest {
                                                       .script("")
                                                       .executeOnDelegate(true)
                                                       .containerServiceParams(containerServiceParams)
+                                                      .includeInfraSelectors(false)
                                                       .build();
     assertThat(shellScriptParameters.fetchRequiredExecutionCapabilities(null)).isEmpty();
+
+    shellScriptParameters.setScript("HARNESS_KUBE_CONFIG_PATH");
+    assertThat(shellScriptParameters.fetchRequiredExecutionCapabilities(null)).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = PARDHA)
+  @Category(UnitTests.class)
+  public void fetchRequiredExecutionCapabilitiesWithInfraSelectors() {
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(KubernetesClusterConfig.builder().useKubernetesDelegate(true).build());
+    when(containerServiceParams.getSettingAttribute()).thenReturn(settingAttribute);
+    when(containerServiceParams.fetchRequiredExecutionCapabilities(null))
+        .thenReturn(Arrays.asList(SelectorCapability.builder().build()));
+    ShellScriptParameters shellScriptParameters = ShellScriptParameters.builder()
+                                                      .script("")
+                                                      .executeOnDelegate(true)
+                                                      .containerServiceParams(containerServiceParams)
+                                                      .includeInfraSelectors(true)
+                                                      .build();
+    assertThat(shellScriptParameters.fetchRequiredExecutionCapabilities(null))
+        .containsExactly(SelectorCapability.builder().build());
 
     shellScriptParameters.setScript("HARNESS_KUBE_CONFIG_PATH");
     assertThat(shellScriptParameters.fetchRequiredExecutionCapabilities(null))

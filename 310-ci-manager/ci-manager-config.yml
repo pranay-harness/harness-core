@@ -60,6 +60,7 @@ cimanager-mongo:
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
   indexManagerMode: AUTO
+  aliasDBName: ci-manager
 pmsMongo:
   uri: mongodb://localhost:27017/pms-harness
   connectTimeout: 30000
@@ -105,24 +106,24 @@ ciExecutionServiceConfig:
   defaultInternalImageConnector: ''
   pvcDefaultStorageSize: 25600
   delegateServiceEndpointVariableValue: "delegate-service:8080"
-  addonImage: harness/ci-addon:releaseBuild-59
-  liteEngineImage: harness/ci-lite-engine:releaseBuild-44
+  addonImage: harness/ci-addon:releaseBuild-71
+  liteEngineImage: harness/ci-lite-engine:releaseBuild-53
   isLocal: false
   stepConfig:
     gitCloneConfig:
-      image: drone/git:1.2.0-linux-amd64
+      image: drone/git:1.2.1-linux-amd64
       entrypoint:
         - /usr/local/bin/clone
     buildAndPushDockerRegistryConfig:
-      image: plugins/kaniko:1.1.2
+      image: plugins/kaniko:1.2.0
       entrypoint:
         - /kaniko/kaniko-docker
     buildAndPushECRConfig:
-      image: plugins/kaniko-ecr:1.1.2
+      image: plugins/kaniko-ecr:1.2.0
       entrypoint:
         - /kaniko/kaniko-ecr
     buildAndPushGCRConfig:
-      image: plugins/kaniko-gcr:1.1.2
+      image: plugins/kaniko-gcr:1.2.0
       entrypoint:
         - /kaniko/kaniko-gcr
     gcsUploadConfig:
@@ -173,3 +174,24 @@ timescaledb:
   logUnclosedConnections: false
   loggerLevel: OFF
 
+eventsFramework:
+  redis:
+    sentinel: false
+    masterName: "test"
+    redisUrl: "redis://localhost:6379"
+    sentinelUrls:
+      - "redis://redis1:26379"
+      - "redis://redis2:26379"
+      - "redis://redis3:26379"
+    envNamespace: ""
+    readMode: MASTER
+    nettyThreads: 16
+    useScriptCache: true
+    userName: ""
+    password: ""
+    sslConfig:
+      enabled: false
+      CATrustStorePath: "/tmp/ca_trust_store"
+      CATrustStorePassword: ""
+
+useRedisForSdkResponseEvents: false

@@ -3,7 +3,6 @@ package io.harness.perpetualtask;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.DelegateTask.DELEGATE_QUEUE_TIMEOUT;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.perpetualtask.PerpetualTaskType.AWS_CODE_DEPLOY_INSTANCE_SYNC;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.TaskType.AWS_EC2_TASK;
@@ -28,6 +27,8 @@ import software.wings.beans.SettingAttribute;
 import software.wings.service.InstanceSyncConstants;
 import software.wings.service.impl.AwsUtils;
 import software.wings.service.impl.aws.model.AwsEc2ListInstancesRequest;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -37,8 +38,6 @@ import com.amazonaws.services.ec2.model.Filter;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
-import com.google.protobuf.util.Durations;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -46,33 +45,16 @@ import lombok.Builder;
 import lombok.Data;
 
 @OwnedBy(CDP)
-public class AwsCodeDeployInstanceSyncPerpetualTaskClient
-    implements PerpetualTaskServiceClient,
-               PerpetualTaskServiceInprocClient<AwsCodeDeployInstanceSyncPerpetualTaskClientParams> {
+public class AwsCodeDeployInstanceSyncPerpetualTaskClient implements PerpetualTaskServiceClient {
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private InfrastructureMappingService infraMappingService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private AppService appService;
+  @Inject private EnvironmentService environmentService;
   @Inject private AwsUtils awsUtils;
   @Inject private SettingsService settingsService;
   @Inject private SecretManager secretManager;
   @Inject private KryoSerializer kryoSerializer;
-
-  @Override
-  public String create(String accountId, AwsCodeDeployInstanceSyncPerpetualTaskClientParams clientParams) {
-    Map<String, String> paramsMap = new HashMap<>();
-    paramsMap.put(INFRASTRUCTURE_MAPPING_ID, clientParams.getInframmapingId());
-    paramsMap.put(HARNESS_APPLICATION_ID, clientParams.getAppId());
-
-    PerpetualTaskClientContext clientContext = PerpetualTaskClientContext.builder().clientParams(paramsMap).build();
-
-    PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
-                                         .setInterval(Durations.fromMinutes(InstanceSyncConstants.INTERVAL_MINUTES))
-                                         .setTimeout(Durations.fromSeconds(InstanceSyncConstants.TIMEOUT_SECONDS))
-                                         .build();
-
-    return perpetualTaskService.createTask(
-        AWS_CODE_DEPLOY_INSTANCE_SYNC, accountId, clientContext, schedule, false, "");
-  }
 
   @Override
   public Message getTaskParams(PerpetualTaskClientContext clientContext) {

@@ -35,7 +35,7 @@ public class JiraApprovalInstance extends ApprovalInstance {
   @NotEmpty String connectorRef;
   @NotEmpty String issueKey;
   @NotNull CriteriaSpecWrapperDTO approvalCriteria;
-  @NotNull CriteriaSpecWrapperDTO rejectionCriteria;
+  CriteriaSpecWrapperDTO rejectionCriteria;
 
   public static JiraApprovalInstance fromStepParameters(Ambiance ambiance, StepElementParameters stepParameters) {
     if (stepParameters == null) {
@@ -57,8 +57,10 @@ public class JiraApprovalInstance extends ApprovalInstance {
         JiraApprovalInstance.builder()
             .connectorRef(connectorRef)
             .issueKey(issueKey)
-            .approvalCriteria(CriteriaSpecWrapperDTO.fromCriteriaSpecWrapper(specParameters.getApprovalCriteria()))
-            .rejectionCriteria(CriteriaSpecWrapperDTO.fromCriteriaSpecWrapper(specParameters.getRejectionCriteria()))
+            .approvalCriteria(
+                CriteriaSpecWrapperDTO.fromCriteriaSpecWrapper(specParameters.getApprovalCriteria(), false))
+            .rejectionCriteria(
+                CriteriaSpecWrapperDTO.fromCriteriaSpecWrapper(specParameters.getRejectionCriteria(), true))
             .build();
     instance.updateFromStepParameters(ambiance, stepParameters);
     return instance;

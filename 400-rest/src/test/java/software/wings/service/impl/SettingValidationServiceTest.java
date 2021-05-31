@@ -189,8 +189,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     final ValidationResult validationResult = settingValidationService.validateConnectivity(
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(createSplunkConfig()).build());
     assertThat(validationResult.isValid()).isFalse();
-    assertThat(validationResult.getErrorMessage())
-        .isEqualTo("DataCollectionException: java.lang.RuntimeException: invalid credentials");
+    assertThat(validationResult.getErrorMessage()).isEqualTo("Error: invalid credentials");
   }
 
   @Test
@@ -302,9 +301,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
             .withValue(ElkConfig.builder().elkUrl("https://elk-example.com/").build())
             .build());
     assertThat(validationResult.isValid()).isFalse();
-    assertThat(validationResult.getErrorMessage())
-        .isEqualTo(
-            "DataCollectionException: java.net.UnknownHostException: elk-example.com: Name or service not known");
+    assertThat(validationResult.getErrorMessage()).isEqualTo("Error: elk-example.com: Name or service not known");
   }
 
   @Test
@@ -344,9 +341,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     final ValidationResult validationResult = settingValidationService.validateConnectivity(
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(logzConfig).build());
     assertThat(validationResult.isValid()).isFalse();
-    assertThat(validationResult.getErrorMessage())
-        .isEqualTo(
-            "DataCollectionException: java.net.UnknownHostException: logz-example.com: Name or service not known");
+    assertThat(validationResult.getErrorMessage()).isEqualTo("Error: logz-example.com: Name or service not known");
   }
 
   @Test
@@ -366,7 +361,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     assertThat(validationResult.isValid()).isFalse();
     assertThat(validationResult.getErrorMessage())
         .contains(
-            "DataCollectionException: Response code: 401, Message: Unauthorized, Error: {\"code\":401,\"message\":\"HTTP 401 Unauthorized\"");
+            "Error: Response code: 401, Message: Unauthorized, Error: {\"code\":401,\"message\":\"HTTP 401 Unauthorized\"");
   }
 
   @Test
@@ -396,8 +391,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     final ValidationResult validationResult = settingValidationService.validateConnectivity(
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(sumoConfig).build());
     assertThat(validationResult.isValid()).isFalse();
-    assertThat(validationResult.getErrorMessage())
-        .isEqualTo("DataCollectionException: java.net.MalformedURLException: no protocol: " + sumoConfig.getSumoUrl());
+    assertThat(validationResult.getErrorMessage()).isEqualTo("Error: no protocol: " + sumoConfig.getSumoUrl());
   }
 
   @Test
@@ -458,9 +452,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     final ValidationResult validationResult = settingValidationService.validateConnectivity(
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(instanaConfig).build());
     assertThat(validationResult.isValid()).isFalse();
-    assertThat(validationResult.getErrorMessage())
-        .isEqualTo(
-            "DataCollectionException: java.net.UnknownHostException: instana-example.com: Name or service not known");
+    assertThat(validationResult.getErrorMessage()).isEqualTo("Error: instana-example.com: Name or service not known");
   }
 
   @Test
@@ -480,8 +472,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(instanaConfig).build());
     assertThat(validationResult.isValid()).isFalse();
     assertThat(validationResult.getErrorMessage())
-        .isEqualTo(
-            "DataCollectionException: Response code: 401, Message: Unauthorized, Error: {\"errors\":[\"Unauthorized request\"]}");
+        .isEqualTo("Error: Response code: 401, Message: Unauthorized, Error: {\"errors\":[\"Unauthorized request\"]}");
   }
 
   @Test
@@ -524,9 +515,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     final ValidationResult validationResult = settingValidationService.validateConnectivity(
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(newRelicConfig).build());
     assertThat(validationResult.isValid()).isFalse();
-    assertThat(validationResult.getErrorMessage())
-        .isEqualTo(
-            "DataCollectionException: java.net.UnknownHostException: newrelic-example.com: Name or service not known");
+    assertThat(validationResult.getErrorMessage()).isEqualTo("Error: newrelic-example.com: Name or service not known");
   }
 
   @Test
@@ -546,7 +535,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     assertThat(validationResult.isValid()).isFalse();
     assertThat(validationResult.getErrorMessage())
         .isEqualTo(
-            "DataCollectionException: Response code: 401, Message: Unauthorized, Error: {\"error\":{\"title\":\"The API key provided is invalid\"}}");
+            "Error: Response code: 401, Message: Unauthorized, Error: {\"error\":{\"title\":\"The API key provided is invalid\"}}");
   }
 
   @Test
@@ -591,9 +580,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     final ValidationResult validationResult = settingValidationService.validateConnectivity(
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(appDynamicsConfig).build());
     assertThat(validationResult.isValid()).isFalse();
-    assertThat(validationResult.getErrorMessage())
-        .isEqualTo(
-            "DataCollectionException: java.net.UnknownHostException: appd-example.com: Name or service not known");
+    assertThat(validationResult.getErrorMessage()).isEqualTo("Error: appd-example.com: Name or service not known");
   }
 
   @Test
@@ -615,7 +602,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(appDynamicsConfig).build());
     assertThat(validationResult.isValid()).isFalse();
     assertThat(validationResult.getErrorMessage())
-        .isEqualTo("DataCollectionException: Response code: 401, Message: Unauthorized, Error: ");
+        .isEqualTo("Error: Response code: 401, Message: Unauthorized, Error: ");
   }
 
   @Test
@@ -661,9 +648,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     final ValidationResult validationResult = settingValidationService.validateConnectivity(
         aSettingAttribute().withAccountId(accountId).withName(generateUuid()).withValue(dynaTraceConfig).build());
     assertThat(validationResult.isValid()).isFalse();
-    assertThat(validationResult.getErrorMessage())
-        .isEqualTo(
-            "DataCollectionException: java.net.UnknownHostException: dynatrace-example.com: Name or service not known");
+    assertThat(validationResult.getErrorMessage()).isEqualTo("Error: dynatrace-example.com: Name or service not known");
   }
 
   @Test
@@ -685,7 +670,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     assertThat(validationResult.isValid()).isFalse();
     assertThat(validationResult.getErrorMessage())
         .isEqualTo(
-            "DataCollectionException: Response code: 401, Message: Unauthorized, Error: {\"error\":{\"code\":401,\"message\":\"Token Authentication failed\"}}");
+            "Error: Response code: 401, Message: Unauthorized, Error: {\"error\":{\"code\":401,\"message\":\"Token Authentication failed\"}}");
   }
 
   @Test
@@ -786,7 +771,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     assertThat(validationResult.isValid()).isFalse();
     assertThat(validationResult.getErrorMessage())
         .isEqualTo(
-            "DataCollectionException: Response code: 401, Message: , Error: {\"message\": \"Couldn't decode API token ...\",\"status\": \"error/client/badParam\"}");
+            "Error: Response code: 401, Message: , Error: {\"message\": \"Couldn't decode API token ...\",\"status\": \"error/client/badParam\"}");
   }
 
   @Test

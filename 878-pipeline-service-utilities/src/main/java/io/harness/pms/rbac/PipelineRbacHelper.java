@@ -1,5 +1,6 @@
 package io.harness.pms.rbac;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.String.format;
@@ -25,12 +26,12 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
 import io.harness.pms.execution.utils.AmbianceUtils;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,15 +64,26 @@ public class PipelineRbacHelper {
 
   public void checkRuntimePermissions(
       Ambiance ambiance, List<EntityDetail> entityDetails, boolean shouldExtractInternalEntities) {
+    if (isEmpty(entityDetails)) {
+      return;
+    }
+    ExecutionPrincipalInfo executionPrincipalInfo = ambiance.getMetadata().getPrincipalInfo();
+
+    // NOTE: rbac should not be validated for triggers so this field is set to false for trigger based execution.
+    if (!executionPrincipalInfo.getShouldValidateRbac()) {
+      return;
+    }
+    String principal = executionPrincipalInfo.getPrincipal();
+    if (EmptyPredicate.isEmpty(principal)) {
+      throw new AccessDeniedException("Execution with empty principal found. Please contact harness customer care.",
+          ErrorCode.NG_ACCESS_DENIED, WingsException.USER);
+    }
+
     String accountId = AmbianceUtils.getAccountId(ambiance);
     if (shouldExtractInternalEntities) {
       entityDetails.addAll(internalReferredEntityExtractor.extractInternalEntities(accountId, entityDetails));
     }
-    ExecutionPrincipalInfo executionPrincipalInfo = ambiance.getMetadata().getPrincipalInfo();
-    String principal = executionPrincipalInfo.getPrincipal();
-    if (EmptyPredicate.isEmpty(principal)) {
-      return;
-    }
+
     PrincipalType principalType = PrincipalTypeProtoToPrincipalTypeMapper.convertToAccessControlPrincipalType(
         executionPrincipalInfo.getPrincipalType());
     List<PermissionCheckDTO> permissionCheckDTOS =
@@ -118,7 +130,7 @@ public class PipelineRbacHelper {
           permissions.add(accessControlDTO.getPermission());
         } else {
           resourceToPermissions.put(
-              accessControlDTO.getResourceIdentifier(), Collections.singletonList(accessControlDTO.getPermission()));
+              accessControlDTO.getResourceIdentifier(), Lists.newArrayList(accessControlDTO.getPermission()));
         }
       } else {
         Map<String, List<String>> resourceToPermissions = new HashMap<>();
@@ -132,8 +144,13 @@ public class PipelineRbacHelper {
     StringBuilder errors = new StringBuilder();
     for (String resourceType : allErrors.keySet()) {
       for (String resourceIdentifier : allErrors.get(resourceType).keySet()) {
-        errors.append(String.format("For %s with identifier %s, these permissions are not there: %s.\n", resourceType,
-            resourceIdentifier, allErrors.get(resourceType).get(resourceIdentifier).toString()));
+        if (EmptyPredicate.isEmpty(resourceIdentifier)) {
+          errors.append(String.format("For %s, these permissions are not there: %s.\n", resourceType,
+              allErrors.get(resourceType).get(resourceIdentifier).toString()));
+        } else {
+          errors.append(String.format("For %s with identifier %s, these permissions are not there: %s.\n", resourceType,
+              resourceIdentifier, allErrors.get(resourceType).get(resourceIdentifier).toString()));
+        }
       }
     }
 

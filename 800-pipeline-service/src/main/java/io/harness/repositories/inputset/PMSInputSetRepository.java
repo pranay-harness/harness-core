@@ -2,18 +2,14 @@ package io.harness.repositories.inputset;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
-import io.harness.annotation.HarnessRepo;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.persistance.GitSyncableHarnessRepo;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 
-import java.util.Optional;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.repository.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
-@HarnessRepo
+@GitSyncableHarnessRepo
+@Transactional
 @OwnedBy(PIPELINE)
-public interface PMSInputSetRepository
-    extends PagingAndSortingRepository<InputSetEntity, String>, PMSInputSetRepositoryCustom {
-  Optional<InputSetEntity>
-  findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPipelineIdentifierAndIdentifierAndDeletedNot(String accountId,
-      String orgIdentifier, String projectIdentifier, String pipelineIdentifier, String identifier, boolean notDeleted);
-}
+public interface PMSInputSetRepository extends Repository<InputSetEntity, String>, PMSInputSetRepositoryCustom {}

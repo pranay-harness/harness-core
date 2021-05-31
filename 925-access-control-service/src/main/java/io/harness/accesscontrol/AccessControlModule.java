@@ -21,6 +21,7 @@ import io.harness.DecisionModule;
 import io.harness.accesscontrol.commons.events.EventConsumer;
 import io.harness.accesscontrol.commons.iterators.AccessControlIteratorsConfig;
 import io.harness.accesscontrol.commons.outbox.AccessControlOutboxEventHandler;
+import io.harness.accesscontrol.commons.validation.HarnessActionValidator;
 import io.harness.accesscontrol.preference.AccessControlPreferenceModule;
 import io.harness.accesscontrol.preference.events.NGRBACEnabledFeatureFlagEventConsumer;
 import io.harness.accesscontrol.principals.PrincipalType;
@@ -34,6 +35,8 @@ import io.harness.accesscontrol.principals.usergroups.events.UserGroupEventConsu
 import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupServiceImpl;
 import io.harness.accesscontrol.resources.resourcegroups.events.ResourceGroupEventConsumer;
+import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
+import io.harness.accesscontrol.roleassignments.validation.RoleAssignmentActionValidator;
 import io.harness.accesscontrol.scopes.core.ScopeLevel;
 import io.harness.accesscontrol.scopes.core.ScopeParamsFactory;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParamsFactory;
@@ -52,6 +55,7 @@ import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.serializer.morphia.OutboxEventMorphiaRegistrar;
+import io.harness.serializer.morphia.PrimaryVersionManagerMorphiaRegistrar;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.usergroups.UserGroupClientModule;
@@ -163,6 +167,7 @@ public class AccessControlModule extends AbstractModule {
     Multibinder<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
         Multibinder.newSetBinder(binder(), new TypeLiteral<Class<? extends MorphiaRegistrar>>() {});
     morphiaRegistrars.addBinding().toInstance(OutboxEventMorphiaRegistrar.class);
+    morphiaRegistrars.addBinding().toInstance(PrimaryVersionManagerMorphiaRegistrar.class);
     install(new TransactionOutboxModule());
     bind(OutboxEventHandler.class).to(AccessControlOutboxEventHandler.class);
     install(new ValidationModule(validatorFactory));
@@ -216,6 +221,11 @@ public class AccessControlModule extends AbstractModule {
     Multibinder<EventConsumer> userMembershipEventConsumers =
         Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(USERMEMBERSHIP));
     userMembershipEventConsumers.addBinding().to(UserMembershipEventConsumer.class);
+
+    binder()
+        .bind(HarnessActionValidator.class)
+        .annotatedWith(Names.named(RoleAssignmentDTO.MODEL_NAME))
+        .to(RoleAssignmentActionValidator.class);
 
     registerRequiredBindings();
   }

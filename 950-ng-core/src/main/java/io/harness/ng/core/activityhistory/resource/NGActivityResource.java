@@ -51,8 +51,8 @@ public class NGActivityResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotEmpty @QueryParam(NGCommonEntityConstants.IDENTIFIER_KEY) String referredEntityIdentifier,
-      @NotNull @QueryParam(NGResourceFilterConstants.START) long startTime,
-      @NotNull @QueryParam(NGResourceFilterConstants.END) long endTime,
+      @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startTime,
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endTime,
       @QueryParam(NGCommonEntityConstants.STATUS) NGActivityStatus status,
       @NotNull @QueryParam(NGCommonEntityConstants.REFERRED_ENTITY_TYPE) EntityType referredEntityType,
       @QueryParam(NGCommonEntityConstants.REFERRED_BY_ENTITY_TYPE) EntityType referredByEntityType) {
@@ -69,8 +69,8 @@ public class NGActivityResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotEmpty @QueryParam(NGCommonEntityConstants.IDENTIFIER_KEY) String referredEntityIdentifier,
-      @NotNull @QueryParam(NGResourceFilterConstants.START) long startTime,
-      @NotNull @QueryParam(NGResourceFilterConstants.END) long endTime) {
+      @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startTime,
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endTime) {
     return ResponseDTO.newResponse(activityHistoryService.getConnectivityCheckSummary(
         accountIdentifier, orgIdentifier, projectIdentifier, referredEntityIdentifier, startTime, endTime));
   }
@@ -89,8 +89,8 @@ public class NGActivityResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotEmpty @QueryParam(NGCommonEntityConstants.IDENTIFIER_KEY) String referredEntityIdentifier,
-      @NotNull @QueryParam(NGResourceFilterConstants.START) long startTime,
-      @NotNull @QueryParam(NGResourceFilterConstants.END) long endTime,
+      @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startTime,
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endTime,
       @NotNull @QueryParam(TIME_GROUP_TYPE) TimeGroupType timeGroupType,
       @NotNull @QueryParam(NGCommonEntityConstants.REFERRED_ENTITY_TYPE) EntityType referredEntityType,
       @QueryParam(NGCommonEntityConstants.REFERRED_BY_ENTITY_TYPE) EntityType referredByEntityType) {

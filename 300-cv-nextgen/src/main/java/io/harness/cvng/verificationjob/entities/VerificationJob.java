@@ -9,6 +9,7 @@ import static io.harness.cvng.verificationjob.CVVerificationJobConstants.SERVICE
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.DataSourceType;
@@ -21,6 +22,7 @@ import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceServi
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -59,6 +61,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @HarnessEntity(exportable = true)
 @SuperBuilder
 @OwnedBy(HarnessTeam.CV)
+@StoreIn(DbAliases.CVNG)
 // Also the serialization of duration is in millis.
 public abstract class VerificationJob
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
@@ -341,7 +344,6 @@ public abstract class VerificationJob
               getRunTimeParameter(dto.getServiceIdentifier(), dto.isRuntimeParam(dto.getEnvIdentifier())))
           .set(VerificationJobKeys.duration,
               getRunTimeParameter(dto.getDuration(), dto.isRuntimeParam(dto.getEnvIdentifier())))
-          .set(VerificationJobKeys.dataSources, dto.getDataSources())
           .set(VerificationJobKeys.monitoringSources, dto.getMonitoringSources())
           .set(VerificationJobKeys.isDefaultJob, dto.isDefaultJob())
           .set(VerificationJobKeys.activitySourceIdentifier, dto.getActivitySourceIdentifier());

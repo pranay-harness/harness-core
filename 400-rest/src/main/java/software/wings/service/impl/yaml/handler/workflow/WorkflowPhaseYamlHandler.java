@@ -17,6 +17,7 @@ import io.harness.ff.FeatureFlagService;
 import software.wings.api.DeploymentType;
 import software.wings.beans.EntityType;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -45,6 +46,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author rktummala on 10/27/17
@@ -139,6 +141,20 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
       computeProviderId = computeProvider.getUuid();
     }
 
+    List<NameValuePair> serviceVariableOverride = Lists.newArrayList();
+    if (yaml.getServiceVariableOverrides() != null) {
+      serviceVariableOverride =
+          yaml.getServiceVariableOverrides()
+              .stream()
+              .map(variableOverride
+                  -> NameValuePair.builder()
+                         .name(variableOverride.getName())
+                         .value(variableOverride.getValue() == null ? "" : variableOverride.getValue())
+                         .valueType(variableOverride.getValueType())
+                         .build())
+              .collect(Collectors.toList());
+    }
+
     Boolean isRollback = (Boolean) context.getProperties().get(YamlConstants.IS_ROLLBACK);
     WorkflowPhaseBuilder phase = WorkflowPhaseBuilder.aWorkflowPhase();
     DeploymentType deploymentType = Utils.getEnumFromString(DeploymentType.class, deploymentTypeString);
@@ -156,7 +172,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
                                       .templateExpressions(templateExpressions)
                                       .daemonSet(yaml.isDaemonSet())
                                       .statefulSet(yaml.isStatefulSet())
-                                      .variableOverrides(yaml.getServiceVariableOverrides())
+                                      .variableOverrides(serviceVariableOverride)
                                       .build();
     workflowServiceHelper.validateService(
         workflowPhase, yaml.getServiceName(), (Boolean) context.getProperties().get("IS_BUILD"));

@@ -129,8 +129,10 @@ public class JiraApprovalCallback implements PushThroughNotifyCallback {
       }
       logCallback.saveExecutionLog("Approval criteria has not been met");
 
-      if (isNull(instance.getRejectionCriteria()) || isNull(instance.getRejectionCriteria().getCriteriaSpecDTO())) {
-        throw new InvalidRequestException("Rejection criteria can't be empty");
+      if (isNull(instance.getRejectionCriteria()) || isNull(instance.getRejectionCriteria().getCriteriaSpecDTO())
+          || instance.getRejectionCriteria().getCriteriaSpecDTO().isEmpty()) {
+        logCallback.saveExecutionLog("Rejection criteria is not present");
+        return;
       }
 
       logCallback.saveExecutionLog("Evaluating rejection criteria...");

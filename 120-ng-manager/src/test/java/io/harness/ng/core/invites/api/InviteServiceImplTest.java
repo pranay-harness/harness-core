@@ -93,7 +93,8 @@ public class InviteServiceImplTest extends CategoryTest {
     MongoConfig mongoConfig = MongoConfig.builder().uri("mongodb://localhost:27017/ng-harness").build();
     inviteService = new InviteServiceImpl(USER_VERIFICATION_SECRET, mongoConfig, jwtGeneratorUtils, ngUserService,
         transactionTemplate, inviteRepository, notificationClient, accountClient, outboxService, organizationService,
-        projectService, accessControlClient, "https://qa.harness.io/");
+        projectService, accessControlClient, "https://qa.harness.io/", "https://qa.harness.io/ng/#/",
+        "https://qa.harness.io/auth/#/", false);
 
     when(accountClient.getAccountDTO(any()).execute())
         .thenReturn(Response.success(new RestResponse(AccountDTO.builder()
@@ -310,7 +311,7 @@ public class InviteServiceImplTest extends CategoryTest {
     ArgumentCaptor<String> idCapture = ArgumentCaptor.forClass(String.class);
     when(claim.asString()).thenReturn(inviteId);
     when(jwtGeneratorUtils.verifyJWTToken(any(), any())).thenReturn(Collections.singletonMap(InviteKeys.id, claim));
-    when(inviteRepository.findFirstByIdAndDeleted(any(), any())).thenReturn(Optional.of(invite));
+    when(inviteRepository.findById(any())).thenReturn(Optional.of(invite));
     when(ngUserService.getUserFromEmail(any())).thenReturn(Optional.of(user));
 
     InviteAcceptResponse inviteAcceptResponse = inviteService.acceptInvite(dummyJWTToken);

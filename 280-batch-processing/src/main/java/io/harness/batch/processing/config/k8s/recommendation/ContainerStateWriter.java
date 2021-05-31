@@ -13,8 +13,8 @@ import static software.wings.graphql.datafetcher.ce.recommendation.entity.Recomm
 import static java.time.Duration.between;
 
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.beans.recommendation.ResourceId;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.ContainerStateProto;

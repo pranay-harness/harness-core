@@ -35,7 +35,7 @@ public class JexlCriteriaSpec implements CriteriaSpec {
   }
 
   @Override
-  public CriteriaSpecDTO toCriteriaSpecDTO() {
-    return JexlCriteriaSpecDTO.fromJexlCriteriaSpec(this);
+  public CriteriaSpecDTO toCriteriaSpecDTO(boolean skipEmpty) {
+    return JexlCriteriaSpecDTO.fromJexlCriteriaSpec(this, skipEmpty);
   }
 }

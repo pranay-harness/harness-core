@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.utils.PmsConstants;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
 
@@ -34,5 +35,23 @@ public class ResourceConstraintUtility {
       throw new InvalidRequestException("Exception while creating resource constraint");
     }
     return resourceConstraintYamlField.getNode().getCurrJsonNode();
+  }
+
+  public boolean isSimultaneousDeploymentsAllowed(
+      ParameterField<Boolean> allowSimultaneousDeploymentsField, YamlField rcYamlField) {
+    if (!ParameterField.isNull(allowSimultaneousDeploymentsField) && allowSimultaneousDeploymentsField.isExpression()) {
+      throw new InvalidRequestException(
+          "AllowedSimultaneous Deployment field is not a fixed value during execution of pipeline.");
+    }
+    boolean allowSimultaneousDeployments = false;
+    if (!ParameterField.isNull(allowSimultaneousDeploymentsField)) {
+      allowSimultaneousDeployments = allowSimultaneousDeploymentsField.getValue();
+    }
+
+    if (allowSimultaneousDeployments) {
+      return true;
+    }
+
+    return rcYamlField == null;
   }
 }

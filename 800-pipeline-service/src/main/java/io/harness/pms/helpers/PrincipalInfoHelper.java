@@ -5,27 +5,38 @@ import static io.harness.pms.contracts.plan.PrincipalType.API_KEY;
 import static io.harness.pms.contracts.plan.PrincipalType.SERVICE;
 import static io.harness.pms.contracts.plan.PrincipalType.USER;
 
+import io.harness.PipelineServiceConfiguration;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.AccessDeniedException;
+import io.harness.exception.WingsException;
 import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
 import io.harness.pms.contracts.plan.PrincipalType;
 import io.harness.security.SecurityContextBuilder;
 
+import com.google.inject.Inject;
 import java.util.Objects;
 
 @OwnedBy(PIPELINE)
 public class PrincipalInfoHelper {
-  public static ExecutionPrincipalInfo getPrincipalInfoFromSecurityContext() {
+  @Inject PipelineServiceConfiguration configuration;
+
+  public ExecutionPrincipalInfo getPrincipalInfoFromSecurityContext() {
+    if (!configuration.isEnableAuth()) {
+      return ExecutionPrincipalInfo.newBuilder().setShouldValidateRbac(false).build();
+    }
     io.harness.security.dto.Principal principalInContext = SecurityContextBuilder.getPrincipal();
     if (principalInContext == null || principalInContext.getName() == null || principalInContext.getType() == null) {
-      return ExecutionPrincipalInfo.newBuilder().build();
+      throw new AccessDeniedException("Principal cannot be null", ErrorCode.NG_ACCESS_DENIED, WingsException.USER);
     }
     return ExecutionPrincipalInfo.newBuilder()
         .setPrincipal(principalInContext.getName())
         .setPrincipalType(Objects.requireNonNull(fromSecurityPrincipalType(principalInContext.getType())))
+        .setShouldValidateRbac(true)
         .build();
   }
 
-  private static PrincipalType fromSecurityPrincipalType(io.harness.security.dto.PrincipalType principalType) {
+  private PrincipalType fromSecurityPrincipalType(io.harness.security.dto.PrincipalType principalType) {
     switch (principalType) {
       case SERVICE:
         return SERVICE;

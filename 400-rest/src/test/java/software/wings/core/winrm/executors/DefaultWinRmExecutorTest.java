@@ -160,7 +160,7 @@ public class DefaultWinRmExecutorTest extends CategoryTest {
     List<List<String>> result =
         WinRmExecutorHelper.constructPSScriptWithCommands(command, "tempPSScript.ps1", DefaultWinRmExecutor.POWERSHELL);
     assertThat(result.size()).isEqualTo(1);
-    assertThat(result.get(0)).hasSize(3);
+    assertThat(result.get(0)).hasSize(2);
     Pattern patternForAmpersandWithinString = Pattern.compile("[a-zA-Z0-9]+\\^&");
     assertThat(patternForAmpersandWithinString.matcher(result.get(0).get(1)).find()).isTrue();
   }

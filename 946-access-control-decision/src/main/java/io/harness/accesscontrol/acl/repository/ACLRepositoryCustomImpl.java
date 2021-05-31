@@ -17,8 +17,6 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.data.mongodb.BulkOperationException;
-import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -30,25 +28,17 @@ import org.springframework.data.mongodb.core.query.Query;
 public class ACLRepositoryCustomImpl implements ACLRepositoryCustom {
   private final MongoTemplate mongoTemplate;
 
-  private boolean isDuplicateKeyException(BulkOperationException ex) {
-    int duplicateKeyErrorCode = 11000;
-    return ex.getErrors().stream().anyMatch(bwe -> bwe.getCode() == duplicateKeyErrorCode);
-  }
-
   public long insertAllIgnoringDuplicates(List<ACL> acls) {
-    try {
-      return mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, ACL.class)
-          .insert(acls)
-          .execute()
-          .getInsertedCount();
-    } catch (DuplicateKeyException duplicateKeyException) {
-      return 0;
-    } catch (BulkOperationException bulkOperationException) {
-      if (!isDuplicateKeyException(bulkOperationException)) {
-        throw bulkOperationException;
+    long insertedCount = 0;
+    for (ACL acl : acls) {
+      try {
+        mongoTemplate.save(acl);
+        insertedCount++;
+      } catch (DuplicateKeyException duplicateKeyException) {
+        // ignore
       }
-      return 0;
     }
+    return insertedCount;
   }
 
   @Override

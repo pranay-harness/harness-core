@@ -95,4 +95,6 @@ public interface ArtifactStreamService extends OwnedByService {
   boolean detachPerpetualTaskId(String perpetualTaskId);
 
   List<String> getArtifactStreamParameters(String artifactStreamId);
+
+  void deleteArtifacts(String accountId, ArtifactStream artifactStream);
 }

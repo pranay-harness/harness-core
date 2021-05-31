@@ -68,7 +68,7 @@ import org.eclipse.jgit.errors.TransportException;
 @Singleton
 @Slf4j
 public class GitClientHelper {
-  private static final String GIT_URL_REGEX = "(https|git)(:\\/\\/|@)([^\\/:]+)[\\/:]([^\\/:]+)\\/(.+)?(.git)?";
+  private static final String GIT_URL_REGEX = "(http|https|git)(:\\/\\/|@)([^\\/:]+)[\\/:]([^\\/:]+)\\/(.+)?(.git)?";
   private static final Pattern GIT_URL = Pattern.compile(GIT_URL_REGEX);
   private static final Integer OWNER_GROUP = 4;
   private static final Integer REPO_GROUP = 5;
@@ -120,6 +120,39 @@ public class GitClientHelper {
 
   public static boolean isGithubSAAS(String url) {
     return getGitSCM(url).equals("github.com");
+  }
+  public static boolean isGitlabSAAS(String url) {
+    return getGitSCM(url).contains("gitlab.com");
+  }
+
+  public static boolean isBitBucketSAAS(String url) {
+    return getGitSCM(url).contains("bitbucket.org");
+  }
+
+  public static String getGithubApiURL(String url) {
+    if (GitClientHelper.isGithubSAAS(url)) {
+      return "https://api.github.com/";
+    } else {
+      String domain = GitClientHelper.getGitSCM(url);
+      return "https://" + domain + "/api/v3/";
+    }
+  }
+  public static String getGitlabApiURL(String url) {
+    if (GitClientHelper.isGitlabSAAS(url)) {
+      return "https://gitlab.com/";
+    } else {
+      String domain = GitClientHelper.getGitSCM(url);
+      return "https://" + domain + "/";
+    }
+  }
+
+  public static String getBitBucketApiURL(String url) {
+    if (isBitBucketSAAS(url)) {
+      return "https://api.bitbucket.org/";
+    } else {
+      String domain = GitClientHelper.getGitSCM(url);
+      return "https://" + domain + "/";
+    }
   }
 
   public static String getGitSCM(String url) {

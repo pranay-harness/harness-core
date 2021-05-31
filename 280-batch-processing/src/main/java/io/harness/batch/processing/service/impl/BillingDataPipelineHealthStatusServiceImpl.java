@@ -6,13 +6,13 @@ import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.BatchJobScheduledDataDao;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.BillingDataPipelineHealthStatusService;
 import io.harness.batch.processing.service.intfc.BillingDataPipelineService;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord.BillingDataPipelineRecordBuilder;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData;
+import io.harness.ccm.commons.constants.CloudProvider;
 
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.FieldValueList;

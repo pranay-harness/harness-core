@@ -4,19 +4,19 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.cdstepinfo.K8sBlueGreenStepInfoVisitorHelper;
 import io.harness.executions.steps.StepSpecTypeConstants;
+import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -36,8 +36,9 @@ public class K8sBlueGreenStepInfo extends K8sBlueGreenBaseStepInfo implements CD
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Builder(builderMethodName = "infoBuilder")
-  public K8sBlueGreenStepInfo(ParameterField<Boolean> skipDryRun) {
-    super(skipDryRun);
+  public K8sBlueGreenStepInfo(
+      ParameterField<Boolean> skipDryRun, ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
+    super(skipDryRun, delegateSelectors);
   }
 
   @Override
@@ -51,12 +52,7 @@ public class K8sBlueGreenStepInfo extends K8sBlueGreenBaseStepInfo implements CD
   }
 
   @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.K8S_BLUE_GREEN_DEPLOY).build();
-  }
-
-  @Override
   public SpecParameters getSpecParameters() {
-    return K8sBlueGreenStepParameters.infoBuilder().skipDryRun(skipDryRun).build();
+    return K8sBlueGreenStepParameters.infoBuilder().skipDryRun(skipDryRun).delegateSelectors(delegateSelectors).build();
   }
 }

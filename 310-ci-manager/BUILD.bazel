@@ -1,10 +1,13 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//:macros.bzl", "run_analysis")
+load("//:tools/bazel/macros.bzl", "run_analysis")
 
 HarnessTeam = "CI"
 
 shared_dependencies = [
+    "@maven//:com_google_guava_guava",
+    "@maven//:io_netty_netty_all",
+] + [
     "//320-ci-execution:module",
     "//330-ci-beans:module",
     "//870-cg-orchestration:module",
@@ -101,7 +104,6 @@ shared_dependencies = [
     "@maven//:com_google_code_findbugs_jsr305",
     "@maven//:com_google_code_gson_gson",
     "@maven//:com_google_errorprone_error_prone_annotations",
-    "@maven//:com_google_guava_guava",
     "@maven//:com_google_http_client_google_http_client",
     "@maven//:com_google_http_client_google_http_client_appengine",
     "@maven//:com_google_http_client_google_http_client_jackson",
@@ -237,7 +239,6 @@ shared_dependencies = [
     "@maven//:io_grpc_grpc_grpclb",
     "@maven//:io_grpc_grpc_netty_shaded",
     "@maven//:io_grpc_grpc_protobuf",
-    "@maven//:io_grpc_grpc_protobuf_lite",
     "@maven//:io_grpc_grpc_services",
     "@maven//:io_grpc_grpc_stub",
     "@maven//:io_gsonfire_gson_fire",
@@ -385,10 +386,6 @@ shared_dependencies = [
     "@maven//:org_objenesis_objenesis",
     "@maven//:org_ow2_asm_asm",
     "@maven//:org_postgresql_postgresql",
-    "@maven//:org_powermock_powermock_core",
-    "@maven//:org_powermock_powermock_module_junit4",
-    "@maven//:org_powermock_powermock_module_junit4_common",
-    "@maven//:org_powermock_powermock_reflect",
     "@maven//:org_quartz_scheduler_quartz",
     "@maven//:org_reactivestreams_reactive_streams",
     "@maven//:org_redisson_redisson",

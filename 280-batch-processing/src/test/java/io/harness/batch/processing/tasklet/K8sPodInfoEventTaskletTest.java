@@ -1,8 +1,8 @@
 package io.harness.batch.processing.tasklet;
 
 import static io.harness.batch.processing.billing.timeseries.data.PrunedInstanceData.PrunedInstanceDataBuilder;
-import static io.harness.batch.processing.pricing.data.CloudProvider.AZURE;
 import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
+import static io.harness.ccm.commons.constants.CloudProvider.AZURE;
 import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.NIKUNJ;
 import static io.harness.rule.OwnerRule.UTSAV;
@@ -11,32 +11,28 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.billing.timeseries.data.PrunedInstanceData;
 import io.harness.batch.processing.billing.writer.support.ClusterDataGenerationValidator;
-import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.config.BatchMainConfig;
-import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.tasklet.support.HarnessServiceInfoFetcher;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.ccm.commons.beans.InstanceType;
+import io.harness.ccm.commons.constants.CloudProvider;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.ff.FeatureFlagService;
 import io.harness.grpc.utils.HTimestamps;
@@ -45,8 +41,8 @@ import io.harness.perpetualtask.k8s.watch.PodEvent.EventType;
 import io.harness.perpetualtask.k8s.watch.PodInfo;
 import io.harness.perpetualtask.k8s.watch.Quantity;
 import io.harness.perpetualtask.k8s.watch.Resource;
-import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
+import io.harness.testsupport.BaseTaskletTest;
 
 import software.wings.security.authentication.BatchQueryConfig;
 
@@ -67,22 +63,15 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.scope.context.ChunkContext;
-import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.repeat.RepeatStatus;
 
 @OwnedBy(HarnessTeam.CE)
 @RunWith(MockitoJUnitRunner.class)
-public class K8sPodInfoEventTaskletTest extends CategoryTest {
+public class K8sPodInfoEventTaskletTest extends BaseTaskletTest {
   @InjectMocks private K8sPodEventTasklet k8sPodEventTasklet;
   @InjectMocks private K8sPodInfoTasklet k8sPodInfoTasklet;
   @Mock private BatchMainConfig config;
-  @Mock private HPersistence hPersistence;
-  @Mock private InstanceDataDao instanceDataDao;
   @Mock private WorkloadRepository workloadRepository;
   @Mock private InstanceDataService instanceDataService;
   @Mock private InstanceDataBulkWriteService instanceDataBulkWriteService;
@@ -118,12 +107,9 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
 
   private final Instant NOW = Instant.now();
   private final Timestamp START_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(1, ChronoUnit.DAYS));
-  private final long START_TIME_MILLIS = NOW.minus(1, ChronoUnit.HOURS).toEpochMilli();
-  private final long END_TIME_MILLIS = NOW.toEpochMilli();
 
   @Before
   public void setup() {
-    MockitoAnnotations.initMocks(this);
     when(config.getBatchQueryConfig()).thenReturn(BatchQueryConfig.builder().queryBatchSize(50).build());
     when(clusterDataGenerationValidator.shouldGenerateClusterData(any(), any())).thenReturn(true);
     when(instanceDataBulkWriteService.updateList(any())).thenReturn(true);
@@ -136,19 +122,6 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testPodInfoExecute() {
-    ChunkContext chunkContext = mock(ChunkContext.class);
-    StepContext stepContext = mock(StepContext.class);
-    StepExecution stepExecution = mock(StepExecution.class);
-    JobParameters parameters = mock(JobParameters.class);
-
-    when(chunkContext.getStepContext()).thenReturn(stepContext);
-    when(stepContext.getStepExecution()).thenReturn(stepExecution);
-    when(stepExecution.getJobParameters()).thenReturn(parameters);
-
-    when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
-    when(parameters.getString(CCMJobConstants.ACCOUNT_ID)).thenReturn(ACCOUNT_ID);
-    when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
-
     PrunedInstanceData instanceData = getNodeInstantData(CloudProvider.GCP);
     when(instanceDataService.fetchPrunedInstanceDataWithName(
              ACCOUNT_ID, CLUSTER_ID, NODE_NAME, HTimestamps.toMillis(START_TIMESTAMP)))
@@ -198,18 +171,6 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testPodEventExecute() {
-    ChunkContext chunkContext = mock(ChunkContext.class);
-    StepContext stepContext = mock(StepContext.class);
-    StepExecution stepExecution = mock(StepExecution.class);
-    JobParameters parameters = mock(JobParameters.class);
-
-    when(chunkContext.getStepContext()).thenReturn(stepContext);
-    when(stepContext.getStepExecution()).thenReturn(stepExecution);
-    when(stepExecution.getJobParameters()).thenReturn(parameters);
-
-    when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
-    when(parameters.getString(CCMJobConstants.ACCOUNT_ID)).thenReturn(ACCOUNT_ID);
-    when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
     PublishedMessage k8sNodeEventMessage = getK8sPodEventMessage(
         POD_UID, CLOUD_PROVIDER_ID, CLUSTER_ID, ACCOUNT_ID, PodEvent.EventType.EVENT_TYPE_SCHEDULED, START_TIMESTAMP);
     when(publishedMessageDao.fetchPublishedMessage(any(), any(), any(), any(), anyInt()))

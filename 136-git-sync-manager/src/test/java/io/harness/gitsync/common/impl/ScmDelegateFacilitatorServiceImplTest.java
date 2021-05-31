@@ -71,8 +71,10 @@ public class ScmDelegateFacilitatorServiceImplTest extends GitSyncTestBase {
     doReturn(Optional.of(ConnectorResponseDTO.builder().connector(connectorInfo).build()))
         .when(connectorService)
         .get(anyString(), anyString(), anyString(), anyString());
-    when(abstractScmClientFacilitatorService.getYamlGitConfigIdentifierRef(
+    when(abstractScmClientFacilitatorService.getYamlGitConfigDTO(
              accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigIdentifier))
+        .thenReturn(YamlGitConfigDTO.builder().build());
+    when(abstractScmClientFacilitatorService.getConnectorIdentifierRef(any(), anyString(), anyString(), anyString()))
         .thenReturn(IdentifierRef.builder().build());
     when(yamlGitConfigService.get(anyString(), anyString(), anyString(), anyString()))
         .thenReturn(YamlGitConfigDTO.builder()
@@ -88,7 +90,8 @@ public class ScmDelegateFacilitatorServiceImplTest extends GitSyncTestBase {
   @Category(UnitTests.class)
   public void listBranchesForRepoByConnectorTest() {
     when(delegateGrpcClientWrapper.executeSyncTask(any()))
-        .thenReturn(ScmGitRefTaskResponseData.builder().listBranchesResponse(listBranchesResponse).build());
+        .thenReturn(
+            ScmGitRefTaskResponseData.builder().listBranchesResponse(listBranchesResponse.toByteArray()).build());
     final List<String> branches = scmDelegateFacilitatorService.listBranchesForRepoByConnector(accountIdentifier,
         orgIdentifier, projectIdentifier, connectorIdentifierRef, repoURL,
         PageRequest.builder().pageIndex(0).pageSize(10).build(), "");
@@ -100,7 +103,7 @@ public class ScmDelegateFacilitatorServiceImplTest extends GitSyncTestBase {
   @Category(UnitTests.class)
   public void getFileContentTest() {
     when(delegateGrpcClientWrapper.executeSyncTask(any()))
-        .thenReturn(GitFileTaskResponseData.builder().fileContent(fileContent).build());
+        .thenReturn(GitFileTaskResponseData.builder().fileContent(fileContent.toByteArray()).build());
     final GitFileContent gitFileContent = scmDelegateFacilitatorService.getFileContent(
         yamlGitConfigIdentifier, accountIdentifier, orgIdentifier, projectIdentifier, filePath, branch, null);
     assertThat(gitFileContent)

@@ -4695,7 +4695,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     addressInefficientQueries(workflowExecutionQuery);
 
     if (isNotEmpty(workflowExecution.getInfraMappingIds())) {
-      findOptions.modifier("$hint", "appid_workflowid_infraMappingIds_status_createdat");
+      findOptions.modifier("$hint", "appid_status_workflowid_infraMappingIds_createdat");
     } else {
       findOptions.modifier("$hint", "appid_workflowid_status_createdat");
     }
@@ -4718,7 +4718,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     addressInefficientQueries(workflowExecutionQuery);
 
     if (isNotEmpty(infraMappingList)) {
-      findOptions.modifier("$hint", "appid_workflowid_infraMappingIds_status_createdat");
+      findOptions.modifier("$hint", "appid_status_workflowid_infraMappingIds_createdat");
     } else {
       findOptions.modifier("$hint", "appid_workflowid_status_createdat");
     }

@@ -44,14 +44,17 @@ public class OutboxPollJobTest extends CategoryTest {
     outboxEventHandler = mock(OutboxEventHandler.class);
     persistentLocker = mock(PersistentLocker.class);
     outboxEventPollJob = new OutboxEventPollJob(outboxService, outboxEventHandler, persistentLocker,
-        OutboxPollConfiguration.builder().maximumRetryAttemptsForAnEvent(2).build());
+        OutboxPollConfiguration.builder().maximumRetryAttemptsForAnEvent(2).lockId("LOCK_ID").build());
   }
 
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
   public void testSuccessfulHandling() {
-    when(persistentLocker.tryToAcquireLock(eq(OUTBOX_POLL_JOB_LOCK), any())).thenReturn(mock(AcquiredLock.class));
+    when(persistentLocker.tryToAcquireLock(eq(OUTBOX_POLL_JOB_LOCK + "_"
+                                               + "LOCK_ID"),
+             any()))
+        .thenReturn(mock(AcquiredLock.class));
     String id = randomAlphabetic(10);
     OutboxEvent outboxEvent = OutboxEvent.builder().eventType("emptyEvent").blocked(false).id(id).build();
     when(outboxService.list(any())).thenReturn(singletonList(outboxEvent));
@@ -67,7 +70,10 @@ public class OutboxPollJobTest extends CategoryTest {
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
   public void testUnSuccessfulHandling() {
-    when(persistentLocker.tryToAcquireLock(eq(OUTBOX_POLL_JOB_LOCK), any())).thenReturn(mock(AcquiredLock.class));
+    when(persistentLocker.tryToAcquireLock(eq(OUTBOX_POLL_JOB_LOCK + "_"
+                                               + "LOCK_ID"),
+             any()))
+        .thenReturn(mock(AcquiredLock.class));
     String id = randomAlphabetic(10);
     OutboxEvent outboxEvent = OutboxEvent.builder().eventType("emptyEvent").blocked(false).id(id).build();
     when(outboxService.list(any())).thenReturn(singletonList(outboxEvent));

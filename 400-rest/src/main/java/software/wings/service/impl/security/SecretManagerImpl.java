@@ -215,6 +215,8 @@ public class SecretManagerImpl implements SecretManager {
         encryptionConfig = localSecretManagerService.getEncryptionConfig(accountId);
         log.info("Replaced it with LOCAL encryption for secret {}", encryptedData.getUuid());
       }
+      // TODO {karan} {piyush} revisit this to check if there is a need to send encryption config if conversion to local
+      // failed
     } else {
       encryptedRecordData = SecretManager.buildRecordData(encryptedData);
     }

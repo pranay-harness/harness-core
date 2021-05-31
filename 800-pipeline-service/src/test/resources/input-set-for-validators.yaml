@@ -1,0 +1,51 @@
+inputSet:
+  identifier: input-set-1
+  pipeline:
+    identifier: Test_Pipline11
+    variables:
+      - name: port2
+        value: 12000
+        type: String
+    stages:
+      - stage:
+          identifier: qaStage
+          type: Deployment
+          spec:
+            service:
+              identifier: manager
+              serviceDefinition:
+                type: Kubernetes
+                spec:
+                  manifests:
+                    - manifest:
+                        identifier: baseValues
+                        type: K8sManifest
+                        spec:
+                          store:
+                            type: Git
+                            spec:
+                              connectorRef: acc.gitConnDev
+            infrastructure:
+              environment:
+                identifier: stagingInfra
+                type: PreProduction
+                tags:
+                  team: CI
+              infrastructureDefinition:
+                type: KubernetesDirect
+                spec:
+                  connectorRef: <+some.expression>
+                  namespace: harness
+                  releaseName: anything
+            execution:
+              steps:
+                - step:
+                    identifier: httpStep1
+                    type: Http
+                    spec:
+                      url: www.google.com
+                - step:
+                    identifier: httpStep2
+                    type: Http
+                    spec:
+                      method: <+some.expression>

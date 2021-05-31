@@ -6,6 +6,7 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ACASIAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -17,6 +18,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.manifest.steps.ManifestsOutcome;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfig;
@@ -29,6 +31,7 @@ import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sScaleRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
+import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
@@ -76,9 +79,9 @@ public class K8sScaleStepTest extends CategoryTest {
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
-  public void testObtainTaskWithCountInstanceSelection() {
+  public void testShouldFailIfCountInstanceSelectionNotANumber() {
     CountInstanceSelection spec = new CountInstanceSelection();
-    spec.setCount(ParameterField.createValueField(2));
+    spec.setCount(ParameterField.createValueField("2.2"));
 
     final K8sScaleStepParameter stepParameters =
         K8sScaleStepParameter.infoBuilder()
@@ -95,12 +98,81 @@ public class K8sScaleStepTest extends CategoryTest {
         .when(k8sStepHelper)
         .queueK8sTask(eq(stepElementParameters), any(K8sDeployRequest.class), eq(ambiance), eq(infrastructureOutcome));
 
-    doReturn(serviceOutcome)
+    doReturn(new ManifestsOutcome(serviceOutcome.getManifestResults()))
         .when(outcomeService)
-        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.SERVICE));
+        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.MANIFESTS));
     doReturn(infrastructureOutcome)
         .when(outcomeService)
-        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
+
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> scaleStep.obtainTask(ambiance, stepElementParameters, stepInputPackage))
+        .withMessageContaining("Count value: [2.2] is not an integer");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldFailIfPercentageInstanceSelectionNotANumber() {
+    PercentageInstanceSelection spec = new PercentageInstanceSelection();
+    spec.setPercentage(ParameterField.createValueField("80.5"));
+
+    final K8sScaleStepParameter stepParameters =
+        K8sScaleStepParameter.infoBuilder()
+            .instanceSelection(
+                InstanceSelectionWrapper.builder().spec(spec).type(K8sInstanceUnitType.Percentage).build())
+            .skipSteadyStateCheck(ParameterField.createValueField(false))
+            .workload(ParameterField.createValueField("Deployment/test-scale-percentage-deployment"))
+            .build();
+
+    final StepElementParameters stepElementParameters =
+        StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("10m")).build();
+
+    final TaskRequest taskRequest = TaskRequest.newBuilder().build();
+    doReturn(TaskChainResponse.builder().taskRequest(taskRequest).build())
+        .when(k8sStepHelper)
+        .queueK8sTask(eq(stepElementParameters), any(K8sDeployRequest.class), eq(ambiance), eq(infrastructureOutcome));
+
+    doReturn(new ManifestsOutcome(serviceOutcome.getManifestResults()))
+        .when(outcomeService)
+        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.MANIFESTS));
+    doReturn(infrastructureOutcome)
+        .when(outcomeService)
+        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
+
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> scaleStep.obtainTask(ambiance, stepElementParameters, stepInputPackage))
+        .withMessageContaining("Percentage value: [80.5] is not an integer");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testObtainTaskWithCountInstanceSelection() {
+    CountInstanceSelection spec = new CountInstanceSelection();
+    spec.setCount(ParameterField.createValueField("2"));
+
+    final K8sScaleStepParameter stepParameters =
+        K8sScaleStepParameter.infoBuilder()
+            .instanceSelection(InstanceSelectionWrapper.builder().spec(spec).type(K8sInstanceUnitType.Count).build())
+            .skipSteadyStateCheck(ParameterField.createValueField(false))
+            .workload(ParameterField.createValueField("Deployment/test-scale-count-deployment"))
+            .build();
+
+    final StepElementParameters stepElementParameters =
+        StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("10m")).build();
+
+    final TaskRequest taskRequest = TaskRequest.newBuilder().build();
+    doReturn(TaskChainResponse.builder().taskRequest(taskRequest).build())
+        .when(k8sStepHelper)
+        .queueK8sTask(eq(stepElementParameters), any(K8sDeployRequest.class), eq(ambiance), eq(infrastructureOutcome));
+
+    doReturn(new ManifestsOutcome(serviceOutcome.getManifestResults()))
+        .when(outcomeService)
+        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.MANIFESTS));
+    doReturn(infrastructureOutcome)
+        .when(outcomeService)
+        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
     doReturn("test-scale-count-release").when(k8sStepHelper).getReleaseName(infrastructureOutcome);
     doReturn(manifestOutcome).when(k8sStepHelper).getK8sSupportedManifestOutcome(any(LinkedList.class));
 
@@ -129,7 +201,7 @@ public class K8sScaleStepTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testObtainTaskWithPercentageInstanceSelection() {
     PercentageInstanceSelection spec = new PercentageInstanceSelection();
-    spec.setPercentage(ParameterField.createValueField(80));
+    spec.setPercentage(ParameterField.createValueField("80.0"));
 
     final K8sScaleStepParameter stepParameters =
         K8sScaleStepParameter.infoBuilder()
@@ -147,12 +219,12 @@ public class K8sScaleStepTest extends CategoryTest {
         .when(k8sStepHelper)
         .queueK8sTask(eq(stepElementParameters), any(K8sDeployRequest.class), eq(ambiance), eq(infrastructureOutcome));
 
-    doReturn(serviceOutcome)
+    doReturn(new ManifestsOutcome(serviceOutcome.getManifestResults()))
         .when(outcomeService)
-        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.SERVICE));
+        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.MANIFESTS));
     doReturn(infrastructureOutcome)
         .when(outcomeService)
-        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
     doReturn("test-scale-percentage-release").when(k8sStepHelper).getReleaseName(infrastructureOutcome);
     doReturn(manifestOutcome).when(k8sStepHelper).getK8sSupportedManifestOutcome(any(LinkedList.class));
 

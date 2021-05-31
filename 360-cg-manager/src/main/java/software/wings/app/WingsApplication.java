@@ -118,7 +118,9 @@ import io.harness.service.DelegateServiceModule;
 import io.harness.service.impl.DelegateInsightsServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.service.impl.DelegateTaskServiceImpl;
+import io.harness.service.impl.DelegateTokenServiceImpl;
 import io.harness.service.intfc.DelegateTaskService;
+import io.harness.service.intfc.DelegateTokenService;
 import io.harness.springdata.SpringPersistenceModule;
 import io.harness.stream.AtmosphereBroadcaster;
 import io.harness.stream.GuiceObjectFactory;
@@ -165,6 +167,7 @@ import software.wings.scheduler.AccessRequestHandler;
 import software.wings.scheduler.AccountPasswordExpirationJob;
 import software.wings.scheduler.DeletedEntityHandler;
 import software.wings.scheduler.InstancesPurgeJob;
+import software.wings.scheduler.LdapGroupSyncJobHandler;
 import software.wings.scheduler.ManagerVersionsCleanUpJob;
 import software.wings.scheduler.ResourceLookupSyncHandler;
 import software.wings.scheduler.UsageMetricsHandler;
@@ -937,6 +940,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     accountService.getAccountCrudSubject().register(
         (DelegateProfileServiceImpl) injector.getInstance(Key.get(DelegateProfileService.class)));
     accountService.getAccountCrudSubject().register(injector.getInstance(Key.get(CEPerpetualTaskHandler.class)));
+    accountService.getAccountCrudSubject().register(
+        (DelegateTokenServiceImpl) injector.getInstance(Key.get(DelegateTokenService.class)));
 
     PerpetualTaskServiceImpl perpetualTaskService =
         (PerpetualTaskServiceImpl) injector.getInstance(Key.get(PerpetualTaskService.class));
@@ -990,6 +995,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(SettingAttributeValidateConnectivityHandler.class).registerIterators();
     injector.getInstance(PerpetualTaskRecordHandler.class).registerIterators();
     injector.getInstance(VaultSecretManagerRenewalHandler.class).registerIterators();
+    injector.getInstance(LdapGroupSyncJobHandler.class).registerIterators();
     injector.getInstance(SettingAttributesSecretsMigrationHandler.class).registerIterators();
     injector.getInstance(GitSyncEntitiesExpiryHandler.class).registerIterators();
     injector.getInstance(ExportExecutionsRequestHandler.class).registerIterators();

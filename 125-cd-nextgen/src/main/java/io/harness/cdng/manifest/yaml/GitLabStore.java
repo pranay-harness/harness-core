@@ -12,7 +12,6 @@ import io.harness.ngpipeline.common.ParameterFieldHelper;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.validation.OneOfField;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -22,6 +21,7 @@ import io.swagger.annotations.ApiModelProperty;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -38,9 +38,12 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("gitLabStore")
 @OwnedBy(CDP)
 public class GitLabStore implements GitStoreConfig, Visitable, WithConnectorRef {
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> connectorRef;
+  @NotNull
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  private ParameterField<String> connectorRef;
 
-  @Wither private FetchType gitFetchType;
+  @NotNull @Wither private FetchType gitFetchType;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> branch;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> commitId;
 
@@ -101,11 +104,6 @@ public class GitLabStore implements GitStoreConfig, Visitable, WithConnectorRef 
   @Override
   public VisitableChildren getChildrenToWalk() {
     return VisitableChildren.builder().build();
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YAMLFieldNameConstants.SPEC).isPartOfFQN(false).build();
   }
 
   @Override

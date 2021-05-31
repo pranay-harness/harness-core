@@ -114,6 +114,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("awsInstanceTypes") private List<String> awsInstanceTypes;
   @JsonProperty("awsRegionIdToName") private Map<String, String> awsRegionIdToName;
   @JsonProperty("apiUrl") private String apiUrl;
+  @JsonProperty("exportAccountDataBatchSize") private int exportAccountDataBatchSize;
   @JsonProperty("supportEmail") private String supportEmail;
   @JsonProperty("envPath") private String envPath;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
@@ -122,6 +123,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("featuresEnabled") private String featureNames;
   @JsonProperty("kubectlVersion") private String kubectlVersion;
   @JsonProperty("ocVersion") private String ocVersion;
+  @JsonProperty("scmVersion") private String scmVersion;
   @JsonProperty("trialRegistrationAllowed") private boolean trialRegistrationAllowed;
   @JsonProperty("ngManagerAvailable") private boolean ngManagerAvailable;
   @JsonProperty(value = "trialRegistrationAllowedForBugathon", defaultValue = "false")

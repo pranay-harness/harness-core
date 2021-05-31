@@ -3,6 +3,7 @@ package software.wings.sm.states.k8s;
 import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
+import static io.harness.beans.FeatureName.PRUNE_KUBERNETES_RESOURCES;
 
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING_ROLLBACK;
@@ -18,6 +19,7 @@ import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.tasks.ResponseData;
@@ -50,8 +52,8 @@ import software.wings.stencils.DefaultValue;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
-import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +76,7 @@ public class K8sRollingDeployRollback extends AbstractK8sState {
   @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
   @Inject private transient ApplicationManifestService applicationManifestService;
   @Inject private transient AwsCommandHelper awsCommandHelper;
+  @Inject private transient FeatureFlagService featureFlagService;
 
   public static final String K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME = "Rolling Deployment Rollback";
 
@@ -109,23 +112,25 @@ public class K8sRollingDeployRollback extends AbstractK8sState {
             .build();
       }
 
-      Activity activity =
-          createK8sActivity(context, K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME, getStateType(), activityService,
-              ImmutableList.of(new K8sDummyCommandUnit(K8sCommandUnitConstants.Init),
-                  new K8sDummyCommandUnit(K8sCommandUnitConstants.Rollback),
-                  new K8sDummyCommandUnit(K8sCommandUnitConstants.WaitForSteadyState)));
+      Activity activity = createK8sActivity(context, K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME, getStateType(),
+          activityService, getRollbackCommandUnits(context.getAccountId()));
 
-      K8sTaskParameters k8sTaskParameters = K8sRollingDeployRollbackTaskParameters.builder()
-                                                .activityId(activity.getUuid())
-                                                .releaseName(k8sContextElement.getReleaseName())
-                                                .releaseNumber(k8sContextElement.getReleaseNumber())
-                                                .commandName(K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME)
-                                                .k8sTaskType(K8sTaskType.DEPLOYMENT_ROLLING_ROLLBACK)
-                                                .timeoutIntervalInMin(stateTimeoutInMinutes)
-                                                .delegateSelectors((k8sContextElement.getDelegateSelectors() == null)
-                                                        ? null
-                                                        : new HashSet<>(k8sContextElement.getDelegateSelectors()))
-                                                .build();
+      K8sTaskParameters k8sTaskParameters =
+          K8sRollingDeployRollbackTaskParameters.builder()
+              .activityId(activity.getUuid())
+              .releaseName(k8sContextElement.getReleaseName())
+              .releaseNumber(k8sContextElement.getReleaseNumber())
+              .commandName(K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME)
+              .k8sTaskType(K8sTaskType.DEPLOYMENT_ROLLING_ROLLBACK)
+              .timeoutIntervalInMin(stateTimeoutInMinutes)
+              .delegateSelectors((k8sContextElement.getDelegateSelectors() == null)
+                      ? null
+                      : new HashSet<>(k8sContextElement.getDelegateSelectors()))
+              .prunedResourcesIds(k8sContextElement.getPrunedResourcesIds() == null
+                      ? emptyList()
+                      : k8sContextElement.getPrunedResourcesIds())
+              .isPruningEnabled(featureFlagService.isEnabled(PRUNE_KUBERNETES_RESOURCES, context.getAccountId()))
+              .build();
 
       return queueK8sDelegateTask(context, k8sTaskParameters, null);
     } catch (WingsException e) {
@@ -133,6 +138,19 @@ public class K8sRollingDeployRollback extends AbstractK8sState {
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
+  }
+
+  private List<CommandUnit> getRollbackCommandUnits(String accountId) {
+    List<CommandUnit> rollingDeployRollbackCommandUnits = new ArrayList<>();
+    rollingDeployRollbackCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Init));
+    if (featureFlagService.isEnabled(PRUNE_KUBERNETES_RESOURCES, accountId)) {
+      rollingDeployRollbackCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.RecreatePrunedResource));
+      rollingDeployRollbackCommandUnits.add(
+          new K8sDummyCommandUnit(K8sCommandUnitConstants.DeleteFailedReleaseResources));
+    }
+    rollingDeployRollbackCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Rollback));
+    rollingDeployRollbackCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.WaitForSteadyState));
+    return rollingDeployRollbackCommandUnits;
   }
 
   @Override
@@ -183,7 +201,7 @@ public class K8sRollingDeployRollback extends AbstractK8sState {
   }
 
   @Override
-  public List<CommandUnit> commandUnitList(boolean remoteStoreType) {
+  public List<CommandUnit> commandUnitList(boolean remoteStoreType, String accountId) {
     throw new UnsupportedOperationException();
   }
 

@@ -34,6 +34,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
@@ -45,7 +46,6 @@ import io.harness.k8s.model.K8sPod;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
 
-import software.wings.WingsBaseTest;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Application;
@@ -77,10 +77,11 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @TargetModule(_861_CG_ORCHESTRATION_STATES)
 @OwnedBy(CDP)
-public class K8sRollingDeployTest extends WingsBaseTest {
+public class K8sRollingDeployTest extends CategoryTest {
   private static final String RELEASE_NAME = "releaseName";
 
   @Mock private FeatureFlagService featureFlagService;
@@ -96,6 +97,7 @@ public class K8sRollingDeployTest extends WingsBaseTest {
 
   @Before
   public void setup() {
+    MockitoAnnotations.initMocks(this);
     context = new ExecutionContextImpl(stateExecutionInstance);
     k8sRollingDeploy.setStateTimeoutInMinutes(10);
     k8sRollingDeploy.setSkipDryRun(true);
@@ -192,7 +194,7 @@ public class K8sRollingDeployTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testCommandUnitList() {
-    List<CommandUnit> blueGreenCommandUnits = k8sRollingDeploy.commandUnitList(true);
+    List<CommandUnit> blueGreenCommandUnits = k8sRollingDeploy.commandUnitList(true, "accountId");
     assertThat(blueGreenCommandUnits).isNotEmpty();
     assertThat(blueGreenCommandUnits.get(0).getName()).isEqualTo(K8sCommandUnitConstants.FetchFiles);
     assertThat(blueGreenCommandUnits.get(1).getName()).isEqualTo(K8sCommandUnitConstants.Init);

@@ -21,6 +21,7 @@ import static software.wings.utils.WingsTestConstants.BUCKET_NAME;
 import static software.wings.utils.WingsTestConstants.BUILD_NO;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
+import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.S3_URL;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
@@ -155,13 +156,14 @@ public class AwsLambdaStateTest extends CategoryTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testExecute() {
-    when(infrastructureMappingService.get(anyString(), anyString()))
-        .thenReturn(AwsLambdaInfraStructureMapping.builder()
-                        .uuid(INFRA_MAPPING_ID)
-                        .appId(APP_ID)
-                        .computeProviderSettingId(SETTING_ID)
-                        .envId(ENV_ID)
-                        .build());
+    AwsLambdaInfraStructureMapping mapping = AwsLambdaInfraStructureMapping.builder()
+                                                 .uuid(INFRA_MAPPING_ID)
+                                                 .appId(APP_ID)
+                                                 .computeProviderSettingId(SETTING_ID)
+                                                 .envId(ENV_ID)
+                                                 .build();
+    mapping.setInfrastructureDefinitionId(INFRA_DEFINITION_ID);
+    when(infrastructureMappingService.get(anyString(), anyString())).thenReturn(mapping);
     when(settingsService.get(SETTING_ID))
         .thenReturn(SettingAttribute.Builder.aSettingAttribute().withValue(AwsConfig.builder().build()).build());
 
@@ -209,7 +211,8 @@ public class AwsLambdaStateTest extends CategoryTest {
     when(mockDockerArtifactStream.getSettingId()).thenReturn(SETTING_ID);
     when(serviceResourceService.getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, null))
         .thenReturn(asList(new AwsLambdaCommandUnit()));
-    when(activityService.save(any())).thenReturn(Activity.builder().build());
+    ArgumentCaptor<Activity> activityCaptor = ArgumentCaptor.forClass(Activity.class);
+    when(activityService.save(activityCaptor.capture())).thenReturn(Activity.builder().build());
     when(serviceResourceService.getLambdaSpecification(APP_ID, SERVICE_ID))
         .thenReturn(LambdaSpecification.builder()
                         .functions(asList(
@@ -225,6 +228,8 @@ public class AwsLambdaStateTest extends CategoryTest {
     assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.ENV_ID_FIELD)).isEqualTo(ENV_ID);
     assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD))
         .isEqualTo(INFRA_MAPPING_ID);
+    Activity activity = activityCaptor.getValue();
+    assertThat(activity.getInfrastructureDefinitionId()).isEqualTo(INFRA_DEFINITION_ID);
   }
 
   private Map<String, String> mockMetadata(ArtifactStreamType artifactStreamType) {

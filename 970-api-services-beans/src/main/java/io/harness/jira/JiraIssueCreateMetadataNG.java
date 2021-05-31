@@ -65,4 +65,8 @@ public class JiraIssueCreateMetadataNG {
   public void removeField(String fieldName) {
     this.projects.values().forEach(p -> p.removeField(fieldName));
   }
+
+  public void addField(JiraFieldNG field) {
+    this.projects.values().forEach(p -> p.addField(field));
+  }
 }

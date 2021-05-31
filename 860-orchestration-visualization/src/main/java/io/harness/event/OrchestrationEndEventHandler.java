@@ -27,7 +27,7 @@ public class OrchestrationEndEventHandler implements AsyncOrchestrationEventHand
       Ambiance ambiance = event.getAmbiance();
       PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
       // One last time try to update the graph to process any unprocessed logs
-      graphGenerationService.updateGraph(planExecution);
+      graphGenerationService.updateGraph(planExecution.getUuid());
 
       log.info("Ending Execution for planExecutionId [{}] with status [{}].", planExecution.getUuid(),
           planExecution.getStatus());

@@ -12,6 +12,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import io.harness.PipelineServiceTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc;
@@ -19,6 +21,7 @@ import io.harness.pms.contracts.plan.SetupMetadata;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.filter.creation.FilterCreatorMergeService;
 import io.harness.pms.filter.creation.FilterCreatorMergeServiceResponse;
+import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineSetupUsageHelper;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
@@ -37,6 +40,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
   private static String ACCOUNT_ID = "accountId";
   private static String PROJECT_ID = "projectId";
@@ -94,12 +98,13 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
   PlanCreationServiceGrpc.PlanCreationServiceBlockingStub planCreationServiceBlockingStub;
   @Mock PmsSdkHelper pmsSdkHelper;
   @Mock PipelineSetupUsageHelper pipelineSetupUsageHelper;
+  @Mock PmsGitSyncHelper pmsGitSyncHelper;
   FilterCreatorMergeService filterCreatorMergeService;
 
   @Before
   public void init() {
-    Map<String, PlanCreationServiceGrpc.PlanCreationServiceBlockingStub> map = new HashMap<>();
-    filterCreatorMergeService = spy(new FilterCreatorMergeService(map, pmsSdkHelper, pipelineSetupUsageHelper));
+    filterCreatorMergeService =
+        spy(new FilterCreatorMergeService(pmsSdkHelper, pipelineSetupUsageHelper, pmsGitSyncHelper));
   }
 
   @After

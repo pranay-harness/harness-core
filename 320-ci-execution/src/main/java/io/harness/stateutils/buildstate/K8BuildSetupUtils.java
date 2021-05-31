@@ -111,10 +111,10 @@ import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.rbac.PipelineRbacHelper;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider;
-import io.harness.steps.StepOutcomeGroup;
 import io.harness.tiserviceclient.TIServiceUtils;
 import io.harness.util.GithubApiFunctor;
 import io.harness.util.GithubApiTokenEvaluator;
@@ -148,7 +148,6 @@ import org.jetbrains.annotations.NotNull;
 public class K8BuildSetupUtils {
   @Inject private SecretUtils secretUtils;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
-  @Inject private ServiceTokenUtils serviceTokenUtils;
   @Inject private ConnectorUtils connectorUtils;
   @Inject private InternalContainerParamsProvider internalContainerParamsProvider;
   @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
@@ -451,9 +450,8 @@ public class K8BuildSetupUtils {
       Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys, Ambiance ambiance) {
     Map<String, ConnectorDetails> stepConnectorDetails = new HashMap<>();
 
-    String serviceToken = serviceTokenUtils.getServiceToken();
     return internalContainerParamsProvider.getLiteEngineContainerParams(connectorDetails, stepConnectorDetails,
-        k8PodDetails, serviceToken, stageCpuRequest, stageMemoryRequest, serviceGrpcPortList, logEnvVars, tiEnvVars,
+        k8PodDetails, stageCpuRequest, stageMemoryRequest, serviceGrpcPortList, logEnvVars, tiEnvVars,
         volumeToMountPath, workDirPath, logPrefix, ambiance);
   }
 

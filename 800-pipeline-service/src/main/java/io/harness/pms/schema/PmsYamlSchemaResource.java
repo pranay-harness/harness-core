@@ -56,9 +56,9 @@ public class PmsYamlSchemaResource implements YamlSchemaResource {
       @QueryParam("scope") Scope scope, @QueryParam(IDENTIFIER_KEY) String identifier) {
     JsonNode schema = null;
     if (entityType == PIPELINES) {
-      schema = pmsYamlSchemaService.getPipelineYamlSchema(orgIdentifier, projectIdentifier, scope);
+      schema = pmsYamlSchemaService.getPipelineYamlSchema(projectIdentifier, orgIdentifier, scope);
     } else if (entityType == TRIGGERS) {
-      schema = ngTriggerYamlSchemaService.getTriggerYamlSchema(orgIdentifier, projectIdentifier, identifier, scope);
+      schema = ngTriggerYamlSchemaService.getTriggerYamlSchema(projectIdentifier, orgIdentifier, identifier, scope);
     } else {
       throw new NotSupportedException(String.format("Entity type %s is not supported", entityType.getYamlName()));
     }

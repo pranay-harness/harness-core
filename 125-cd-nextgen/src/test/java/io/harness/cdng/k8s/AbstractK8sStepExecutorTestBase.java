@@ -3,6 +3,7 @@ package io.harness.cdng.k8s;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import static java.util.Collections.emptyList;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -18,6 +19,7 @@ import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 
 import org.junit.Before;
 import org.mockito.ArgumentCaptor;
@@ -45,6 +47,9 @@ public abstract class AbstractK8sStepExecutorTestBase extends CategoryTest {
     doReturn(infraDelegateConfig).when(k8sStepHelper).getK8sInfraDelegateConfig(infrastructureOutcome, ambiance);
     doReturn(manifestDelegateConfig).when(k8sStepHelper).getManifestDelegateConfig(manifestOutcome, ambiance);
     doReturn(true).when(k8sStepHelper).getSkipResourceVersioning(manifestOutcome);
+    doReturn(TaskChainResponse.builder().chainEnd(true).build())
+        .when(k8sStepHelper)
+        .startChainLink(any(), any(), any());
   }
 
   protected <T extends K8sDeployRequest> T executeTask(

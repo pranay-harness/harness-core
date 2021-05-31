@@ -36,6 +36,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DEPLOYMENT_FREEZES;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_IP_WHITELIST;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_RESTRICTED_ACCESS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRETS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SSH_AND_WINRM;
@@ -1531,7 +1532,8 @@ public class AuthHandler {
 
     AppPermission deploymentPermission =
         AppPermission.builder()
-            .actions(Sets.newHashSet(Action.READ, Action.EXECUTE_WORKFLOW, Action.EXECUTE_PIPELINE))
+            .actions(Sets.newHashSet(
+                Action.READ, Action.EXECUTE_WORKFLOW, Action.EXECUTE_WORKFLOW_ROLLBACK, Action.EXECUTE_PIPELINE))
             .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
             .entityFilter(new EnvFilter(null, Sets.newHashSet(envFilterType)))
             .permissionType(PermissionType.DEPLOYMENT)
@@ -1573,12 +1575,12 @@ public class AuthHandler {
         MANAGE_APPLICATION_STACKS, MANAGE_DELEGATES, MANAGE_ALERT_NOTIFICATION_RULES, MANAGE_DELEGATE_PROFILES,
         MANAGE_CONFIG_AS_CODE, MANAGE_SECRETS, MANAGE_SECRET_MANAGERS, MANAGE_AUTHENTICATION_SETTINGS,
         MANAGE_IP_WHITELIST, MANAGE_DEPLOYMENT_FREEZES, MANAGE_PIPELINE_GOVERNANCE_STANDARDS, MANAGE_API_KEYS,
-        MANAGE_CUSTOM_DASHBOARDS, CREATE_CUSTOM_DASHBOARDS, MANAGE_SSH_AND_WINRM);
+        MANAGE_CUSTOM_DASHBOARDS, CREATE_CUSTOM_DASHBOARDS, MANAGE_SSH_AND_WINRM, MANAGE_RESTRICTED_ACCESS);
   }
 
   private Set<Action> getAllActions() {
-    return Sets.newHashSet(
-        Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE, Action.EXECUTE_WORKFLOW, Action.EXECUTE_PIPELINE);
+    return Sets.newHashSet(Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE, Action.EXECUTE_WORKFLOW,
+        Action.EXECUTE_WORKFLOW_ROLLBACK, Action.EXECUTE_PIPELINE);
   }
 
   private Set<Action> getAllNonDeploymentActions() {

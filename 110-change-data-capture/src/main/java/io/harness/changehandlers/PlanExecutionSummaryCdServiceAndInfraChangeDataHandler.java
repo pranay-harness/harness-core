@@ -12,7 +12,6 @@ import com.mongodb.DBObject;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -77,9 +76,22 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
     }
     Map<String, List<String>> columnValueMapping = new HashMap<>();
     DBObject dbObject = changeEvent.getFullDocument();
+    String accountId = null;
+    String orgIdentifier = null;
+    String projectIdentifier = null;
 
     if (dbObject == null) {
       return columnValueMapping;
+    }
+
+    if (dbObject.get("accountId") != null) {
+      accountId = dbObject.get("accountId").toString();
+    }
+    if (dbObject.get("orgIdentifier") != null) {
+      orgIdentifier = dbObject.get("orgIdentifier").toString();
+    }
+    if (dbObject.get("projectIdentifier") != null) {
+      projectIdentifier = dbObject.get("projectIdentifier").toString();
     }
 
     // if moduleInfo is null, not sure whether needs to be pushed to this table
@@ -126,8 +138,8 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
       }
       // service_startts
       if (((BasicDBObject) iteratorObject.getValue()).get("startTs") != null) {
-        String service_startts = String.valueOf(
-            new Timestamp(Long.parseLong(((BasicDBObject) iteratorObject.getValue()).get("startTs").toString())));
+        String service_startts =
+            String.valueOf(Long.parseLong(((BasicDBObject) iteratorObject.getValue()).get("startTs").toString()));
         if (service_startts != null) {
           if (columnValueMapping.containsKey("service_startts")) {
             columnValueMapping.get("service_startts").add(service_startts);
@@ -140,8 +152,8 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
       }
       // service_endts
       if (((BasicDBObject) iteratorObject.getValue()).get("endTs") != null) {
-        String service_endts = String.valueOf(
-            new Timestamp(Long.parseLong(((BasicDBObject) iteratorObject.getValue()).get("endTs").toString())));
+        String service_endts =
+            String.valueOf(Long.parseLong(((BasicDBObject) iteratorObject.getValue()).get("endTs").toString()));
         if (service_endts != null) {
           if (columnValueMapping.containsKey("service_endts")) {
             columnValueMapping.get("service_endts").add(service_endts);
@@ -177,6 +189,32 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
               List<String> serviceIdList = new ArrayList<>();
               serviceIdList.add(serviceId);
               columnValueMapping.put("service_id", serviceIdList);
+            }
+
+            // accountId
+            if (columnValueMapping.containsKey("accountId")) {
+              columnValueMapping.get("accountId").add(accountId);
+            } else {
+              List<String> accountIdList = new ArrayList<>();
+              accountIdList.add(accountId);
+              columnValueMapping.put("accountId", accountIdList);
+            }
+            // orgIdentifier
+            if (columnValueMapping.containsKey("orgIdentifier")) {
+              columnValueMapping.get("orgIdentifier").add(orgIdentifier);
+            } else {
+              List<String> orgIdList = new ArrayList<>();
+              orgIdList.add(orgIdentifier);
+              columnValueMapping.put("orgIdentifier", orgIdList);
+            }
+
+            // projectIdentifier
+            if (columnValueMapping.containsKey("projectIdentifier")) {
+              columnValueMapping.get("projectIdentifier").add(projectIdentifier);
+            } else {
+              List<String> projectIdList = new ArrayList<>();
+              projectIdList.add(projectIdentifier);
+              columnValueMapping.put("projectIdentifier", projectIdList);
             }
 
             // deploymentType
@@ -343,9 +381,14 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
     updateQueryBuilder.append(" ON CONFLICT (id) Do ");
 
     if (!columnValueMappingForSet.isEmpty()) {
-      for (Map.Entry<String, String> entry : columnValueMappingForSet.entrySet()) {
-        if (entry.getValue() == null || entry.getValue().equals("")) {
-          columnValueMappingForSet.remove(entry.getKey());
+      Set<Map.Entry<String, String>> setOfEntries = columnValueMappingForSet.entrySet();
+      Iterator<Map.Entry<String, String>> iterator = setOfEntries.iterator();
+
+      while (iterator.hasNext()) {
+        Map.Entry<String, String> entry = iterator.next();
+        String value = entry.getValue();
+        if (value == null || value.equals("")) {
+          iterator.remove();
         }
       }
     }

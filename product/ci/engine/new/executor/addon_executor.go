@@ -2,6 +2,7 @@ package executor
 
 import (
 	"context"
+	"io"
 	"time"
 
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
@@ -25,10 +26,10 @@ var (
 
 // ExecuteStepOnAddon executes customer provided step on addon
 func ExecuteStepOnAddon(ctx context.Context, step *pb.UnitStep, tmpFilePath string,
-	log *zap.SugaredLogger) (*output.StepOutput, *pb.Artifact, error) {
+	log *zap.SugaredLogger, procWriter io.Writer) (*output.StepOutput, *pb.Artifact, error) {
 	// execute runtest step
 	if _, ok := step.GetStep().(*pb.UnitStep_RunTests); ok {
-		stepOutput, _, err := runtests.NewRunTestsStep(step, tmpFilePath, nil, log).Run(ctx)
+		stepOutput, _, err := runtests.NewRunTestsStep(step, tmpFilePath, nil, log, procWriter).Run(ctx)
 		return stepOutput, nil, err
 	}
 

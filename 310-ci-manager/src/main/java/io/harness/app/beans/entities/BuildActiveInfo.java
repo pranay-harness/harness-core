@@ -10,7 +10,7 @@ public class BuildActiveInfo {
   private String branch;
   private String commit;
   private String commitID;
-  private String startTs;
+  private long startTs;
   private String status;
-  private String endTs;
+  private long endTs;
 }

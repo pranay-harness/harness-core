@@ -1,5 +1,9 @@
 package io.harness.utils;
 
+import io.harness.annotation.RecasterAlias;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.core.AliasRegistry;
 import io.harness.core.Recaster;
 
 import java.lang.reflect.Array;
@@ -20,9 +24,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 public class RecastReflectionUtils {
   public static Field[] getDeclaredAndInheritedFields(final Class<?> type, final boolean returnFinalFields) {
@@ -114,10 +120,17 @@ public class RecastReflectionUtils {
     // see if there is a className value
     Class<?> c = null;
     if (document.containsKey(Recaster.RECAST_CLASS_KEY)) {
-      final String className = document.getString(Recaster.RECAST_CLASS_KEY);
-      // TODO : add caching here
+      final String documentIdentifier = (String) getDocumentIdentifier(document);
+
+      // lets check alias registry first
+      AliasRegistry aliasRegistry = AliasRegistry.getInstance();
+      Class<?> aliasClazz = aliasRegistry.obtain(documentIdentifier);
+      if (aliasClazz != null) {
+        return (Class<T>) aliasClazz;
+      }
+
       try {
-        c = Class.forName(className, true, Thread.currentThread().getContextClassLoader());
+        c = Class.forName(documentIdentifier, true, Thread.currentThread().getContextClassLoader());
       } catch (ClassNotFoundException e) {
         log.warn("Class not found defined in dbObj: ", e);
       }
@@ -241,5 +254,36 @@ public class RecastReflectionUtils {
     }
 
     return ar;
+  }
+
+  public static boolean isMap(Document document) {
+    return !containsIdentifier(document);
+  }
+
+  public static boolean containsIdentifier(Document document) {
+    return document.containsKey(Recaster.RECAST_CLASS_KEY);
+  }
+
+  public static <T> String obtainRecasterAliasValueOrNull(Class<T> clazz) {
+    RecasterAlias recasterAlias = clazz.getAnnotation(RecasterAlias.class);
+    if (recasterAlias == null) {
+      return null;
+    }
+
+    return recasterAlias.value();
+  }
+
+  public static <T> void setDocumentIdentifier(Document document, Class<T> clazz) {
+    String recasterAliasValue = obtainRecasterAliasValueOrNull(clazz);
+    if (recasterAliasValue != null) {
+      document.append(Recaster.RECAST_CLASS_KEY, recasterAliasValue);
+    } else {
+      document.append(Recaster.RECAST_CLASS_KEY, clazz.getName());
+    }
+  }
+
+  @Nullable
+  public static Object getDocumentIdentifier(Document document) {
+    return document.get(Recaster.RECAST_CLASS_KEY);
   }
 }

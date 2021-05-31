@@ -18,20 +18,33 @@ import org.apache.commons.codec.binary.Base64;
 
 @Slf4j
 public class StackdriverUtils {
-  private static final String SCOPE = "https://www.googleapis.com/auth/monitoring.read";
+  public enum Scope {
+    METRIC_SCOPE("https://www.googleapis.com/auth/monitoring.read"),
+    LOG_SCOPE("https://www.googleapis.com/auth/logging.read");
+
+    private final String value;
+
+    Scope(final String v) {
+      this.value = v;
+    }
+    public String getValue() {
+      return this.value;
+    }
+  }
+
   public static final String TIMESTAMP_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
 
   private StackdriverUtils() {}
 
-  public static Map<String, Object> getCommonEnvVariables(StackdriverCredential credential) {
+  public static Map<String, Object> getCommonEnvVariables(StackdriverCredential credential, Scope scope) {
     Map<String, Object> envVariables = new HashMap<>();
-    String jwtToken = StackdriverUtils.getJwtToken(credential);
+    String jwtToken = StackdriverUtils.getJwtToken(credential, scope);
     envVariables.put("jwtToken", jwtToken);
     envVariables.put("project", credential.getProjectId());
     return envVariables;
   }
 
-  private static String getJwtToken(StackdriverCredential credential) {
+  private static String getJwtToken(StackdriverCredential credential, Scope scope) {
     Algorithm algorithm;
     try {
       algorithm = Algorithm.RSA256(getPrivateKeyFromString(credential.getPrivateKey()));
@@ -47,7 +60,7 @@ public class StackdriverUtils {
     return JWT.create()
         .withIssuer(credential.getClientEmail())
         .withSubject(credential.getClientEmail())
-        .withClaim("scope", SCOPE)
+        .withClaim("scope", scope.getValue())
         .withIssuedAt(new Date())
         .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(5)))
         .withAudience("https://www.googleapis.com/oauth2/v4/token")

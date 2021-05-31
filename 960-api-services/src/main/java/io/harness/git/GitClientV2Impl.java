@@ -1,5 +1,6 @@
 package io.harness.git;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
@@ -27,8 +28,10 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.OK;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.UP_TO_DATE;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GitClientException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -107,6 +110,7 @@ import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 
 @Singleton
 @Slf4j
+@OwnedBy(CDP)
 public class GitClientV2Impl implements GitClientV2 {
   @Inject private GitClientHelper gitClientHelper;
 
@@ -940,6 +944,8 @@ public class GitClientV2Impl implements GitClientV2 {
                                          .append("]")
                                          .append(request.useBranch() ? "for Branch: " : "for CommitId: ")
                                          .append(request.useBranch() ? request.getBranch() : request.getCommitId())
+                                         .append(". Reason: ")
+                                         .append(ExceptionUtils.getMessage(e))
                                          .toString(),
             USER, e);
       }

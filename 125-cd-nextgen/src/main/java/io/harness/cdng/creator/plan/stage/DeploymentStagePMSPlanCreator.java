@@ -1,7 +1,6 @@
 package io.harness.cdng.creator.plan.stage;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.plan.execution.CDExecutionPMSPlanCreator;
@@ -38,6 +37,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 @OwnedBy(CDC)
 public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
@@ -73,15 +73,14 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
 
     // Adding service child
     YamlField serviceField = specField.getNode().getField(YamlTypes.SERVICE_CONFIG);
-
     if (serviceField == null) {
       throw new InvalidRequestException("ServiceConfig Section cannot be absent in a pipeline");
     }
 
-    PlanNode servicePlanNode = ServicePMSPlanCreator.createPlanForServiceNode(
+    PlanCreationResponse servicePlanCreationResponse = ServicePMSPlanCreator.createPlanForServiceNode(
         serviceField, ((DeploymentStageConfig) field.getStageType()).getServiceConfig(), kryoSerializer);
-    planCreationResponseMap.put(serviceField.getNode().getUuid(),
-        PlanCreationResponse.builder().node(serviceField.getNode().getUuid(), servicePlanNode).build());
+    planCreationResponseMap.put(servicePlanCreationResponse.getStartingNodeId(),
+        PlanCreationResponse.builder().nodes(servicePlanCreationResponse.getNodes()).build());
 
     // Adding Spec node
     PlanNode specPlanNode =
@@ -120,8 +119,13 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
         infraNode.getUuid(), PlanCreationResponse.builder().node(infraNode.getUuid(), infraSectionPlanNode).build());
 
     // Add dependency for resource constraint
-    if (pipelineInfrastructure.isAllowSimultaneousDeployments()) {
+    boolean allowSimultaneousDeployments = ResourceConstraintUtility.isSimultaneousDeploymentsAllowed(
+        pipelineInfrastructure.getAllowSimultaneousDeployments(), rcYamlField);
+
+    if (!allowSimultaneousDeployments && rcYamlField != null) {
       dependenciesNodeMap.put(rcYamlField.getNode().getUuid(), rcYamlField);
+      planCreationResponseMap.put(
+          rcYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(dependenciesNodeMap).build());
     }
 
     // Add dependency for execution
@@ -132,27 +136,27 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
     PlanCreationResponse planForExecution = CDExecutionPMSPlanCreator.createPlanForExecution(executionField);
     planCreationResponseMap.put(executionField.getNode().getUuid(), planForExecution);
 
-    planCreationResponseMap.put(
-        rcYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(dependenciesNodeMap).build());
-
     return planCreationResponseMap;
   }
 
+  @Nullable
   private YamlField constructResourceConstraintYamlField(YamlNode infraNode) {
-    JsonNode resourceConstraintJsonNode =
-        ResourceConstraintUtility.getResourceConstraintJsonNode(obtainResourceUnitFromInfrastructure(infraNode));
+    String resourceUnit = obtainResourceUnitFromInfrastructure(infraNode);
+    if (resourceUnit == null) {
+      return null;
+    }
+    JsonNode resourceConstraintJsonNode = ResourceConstraintUtility.getResourceConstraintJsonNode(resourceUnit);
     return new YamlField("step", new YamlNode(resourceConstraintJsonNode, infraNode.getParentNode()));
   }
 
+  @Nullable
   private String obtainResourceUnitFromInfrastructure(YamlNode infraNode) {
     JsonNode infrastructureKey = infraNode.getCurrJsonNode().get("infrastructureKey");
-    String resourceUnit;
-    if (infrastructureKey == null) {
-      resourceUnit = generateUuid();
-    } else {
-      resourceUnit = infrastructureKey.asText();
+    if (infrastructureKey == null || EmptyPredicate.isEmpty(infrastructureKey.asText())) {
+      return null;
     }
-    return resourceUnit;
+
+    return infrastructureKey.asText();
   }
 
   private void validateFailureStrategy(StageElementConfig stageElementConfig) {

@@ -1,8 +1,11 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
@@ -34,9 +37,11 @@ import software.wings.sm.StepExecutionSummary.StepExecutionSummaryBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+@OwnedBy(DX)
 public class InstanceHelperTestHelper {
   public static final String INFRA_MAP_ID = "infraMap_1";
   public static final String CODE_DEPLOY_DEPLOYMENT_ID = "codeDeployment_id";
@@ -368,7 +373,7 @@ public class InstanceHelperTestHelper {
     if (InfrastructureMappingType.GCP_KUBERNETES == infrastructureMappingType) {
       if (helm) {
         HelmSetupExecutionSummary helmSetupExecutionSummary =
-            new HelmSetupExecutionSummary("version1", 1, 0, 0, "default", null);
+            new HelmSetupExecutionSummary("version1", 1, 0, 0, "default", null, Arrays.asList("default"));
 
         stepExecutionSummaries =
             asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),

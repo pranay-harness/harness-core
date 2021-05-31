@@ -42,6 +42,11 @@ public class PersistentNoopLocker implements PersistentLocker, Managed {
   }
 
   @Override
+  public AcquiredLock tryToAcquireInfiniteLockWithPeriodicRefresh(String name, Duration waitTime) {
+    return new AcquiredNoopLock();
+  }
+
+  @Override
   public AcquiredLock tryToAcquireEphemeralLock(String name, Duration timeout) {
     return new AcquiredNoopLock();
   }

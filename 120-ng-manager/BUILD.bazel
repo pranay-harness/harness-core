@@ -1,7 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//:macros.bzl", "run_analysis")
-load("//:macros.bzl", "test_targets_list")
+load("//:tools/bazel/macros.bzl", "run_analysis")
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
@@ -14,12 +13,12 @@ shared_dependencies = [
     "@maven//:io_grpc_grpc_netty",
     "@maven//:io_grpc_grpc_netty_shaded",
     "@maven//:io_grpc_grpc_protobuf",
-    "@maven//:io_grpc_grpc_protobuf_lite",
     "@maven//:io_grpc_grpc_services",
     "@maven//:io_grpc_grpc_stub",
-    "@maven//:io_grpc_grpc_testing",
 ] + [
     "//:lombok",
+    "//121-access-control-migration:module",
+    "//122-ng-core-user:module",
     "//125-cd-nextgen:module",
     "//136-git-sync-manager:module",
     "//400-rest:module",
@@ -40,8 +39,8 @@ shared_dependencies = [
     "//920-ng-signup:module",
     "//930-delegate-tasks:module",
     "//930-ng-core-clients:module",
+    "//930-ng-license-manager:module",
     "//950-log-client:module",
-    "//950-ng-license-manager:module",
     "//955-delegate-beans:module",
     "//940-feature-flag:module",
     "//940-notification-client:module",
@@ -67,7 +66,6 @@ shared_dependencies = [
     "//440-connector-nextgen:module",
     "//955-filters-sdk:module",
     "//955-outbox-sdk:module",
-    "//958-migration-sdk:module",
     "//958-ng-file-service-sdk:module",
     "//960-notification-beans:module",
     "//960-persistence:module",
@@ -320,7 +318,6 @@ shared_dependencies = [
     "@maven//:commons_validator_commons_validator",
     "@maven//:de_bwaldvogel_mongo_java_server",
     "@maven//:de_danielbechler_java_object_diff",
-    "@maven//:de_flapdoodle_embed_de_flapdoodle_embed_mongo",
     "@maven//:de_javakaffee_kryo_serializers",
     "@maven//:de_jkeylockmanager_jkeylockmanager",
     "@maven//:dk_brics_automaton_automaton",
@@ -368,7 +365,6 @@ shared_dependencies = [
     "@maven//:io_fabric8_kubernetes_api",
     "@maven//:io_fabric8_kubernetes_client",
     "@maven//:io_fabric8_kubernetes_model",
-    "@maven//:io_fabric8_kubernetes_server_mock",
     "@maven//:io_fabric8_openshift_client",
     "@maven//:io_fabric8_zjsonpatch",
     "@maven//:io_github_resilience4j_resilience4j_circuitbreaker",
@@ -682,7 +678,7 @@ shared_dependencies = [
     "@maven//:xml_apis_xml_apis",
     "@maven//:xml_resolver_xml_resolver",
     "@maven//:xpp3_xpp3",
-    "@maven_harness//:io_harness_ff_java_server_sdk",
+    "@maven//:io_harness_ff_java_server_sdk",
     "@maven_harness//:io_harness_cv_data_collection_dsl",
 ]
 

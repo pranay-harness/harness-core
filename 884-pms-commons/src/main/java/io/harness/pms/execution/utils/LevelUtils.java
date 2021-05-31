@@ -19,6 +19,7 @@ public class LevelUtils {
                                      .setRuntimeId(runtimeId)
                                      .setIdentifier(node.getIdentifier())
                                      .setRetryIndex(retryIndex)
+                                     .setSkipExpressionChain(node.getSkipExpressionChain())
                                      .setStepType(StepType.newBuilder().setType(node.getStepType().getType()).build());
     if (node.getGroup() != null) {
       levelBuilder.setGroup(node.getGroup());

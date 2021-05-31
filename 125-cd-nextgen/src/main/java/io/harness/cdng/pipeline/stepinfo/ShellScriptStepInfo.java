@@ -2,15 +2,15 @@ package io.harness.cdng.pipeline.stepinfo;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.pipeline.CDStepInfo;
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.cdstepinfo.ShellScriptStepInfoVisitorHelper;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.common.script.ExecutionTarget;
 import io.harness.steps.common.script.ShellScriptBaseStepInfo;
@@ -18,7 +18,6 @@ import io.harness.steps.common.script.ShellScriptSourceWrapper;
 import io.harness.steps.common.script.ShellScriptStep;
 import io.harness.steps.common.script.ShellScriptStepParameters;
 import io.harness.steps.common.script.ShellType;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.variables.NGVariable;
@@ -26,6 +25,7 @@ import io.harness.yaml.utils.NGVariablesUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
@@ -43,6 +43,7 @@ import org.springframework.data.annotation.TypeAlias;
 public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDStepInfo, Visitable {
   List<NGVariable> outputVariables;
   List<NGVariable> environmentVariables;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
   ParameterField<List<TaskSelectorYaml>> delegateSelectors;
 
   @Builder(builderMethodName = "infoBuilder")
@@ -65,11 +66,6 @@ public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDSt
   @JsonIgnore
   public String getFacilitatorType() {
     return OrchestrationFacilitatorType.TASK;
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.SHELL_SCRIPT_STEP).isPartOfFQN(false).build();
   }
 
   @Override

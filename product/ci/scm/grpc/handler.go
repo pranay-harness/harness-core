@@ -149,6 +149,11 @@ func (h *handler) ListCommits(ctx context.Context, in *pb.ListCommitsRequest) (*
 	return git.ListCommits(ctx, in, h.log)
 }
 
+// ListCommitsInPR is used to return a list of commit details given pr number.
+func (h *handler) ListCommitsInPR(ctx context.Context, in *pb.ListCommitsInPRRequest) (*pb.ListCommitsInPRResponse, error) {
+	return git.ListCommitsInPR(ctx, in, h.log)
+}
+
 // CreateWebhook is used to add a webhook to a repo.
 func (h *handler) CreateWebhook(ctx context.Context, in *pb.CreateWebhookRequest) (*pb.CreateWebhookResponse, error) {
 	return repo.CreateWebhook(ctx, in, h.log)

@@ -4,6 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
+import io.harness.ng.core.user.PasswordChangeDTO;
+import io.harness.ng.core.user.PasswordChangeResponse;
 import io.harness.ng.core.user.TwoFactorAuthMechanismInfo;
 import io.harness.ng.core.user.TwoFactorAuthSettingsInfo;
 import io.harness.ng.core.user.UserInfo;
@@ -76,4 +78,15 @@ public interface UserClient {
 
   @PUT(USER_DISABLE_TWO_FACTOR_AUTH)
   Call<RestResponse<Optional<UserInfo>>> disableUserTwoFactorAuth(@Query(value = "emailId") String emailId);
+
+  @POST(USERS_API + "/{urlType}/url")
+  Call<RestResponse<Optional<String>>> generateSignupNotificationUrl(
+      @Path("urlType") String urlType, @Body UserInfo userInfo);
+
+  @GET(USERS_API + "/user-password-present")
+  Call<RestResponse<Boolean>> isUserPasswordSet(@Query("accountId") String accountId, @Query("emailId") String emailId);
+
+  @PUT(USERS_API + "/password")
+  Call<RestResponse<PasswordChangeResponse>> changeUserPassword(
+      @Query(value = "userId") String userId, @Body PasswordChangeDTO password);
 }

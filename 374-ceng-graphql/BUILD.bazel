@@ -1,6 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//:macros.bzl", "run_analysis")
+load("//:tools/bazel/macros.bzl", "run_analysis")
 
 HarnessTeam = "CE"
 
@@ -9,6 +9,7 @@ shared_dependencies = [
     "@ce_nextgen//:org_antlr_antlr4_runtime",
 ] + [
     "//:lombok",
+    "//450-ce-views:module",
     "//490-ce-commons:module",
     "//970-ng-commons:module",
     "@maven//:com_google_inject_guice",

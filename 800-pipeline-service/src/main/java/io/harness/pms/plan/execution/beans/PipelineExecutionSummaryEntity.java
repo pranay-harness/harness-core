@@ -25,6 +25,7 @@ import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
+import com.google.protobuf.ByteString;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,6 +89,7 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
 
   ExecutionTriggerInfo executionTriggerInfo;
   ExecutionErrorInfo executionErrorInfo;
+  ByteString gitSyncBranchContext;
 
   Long startTs;
   Long endTs;

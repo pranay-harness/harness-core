@@ -46,9 +46,11 @@ import io.harness.cvng.core.entities.MetricCVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
 import io.harness.cvng.core.entities.NewRelicCVConfig;
+import io.harness.cvng.core.entities.PrometheusCVConfig;
 import io.harness.cvng.core.entities.ServiceGuardDataCollectionTask;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.entities.StackdriverCVConfig;
+import io.harness.cvng.core.entities.StackdriverLogCVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.entities.TimeSeriesThreshold;
 import io.harness.cvng.core.entities.VerificationTask;
@@ -145,6 +147,9 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(NewRelicCVConfig.class);
     set.add(CDNGActivitySource.class);
     set.add(CVNGStepTask.class);
+    set.add(Comparable.class);
+    set.add(PrometheusCVConfig.class);
+    set.add(StackdriverLogCVConfig.class);
   }
 
   @Override

@@ -140,10 +140,6 @@ fi
 
 export DEPLOY_MODE=KUBERNETES
 
-if [[ -z "$MANAGER_SERVICE_SECRET" || "$MANAGER_SERVICE_SECRET" == "null" ]]; then
-  export MANAGER_SERVICE_SECRET=**********
-fi
-
 if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   echo "Checking Delegate latest version..."
   DELEGATE_STORAGE_URL=http://localhost:8888
@@ -231,12 +227,6 @@ else
   sed -i.bak "s|^grpcServiceConnectorPort:.*$|grpcServiceConnectorPort: $GRPC_SERVICE_CONNECTOR_PORT|" config-delegate.yml
 fi
 
-if ! `grep managerServiceSecret config-delegate.yml > /dev/null`; then
-  echo "managerServiceSecret: $MANAGER_SERVICE_SECRET" >> config-delegate.yml
-else
-  sed -i.bak "s|^managerServiceSecret:.*$|managerServiceSecret: $MANAGER_SERVICE_SECRET|" config-delegate.yml
-fi
-
 if ! `grep logStreamingServiceBaseUrl config-delegate.yml > /dev/null`; then
   echo "logStreamingServiceBaseUrl: http://localhost:8079" >> config-delegate.yml
 else
@@ -258,6 +248,8 @@ fi
 rm -f -- *.bak
 
 export KUBECTL_VERSION=v1.12.2
+
+export SCM_VERSION=542f4642
 
 export DELEGATE_PROFILE=QFWin33JRlKWKBzpzE5A9A
 export DELEGATE_TYPE=SHELL_SCRIPT

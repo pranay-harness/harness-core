@@ -1,0 +1,24 @@
+package io.harness.ccm.commons.beans.recommendation.models;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.gson.annotations.SerializedName;
+import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+
+@Data
+@Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class RecommendationResponse {
+  @SerializedName("accuracy") private ClusterRecommendationAccuracy accuracy;
+
+  @SerializedName("nodePools") private List<NodePool> nodePools;
+
+  @SerializedName("provider") private String provider;
+
+  @SerializedName("region") private String region;
+
+  @SerializedName("service") private String service;
+
+  @SerializedName("zone") private String zone;
+}

@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.k8s.K8sScaleBaseStepInfo.K8sScaleBaseStepInfoKeys;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
@@ -22,7 +23,6 @@ import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.supplier.ThrowingSupplier;
 
 import com.google.inject.Inject;
@@ -41,22 +41,19 @@ public class K8sScaleStep extends TaskExecutableWithRollback<K8sDeployResponse> 
   public TaskRequest obtainTask(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     InfrastructureOutcome infrastructure = (InfrastructureOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
 
     K8sScaleStepParameter scaleStepParameter = (K8sScaleStepParameter) stepElementParameters.getSpec();
-    ParameterField<Integer> instances = K8sInstanceUnitType.Count == scaleStepParameter.getInstanceSelection().getType()
-        ? ((CountInstanceSelection) scaleStepParameter.getInstanceSelection().getSpec()).getCount()
-        : ((PercentageInstanceSelection) scaleStepParameter.getInstanceSelection().getSpec()).getPercentage();
+    Integer instances = scaleStepParameter.getInstanceSelection().getSpec().getInstances();
 
-    boolean skipSteadyCheck = scaleStepParameter.getSkipSteadyStateCheck() != null
-        && scaleStepParameter.getSkipSteadyStateCheck().getValue() != null
-        && scaleStepParameter.getSkipSteadyStateCheck().getValue();
+    boolean skipSteadyCheck = K8sStepHelper.getParameterFieldBooleanValue(scaleStepParameter.getSkipSteadyStateCheck(),
+        K8sScaleBaseStepInfoKeys.skipSteadyStateCheck, stepElementParameters);
 
     K8sScaleRequest request =
         K8sScaleRequest.builder()
             .commandName(K8S_SCALE_COMMAND_NAME)
             .releaseName(k8sStepHelper.getReleaseName(infrastructure))
-            .instances(instances.getValue())
+            .instances(instances)
             .instanceUnitType(scaleStepParameter.getInstanceSelection().getType().getInstanceUnitType())
             .workload(scaleStepParameter.getWorkload().getValue())
             .maxInstances(Optional.empty()) // do we need those for scale?

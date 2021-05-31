@@ -1,7 +1,6 @@
 package io.harness.engine.expressions;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -14,22 +13,23 @@ import io.harness.engine.expressions.functors.OutcomeFunctor;
 import io.harness.engine.expressions.functors.SecretFunctor;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
-import io.harness.exception.CriticalExpressionEvaluationException;
+import io.harness.exception.EngineExpressionEvaluationException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.expression.ExpressionEvaluatorUtils;
-import io.harness.expression.JsonFunctor;
 import io.harness.expression.RegexFunctor;
 import io.harness.expression.ResolveObjectResponse;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.expression.XmlFunctor;
+import io.harness.expression.functors.NGJsonFunctor;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.expression.ProcessorResult;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterDocumentField;
 import io.harness.pms.yaml.ParameterDocumentFieldMapper;
 import io.harness.pms.yaml.ParameterFieldProcessor;
+import io.harness.pms.yaml.validation.InputSetValidatorFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -56,14 +56,14 @@ import org.hibernate.validator.constraints.NotEmpty;
  * ExpressionEvaluatorProvider} to be provided when adding a dependency on {@link io.harness.OrchestrationModule}. For a
  * sample implementation, look at SampleExpressionEvaluator.java and SampleExpressionEvaluatorProvider.java.
  */
-@OwnedBy(CDC)
+@OwnedBy(HarnessTeam.PIPELINE)
 @Getter
 public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
   @Inject private PmsOutcomeService pmsOutcomeService;
   @Inject private PmsSweepingOutputService pmsSweepingOutputService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
-  @Inject private ParameterFieldProcessor parameterFieldProcessor;
+  @Inject private InputSetValidatorFactory inputSetValidatorFactory;
 
   protected final Ambiance ambiance;
   private final Set<NodeExecutionEntityType> entityTypes;
@@ -90,7 +90,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
     if (!refObjectSpecific) {
       // Add basic functors.
       addToContext("regex", new RegexFunctor());
-      addToContext("json", new JsonFunctor());
+      addToContext("json", new NGJsonFunctor());
       addToContext("xml", new XmlFunctor());
       addToContext("secrets", new SecretFunctor(ambiance.getExpressionFunctorToken()));
     }
@@ -177,20 +177,19 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
   }
 
   @Override
-  public Object resolve(Object o) {
+  public Object resolve(Object o, boolean skipUnresolvedExpressionsCheck) {
     return ExpressionEvaluatorUtils.updateExpressions(
-        o, new AmbianceResolveFunctorImpl(this, parameterFieldProcessor, ambiance));
+        o, new AmbianceResolveFunctorImpl(this, skipUnresolvedExpressionsCheck, inputSetValidatorFactory));
   }
 
   public static class AmbianceResolveFunctorImpl extends ResolveFunctorImpl {
     private final ParameterFieldProcessor parameterFieldProcessor;
-    private final Ambiance ambiance;
 
     public AmbianceResolveFunctorImpl(AmbianceExpressionEvaluator expressionEvaluator,
-        ParameterFieldProcessor parameterFieldProcessor, Ambiance ambiance) {
-      super(expressionEvaluator);
-      this.parameterFieldProcessor = parameterFieldProcessor;
-      this.ambiance = ambiance;
+        boolean skipUnresolvedExpressionsCheck, InputSetValidatorFactory inputSetValidatorFactory) {
+      super(expressionEvaluator, skipUnresolvedExpressionsCheck);
+      this.parameterFieldProcessor = new ParameterFieldProcessor(
+          getExpressionEvaluator(), isSkipUnresolvedExpressionsCheck(), inputSetValidatorFactory);
     }
 
     @Override
@@ -209,9 +208,9 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
     }
 
     private void processObjectInternal(ParameterDocumentField documentField) {
-      ProcessorResult processorResult = parameterFieldProcessor.process(ambiance, documentField);
+      ProcessorResult processorResult = parameterFieldProcessor.process(documentField);
       if (processorResult.isError()) {
-        throw new CriticalExpressionEvaluationException(processorResult.getMessage());
+        throw new EngineExpressionEvaluationException(processorResult.getMessage(), processorResult.getExpression());
       }
     }
   }

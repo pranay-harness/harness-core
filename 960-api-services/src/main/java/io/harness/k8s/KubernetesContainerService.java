@@ -1,5 +1,8 @@
 package io.harness.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.container.ContainerInfo;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
@@ -31,6 +34,7 @@ import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
 /**
  * Created by brett on 2/10/17.
  */
+@OwnedBy(CDP)
 public interface KubernetesContainerService {
   HasMetadata createOrReplaceController(KubernetesConfig kubernetesConfig, HasMetadata definition);
 
@@ -40,6 +44,8 @@ public interface KubernetesContainerService {
   List<? extends HasMetadata> getControllers(KubernetesConfig kubernetesConfig, Map<String, String> labels);
 
   void validate(KubernetesConfig kubernetesConfig);
+
+  void validateMasterUrl(KubernetesConfig kubernetesConfig);
 
   @SuppressWarnings("squid:S1452") List<? extends HasMetadata> listControllers(KubernetesConfig kubernetesConfig);
 
@@ -145,9 +151,6 @@ public interface KubernetesContainerService {
 
   void saveReleaseHistory(
       KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory, boolean storeInSecrets);
-
-  List<Pod> getRunningPodsWithLabelsFabric8(
-      KubernetesConfig kubernetesConfig, String namespace, Map<String, String> labels);
 
   List<V1Pod> getRunningPodsWithLabels(KubernetesConfig kubernetesConfig, String namespace, Map<String, String> labels);
 

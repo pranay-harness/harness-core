@@ -3,7 +3,6 @@ package io.harness.pms.yaml;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.Visitable;
 
@@ -152,6 +151,10 @@ public class YamlNode implements Visitable {
     return Optional.ofNullable(getName()).orElse(getIdentifier());
   }
 
+  public String getArrayUniqueIdentifier() {
+    return Optional.ofNullable(getIdentifier()).orElse(Optional.ofNullable(getName()).orElse(getKey()));
+  }
+
   public String getStringValue(String name) {
     JsonNode value = getValueInternal(name);
     return (value == null || !value.isTextual()) ? null : value.asText();
@@ -188,10 +191,5 @@ public class YamlNode implements Visitable {
       }
     }
     return visitableChildren;
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().build();
   }
 }

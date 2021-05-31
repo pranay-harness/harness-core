@@ -16,7 +16,7 @@ pipeline:
                 artifacts:
                   sidecars: []
                   primary:
-                    type: Dockerhub
+                    type: DockerRegistry
                     spec:
                       connectorRef: org.DockerConnectorForAutomationTest
                       imagePath: nginx

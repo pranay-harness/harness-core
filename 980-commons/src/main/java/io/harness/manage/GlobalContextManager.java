@@ -98,14 +98,6 @@ public class GlobalContextManager {
     contextThreadLocal.remove();
   }
 
-  public static void unset(String key) {
-    GlobalContext globalContext = contextThreadLocal.get();
-    if (globalContext == null) {
-      return;
-    }
-    globalContext.unset(key);
-  }
-
   public static <T extends GlobalContextData> T get(String key) {
     GlobalContext globalContext = contextThreadLocal.get();
     if (globalContext == null) {

@@ -4,20 +4,20 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.cdstepinfo.K8sCanaryStepInfoVisitorHelper;
 import io.harness.executions.steps.StepSpecTypeConstants;
+import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -40,9 +40,9 @@ public class K8sCanaryStepInfo extends K8sCanaryBaseStepInfo implements CDStepIn
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Builder(builderMethodName = "infoBuilder")
-  public K8sCanaryStepInfo(
-      InstanceSelectionWrapper instanceSelection, ParameterField<Boolean> skipDryRun, String name, String identifier) {
-    super(instanceSelection, skipDryRun);
+  public K8sCanaryStepInfo(InstanceSelectionWrapper instanceSelection, ParameterField<Boolean> skipDryRun,
+      ParameterField<List<TaskSelectorYaml>> delegateSelectors, String name, String identifier) {
+    super(instanceSelection, skipDryRun, delegateSelectors);
     this.name = name;
     this.identifier = identifier;
   }
@@ -63,12 +63,11 @@ public class K8sCanaryStepInfo extends K8sCanaryBaseStepInfo implements CDStepIn
   }
 
   @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.K8S_CANARY_DEPLOY).build();
-  }
-
-  @Override
   public SpecParameters getSpecParameters() {
-    return K8sCanaryStepParameters.infoBuilder().instanceSelection(instanceSelection).skipDryRun(skipDryRun).build();
+    return K8sCanaryStepParameters.infoBuilder()
+        .instanceSelection(instanceSelection)
+        .skipDryRun(skipDryRun)
+        .delegateSelectors(delegateSelectors)
+        .build();
   }
 }

@@ -15,13 +15,12 @@ import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
-import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.gitsync.GitSyncTestBase;
 import io.harness.gitsync.common.dtos.GitFileContent;
+import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.ng.beans.PageRequest;
 import io.harness.product.ci.scm.proto.FileContent;
@@ -49,6 +48,7 @@ public class ScmManagerFacilitatorServiceImplTest extends GitSyncTestBase {
   @Mock ConnectorService connectorService;
   @Mock AbstractScmClientFacilitatorServiceImpl abstractScmClientFacilitatorService;
   @Mock YamlGitConfigService yamlGitConfigService;
+  @Mock GitSyncConnectorHelper gitSyncConnectorHelper;
   @InjectMocks @Inject ScmManagerFacilitatorServiceImpl scmManagerFacilitatorService;
   String accountIdentifier = "accountIdentifier";
   String projectIdentifier = "projectIdentifier";
@@ -75,8 +75,14 @@ public class ScmManagerFacilitatorServiceImplTest extends GitSyncTestBase {
     doReturn(Optional.of(ConnectorResponseDTO.builder().connector(connectorInfo).build()))
         .when(connectorService)
         .get(anyString(), anyString(), anyString(), anyString());
-    when(abstractScmClientFacilitatorService.getYamlGitConfigIdentifierRef(
+    doReturn(githubConnector).when(gitSyncConnectorHelper).getDecryptedConnector(any(), any());
+    doReturn(githubConnector)
+        .when(gitSyncConnectorHelper)
+        .getDecryptedConnector(anyString(), anyString(), anyString(), anyString());
+    when(abstractScmClientFacilitatorService.getYamlGitConfigDTO(
              accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigIdentifier))
+        .thenReturn(YamlGitConfigDTO.builder().build());
+    when(abstractScmClientFacilitatorService.getConnectorIdentifierRef(any(), anyString(), anyString(), anyString()))
         .thenReturn(IdentifierRef.builder().build());
     when(yamlGitConfigService.get(anyString(), anyString(), anyString(), anyString()))
         .thenReturn(YamlGitConfigDTO.builder()
@@ -112,15 +118,11 @@ public class ScmManagerFacilitatorServiceImplTest extends GitSyncTestBase {
   @Owner(developers = HARI)
   @Category(UnitTests.class)
   public void isSaasGitTest() {
-    List<ScmConnector> scmConnectors =
-        new ArrayList<>(Arrays.asList(GithubConnectorDTO.builder().url("www.github.com").build(),
-            GitlabConnectorDTO.builder().url("http://www.gitlab.com").build(),
-            GithubConnectorDTO.builder().url("www.github.harness.com").build(),
-            GithubConnectorDTO.builder().url("harness.github.com").build(),
-            GithubConnectorDTO.builder().url("github.com").build()));
+    List<String> repoURLs = new ArrayList<>(Arrays.asList(
+        "www.github.com", "http://www.gitlab.com", "www.github.harness.com", "harness.github.com", "github.com"));
     List<Boolean> expected = new ArrayList<>(Arrays.asList(true, true, false, false, true));
     List<Boolean> actual = new ArrayList<>();
-    scmConnectors.forEach(scmConnector -> actual.add(scmManagerFacilitatorService.isSaasGit(scmConnector).isSaasGit()));
+    repoURLs.forEach(repoURL -> actual.add(GitUtils.isSaasGit(repoURL).isSaasGit()));
     assertThat(actual).isEqualTo(expected);
   }
 }

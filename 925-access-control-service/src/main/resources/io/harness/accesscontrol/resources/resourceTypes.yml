@@ -24,3 +24,13 @@
   permissionKey: role
 - identifier: RESOURCEGROUP
   permissionKey: resourcegroup
+- identifier: LICENSE
+  permissionKey: license
+- identifier: AUTHSETTING
+  permissionKey: authsetting
+- identifier: FEATUREFLAG
+  permissionKey: featureflag
+- identifier: TARGET
+  permissionKey: target
+- identifier: TARGETGROUP
+  permissionKey: targetgroup

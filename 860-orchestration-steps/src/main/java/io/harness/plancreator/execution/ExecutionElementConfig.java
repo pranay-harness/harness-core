@@ -10,10 +10,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Value;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -29,6 +30,6 @@ public class ExecutionElementConfig {
   @ApiModelProperty(hidden = true)
   String uuid;
 
-  @NotEmpty List<ExecutionWrapperConfig> steps;
+  @NotNull @Size(min = 1) List<ExecutionWrapperConfig> steps;
   List<ExecutionWrapperConfig> rollbackSteps;
 }

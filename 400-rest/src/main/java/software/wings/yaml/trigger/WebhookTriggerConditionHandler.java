@@ -72,7 +72,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
 
     String accountId = appService.getAccountIdByAppId(appId);
     if (featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, accountId)) {
-      webhookEventTriggerConditionYamlBuilder.webHookSecret(
+      webhookEventTriggerConditionYamlBuilder.webhookSecret(
           secretManager.getEncryptedYamlRef(accountId, webHookTriggerCondition.getWebHookSecret()));
     }
 
@@ -116,18 +116,12 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
     }
 
     if (featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, accountId)) {
-      if (webhookConditionYaml.getWebHookSecret() != null
-          && !webhookConditionYaml.getRepositoryType().equals(GITHUB.name())) {
+      if (webhookConditionYaml.getWebhookSecret() != null
+          && !GITHUB.name().equals(webhookConditionYaml.getRepositoryType())) {
         throw new InvalidRequestException("WebHook Secret is only supported with Github repository", USER);
       }
-      String webHookSecret = webhookConditionYaml.getWebHookSecret();
-      if (isNotEmpty(webHookSecret)) {
-        int pos = webHookSecret.indexOf(':');
-        if (pos == -1) {
-          throw new InvalidRequestException("Please use proper format for webHookSecret: <secretManger>:<refId>", USER);
-        }
-      }
-      webHookTriggerCondition.setWebHookSecret(yamlHelper.extractEncryptedRecordId(webHookSecret, accountId));
+      webHookTriggerCondition.setWebHookSecret(
+          yamlHelper.extractEncryptedRecordId(webhookConditionYaml.getWebhookSecret(), accountId));
     }
 
     return webHookTriggerCondition;

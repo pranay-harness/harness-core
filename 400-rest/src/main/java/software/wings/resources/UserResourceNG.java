@@ -8,10 +8,13 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.FeatureFlag;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.mappers.AccountMapper;
+import io.harness.ng.core.user.PasswordChangeDTO;
+import io.harness.ng.core.user.PasswordChangeResponse;
 import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
@@ -25,11 +28,14 @@ import software.wings.beans.User;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -63,7 +69,10 @@ import retrofit2.http.Body;
 public class UserResourceNG {
   private final UserService userService;
   private final TwoFactorAuthenticationManager twoFactorAuthenticationManager;
+  private final AccountService accountService;
   private static final String ACCOUNT_ADMINISTRATOR_USER_GROUP = "Account Administrator";
+  private static final String CONFIRM_URL = "confirm";
+  private static final String VERIFY_URL = "verify";
 
   @POST
   public RestResponse<UserInfo> createNewUserAndSignIn(UserRequestDTO userRequest) {
@@ -117,6 +126,20 @@ public class UserResourceNG {
   public RestResponse<Optional<UserInfo>> getUserByEmailId(@PathParam("emailId") String emailId) {
     User user = userService.getUserByEmail(emailId);
     return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(user)));
+  }
+
+  @GET
+  @Path("user-password-present")
+  public RestResponse<Boolean> getUserByEmailId(
+      @QueryParam("accountId") String accountId, @QueryParam("emailId") String emailId) {
+    return new RestResponse<>(userService.isUserPasswordPresent(accountId, emailId));
+  }
+
+  @PUT
+  @Path("password")
+  public RestResponse<PasswordChangeResponse> changeUserPassword(
+      @QueryParam("userId") String userId, PasswordChangeDTO passwordChangeDTO) {
+    return new RestResponse<>(userService.changePassword(userId, passwordChangeDTO));
   }
 
   @POST
@@ -203,6 +226,23 @@ public class UserResourceNG {
         twoFactorAuthenticationManager.disableTwoFactorAuthentication(userService.getUserByEmail(emailId)))));
   }
 
+  @POST
+  @Path("/{urlType}/url")
+  public RestResponse<Optional<String>> generateSignupNotificationUrl(
+      @PathParam("urlType") String urlType, @Body UserInfo userInfo) {
+    String url = null;
+    try {
+      if (VERIFY_URL.equals(urlType)) {
+        url = userService.generateVerificationUrl(userInfo.getUuid(), userInfo.getDefaultAccountId());
+      } else if (CONFIRM_URL.equals(urlType)) {
+        url = userService.generateLoginUrl(userInfo.getDefaultAccountId());
+      }
+    } catch (URISyntaxException e) {
+      throw new InvalidRequestException(String.format("URL type [%s] failed to be generated", urlType), e);
+    }
+    return new RestResponse<>(Optional.ofNullable(url));
+  }
+
   private List<UserInfo> convertUserToNgUser(List<User> userList) {
     return userList.stream()
         .map(user
@@ -216,6 +256,7 @@ public class UserResourceNG {
                                       y -> ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(y.getName()) && y.isDefault()))
                               .orElse(false))
                    .twoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled())
+                   .emailVerified(user.isEmailVerified())
                    .build())
         .collect(Collectors.toList());
   }
@@ -230,6 +271,11 @@ public class UserResourceNG {
         .uuid(user.getUuid())
         .defaultAccountId(user.getDefaultAccountId())
         .twoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled())
+        .emailVerified(user.isEmailVerified())
+        .accounts(user.getAccounts()
+                      .stream()
+                      .map(account -> AccountMapper.toGatewayAccountRequest(account))
+                      .collect(Collectors.toList()))
         .token(user.getToken())
         .admin(
             Optional.ofNullable(user.getUserGroups())
@@ -293,5 +339,11 @@ public class UserResourceNG {
     else {
       return new RestResponse(twoFactorAuthenticationManager.overrideTwoFactorAuthentication(accountId, settings));
     }
+  }
+
+  @GET
+  @Path("feature-flags/{accountId}")
+  public RestResponse<Collection<FeatureFlag>> getFeatureFlags(@PathParam("accountId") String accountId) {
+    return new RestResponse<>(accountService.getFeatureFlags(accountId));
   }
 }

@@ -130,14 +130,11 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
   }
 
   private ExecutorService executorService = new CurrentThreadExecutor();
-  public static final String alpnJar =
-      "org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar";
-  public static final String alpn = "/home/jenkins/maven-repositories/0/";
   @Getter private GraphQL graphQL;
 
   @Override
   public List<Module> modules(List<Annotation> annotations) throws Exception {
-    ManagerExecutor.ensureManager(AbstractFunctionalTest.class, alpn, alpnJar);
+    ManagerExecutor.ensureManager(AbstractFunctionalTest.class);
 
     RestResponse<MongoConfig> mongoConfigRestResponse =
         Setup.portal()

@@ -23,8 +23,9 @@ import io.harness.accesscontrol.commons.events.FeatureFlagEventListenerService;
 import io.harness.accesscontrol.commons.events.UserMembershipEventListenerService;
 import io.harness.accesscontrol.principals.usergroups.iterators.UserGroupReconciliationIterator;
 import io.harness.accesscontrol.resources.resourcegroups.iterators.ResourceGroupReconciliationIterator;
-import io.harness.aggregator.AggregatorApplication;
+import io.harness.aggregator.AggregatorService;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
@@ -37,6 +38,7 @@ import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
 import io.harness.remote.CharsetResponseFilter;
 import io.harness.request.RequestContextFilter;
+import io.harness.resource.VersionInfoResource;
 import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.InternalApi;
@@ -112,8 +114,6 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     Injector injector =
         Guice.createInjector(AccessControlModule.getInstance(appConfig), new MetricRegistryModule(metricRegistry));
     injector.getInstance(HPersistence.class);
-    AggregatorApplication aggregatorApplication = injector.getInstance(AggregatorApplication.class);
-    aggregatorApplication.run();
     registerCorsFilter(appConfig, environment);
     registerResources(environment, injector);
     registerJerseyProviders(environment);
@@ -122,11 +122,16 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     registerCorrelationFilter(environment, injector);
     registerRequestContextFilter(environment);
     registerIterators(injector);
+    registerScheduledJobs(injector);
     registerManagedBeans(appConfig, environment, injector);
     registerAuthFilters(appConfig, environment, injector);
     registerHealthCheck(environment, injector);
     AccessControlManagementJob accessControlManagementJob = injector.getInstance(AccessControlManagementJob.class);
     accessControlManagementJob.run();
+
+    if (appConfig.getAggregatorConfiguration().isEnabled()) {
+      environment.lifecycle().manage(injector.getInstance(AggregatorService.class));
+    }
 
     MaintenanceController.forceMaintenance(false);
   }
@@ -140,6 +145,10 @@ public class AccessControlApplication extends Application<AccessControlConfigura
   public void registerIterators(Injector injector) {
     injector.getInstance(ResourceGroupReconciliationIterator.class).registerIterators();
     injector.getInstance(UserGroupReconciliationIterator.class).registerIterators();
+  }
+
+  public void registerScheduledJobs(Injector injector) {
+    injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
   }
 
   private void registerJerseyFeatures(Environment environment) {
@@ -161,6 +170,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
   }
 
   private void registerManagedBeans(

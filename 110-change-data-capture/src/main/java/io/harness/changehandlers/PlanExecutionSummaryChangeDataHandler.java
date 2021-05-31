@@ -6,7 +6,6 @@ import io.harness.changestreamsframework.ChangeEvent;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,6 +85,8 @@ public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHan
           DBObject author = (DBObject) (ciExecutionInfo.get("author"));
           if (author != null) {
             columnValueMapping.put("moduleInfo_author_id", author.get("id").toString());
+            columnValueMapping.put("author_name", author.get("name").toString());
+            columnValueMapping.put("author_avatar", author.get("avatar").toString());
           }
           if (ciExecutionInfo.get("event") != null) {
             columnValueMapping.put("moduleInfo_event", ciExecutionInfo.get("event").toString());
@@ -98,10 +99,9 @@ public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHan
       // no information mention related to moduleInfo
       return null;
     }
-    columnValueMapping.put(
-        "startTs", String.valueOf(new Timestamp(Long.parseLong(dbObject.get("startTs").toString()))));
+    columnValueMapping.put("startTs", String.valueOf(Long.parseLong(dbObject.get("startTs").toString())));
     if (dbObject.get("endTs") != null) {
-      columnValueMapping.put("endTs", String.valueOf(new Timestamp(Long.parseLong(dbObject.get("endTs").toString()))));
+      columnValueMapping.put("endTs", String.valueOf(Long.parseLong(dbObject.get("endTs").toString())));
     }
 
     return columnValueMapping;

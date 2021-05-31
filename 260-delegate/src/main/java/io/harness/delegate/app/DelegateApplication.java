@@ -24,6 +24,7 @@ import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.service.DelegateAgentService;
 import io.harness.delegate.task.citasks.CITaskFactoryModule;
+import io.harness.delegate.task.citasks.cik8handler.helper.DelegateServiceTokenHelper;
 import io.harness.delegate.task.k8s.apiclient.KubernetesApiClientFactoryModule;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.client.impl.EventPublisherConstants;
@@ -38,6 +39,7 @@ import io.harness.grpc.pingpong.PingPongModule;
 import io.harness.logstreaming.LogStreamingModule;
 import io.harness.managerclient.DelegateManagerClientModule;
 import io.harness.perpetualtask.PerpetualTaskWorkerModule;
+import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
@@ -184,8 +186,11 @@ public class DelegateApplication {
       }
     });
 
-    if (!"ONPREM".equals(System.getenv().get(DEPLOY_MODE))) {
+    if (!ImmutableSet.of("ONPREM", "KUBERNETES_ONPREM").contains(System.getenv().get(DEPLOY_MODE))) {
       modules.add(new PingPongModule());
+    }
+
+    if (!"ONPREM".equals(System.getenv().get(DEPLOY_MODE))) {
       modules.add(new PerpetualTaskWorkerModule());
       modules.add(DelegateServiceGrpcAgentClientModule.getInstance());
     }
@@ -200,9 +205,20 @@ public class DelegateApplication {
     modules.add(DelegateModule.getInstance());
 
     if (configuration.isGrpcServiceEnabled()) {
-      modules.add(new DelegateGrpcServiceModule(
-          configuration.getGrpcServiceConnectorPort(), configuration.getManagerServiceSecret()));
+      modules.add(
+          new DelegateGrpcServiceModule(configuration.getGrpcServiceConnectorPort(), configuration.getAccountSecret()));
     }
+
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(DelegateServiceTokenHelper.class)
+            .toInstance(DelegateServiceTokenHelper.builder()
+                            .serviceTokenGenerator(new ServiceTokenGenerator())
+                            .accountSecret(configuration.getAccountSecret())
+                            .build());
+      }
+    });
 
     Injector injector = Guice.createInjector(modules);
     MessageService messageService = injector.getInstance(MessageService.class);
@@ -219,7 +235,7 @@ public class DelegateApplication {
       watcherData.put(WATCHER_PROCESS, watcherProcess);
       messageService.putAllData(WATCHER_DATA, watcherData);
     }
-    if (!"ONPREM".equals(System.getenv().get(DEPLOY_MODE))) {
+    if (!ImmutableSet.of("ONPREM", "KUBERNETES_ONPREM").contains(System.getenv().get(DEPLOY_MODE))) {
       injector.getInstance(PingPongClient.class).startAsync();
     }
     Runtime.getRuntime().addShutdownHook(new Thread(() -> injector.getInstance(PingPongClient.class).stopAsync()));

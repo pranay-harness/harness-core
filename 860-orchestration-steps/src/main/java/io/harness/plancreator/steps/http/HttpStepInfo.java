@@ -3,19 +3,19 @@ package io.harness.plancreator.steps.http;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.http.HttpHeaderConfig;
 import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.http.HttpBaseStepInfo;
 import io.harness.steps.http.HttpStep;
 import io.harness.steps.http.HttpStepParameters;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -47,6 +47,7 @@ public class HttpStepInfo extends HttpBaseStepInfo implements PMSStepInfo, Visit
 
   List<NGVariable> outputVariables;
   List<HttpHeaderConfig> headers;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
   ParameterField<List<TaskSelectorYaml>> delegateSelectors;
 
   @Builder(builderMethodName = "infoBuilder")
@@ -75,11 +76,6 @@ public class HttpStepInfo extends HttpBaseStepInfo implements PMSStepInfo, Visit
   @Override
   public VisitableChildren getChildrenToWalk() {
     return VisitableChildren.builder().build();
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(StepSpecTypeConstants.HTTP).isPartOfFQN(false).build();
   }
 
   @Override

@@ -1,13 +1,13 @@
 package io.harness.expression;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.algorithm.IdentifierName;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.CriticalExpressionEvaluationException;
+import io.harness.exception.EngineExpressionEvaluationException;
+import io.harness.exception.EngineFunctorException;
 import io.harness.exception.FunctorException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnresolvedExpressionsException;
@@ -20,8 +20,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -37,7 +39,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.logging.impl.NoOpLog;
 import org.hibernate.validator.constraints.NotEmpty;
 
-@OwnedBy(CDC)
+@OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 public class EngineExpressionEvaluator {
   public static final String EXPR_START = "<+";
@@ -46,9 +48,9 @@ public class EngineExpressionEvaluator {
   public static final String EXPR_END_ESC = ">";
   public static final String HARNESS_INTERNAL_VARIABLE_PREFIX = "__HVAR_";
 
-  private static final Pattern VARIABLE_PATTERN = Pattern.compile(EXPR_START_ESC + "[^{}<>]*" + EXPR_END_ESC);
+  private static final Pattern VARIABLE_PATTERN = Pattern.compile(EXPR_START_ESC + "[^<>]*" + EXPR_END_ESC);
   private static final Pattern SECRET_VARIABLE_PATTERN =
-      Pattern.compile(EXPR_START_ESC + "secret(Manager|Delegate)\\.[^{}<>]*" + EXPR_END_ESC);
+      Pattern.compile(EXPR_START_ESC + "secret(Manager|Delegate)\\.[^<>]*" + EXPR_END_ESC);
   private static final Pattern VALID_VARIABLE_FIELD_NAME_PATTERN = Pattern.compile("^[a-zA-Z_][a-zA-Z_0-9]*$");
   private static final Pattern ALIAS_NAME_PATTERN = Pattern.compile("^[a-zA-Z_][a-zA-Z_0-9]*$");
 
@@ -151,8 +153,8 @@ public class EngineExpressionEvaluator {
    * @param o the object to resolve
    * @return the resolved object (this can be the same object or a new one)
    */
-  public Object resolve(Object o) {
-    return ExpressionEvaluatorUtils.updateExpressions(o, new ResolveFunctorImpl(this));
+  public Object resolve(Object o, boolean skipUnresolvedExpressionsCheck) {
+    return ExpressionEvaluatorUtils.updateExpressions(o, new ResolveFunctorImpl(this, skipUnresolvedExpressionsCheck));
   }
 
   public PartialEvaluateResult partialResolve(Object o) {
@@ -162,19 +164,33 @@ public class EngineExpressionEvaluator {
   }
 
   public String renderExpression(String expression) {
-    return renderExpression(expression, null);
+    return renderExpression(expression, false);
+  }
+
+  public String renderExpression(String expression, boolean skipUnresolvedExpressionsCheck) {
+    return renderExpression(expression, null, skipUnresolvedExpressionsCheck);
   }
 
   public String renderExpression(String expression, Map<String, Object> ctx) {
+    return renderExpression(expression, ctx, false);
+  }
+
+  public String renderExpression(String expression, Map<String, Object> ctx, boolean skipUnresolvedExpressionsCheck) {
     if (!hasVariables(expression)) {
       return expression;
     }
-    return renderExpressionInternal(expression, prepareContext(ctx), MAX_DEPTH);
+    return renderExpressionInternal(expression, prepareContext(ctx), skipUnresolvedExpressionsCheck, MAX_DEPTH);
   }
 
-  public String renderExpressionInternal(@NotNull String expression, @NotNull EngineJexlContext ctx, int depth) {
+  public String renderExpressionInternal(
+      @NotNull String expression, @NotNull EngineJexlContext ctx, boolean skipUnresolvedExpressionsCheck, int depth) {
     checkDepth(depth, expression);
-    return runStringReplacer(expression, new RenderExpressionResolver(this, ctx, depth));
+    RenderExpressionResolver resolver = new RenderExpressionResolver(this, ctx, depth);
+    String finalExpression = runStringReplacer(expression, resolver);
+    if (!skipUnresolvedExpressionsCheck && EmptyPredicate.isNotEmpty(resolver.getUnresolvedExpressions())) {
+      throw new UnresolvedExpressionsException(new ArrayList<>(resolver.getUnresolvedExpressions()));
+    }
+    return finalExpression;
   }
 
   public Object evaluateExpression(String expression) {
@@ -191,12 +207,10 @@ public class EngineExpressionEvaluator {
 
   private Object evaluateExpressionInternal(@NotNull String expression, @NotNull EngineJexlContext ctx, int depth) {
     checkDepth(depth, expression);
-    String finalExpression = runStringReplacer(expression, new EvaluateExpressionResolver(this, ctx, depth));
-    if (hasVariables(finalExpression)) {
-      if (isNotSingleExpression(finalExpression)) {
-        finalExpression = createExpression(finalExpression);
-      }
-      throw new UnresolvedExpressionsException(finalExpression, findVariables(finalExpression));
+    EvaluateExpressionResolver resolver = new EvaluateExpressionResolver(this, ctx, depth);
+    String finalExpression = runStringReplacer(expression, resolver);
+    if (EmptyPredicate.isNotEmpty(resolver.getUnresolvedExpressions())) {
+      throw new UnresolvedExpressionsException(new ArrayList<>(resolver.getUnresolvedExpressions()));
     }
     return evaluateInternal(finalExpression, ctx);
   }
@@ -231,7 +245,7 @@ public class EngineExpressionEvaluator {
               .replace(finalExpression);
       return PartialEvaluateResult.createPartialResult(finalExpression, partialCtx);
     } else {
-      return PartialEvaluateResult.createCompleteResult(renderExpressionInternal(expression, ctx, depth));
+      return PartialEvaluateResult.createCompleteResult(renderExpressionInternal(expression, ctx, false, depth));
     }
   }
 
@@ -286,8 +300,8 @@ public class EngineExpressionEvaluator {
     if (object instanceof String && hasVariables((String) object)) {
       if (createExpression(expressionBlock).equals(object)) {
         // If returned expression is exactly the same, throw exception.
-        throw new CriticalExpressionEvaluationException(
-            "Infinite loop in variable interpretation", createExpression(expressionBlock));
+        throw new EngineExpressionEvaluationException(
+            "Infinite loop in variable evaluation", createExpression(expressionBlock));
       } else {
         PartialEvaluateResult result = partialEvaluateExpressionInternal((String) object, ctx, partialCtx, depth - 1);
         if (result.isPartial()) {
@@ -323,12 +337,13 @@ public class EngineExpressionEvaluator {
       return evaluateExpressionInternal(expressionBlock, ctx, depth - 1);
     }
 
-    // If object is another expression, evaluate it recursively.
     Object object = evaluatePrefixCombinations(expressionBlock, ctx, depth);
+
+    // If object is another expression, evaluate it recursively.
     if (object instanceof String && hasVariables((String) object)) {
       if (createExpression(expressionBlock).equals(object)) {
         // If returned expression is exactly the same, throw exception.
-        throw new CriticalExpressionEvaluationException(
+        throw new EngineExpressionEvaluationException(
             "Infinite loop in variable interpretation", createExpression(expressionBlock));
       } else {
         observed(expressionBlock, object);
@@ -353,10 +368,20 @@ public class EngineExpressionEvaluator {
           object = evaluateInternal(finalExpression, ctx);
         }
       } catch (JexlException ex) {
-        if (ex.getCause() instanceof FunctorException) {
-          throw(FunctorException) ex.getCause();
+        if (ex.getCause() instanceof EngineFunctorException) {
+          throw new EngineExpressionEvaluationException(
+              (EngineFunctorException) ex.getCause(), createExpression(expressionBlock));
+        } else if (ex.getCause() instanceof FunctorException) {
+          // For backwards compatibility.
+          throw new EngineExpressionEvaluationException(
+              (FunctorException) ex.getCause(), createExpression(expressionBlock));
         }
         log.debug(format("Failed to evaluate final expression: %s", finalExpression), ex);
+      } catch (EngineFunctorException ex) {
+        throw new EngineExpressionEvaluationException(ex, createExpression(expressionBlock));
+      } catch (FunctorException ex) {
+        // For backwards compatibility.
+        throw new EngineExpressionEvaluationException(ex, createExpression(expressionBlock));
       }
 
       if (object != null) {
@@ -416,7 +441,7 @@ public class EngineExpressionEvaluator {
       }
     }
 
-    throw new CriticalExpressionEvaluationException(
+    throw new EngineExpressionEvaluationException(
         "Infinite loop or too deep indirection in static alias interpretation", expression);
   }
 
@@ -447,8 +472,8 @@ public class EngineExpressionEvaluator {
 
   private static void checkDepth(int depth, String expression) {
     if (depth <= 0) {
-      throw new CriticalExpressionEvaluationException(
-          "Infinite loop or too deep indirection in expression interpretation", expression);
+      throw new EngineExpressionEvaluationException(
+          "Infinite loop or too deep indirection in expression evaluation", expression);
     }
   }
 
@@ -530,6 +555,7 @@ public class EngineExpressionEvaluator {
     private final EngineExpressionEvaluator engineExpressionEvaluator;
     private final EngineJexlContext ctx;
     private final int depth;
+    @Getter private final Set<String> unresolvedExpressions = new HashSet<>();
 
     RenderExpressionResolver(EngineExpressionEvaluator engineExpressionEvaluator, EngineJexlContext ctx, int depth) {
       this.engineExpressionEvaluator = engineExpressionEvaluator;
@@ -542,14 +568,14 @@ public class EngineExpressionEvaluator {
       try {
         Object value = engineExpressionEvaluator.evaluateExpressionBlock(expression, ctx, depth);
         if (value == null) {
-          return createExpression(expression);
+          String finalExpression = createExpression(expression);
+          unresolvedExpressions.add(finalExpression);
+          return finalExpression;
         }
-
-        // TODO(gpahal): On order to make render strict - we should throw an error if value is a string and contains
-        // expressions
         return String.valueOf(value);
       } catch (UnresolvedExpressionsException ex) {
-        return ex.fetchFinalExpression();
+        unresolvedExpressions.addAll(ex.fetchExpressions());
+        return createExpression(expression);
       }
     }
   }
@@ -561,6 +587,7 @@ public class EngineExpressionEvaluator {
     private final String prefix;
     private final String suffix;
     private int varIndex;
+    @Getter private final Set<String> unresolvedExpressions = new HashSet<>();
 
     EvaluateExpressionResolver(EngineExpressionEvaluator engineExpressionEvaluator, EngineJexlContext ctx, int depth) {
       this.engineExpressionEvaluator = engineExpressionEvaluator;
@@ -572,14 +599,21 @@ public class EngineExpressionEvaluator {
 
     @Override
     public String resolve(String expression) {
-      Object value = engineExpressionEvaluator.evaluateExpressionBlock(expression, ctx, depth - 1);
-      if (value == null) {
+      try {
+        Object value = engineExpressionEvaluator.evaluateExpressionBlock(expression, ctx, depth - 1);
+        if (value == null) {
+          String finalExpression = createExpression(expression);
+          unresolvedExpressions.add(finalExpression);
+          return finalExpression;
+        }
+
+        String name = prefix + ++varIndex + suffix;
+        ctx.set(name, value);
+        return name;
+      } catch (UnresolvedExpressionsException ex) {
+        unresolvedExpressions.addAll(ex.fetchExpressions());
         return createExpression(expression);
       }
-
-      String name = prefix + ++varIndex + suffix;
-      ctx.set(name, value);
-      return name;
     }
   }
 
@@ -635,16 +669,19 @@ public class EngineExpressionEvaluator {
     }
   }
 
+  @Getter
   public static class ResolveFunctorImpl implements ExpressionResolveFunctor {
     private final EngineExpressionEvaluator expressionEvaluator;
+    private final boolean skipUnresolvedExpressionsCheck;
 
-    public ResolveFunctorImpl(EngineExpressionEvaluator expressionEvaluator) {
+    public ResolveFunctorImpl(EngineExpressionEvaluator expressionEvaluator, boolean skipUnresolvedExpressionsCheck) {
       this.expressionEvaluator = expressionEvaluator;
+      this.skipUnresolvedExpressionsCheck = skipUnresolvedExpressionsCheck;
     }
 
     @Override
     public String processString(String expression) {
-      return expressionEvaluator.renderExpression(expression);
+      return expressionEvaluator.renderExpression(expression, skipUnresolvedExpressionsCheck);
     }
   }
 

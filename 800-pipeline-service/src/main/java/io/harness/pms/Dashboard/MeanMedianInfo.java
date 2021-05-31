@@ -10,6 +10,6 @@ import lombok.Value;
 @Value
 @Builder
 public class MeanMedianInfo {
-  private String duration;
-  private String rate;
+  private long duration;
+  private double rate;
 }

@@ -75,10 +75,11 @@ public class TerraformHelperUtils {
     return tfStateFile.exists() ? tfStateFile : null;
   }
 
-  public String createFileFromStringContent(String varFilesListContent, String scriptDirectory) throws IOException {
+  public String createFileFromStringContent(String fileContent, String scriptDirectory, String fileName)
+      throws IOException {
     UUID uuid = UUID.randomUUID();
-    Path filePath = Files.createFile(Paths.get(scriptDirectory + "/varFile-" + uuid + ".tfvars"));
-    Files.write(filePath, varFilesListContent.getBytes());
+    Path filePath = Files.createFile(Paths.get(scriptDirectory + "/" + format(fileName, uuid)));
+    Files.write(filePath, fileContent.getBytes());
     return filePath.toString();
   }
 }

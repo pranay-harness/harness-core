@@ -3,6 +3,7 @@ package io.harness.gitsync.common.service;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.validation.Create;
@@ -15,7 +16,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 @OwnedBy(DX)
 public interface YamlGitConfigService {
-  Optional<ConnectorInfoDTO> getGitConnector(YamlGitConfigDTO ygs, String gitConnectorId);
+  Optional<ConnectorInfoDTO> getGitConnector(IdentifierRef identifierRef);
 
   List<YamlGitConfigDTO> getByConnectorRepoAndBranch(
       String gitConnectorId, String repo, String branchName, String accountId);
@@ -37,4 +38,6 @@ public interface YamlGitConfigService {
   boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String identifier);
 
   Boolean isGitSyncEnabled(String accountIdentifier, String organizationIdentifier, String projectIdentifier);
+
+  Boolean isRepoExists(String repo);
 }

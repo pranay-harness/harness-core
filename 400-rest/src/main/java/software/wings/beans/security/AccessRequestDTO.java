@@ -15,10 +15,14 @@ import lombok.Data;
 @OwnedBy(HarnessTeam.PL)
 @TargetModule(_970_RBAC_CORE)
 public class AccessRequestDTO {
+  String accessRequestId;
   String accountId;
   String harnessUserGroupId;
+  String harnessUserGroupName;
   Set<String> emailIds;
-  private long accessStartAt;
-  private long accessEndAt;
-  private Integer hours;
+  long accessStartAt;
+  long accessEndAt;
+  Integer hours;
+  AccessRequest.AccessType accessType;
+  boolean accessActive;
 }

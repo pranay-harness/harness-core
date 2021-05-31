@@ -4,7 +4,7 @@ import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.get
 
 import io.harness.batch.processing.ccm.PricingSource;
 import io.harness.batch.processing.pricing.service.support.StorageCustomPricingProvider;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
 import io.harness.perpetualtask.k8s.watch.PVInfo.PVType;
 
 import java.util.Map;
@@ -44,10 +44,6 @@ public class StoragePricingData {
     boolean isRegional = REGIONAL_PD.equals(getValueForKeyFromInstanceMetaData(REPLICATION_TYPE, metaData));
     String region = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.REGION, metaData);
     String type = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.GCE_STORAGE_CLASS, metaData);
-    // Supporting old instanceData or depricated metaData key
-    if (type == null) {
-      type = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.STORAGE_CLASS, metaData);
-    }
     if (type == null) {
       type = GoogleStoragePricingData.Type.PD_STANDARD.getFieldName();
     }

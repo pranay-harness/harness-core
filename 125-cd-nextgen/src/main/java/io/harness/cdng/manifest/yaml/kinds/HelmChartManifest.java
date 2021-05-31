@@ -11,13 +11,11 @@ import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.manifest.HelmChartManifestVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -33,12 +31,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.FieldNameConstants;
 import lombok.experimental.Wither;
 import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
 @Data
 @Builder
+@FieldNameConstants(innerTypeName = "HelmChartManifestKeys")
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(ManifestType.HelmChart)
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -46,7 +46,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("helmChartManifest")
 public class HelmChartManifest implements ManifestAttributes, Visitable {
   @EntityIdentifier String identifier;
-  @Wither @JsonProperty("store") StoreConfigWrapper storeConfigWrapper;
+  @Wither @JsonProperty("store") StoreConfigWrapper store;
   @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) ParameterField<String> chartName;
   @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) ParameterField<String> chartVersion;
   @Wither HelmVersion helmVersion;
@@ -57,10 +57,9 @@ public class HelmChartManifest implements ManifestAttributes, Visitable {
   public ManifestAttributes applyOverrides(ManifestAttributes overrideConfig) {
     HelmChartManifest helmChartManifest = (HelmChartManifest) overrideConfig;
     HelmChartManifest resultantManifest = this;
-    if (helmChartManifest.getStoreConfigWrapper() != null) {
-      StoreConfigWrapper storeConfigOverride = helmChartManifest.getStoreConfigWrapper();
-      resultantManifest =
-          resultantManifest.withStoreConfigWrapper(storeConfigWrapper.applyOverrides(storeConfigOverride));
+    if (helmChartManifest.getStore() != null) {
+      StoreConfigWrapper storeConfigOverride = helmChartManifest.getStore();
+      resultantManifest = resultantManifest.withStore(store.applyOverrides(storeConfigOverride));
     }
 
     if (!ParameterField.isNull(helmChartManifest.getChartName())) {
@@ -88,7 +87,7 @@ public class HelmChartManifest implements ManifestAttributes, Visitable {
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
-    children.add(YAMLFieldNameConstants.STORE, storeConfigWrapper);
+    children.add(YAMLFieldNameConstants.STORE, store);
     return children;
   }
 
@@ -99,11 +98,6 @@ public class HelmChartManifest implements ManifestAttributes, Visitable {
 
   @Override
   public StoreConfig getStoreConfig() {
-    return this.storeConfigWrapper.getStoreConfig();
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.HELM_CHART_MANIFEST).isPartOfFQN(false).build();
+    return this.store.getSpec();
   }
 }

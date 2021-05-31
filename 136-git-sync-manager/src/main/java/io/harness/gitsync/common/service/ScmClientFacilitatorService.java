@@ -3,13 +3,14 @@ package io.harness.gitsync.common.service;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.gitsync.common.dtos.GitFileContent;
-import io.harness.gitsync.common.dtos.SaasGitDTO;
 import io.harness.ng.beans.PageRequest;
+import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 
 import java.util.List;
 
+// Don't inject this directly go through ScmClientOrchestrator.
 @OwnedBy(DX)
 public interface ScmClientFacilitatorService {
   List<String> listBranchesForRepoByConnector(String accountIdentifier, String orgIdentifier, String projectIdentifier,
@@ -21,5 +22,9 @@ public interface ScmClientFacilitatorService {
   GitFileContent getFileContent(String yamlGitConfigIdentifier, String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String filePath, String branch, String commitId);
 
-  SaasGitDTO isSaasGit(ScmConnector scmConnector);
+  boolean createPullRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String yamlGitConfigRef, GitPRCreateRequest gitCreatePRRequest);
+
+  FileBatchContentResponse listFilesOfBranches(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String yamlGitConfigIdentifier, List<String> foldersList, String branchName);
 }

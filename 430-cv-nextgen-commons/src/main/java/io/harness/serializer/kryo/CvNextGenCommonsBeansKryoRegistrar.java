@@ -41,11 +41,16 @@ import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO.ApiCallLogDTOField;
 import io.harness.cvng.beans.newrelic.NewRelicApplicationFetchRequest;
 import io.harness.cvng.beans.newrelic.NewRelicMetricPackValidationRequest;
+import io.harness.cvng.beans.prometheus.PrometheusFetchSampleDataRequest;
+import io.harness.cvng.beans.prometheus.PrometheusLabelNamesFetchRequest;
+import io.harness.cvng.beans.prometheus.PrometheusLabelValuesFetchRequest;
+import io.harness.cvng.beans.prometheus.PrometheusMetricListFetchRequest;
 import io.harness.cvng.beans.splunk.SplunkDataCollectionRequest;
 import io.harness.cvng.beans.splunk.SplunkSavedSearchRequest;
 import io.harness.cvng.beans.stackdriver.StackDriverMetricDefinition;
 import io.harness.cvng.beans.stackdriver.StackdriverDashboardDetailsRequest;
 import io.harness.cvng.beans.stackdriver.StackdriverDashboardRequest;
+import io.harness.cvng.beans.stackdriver.StackdriverLogSampleDataRequest;
 import io.harness.cvng.beans.stackdriver.StackdriverSampleDataRequest;
 import io.harness.cvng.models.VerificationType;
 import io.harness.serializer.KryoRegistrar;
@@ -108,5 +113,10 @@ public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(NewRelicApplicationFetchRequest.class, 9051);
     kryo.register(NewRelicMetricPackValidationRequest.class, 9052);
     kryo.register(AppDynamicsMetricDataValidationRequest.class, 9053);
+    kryo.register(PrometheusMetricListFetchRequest.class, 9054);
+    kryo.register(PrometheusLabelValuesFetchRequest.class, 9055);
+    kryo.register(PrometheusLabelNamesFetchRequest.class, 9056);
+    kryo.register(PrometheusFetchSampleDataRequest.class, 9057);
+    kryo.register(StackdriverLogSampleDataRequest.class, 9058);
   }
 }

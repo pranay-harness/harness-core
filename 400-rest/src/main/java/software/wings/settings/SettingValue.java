@@ -75,6 +75,10 @@ public abstract class SettingValue implements ExecutionCapabilityDemander {
     return SettingServiceHelper.getAllEncryptedSecrets(this);
   }
 
+  public boolean shouldDeleteArtifact(SettingValue prev) {
+    return false;
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)

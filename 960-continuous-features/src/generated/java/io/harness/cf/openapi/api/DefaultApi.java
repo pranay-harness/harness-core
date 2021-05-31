@@ -50,7 +50,7 @@ public class DefaultApi {
 
   /**
    * Build call for createFeatureFlag
-   * @param account Account (required)
+   * @param accountIdentifier Account (required)
    * @param org Organization Identifier (required)
    * @param inlineObject  (optional)
    * @param _callback Callback for upload/download progress
@@ -67,8 +67,8 @@ public class DefaultApi {
       <tr><td> 500 </td><td> Internal server error </td><td>  -  </td></tr>
    </table>
    */
-  public okhttp3.Call createFeatureFlagCall(
-      String account, String org, InlineObject inlineObject, final ApiCallback _callback) throws ApiException {
+  public okhttp3.Call createFeatureFlagCall(String accountIdentifier, String org, InlineObject inlineObject,
+      final ApiCallback _callback) throws ApiException {
     Object localVarPostBody = inlineObject;
 
     // create path and map variables
@@ -76,8 +76,8 @@ public class DefaultApi {
 
     List<Pair> localVarQueryParams = new ArrayList<Pair>();
     List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
-    if (account != null) {
-      localVarQueryParams.addAll(localVarApiClient.parameterToPair("account", account));
+    if (accountIdentifier != null) {
+      localVarQueryParams.addAll(localVarApiClient.parameterToPair("accountIdentifier", accountIdentifier));
     }
 
     if (org != null) {
@@ -103,11 +103,12 @@ public class DefaultApi {
   }
 
   @SuppressWarnings("rawtypes")
-  private okhttp3.Call createFeatureFlagValidateBeforeCall(
-      String account, String org, InlineObject inlineObject, final ApiCallback _callback) throws ApiException {
-    // verify the required parameter 'account' is set
-    if (account == null) {
-      throw new ApiException("Missing the required parameter 'account' when calling createFeatureFlag(Async)");
+  private okhttp3.Call createFeatureFlagValidateBeforeCall(String accountIdentifier, String org,
+      InlineObject inlineObject, final ApiCallback _callback) throws ApiException {
+    // verify the required parameter 'accountIdentifier' is set
+    if (accountIdentifier == null) {
+      throw new ApiException(
+          "Missing the required parameter 'accountIdentifier' when calling createFeatureFlag(Async)");
     }
 
     // verify the required parameter 'org' is set
@@ -115,14 +116,14 @@ public class DefaultApi {
       throw new ApiException("Missing the required parameter 'org' when calling createFeatureFlag(Async)");
     }
 
-    okhttp3.Call localVarCall = createFeatureFlagCall(account, org, inlineObject, _callback);
+    okhttp3.Call localVarCall = createFeatureFlagCall(accountIdentifier, org, inlineObject, _callback);
     return localVarCall;
   }
 
   /**
    * Create a feature
    * Create a feature flag.
-   * @param account Account (required)
+   * @param accountIdentifier Account (required)
    * @param org Organization Identifier (required)
    * @param inlineObject  (optional)
    * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
@@ -137,14 +138,14 @@ public class DefaultApi {
       <tr><td> 500 </td><td> Internal server error </td><td>  -  </td></tr>
    </table>
    */
-  public void createFeatureFlag(String account, String org, InlineObject inlineObject) throws ApiException {
-    createFeatureFlagWithHttpInfo(account, org, inlineObject);
+  public void createFeatureFlag(String accountIdentifier, String org, InlineObject inlineObject) throws ApiException {
+    createFeatureFlagWithHttpInfo(accountIdentifier, org, inlineObject);
   }
 
   /**
    * Create a feature
    * Create a feature flag.
-   * @param account Account (required)
+   * @param accountIdentifier Account (required)
    * @param org Organization Identifier (required)
    * @param inlineObject  (optional)
    * @return ApiResponse&lt;Void&gt;
@@ -160,16 +161,16 @@ public class DefaultApi {
       <tr><td> 500 </td><td> Internal server error </td><td>  -  </td></tr>
    </table>
    */
-  public io.harness.cf.openapi.ApiResponse<Void> createFeatureFlagWithHttpInfo(
-      String account, String org, InlineObject inlineObject) throws ApiException {
-    okhttp3.Call localVarCall = createFeatureFlagValidateBeforeCall(account, org, inlineObject, null);
+  public ApiResponse<Void> createFeatureFlagWithHttpInfo(
+      String accountIdentifier, String org, InlineObject inlineObject) throws ApiException {
+    okhttp3.Call localVarCall = createFeatureFlagValidateBeforeCall(accountIdentifier, org, inlineObject, null);
     return localVarApiClient.execute(localVarCall);
   }
 
   /**
    * Create a feature (asynchronously)
    * Create a feature flag.
-   * @param account Account (required)
+   * @param accountIdentifier Account (required)
    * @param org Organization Identifier (required)
    * @param inlineObject  (optional)
    * @param _callback The callback to be executed when the API call finishes
@@ -186,16 +187,16 @@ public class DefaultApi {
       <tr><td> 500 </td><td> Internal server error </td><td>  -  </td></tr>
    </table>
    */
-  public okhttp3.Call createFeatureFlagAsync(
-      String account, String org, InlineObject inlineObject, final ApiCallback<Void> _callback) throws ApiException {
-    okhttp3.Call localVarCall = createFeatureFlagValidateBeforeCall(account, org, inlineObject, _callback);
+  public okhttp3.Call createFeatureFlagAsync(String accountIdentifier, String org, InlineObject inlineObject,
+      final ApiCallback<Void> _callback) throws ApiException {
+    okhttp3.Call localVarCall = createFeatureFlagValidateBeforeCall(accountIdentifier, org, inlineObject, _callback);
     localVarApiClient.executeAsync(localVarCall, _callback);
     return localVarCall;
   }
   /**
    * Build call for deleteFeatureFlag
    * @param identifier Unique identifier for the object in the API. (required)
-   * @param account Account (required)
+   * @param accountIdentifier Account (required)
    * @param org Organization Identifier (required)
    * @param project Project (required)
    * @param _callback Callback for upload/download progress
@@ -211,8 +212,8 @@ public class DefaultApi {
       <tr><td> 500 </td><td> Internal server error </td><td>  -  </td></tr>
    </table>
    */
-  public okhttp3.Call deleteFeatureFlagCall(
-      String identifier, String account, String org, String project, final ApiCallback _callback) throws ApiException {
+  public okhttp3.Call deleteFeatureFlagCall(String identifier, String accountIdentifier, String org, String project,
+      final ApiCallback _callback) throws ApiException {
     Object localVarPostBody = null;
 
     // create path and map variables
@@ -223,8 +224,8 @@ public class DefaultApi {
 
     List<Pair> localVarQueryParams = new ArrayList<Pair>();
     List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
-    if (account != null) {
-      localVarQueryParams.addAll(localVarApiClient.parameterToPair("account", account));
+    if (accountIdentifier != null) {
+      localVarQueryParams.addAll(localVarApiClient.parameterToPair("accountIdentifier", accountIdentifier));
     }
 
     if (org != null) {
@@ -256,16 +257,17 @@ public class DefaultApi {
   }
 
   @SuppressWarnings("rawtypes")
-  private okhttp3.Call deleteFeatureFlagValidateBeforeCall(
-      String identifier, String account, String org, String project, final ApiCallback _callback) throws ApiException {
+  private okhttp3.Call deleteFeatureFlagValidateBeforeCall(String identifier, String accountIdentifier, String org,
+      String project, final ApiCallback _callback) throws ApiException {
     // verify the required parameter 'identifier' is set
     if (identifier == null) {
       throw new ApiException("Missing the required parameter 'identifier' when calling deleteFeatureFlag(Async)");
     }
 
-    // verify the required parameter 'account' is set
-    if (account == null) {
-      throw new ApiException("Missing the required parameter 'account' when calling deleteFeatureFlag(Async)");
+    // verify the required parameter 'accountIdentifier' is set
+    if (accountIdentifier == null) {
+      throw new ApiException(
+          "Missing the required parameter 'accountIdentifier' when calling deleteFeatureFlag(Async)");
     }
 
     // verify the required parameter 'org' is set
@@ -278,7 +280,7 @@ public class DefaultApi {
       throw new ApiException("Missing the required parameter 'project' when calling deleteFeatureFlag(Async)");
     }
 
-    okhttp3.Call localVarCall = deleteFeatureFlagCall(identifier, account, org, project, _callback);
+    okhttp3.Call localVarCall = deleteFeatureFlagCall(identifier, accountIdentifier, org, project, _callback);
     return localVarCall;
   }
 
@@ -286,7 +288,7 @@ public class DefaultApi {
    * Delete a feature
    * Delete feature with certain identifier and account id.
    * @param identifier Unique identifier for the object in the API. (required)
-   * @param account Account (required)
+   * @param accountIdentifier Account (required)
    * @param org Organization Identifier (required)
    * @param project Project (required)
    * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
@@ -300,15 +302,16 @@ public class DefaultApi {
       <tr><td> 500 </td><td> Internal server error </td><td>  -  </td></tr>
    </table>
    */
-  public void deleteFeatureFlag(String identifier, String account, String org, String project) throws ApiException {
-    deleteFeatureFlagWithHttpInfo(identifier, account, org, project);
+  public void deleteFeatureFlag(String identifier, String accountIdentifier, String org, String project)
+      throws ApiException {
+    deleteFeatureFlagWithHttpInfo(identifier, accountIdentifier, org, project);
   }
 
   /**
    * Delete a feature
    * Delete feature with certain identifier and account id.
    * @param identifier Unique identifier for the object in the API. (required)
-   * @param account Account (required)
+   * @param accountIdentifier Account (required)
    * @param org Organization Identifier (required)
    * @param project Project (required)
    * @return ApiResponse&lt;Void&gt;
@@ -323,9 +326,9 @@ public class DefaultApi {
       <tr><td> 500 </td><td> Internal server error </td><td>  -  </td></tr>
    </table>
    */
-  public io.harness.cf.openapi.ApiResponse<Void> deleteFeatureFlagWithHttpInfo(
-      String identifier, String account, String org, String project) throws ApiException {
-    okhttp3.Call localVarCall = deleteFeatureFlagValidateBeforeCall(identifier, account, org, project, null);
+  public ApiResponse<Void> deleteFeatureFlagWithHttpInfo(
+      String identifier, String accountIdentifier, String org, String project) throws ApiException {
+    okhttp3.Call localVarCall = deleteFeatureFlagValidateBeforeCall(identifier, accountIdentifier, org, project, null);
     return localVarApiClient.execute(localVarCall);
   }
 
@@ -333,7 +336,7 @@ public class DefaultApi {
    * Delete a feature (asynchronously)
    * Delete feature with certain identifier and account id.
    * @param identifier Unique identifier for the object in the API. (required)
-   * @param account Account (required)
+   * @param accountIdentifier Account (required)
    * @param org Organization Identifier (required)
    * @param project Project (required)
    * @param _callback The callback to be executed when the API call finishes
@@ -349,15 +352,16 @@ public class DefaultApi {
       <tr><td> 500 </td><td> Internal server error </td><td>  -  </td></tr>
    </table>
    */
-  public okhttp3.Call deleteFeatureFlagAsync(String identifier, String account, String org, String project,
+  public okhttp3.Call deleteFeatureFlagAsync(String identifier, String accountIdentifier, String org, String project,
       final ApiCallback<Void> _callback) throws ApiException {
-    okhttp3.Call localVarCall = deleteFeatureFlagValidateBeforeCall(identifier, account, org, project, _callback);
+    okhttp3.Call localVarCall =
+        deleteFeatureFlagValidateBeforeCall(identifier, accountIdentifier, org, project, _callback);
     localVarApiClient.executeAsync(localVarCall, _callback);
     return localVarCall;
   }
   /**
    * Build call for getAllFeatures
-   * @param account Account (required)
+   * @param accountIdentifier Account (required)
    * @param org Organization Identifier (required)
    * @param project Project (required)
    * @param environment Environment (optional)
@@ -376,7 +380,7 @@ public class DefaultApi {
       <tr><td> 500 </td><td> Internal server error </td><td>  -  </td></tr>
    </table>
    */
-  public okhttp3.Call getAllFeaturesCall(String account, String org, String project, String environment,
+  public okhttp3.Call getAllFeaturesCall(String accountIdentifier, String org, String project, String environment,
       Integer pageNumber, Integer pageSize, final ApiCallback _callback) throws ApiException {
     Object localVarPostBody = null;
 
@@ -385,8 +389,8 @@ public class DefaultApi {
 
     List<Pair> localVarQueryParams = new ArrayList<Pair>();
     List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
-    if (account != null) {
-      localVarQueryParams.addAll(localVarApiClient.parameterToPair("account", account));
+    if (accountIdentifier != null) {
+      localVarQueryParams.addAll(localVarApiClient.parameterToPair("accountIdentifier", accountIdentifier));
     }
 
     if (org != null) {
@@ -430,11 +434,11 @@ public class DefaultApi {
   }
 
   @SuppressWarnings("rawtypes")
-  private okhttp3.Call getAllFeaturesValidateBeforeCall(String account, String org, String project, String environment,
-      Integer pageNumber, Integer pageSize, final ApiCallback _callback) throws ApiException {
-    // verify the required parameter 'account' is set
-    if (account == null) {
-      throw new ApiException("Missing the required parameter 'account' when calling getAllFeatures(Async)");
+  private okhttp3.Call getAllFeaturesValidateBeforeCall(String accountIdentifier, String org, String project,
+      String environment, Integer pageNumber, Integer pageSize, final ApiCallback _callback) throws ApiException {
+    // verify the required parameter 'accountIdentifier' is set
+    if (accountIdentifier == null) {
+      throw new ApiException("Missing the required parameter 'accountIdentifier' when calling getAllFeatures(Async)");
     }
 
     // verify the required parameter 'org' is set
@@ -447,14 +451,15 @@ public class DefaultApi {
       throw new ApiException("Missing the required parameter 'project' when calling getAllFeatures(Async)");
     }
 
-    okhttp3.Call localVarCall = getAllFeaturesCall(account, org, project, environment, pageNumber, pageSize, _callback);
+    okhttp3.Call localVarCall =
+        getAllFeaturesCall(accountIdentifier, org, project, environment, pageNumber, pageSize, _callback);
     return localVarCall;
   }
 
   /**
    * Retrieve all feature activations.
    * Used to retrieve all feature activations for certain account id.
-   * @param account Account (required)
+   * @param accountIdentifier Account (required)
    * @param org Organization Identifier (required)
    * @param project Project (required)
    * @param environment Environment (optional)
@@ -472,17 +477,17 @@ public class DefaultApi {
       <tr><td> 500 </td><td> Internal server error </td><td>  -  </td></tr>
    </table>
    */
-  public Features getAllFeatures(String account, String org, String project, String environment, Integer pageNumber,
-      Integer pageSize) throws ApiException {
-    io.harness.cf.openapi.ApiResponse<Features> localVarResp =
-        getAllFeaturesWithHttpInfo(account, org, project, environment, pageNumber, pageSize);
+  public Features getAllFeatures(String accountIdentifier, String org, String project, String environment,
+      Integer pageNumber, Integer pageSize) throws ApiException {
+    ApiResponse<Features> localVarResp =
+        getAllFeaturesWithHttpInfo(accountIdentifier, org, project, environment, pageNumber, pageSize);
     return localVarResp.getData();
   }
 
   /**
    * Retrieve all feature activations.
    * Used to retrieve all feature activations for certain account id.
-   * @param account Account (required)
+   * @param accountIdentifier Account (required)
    * @param org Organization Identifier (required)
    * @param project Project (required)
    * @param environment Environment (optional)
@@ -500,10 +505,10 @@ public class DefaultApi {
       <tr><td> 500 </td><td> Internal server error </td><td>  -  </td></tr>
    </table>
    */
-  public io.harness.cf.openapi.ApiResponse<Features> getAllFeaturesWithHttpInfo(String account, String org,
-      String project, String environment, Integer pageNumber, Integer pageSize) throws ApiException {
+  public ApiResponse<Features> getAllFeaturesWithHttpInfo(String accountIdentifier, String org, String project,
+      String environment, Integer pageNumber, Integer pageSize) throws ApiException {
     okhttp3.Call localVarCall =
-        getAllFeaturesValidateBeforeCall(account, org, project, environment, pageNumber, pageSize, null);
+        getAllFeaturesValidateBeforeCall(accountIdentifier, org, project, environment, pageNumber, pageSize, null);
     Type localVarReturnType = new TypeToken<Features>() {}.getType();
     return localVarApiClient.execute(localVarCall, localVarReturnType);
   }
@@ -511,7 +516,7 @@ public class DefaultApi {
   /**
    * Retrieve all feature activations. (asynchronously)
    * Used to retrieve all feature activations for certain account id.
-   * @param account Account (required)
+   * @param accountIdentifier Account (required)
    * @param org Organization Identifier (required)
    * @param project Project (required)
    * @param environment Environment (optional)
@@ -530,10 +535,10 @@ public class DefaultApi {
       <tr><td> 500 </td><td> Internal server error </td><td>  -  </td></tr>
    </table>
    */
-  public okhttp3.Call getAllFeaturesAsync(String account, String org, String project, String environment,
+  public okhttp3.Call getAllFeaturesAsync(String accountIdentifier, String org, String project, String environment,
       Integer pageNumber, Integer pageSize, final ApiCallback<Features> _callback) throws ApiException {
     okhttp3.Call localVarCall =
-        getAllFeaturesValidateBeforeCall(account, org, project, environment, pageNumber, pageSize, _callback);
+        getAllFeaturesValidateBeforeCall(accountIdentifier, org, project, environment, pageNumber, pageSize, _callback);
     Type localVarReturnType = new TypeToken<Features>() {}.getType();
     localVarApiClient.executeAsync(localVarCall, localVarReturnType, _callback);
     return localVarCall;
@@ -541,7 +546,7 @@ public class DefaultApi {
   /**
    * Build call for getFeatureFlag
    * @param identifier Unique identifier for the object in the API. (required)
-   * @param account Account (required)
+   * @param accountIdentifier Account (required)
    * @param org Organization Identifier (required)
    * @param project Project (required)
    * @param environment Environment (optional)
@@ -558,7 +563,7 @@ public class DefaultApi {
       <tr><td> 500 </td><td> Internal server error </td><td>  -  </td></tr>
    </table>
    */
-  public okhttp3.Call getFeatureFlagCall(String identifier, String account, String org, String project,
+  public okhttp3.Call getFeatureFlagCall(String identifier, String accountIdentifier, String org, String project,
       String environment, final ApiCallback _callback) throws ApiException {
     Object localVarPostBody = null;
 
@@ -570,8 +575,8 @@ public class DefaultApi {
 
     List<Pair> localVarQueryParams = new ArrayList<Pair>();
     List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
-    if (account != null) {
-      localVarQueryParams.addAll(localVarApiClient.parameterToPair("account", account));
+    if (accountIdentifier != null) {
+      localVarQueryParams.addAll(localVarApiClient.parameterToPair("accountIdentifier", accountIdentifier));
     }
 
     if (org != null) {
@@ -607,16 +612,16 @@ public class DefaultApi {
   }
 
   @SuppressWarnings("rawtypes")
-  private okhttp3.Call getFeatureFlagValidateBeforeCall(String identifier, String account, String org, String project,
-      String environment, final ApiCallback _callback) throws ApiException {
+  private okhttp3.Call getFeatureFlagValidateBeforeCall(String identifier, String accountIdentifier, String org,
+      String project, String environment, final ApiCallback _callback) throws ApiException {
     // verify the required parameter 'identifier' is set
     if (identifier == null) {
       throw new ApiException("Missing the required parameter 'identifier' when calling getFeatureFlag(Async)");
     }
 
-    // verify the required parameter 'account' is set
-    if (account == null) {
-      throw new ApiException("Missing the required parameter 'account' when calling getFeatureFlag(Async)");
+    // verify the required parameter 'accountIdentifier' is set
+    if (accountIdentifier == null) {
+      throw new ApiException("Missing the required parameter 'accountIdentifier' when calling getFeatureFlag(Async)");
     }
 
     // verify the required parameter 'org' is set
@@ -629,7 +634,7 @@ public class DefaultApi {
       throw new ApiException("Missing the required parameter 'project' when calling getFeatureFlag(Async)");
     }
 
-    okhttp3.Call localVarCall = getFeatureFlagCall(identifier, account, org, project, environment, _callback);
+    okhttp3.Call localVarCall = getFeatureFlagCall(identifier, accountIdentifier, org, project, environment, _callback);
     return localVarCall;
   }
 
@@ -637,7 +642,7 @@ public class DefaultApi {
    * Retrieve a feature
    * Retrieve certain feature flag with certain identifier and account id.
    * @param identifier Unique identifier for the object in the API. (required)
-   * @param account Account (required)
+   * @param accountIdentifier Account (required)
    * @param org Organization Identifier (required)
    * @param project Project (required)
    * @param environment Environment (optional)
@@ -653,9 +658,10 @@ public class DefaultApi {
       <tr><td> 500 </td><td> Internal server error </td><td>  -  </td></tr>
    </table>
    */
-  public Feature getFeatureFlag(String identifier, String account, String org, String project, String environment)
-      throws ApiException {
-    ApiResponse<Feature> localVarResp = getFeatureFlagWithHttpInfo(identifier, account, org, project, environment);
+  public Feature getFeatureFlag(
+      String identifier, String accountIdentifier, String org, String project, String environment) throws ApiException {
+    ApiResponse<Feature> localVarResp =
+        getFeatureFlagWithHttpInfo(identifier, accountIdentifier, org, project, environment);
     return localVarResp.getData();
   }
 
@@ -663,7 +669,7 @@ public class DefaultApi {
    * Retrieve a feature
    * Retrieve certain feature flag with certain identifier and account id.
    * @param identifier Unique identifier for the object in the API. (required)
-   * @param account Account (required)
+   * @param accountIdentifier Account (required)
    * @param org Organization Identifier (required)
    * @param project Project (required)
    * @param environment Environment (optional)
@@ -680,8 +686,9 @@ public class DefaultApi {
    </table>
    */
   public ApiResponse<Feature> getFeatureFlagWithHttpInfo(
-      String identifier, String account, String org, String project, String environment) throws ApiException {
-    okhttp3.Call localVarCall = getFeatureFlagValidateBeforeCall(identifier, account, org, project, environment, null);
+      String identifier, String accountIdentifier, String org, String project, String environment) throws ApiException {
+    okhttp3.Call localVarCall =
+        getFeatureFlagValidateBeforeCall(identifier, accountIdentifier, org, project, environment, null);
     Type localVarReturnType = new TypeToken<Feature>() {}.getType();
     return localVarApiClient.execute(localVarCall, localVarReturnType);
   }
@@ -690,7 +697,7 @@ public class DefaultApi {
    * Retrieve a feature (asynchronously)
    * Retrieve certain feature flag with certain identifier and account id.
    * @param identifier Unique identifier for the object in the API. (required)
-   * @param account Account (required)
+   * @param accountIdentifier Account (required)
    * @param org Organization Identifier (required)
    * @param project Project (required)
    * @param environment Environment (optional)
@@ -707,10 +714,10 @@ public class DefaultApi {
       <tr><td> 500 </td><td> Internal server error </td><td>  -  </td></tr>
    </table>
    */
-  public okhttp3.Call getFeatureFlagAsync(String identifier, String account, String org, String project,
+  public okhttp3.Call getFeatureFlagAsync(String identifier, String accountIdentifier, String org, String project,
       String environment, final ApiCallback<Feature> _callback) throws ApiException {
     okhttp3.Call localVarCall =
-        getFeatureFlagValidateBeforeCall(identifier, account, org, project, environment, _callback);
+        getFeatureFlagValidateBeforeCall(identifier, accountIdentifier, org, project, environment, _callback);
     Type localVarReturnType = new TypeToken<Feature>() {}.getType();
     localVarApiClient.executeAsync(localVarCall, localVarReturnType, _callback);
     return localVarCall;
@@ -718,7 +725,7 @@ public class DefaultApi {
   /**
    * Build call for patchFeature
    * @param identifier Unique identifier for the object in the API. (required)
-   * @param account Account (required)
+   * @param accountIdentifier Account (required)
    * @param org Organization Identifier (required)
    * @param project Project (required)
    * @param environment Environment (required)
@@ -738,7 +745,7 @@ public class DefaultApi {
       <tr><td> 500 </td><td> Internal server error </td><td>  -  </td></tr>
    </table>
    */
-  public okhttp3.Call patchFeatureCall(String identifier, String account, String org, String project,
+  public okhttp3.Call patchFeatureCall(String identifier, String accountIdentifier, String org, String project,
       String environment, Object UNKNOWN_BASE_TYPE, final ApiCallback _callback) throws ApiException {
     Object localVarPostBody = UNKNOWN_BASE_TYPE;
 
@@ -750,8 +757,8 @@ public class DefaultApi {
 
     List<Pair> localVarQueryParams = new ArrayList<Pair>();
     List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
-    if (account != null) {
-      localVarQueryParams.addAll(localVarApiClient.parameterToPair("account", account));
+    if (accountIdentifier != null) {
+      localVarQueryParams.addAll(localVarApiClient.parameterToPair("accountIdentifier", accountIdentifier));
     }
 
     if (org != null) {
@@ -785,16 +792,16 @@ public class DefaultApi {
   }
 
   @SuppressWarnings("rawtypes")
-  private okhttp3.Call patchFeatureValidateBeforeCall(String identifier, String account, String org, String project,
-      String environment, Object UNKNOWN_BASE_TYPE, final ApiCallback _callback) throws ApiException {
+  private okhttp3.Call patchFeatureValidateBeforeCall(String identifier, String accountIdentifier, String org,
+      String project, String environment, Object UNKNOWN_BASE_TYPE, final ApiCallback _callback) throws ApiException {
     // verify the required parameter 'identifier' is set
     if (identifier == null) {
       throw new ApiException("Missing the required parameter 'identifier' when calling patchFeature(Async)");
     }
 
-    // verify the required parameter 'account' is set
-    if (account == null) {
-      throw new ApiException("Missing the required parameter 'account' when calling patchFeature(Async)");
+    // verify the required parameter 'accountIdentifier' is set
+    if (accountIdentifier == null) {
+      throw new ApiException("Missing the required parameter 'accountIdentifier' when calling patchFeature(Async)");
     }
 
     // verify the required parameter 'org' is set
@@ -813,7 +820,7 @@ public class DefaultApi {
     }
 
     okhttp3.Call localVarCall =
-        patchFeatureCall(identifier, account, org, project, environment, UNKNOWN_BASE_TYPE, _callback);
+        patchFeatureCall(identifier, accountIdentifier, org, project, environment, UNKNOWN_BASE_TYPE, _callback);
     return localVarCall;
   }
 
@@ -821,7 +828,7 @@ public class DefaultApi {
    * Modify a feature using instructions
    * Modify feature flag with certain identifier and account id.
    * @param identifier Unique identifier for the object in the API. (required)
-   * @param account Account (required)
+   * @param accountIdentifier Account (required)
    * @param org Organization Identifier (required)
    * @param project Project (required)
    * @param environment Environment (required)
@@ -840,10 +847,10 @@ public class DefaultApi {
       <tr><td> 500 </td><td> Internal server error </td><td>  -  </td></tr>
    </table>
    */
-  public Feature patchFeature(String identifier, String account, String org, String project, String environment,
-      Object UNKNOWN_BASE_TYPE) throws ApiException {
+  public Feature patchFeature(String identifier, String accountIdentifier, String org, String project,
+      String environment, Object UNKNOWN_BASE_TYPE) throws ApiException {
     ApiResponse<Feature> localVarResp =
-        patchFeatureWithHttpInfo(identifier, account, org, project, environment, UNKNOWN_BASE_TYPE);
+        patchFeatureWithHttpInfo(identifier, accountIdentifier, org, project, environment, UNKNOWN_BASE_TYPE);
     return localVarResp.getData();
   }
 
@@ -851,7 +858,7 @@ public class DefaultApi {
    * Modify a feature using instructions
    * Modify feature flag with certain identifier and account id.
    * @param identifier Unique identifier for the object in the API. (required)
-   * @param account Account (required)
+   * @param accountIdentifier Account (required)
    * @param org Organization Identifier (required)
    * @param project Project (required)
    * @param environment Environment (required)
@@ -870,10 +877,10 @@ public class DefaultApi {
       <tr><td> 500 </td><td> Internal server error </td><td>  -  </td></tr>
    </table>
    */
-  public ApiResponse<Feature> patchFeatureWithHttpInfo(String identifier, String account, String org, String project,
-      String environment, Object UNKNOWN_BASE_TYPE) throws ApiException {
-    okhttp3.Call localVarCall =
-        patchFeatureValidateBeforeCall(identifier, account, org, project, environment, UNKNOWN_BASE_TYPE, null);
+  public ApiResponse<Feature> patchFeatureWithHttpInfo(String identifier, String accountIdentifier, String org,
+      String project, String environment, Object UNKNOWN_BASE_TYPE) throws ApiException {
+    okhttp3.Call localVarCall = patchFeatureValidateBeforeCall(
+        identifier, accountIdentifier, org, project, environment, UNKNOWN_BASE_TYPE, null);
     Type localVarReturnType = new TypeToken<Feature>() {}.getType();
     return localVarApiClient.execute(localVarCall, localVarReturnType);
   }
@@ -882,7 +889,7 @@ public class DefaultApi {
    * Modify a feature using instructions (asynchronously)
    * Modify feature flag with certain identifier and account id.
    * @param identifier Unique identifier for the object in the API. (required)
-   * @param account Account (required)
+   * @param accountIdentifier Account (required)
    * @param org Organization Identifier (required)
    * @param project Project (required)
    * @param environment Environment (required)
@@ -902,10 +909,10 @@ public class DefaultApi {
       <tr><td> 500 </td><td> Internal server error </td><td>  -  </td></tr>
    </table>
    */
-  public okhttp3.Call patchFeatureAsync(String identifier, String account, String org, String project,
+  public okhttp3.Call patchFeatureAsync(String identifier, String accountIdentifier, String org, String project,
       String environment, Object UNKNOWN_BASE_TYPE, final ApiCallback<Feature> _callback) throws ApiException {
-    okhttp3.Call localVarCall =
-        patchFeatureValidateBeforeCall(identifier, account, org, project, environment, UNKNOWN_BASE_TYPE, _callback);
+    okhttp3.Call localVarCall = patchFeatureValidateBeforeCall(
+        identifier, accountIdentifier, org, project, environment, UNKNOWN_BASE_TYPE, _callback);
     Type localVarReturnType = new TypeToken<Feature>() {}.getType();
     localVarApiClient.executeAsync(localVarCall, localVarReturnType, _callback);
     return localVarCall;

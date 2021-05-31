@@ -1,11 +1,15 @@
 package io.harness.pms.ngpipeline.inputset.mappers;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
+import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.ng.core.mapper.TagMapper;
+import io.harness.pms.inputset.InputSetErrorWrapperDTOPMS;
 import io.harness.pms.merger.PipelineYamlConfig;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
-import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetErrorWrapperDTOPMS;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetResponseDTOPMS;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetSummaryResponseDTOPMS;
 import io.harness.pms.ngpipeline.overlayinputset.beans.resource.OverlayInputSetResponseDTOPMS;
@@ -22,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(PIPELINE)
 @UtilityClass
 public class PMSInputSetElementMapper {
   public InputSetEntity toInputSetEntity(
@@ -86,6 +91,7 @@ public class PMSInputSetElementMapper {
         .description(entity.getDescription())
         .tags(TagMapper.convertToMap(entity.getTags()))
         .version(entity.getVersion())
+        .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(entity))
         .build();
   }
 
@@ -109,6 +115,7 @@ public class PMSInputSetElementMapper {
         .version(entity.getVersion())
         .isErrorResponse(isError)
         .invalidInputSetReferences(invalidReferences)
+        .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(entity))
         .build();
   }
 
@@ -121,6 +128,7 @@ public class PMSInputSetElementMapper {
         .inputSetType(entity.getInputSetEntityType())
         .tags(TagMapper.convertToMap(entity.getTags()))
         .version(entity.getVersion())
+        .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(entity))
         .build();
   }
 
@@ -143,7 +151,7 @@ public class PMSInputSetElementMapper {
       JsonNode node = (new PipelineYamlConfig(yaml)).getYamlMap();
       JsonNode innerMap = node.get("inputSet");
       JsonNode field = innerMap.get("pipeline");
-      return field == null;
+      return field == null || field.toString().equals("{}");
     } catch (IOException e) {
       throw new InvalidRequestException("Could not convert yaml to JsonNode");
     }

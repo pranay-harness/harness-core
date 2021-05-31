@@ -25,9 +25,10 @@ public class InfraSectionStepParameters extends PipelineInfrastructure implement
 
   @Builder(builderMethodName = "newBuilder")
   public InfraSectionStepParameters(InfrastructureDef infrastructureDefinition, InfraUseFromStage useFromStage,
-      EnvironmentYaml environment, ParameterField<String> environmentRef, boolean allowSimultaneousDeployments,
-      ParameterField<String> infrastructureKey, String metadata, String childNodeID) {
-    super(infrastructureDefinition, useFromStage, environment, allowSimultaneousDeployments, infrastructureKey,
+      EnvironmentYaml environment, ParameterField<String> environmentRef,
+      ParameterField<Boolean> allowSimultaneousDeployments1, ParameterField<String> infrastructureKey, String metadata,
+      String childNodeID) {
+    super(infrastructureDefinition, useFromStage, environment, allowSimultaneousDeployments1, infrastructureKey,
         environmentRef, metadata);
     this.childNodeID = childNodeID;
   }
@@ -36,7 +37,7 @@ public class InfraSectionStepParameters extends PipelineInfrastructure implement
       PipelineInfrastructure infrastructure, String childNodeID) {
     return new InfraSectionStepParameters(infrastructure.getInfrastructureDefinition(),
         infrastructure.getUseFromStage(), infrastructure.getEnvironment(), infrastructure.getEnvironmentRef(),
-        infrastructure.isAllowSimultaneousDeployments(), infrastructure.getInfrastructureKey(),
+        infrastructure.getAllowSimultaneousDeployments(), infrastructure.getInfrastructureKey(),
         infrastructure.getMetadata(), childNodeID);
   }
 }

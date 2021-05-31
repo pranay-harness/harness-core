@@ -47,15 +47,15 @@ public class DashboardPipelineHealthAndExecutionInfoTest {
     // this test tests only total and success components of Executions  and duration part of mean and median under
     // DashboardPipelineHealthInfo
 
-    String startInterval = "2021-04-01";
-    String endInterval = "2021-04-30";
-    String previousStartInterval = "2021-03-01";
+    long startInterval = 1617235200000L;
+    long endInterval = 1619740800000L;
+    long previousStartInterval = 1614556800000L;
 
     List<String> status = Arrays.asList(ExecutionStatus.SUCCESS.name(), ExecutionStatus.FAILED.name(),
         ExecutionStatus.SUCCESS.name(), ExecutionStatus.SUCCESS.name(), ExecutionStatus.SUCCESS.name(),
         ExecutionStatus.ABORTED.name(), ExecutionStatus.SUCCESS.name());
-    List<String> time = Arrays.asList("2021-04-05 17:37:45.383", "2021-04-21 17:37:45.383", "2021-04-30 0:0:0",
-        "2021-03-31 0.0.0", "2021-04-01 0.0.0", "2021-03-25 0:0:0", "2021-03-25 23:59:999");
+    List<Long> time = Arrays.asList(
+        1617624465000L, 1619006865000L, 1619721000000L, 1617129000000L, 1617235200000L, 1616610600000L, 1616697939000L);
     StatusAndTime statusAndTime = StatusAndTime.builder().status(status).time(time).build();
 
     doReturn(statusAndTime).when(pipelineDashboardService).queryCalculatorForStatusAndTime(anyString());
@@ -74,14 +74,14 @@ public class DashboardPipelineHealthAndExecutionInfoTest {
 
     // test for empty status and time
     List<String> emptyStatus = new ArrayList<>();
-    List<String> emptyTime = new ArrayList<>();
+    List<Long> emptyTime = new ArrayList<>();
     doReturn(StatusAndTime.builder().time(emptyTime).status(emptyStatus).build())
         .when(pipelineDashboardService)
         .queryCalculatorForStatusAndTime(anyString());
 
     DashboardPipelineHealthInfo dashboardPipelineHealthInfoEmptyList =
         pipelineDashboardService.getDashboardPipelineHealthInfo(
-            "ac", "or", "pr", "pip", "2021-04-01", "2021-04-30", "2021-03-01", "CI");
+            "ac", "or", "pr", "pip", 1617235200000L, 1619740800000L, 1614556800000L, "CI");
     assertThat(dashboardPipelineHealthInfoEmptyList.getExecutions().getTotal().getCount()).isEqualTo(0);
     assertThat(dashboardPipelineHealthInfoEmptyList.getExecutions().getTotal().getRate()).isEqualTo(0.0);
     assertThat(dashboardPipelineHealthInfoEmptyList.getExecutions().getSuccess().getPercent()).isEqualTo(0.0);
@@ -92,12 +92,12 @@ public class DashboardPipelineHealthAndExecutionInfoTest {
 
     // currentMean
     String queryCurrentMean =
-        pipelineDashboardService.queryBuilderMean("ac", "or", "pr", "pip", startInterval, "2021-05-01", table);
+        pipelineDashboardService.queryBuilderMean("ac", "or", "pr", "pip", startInterval, 1619827200000L, table);
     doReturn(100L).when(pipelineDashboardService).queryCalculatorMean(queryCurrentMean);
 
     // currentMedian
     String queryCurrentMedian =
-        pipelineDashboardService.queryBuilderMedian("ac", "or", "pr", "pip", startInterval, "2021-05-01", table);
+        pipelineDashboardService.queryBuilderMedian("ac", "or", "pr", "pip", startInterval, 1619827200000L, table);
     doReturn(150L).when(pipelineDashboardService).queryCalculatorMedian(queryCurrentMedian);
 
     // PreviousMean
@@ -112,25 +112,25 @@ public class DashboardPipelineHealthAndExecutionInfoTest {
 
     DashboardPipelineHealthInfo dashboardPipelineHealthInfoMeanMedian =
         pipelineDashboardService.getDashboardPipelineHealthInfo(
-            "ac", "or", "pr", "pip", "2021-04-01", "2021-04-30", "2021-03-01", "CI");
-    assertThat(dashboardPipelineHealthInfoMeanMedian.getExecutions().getMeanInfo().getDuration()).isEqualTo("100");
-    assertThat(dashboardPipelineHealthInfoMeanMedian.getExecutions().getMeanInfo().getRate()).isEqualTo("60");
-    assertThat(dashboardPipelineHealthInfoMeanMedian.getExecutions().getMedianInfo().getDuration()).isEqualTo("150");
-    assertThat(dashboardPipelineHealthInfoMeanMedian.getExecutions().getMedianInfo().getRate()).isEqualTo("-30");
+            "ac", "or", "pr", "pip", 1617235200000L, 1619740800000L, 1614556800000L, "CI");
+    assertThat(dashboardPipelineHealthInfoMeanMedian.getExecutions().getMeanInfo().getDuration()).isEqualTo(100L);
+    assertThat(dashboardPipelineHealthInfoMeanMedian.getExecutions().getMeanInfo().getRate()).isEqualTo(60L);
+    assertThat(dashboardPipelineHealthInfoMeanMedian.getExecutions().getMedianInfo().getDuration()).isEqualTo(150L);
+    assertThat(dashboardPipelineHealthInfoMeanMedian.getExecutions().getMedianInfo().getRate()).isEqualTo(-30L);
   }
 
   @Test
   @Owner(developers = PRASHANTSHARMA)
   @Category(UnitTests.class)
   public void testGetDashboardPipelineExecutionInfo() {
-    String startInterval = "2021-04-01";
-    String endInterval = "2021-04-05";
+    long startInterval = 1617235200000L;
+    long endInterval = 1617580800000L;
 
     List<String> status = Arrays.asList(ExecutionStatus.SUCCESS.name(), ExecutionStatus.FAILED.name(),
         ExecutionStatus.ABORTED.name(), ExecutionStatus.RUNNING.name(), ExecutionStatus.FAILED.name(),
         ExecutionStatus.ABORTED.name(), ExecutionStatus.EXPIRED.name());
-    List<String> time = Arrays.asList("2021-04-02 17:37:45.383", "2021-04-02 17:37:45.383", "2021-04-02 0:0:0",
-        "2021-04-05 0.0.0", "2021-04-03 0.0.0", "2021-04-01 0:0:0", "2021-04-01 23:59:999");
+    List<Long> time = Arrays.asList(
+        1617365265000L, 1617365265000L, 1617321600000L, 1617580800000L, 1617408000000L, 1617235200000L, 1617302739000L);
     StatusAndTime statusAndTime = StatusAndTime.builder().status(status).time(time).build();
 
     doReturn(statusAndTime).when(pipelineDashboardService).queryCalculatorForStatusAndTime(anyString());
@@ -141,23 +141,23 @@ public class DashboardPipelineHealthAndExecutionInfoTest {
 
     List<PipelineExecutionInfo> pipelineExecutionInfoList = new ArrayList<>();
     pipelineExecutionInfoList.add(PipelineExecutionInfo.builder()
-                                      .date("2021-04-01")
+                                      .date(1617235200000L)
                                       .count(PipelineCountInfo.builder().total(2).success(0).failure(2).build())
                                       .build());
     pipelineExecutionInfoList.add(PipelineExecutionInfo.builder()
-                                      .date("2021-04-02")
+                                      .date(1617321600000L)
                                       .count(PipelineCountInfo.builder().total(3).success(1).failure(2).build())
                                       .build());
     pipelineExecutionInfoList.add(PipelineExecutionInfo.builder()
-                                      .date("2021-04-03")
+                                      .date(1617408000000L)
                                       .count(PipelineCountInfo.builder().total(1).success(0).failure(1).build())
                                       .build());
     pipelineExecutionInfoList.add(PipelineExecutionInfo.builder()
-                                      .date("2021-04-04")
+                                      .date(1617494400000L)
                                       .count(PipelineCountInfo.builder().total(0).success(0).failure(0).build())
                                       .build());
     pipelineExecutionInfoList.add(PipelineExecutionInfo.builder()
-                                      .date("2021-04-05")
+                                      .date(1617580800000L)
                                       .count(PipelineCountInfo.builder().total(1).success(0).failure(0).build())
                                       .build());
     assertThat(dashboardPipelineExecutionInfo.getPipelineExecutionInfoList()).isEqualTo(pipelineExecutionInfoList);
