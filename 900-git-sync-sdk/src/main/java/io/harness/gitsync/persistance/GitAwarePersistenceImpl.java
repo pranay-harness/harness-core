@@ -196,6 +196,12 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
   }
 
   @Override
+  public Criteria getCriteriaWithGitSync(
+      String projectIdentifier, String orgIdentifier, String accountId, Class entityClass) {
+    return null;
+  }
+
+  @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> B save(
       B objectToSave, Y yaml, ChangeType changeType, Class<B> entityClass) {
     final GitSdkEntityHandlerInterface gitSdkEntityHandlerInterface =
