@@ -33,4 +33,7 @@ public interface GitAwarePersistence {
       String orgIdentifier, String accountId, Class<B> entityClass);
 
   <B extends GitSyncableEntity, Y extends YamlDTO> B save(B objectToSave, ChangeType changeType, Class<B> entityClass);
+
+  // added as a stop gap fix for PMS.
+  Criteria getCriteriaWithGitSync(String projectIdentifier, String orgIdentifier, String accountId, Class entityClass);
 }

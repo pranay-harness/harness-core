@@ -104,8 +104,7 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
   @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> Long count(
       Criteria criteria, String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
-    final Criteria gitSyncCriteria =
-        updateCriteriaIfGitSyncEnabled(projectIdentifier, orgIdentifier, accountId, entityClass);
+    final Criteria gitSyncCriteria = getCriteriaWithGitSync(projectIdentifier, orgIdentifier, accountId, entityClass);
     List<Criteria> criteriaList = Arrays.asList(criteria, gitSyncCriteria);
     Query query = new Query()
                       .addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[criteriaList.size()])))
@@ -118,8 +117,7 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
   @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> Optional<B> findOne(
       Criteria criteria, String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
-    final Criteria gitSyncCriteria =
-        updateCriteriaIfGitSyncEnabled(projectIdentifier, orgIdentifier, accountId, entityClass);
+    final Criteria gitSyncCriteria = getCriteriaWithGitSync(projectIdentifier, orgIdentifier, accountId, entityClass);
     List<Criteria> criteriaList = Arrays.asList(criteria, gitSyncCriteria);
     Query query =
         new Query().addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[criteriaList.size()])));
@@ -130,8 +128,7 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
   @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> List<B> find(Criteria criteria, Pageable pageable,
       String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
-    final Criteria gitSyncCriteria =
-        updateCriteriaIfGitSyncEnabled(projectIdentifier, orgIdentifier, accountId, entityClass);
+    final Criteria gitSyncCriteria = getCriteriaWithGitSync(projectIdentifier, orgIdentifier, accountId, entityClass);
     List<Criteria> criteriaList = Arrays.asList(criteria, gitSyncCriteria);
     Query query = new Query()
                       .addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[criteriaList.size()])))
@@ -142,8 +139,7 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
   @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> boolean exists(
       Criteria criteria, String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
-    final Criteria gitSyncCriteria =
-        updateCriteriaIfGitSyncEnabled(projectIdentifier, orgIdentifier, accountId, entityClass);
+    final Criteria gitSyncCriteria = getCriteriaWithGitSync(projectIdentifier, orgIdentifier, accountId, entityClass);
     List<Criteria> criteriaList = Arrays.asList(criteria, gitSyncCriteria);
     Query query =
         new Query().addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[criteriaList.size()])));
@@ -162,7 +158,8 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
     return gitSyncSdkService.isGitSyncEnabled(accountIdentifier, orgIdentifier, projectIdentifier);
   }
 
-  private Criteria updateCriteriaIfGitSyncEnabled(
+  @Override
+  public Criteria getCriteriaWithGitSync(
       String projectIdentifier, String orgIdentifier, String accountId, Class entityClass) {
     if (isGitSyncEnabled(projectIdentifier, orgIdentifier, accountId)) {
       final GitSdkEntityHandlerInterface gitSdkEntityHandlerInterface =
