@@ -5,10 +5,8 @@ load("//:tools/bazel/macros.bzl", "test_targets_list")
 
 shared_dependencies = [
     "//:lombok",
-    "//123-ng-core-user:module",
     "//125-cd-nextgen:module",
-    "//948-access-control-admin-client:module",
-    "//958-migration-sdk:module",
+    "//123-ng-core-user:module",
 ]
 
 java_library(
