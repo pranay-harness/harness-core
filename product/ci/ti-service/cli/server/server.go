@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/wings-software/portal/product/ci/ti-service/cgservice"
-	"github.com/wings-software/portal/product/ci/ti-service/cgservice/mongodb"
+	"github.com/wings-software/portal/product/ci/ti-service/cg"
+	"github.com/wings-software/portal/product/ci/ti-service/cg/mongodb"
 	"os"
 	"os/signal"
 
@@ -84,7 +84,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 
 	// Test intelligence DB
 	var tidb mdb.Persistence
-	var cgs cgservice.CgService
+	var cgs cg.CgService
 	if config.MongoDb.DbName != "" && (config.MongoDb.Host != "" || config.MongoDb.ConnStr != "") {
 		// Create mongoDB connection
 		log.Infow("configuring TI service to use mongo DB",

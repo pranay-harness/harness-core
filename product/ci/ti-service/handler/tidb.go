@@ -3,7 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/wings-software/portal/product/ci/ti-service/cgservice"
+	"github.com/wings-software/portal/product/ci/ti-service/cg"
 	"net/http"
 	"time"
 
@@ -20,7 +20,7 @@ const (
 
 // HandleSelect returns an http.HandlerFunc that figures out which tests to run
 // based on the files provided.
-func HandleSelect(svc cgservice.CgService, db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleSelect(svc cg.CgService, db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
 		ctx := r.Context()
@@ -124,7 +124,7 @@ func HandleOverview(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 	}
 }
 
-func HandleUploadCg(svc cgservice.CgService, db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleUploadCg(svc cg.CgService, db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, repoParam, sourceBranchParam, targetBranchParam, shaParam)
 		if err != nil {
@@ -139,7 +139,7 @@ func HandleUploadCg(svc cgservice.CgService, db db.Db, log *zap.SugaredLogger) h
 		buildId := r.FormValue(buildIdParam)
 		stageId := r.FormValue(stageIdParam)
 		stepId := r.FormValue(stepIdParam)
-		info := cgservice.VCSInfo{
+		info := cg.VCSInfo{
 			Repo:     r.FormValue(repoParam),
 			Branch:   r.FormValue(sourceBranchParam),
 			CommitId: r.FormValue(shaParam),

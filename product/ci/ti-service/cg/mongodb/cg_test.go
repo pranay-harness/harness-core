@@ -7,7 +7,7 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/db"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	"github.com/wings-software/portal/product/ci/addon/ti"
-	"github.com/wings-software/portal/product/ci/ti-service/cgservice"
+	"github.com/wings-software/portal/product/ci/ti-service/cg"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
@@ -16,7 +16,7 @@ import (
 	"testing"
 )
 
-var svc cgservice.CgService
+var svc cg.CgService
 var mdb *db.MongoDb
 var err error
 
@@ -154,8 +154,8 @@ func setupNodes(ctx context.Context) {
 	mdb.Database.Collection("nodes").InsertMany(ctx, nodes)
 }
 
-func getVCSInfo() cgservice.VCSInfo {
-	return cgservice.VCSInfo{
+func getVCSInfo() cg.VCSInfo {
+	return cg.VCSInfo{
 		Repo:     "repo",
 		Branch:   "branch",
 		CommitId: "commit",

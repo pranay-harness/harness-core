@@ -1,5 +1,5 @@
-// cgservice package contains functions to interact with callgraph
-package cgservice
+// cg package contains functions to interact with callgraph
+package cg
 
 import (
 	"context"

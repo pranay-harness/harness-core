@@ -8,8 +8,8 @@ go_library(
     deps = [
         "//commons/go/lib/db:go_default_library",
         "//commons/go/lib/logs:go_default_library",
-        "//product/ci/ti-service/cgservice:go_default_library",
-        "//product/ci/ti-service/cgservice/mongodb:go_default_library",
+        "//product/ci/ti-service/cg:go_default_library",
+        "//product/ci/ti-service/cg/mongodb:go_default_library",
         "//product/ci/ti-service/config:go_default_library",
         "//product/ci/ti-service/db:go_default_library",
         "//product/ci/ti-service/db/timescaledb:go_default_library",
