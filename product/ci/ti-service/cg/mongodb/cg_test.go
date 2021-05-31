@@ -55,7 +55,7 @@ func TestMongoDb_UploadPartialCgForNodes(t *testing.T) {
 		getVCSInfo(),
 		"acct", "org", "proj")
 	n := []interface{}{n1, n2}
-	db.Database.Collection("nodes").InsertMany(ctx, n)
+	mdb.Database.Collection("nodes").InsertMany(ctx, n)
 
 	// this should be added in nodes collection as ID: 3 is unique
 	newNode := getNode(3)
@@ -94,7 +94,7 @@ func TestMongoDb_UploadPartialCgForRelations(t *testing.T) {
 	r1 := NewRelation(1, []int{1, 2}, getVCSInfo(), "acc", "org", "proj")
 	r2 := NewRelation(2, []int{3, 4, 5, 6}, getVCSInfo(), "acc", "org", "proj")
 	nodes := []interface{}{r1, r2}
-	db.Database.Collection("relations").InsertMany(ctx, nodes)
+	mdb.Database.Collection("relations").InsertMany(ctx, nodes)
 
 	// this should be added in nodes collection as ID: 3 is unique
 	newRelation := getRelation(3, []int{8})
@@ -159,11 +159,11 @@ func Test_GetTestsToRun_Unsupported_File(t *testing.T) {
 		getVCSInfo(), "acct", "org", "proj")
 
 	n := []interface{}{n1, n2, n3, n4, n5}
-	db.Database.Collection("nodes").InsertMany(ctx, n)
+	mdb.Database.Collection("nodes").InsertMany(ctx, n)
 
 	chFiles := []types.File{{Name: "a.xml", Status: types.FileModified}}
 
-	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{Files: chFiles, TargetBranch: "branch", Repo: "repo"})
+	resp, err := svc.GetTestsToRun(ctx, types.SelectTestsReq{Files: chFiles, TargetBranch: "branch", Repo: "repo"})
 	assert.Nil(t, err)
 	assert.Equal(t, resp.SelectAll, true)
 	assert.Equal(t, resp.TotalTests, 4)
@@ -222,13 +222,13 @@ func Test_GetTestsToRun_TiConfig_Added_Deleted(t *testing.T) {
 	n10 := NewNode(10, "path.to.test4", "m2", "param", "GhiTest", "test",
 		getVCSInfo(), "acct", "org", "proj")
 	n := []interface{}{n1, n2, n3, n4, n5, n6, n7, n8, n9, n10}
-	db.Database.Collection("nodes").InsertMany(ctx, n)
+	mdb.Database.Collection("nodes").InsertMany(ctx, n)
 
 	// Add relation between them
 	r1 := NewRelation(1, []int{2}, getVCSInfo(), "acct", "org", "proj")
 	r2 := NewRelation(5, []int{6}, getVCSInfo(), "acct", "org", "proj")
 	r3 := NewRelation(8, []int{9}, getVCSInfo(), "acct", "org", "proj")
-	db.Database.Collection("relations").InsertMany(ctx, []interface{}{r1, r2, r3})
+	mdb.Database.Collection("relations").InsertMany(ctx, []interface{}{r1, r2, r3})
 
 	chFiles := []types.File{{Name: "src/a.xml", Status: types.FileModified},
 		{Name: "src/b.jsp", Status: types.FileModified},
@@ -241,7 +241,7 @@ func Test_GetTestsToRun_TiConfig_Added_Deleted(t *testing.T) {
 	ticonfig := types.TiConfig{}
 	ticonfig.Config.Ignore = []string{"**/*.xml", "**/*.jsp"}
 
-	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{TiConfig: ticonfig, Files: chFiles, TargetBranch: "branch", Repo: "repo"})
+	resp, err := svc.GetTestsToRun(ctx, types.SelectTestsReq{TiConfig: ticonfig, Files: chFiles, TargetBranch: "branch", Repo: "repo"})
 	assert.Nil(t, err)
 	assert.Equal(t, resp.SelectAll, false)
 	assert.Equal(t, resp.TotalTests, 7)
@@ -267,13 +267,13 @@ func Test_GetTestsToRun_WithNewTests(t *testing.T) {
 	n2 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test",
 		getVCSInfo(), "acct", "org", "proj")
 	n := []interface{}{n1, n2}
-	db.Database.Collection("nodes").InsertMany(ctx, n)
+	mdb.Database.Collection("nodes").InsertMany(ctx, n)
 
 	// Add relation between them
 	r1 := NewRelation(1, []int{2}, getVCSInfo(), "acct", "org", "proj")
 	r2 := NewRelation(5, []int{6}, getVCSInfo(), "acct", "org", "proj")
 	r3 := NewRelation(8, []int{9}, getVCSInfo(), "acct", "org", "proj")
-	db.Database.Collection("relations").InsertMany(ctx, []interface{}{r1, r2, r3})
+	mdb.Database.Collection("relations").InsertMany(ctx, []interface{}{r1, r2, r3})
 
 	chFiles := []types.File{{Name: "src/a.xml", Status: types.FileModified},
 		{Name: "src/b.jsp", Status: types.FileModified},
@@ -284,7 +284,7 @@ func Test_GetTestsToRun_WithNewTests(t *testing.T) {
 	ticonfig := types.TiConfig{}
 	ticonfig.Config.Ignore = []string{"**/*.xml", "**/*.jsp"}
 
-	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{TiConfig: ticonfig, Files: chFiles, TargetBranch: "branch", Repo: "repo"})
+	resp, err := svc.GetTestsToRun(ctx, types.SelectTestsReq{TiConfig: ticonfig, Files: chFiles, TargetBranch: "branch", Repo: "repo"})
 	assert.Nil(t, err)
 	assert.Equal(t, resp.SelectAll, false)
 	assert.Equal(t, resp.TotalTests, 1)    // new tests will get factored after CG
@@ -320,11 +320,11 @@ func contains(s []int, searchTerm int) bool {
 }
 
 func dropNodes(ctx context.Context) {
-	db.Database.Collection("nodes").Drop(ctx)
+	mdb.Database.Collection("nodes").Drop(ctx)
 }
 
 func dropRelations(ctx context.Context) {
-	db.Database.Collection("relations").Drop(ctx)
+	mdb.Database.Collection("relations").Drop(ctx)
 }
 
 func getVCSInfo() cg.VCSInfo {
