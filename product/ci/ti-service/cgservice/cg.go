@@ -7,6 +7,13 @@ import (
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 )
 
+// VCSInfo contains metadata corresponding to version control system details
+type VCSInfo struct {
+	Repo     string `json:"repo" bson:"repo"`
+	Branch   string `json:"branch" bson:"branch"`
+	CommitId string `json:"commit_id" bson:"commit_id"`
+}
+
 // CgService represents an interface to run tests intelligently
 type CgService interface {
 

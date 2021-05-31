@@ -1,5 +1,5 @@
 // cgservice package contains functions to interact with the cg in db
-package cgservice
+package mongodb
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/db"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	"github.com/wings-software/portal/product/ci/addon/ti"
+	"github.com/wings-software/portal/product/ci/ti-service/cgservice"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -39,39 +40,32 @@ type Relation struct {
 	// DefaultModel adds _id,created_at and updated_at fields to the Model
 	mgm.DefaultModel `bson:",inline"`
 
-	Source  int     `json:"source" bson:"source"`
-	Tests   []int   `json:"tests" bson:"tests"`
-	Acct    string  `json:"account" bson:"account"`
-	Proj    string  `json:"project" bson:"project"`
-	Org     string  `json:"organization" bson:"organization"`
-	VCSInfo VCSInfo `json:"vcs_info" bson:"vcs_info"`
+	Source  int               `json:"source" bson:"source"`
+	Tests   []int             `json:"tests" bson:"tests"`
+	Acct    string            `json:"account" bson:"account"`
+	Proj    string            `json:"project" bson:"project"`
+	Org     string            `json:"organization" bson:"organization"`
+	VCSInfo cgservice.VCSInfo `json:"vcs_info" bson:"vcs_info"`
 }
 
 type Node struct {
 	// DefaultModel adds _id,created_at and updated_at fields to the Model
 	mgm.DefaultModel `bson:",inline"`
 
-	Package string  `json:"package" bson:"package"`
-	Method  string  `json:"method" bson:"method"`
-	Id      int     `json:"id" bson:"id"`
-	Params  string  `json:"params" bson:"params"`
-	Class   string  `json:"class" bson:"class"`
-	Type    string  `json:"type" bson:"type"`
-	Acct    string  `json:"account" bson:"account"`
-	Proj    string  `json:"project" bson:"project"`
-	Org     string  `json:"organization" bson:"organization"`
-	VCSInfo VCSInfo `json:"vcs_info" bson:"vcs_info"`
-}
-
-// VCSInfo contains metadata corresponding to version control system details
-type VCSInfo struct {
-	Repo     string `json:"repo" bson:"repo"`
-	Branch   string `json:"branch" bson:"branch"`
-	CommitId string `json:"commit_id" bson:"commit_id"`
+	Package string            `json:"package" bson:"package"`
+	Method  string            `json:"method" bson:"method"`
+	Id      int               `json:"id" bson:"id"`
+	Params  string            `json:"params" bson:"params"`
+	Class   string            `json:"class" bson:"class"`
+	Type    string            `json:"type" bson:"type"`
+	Acct    string            `json:"account" bson:"account"`
+	Proj    string            `json:"project" bson:"project"`
+	Org     string            `json:"organization" bson:"organization"`
+	VCSInfo cgservice.VCSInfo `json:"vcs_info" bson:"vcs_info"`
 }
 
 // NewNode creates Node object form given fields
-func NewNode(id int, pkg, method, params, class, typ string, vcs VCSInfo, acc, org, proj string) *Node {
+func NewNode(id int, pkg, method, params, class, typ string, vcs cgservice.VCSInfo, acc, org, proj string) *Node {
 	return &Node{
 		Id:      id,
 		Package: pkg,
@@ -87,7 +81,7 @@ func NewNode(id int, pkg, method, params, class, typ string, vcs VCSInfo, acc, o
 }
 
 // NewRelation creates Relation object form given fields
-func NewRelation(source int, tests []int, vcs VCSInfo, acc, org, proj string) *Relation {
+func NewRelation(source int, tests []int, vcs cgservice.VCSInfo, acc, org, proj string) *Relation {
 	return &Relation{
 		Source:  source,
 		Tests:   tests,
@@ -328,7 +322,7 @@ func (cgs *CgServiceImpl) GetTestsToRun(ctx context.Context, req types.SelectTes
 }
 
 // UploadPartialCg uploads callgraph corresponding to a branch in PR run in mongo.
-func (cgs *CgServiceImpl) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info VCSInfo, acc, org, proj, target string) (types.SelectTestsResp, error) {
+func (cgs *CgServiceImpl) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info cgservice.VCSInfo, acc, org, proj, target string) (types.SelectTestsResp, error) {
 	nodes := make([]Node, len(cg.Nodes))
 	rels := make([]Relation, len(cg.Relations))
 
@@ -687,7 +681,7 @@ func (cgs *CgServiceImpl) mergeRelations(ctx context.Context, commit, branch, re
 // for the same PR.
 // 2. In new nodes received as part of current pr callgraph, only the nodes which are not already present in db will be created.
 // it is checked using Id key. If the Id already exists, skip the node.
-func (cgs *CgServiceImpl) upsertNodes(ctx context.Context, nodes []Node, info VCSInfo) error {
+func (cgs *CgServiceImpl) upsertNodes(ctx context.Context, nodes []Node, info cgservice.VCSInfo) error {
 	cgs.Log.Infow("uploading partialcg in nodes collection",
 		"#nodes", len(nodes), "repo", info.Repo, "branch", info.Branch)
 	// fetch existing records for branch
@@ -723,7 +717,7 @@ func (cgs *CgServiceImpl) upsertNodes(ctx context.Context, nodes []Node, info VC
 // 1. get all the existing relations for `repo` + `branch` + `commit_id`.
 // 2. Relations received in cg which are new will be inserted in relations collection.
 // relations which are already present in the db needs to be merged.
-func (cgs *CgServiceImpl) upsertRelations(ctx context.Context, relns []Relation, info VCSInfo) error {
+func (cgs *CgServiceImpl) upsertRelations(ctx context.Context, relns []Relation, info cgservice.VCSInfo) error {
 	cgs.Log.Infow("uploading partialcg in relations collection",
 		"#relns", len(relns), "repo", info.Repo, "branch", info.Branch)
 	// fetch existing records for branch

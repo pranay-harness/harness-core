@@ -1,4 +1,4 @@
-package cgservice
+package mongodb
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/db"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	"github.com/wings-software/portal/product/ci/addon/ti"
+	"github.com/wings-software/portal/product/ci/ti-service/cgservice"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
@@ -15,7 +16,7 @@ import (
 	"testing"
 )
 
-var svc CgService
+var svc cgservice.CgService
 var mdb *db.MongoDb
 var err error
 
@@ -36,10 +37,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		fmt.Println(fmt.Sprintf("%v", err))
 	}
-	svc = &CgServiceImpl{
-		MongoDb: mdb,
-		Log:     log.Sugar(),
-	}
+	svc = NewCgServiceImpl(*mdb, log.Sugar())
 	os.Exit(m.Run())
 }
 
@@ -156,8 +154,8 @@ func setupNodes(ctx context.Context) {
 	mdb.Database.Collection("nodes").InsertMany(ctx, nodes)
 }
 
-func getVCSInfo() VCSInfo {
-	return VCSInfo{
+func getVCSInfo() cgservice.VCSInfo {
+	return cgservice.VCSInfo{
 		Repo:     "repo",
 		Branch:   "branch",
 		CommitId: "commit",

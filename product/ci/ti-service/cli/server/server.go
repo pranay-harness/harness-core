@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/wings-software/portal/product/ci/ti-service/cgservice"
+	"github.com/wings-software/portal/product/ci/ti-service/cgservice/mongodb"
 	"os"
 	"os/signal"
 
@@ -103,7 +104,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 		}
 
 		// Callgraph service
-		cgs = &cgservice.CgServiceImpl{
+		cgs = &mongodb.CgServiceImpl{
 			MongoDb: tidb,
 			Log:     log,
 		}
