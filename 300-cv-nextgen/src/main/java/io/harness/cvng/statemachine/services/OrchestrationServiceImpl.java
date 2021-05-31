@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.metrics.MetricsConstants;
 import io.harness.cvng.metrics.beans.CVNGMetricAnalysisContext;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
@@ -98,7 +99,8 @@ public class OrchestrationServiceImpl implements OrchestrationService {
           .forEach(orchestrator -> {
             try (CVNGMetricAnalysisContext context =
                      new CVNGMetricAnalysisContext(orchestrator.getAccountId(), orchestrator.getVerificationTaskId())) {
-              metricService.recordMetric("orchestrator_queue_size", orchestrator.getAnalysisStateMachineQueue().size());
+              metricService.recordMetric(
+                  MetricsConstants.ORCHESTRATOR_QUEUE_SIZE, orchestrator.getAnalysisStateMachineQueue().size());
             }
           });
     }

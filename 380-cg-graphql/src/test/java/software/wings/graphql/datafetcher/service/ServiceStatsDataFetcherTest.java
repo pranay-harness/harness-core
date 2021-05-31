@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.service;
 
+import static io.harness.rule.OwnerRule.ABHINAV_MITTAL;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,6 +22,8 @@ import software.wings.graphql.schema.type.aggregation.service.QLDeploymentTypeFi
 import software.wings.graphql.schema.type.aggregation.service.QLServiceAggregation;
 import software.wings.graphql.schema.type.aggregation.service.QLServiceEntityAggregation;
 import software.wings.graphql.schema.type.aggregation.service.QLServiceFilter;
+import software.wings.graphql.schema.type.aggregation.service.QLServiceTagAggregation;
+import software.wings.graphql.schema.type.aggregation.service.QLServiceTagType;
 import software.wings.security.UserThreadLocal;
 
 import com.google.inject.Inject;
@@ -70,5 +73,18 @@ public class ServiceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
     assertThat(qlData).isInstanceOf(QLAggregatedData.class);
     QLAggregatedData aggregatedData = (QLAggregatedData) qlData;
     assertThat(aggregatedData.getDataPoints().size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV_MITTAL)
+  @Category(UnitTests.class)
+  public void assertGroupByTag() {
+    assertThat(serviceStatsDataFetcher.getGroupByEntityFromTag(
+                   QLServiceTagAggregation.builder().entityType(QLServiceTagType.APPLICATION).build()))
+        .isEqualTo(QLServiceEntityAggregation.Application);
+
+    assertThat(serviceStatsDataFetcher.getGroupByEntityFromTag(
+                   QLServiceTagAggregation.builder().entityType(QLServiceTagType.SERVICE).build()))
+        .isEqualTo(QLServiceEntityAggregation.Service);
   }
 }
