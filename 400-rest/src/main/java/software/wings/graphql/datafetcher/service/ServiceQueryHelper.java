@@ -84,6 +84,9 @@ public class ServiceQueryHelper {
           case APPLICATION:
             query.field("appId").in(entityIds);
             break;
+          case SERVICE:
+            query.field("_id").in(entityIds);
+            break;
           default:
             log.error("EntityType {} not supported in query", serviceTagFilter.getEntityType());
             throw new InvalidRequestException("Error while compiling query", WingsException.USER);
@@ -96,6 +99,8 @@ public class ServiceQueryHelper {
     switch (entityType) {
       case APPLICATION:
         return EntityType.APPLICATION;
+      case SERVICE:
+        return EntityType.SERVICE;
       default:
         log.error("Unsupported entity type {} for tag ", entityType);
         throw new InvalidRequestException("Unsupported entity type " + entityType);

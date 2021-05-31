@@ -331,9 +331,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     YamlSdkInitHelper.initialize(injector, yamlSdkConfiguration);
     initializeServiceSecretKeys();
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
-    if (!configuration.getShouldConfigureWithPMS()) {
-      initMetrics(injector);
-    }
+    initMetrics(injector);
     autoCreateCollectionsAndIndexes(injector);
     registerCorrelationFilter(environment, injector);
     registerAuthFilters(environment, injector, configuration);

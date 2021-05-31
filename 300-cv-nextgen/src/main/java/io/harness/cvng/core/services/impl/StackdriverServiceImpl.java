@@ -7,6 +7,7 @@ import io.harness.cvng.beans.DataCollectionRequestType;
 import io.harness.cvng.beans.stackdriver.StackDriverMetricDefinition;
 import io.harness.cvng.beans.stackdriver.StackdriverDashboardDetailsRequest;
 import io.harness.cvng.beans.stackdriver.StackdriverDashboardRequest;
+import io.harness.cvng.beans.stackdriver.StackdriverLogSampleDataRequest;
 import io.harness.cvng.beans.stackdriver.StackdriverSampleDataRequest;
 import io.harness.cvng.core.beans.MonitoringSourceImportStatus;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
@@ -31,6 +32,7 @@ import java.lang.reflect.Type;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -95,6 +97,40 @@ public class StackdriverServiceImpl implements StackdriverService {
     List<StackdriverDashboardDetail> dashboardDetails = gson.fromJson(JsonUtils.asJson(response.getResult()), type);
     dashboardDetails.forEach(StackdriverDashboardDetail::transformDataSets);
     return dashboardDetails;
+  }
+
+  @Override
+  public List<LinkedHashMap> getSampleLogData(String accountId, String connectorIdentifier, String orgIdentifier,
+      String projectIdentifier, String query, String tracingId) {
+    try {
+      Instant now = DateTimeUtils.roundDownTo1MinBoundary(Instant.now());
+
+      DataCollectionRequest request = StackdriverLogSampleDataRequest.builder()
+                                          .type(DataCollectionRequestType.STACKDRIVER_LOG_SAMPLE_DATA)
+                                          .query(query)
+                                          .startTime(now.minus(Duration.ofMinutes(60)))
+                                          .endTime(now)
+                                          .build();
+
+      OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
+                                                      .dataCollectionRequest(request)
+                                                      .connectorIdentifier(connectorIdentifier)
+                                                      .accountId(accountId)
+                                                      .tracingId(tracingId)
+                                                      .orgIdentifier(orgIdentifier)
+                                                      .projectIdentifier(projectIdentifier)
+                                                      .build();
+
+      OnboardingResponseDTO response = onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
+
+      final Gson gson = new Gson();
+      Type type = new TypeToken<List<LinkedHashMap>>() {}.getType();
+      return gson.fromJson(JsonUtils.asJson(response.getResult()), type);
+    } catch (Exception ex) {
+      String msg = "Exception while trying to fetch sample data. Please ensure that the query is valid.";
+      log.error(msg, ex);
+      throw new OnboardingException(msg);
+    }
   }
 
   @Override

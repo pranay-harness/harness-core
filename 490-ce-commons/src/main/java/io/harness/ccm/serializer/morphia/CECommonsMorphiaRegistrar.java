@@ -8,6 +8,7 @@ import io.harness.ccm.commons.entities.CEDataCleanupRequest;
 import io.harness.ccm.commons.entities.CEMetadataRecord;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.ccm.commons.entities.LatestClusterInfo;
+import io.harness.ccm.commons.entities.recommendation.K8sNodeRecommendation;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 
@@ -26,6 +27,7 @@ public class CECommonsMorphiaRegistrar implements MorphiaRegistrar {
     set.add(K8sWorkloadRecommendation.class);
     set.add(PartialRecommendationHistogram.class);
     set.add(Budget.class);
+    set.add(K8sNodeRecommendation.class);
   }
   @Override
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {

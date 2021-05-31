@@ -3181,6 +3181,7 @@ public class TriggerServiceTest extends WingsBaseTest {
             .appManifestId(MANIFEST_ID + 2)
             .pipelineId(WORKFLOW_ID)
             .build()));
+    mockGetAppManifestAndGetService();
     triggerService.save(trigger);
 
     when(helmChartService.getLastCollectedManifest(ACCOUNT_ID, MANIFEST_ID))
@@ -3202,6 +3203,20 @@ public class TriggerServiceTest extends WingsBaseTest {
         .containsExactlyInAnyOrder(HELM_CHART_ID, HELM_CHART_ID + 2);
   }
 
+  private void mockGetAppManifestAndGetService() {
+    ApplicationManifest appManifest =
+        ApplicationManifest.builder().accountId(ACCOUNT_ID).storeType(StoreType.HelmChartRepo).build();
+    appManifest.setUuid(MANIFEST_ID + 2);
+    when(applicationManifestService.getManifestByServiceId(APP_ID, SERVICE_ID + 2)).thenReturn(appManifest);
+    ApplicationManifest appManifest1 =
+        ApplicationManifest.builder().accountId(ACCOUNT_ID).storeType(StoreType.HelmChartRepo).build();
+    appManifest1.setUuid(MANIFEST_ID);
+    when(applicationManifestService.getManifestByServiceId(APP_ID, SERVICE_ID)).thenReturn(appManifest1);
+    when(serviceResourceService.get(APP_ID, SERVICE_ID + 2, false))
+        .thenReturn(Service.builder().name(SERVICE_NAME + 2).uuid(SERVICE_ID + 2).build());
+    return;
+  }
+
   @Test
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
@@ -3217,6 +3232,7 @@ public class TriggerServiceTest extends WingsBaseTest {
             .serviceId(SERVICE_ID + 2)
             .appManifestId(MANIFEST_ID + 2)
             .build()));
+    mockGetAppManifestAndGetService();
     triggerService.save(trigger);
 
     when(helmChartService.getLastCollectedManifest(ACCOUNT_ID, MANIFEST_ID))
@@ -3253,6 +3269,7 @@ public class TriggerServiceTest extends WingsBaseTest {
             .serviceId(SERVICE_ID + 2)
             .appManifestId(MANIFEST_ID + 2)
             .build()));
+    mockGetAppManifestAndGetService();
     triggerService.save(trigger);
 
     when(helmChartService.getManifestByVersionNumber(eq(ACCOUNT_ID), anyString(), anyString()))
@@ -3294,6 +3311,7 @@ public class TriggerServiceTest extends WingsBaseTest {
             .serviceId(SERVICE_ID + 2)
             .appManifestId(MANIFEST_ID + 2)
             .build()));
+    mockGetAppManifestAndGetService();
     triggerService.save(trigger);
 
     when(helmChartService.getManifestByVersionNumber(eq(ACCOUNT_ID), eq("1"), anyString()))
@@ -3342,6 +3360,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(applicationManifestService.getById(APP_ID, MANIFEST_ID)).thenReturn(appManifest);
     when(serviceResourceService.get(APP_ID, SERVICE_ID))
         .thenReturn(Service.builder().name(SERVICE_NAME).uuid(SERVICE_ID).build());
+    mockGetAppManifestAndGetService();
     triggerService.save(trigger);
 
     HelmChart helmChart1 = HelmChart.builder()
@@ -3405,6 +3424,8 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(applicationManifestService.getById(APP_ID, MANIFEST_ID)).thenReturn(appManifest);
     when(serviceResourceService.get(APP_ID, SERVICE_ID))
         .thenReturn(Service.builder().name(SERVICE_NAME).uuid(SERVICE_ID).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID + 2, false))
+        .thenReturn(Service.builder().name(SERVICE_NAME + 2).uuid(SERVICE_ID + 2).build());
     triggerService.save(trigger);
 
     HelmChart helmChart1 = HelmChart.builder()
@@ -3480,6 +3501,13 @@ public class TriggerServiceTest extends WingsBaseTest {
                                              .serviceId(SERVICE_ID)
                                              .appManifestId(MANIFEST_ID)
                                              .build()));
+    ApplicationManifest appManifest = ApplicationManifest.builder()
+                                          .accountId(ACCOUNT_ID)
+                                          .storeType(StoreType.HelmChartRepo)
+                                          .pollForChanges(true)
+                                          .build();
+    appManifest.setUuid(MANIFEST_ID);
+    when(applicationManifestService.getManifestByServiceId(APP_ID, SERVICE_ID)).thenReturn(appManifest);
     triggerService.save(trigger);
 
     when(helmChartService.getManifestByVersionNumber(eq(ACCOUNT_ID), anyString(), anyString()))
@@ -3488,12 +3516,6 @@ public class TriggerServiceTest extends WingsBaseTest {
                    .uuid(HELM_CHART_ID + invocationOnMock.getArgumentAt(2, String.class))
                    .version(invocationOnMock.getArgumentAt(2, String.class))
                    .build());
-    ApplicationManifest appManifest = ApplicationManifest.builder()
-                                          .accountId(ACCOUNT_ID)
-                                          .storeType(StoreType.HelmChartRepo)
-                                          .pollForChanges(true)
-                                          .build();
-    appManifest.setUuid(MANIFEST_ID);
     when(applicationManifestService.getManifestByServiceId(APP_ID, SERVICE_ID + 2)).thenReturn(appManifest);
     when(applicationManifestService.getById(APP_ID, MANIFEST_ID)).thenReturn(appManifest);
 
@@ -3714,6 +3736,7 @@ public class TriggerServiceTest extends WingsBaseTest {
             .appManifestId(MANIFEST_ID + 2)
             .pipelineId(WORKFLOW_ID)
             .build()));
+    mockGetAppManifestAndGetService();
     triggerService.save(trigger);
 
     when(featureFlagService.isEnabled(FeatureName.ON_NEW_ARTIFACT_TRIGGER_WITH_LAST_COLLECTED_FILTER, ACCOUNT_ID))
@@ -3824,7 +3847,6 @@ public class TriggerServiceTest extends WingsBaseTest {
         .uuid(TRIGGER_ID)
         .appId(APP_ID)
         .name(TRIGGER_NAME)
-        .accountId(ACCOUNT_ID)
         .condition(WebHookTriggerCondition.builder()
                        .webhookSource(webhookSource)
                        .webHookToken(WebHookToken.builder().build())

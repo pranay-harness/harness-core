@@ -83,6 +83,7 @@ input WorkflowTagFilter {
 
 enum WorkflowTagType {
   APPLICATION
+  WORKFLOW
 }
 
 enum OrchestrationWorkflowType {

@@ -2,7 +2,7 @@ package io.harness.batch.processing.budgets.service.impl;
 
 import static io.harness.ccm.budget.AlertThresholdBase.ACTUAL_COST;
 import static io.harness.ccm.budget.AlertThresholdBase.FORECASTED_COST;
-import static io.harness.ccm.commons.Constants.HARNESS_NAME;
+import static io.harness.ccm.commons.constants.Constants.HARNESS_NAME;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unified;

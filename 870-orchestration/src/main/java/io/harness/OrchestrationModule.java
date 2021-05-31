@@ -93,8 +93,8 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
 
     bind(NodeExecutionService.class).to(NodeExecutionServiceImpl.class).in(Singleton.class);
     bind(PlanExecutionService.class).to(PlanExecutionServiceImpl.class).in(Singleton.class);
-    bind(InterruptService.class).to(InterruptServiceImpl.class);
-    bind(OrchestrationService.class).to(OrchestrationServiceImpl.class);
+    bind(InterruptService.class).to(InterruptServiceImpl.class).in(Singleton.class);
+    bind(OrchestrationService.class).to(OrchestrationServiceImpl.class).in(Singleton.class);
 
     MapBinder<TaskCategory, TaskExecutor> taskExecutorMap =
         MapBinder.newMapBinder(binder(), TaskCategory.class, TaskExecutor.class);

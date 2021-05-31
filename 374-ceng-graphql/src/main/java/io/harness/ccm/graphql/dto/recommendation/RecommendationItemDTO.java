@@ -1,5 +1,7 @@
 package io.harness.ccm.graphql.dto.recommendation;
 
+import io.harness.ccm.commons.beans.recommendation.ResourceType;
+
 import io.leangen.graphql.annotations.GraphQLNonNull;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;

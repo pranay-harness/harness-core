@@ -1,53 +1,193 @@
 package io.harness.batch.processing.tasklet;
 
-import static io.harness.ccm.commons.Constants.ZONE_OFFSET;
+import static io.harness.annotations.dev.HarnessTeam.CE;
+import static io.harness.ccm.commons.utils.TimeUtils.toOffsetDateTime;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.ccm.CCMJobConstants;
+import io.harness.batch.processing.pricing.client.BanzaiRecommenderClient;
+import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
+import io.harness.batch.processing.pricing.service.intfc.VMPricingService;
 import io.harness.ccm.commons.beans.JobConstants;
+import io.harness.ccm.commons.beans.billing.InstanceCategory;
+import io.harness.ccm.commons.beans.recommendation.K8sServiceProvider;
 import io.harness.ccm.commons.beans.recommendation.NodePoolId;
+import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
 import io.harness.ccm.commons.beans.recommendation.TotalResourceUsage;
+import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequest;
+import io.harness.ccm.commons.beans.recommendation.models.RecommendationResponse;
 import io.harness.ccm.commons.dao.recommendation.K8sRecommendationDAO;
+import io.harness.exception.InvalidRequestException;
 
+import java.net.ConnectException;
 import java.time.Instant;
-import java.time.OffsetDateTime;
 import java.util.List;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import retrofit2.Response;
 
 @Slf4j
-@OwnedBy(HarnessTeam.CE)
+@OwnedBy(CE)
 public class K8sNodeRecommendationTasklet implements Tasklet {
   @Autowired private K8sRecommendationDAO k8sRecommendationDAO;
+  @Autowired private BanzaiRecommenderClient banzaiRecommenderClient;
+  @Autowired private VMPricingService vmPricingService;
+
+  // TODO(REVIEWER): Verify that the tasklet instance are not shared between parallel execution and this class is
+  // stateful.
+  private JobConstants jobConstants;
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
-    final JobConstants jobConstants = new CCMJobConstants(chunkContext);
+    this.jobConstants = new CCMJobConstants(chunkContext);
 
     List<NodePoolId> nodePoolIdList = k8sRecommendationDAO.getUniqueNodePools(jobConstants.getAccountId());
 
     for (NodePoolId nodePoolId : nodePoolIdList) {
-      TotalResourceUsage totalResourceUsage =
-          k8sRecommendationDAO.maxResourceOfAllTimeBucketsForANodePool(jobConstants, nodePoolId);
-      k8sRecommendationDAO.insertNodePoolAggregated(jobConstants, nodePoolId, totalResourceUsage);
+      if (nodePoolId.getNodepoolname() == null) {
+        log.info("There is a node with node_pool_name as null in [accountId:{}, clusterId:{}], skipping",
+            jobConstants.getAccountId(), nodePoolId.getClusterid());
+        continue;
+      }
 
-      logTotalResourceUsage(jobConstants, nodePoolId, totalResourceUsage);
+      TotalResourceUsage totalResourceUsage = getTotalResourceUsageAndInsert(nodePoolId);
+
+      logTotalResourceUsage(nodePoolId, totalResourceUsage);
+
+      try {
+        calculateAndSaveRecommendation(nodePoolId, totalResourceUsage);
+      } catch (InvalidRequestException ex) {
+        log.error("Not generating recommendation for: {} with TRU: {}", nodePoolId, totalResourceUsage, ex);
+      }
     }
 
     return null;
   }
 
-  private void logTotalResourceUsage(@NonNull JobConstants jobConstants, @NonNull NodePoolId nodePoolId,
-      @NonNull TotalResourceUsage totalResourceUsage) {
+  private TotalResourceUsage getTotalResourceUsageAndInsert(@NonNull NodePoolId nodePoolId) {
+    TotalResourceUsage totalResourceUsage =
+        k8sRecommendationDAO.maxResourceOfAllTimeBucketsForANodePool(jobConstants, nodePoolId);
+    k8sRecommendationDAO.insertNodePoolAggregated(jobConstants, nodePoolId, totalResourceUsage);
+    return totalResourceUsage;
+  }
+
+  private void logTotalResourceUsage(@NonNull NodePoolId nodePoolId, @NonNull TotalResourceUsage totalResourceUsage) {
     log.info("TotalResourceUsage for {}:{} is {} between {} and {}", jobConstants.getAccountId(), nodePoolId.toString(),
-        totalResourceUsage.toString(),
-        OffsetDateTime.ofInstant(Instant.ofEpochMilli(jobConstants.getJobStartTime()), ZONE_OFFSET),
-        OffsetDateTime.ofInstant(Instant.ofEpochMilli(jobConstants.getJobEndTime()), ZONE_OFFSET));
+        totalResourceUsage.toString(), toOffsetDateTime(jobConstants.getJobStartTime()),
+        toOffsetDateTime(jobConstants.getJobEndTime()));
+  }
+
+  private void calculateAndSaveRecommendation(
+      @NonNull NodePoolId nodePoolId, @NonNull TotalResourceUsage totalResourceUsage) {
+    K8sServiceProvider serviceProvider =
+        k8sRecommendationDAO.getServiceProvider(jobConstants.getAccountId(), nodePoolId);
+    log.info("serviceProvider: {}", serviceProvider);
+
+    RecommendationResponse recommendation = getRecommendation(serviceProvider, totalResourceUsage);
+    log.info("RecommendationResponse: {}", recommendation);
+
+    String mongoEntityId = k8sRecommendationDAO.insertNodeRecommendationResponse(
+        jobConstants, nodePoolId, totalResourceUsage, recommendation);
+
+    RecommendationOverviewStats stats = getMonthlyCostAndSaving(nodePoolId, serviceProvider, recommendation);
+    log.info("The monthly stat is: {}", stats);
+
+    k8sRecommendationDAO.updateCeRecommendation(mongoEntityId, jobConstants, nodePoolId, stats, Instant.now());
+  }
+
+  @SneakyThrows
+  private RecommendationResponse getRecommendation(
+      K8sServiceProvider serviceProvider, TotalResourceUsage totalResourceUsage) {
+    RecommendClusterRequest request = constructRequest(totalResourceUsage);
+    log.info("RecommendClusterRequest: {}", request);
+
+    Response<RecommendationResponse> response =
+        banzaiRecommenderClient
+            .getRecommendation(serviceProvider.getCloudProvider().getCloudProviderName(),
+                serviceProvider.getCloudProvider().getK8sService(), serviceProvider.getRegion(), request)
+            .execute();
+
+    if (response.isSuccessful()) {
+      return response.body();
+    }
+
+    log.error("banzaiRecommenderClient response: {}", response);
+    throw new ConnectException("Failed to get/parse response from banzai recommender");
+  }
+
+  private static RecommendClusterRequest constructRequest(TotalResourceUsage totalResourceUsage) {
+    if (!isResourceConsistent(totalResourceUsage)) {
+      throw new InvalidRequestException(String.format("Inconsistent TotalResourceUsage: %s", totalResourceUsage));
+    }
+
+    long minNodes = 3L;
+    long maxNodesPossible = (long) Math.min(Math.floor(totalResourceUsage.getSumcpu() / totalResourceUsage.getMaxcpu()),
+        Math.floor(totalResourceUsage.getSummemory() / totalResourceUsage.getMaxmemory()));
+
+    maxNodesPossible = Math.max(maxNodesPossible, 1L);
+    if (maxNodesPossible < 3L) {
+      minNodes = maxNodesPossible;
+    }
+
+    return RecommendClusterRequest.builder()
+        .maxNodes(maxNodesPossible)
+        .minNodes(minNodes)
+        .sumCpu(totalResourceUsage.getSumcpu() / 1024.0D)
+        .sumMem(totalResourceUsage.getSummemory() / 1024.0D)
+        .allowBurst(true)
+        .sameSize(true)
+        .build();
+  }
+
+  private RecommendationOverviewStats getMonthlyCostAndSaving(
+      NodePoolId nodePoolId, K8sServiceProvider serviceProvider, RecommendationResponse recommendation) {
+    int nodeCount = k8sRecommendationDAO.getNodeCount(jobConstants, nodePoolId);
+
+    double currentPricePerVm = getCurrentInstancePrice(serviceProvider);
+
+    final double toMonthly = 24 * 30;
+    double monthlyCost = currentPricePerVm * (double) nodeCount * toMonthly;
+    double monthlySaving = recommendation.getAccuracy().getTotalPrice() * toMonthly - monthlyCost;
+
+    return RecommendationOverviewStats.builder()
+        .totalMonthlyCost(monthlyCost)
+        .totalMonthlySaving(monthlySaving)
+        .build();
+  }
+
+  private double getCurrentInstancePrice(@NonNull K8sServiceProvider serviceProvider) {
+    if (serviceProvider.getInstanceFamily() == null) {
+      log.warn("Incomplete K8sServiceProvider {}, returning currentCost = 0", serviceProvider);
+      return 0; // shall we use any default value?
+    }
+
+    VMComputePricingInfo vmComputePricingInfo = vmPricingService.getComputeVMPricingInfo(
+        serviceProvider.getInstanceFamily(), serviceProvider.getRegion(), serviceProvider.getCloudProvider());
+
+    log.info("Current Pricing {}", vmComputePricingInfo);
+
+    if (InstanceCategory.SPOT.equals(serviceProvider.getInstanceCategory())
+        && !isEmpty(vmComputePricingInfo.getSpotPrice())) {
+      // get any zone price, generally they all are same
+      return vmComputePricingInfo.getSpotPrice().get(0).getPrice();
+    }
+
+    return vmComputePricingInfo.getOnDemandPrice();
+  }
+
+  private static boolean isResourceConsistent(@NonNull TotalResourceUsage resource) {
+    boolean inconsistent = Math.round(resource.getSumcpu()) < Math.round(resource.getMaxcpu())
+        || Math.round(resource.getSummemory()) < Math.round(resource.getMaxmemory());
+    boolean anyZero = Math.round(resource.getSumcpu()) == 0L || Math.round(resource.getSummemory()) == 0L
+        || Math.round(resource.getMaxcpu()) == 0L || Math.round(resource.getMaxmemory()) == 0L;
+
+    return !inconsistent && !anyZero;
   }
 }
