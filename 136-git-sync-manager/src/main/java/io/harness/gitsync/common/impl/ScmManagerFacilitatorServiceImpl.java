@@ -101,9 +101,9 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
 
   @Override
   public List<GitFileChangeDTO> listFilesByFilePaths(
-      YamlGitConfigDTO yamlGitConfigIdentifier, List<String> filePaths, String branchName) {
-    final ScmConnector decryptedConnector = gitSyncConnectorHelper.getDecryptedConnector(
-        yamlGitConfigIdentifier, yamlGitConfigIdentifier.getAccountIdentifier());
+      YamlGitConfigDTO yamlGitConfigDTO, List<String> filePaths, String branchName) {
+    final ScmConnector decryptedConnector =
+        gitSyncConnectorHelper.getDecryptedConnector(yamlGitConfigDTO, yamlGitConfigDTO.getAccountIdentifier());
     FileBatchContentResponse filesList = scmClient.listFiles(decryptedConnector, filePaths, branchName);
     return FileBatchResponseMapper.createGitFileChangeList(filesList);
   }
