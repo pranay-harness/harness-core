@@ -3,10 +3,12 @@ package software.wings.beans;
 import static java.util.Arrays.asList;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -25,6 +27,7 @@ import org.mongodb.morphia.annotations.PostLoad;
 @Entity(value = "roles", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "RoleKeys")
+@StoreIn(DbAliases.CG_MANAGER)
 public class Role extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

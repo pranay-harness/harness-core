@@ -6,12 +6,14 @@ import static io.harness.secretmanagerclient.NGMetadata.NGMetadataKeys;
 import static io.harness.secretmanagerclient.NGSecretManagerMetadata.NGSecretManagerMetadataKeys;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.NGAccess;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -66,6 +68,7 @@ import org.mongodb.morphia.annotations.Transient;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "SecretManagerConfigKeys")
 @OwnedBy(PL)
+@StoreIn(DbAliases.CG_MANAGER)
 public abstract class SecretManagerConfig
     implements AccountAccess, EncryptionConfig, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
                UpdatedAtAware, UpdatedByAware, PersistentRegularIterable, NGAccess, NGSecretManagerConfigDTOConverter,

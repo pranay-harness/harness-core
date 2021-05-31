@@ -2,8 +2,10 @@ package io.harness.ng.core.models;
 
 import static io.harness.ng.core.mapper.TagMapper.convertToMap;
 
+import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.secretmanagerclient.SecretType;
@@ -28,6 +30,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "secrets", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document("secrets")
+@StoreIn(DbAliases.NG_MANAGER)
 public class Secret {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

@@ -2,7 +2,9 @@ package software.wings.search.framework;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 
 import lombok.Value;
@@ -22,6 +24,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "searchEntitiesIndexState", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "SearchEntityIndexStateKeys")
 @Slf4j
+@StoreIn(DbAliases.CG_MANAGER)
 public class SearchEntityIndexState implements PersistentEntity {
   @Id private String entityClass;
   private String syncVersion;

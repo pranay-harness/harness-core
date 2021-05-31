@@ -1,9 +1,11 @@
 package software.wings.scheduler.events.segment;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.UpdatedAtAccess;
 
@@ -23,6 +25,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "segmentGroupEventJobContexts")
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "SegmentGroupEventJobContextKeys")
+@StoreIn(DbAliases.CG_MANAGER)
 public class SegmentGroupEventJobContext implements PersistentRegularIterable, CreatedAtAccess, UpdatedAtAccess {
   @Id private String uuid;
 

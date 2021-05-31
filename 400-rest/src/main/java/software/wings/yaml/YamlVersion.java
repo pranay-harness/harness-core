@@ -3,6 +3,8 @@ package software.wings.yaml;
 import static software.wings.yaml.YamlVersion.Builder.aYamlVersion;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
+import io.harness.ng.DbAliases;
 
 import software.wings.beans.Base;
 
@@ -18,6 +20,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "yamlVersion", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "YamlVersionKeys")
+@StoreIn(DbAliases.CG_MANAGER)
 public class YamlVersion extends Base implements YamlHistory {
   private String yamlVersionId;
   private int version;

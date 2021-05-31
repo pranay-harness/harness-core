@@ -3,9 +3,11 @@ package software.wings.yaml.gitSync;
 import static software.wings.settings.SettingVariableTypes.YAML_GIT_SYNC;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Base;
@@ -38,6 +40,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "yamlGitConfig", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "YamlGitConfigKeys")
+@StoreIn(DbAliases.CG_MANAGER)
 public class YamlGitConfig extends Base implements EncryptableSetting {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

@@ -15,6 +15,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
@@ -22,6 +23,7 @@ import io.harness.data.validator.EntityName;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 
@@ -54,6 +56,7 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "WorkflowKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@StoreIn(DbAliases.CG_MANAGER)
 public class Workflow extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
