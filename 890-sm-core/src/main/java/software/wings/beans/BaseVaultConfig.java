@@ -65,8 +65,12 @@ public abstract class BaseVaultConfig extends SecretManagerConfig {
 
   @Override
   public void maskSecrets() {
-    this.authToken = SECRET_MASK;
-    this.secretId = SECRET_MASK;
+    if (isNotEmpty(this.authToken)) {
+      this.authToken = SECRET_MASK;
+    }
+    if (isNotEmpty(this.secretId)) {
+      this.secretId = SECRET_MASK;
+    }
   }
 
   @JsonIgnore
