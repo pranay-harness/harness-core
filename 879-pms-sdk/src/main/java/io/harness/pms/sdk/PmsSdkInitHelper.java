@@ -1,5 +1,6 @@
 package io.harness.pms.sdk;
 
+import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -9,6 +10,7 @@ import io.harness.monitoring.MonitoringEventObserver;
 import io.harness.pms.contracts.plan.ConsumerConfig;
 import io.harness.pms.contracts.plan.InitializeSdkRequest;
 import io.harness.pms.contracts.plan.PmsServiceGrpc;
+import io.harness.pms.contracts.plan.SdkModuleInfo;
 import io.harness.pms.contracts.plan.Types;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.execution.events.node.NodeExecutionEventListener;
@@ -18,6 +20,7 @@ import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
+import io.harness.pms.utils.PmsConstants;
 import io.harness.queue.QueueListenerController;
 
 import com.google.common.util.concurrent.ServiceManager;
@@ -74,8 +77,7 @@ public class PmsSdkInitHelper {
   }
 
   private static void initialize(Injector injector, PmsSdkConfiguration config) {
-    String serviceName = config.getServiceName();
-    log.info("Initializing PMS SDK for service: {}", serviceName);
+    log.info("Initializing PMS SDK for module: {}", config.getModuleType());
     if (config.getDeploymentMode().isNonLocal()) {
       ServiceManager serviceManager =
           injector.getInstance(Key.get(ServiceManager.class, Names.named("pmsSDKServiceManager"))).startAsync();
@@ -85,7 +87,7 @@ public class PmsSdkInitHelper {
       PipelineServiceInfoProvider pipelineServiceInfoProvider = config.getPipelineServiceInfoProviderClass() == null
           ? null
           : injector.getInstance(config.getPipelineServiceInfoProviderClass());
-      registerSdk(pipelineServiceInfoProvider, serviceName, injector, config.getInterruptConsumerConfig(),
+      registerSdk(pipelineServiceInfoProvider, config.getModuleType(), injector, config.getInterruptConsumerConfig(),
           config.getOrchestrationEventConsumerConfig());
     }
     registerQueueListeners(injector);
@@ -114,12 +116,14 @@ public class PmsSdkInitHelper {
     queueListenerController.register(injector.getInstance(InterruptEventListener.class), 1);
   }
 
-  private static void registerSdk(PipelineServiceInfoProvider pipelineServiceInfoProvider, String serviceName,
+  private static void registerSdk(PipelineServiceInfoProvider pipelineServiceInfoProvider, ModuleType moduleType,
       Injector injector, ConsumerConfig interruptConsumerConfig, ConsumerConfig orchestrationEventConsumerConfig) {
     try {
       StepRegistry stepRegistry = injector.getInstance(StepRegistry.class);
       Map<StepType, Step> registry = stepRegistry.getRegistry();
       List<StepType> stepTypes = registry == null ? Collections.emptyList() : new ArrayList<>(registry.keySet());
+      String serviceName = moduleType == null ? PmsConstants.INTERNAL_SERVICE_NAME : moduleType.name().toLowerCase();
+      String displayName = moduleType == null ? PmsConstants.INTERNAL_SERVICE_NAME : moduleType.getDisplayName();
       PmsServiceGrpc.PmsServiceBlockingStub pmsClient =
           injector.getInstance(PmsServiceGrpc.PmsServiceBlockingStub.class);
       pmsClient.initializeSdk(
@@ -130,6 +134,7 @@ public class PmsSdkInitHelper {
               .addAllSupportedStepTypes(stepTypes)
               .setInterruptConsumerConfig(interruptConsumerConfig)
               .setOrchestrationEventConsumerConfig(orchestrationEventConsumerConfig)
+              .setSdkModuleInfo(SdkModuleInfo.newBuilder().setDisplayName(displayName).build())
               .build());
     } catch (StatusRuntimeException ex) {
       log.error("Sdk Initialization failed with StatusRuntimeException Status: {}", ex.getStatus());

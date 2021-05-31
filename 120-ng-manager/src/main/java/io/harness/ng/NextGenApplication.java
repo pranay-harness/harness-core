@@ -16,6 +16,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import io.harness.EntityType;
 import io.harness.EventObserverUtils;
 import io.harness.Microservice;
+import io.harness.ModuleType;
 import io.harness.PipelineServiceUtilityModule;
 import io.harness.SCMGrpcClientModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -404,7 +405,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     }
     return PmsSdkConfiguration.builder()
         .deploymentMode(remote ? SdkDeployMode.REMOTE : SdkDeployMode.LOCAL)
-        .serviceName(PMS_SERVICE_NAME)
+        .moduleType(ModuleType.CD)
         .mongoConfig(appConfig.getPmsMongoConfig())
         .grpcServerConfig(appConfig.getPmsSdkGrpcServerConfig())
         .pmsGrpcClientConfig(appConfig.getPmsGrpcClientConfig())

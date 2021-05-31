@@ -6,6 +6,7 @@ import static org.mockito.Mockito.mock;
 
 import io.harness.CIExecutionServiceModule;
 import io.harness.CIExecutionTestModule;
+import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallbackToken;
@@ -140,7 +141,7 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
   private PmsSdkConfiguration getPmsSdkConfiguration() {
     return PmsSdkConfiguration.builder()
         .deploymentMode(SdkDeployMode.LOCAL)
-        .serviceName("ci")
+        .moduleType(ModuleType.CI)
         .engineSteps(ExecutionRegistrar.getEngineSteps())
         .engineAdvisers(ExecutionAdvisers.getEngineAdvisers())
         .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())

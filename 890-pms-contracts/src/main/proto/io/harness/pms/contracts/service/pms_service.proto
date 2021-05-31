@@ -17,8 +17,9 @@ message InitializeSdkRequest {
   map<string, Types> supportedTypes = 2;
   repeated io.harness.pms.contracts.steps.StepInfo supportedSteps = 3;
   repeated io.harness.pms.contracts.steps.StepType supportedStepTypes = 4;
-  ConsumerConfig interruptConsumerConfig = 5;
-  ConsumerConfig orchestrationEventConsumerConfig = 6;
+  SdkModuleInfo sdkModuleInfo = 5;
+  ConsumerConfig interruptConsumerConfig = 6;
+  ConsumerConfig orchestrationEventConsumerConfig = 7;
 }
 
 message InitializeSdkResponse {}
@@ -27,6 +28,9 @@ message Types {
   repeated string types = 1;
 }
 
+message SdkModuleInfo {
+  string displayName = 1;
+}
 message ConsumerConfig {
   oneof config {
     Redis redis = 1;

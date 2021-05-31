@@ -11,6 +11,7 @@ import static java.util.Collections.singletonList;
 
 import io.harness.AuthorizationServiceHeader;
 import io.harness.EventObserverUtils;
+import io.harness.ModuleType;
 import io.harness.PipelineServiceUtilityModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ci.app.InspectCommand;
@@ -320,7 +321,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
 
     return PmsSdkConfiguration.builder()
         .deploymentMode(remote ? SdkDeployMode.REMOTE : SdkDeployMode.LOCAL)
-        .serviceName(PMS_SERVICE_NAME)
+        .moduleType(ModuleType.CI)
         .pipelineServiceInfoProviderClass(CIPipelineServiceInfoProvider.class)
         .mongoConfig(config.getPmsMongoConfig())
         .grpcServerConfig(config.getPmsSdkGrpcServerConfig())

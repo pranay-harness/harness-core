@@ -8,9 +8,9 @@ import io.harness.pms.contracts.plan.InitializeSdkRequest;
 import io.harness.pms.contracts.plan.InitializeSdkResponse;
 import io.harness.pms.contracts.plan.PmsServiceGrpc.PmsServiceImplBase;
 import io.harness.pms.contracts.plan.Types;
-import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.exception.InitializeSdkException;
+import io.harness.pms.pipeline.StepPalleteInfo;
 import io.harness.repositories.sdk.PmsSdkInstanceRepository;
 
 import com.google.inject.Inject;
@@ -71,15 +71,14 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
 
     Optional<PmsSdkInstance> instanceOptional = pmsSdkInstanceRepository.findByName(request.getName());
     if (instanceOptional.isPresent()) {
-      pmsSdkInstanceRepository.updatePmsSdkInstance(request.getName(), supportedTypes, request.getSupportedStepsList(),
-          request.getSupportedStepTypesList(), request.getInterruptConsumerConfig(),
-          request.getOrchestrationEventConsumerConfig());
+      pmsSdkInstanceRepository.updatePmsSdkInstance(request, supportedTypes);
     } else {
       pmsSdkInstanceRepository.save(PmsSdkInstance.builder()
                                         .name(request.getName())
                                         .supportedTypes(supportedTypes)
                                         .supportedSteps(request.getSupportedStepsList())
                                         .supportedStepTypes(request.getSupportedStepTypesList())
+                                        .sdkModuleInfo(request.getSdkModuleInfo())
                                         .interruptConsumerConfig(request.getInterruptConsumerConfig())
                                         .orchestrationEventConsumerConfig(request.getOrchestrationEventConsumerConfig())
                                         .build());
@@ -93,10 +92,14 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
     return instances;
   }
 
-  public Map<String, List<StepInfo>> getInstanceNameToSupportedSteps() {
-    Map<String, List<StepInfo>> instances = new HashMap<>();
-    pmsSdkInstanceRepository.findAll().forEach(
-        instance -> instances.put(instance.getName(), instance.getSupportedSteps()));
+  public Map<String, StepPalleteInfo> getModuleNameToStepPalleteInfo() {
+    Map<String, StepPalleteInfo> instances = new HashMap<>();
+    pmsSdkInstanceRepository.findAll().forEach(instance
+        -> instances.put(instance.getName(),
+            StepPalleteInfo.builder()
+                .moduleName(instance.getSdkModuleInfo().getDisplayName())
+                .stepTypes(instance.getSupportedSteps())
+                .build()));
     return instances;
   }
 
