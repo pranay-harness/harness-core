@@ -756,9 +756,9 @@ public class InstanceHelper {
       if (status.isSuccess()) {
         if (response instanceof ContainerSyncResponse && ((ContainerSyncResponse) response).isEcs()
             && isEmpty(((ContainerSyncResponse) response).getContainerInfoList())) {
-          boolean keepPerpetualTask = instanceService.handleSyncFailure(
-              infrastructureMapping.getAppId(), infrastructureMapping.getServiceId(), infrastructureMapping.getEnvId(),
-              infrastructureMapping.getUuid(), infrastructureMapping.getDisplayName(), System.currentTimeMillis(),
+          boolean keepPerpetualTask = instanceService.handleSyncFailure(infrastructureMapping.getAppId(),
+              infrastructureMapping.getServiceId(), infrastructureMapping.getEnvId(), infrastructureMapping.getUuid(),
+              infrastructureMapping.getDisplayName(), System.currentTimeMillis(),
               ((ContainerSyncResponse) response).getErrorMessage());
 
           if (!keepPerpetualTask) {
