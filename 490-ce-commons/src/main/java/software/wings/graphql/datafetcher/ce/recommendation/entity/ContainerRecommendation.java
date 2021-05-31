@@ -8,9 +8,9 @@ import lombok.Data;
 @Builder
 public class ContainerRecommendation {
   ResourceRequirement current;
-  ResourceRequirement burstable;
-  ResourceRequirement guaranteed;
-  ResourceRequirement recommended;
+  @Deprecated ResourceRequirement burstable;
+  @Deprecated ResourceRequirement guaranteed;
+  @Deprecated ResourceRequirement recommended;
   Map<String, ResourceRequirement> percentileBased;
   Cost lastDayCost;
   int numDays;

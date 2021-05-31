@@ -5,7 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationData;
 import io.harness.batch.processing.billing.timeseries.data.K8sGranularUtilizationData;
 import io.harness.ccm.commons.beans.InstanceType;
-import io.harness.ccm.commons.utils.DataUtils;
+import io.harness.ccm.commons.utils.TimeUtils;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 
@@ -31,7 +31,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class K8sUtilizationGranularDataServiceImpl {
   @Autowired private TimeScaleDBService timeScaleDBService;
-  @Autowired private DataUtils utils;
+  @Autowired private TimeUtils utils;
 
   private static final int MAX_RETRY_COUNT = 2;
   private static final int BATCH_SIZE = 500;

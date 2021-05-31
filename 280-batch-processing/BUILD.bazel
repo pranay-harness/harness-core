@@ -121,6 +121,7 @@ java_library(
     ],
     resources = [
         "//280-batch-processing/src/main/resources:resource",
+        "//280-batch-processing/src/test/resources:resource",
     ],
     visibility = ["//visibility:public"],
     deps = shared_dependencies + [

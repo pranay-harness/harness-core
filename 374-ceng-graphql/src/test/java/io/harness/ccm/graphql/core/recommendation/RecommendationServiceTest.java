@@ -14,11 +14,11 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
 import io.harness.ccm.commons.beans.recommendation.ResourceId;
+import io.harness.ccm.commons.beans.recommendation.ResourceType;
 import io.harness.ccm.commons.dao.recommendation.K8sRecommendationDAO;
 import io.harness.ccm.graphql.dto.recommendation.ContainerHistogramDTO.HistogramExp;
 import io.harness.ccm.graphql.dto.recommendation.FilterStatsDTO;
 import io.harness.ccm.graphql.dto.recommendation.RecommendationItemDTO;
-import io.harness.ccm.graphql.dto.recommendation.ResourceType;
 import io.harness.ccm.graphql.dto.recommendation.WorkloadRecommendationDTO;
 import io.harness.histogram.HistogramCheckpoint;
 import io.harness.rule.Owner;
@@ -103,7 +103,7 @@ public class RecommendationServiceTest extends CategoryTest {
 
   private static final CeRecommendations ceRecommendation = new CeRecommendations()
                                                                 .setId(ID)
-                                                                .setResourcetype("WORKLOAD")
+                                                                .setResourcetype(ResourceType.WORKLOAD.name())
                                                                 .setClustername(CLUSTER_NAME)
                                                                 .setName(NAME)
                                                                 .setMonthlycost(MONTHLY_COST)

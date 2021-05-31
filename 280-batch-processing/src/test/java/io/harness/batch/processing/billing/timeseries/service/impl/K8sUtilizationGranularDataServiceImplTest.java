@@ -12,7 +12,7 @@ import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationData;
 import io.harness.batch.processing.billing.timeseries.data.K8sGranularUtilizationData;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.commons.utils.DataUtils;
+import io.harness.ccm.commons.utils.TimeUtils;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 
@@ -43,7 +43,7 @@ public class K8sUtilizationGranularDataServiceImplTest extends CategoryTest {
   @Inject @InjectMocks private K8sUtilizationGranularDataServiceImpl k8sUtilizationGranularDataService;
   @Mock private TimeScaleDBService timeScaleDBService;
   @Mock private PreparedStatement statement;
-  @Mock private DataUtils utils;
+  @Mock private TimeUtils utils;
   @Mock ResultSet instanceIdsResultSet, aggregatedDataResultSet;
 
   private final Instant NOW = Instant.now();

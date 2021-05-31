@@ -5,16 +5,16 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 import io.harness.annotations.dev.OwnedBy;
 
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
-@Value
+@Data
 @Builder
 @OwnedBy(CE)
 public class TotalResourceUsage {
-  // sum resource of all Pods
+  // sum resource of ALL Pods
   double sumcpu;
   double summemory;
-  // max resources for any Pod
+  // max resource of ANY Pod
   double maxcpu;
   double maxmemory;
 }
