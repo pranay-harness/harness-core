@@ -756,12 +756,12 @@ public class InstanceHelper {
       if (status.isSuccess()) {
         if (response instanceof ContainerSyncResponse && ((ContainerSyncResponse) response).isEcs()
             && isEmpty(((ContainerSyncResponse) response).getContainerInfoList())) {
-          boolean shouldDeletePerpetualTask = instanceService.checkIfDeletePerpetualTask(
+          boolean keepPerpetualTask = instanceService.handleSyncFailure(
               infrastructureMapping.getAppId(), infrastructureMapping.getServiceId(), infrastructureMapping.getEnvId(),
               infrastructureMapping.getUuid(), infrastructureMapping.getDisplayName(), System.currentTimeMillis(),
               ((ContainerSyncResponse) response).getErrorMessage());
 
-          if (shouldDeletePerpetualTask) {
+          if (!keepPerpetualTask) {
             log.info("Sync Failure, Ecs Service has 0 instances for more than 7 days. "
                     + "Deleting Perpetual Tasks. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
                 infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());

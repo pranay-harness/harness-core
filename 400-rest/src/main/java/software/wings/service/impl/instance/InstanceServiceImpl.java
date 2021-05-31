@@ -389,7 +389,7 @@ public class InstanceServiceImpl implements InstanceService {
       String infraMappingName, long timestamp, String errorMsg) {
     SyncStatus syncStatus = getSyncStatus(appId, serviceId, envId, infraMappingId);
     if (syncStatus != null) {
-      if ((timestamp - syncStatus.getLastSuccessfullySyncedAt()) >= Duration.ofSeconds(30).toMillis()) {
+      if ((timestamp - syncStatus.getLastSuccessfullySyncedAt()) >= Duration.ofDays(7).toMillis()) {
         log.info("Deleting the instances since sync has been failing for more than a week for infraMappingId: {}",
             infraMappingId);
         wingsPersistence.delete(SyncStatus.class, syncStatus.getUuid());
@@ -400,24 +400,6 @@ public class InstanceServiceImpl implements InstanceService {
 
     updateSyncFailure(appId, serviceId, envId, infraMappingId, infraMappingName, timestamp, errorMsg);
     return true;
-  }
-
-  @Override
-  public boolean checkIfDeletePerpetualTask(String appId, String serviceId, String envId, String infraMappingId,
-      String infraMappingName, long timestamp, String errorMsg) {
-    SyncStatus syncStatus = getSyncStatus(appId, serviceId, envId, infraMappingId);
-    if (syncStatus != null) {
-      if ((timestamp - syncStatus.getLastSuccessfullySyncedAt()) >= Duration.ofDays(7).toMillis()) {
-        log.info("Deleting the instances since sync has been failing for more than a week for infraMappingId: {}",
-            infraMappingId);
-        wingsPersistence.delete(SyncStatus.class, syncStatus.getUuid());
-        updateSyncFailure(appId, serviceId, envId, infraMappingId, infraMappingName, timestamp, errorMsg);
-        pruneByInfrastructureMapping(appId, infraMappingId);
-        return true;
-      }
-    }
-
-    return false;
   }
 
   private void updateSyncFailure(String appId, String serviceId, String envId, String infraMappingId,

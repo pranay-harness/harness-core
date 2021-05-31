@@ -123,10 +123,6 @@ public interface InstanceService
    */
   boolean handleSyncFailure(String appId, String serviceId, String envId, String infraMappingId,
       String infraMappingName, long timestamp, String errorMsg);
-
-  boolean checkIfDeletePerpetualTask(String appId, String serviceId, String envId, String infraMappingId,
-      String infraMappingName, long timestamp, String errorMsg);
-
   /**
    *
    * @param appId
