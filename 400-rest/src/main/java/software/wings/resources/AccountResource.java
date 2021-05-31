@@ -42,6 +42,7 @@ import software.wings.beans.LicenseUpdateInfo;
 import software.wings.beans.Service;
 import software.wings.beans.SubdomainUrl;
 import software.wings.beans.TechStack;
+import software.wings.beans.security.HarnessSupportUserDTO;
 import software.wings.features.api.FeatureService;
 import software.wings.licensing.LicenseService;
 import software.wings.scheduler.ServiceInstanceUsageCheckerJob;
@@ -543,5 +544,14 @@ public class AccountResource {
   public RestResponse<Boolean> disableHarnessUserGroupAccessWorkflow(
       @PathParam("accountId") String accountId, @PathParam("disableAccountId") String disableAccountId) {
     return new RestResponse<>(accountService.disableHarnessUserGroupAccess(disableAccountId));
+  }
+
+  @GET
+  @Path("listAllHarnessSupportUsers")
+  @AuthRule(permissionType = MANAGE_RESTRICTED_ACCESS)
+  public RestResponse<List<HarnessSupportUserDTO>> listAllHarnessSupportUsers(
+      @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(
+        harnessUserGroupService.toHarnessSupportUser(harnessUserGroupService.listAllHarnessSupportUsers()));
   }
 }
