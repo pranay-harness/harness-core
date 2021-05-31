@@ -43,7 +43,7 @@ public class ConnectorFeatureFlagStreamListener implements MessageListener {
     }
     return true;
   }
-
+  // comment
   private boolean processNGEnableAction(String accountId) {
     harnessSMManager.createHarnessSecretManager(accountId, null, null);
     return true;
