@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.ng.core.mapper.TagMapper.convertToMap;
 
+import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 
@@ -44,7 +45,7 @@ public class UserGroupMapper {
               .ssoGroupName(userGroup.getSsoGroupName())
               .linkedSsoDisplayName(userGroup.getLinkedSsoDisplayName())
               .linkedSsoId(userGroup.getLinkedSsoId())
-              .isSsoLinked(userGroup.isSsoLinked())
+              .isSsoLinked(TRUE.equals(userGroup.getIsSsoLinked()))
               .notificationConfigs(
                   userGroup.getNotificationConfigs().stream().map(UserGroupMapper::toDTO).collect(Collectors.toList()))
               .users(userGroup.getUsers() == null ? emptyList() : userGroup.getUsers())

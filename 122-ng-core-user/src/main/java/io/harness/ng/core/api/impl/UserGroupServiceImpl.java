@@ -12,6 +12,7 @@ import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPL
 import static io.harness.remote.client.RestClientUtils.getResponse;
 import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
 
+import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -488,7 +489,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     UserGroup existingUserGroup = getOrThrow(accountIdentifier, null, null, userGroupIdentifier);
     UserGroupDTO oldUserGroup = (UserGroupDTO) NGObjectMapperHelper.clone(toDTO(existingUserGroup));
 
-    if (existingUserGroup.isSsoLinked()) {
+    if (TRUE.equals(existingUserGroup.getIsSsoLinked())) {
       throw new InvalidRequestException("SSO Provider already linked to the group. Try unlinking first.");
     }
 
@@ -506,7 +507,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (null == ssoSettings) {
       throw new InvalidRequestException("Invalid ssoId");
     }
-    existingUserGroup.setSsoLinked(TRUE);
+    existingUserGroup.setIsSsoLinked(TRUE);
     existingUserGroup.setLinkedSsoType(ssoType);
     existingUserGroup.setLinkedSsoId(ssoId);
     existingUserGroup.setLinkedSsoDisplayName(ssoSettings.getDisplayName());
@@ -525,7 +526,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     UserGroup existingUserGroup = getOrThrow(accountIdentifier, null, null, userGroupIdentifier);
     UserGroupDTO oldUserGroup = (UserGroupDTO) NGObjectMapperHelper.clone(toDTO(existingUserGroup));
 
-    if (!existingUserGroup.isSsoLinked()) {
+    if (FALSE.equals(existingUserGroup.getIsSsoLinked()) || existingUserGroup.getIsSsoLinked() == null) {
       throw new InvalidRequestException("Group is not linked to any SSO group.");
     }
 
@@ -535,7 +536,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     existingUserGroup.setSsoGroupId(null);
-    existingUserGroup.setSsoLinked(false);
+    existingUserGroup.setIsSsoLinked(FALSE);
     existingUserGroup.setSsoGroupName(null);
     existingUserGroup.setLinkedSsoId(null);
     existingUserGroup.setLinkedSsoType(null);
