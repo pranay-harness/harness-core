@@ -5,4 +5,4 @@ metrics:
   - metricName: orchestrator_queue_size
     metricDefinition: queueSize of the orchestrator
     type: LastValue
-    unit: count
+    unit: "1"

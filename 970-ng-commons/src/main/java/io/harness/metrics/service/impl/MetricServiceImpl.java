@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.metrics.MetricConstants.ENV_LABEL;
 import static io.harness.metrics.MetricConstants.METRIC_LABEL_PREFIX;
 
-import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.beans.MetricConfiguration;
 import io.harness.metrics.beans.MetricGroup;
 import io.harness.metrics.service.api.MetricDefinitionInitializer;
@@ -15,12 +14,13 @@ import io.harness.serializer.YamlUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
-import com.google.inject.Inject;
 import io.opencensus.common.Duration;
 import io.opencensus.common.Scope;
 import io.opencensus.exporter.stats.stackdriver.StackdriverStatsConfiguration;
 import io.opencensus.exporter.stats.stackdriver.StackdriverStatsExporter;
+import io.opencensus.stats.Measure;
 import io.opencensus.stats.Measure.MeasureDouble;
+import io.opencensus.stats.Measure.MeasureLong;
 import io.opencensus.stats.Stats;
 import io.opencensus.stats.StatsRecorder;
 import io.opencensus.stats.View;
@@ -32,6 +32,7 @@ import io.opencensus.tags.TagValue;
 import io.opencensus.tags.Tagger;
 import io.opencensus.tags.Tags;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -48,32 +49,46 @@ import org.reflections.scanners.ResourcesScanner;
 
 @Slf4j
 public class MetricServiceImpl implements MetricService {
-  @Inject private HarnessMetricRegistry harnessMetricRegistry;
+  public static final String GOOGLE_APPLICATION_CREDENTIALS = "GOOGLE_APPLICATION_CREDENTIALS";
   private static boolean WILL_PUBLISH_METRICS;
+  private static List<MetricConfiguration> METRIC_CONFIG_DEFINITIONS = new ArrayList<>();
+  private static Map<String, MetricGroup> METRIC_GROUP_MAP = new HashMap<>();
 
-  private static Map<String, MetricGroup> metricGroupMap = new HashMap<>();
-  private static List<MetricConfiguration> metricConfigDefinitions = new ArrayList<>();
-
+  static {
+    initializeFromYAML();
+  }
   private static final Tagger tagger = Tags.getTagger();
   private static final StatsRecorder statsRecorder = Stats.getStatsRecorder();
 
-  private static void recordTaggedStat(Map<TagKey, String> tags, MeasureDouble md, Double d) {
+  private static void recordTaggedStat(Map<TagKey, String> tags, Measure md, Double d) {
     TagContextBuilder contextBuilder = tagger.emptyBuilder();
     tags.forEach((tag, val) -> contextBuilder.put(tag, TagValue.create(val)));
     TagContext tctx = contextBuilder.build();
 
     try (Scope ss = tagger.withTagContext(tctx)) {
-      statsRecorder.newMeasureMap().put(md, d).record(tctx);
+      if (md instanceof MeasureDouble) {
+        statsRecorder.newMeasureMap().put((MeasureDouble) md, d).record(tctx);
+      } else if (md instanceof MeasureLong) {
+        statsRecorder.newMeasureMap().put((MeasureLong) md, (long) (double) d).record(tctx); // TODO: refactor
+      }
       log.info("Recorded metric to stackdriver");
     }
   }
 
   private void fetchAndInitMetricDefinitions(List<MetricDefinitionInitializer> metricDefinitionInitializers) {
-    Reflections reflections = new Reflections("metrics.metricDefinitions", new ResourcesScanner());
-    Set<String> metricDefinitionFileNames = reflections.getResources(Pattern.compile(".*\\.yaml"));
+    List<MetricConfiguration> metricConfigDefinitions = new ArrayList<>();
     metricDefinitionInitializers.forEach(metricDefinitionInitializer -> {
       metricConfigDefinitions.addAll(metricDefinitionInitializer.getMetricConfiguration());
     });
+    registerMetricConfigDefinitions(metricConfigDefinitions);
+    METRIC_CONFIG_DEFINITIONS.addAll(metricConfigDefinitions);
+  }
+
+  private static void initializeFromYAML() {
+    List<MetricConfiguration> metricConfigDefinitions = new ArrayList<>();
+    long startTime = Instant.now().toEpochMilli();
+    Reflections reflections = new Reflections("metrics.metricDefinitions", new ResourcesScanner());
+    Set<String> metricDefinitionFileNames = reflections.getResources(Pattern.compile(".*\\.yaml"));
     metricDefinitionFileNames.forEach(metricDefinition -> {
       try {
         String path = "/" + metricDefinition;
@@ -96,32 +111,49 @@ public class MetricServiceImpl implements MetricService {
         final String yaml = Resources.toString(MetricServiceImpl.class.getResource(path), Charsets.UTF_8);
         YamlUtils yamlUtils = new YamlUtils();
         final MetricGroup metricGroup = yamlUtils.read(yaml, new TypeReference<MetricGroup>() {});
-        metricGroupMap.put(metricGroup.getIdentifier(), metricGroup);
+        METRIC_GROUP_MAP.put(metricGroup.getIdentifier(), metricGroup);
       } catch (IOException e) {
         throw new IllegalStateException("Error reading metric group file", e);
       }
     });
+    registerMetricConfigDefinitions(metricConfigDefinitions);
+    METRIC_CONFIG_DEFINITIONS.addAll(metricConfigDefinitions);
+
+    try {
+      if (isNotEmpty(System.getenv(GOOGLE_APPLICATION_CREDENTIALS))) {
+        WILL_PUBLISH_METRICS = true;
+        StackdriverStatsConfiguration configuration =
+            StackdriverStatsConfiguration.builder()
+                .setExportInterval(Duration.fromMillis(TimeUnit.MINUTES.toMillis(1)))
+                .setDeadline(Duration.fromMillis(TimeUnit.MINUTES.toMillis(5)))
+                .build();
+
+        StackdriverStatsExporter.createAndRegister(configuration);
+      }
+    } catch (Exception ex) {
+      log.error("Exception while trying to register stackdriver metrics exporter", ex);
+    }
+    log.info("Finished loading metrics definitions from YAML. time taken is {} ms",
+        Instant.now().toEpochMilli() - startTime);
   }
+
   @Override
   public void initializeMetrics() {
     initializeMetrics(new ArrayList<>());
   }
   @Override
   public void initializeMetrics(List<MetricDefinitionInitializer> metricDefinitionInitializes) {
-    if (isNotEmpty(System.getenv("GOOGLE_APPLICATION_CREDENTIALS"))) {
-      WILL_PUBLISH_METRICS = false;
-    }
-
-    if (!WILL_PUBLISH_METRICS) {
-      log.warn("Google credentials have not been set. No metrics will be published.");
-      return;
-    }
     fetchAndInitMetricDefinitions(metricDefinitionInitializes);
+  }
+
+  private static void registerMetricConfigDefinitions(List<MetricConfiguration> metricConfigDefinitions) {
     metricConfigDefinitions.forEach(metricConfigDefinition -> {
-      List<String> labels = metricGroupMap.get(metricConfigDefinition.getMetricGroup()) == null
+      List<String> labels = METRIC_GROUP_MAP.get(metricConfigDefinition.getMetricGroup()) == null
           ? new ArrayList<>()
-          : metricGroupMap.get(metricConfigDefinition.getMetricGroup()).getLabels();
-      labels.add(ENV_LABEL);
+          : METRIC_GROUP_MAP.get(metricConfigDefinition.getMetricGroup()).getLabels();
+      if (!labels.contains(ENV_LABEL)) {
+        labels.add(ENV_LABEL);
+      }
       metricConfigDefinition.getMetrics().forEach(metric -> {
         List<TagKey> tagKeys = new ArrayList<>();
         labels.forEach(label -> tagKeys.add(TagKey.create(label)));
@@ -131,17 +163,6 @@ public class MetricServiceImpl implements MetricService {
         vmgr.registerView(view);
       });
     });
-    try {
-      StackdriverStatsConfiguration configuration =
-          StackdriverStatsConfiguration.builder()
-              .setExportInterval(Duration.fromMillis(TimeUnit.MINUTES.toMillis(1)))
-              .setDeadline(Duration.fromMillis(TimeUnit.MINUTES.toMillis(5)))
-              .build();
-
-      StackdriverStatsExporter.createAndRegister(configuration);
-    } catch (Exception ex) {
-      log.error("Exception while trying to register stackdriver metrics exporter", ex);
-    }
   }
 
   @Override
@@ -153,7 +174,7 @@ public class MetricServiceImpl implements MetricService {
       }
 
       MetricConfiguration metricConfiguration = null;
-      for (MetricConfiguration configDefinition : metricConfigDefinitions) {
+      for (MetricConfiguration configDefinition : METRIC_CONFIG_DEFINITIONS) {
         if (configDefinition.getMetrics()
                 .stream()
                 .map(MetricConfiguration.Metric::getMetricName)
@@ -172,7 +193,7 @@ public class MetricServiceImpl implements MetricService {
                                                   .findFirst()
                                                   .get();
 
-      MetricGroup group = metricGroupMap.get(metricConfiguration.getMetricGroup());
+      MetricGroup group = METRIC_GROUP_MAP.get(metricConfiguration.getMetricGroup());
       List<String> labelNames =
           group == null || group.getLabels() == null ? Arrays.asList(ENV_LABEL) : group.getLabels();
       List<String> labelVals = group == null ? new ArrayList<>() : getLabelValues(labelNames);
@@ -185,6 +206,11 @@ public class MetricServiceImpl implements MetricService {
     } catch (Exception ex) {
       log.error("Exception occurred while registering a metric", ex);
     }
+  }
+
+  @Override
+  public void incCounter(String metricName) {
+    recordMetric(metricName, 1);
   }
 
   private List<String> getLabelValues(List<String> labelNames) {
