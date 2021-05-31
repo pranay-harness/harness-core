@@ -68,10 +68,11 @@ import org.eclipse.jgit.errors.TransportException;
 @Singleton
 @Slf4j
 public class GitClientHelper {
-  private static final String GIT_URL_REGEX = "(http|https|git)(:\\/\\/|@)([^\\/:]+)[\\/:]([^\\/:]+)\\/(.+)?(.git)?";
+  private static final String GIT_URL_REGEX =
+      "(http|https|git)(:\\/\\/|@)([^\\/:]+(:\\d+)?)[\\/:]([^\\/:]+)\\/(.+)?(.git)?";
   private static final Pattern GIT_URL = Pattern.compile(GIT_URL_REGEX);
-  private static final Integer OWNER_GROUP = 4;
-  private static final Integer REPO_GROUP = 5;
+  private static final Integer OWNER_GROUP = 5;
+  private static final Integer REPO_GROUP = 6;
   private static final Integer SCM_GROUP = 3;
 
   private static final LoadingCache<String, Object> cache = CacheBuilder.newBuilder()
@@ -155,7 +156,7 @@ public class GitClientHelper {
     }
   }
 
-  public static String getGitSCM(String url) {
+  private static String getGitSCMHost(String url) {
     Matcher m = GIT_URL.matcher(url);
     try {
       if (m.find()) {
@@ -166,6 +167,22 @@ public class GitClientHelper {
 
     } catch (Exception e) {
       throw new GitClientException(format("Failed to parse repo from git url  %s", url), SRE);
+    }
+  }
+
+  public static String getGitSCM(String url) {
+    String host = getGitSCMHost(url);
+    return host.split(":")[0];
+  }
+
+  // Returns port on which git SCM is running. Returns null if port is not present in the url.
+  public static String getGitSCMPort(String url) {
+    String host = getGitSCMHost(url);
+    String[] hostParts = host.split(":");
+    if (hostParts.length == 2) {
+      return host.split(":")[1];
+    } else {
+      return null;
     }
   }
 
