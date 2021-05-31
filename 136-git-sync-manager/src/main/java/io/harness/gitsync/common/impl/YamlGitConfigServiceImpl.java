@@ -40,6 +40,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.StringValue;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -366,5 +367,15 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   @Override
   public Boolean isRepoExists(String repo) {
     return yamlGitConfigRepository.existsByRepo(repo);
+  }
+
+  @Override
+  public List<YamlGitConfigDTO> getByRepo(String repo) {
+    List<YamlGitConfigDTO> yamlGitConfigDTOs = new ArrayList<>();
+
+    List<YamlGitConfig> yamlGitConfigs = yamlGitConfigRepository.findByRepo(repo);
+    yamlGitConfigs.forEach(
+        yamlGitConfig -> yamlGitConfigDTOs.add(YamlGitConfigMapper.toYamlGitConfigDTO(yamlGitConfig)));
+    return yamlGitConfigDTOs;
   }
 }
