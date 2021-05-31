@@ -25,10 +25,10 @@ java_library(
     testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = [
-        "//122-ng-core-user/src/test/resources:resource",
+        "//123-ng-core-user/src/test/resources:resource",
     ],
     resources = [
-        "//122-ng-core-user/src/test/resources:resource",
+        "//123-ng-core-user/src/test/resources:resource",
     ],
     visibility = ["//visibility:public"],
     deps = shared_dependencies + [
