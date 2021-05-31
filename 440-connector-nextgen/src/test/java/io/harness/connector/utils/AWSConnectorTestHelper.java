@@ -7,12 +7,12 @@ import io.harness.connector.entities.embedded.awsconnector.AwsIamCredential;
 import io.harness.connector.entities.embedded.ceawsconnector.CEAwsConfig;
 import io.harness.connector.entities.embedded.ceawsconnector.CURAttributes;
 import io.harness.connector.entities.embedded.ceawsconnector.S3BucketDetails;
+import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.AwsCurAttributesDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
-import io.harness.delegate.beans.connector.ceawsconnector.CEAwsFeatures;
 import io.harness.encryption.Scope;
 
 import com.amazonaws.services.costandusagereport.model.ReportDefinition;
@@ -40,8 +40,8 @@ public class AWSConnectorTestHelper {
   private final String REPORT_VERSIONING = "OVERWRITE_REPORT";
   private final String RESOURCES = "RESOURCES";
 
-  public final List<CEAwsFeatures> CE_AWS_FEATURES_ENABLED =
-      ImmutableList.of(CEAwsFeatures.CUR, CEAwsFeatures.VISIBILITY, CEAwsFeatures.OPTIMIZATION);
+  public final List<CEFeatures> CE_AWS_FEATURES_ENABLED =
+      ImmutableList.of(CEFeatures.BILLING, CEFeatures.VISIBILITY, CEFeatures.OPTIMIZATION);
 
   public Connector createAWSConnector(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, Scope scope) {

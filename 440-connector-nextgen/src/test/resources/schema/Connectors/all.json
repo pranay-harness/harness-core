@@ -995,9 +995,9 @@
               "items": {
                 "type": "string",
                 "enum": [
-                  "CUR",
-                  "VISIBILITY",
-                  "OPTIMIZATION"
+                  "BILLING",
+                  "OPTIMIZATION",
+                  "VISIBILITY"
                 ]
               }
             }
@@ -1027,7 +1027,8 @@
                 "type": "string",
                 "enum": [
                   "BILLING",
-                  "OPTIMIZATION"
+                  "OPTIMIZATION",
+                  "VISIBILITY"
                 ]
               }
             },

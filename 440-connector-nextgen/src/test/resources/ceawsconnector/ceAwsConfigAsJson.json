@@ -12,7 +12,7 @@
     },
     "spec": {
       "featuresEnabled": [
-        "CUR",
+        "BILLING",
         "VISIBILITY",
         "OPTIMIZATION"
       ],
