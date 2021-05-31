@@ -11,9 +11,7 @@ import io.harness.pms.plan.execution.handlers.ExecutionSummaryCreateEventHandler
 import io.harness.pms.plan.execution.handlers.PipelineStatusUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.PlanStatusEventEmitterHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
-import io.harness.registrars.OrchestrationModuleEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationModuleRegistrarHelper;
-import io.harness.registrars.OrchestrationStepsModuleEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationVisualizationModuleEventHandlerRegistrar;
 
 import com.google.common.collect.Sets;
@@ -34,10 +32,6 @@ public class PmsOrchestrationEventRegistrar {
             PipelineStatusUpdateEventHandler.class));
     OrchestrationModuleRegistrarHelper.mergeEventHandlers(
         engineEventHandlersMap, OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers());
-    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
-        engineEventHandlersMap, OrchestrationStepsModuleEventHandlerRegistrar.getEngineEventHandlers());
-    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
-        engineEventHandlersMap, OrchestrationModuleEventHandlerRegistrar.getEngineEventHandlers());
     return engineEventHandlersMap;
   }
 }

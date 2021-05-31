@@ -17,6 +17,7 @@ import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.delay.DelayEventListener;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.OrchestrationServiceImpl;
+import io.harness.engine.events.NodeExecutionStatusUpdateEventHandler;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
@@ -93,7 +94,11 @@ import io.harness.serializer.jackson.PipelineServiceJacksonModule;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
+import io.harness.steps.barriers.BarrierInitializer;
+import io.harness.steps.barriers.event.BarrierDropper;
+import io.harness.steps.barriers.event.BarrierPositionHelperEventHandler;
 import io.harness.steps.barriers.service.BarrierServiceImpl;
+import io.harness.steps.resourcerestraint.ResourceRestraintInitializer;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintPersistenceMonitor;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
@@ -306,6 +311,12 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         injector.getInstance(Key.get(PlanExecutionService.class)));
     nodeExecutionService.getStepStatusUpdateSubject().register(
         injector.getInstance(Key.get(StageStatusUpdateNotificationEventHandler.class)));
+    nodeExecutionService.getStepStatusUpdateSubject().register(
+        injector.getInstance(Key.get(BarrierPositionHelperEventHandler.class)));
+    nodeExecutionService.getStepStatusUpdateSubject().register(injector.getInstance(Key.get(BarrierDropper.class)));
+    nodeExecutionService.getStepStatusUpdateSubject().register(
+        injector.getInstance(Key.get(NodeExecutionStatusUpdateEventHandler.class)));
+
     nodeExecutionService.getNodeExecutionStartSubject().register(
         injector.getInstance(Key.get(StageStartNotificationHandler.class)));
     nodeExecutionService.getNodeUpdateObserverSubject().register(
@@ -327,6 +338,10 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         (OrchestrationServiceImpl) injector.getInstance(Key.get(OrchestrationService.class));
     orchestrationService.getOrchestrationStartSubject().register(
         injector.getInstance(Key.get(PipelineStartNotificationHandler.class)));
+    orchestrationService.getOrchestrationStartSubject().register(
+        injector.getInstance(Key.get(BarrierInitializer.class)));
+    orchestrationService.getOrchestrationStartSubject().register(
+        injector.getInstance(Key.get(ResourceRestraintInitializer.class)));
 
     SdkResponseEventListener sdkResponseEventListener = injector.getInstance(SdkResponseEventListener.class);
     sdkResponseEventListener.getEventListenerObserverSubject().register(
