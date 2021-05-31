@@ -26,8 +26,8 @@ public class AbortAndRunningStepStatusUpdate implements StepStatusUpdate {
     NodeExecution updatedParent = nodeExecutionService.updateStatusWithOps(
         nodeExecution.getParentId(), RUNNING, null, EnumSet.noneOf(Status.class));
     if (updatedParent == null) {
-      log.warn("Cannot mark parent of Aborted node to running parentId: {}, nodeExecutionId: {}",
-          nodeExecution.getParentId(), nodeExecution.getUuid());
+      log.warn("Cannot mark parent node to running parentId: {}, nodeExecutionId: {}", nodeExecution.getParentId(),
+          nodeExecution.getUuid());
     }
   }
 }

@@ -12,15 +12,18 @@ import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
+@Slf4j
 public class FacilitateResponseRequestHandler implements SdkResponseEventHandler {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private OrchestrationEngine orchestrationEngine;
 
   @Override
   public void handleEvent(SdkResponseEvent event) {
+    log.info("Starting to process facilitation response");
     FacilitatorResponseRequest request = event.getSdkResponseEventRequest().getFacilitatorResponseRequest();
     FacilitatorResponseProto facilitatorResponseProto = request.getFacilitatorResponse();
     if (facilitatorResponseProto.getIsSuccessful()) {
