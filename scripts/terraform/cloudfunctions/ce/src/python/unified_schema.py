@@ -335,4 +335,12 @@ unifiedTableTableSchema = [
             "name": "azureVMProviderId",
             "type": "STRING"
         },
+        {
+            "name": "azureBillingCurrency",
+            "type": "STRING"
+        },
+        {
+            "name": "azureCustomerName",
+            "type": "STRING"
+        },
     ]

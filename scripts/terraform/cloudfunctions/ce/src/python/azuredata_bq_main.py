@@ -39,13 +39,18 @@ from calendar import monthrange
 TABLE_NAME_FORMAT = "%s.BillingReport_%s.%s"
 
 CE_COLUMN_MAPPING = {
-    "startTime":"",
+    "startTime": "",
     "azureResourceRate": "",
     "cost": "",
     "region": "",
     "azureSubscriptionGuid": "",
     "azureInstanceId": "",
 }
+
+STATIC_MARKUP_LIST = {
+    "UVxMDMhNQxOCvroqqImWdQ": 5.04,  # AXA XL %age markup to costs
+}
+
 
 def main(event, context):
     """Triggered from a message on a Cloud Pub/Sub topic.
@@ -125,7 +130,7 @@ def ingestDataFromCsvToAzureTable(client, jsonData):
         source_format="CSV",
         allow_quoted_newlines=True,
         allow_jagged_rows=True,
-        write_disposition='WRITE_TRUNCATE' #If the table already exists, BigQuery overwrites the table data
+        write_disposition='WRITE_TRUNCATE'  # If the table already exists, BigQuery overwrites the table data
     )
     uris = ["gs://" + jsonData["bucket"] + "/" + csvtoingest]
     print_("Ingesting CSV from %s" % uris)
@@ -161,10 +166,10 @@ def setAvailableColumns(client, jsonData):
             """ % (ds, jsonData["tableSuffix"])
     try:
         query_job = client.query(query)
-        results = query_job.result() # wait for job to complete
+        results = query_job.result()  # wait for job to complete
         columns = set()
         for row in results:
-            columns.add(row.column_name)
+            columns.add(row.column_name.lower())
         jsonData["columns"] = columns
         print_("Retrieved available columns")
     except Exception as e:
@@ -173,45 +178,57 @@ def setAvailableColumns(client, jsonData):
         raise e
 
     # startTime
-    if "Date" in columns:
-        CE_COLUMN_MAPPING["startTime"] = "Date"
-    elif "UsageDateTime" in columns:
-        CE_COLUMN_MAPPING["startTime"] = "UsageDateTime"
+    if "date" in columns:  # This is O(1) for python sets
+        CE_COLUMN_MAPPING["startTime"] = "date"
+    elif "usagedatetime" in columns:
+        CE_COLUMN_MAPPING["startTime"] = "usagedatetime"
     else:
         raise Exception("No mapping found for startTime column")
 
     # azureResourceRate
-    if "EffectivePrice" in columns:
-        CE_COLUMN_MAPPING["azureResourceRate"] = "EffectivePrice"
-    elif "ResourceRate" in columns:
-        CE_COLUMN_MAPPING["azureResourceRate"] = "ResourceRate"
+    if "effectiveprice" in columns:
+        CE_COLUMN_MAPPING["azureResourceRate"] = "effectiveprice"
+    elif "resourcerate" in columns:
+        CE_COLUMN_MAPPING["azureResourceRate"] = "resourcerate"
     else:
         raise Exception("No mapping found for azureResourceRate column")
 
     # cost
-    if "CostInBillingCurrency" in columns:
-        CE_COLUMN_MAPPING["cost"] = "CostInBillingCurrency"
-    elif "PreTaxCost" in columns:
-        CE_COLUMN_MAPPING["cost"] = "PreTaxCost"
+    if "costinbillingcurrency" in columns:
+        CE_COLUMN_MAPPING["cost"] = "costinbillingcurrency"
+    elif "pretaxcost" in columns:
+        CE_COLUMN_MAPPING["cost"] = "pretaxcost"
+    elif "cost" in columns:
+        CE_COLUMN_MAPPING["cost"] = "cost"
     else:
         raise Exception("No mapping found for cost column")
 
     # azureSubscriptionGuid
-    if "SubscriptionId" in columns:
-        CE_COLUMN_MAPPING["azureSubscriptionGuid"] = "SubscriptionId"
-    elif "SubscriptionGuid" in columns:
-        CE_COLUMN_MAPPING["azureSubscriptionGuid"] = "SubscriptionGuid"
+    if "subscriptionid" in columns:
+        CE_COLUMN_MAPPING["azureSubscriptionGuid"] = "subscriptionid"
+    elif "subscriptionguid" in columns:
+        CE_COLUMN_MAPPING["azureSubscriptionGuid"] = "subscriptionguid"
     else:
         raise Exception("No mapping found for azureSubscriptionGuid column")
 
     # azureInstanceId
-    if "ResourceId" in columns:
-        CE_COLUMN_MAPPING["azureInstanceId"] = "ResourceId"
-    elif "InstanceId" in columns:
-        CE_COLUMN_MAPPING["azureInstanceId"] = "InstanceId"
+    if "resourceid" in columns:
+        CE_COLUMN_MAPPING["azureInstanceId"] = "resourceid"
+    elif "instanceid" in columns:
+        CE_COLUMN_MAPPING["azureInstanceId"] = "instanceid"
     else:
         raise Exception("No mapping found for azureInstanceId column")
+
+    # azureResourceGroup
+    if "resourcegroup" in columns:
+        CE_COLUMN_MAPPING["azureResourceGroup"] = "resourcegroup"
+    elif "resourcegroupname" in columns:
+        CE_COLUMN_MAPPING["azureResourceGroup"] = "resourcegroupname"
+    else:
+        raise Exception("No mapping found for azureResourceGroup column")
+
     print_(CE_COLUMN_MAPPING)
+
 
 def ingestDataToPreaggregatedTable(client, jsonData):
     ds = "%s.%s" % (jsonData["projectName"], jsonData["datasetName"])
@@ -232,7 +249,7 @@ def ingestDataToPreaggregatedTable(client, jsonData):
     """ % (ds, date_start, date_end, ds, CE_COLUMN_MAPPING["startTime"], CE_COLUMN_MAPPING["azureResourceRate"],
            CE_COLUMN_MAPPING["cost"], CE_COLUMN_MAPPING["azureSubscriptionGuid"], ds, jsonData["tableSuffix"])
 
-    #print(query)
+    # print(query)
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
             bigquery.ScalarQueryParameter(
@@ -262,10 +279,10 @@ def ingestDataInUnifiedTableTable(client, jsonData):
                         azureInstanceId, region, azureResourceGroup,
                         azureSubscriptionGuid, azureServiceName,
                         cloudProvider, labels, azureResource, azureVMProviderId"""
-    SELECT_COLUMNS = """MeterCategory AS product, TIMESTAMP(%s) as startTime, %s AS cost,
+    SELECT_COLUMNS = """MeterCategory AS product, TIMESTAMP(%s) as startTime, %s*%s AS cost,
                         MeterCategory as azureMeterCategory,MeterSubcategory as azureMeterSubcategory,MeterId as azureMeterId,
                         MeterName as azureMeterName,
-                        %s as azureInstanceId, ResourceLocation as region,  ResourceGroup as azureResourceGroup,
+                        %s as azureInstanceId, ResourceLocation as region,  %s as azureResourceGroup,
                         %s as azureSubscriptionGuid, MeterCategory as azureServiceName,
                         "AZURE" AS cloudProvider, `%s.CE_INTERNAL.jsonStringToLabelsStruct`(Tags) as labels,
                         ARRAY_REVERSE(SPLIT(%s,REGEXP_EXTRACT(%s, r'(?i)providers/')))[OFFSET(0)] as azureResource,
@@ -276,17 +293,22 @@ def ingestDataInUnifiedTableTable(client, jsonData):
                                 LOWER(CONCAT('azure://', %s)),
                                 null))
                      """ % (CE_COLUMN_MAPPING["startTime"],
-                            CE_COLUMN_MAPPING["cost"], CE_COLUMN_MAPPING["azureInstanceId"],
-                            CE_COLUMN_MAPPING["azureSubscriptionGuid"], jsonData["projectName"], CE_COLUMN_MAPPING["azureInstanceId"],
-                            CE_COLUMN_MAPPING["azureInstanceId"], CE_COLUMN_MAPPING["azureInstanceId"],CE_COLUMN_MAPPING["azureInstanceId"],
+                            CE_COLUMN_MAPPING["cost"], get_cost_markup_factor(jsonData),
+                            CE_COLUMN_MAPPING["azureInstanceId"],
+                            CE_COLUMN_MAPPING["azureResourceGroup"],
+                            CE_COLUMN_MAPPING["azureSubscriptionGuid"], jsonData["projectName"],
+                            CE_COLUMN_MAPPING["azureInstanceId"],
+                            CE_COLUMN_MAPPING["azureInstanceId"], CE_COLUMN_MAPPING["azureInstanceId"],
+                            CE_COLUMN_MAPPING["azureInstanceId"],
                             CE_COLUMN_MAPPING["azureInstanceId"], CE_COLUMN_MAPPING["azureInstanceId"])
 
     # Amend query as per columns availability
     for additionalColumn in ["AccountName", "Frequency", "PublisherType", "ServiceTier", "ResourceType",
-                             "SubscriptionName", "ReservationId", "ReservationName", "PublisherName"]:
-        if additionalColumn in jsonData["columns"]:
-            INSERT_COLUMNS = INSERT_COLUMNS + ", azure%s"%additionalColumn
-            SELECT_COLUMNS = SELECT_COLUMNS + ", %s as azure%s"%(additionalColumn, additionalColumn)
+                             "SubscriptionName", "ReservationId", "ReservationName", "PublisherName",
+                             "CustomerName", "BillingCurrency"]:
+        if additionalColumn.lower() in jsonData["columns"]:
+            INSERT_COLUMNS = INSERT_COLUMNS + ", azure%s" % additionalColumn
+            SELECT_COLUMNS = SELECT_COLUMNS + ", %s as azure%s" % (additionalColumn, additionalColumn)
 
     query = """DELETE FROM `%s.unifiedTable` WHERE DATE(startTime) >= '%s' AND DATE(startTime) <= '%s'  AND cloudProvider = "AZURE";
                INSERT INTO `%s.unifiedTable` (%s)
@@ -307,6 +329,7 @@ def ingestDataInUnifiedTableTable(client, jsonData):
     query_job = client.query(query, job_config=job_config)
     query_job.result()
     print_("Loaded into %s table..." % tableName)
+
 
 def createUDF(client, projectId):
     create_dataset(client, "CE_INTERNAL")
@@ -340,6 +363,7 @@ def createUDF(client, projectId):
     query_job = client.query(query)
     query_job.result()
 
+
 def alterPreaggTable(client, jsonData):
     print_("Altering Preaggregated Data Table")
     ds = "%s.%s" % (jsonData["projectName"], jsonData["datasetName"])
@@ -355,6 +379,7 @@ def alterPreaggTable(client, jsonData):
         print_(e, "WARN")
     else:
         print_("Finished Altering preAggregated Table")
+
 
 def alterUnifiedTable(client, jsonData):
     print_("Altering unifiedTable Table")
@@ -377,8 +402,9 @@ def alterUnifiedTable(client, jsonData):
         ADD COLUMN IF NOT EXISTS azurePublisherName STRING, \
         ADD COLUMN IF NOT EXISTS azureServiceName STRING, \
         ADD COLUMN IF NOT EXISTS azureVMProviderId STRING, \
-        ADD COLUMN IF NOT EXISTS azureResource STRING;" % ds
-
+        ADD COLUMN IF NOT EXISTS azureResource STRING, \
+        ADD COLUMN IF NOT EXISTS azureCustomerName STRING, \
+        ADD COLUMN IF NOT EXISTS azureBillingCurrency STRING;" % ds
     try:
         query_job = client.query(query)
         results = query_job.result()
@@ -388,3 +414,11 @@ def alterUnifiedTable(client, jsonData):
     else:
         print_("Finished Altering unifiedTable Table")
 
+
+def get_cost_markup_factor(jsonData):
+    # Try to get custom markup from event data. if not fallback to static list
+    markuppercent = jsonData.get("costMarkUp", 0) or STATIC_MARKUP_LIST.get(jsonData["accountIdOrig"], 0)
+    if markuppercent != 0:
+        return 1 + markuppercent / 100
+    else:
+        return 1
