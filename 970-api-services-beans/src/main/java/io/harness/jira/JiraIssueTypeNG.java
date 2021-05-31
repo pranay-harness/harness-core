@@ -77,6 +77,12 @@ public class JiraIssueTypeNG {
     JiraFieldNG.addStatusField(this.fields, statuses);
   }
 
+  public void addField(JiraFieldNG field) {
+    if (field != null) {
+      this.fields.put(field.getName(), field);
+    }
+  }
+
   public void removeField(String fieldName) {
     if (fieldName != null) {
       this.fields.remove(fieldName);
