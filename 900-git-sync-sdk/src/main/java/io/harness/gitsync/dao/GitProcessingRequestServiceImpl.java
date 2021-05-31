@@ -12,10 +12,10 @@ import io.harness.gitsync.FileProcessingStatus;
 import io.harness.gitsync.GitToHarnessInfo;
 import io.harness.gitsync.GitToHarnessProcessRequest;
 import io.harness.gitsync.beans.GitProcessRequest;
-import io.harness.gitsync.beans.GitProcessRequest.FileProcessStatus;
-import io.harness.gitsync.beans.GitProcessRequest.FileStatus;
-import io.harness.gitsync.beans.GitProcessRequest.FileStatus.FileStatusKeys;
 import io.harness.gitsync.beans.GitProcessRequest.GitProcessingRequestKeys;
+import io.harness.gitsync.common.beans.FileProcessStatus;
+import io.harness.gitsync.common.beans.FileStatus;
+import io.harness.gitsync.common.beans.FileStatus.FileStatusKeys;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

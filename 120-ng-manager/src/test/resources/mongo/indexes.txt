@@ -348,6 +348,7 @@ gitSyncError {"name": "previousErrors_idx_for_app_filter", "background": true} {
 gitSyncErrorNG {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 gitSyncWebhook {"name": "appId_1", "background": true} {"appId": 1}
 gitSyncWebhook {"name": "createdAt_1", "background": true} {"createdAt": 1}
+gitToHarnessProgress {"name": "yamlChangeSetId_1", "background": true} {"yamlChangeSetId": 1}
 governanceConfig {"name": "accountId_1", "background": true} {"accountId": 1}
 governanceConfig {"name": "enableNextCloseIterations_nextCloseIterations", "background": true} {"enableNextCloseIterations": 1, "nextCloseIterations": 1}
 governanceConfig {"name": "enableNextIterations_nextIterations", "background": true} {"enableNextIterations": 1, "nextIterations": 1}

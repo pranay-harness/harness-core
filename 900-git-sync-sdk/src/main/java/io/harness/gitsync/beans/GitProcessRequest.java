@@ -3,14 +3,13 @@ package io.harness.gitsync.beans;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.common.beans.FileStatus;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
-import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.Id;
@@ -32,19 +31,4 @@ public class GitProcessRequest {
   @NotNull String accountId;
   @NotNull String repoUrl;
   @NotNull String branch;
-
-  @Value
-  @Builder
-  @FieldNameConstants(innerTypeName = "FileStatusKeys")
-  @ToString(exclude = "fileContent")
-  public static class FileStatus {
-    String filePath;
-    String fileContent;
-    String changeType;
-    String entityType;
-    FileProcessStatus status;
-    String errorMessage;
-  }
-
-  public enum FileProcessStatus { UNPROCESSED, SUCCESS, FAILURE, SKIPPED }
 }
