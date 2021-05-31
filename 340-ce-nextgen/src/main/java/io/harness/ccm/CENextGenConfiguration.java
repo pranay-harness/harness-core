@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 import static java.util.stream.Collectors.toSet;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.commons.entities.GcpConfig;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
 import io.harness.configuration.DeployMode;
@@ -59,6 +60,7 @@ public class CENextGenConfiguration extends Configuration {
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
 
   @JsonProperty(value = "awsConnectorTemplate", defaultValue = "") private String awsConnectorTemplate;
+  @JsonProperty(value = "gcpConfig") private GcpConfig gcpConfig;
 
   public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {
     SwaggerBundleConfiguration defaultSwaggerConf = new SwaggerBundleConfiguration();

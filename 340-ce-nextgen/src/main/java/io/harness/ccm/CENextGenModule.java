@@ -11,8 +11,17 @@ import io.harness.annotations.retry.MethodExecutionHelper;
 import io.harness.annotations.retry.RetryOnException;
 import io.harness.annotations.retry.RetryOnExceptionInterceptor;
 import io.harness.app.PrimaryVersionManagerModule;
+import io.harness.ccm.bigQuery.BigQueryService;
+import io.harness.ccm.bigQuery.BigQueryServiceImpl;
+import io.harness.ccm.commons.entities.GcpConfig;
 import io.harness.ccm.eventframework.ConnectorEntityCRUDStreamListener;
 import io.harness.ccm.persistence.JooqExecuteListener;
+import io.harness.ccm.views.service.CEViewService;
+import io.harness.ccm.views.service.ViewCustomFieldService;
+import io.harness.ccm.views.service.ViewsBillingService;
+import io.harness.ccm.views.service.impl.CEViewServiceImpl;
+import io.harness.ccm.views.service.impl.ViewCustomFieldServiceImpl;
+import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.ff.FeatureFlagModule;
 import io.harness.govern.ProviderMethodInterceptor;
@@ -108,6 +117,13 @@ public class CENextGenModule extends AbstractModule {
       ExecuteListener executeListener() {
         return new JooqExecuteListener();
       }
+
+      @Provides
+      @Singleton
+      @Named("gcpConfig")
+      GcpConfig gcpConfig() {
+        return configuration.getGcpConfig();
+      }
     });
 
     install(ExecutorModule.getInstance());
@@ -129,6 +145,10 @@ public class CENextGenModule extends AbstractModule {
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(CENextGenConfiguration.class).toInstance(configuration);
     bind(SQLConverter.class).to(SQLConverterImpl.class);
+    bind(BigQueryService.class).to(BigQueryServiceImpl.class);
+    bind(ViewsBillingService.class).to(ViewsBillingServiceImpl.class);
+    bind(CEViewService.class).to(CEViewServiceImpl.class);
+    bind(ViewCustomFieldService.class).to(ViewCustomFieldServiceImpl.class);
     registerEventsFrameworkMessageListeners();
 
     bindRetryOnExceptionInterceptor();

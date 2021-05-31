@@ -102,3 +102,6 @@ cfMigrationConfig:
 
 # CloudFormation template for AWS Connector
 awsConnectorTemplate: https://continuous-efficiency-templates.s3.amazonaws.com/templateOptimOnly.yaml
+
+gcpConfig:
+  gcpProjectId: gcpProjectIdPlaceHolder
