@@ -13,8 +13,8 @@ import io.harness.aws.AwsClient;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.ceawsconnector.CEAwsConfig;
 import io.harness.connector.utils.AWSConnectorTestHelper;
+import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
-import io.harness.delegate.beans.connector.ceawsconnector.CEAwsFeatures;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
@@ -57,6 +57,6 @@ public class CEAwsDTOToEntityTest extends CategoryTest {
 
     assertThatThrownBy(() -> ceAwsDTOToEntity.toConnectorEntity(ceAwsConnectorDTO))
         .isInstanceOf(InvalidRequestException.class)
-        .hasMessageContaining(CEAwsFeatures.CUR.name());
+        .hasMessageContaining(CEFeatures.BILLING.name());
   }
 }
