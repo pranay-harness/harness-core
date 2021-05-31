@@ -9,9 +9,9 @@ import static io.harness.rule.OwnerRule.MARKO;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -21,7 +21,7 @@ import io.harness.event.PublishRequest;
 import io.harness.event.client.FakeService;
 import io.harness.exception.AccessDeniedException;
 import io.harness.rule.Owner;
-import io.harness.security.TokenAuthenticator;
+import io.harness.security.DelegateTokenAuthenticator;
 
 import io.grpc.Channel;
 import io.grpc.Context;
@@ -50,7 +50,7 @@ public class DelegateAuthServerInterceptorTest extends CategoryTest {
   private static final String TOKEN = "TOKEN";
   private ContextRecordingInterceptor contextRecordingInterceptor;
 
-  private TokenAuthenticator tokenAuthenticator;
+  private DelegateTokenAuthenticator tokenAuthenticator;
 
   private Channel channel;
 
@@ -59,7 +59,7 @@ public class DelegateAuthServerInterceptorTest extends CategoryTest {
 
   @Before
   public void setUp() throws Exception {
-    tokenAuthenticator = mock(TokenAuthenticator.class);
+    tokenAuthenticator = mock(DelegateTokenAuthenticator.class);
     fakeService = new FakeService();
     String serverName = InProcessServerBuilder.generateName();
     contextRecordingInterceptor = new ContextRecordingInterceptor();
@@ -122,8 +122,9 @@ public class DelegateAuthServerInterceptorTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldBlockIfTokenValidationFails() throws Exception {
-    when(tokenAuthenticator.validateToken(ACCOUNT_ID, TOKEN))
-        .thenThrow(new AccessDeniedException("Key not found", null));
+    doThrow(new AccessDeniedException("Key not found", null))
+        .when(tokenAuthenticator)
+        .validateDelegateToken(ACCOUNT_ID, TOKEN);
     val metadata = new Metadata();
     metadata.put(ACCOUNT_ID_METADATA_KEY, ACCOUNT_ID);
     metadata.put(TOKEN_METADATA_KEY, TOKEN);
@@ -145,7 +146,7 @@ public class DelegateAuthServerInterceptorTest extends CategoryTest {
     val eventSvcStub = EventPublisherGrpc.newBlockingStub(channel).withInterceptors(
         MetadataUtils.newAttachHeadersInterceptor(metadata));
     eventSvcStub.publish(PublishRequest.newBuilder().addMessages(PublishMessage.newBuilder()).build());
-    verify(tokenAuthenticator).validateToken(ACCOUNT_ID, TOKEN);
+    verify(tokenAuthenticator).validateDelegateToken(ACCOUNT_ID, TOKEN);
     assertThat(ACCOUNT_ID_CTX_KEY.get(contextRecordingInterceptor.lastContext)).isEqualTo(ACCOUNT_ID);
     assertThat(fakeService.getMessageCount()).isEqualTo(1);
   }
