@@ -13,7 +13,6 @@ import io.harness.accesscontrol.principals.usergroups.UserGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
 import io.harness.accesscontrol.roles.RoleService;
-import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.aggregator.consumers.RoleAssignmentChangeConsumerImpl;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -33,7 +32,6 @@ public class RoleAssignmentChangeConsumerImplTest extends CategoryTest {
   private ACLService aclService;
   private ResourceGroupService resourceGroupService;
   private RoleService roleService;
-  private ScopeService scopeService;
   private UserGroupService userGroupService;
   private RoleAssignmentService roleAssignmentService;
 
@@ -42,11 +40,10 @@ public class RoleAssignmentChangeConsumerImplTest extends CategoryTest {
     aclService = mock(ACLService.class);
     resourceGroupService = mock(ResourceGroupService.class);
     roleService = mock(RoleService.class);
-    scopeService = mock(ScopeService.class);
     userGroupService = mock(UserGroupService.class);
     roleAssignmentService = mock(RoleAssignmentService.class);
     roleAssignmentChangeConsumer = new RoleAssignmentChangeConsumerImpl(
-        aclService, roleService, userGroupService, resourceGroupService, scopeService, roleAssignmentService);
+        aclService, roleService, userGroupService, resourceGroupService, roleAssignmentService);
   }
 
   private List<ACL> getAlreadyExistingACLS() {
