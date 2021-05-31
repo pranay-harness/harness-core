@@ -1,5 +1,6 @@
 package service;
 
+import static io.harness.delegate.beans.DelegateConfiguration.Action.SELF_DESTRUCT;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
@@ -7,6 +8,7 @@ import static io.harness.rule.OwnerRule.VUK;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.when;
 
@@ -16,6 +18,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.concurent.HTimeLimiterMocker;
 import io.harness.delegate.beans.DelegateConfiguration;
+import io.harness.delegate.message.MessageService;
+import io.harness.exception.GeneralException;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.watcher.service.WatcherServiceImpl;
@@ -45,6 +49,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 @OwnedBy(HarnessTeam.DEL)
 public class WatcherServiceImplTest extends CategoryTest {
   @Mock private TimeLimiter timeLimiter;
+  @Mock private MessageService messageService;
   @InjectMocks @Spy private WatcherServiceImpl watcherService;
 
   private static final String TEST_RESOURCE_PATH = "250-watcher/src/test/resources/service/";
@@ -305,17 +310,30 @@ public class WatcherServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
-  public void testFindExpectedDelegateVersionsShouldReturnNull() throws Exception {
+  public void testFindExpectedDelegateVersions() throws Exception {
     DelegateConfiguration delegateConfiguration =
         DelegateConfiguration.builder().delegateVersions(Arrays.asList("1", "2")).build();
 
     RestResponse<DelegateConfiguration> restResponse =
         RestResponse.Builder.aRestResponse().withResource(delegateConfiguration).build();
 
-    HTimeLimiterMocker.mockCallInterruptible(timeLimiter, ofSeconds(15)).thenReturn(restResponse).thenReturn(null);
+    RestResponse<DelegateConfiguration> selfDestructRestResponse =
+        RestResponse.Builder.aRestResponse()
+            .withResource(DelegateConfiguration.builder().action(SELF_DESTRUCT).build())
+            .build();
+
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter, ofSeconds(15))
+        .thenReturn(restResponse)
+        .thenReturn(selfDestructRestResponse)
+        .thenReturn(null);
 
     List<String> expectedDelegateVersions = watcherService.findExpectedDelegateVersions();
     assertThat(expectedDelegateVersions).containsExactlyInAnyOrder("1", "2");
+
+    assertThatThrownBy(() -> watcherService.findExpectedDelegateVersions())
+        .isInstanceOf(
+            GeneralException.class); // This will be throw because test framework does not allow System.exit
+                                     // to be used in test code, which is being invoked fom selfDestruct method
 
     expectedDelegateVersions = watcherService.findExpectedDelegateVersions();
     assertThat(expectedDelegateVersions).isNull();

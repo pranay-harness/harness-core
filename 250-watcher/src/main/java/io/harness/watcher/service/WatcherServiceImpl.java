@@ -3,6 +3,7 @@ package io.harness.watcher.service;
 import static io.harness.concurrent.HTimeLimiter.callInterruptible;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.DelegateConfiguration.Action.SELF_DESTRUCT;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_GO_AHEAD;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_HEARTBEAT;
@@ -931,6 +932,10 @@ public class WatcherServiceImpl implements WatcherService {
         }
 
         DelegateConfiguration config = restResponse.getResource();
+
+        if (config != null && config.getAction() == SELF_DESTRUCT) {
+          selfDestruct();
+        }
 
         return config.getDelegateVersions();
       } else {
