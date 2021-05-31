@@ -10,6 +10,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import io.harness.pms.contracts.plan.ConsumerConfig;
+import io.harness.pms.contracts.plan.SdkModuleInfo;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepType;
 
@@ -48,6 +49,7 @@ public class PmsSdkInstance implements PersistentEntity, UuidAware, CreatedAtAwa
   Map<String, Set<String>> supportedTypes;
   List<StepInfo> supportedSteps;
   List<StepType> supportedStepTypes;
+  SdkModuleInfo sdkModuleInfo;
 
   ConsumerConfig interruptConsumerConfig;
   ConsumerConfig orchestrationEventConsumerConfig;

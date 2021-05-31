@@ -2,6 +2,7 @@ package io.harness.pms.sample.cv;
 
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
+import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.maintenance.MaintenanceController;
@@ -82,7 +83,7 @@ public class CvServiceApplication extends Application<CvServiceConfiguration> {
   private PmsSdkConfiguration getPmsSdkConfiguration(CvServiceConfiguration config) {
     return PmsSdkConfiguration.builder()
         .deploymentMode(SdkDeployMode.REMOTE)
-        .serviceName("cv")
+        .moduleType(ModuleType.CV)
         .mongoConfig(config.getMongoConfig())
         .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
         .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())

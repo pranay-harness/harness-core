@@ -3,6 +3,7 @@ package io.harness.app.impl;
 import static io.harness.annotations.dev.HarnessTeam.CI;
 
 import io.harness.AccessControlClientConfiguration;
+import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.CIManagerConfiguration;
 import io.harness.app.CIManagerServiceModule;
@@ -159,7 +160,7 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
   private PmsSdkConfiguration getPmsSdkConfiguration() {
     return PmsSdkConfiguration.builder()
         .deploymentMode(SdkDeployMode.LOCAL)
-        .serviceName("ci")
+        .moduleType(ModuleType.CI)
         .engineSteps(ExecutionRegistrar.getEngineSteps())
         .engineAdvisers(ExecutionAdvisers.getEngineAdvisers())
         .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())

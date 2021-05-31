@@ -24,6 +24,7 @@ import io.harness.serializer.morphia.converters.InterruptEffectMorphiaConverter;
 import io.harness.serializer.morphia.converters.LevelMorphiaConverter;
 import io.harness.serializer.morphia.converters.RefObjectMorphiaConverter;
 import io.harness.serializer.morphia.converters.RefTypeMorphiaConverter;
+import io.harness.serializer.morphia.converters.SdkModuleInfoMorphiaConverter;
 import io.harness.serializer.morphia.converters.SdkResponseEventRequestMorphiaConverter;
 import io.harness.serializer.morphia.converters.StepTypeMorphiaConverter;
 import io.harness.serializer.morphia.converters.TriggerPayloadMorphiaConverter;
@@ -78,6 +79,8 @@ import io.harness.serializer.spring.converters.reftype.RefTypeReadConverter;
 import io.harness.serializer.spring.converters.reftype.RefTypeWriteConverter;
 import io.harness.serializer.spring.converters.run.NodeRunInfoReadConverter;
 import io.harness.serializer.spring.converters.run.NodeRunInfoWriteConverter;
+import io.harness.serializer.spring.converters.sdk.SdkModuleInfoReadConverter;
+import io.harness.serializer.spring.converters.sdk.SdkModuleInfoWriteConverter;
 import io.harness.serializer.spring.converters.skip.SkipInfoReadConverter;
 import io.harness.serializer.spring.converters.skip.SkipInfoWriteConverter;
 import io.harness.serializer.spring.converters.stepoutcomeref.StepOutcomeRefReadConverter;
@@ -132,6 +135,7 @@ public class OrchestrationRegistrars {
       ImmutableSet.<Class<? extends TypeConverter>>builder()
           .addAll(OrchestrationBeansRegistrars.morphiaConverters)
           .add(AmbianceMorphiaConverter.class)
+          .add(SdkModuleInfoMorphiaConverter.class)
           .add(LevelMorphiaConverter.class)
           .add(StepTypeMorphiaConverter.class)
           .add(RefObjectMorphiaConverter.class)
@@ -176,7 +180,8 @@ public class OrchestrationRegistrars {
       SdkResponseEventRequestReadConverter.class, SdkResponseEventRequestWriteConverter.class,
       NodeRunInfoReadConverter.class, NodeRunInfoWriteConverter.class, ExecutionPrincipalInfoReadConverter.class,
       ExecutionPrincipalInfoWriteConverter.class, InterruptEffectReadConverter.class,
-      InterruptEffectWriteConverter.class, ConsumerConfigReadConverter.class, ConsumerConfigWriteConverter.class);
+      InterruptEffectWriteConverter.class, SdkModuleInfoReadConverter.class, SdkModuleInfoWriteConverter.class,
+      ConsumerConfigReadConverter.class, ConsumerConfigWriteConverter.class);
 
   public static final List<Class<? extends Converter<?, ?>>> springConverters =
       ImmutableList.<Class<? extends Converter<?, ?>>>builder()

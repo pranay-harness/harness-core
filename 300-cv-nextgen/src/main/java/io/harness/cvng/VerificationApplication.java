@@ -16,6 +16,7 @@ import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
 import io.harness.EventObserverUtils;
+import io.harness.ModuleType;
 import io.harness.PipelineServiceUtilityModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -409,7 +410,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
 
     return PmsSdkConfiguration.builder()
         .deploymentMode(remote ? SdkDeployMode.REMOTE : SdkDeployMode.LOCAL)
-        .serviceName(PMS_SERVICE_NAME)
+        .moduleType(ModuleType.CV)
         .mongoConfig(config.getPmsMongoConfig())
         .pipelineServiceInfoProviderClass(CVNGPipelineServiceInfoProvider.class)
         .grpcServerConfig(config.getPmsSdkGrpcServerConfig())

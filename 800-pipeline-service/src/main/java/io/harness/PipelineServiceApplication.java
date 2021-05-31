@@ -82,7 +82,6 @@ import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.pms.triggers.scheduled.ScheduledTriggerHandler;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
-import io.harness.pms.utils.PmsConstants;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.registrars.PipelineServiceFacilitatorRegistrar;
@@ -375,7 +374,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   private PmsSdkConfiguration getPmsSdkConfiguration(PipelineServiceConfiguration config) {
     return PmsSdkConfiguration.builder()
         .deploymentMode(SdkDeployMode.REMOTE_IN_PROCESS)
-        .serviceName(PmsConstants.INTERNAL_SERVICE_NAME)
         .mongoConfig(config.getMongoConfig())
         .pipelineServiceInfoProviderClass(PipelineServiceInternalInfoProvider.class)
         .filterCreationResponseMerger(new PipelineServiceFilterCreationResponseMerger())
