@@ -2,6 +2,7 @@ enum ServiceEntityAggregation {
   Application
   ArtifactType
   DeploymentType
+  Service
 }
 
 input ServiceAggregation {

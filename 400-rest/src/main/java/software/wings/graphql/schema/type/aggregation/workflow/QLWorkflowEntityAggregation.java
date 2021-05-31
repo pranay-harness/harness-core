@@ -5,5 +5,6 @@ import io.harness.annotations.dev.TargetModule;
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public enum QLWorkflowEntityAggregation {
   Application,
-  OrchestrationWorkflowType
+  OrchestrationWorkflowType,
+  Workflow
 }
