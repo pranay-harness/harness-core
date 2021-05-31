@@ -14,6 +14,7 @@ import software.wings.beans.security.HarnessSupportUserDTO;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.beans.security.HarnessUserGroupDTO;
 import software.wings.security.annotations.ApiKeyAuthorized;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.HarnessUserGroupService;
 
 import com.google.inject.Inject;
