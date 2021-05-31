@@ -46,7 +46,7 @@ message InfoForPush {
   google.protobuf.StringValue file_path = 2;
   // status 0 = failed, 1 = success
   bool status = 3;
-  google.protobuf.StringValue exception = 4;
+  google.protobuf.BytesValue exception = 4;
   bool is_default = 5;
   string yaml_git_config_id = 6;
   string account_id = 7;

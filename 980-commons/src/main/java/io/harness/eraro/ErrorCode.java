@@ -539,7 +539,8 @@ public enum ErrorCode {
   ENGINE_EXPRESSION_EVALUATION_ERROR,
   ENGINE_FUNCTOR_ERROR,
   JIRA_CLIENT_ERROR,
-  INVALID_YAML_ERROR;
+  INVALID_YAML_ERROR,
+  SCM_NOT_MODIFIED;
 
   private Status status = BAD_REQUEST;
   private String description;
