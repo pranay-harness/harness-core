@@ -6,6 +6,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.entities.instance.Instance;
 import io.harness.models.BuildsByEnvironment;
+import io.harness.models.EnvBuildInstanceCount;
 import io.harness.models.InstancesByBuild;
 import io.harness.models.dashboard.InstanceCountDetails;
 import io.harness.models.dashboard.InstanceCountDetailsByService;
@@ -18,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 
 @OwnedBy(HarnessTeam.DX)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -49,7 +51,8 @@ public class InstanceDashboardServiceImpl implements InstanceDashboardService {
   }
 
   /**
-   * API to fetch all active instances for given account+org+project at a given time grouped by environment and build
+   * API to fetch all active instances for given account+org+project+service at a given time grouped by environment and
+   * build
    * @param accountIdentifier
    * @param orgIdentifier
    * @param projectIdentifier
@@ -57,10 +60,10 @@ public class InstanceDashboardServiceImpl implements InstanceDashboardService {
    * @return List of instances grouped by environment and build
    */
   @Override
-  public List<BuildsByEnvironment> getActiveInstancesGroupedByEnvironmentAndBuild(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, long timestampInMs) {
-    List<Instance> instances =
-        instanceRepository.getActiveInstances(accountIdentifier, orgIdentifier, projectIdentifier, timestampInMs);
+  public List<BuildsByEnvironment> getActiveInstancesByServiceIdGroupedByEnvironmentAndBuild(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs) {
+    List<Instance> instances = instanceRepository.getActiveInstancesByServiceId(
+        accountIdentifier, orgIdentifier, projectIdentifier, serviceId, timestampInMs);
 
     // used to map a list of instances to build and map it further to environment
     Map<String, Map<String, List<Instance>>> instanceGroupMap = new HashMap<>();
@@ -77,6 +80,34 @@ public class InstanceDashboardServiceImpl implements InstanceDashboardService {
     });
 
     return prepareInstanceGroupedByEnvironmentAndBuildData(instanceGroupMap);
+  }
+
+  /**
+   * API to fetch all unique combinations of environment and build with instance count
+   * @param accountIdentifier
+   * @param orgIdentifier
+   * @param projectIdentifier
+   * @param serviceId
+   * @param timestampInMs
+   * @return List of unique environment and build ids with instance count
+   */
+  @Override
+  public List<EnvBuildInstanceCount> getEnvBuildInstanceCountByServiceId(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs) {
+    AggregationResults<EnvBuildInstanceCount> envBuildInstanceCountAggregationResults =
+        instanceRepository.getEnvBuildInstanceCountByServiceId(
+            accountIdentifier, orgIdentifier, projectIdentifier, serviceId, timestampInMs);
+    List<EnvBuildInstanceCount> envBuildInstanceCounts = new ArrayList<>();
+
+    envBuildInstanceCountAggregationResults.getMappedResults().forEach(envBuildInstanceCount -> {
+      final String envId = envBuildInstanceCount.getEnvId();
+      final String envName = envBuildInstanceCount.getEnvName();
+      final String buildId = envBuildInstanceCount.getTag();
+      final Integer count = envBuildInstanceCount.getCount();
+      envBuildInstanceCounts.add(new EnvBuildInstanceCount(envId, envName, buildId, count));
+    });
+
+    return envBuildInstanceCounts;
   }
 
   // ----------------------------- PRIVATE METHODS -----------------------------

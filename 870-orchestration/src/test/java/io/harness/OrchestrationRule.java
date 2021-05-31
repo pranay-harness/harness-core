@@ -180,7 +180,7 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
                                             .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
                                             .isPipelineService(true)
                                             .build()));
-    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder().serviceName("orchestrationTest").build();
+    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder().build();
     modules.add(PmsSdkModule.getInstance(sdkConfig));
     return modules;
   }

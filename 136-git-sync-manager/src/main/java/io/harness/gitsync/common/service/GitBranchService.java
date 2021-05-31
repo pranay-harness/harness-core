@@ -27,4 +27,6 @@ public interface GitBranchService {
   GitBranch get(String accountIdentifier, String repoURL, String branchName);
 
   void checkBranchIsNotAlreadyShortlisted(String repoURL, String accountId, String branch);
+
+  boolean isBranchExists(String accountIdentifier, String repoURL, String branch, BranchSyncStatus branchSyncStatus);
 }

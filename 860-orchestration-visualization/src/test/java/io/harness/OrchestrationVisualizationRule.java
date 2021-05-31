@@ -157,7 +157,7 @@ public class OrchestrationVisualizationRule implements MethodRule, InjectorRuleM
                                             .serviceName("ORCHESTRATION_VISUALIZATION_TEST")
                                             .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
                                             .build()));
-    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder().serviceName("orchestrationVisualisationTest").build();
+    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder().build();
     modules.add(PmsSdkModule.getInstance(sdkConfig));
     modules.add(OrchestrationVisualizationModule.getInstance());
     return modules;

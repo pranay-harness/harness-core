@@ -32,8 +32,6 @@ import io.harness.cdng.NGModule;
 import io.harness.cdng.expressions.CDExpressionEvaluatorProvider;
 import io.harness.cdng.fileservice.FileServiceClient;
 import io.harness.cdng.fileservice.FileServiceClientFactory;
-import io.harness.cdng.service.dashboard.CDOverviewDashboardService;
-import io.harness.cdng.service.dashboard.CDOverviewDashboardServiceImpl;
 import io.harness.connector.ConnectorModule;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
@@ -46,6 +44,8 @@ import io.harness.exception.exceptionmanager.ExceptionModule;
 import io.harness.file.NGFileServiceModule;
 import io.harness.gitsync.GitSyncModule;
 import io.harness.gitsync.core.runnable.HarnessToGitPushMessageListener;
+import io.harness.gitsync.core.webhook.createbranchevent.GitCreateBranchEventStreamListener;
+import io.harness.gitsync.core.webhook.pushevent.GitPushEventStreamListener;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
@@ -66,6 +66,8 @@ import io.harness.ng.accesscontrol.mockserver.MockRoleAssignmentModule;
 import io.harness.ng.accesscontrol.user.AggregateUserService;
 import io.harness.ng.accesscontrol.user.AggregateUserServiceImpl;
 import io.harness.ng.authenticationsettings.AuthenticationSettingsModule;
+import io.harness.ng.cdOverview.service.CDOverviewDashboardService;
+import io.harness.ng.cdOverview.service.CDOverviewDashboardServiceImpl;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.DefaultOrganizationModule;
 import io.harness.ng.core.InviteModule;
@@ -91,8 +93,6 @@ import io.harness.ng.core.event.OrganizationEntityCRUDStreamListener;
 import io.harness.ng.core.event.OrganizationFeatureFlagStreamListener;
 import io.harness.ng.core.event.ProjectEntityCRUDStreamListener;
 import io.harness.ng.core.event.UserMembershipStreamListener;
-import io.harness.ng.core.gitsync.GitChangeProcessorService;
-import io.harness.ng.core.gitsync.YamlHandler;
 import io.harness.ng.core.impl.OrganizationServiceImpl;
 import io.harness.ng.core.impl.ProjectServiceImpl;
 import io.harness.ng.core.outbox.NextGenOutboxEventHandler;
@@ -103,8 +103,6 @@ import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.user.service.impl.NgUserServiceImpl;
 import io.harness.ng.core.user.service.impl.UserEntityCrudStreamListener;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
-import io.harness.ng.gitsync.NgCoreGitChangeSetProcessorServiceImpl;
-import io.harness.ng.gitsync.handlers.ConnectorYamlHandler;
 import io.harness.ng.userprofile.commons.SCMType;
 import io.harness.ng.userprofile.entities.AwsCodeCommitSCM.AwsCodeCommitSCMMapper;
 import io.harness.ng.userprofile.entities.AzureDevOpsSCM.AzureDevOpsSCMMapper;
@@ -164,7 +162,6 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
-import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.dropwizard.jackson.Jackson;
@@ -462,8 +459,6 @@ public class NextGenModule extends AbstractModule {
         .to(SecretManagerConnectorServiceImpl.class);
     bind(NgUserService.class).to(NgUserServiceImpl.class);
     bind(UserGroupService.class).to(UserGroupServiceImpl.class);
-    bind(GitChangeProcessorService.class).to(NgCoreGitChangeSetProcessorServiceImpl.class);
-    bindYamlHandlers();
     bind(YamlBaseUrlService.class).to(YamlBaseUrlServiceImpl.class);
     bind(DelegateProfileManagerNgService.class).to(DelegateProfileManagerNgServiceImpl.class);
     bind(UserInfoService.class).to(UserInfoServiceImpl.class);
@@ -521,6 +516,12 @@ public class NextGenModule extends AbstractModule {
     bind(MessageListener.class)
         .annotatedWith(Names.named(EventsFrameworkConstants.HARNESS_TO_GIT_PUSH))
         .to(HarnessToGitPushMessageListener.class);
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(EventsFrameworkConstants.GIT_PUSH_EVENT_STREAM))
+        .to(GitPushEventStreamListener.class);
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CREATE_BRANCH_EVENT_STREAM))
+        .to(GitCreateBranchEventStreamListener.class);
   }
 
   private OrchestrationModuleConfig getOrchestrationConfig() {
@@ -537,10 +538,5 @@ public class NextGenModule extends AbstractModule {
         .configure()
         .parameterNameProvider(new ReflectionParameterNameProvider())
         .buildValidatorFactory();
-  }
-
-  private void bindYamlHandlers() {
-    final Multibinder<YamlHandler> yamlHandlerMultiBinder = Multibinder.newSetBinder(binder(), YamlHandler.class);
-    yamlHandlerMultiBinder.addBinding().to(ConnectorYamlHandler.class);
   }
 }

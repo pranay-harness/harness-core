@@ -1,7 +1,7 @@
 package io.harness.connector.entities.embedded.ceazure;
 
 import io.harness.connector.entities.Connector;
-import io.harness.delegate.beans.connector.ceazure.CEAzureFeatures;
+import io.harness.delegate.beans.connector.CEFeatures;
 
 import java.util.List;
 import javax.annotation.Nullable;
@@ -23,7 +23,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Entity(value = "connectors", noClassnameStored = true)
 @TypeAlias("io.harness.connector.entities.embedded.ceazure.CEAzureConfig")
 public class CEAzureConfig extends Connector {
-  @NotEmpty List<CEAzureFeatures> featuresEnabled;
+  @NotEmpty List<CEFeatures> featuresEnabled;
   @NotNull String subscriptionId;
   @NotNull String tenantId;
   @Nullable BillingExportDetails billingExportDetails;

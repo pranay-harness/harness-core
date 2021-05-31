@@ -1023,6 +1023,11 @@ awsEbsInventorySchema = [
         "type": "STRING"
     },
     {
+        "mode": "NULLABLE",
+        "name": "kmsKeyId",
+        "type": "STRING"
+    },
+    {
         "fields": [
             {
                 "name": "attachTime",
@@ -1075,28 +1080,8 @@ awsEbsInventorySchema = [
     },
     {
         "mode": "NULLABLE",
-        "name": "volumeReadBytes",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "volumeWriteBytes",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "volumeReadOps",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "volumeWriteOps",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "volumeIdleTime",
-        "type": "FLOAT"
+        "name": "linkedAccountIdPartition",
+        "type": "INTEGER"
     }
 ]
 

@@ -2,6 +2,7 @@ package io.harness.pms.sample.cd;
 
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
+import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.maintenance.MaintenanceController;
@@ -82,7 +83,7 @@ public class CdServiceApplication extends Application<CdServiceConfiguration> {
   private PmsSdkConfiguration getPmsSdkConfiguration(CdServiceConfiguration config) {
     return PmsSdkConfiguration.builder()
         .deploymentMode(SdkDeployMode.REMOTE)
-        .serviceName("cd")
+        .moduleType(ModuleType.CD)
         .mongoConfig(config.getMongoConfig())
         .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
         .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())

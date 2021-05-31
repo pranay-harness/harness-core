@@ -7,6 +7,7 @@ import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.core.beans.ChangeWithErrorMsg;
 import io.harness.gitsync.core.beans.GitCommit;
+import io.harness.gitsync.core.beans.GitCommit.GitCommitProcessingStatus;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity.Status;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivitySummary;
@@ -22,8 +23,8 @@ public interface GitSyncService {
   void logActivityForSkippedFiles(List<GitFileChange> changeList, List<GitFileChange> completeChangeList,
       String message, String accountId, String commitId);
 
-  GitFileActivitySummary createGitFileActivitySummaryForCommit(
-      String commitId, String accountId, Boolean gitToHarness, GitCommit.Status status, YamlGitConfigDTO yamlGitConfig);
+  GitFileActivitySummary createGitFileActivitySummaryForCommit(String commitId, String accountId, Boolean gitToHarness,
+      GitCommitProcessingStatus status, YamlGitConfigDTO yamlGitConfig);
 
   void logActivityForSuccessfulFiles(
       List<GitFileChange> gitFileChanges, String accountId, String commitMessage, YamlGitConfigDTO yamlGitConfig);

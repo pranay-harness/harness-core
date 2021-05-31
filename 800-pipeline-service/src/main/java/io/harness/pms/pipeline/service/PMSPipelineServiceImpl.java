@@ -15,12 +15,12 @@ import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.observer.Subject;
-import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.PipelineFilterPropertiesDto;
 import io.harness.pms.pipeline.StepCategory;
+import io.harness.pms.pipeline.StepPalleteInfo;
 import io.harness.pms.pipeline.mappers.PipelineYamlDtoMapper;
 import io.harness.pms.pipeline.observer.PipelineActionObserver;
 import io.harness.pms.sdk.PmsSdkInstanceService;
@@ -31,7 +31,6 @@ import io.harness.repositories.pipeline.PMSPipelineRepository;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.Getter;
@@ -181,16 +180,16 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
 
   @Override
   public StepCategory getSteps(String module, String category, String accountId) {
-    Map<String, List<StepInfo>> serviceInstanceNameToSupportedSteps =
-        pmsSdkInstanceService.getInstanceNameToSupportedSteps();
+    Map<String, StepPalleteInfo> serviceInstanceNameToSupportedSteps =
+        pmsSdkInstanceService.getModuleNameToStepPalleteInfo();
     StepCategory stepCategory = pmsPipelineServiceStepHelper.calculateStepsForModuleBasedOnCategory(
-        category, serviceInstanceNameToSupportedSteps.get(module), accountId);
-    for (Map.Entry<String, List<StepInfo>> entry : serviceInstanceNameToSupportedSteps.entrySet()) {
-      if (entry.getKey().equals(module) || EmptyPredicate.isEmpty(entry.getValue())) {
+        category, serviceInstanceNameToSupportedSteps.get(module).getStepTypes(), accountId);
+    for (Map.Entry<String, StepPalleteInfo> entry : serviceInstanceNameToSupportedSteps.entrySet()) {
+      if (entry.getKey().equals(module) || EmptyPredicate.isEmpty(entry.getValue().getStepTypes())) {
         continue;
       }
-      stepCategory.addStepCategory(
-          pmsPipelineServiceStepHelper.calculateStepsForCategory(entry.getKey(), entry.getValue(), accountId));
+      stepCategory.addStepCategory(pmsPipelineServiceStepHelper.calculateStepsForCategory(
+          entry.getValue().getModuleName(), entry.getValue().getStepTypes(), accountId));
     }
     return stepCategory;
   }

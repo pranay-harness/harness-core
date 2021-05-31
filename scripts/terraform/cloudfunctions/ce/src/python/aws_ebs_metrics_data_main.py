@@ -3,6 +3,7 @@ import datetime
 import json
 import io
 import os
+import re
 import base64
 from google.cloud import bigquery
 from util import create_dataset, if_tbl_exists, createTable, print_, ACCOUNTID_LOG, TABLE_NAME_FORMAT
@@ -29,7 +30,7 @@ def get_regions_and_volumes(jsonData):
 
 def get_ebs_metrics_data(jsonData):
     EBS_DATA_MAP = {}
-    REGIONS_VOLUME_MAP = get_regions_and_volumes()
+    REGIONS_VOLUME_MAP = get_regions_and_volumes(jsonData)
     key, secret, token = assumed_role_session(jsonData)
     added_at = datetime.datetime.utcnow()
     for region in REGIONS_VOLUME_MAP:
@@ -188,12 +189,14 @@ def main(event, context):
     # Set the accountId for GCP logging
     ACCOUNTID_LOG = jsonData.get("accountIdOrig")
 
+    jsonData["accountIdBQ"] = re.sub('[^0-9a-z]', '_', jsonData.get("accountId").lower())
+    jsonData["datasetName"] = "BillingReport_%s" % jsonData["accountIdBQ"]
     create_dataset(client, jsonData["datasetName"])
     dataset = client.dataset(jsonData["datasetName"])
 
     awsEbsInventoryMetricsTableRef = dataset.table("awsEbsInventoryMetrics")
     awsEbsInventoryMetricsTableName = TABLE_NAME_FORMAT % (
-        jsonData["projectName"], jsonData["accountId"], "awsEbsInventoryMetrics")
+        jsonData["projectName"], jsonData["accountIdBQ"], "awsEbsInventoryMetrics")
 
     if not if_tbl_exists(client, awsEbsInventoryMetricsTableRef):
         print_("%s table does not exists, creating table..." % awsEbsInventoryMetricsTableRef)
@@ -213,8 +216,6 @@ def main(event, context):
     job = client.load_table_from_file(data_as_file, awsEbsInventoryMetricsTableName, job_config=job_config)
     print_(job.job_id)
     job.result()
-
-    # Todo: Merge with main table
 
 
 

@@ -74,12 +74,13 @@ public class QuickFilterTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testformCriteriaFilterProperties() {
     // making a filterProperties object with a status value
-    Criteria form = pmsExecutionServiceImpl.formCriteria("acc", "org", "pro", "pip", null,
+    Criteria form = pmsExecutionServiceImpl.formCriteria(null, null, null, null, null,
         PipelineExecutionFilterPropertiesDTO.builder()
             .status(Collections.singletonList(ExecutionStatus.ABORTED))
             .build(),
-        "mod", "sear", null, true, false);
-    assertThat(form.getCriteriaObject().get("status")).isNotNull();
+        null, null, null, true, false);
+    String documentString = "[Document{{status=Document{{$in=[ABORTED]}}}}, Document{{}}, Document{{}}]";
+    assertThat(form.getCriteriaObject().get("$and").toString()).isEqualTo(documentString);
 
     // filterProperties and filterIdentifier as not null
     assertThatThrownBy(()

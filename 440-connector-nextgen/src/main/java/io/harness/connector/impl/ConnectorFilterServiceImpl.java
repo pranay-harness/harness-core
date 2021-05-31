@@ -21,6 +21,7 @@ import io.harness.connector.ConnectorCategory;
 import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.connector.entities.embedded.ceawsconnector.CEAwsConfig.CEAwsConfigKeys;
+import io.harness.connector.entities.embedded.ceazure.CEAzureConfig.CEAzureConfigKeys;
 import io.harness.connector.services.ConnectorFilterService;
 import io.harness.delegate.beans.connector.CcmConnectorFilter;
 import io.harness.delegate.beans.connector.ConnectorType;
@@ -269,10 +270,26 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
     }
     return criteria;
   }
+
   private void populateCcmFilters(Criteria criteria, CcmConnectorFilter ccmConnectorFilter) {
+    populateAwsFilters(criteria, ccmConnectorFilter);
+    populateAzureFilters(criteria, ccmConnectorFilter);
+    populateAllFilter(criteria, CEAzureConfigKeys.featuresEnabled, ccmConnectorFilter.getFeaturesEnabled());
+  }
+
+  private void populateAwsFilters(Criteria criteria, CcmConnectorFilter ccmConnectorFilter) {
     if (ccmConnectorFilter.getAwsAccountId() != null) {
       populateInFilter(criteria, CEAwsConfigKeys.awsAccountId, Arrays.asList(ccmConnectorFilter.getAwsAccountId()));
     }
-    populateAllFilter(criteria, CEAwsConfigKeys.featuresEnabled, ccmConnectorFilter.getFeaturesEnabled());
+  }
+
+  private void populateAzureFilters(Criteria criteria, CcmConnectorFilter ccmConnectorFilter) {
+    if (ccmConnectorFilter.getAzureSubscriptionId() != null) {
+      populateInFilter(
+          criteria, CEAzureConfigKeys.subscriptionId, Arrays.asList(ccmConnectorFilter.getAzureSubscriptionId()));
+    }
+    if (ccmConnectorFilter.getAzureTenantId() != null) {
+      populateInFilter(criteria, CEAzureConfigKeys.tenantId, Arrays.asList(ccmConnectorFilter.getAzureTenantId()));
+    }
   }
 }
