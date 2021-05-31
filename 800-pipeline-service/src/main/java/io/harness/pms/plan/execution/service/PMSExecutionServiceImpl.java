@@ -83,12 +83,13 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
     }
     criteria.and(PlanExecutionSummaryKeys.pipelineDeleted).ne(!pipelineDeleted);
 
+    Criteria filterCriteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(filterIdentifier) && filterProperties != null) {
       throw new InvalidRequestException("Can not apply both filter properties and saved filter together");
     } else if (EmptyPredicate.isNotEmpty(filterIdentifier) && filterProperties == null) {
-      populatePipelineFilterUsingIdentifier(criteria, accountId, orgId, projectId, filterIdentifier);
+      populatePipelineFilterUsingIdentifier(filterCriteria, accountId, orgId, projectId, filterIdentifier);
     } else if (EmptyPredicate.isEmpty(filterIdentifier) && filterProperties != null) {
-      populatePipelineFilter(criteria, filterProperties);
+      populatePipelineFilter(filterCriteria, filterProperties);
     }
 
     if (myDeployments) {
@@ -99,9 +100,10 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
                   .build());
     }
 
+    Criteria moduleCriteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(moduleName)) {
       // Check for pipeline with no filters also - empty pipeline or pipelines with only approval stage
-      criteria.orOperator(Criteria.where(PlanExecutionSummaryKeys.modules).is(Collections.emptyList()),
+      moduleCriteria.orOperator(Criteria.where(PlanExecutionSummaryKeys.modules).is(Collections.emptyList()),
           Criteria.where(PlanExecutionSummaryKeys.modules)
               .is(Collections.singletonList(PmsConstants.INTERNAL_SERVICE_NAME)),
           Criteria.where(PlanExecutionSummaryKeys.modules).in(moduleName),
@@ -120,7 +122,7 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
               .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
     }
 
-    criteria.andOperator(searchCriteria);
+    criteria.andOperator(filterCriteria, moduleCriteria, searchCriteria);
 
     return criteria;
   }
@@ -138,7 +140,11 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
 
   private void populatePipelineFilter(Criteria criteria, @NotNull PipelineExecutionFilterPropertiesDTO piplineFilter) {
     if (EmptyPredicate.isNotEmpty(piplineFilter.getPipelineName())) {
-      criteria.and(PlanExecutionSummaryKeys.name).is(piplineFilter.getPipelineName());
+      criteria.orOperator(
+          where(PlanExecutionSummaryKeys.name)
+              .regex(piplineFilter.getPipelineName(), NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(PlanExecutionSummaryKeys.pipelineIdentifier)
+              .regex(piplineFilter.getPipelineName(), NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
     }
     if (EmptyPredicate.isNotEmpty(piplineFilter.getStatus())) {
       criteria.and(PlanExecutionSummaryKeys.status).in(piplineFilter.getStatus());
