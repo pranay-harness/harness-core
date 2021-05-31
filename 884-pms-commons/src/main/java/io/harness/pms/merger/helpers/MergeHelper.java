@@ -154,6 +154,9 @@ public class MergeHelper {
     try {
       JsonNode node = YamlUtils.readTree(inputSetYaml).getNode().getCurrJsonNode();
       ObjectNode innerMap = (ObjectNode) node.get("inputSet");
+      if (innerMap == null) {
+        return inputSetYaml;
+      }
       JsonNode pipelineNode = innerMap.get("pipeline");
       innerMap.removeAll();
       innerMap.putObject("pipeline");
