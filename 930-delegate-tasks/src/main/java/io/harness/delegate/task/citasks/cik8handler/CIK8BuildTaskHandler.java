@@ -34,6 +34,7 @@ import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.delegate.beans.ci.pod.SecretVolumeParams;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.citasks.CIBuildTaskHandler;
+import io.harness.delegate.task.citasks.cik8handler.helper.DelegateServiceTokenHelper;
 import io.harness.delegate.task.citasks.cik8handler.helper.ProxyVariableHelper;
 import io.harness.delegate.task.citasks.cik8handler.params.CIConstants;
 import io.harness.delegate.task.citasks.cik8handler.pod.CIK8PodSpecBuilder;
@@ -70,6 +71,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
   @Inject private KubernetesHelperService kubernetesHelperService;
   @Inject private K8EventHandler k8EventHandler;
   @Inject private ProxyVariableHelper proxyVariableHelper;
+  @Inject private DelegateServiceTokenHelper delegateServiceTokenHelper;
 
   @NotNull private Type type = CIBuildTaskHandler.Type.GCP_K8;
 
@@ -257,7 +259,8 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
             podParams.getName());
         Map<String, String> proxyConfigurationSecretData =
             getAndUpdateProxyConfigurationSecretData(containerParams, secretName);
-        secretData.putAll(proxyConfigurationSecretData);
+        secretData.putAll(getAndUpdateProxyConfigurationSecretData(containerParams, secretName));
+        secretData.putAll(getAndUpdateDelegateServiceToken(containerParams, secretName));
       }
     }
 
@@ -318,6 +321,13 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     } else {
       return Collections.emptyMap();
     }
+  }
+
+  private Map<String, String> getAndUpdateDelegateServiceToken(CIK8ContainerParams containerParams, String secretName) {
+    Map<String, SecretParams> serviceTokenSecretParams = delegateServiceTokenHelper.getServiceTokenSecretParams();
+    updateContainer(containerParams, secretName, serviceTokenSecretParams);
+    return serviceTokenSecretParams.values().stream().collect(
+        Collectors.toMap(SecretParams::getSecretKey, SecretParams::getValue));
   }
 
   private Map<String, String> getAndUpdateGitSecretData(
