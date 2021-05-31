@@ -74,7 +74,6 @@ import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.message.Message;
 import io.harness.delegate.message.MessageService;
 import io.harness.event.client.impl.tailer.ChronicleEventTailer;
-import io.harness.exception.GeneralException;
 import io.harness.filesystem.FileIo;
 import io.harness.grpc.utils.DelegateGrpcConfigExtractor;
 import io.harness.managerclient.ManagerClientV2;
@@ -945,7 +944,7 @@ public class WatcherServiceImpl implements WatcherService {
     } catch (Exception e) {
       log.warn("Unable to fetch delegate version information", e);
     }
-    throw new GeneralException("Couldn't get delegate versions.");
+    return null;
   }
 
   private int getMinorVersion(String delegateVersion) {
