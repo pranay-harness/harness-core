@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.beans.DelegateConfiguration.Action.SELF_DESTRUCT;
 import static io.harness.delegate.beans.DelegateTaskEvent.DelegateTaskEventBuilder;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANKIT;
@@ -20,6 +21,8 @@ import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -44,6 +47,7 @@ import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
+import io.harness.exception.InvalidRequestException;
 import io.harness.managerclient.AccountPreference;
 import io.harness.managerclient.AccountPreferenceQuery;
 import io.harness.managerclient.GetDelegatePropertiesRequest;
@@ -158,7 +162,7 @@ public class DelegateAgentResourceTest {
     List<String> delegateVersions = new ArrayList<>();
     DelegateConfiguration delegateConfiguration =
         DelegateConfiguration.builder().delegateVersions(delegateVersions).build();
-    when(accountService.getDelegateConfiguration(ACCOUNT_ID)).thenReturn(delegateConfiguration);
+    doReturn(delegateConfiguration).when(accountService).getDelegateConfiguration(ACCOUNT_ID);
     RestResponse<DelegateConfiguration> restResponse =
         RESOURCES.client()
             .target("/agent/delegates/configuration?accountId=" + ACCOUNT_ID)
@@ -167,6 +171,25 @@ public class DelegateAgentResourceTest {
 
     verify(accountService, atLeastOnce()).getDelegateConfiguration(ACCOUNT_ID);
     assertThat(restResponse.getResource()).isInstanceOf(DelegateConfiguration.class).isNotNull();
+    assertThat(restResponse.getResource().getAction()).isNull();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldGetDelegateConfigurationWithSelfDestruct() {
+    doThrow(new InvalidRequestException("Deleted AccountId: " + ACCOUNT_ID))
+        .when(accountService)
+        .getDelegateConfiguration(ACCOUNT_ID);
+    RestResponse<DelegateConfiguration> restResponse =
+        RESOURCES.client()
+            .target("/agent/delegates/configuration?accountId=" + ACCOUNT_ID)
+            .request()
+            .get(new GenericType<RestResponse<DelegateConfiguration>>() {});
+
+    assertThat(restResponse.getResource()).isInstanceOf(DelegateConfiguration.class).isNotNull();
+    assertThat(restResponse.getResource().getAction()).isEqualTo(SELF_DESTRUCT);
+    assertThat(restResponse.getResource().getDelegateVersions()).isNull();
   }
 
   @Test
