@@ -1062,11 +1062,12 @@ public class WatcherServiceImpl implements WatcherService {
             FileUtils.moveFile(downloadDestination, finalDestination);
             log.info("Moved delegate jar version {} to the final location", version);
           } else {
-            log.error("Downloaded delegate jar version {} is corrupted. Removing invalid file.", version);
+            log.warn("Downloaded delegate jar version {} is corrupted. Removing invalid file.", version);
             FileUtils.forceDelete(downloadDestination);
           }
         } catch (Exception ex) {
-          log.error("Unexpected error occurred during jar file verification. File will be deleted.", ex);
+          log.warn("Unexpected error occurred during jar file verification with message: {}. File will be deleted.",
+              ex.getMessage());
         } finally {
           if (downloadDestination.exists()) {
             FileUtils.forceDelete(downloadDestination);
