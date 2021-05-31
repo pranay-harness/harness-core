@@ -2,6 +2,8 @@ package io.harness.ng.core.user.entities;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import static java.lang.Boolean.FALSE;
+
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
@@ -60,7 +62,7 @@ public class UserGroup implements PersistentEntity, NGAccountAccess {
   @EntityIdentifier(allowBlank = true) String projectIdentifier;
   @EntityIdentifier String identifier;
 
-  private boolean isSsoLinked;
+  @Builder.Default Boolean isSsoLinked = FALSE;
   private SSOType linkedSsoType;
   private String linkedSsoId;
   private String linkedSsoDisplayName;
