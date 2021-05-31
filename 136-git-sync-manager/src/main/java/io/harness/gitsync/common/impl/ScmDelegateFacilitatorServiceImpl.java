@@ -189,8 +189,8 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
   }
 
   @Override
-  public List<GitFileChangeDTO> listFilesByFilePaths(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String yamlGitConfigIdentifier, List<String> filePaths, String branchName) {
+  public List<GitFileChangeDTO> listFilesByFilePaths(
+      YamlGitConfigDTO yamlGitConfigIdentifier, List<String> filePaths, String branchName) {
     return null;
   }
 
