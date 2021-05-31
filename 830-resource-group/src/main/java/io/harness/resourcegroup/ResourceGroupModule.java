@@ -18,6 +18,7 @@ import io.harness.pipeline.PipelineRemoteClientModule;
 import io.harness.pipeline.remote.PipelineServiceClient;
 import io.harness.project.ProjectClientModule;
 import io.harness.project.remote.ProjectClient;
+import io.harness.remote.client.ClientMode;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroup.framework.service.Resource;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
@@ -101,7 +102,7 @@ public class ResourceGroupModule extends AbstractModule {
         resourceClients.getNgManager().getSecret(), RESOUCE_GROUP_SERVICE.toString()));
     install(new ConnectorResourceClientModule(
         ServiceHttpClientConfig.builder().baseUrl(resourceClients.getNgManager().getBaseUrl()).build(),
-        resourceClients.getNgManager().getSecret(), RESOUCE_GROUP_SERVICE.toString()));
+        resourceClients.getNgManager().getSecret(), RESOUCE_GROUP_SERVICE.toString(), ClientMode.PRIVILEGED));
     install(new AccountClientModule(
         ServiceHttpClientConfig.builder().baseUrl(resourceClients.getManager().getBaseUrl()).build(),
         resourceClients.getManager().getSecret(), RESOUCE_GROUP_SERVICE.toString()));
