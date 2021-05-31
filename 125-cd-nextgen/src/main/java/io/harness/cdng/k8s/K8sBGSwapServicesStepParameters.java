@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
 import io.harness.k8s.K8sCommandUnitConstants;
+import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -25,10 +26,14 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("k8sBGSwapServicesStepParameters")
 public class K8sBGSwapServicesStepParameters implements K8sSpecParameters {
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> skipDryRun;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
+  ParameterField<List<TaskSelectorYaml>> delegateSelectors;
 
   @Builder(builderMethodName = "infoBuilder")
-  public K8sBGSwapServicesStepParameters(ParameterField<Boolean> skipDryRun) {
+  public K8sBGSwapServicesStepParameters(
+      ParameterField<Boolean> skipDryRun, ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
     this.skipDryRun = skipDryRun;
+    this.delegateSelectors = delegateSelectors;
   }
 
   @Nonnull

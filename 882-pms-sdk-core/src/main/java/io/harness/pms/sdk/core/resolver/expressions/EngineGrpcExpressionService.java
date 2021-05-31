@@ -9,6 +9,7 @@ import io.harness.pms.contracts.service.ExpressionEvaluateBlobResponse;
 import io.harness.pms.contracts.service.ExpressionRenderBlobRequest;
 import io.harness.pms.contracts.service.ExpressionRenderBlobResponse;
 import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.sdk.core.grpc.client.PmsSdkGrpcClientUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.inject.Inject;
@@ -27,21 +28,29 @@ public class EngineGrpcExpressionService implements EngineExpressionService {
 
   @Override
   public String renderExpression(Ambiance ambiance, String expression, boolean skipUnresolvedExpressionsCheck) {
-    ExpressionRenderBlobResponse expressionRenderBlobResponse =
-        engineExpressionProtoServiceBlockingStub.renderExpression(
-            ExpressionRenderBlobRequest.newBuilder()
-                .setAmbiance(ambiance)
-                .setExpression(expression)
-                .setSkipUnresolvedExpressionsCheck(skipUnresolvedExpressionsCheck)
-                .build());
-    return expressionRenderBlobResponse.getValue();
+    try {
+      ExpressionRenderBlobResponse expressionRenderBlobResponse =
+          engineExpressionProtoServiceBlockingStub.renderExpression(
+              ExpressionRenderBlobRequest.newBuilder()
+                  .setAmbiance(ambiance)
+                  .setExpression(expression)
+                  .setSkipUnresolvedExpressionsCheck(skipUnresolvedExpressionsCheck)
+                  .build());
+      return expressionRenderBlobResponse.getValue();
+    } catch (Exception ex) {
+      throw PmsSdkGrpcClientUtils.processException(ex);
+    }
   }
 
   @Override
   public Object evaluateExpression(Ambiance ambiance, String expression) {
-    ExpressionEvaluateBlobResponse expressionEvaluateBlobResponse =
-        engineExpressionProtoServiceBlockingStub.evaluateExpression(
-            ExpressionEvaluateBlobRequest.newBuilder().setAmbiance(ambiance).setExpression(expression).build());
-    return RecastOrchestrationUtils.fromDocumentJson(expressionEvaluateBlobResponse.getValue(), Object.class);
+    try {
+      ExpressionEvaluateBlobResponse expressionEvaluateBlobResponse =
+          engineExpressionProtoServiceBlockingStub.evaluateExpression(
+              ExpressionEvaluateBlobRequest.newBuilder().setAmbiance(ambiance).setExpression(expression).build());
+      return RecastOrchestrationUtils.fromDocumentJson(expressionEvaluateBlobResponse.getValue(), Object.class);
+    } catch (Exception ex) {
+      throw PmsSdkGrpcClientUtils.processException(ex);
+    }
   }
 }

@@ -3,7 +3,9 @@ package io.harness.metrics.beans;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.opencensus.stats.Aggregation;
+import io.opencensus.stats.Measure;
 import io.opencensus.stats.Measure.MeasureDouble;
+import io.opencensus.stats.Measure.MeasureLong;
 import io.opencensus.stats.View;
 import io.opencensus.tags.TagKey;
 import java.util.List;
@@ -29,11 +31,11 @@ public class MetricConfiguration {
     String metricDefinition;
     String type;
     String unit;
-    MeasureDouble measure;
+    Measure measure;
     View view;
 
     public View getView(List<TagKey> tagKeys) {
-      MeasureDouble measure = MeasureDouble.create(this.getMetricName(), this.getMetricDefinition(), this.getUnit());
+      Measure measure = MeasureDouble.create(this.getMetricName(), this.getMetricDefinition(), this.getUnit());
       this.setMeasure(measure);
       if (isEmpty(type)) {
         return View.create(View.Name.create(this.getMetricName()), this.getMetricDefinition(), measure,
@@ -45,6 +47,8 @@ public class MetricConfiguration {
           return View.create(View.Name.create(this.getMetricName()), this.getMetricDefinition(), measure,
               Aggregation.LastValue.create(), tagKeys);
         case "Count":
+          measure = MeasureLong.create(this.getMetricName(), this.getMetricDefinition(), this.getUnit());
+          this.setMeasure(measure);
           return View.create(View.Name.create(this.getMetricName()), this.getMetricDefinition(), measure,
               Aggregation.Count.create(), tagKeys);
         case "Mean":

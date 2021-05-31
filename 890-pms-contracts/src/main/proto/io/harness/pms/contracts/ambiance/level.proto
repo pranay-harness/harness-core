@@ -13,4 +13,5 @@ message Level {
   io.harness.pms.contracts.steps.StepType stepType = 4;
   string group = 5;
   int32 retryIndex = 6;
+  bool skipExpressionChain = 7;
 }

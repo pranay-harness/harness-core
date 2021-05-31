@@ -46,6 +46,9 @@
     },
     "ExecutionElementConfig": {
       "type": "object",
+      "required": [
+        "steps"
+      ],
       "properties": {
         "rollbackSteps": {
           "type": "array",
@@ -57,7 +60,9 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/ExecutionWrapperConfig"
-          }
+          },
+          "maxItems": 2147483647,
+          "minItems": 1
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -233,7 +238,16 @@
         "errors": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "AnyOther",
+              "Authentication",
+              "Connectivity",
+              "Timeout",
+              "Authorization",
+              "Verification",
+              "DelegateProvisioning"
+            ]
           }
         }
       },
@@ -402,10 +416,12 @@
           }
         },
         "identifier": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
         },
         "spec": {
           "$ref": "#/definitions/StepSpecType"
@@ -436,10 +452,12 @@
           }
         },
         "identifier": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
         },
         "rollbackSteps": {
           "type": "array",
@@ -451,7 +469,9 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/ExecutionWrapperConfig"
-          }
+          },
+          "maxItems": 2147483647,
+          "minItems": 1
         },
         "when": {
           "$ref": "#/definitions/StepWhenCondition"

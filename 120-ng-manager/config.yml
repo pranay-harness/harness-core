@@ -27,6 +27,7 @@ nextGen:
   managerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
   userVerificationSecret: dyBvaWVmbGRrYyB6aHpjeHZvaWxzamt6ZGN6c2RhZmh5dBrebhmnjryRe54rX43W3565ytgbsDvnjws5
   ngManagerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+  pipelineServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
   jwtAuthSecret: dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq
   jwtIdentityServiceSecret: HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=
 
@@ -93,6 +94,11 @@ ngManagerClientConfig:
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
+pipelineServiceClientConfig:
+  baseUrl: http://localhost:12001/api/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
 auditClientConfig:
   baseUrl: http://localhost:9005/api/
   connectTimeOutSeconds: 15
@@ -146,6 +152,8 @@ eventsFramework:
       CATrustStorePath: "/tmp/ca_trust_store"
       CATrustStorePassword: ""
 
+distributedLockImplementation: MONGO
+
 redisLockConfig:
   sentinel: false
   masterName: "test"
@@ -158,6 +166,7 @@ redisLockConfig:
   readMode: MASTER
   nettyThreads: 16
   useScriptCache: true
+  userName: ""
   password: ""
 
 pmsSdkGrpcServerConfig:
@@ -215,6 +224,7 @@ outboxPollConfig:
   initialDelayInSeconds: 5
   pollingIntervalInSeconds: 5
   maximumRetryAttemptsForAnEvent: 7
+  lockId: NextGenManager
 
 segmentConfiguration:
   enabled: false
@@ -242,7 +252,7 @@ accessControlAdminClient:
 
 gitGrpcClientConfigs:
   pms:
-    target: localhost:12011
+    target: localhost:14001
     authority: localhost
   core:
     target: localhost:13001
@@ -265,6 +275,10 @@ gitSdkConfiguration:
 
 baseUrls:
   currentGenUiUrl: http://localhost:8181/#/
+  nextGenUiUrl: http://localhost:8181/ng/#/
+  nextGenAuthUiUrl: http://localhost:8181/auth/#/
+
+ngAuthUIEnabled: false
 
 enableDefaultResourceGroupCreation: true
 
@@ -320,3 +334,4 @@ signupNotificationConfiguration:
       templateId: "signup_confirmation"
   expireDurationInMinutes: 60
 
+useRedisForSdkResponseEvents: false

@@ -1,11 +1,15 @@
 package io.harness.ng.core.entitysetupusage.event;
 
+import static io.harness.NGConstants.BRANCH;
+import static io.harness.NGConstants.REPO;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.REFERRED_ENTITY_TYPE;
 import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.CONNECTORS;
 import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.ENVIRONMENT;
 import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.SECRETS;
 import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.SERVICE;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
@@ -17,7 +21,10 @@ import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
 import io.harness.eventsframework.schemas.entitysetupusage.DeleteSetupUsageDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateV2DTO;
 import io.harness.exception.InvalidRequestException;
+import io.harness.gitsync.interceptor.GitEntityInfo;
+import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.logging.AutoLogContext;
+import io.harness.manage.GlobalContextManager;
 import io.harness.ng.core.entitysetupusage.entity.EntitySetupUsage;
 import io.harness.ng.core.entitysetupusage.mapper.EntitySetupUsageEventDTOMapper;
 import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
@@ -58,21 +65,25 @@ public class SetupUsageChangeEventMessageListener implements MessageListener {
       if (!metadataMap.containsKey(REFERRED_ENTITY_TYPE) || !handledByNgCore(metadataMap.get(REFERRED_ENTITY_TYPE))) {
         return false;
       }
-      final EntityType entityTypeFromProto = EventProtoToEntityHelper.getEntityTypeFromProto(
-          EntityTypeProtoEnum.valueOf(metadataMap.get(REFERRED_ENTITY_TYPE)));
-      log.info("Event received for entityType: [{}]", entityTypeFromProto.getYamlName());
-      if (metadataMap.containsKey(EventsFrameworkMetadataConstants.ACTION)) {
-        switch (metadataMap.get(EventsFrameworkMetadataConstants.ACTION)) {
-          case EventsFrameworkMetadataConstants.FLUSH_CREATE_ACTION:
-            log.info("Event received for action: FLUSH_CREATE_ACTION");
-            final EntitySetupUsageCreateV2DTO setupUsageCreateDTO = getEntitySetupUsageCreateDTO(message);
-            return processCreateAction(setupUsageCreateDTO, entityTypeFromProto);
-          case EventsFrameworkMetadataConstants.DELETE_ACTION:
-            log.info("Event received for action: DELETE_ACTION");
-            final DeleteSetupUsageDTO deleteRequestDTO = getEntitySetupUsageDeleteDTO(message);
-            return processDeleteAction(deleteRequestDTO, entityTypeFromProto);
-          default:
-            log.info("Invalid action type: {}", metadataMap.get(EventsFrameworkMetadataConstants.ACTION));
+      final GitEntityInfo newBranch = getGitEntityInfoFromMessage(message);
+      try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+        GlobalContextManager.upsertGlobalContextRecord(GitSyncBranchContext.builder().gitBranchInfo(newBranch).build());
+        final EntityType entityTypeFromProto = EventProtoToEntityHelper.getEntityTypeFromProto(
+            EntityTypeProtoEnum.valueOf(metadataMap.get(REFERRED_ENTITY_TYPE)));
+        log.info("Event received for entityType: [{}]", entityTypeFromProto.getYamlName());
+        if (metadataMap.containsKey(EventsFrameworkMetadataConstants.ACTION)) {
+          switch (metadataMap.get(EventsFrameworkMetadataConstants.ACTION)) {
+            case EventsFrameworkMetadataConstants.FLUSH_CREATE_ACTION:
+              log.info("Event received for action: FLUSH_CREATE_ACTION");
+              final EntitySetupUsageCreateV2DTO setupUsageCreateDTO = getEntitySetupUsageCreateDTO(message);
+              return processCreateAction(setupUsageCreateDTO, entityTypeFromProto);
+            case EventsFrameworkMetadataConstants.DELETE_ACTION:
+              log.info("Event received for action: DELETE_ACTION");
+              final DeleteSetupUsageDTO deleteRequestDTO = getEntitySetupUsageDeleteDTO(message);
+              return processDeleteAction(deleteRequestDTO, entityTypeFromProto);
+            default:
+              log.info("Invalid action type: {}", metadataMap.get(EventsFrameworkMetadataConstants.ACTION));
+          }
         }
       }
       log.info("Cannot process the setup usage event with id {}", messageId);
@@ -126,5 +137,22 @@ public class SetupUsageChangeEventMessageListener implements MessageListener {
       log.error("Exception in unpacking DeleteSetupUsageDTO for key {}", entityDeleteMessage.getId(), e);
     }
     return deleteRequestDTO;
+  }
+
+  private GitEntityInfo getGitEntityInfoFromMessage(Message message) {
+    Map<String, String> metaDataMap = message.getMessage() != null ? message.getMessage().getMetadataMap() : null;
+    if (metaDataMap != null) {
+      String repo = null, branch = null;
+      if (metaDataMap.containsKey(REPO)) {
+        repo = metaDataMap.get(REPO);
+      }
+      if (metaDataMap.containsKey(BRANCH)) {
+        branch = metaDataMap.get(BRANCH);
+      }
+      if (isNotBlank(repo) && isNotBlank(branch)) {
+        return GitEntityInfo.builder().branch(branch).yamlGitConfigId(repo).findDefaultFromOtherBranches(true).build();
+      }
+    }
+    return null;
   }
 }

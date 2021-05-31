@@ -11,10 +11,12 @@
       }
     },
     "identifier": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
     },
     "timeout": {
       "type": "string"
@@ -746,7 +748,10 @@
               "type": "string"
             },
             "delegateSelectors": {
-              "$ref": "#/definitions/ParameterFieldListTaskSelectorYaml"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "headers": {
               "type": "array",
@@ -851,8 +856,7 @@
           "required": [
             "approvalCriteria",
             "connectorRef",
-            "issueKey",
-            "rejectionCriteria"
+            "issueKey"
           ],
           "properties": {
             "approvalCriteria": {
@@ -1086,6 +1090,10 @@
               "type": "number",
               "format": "double"
             },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+            },
             "type": {
               "type": "string",
               "enum": [
@@ -1136,7 +1144,16 @@
         "errors": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "AnyOther",
+              "Authentication",
+              "Connectivity",
+              "Timeout",
+              "Authorization",
+              "Verification",
+              "DelegateProvisioning"
+            ]
           }
         }
       },
@@ -1227,36 +1244,6 @@
         },
         "value": {
           "type": "object"
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "ParameterFieldListTaskSelectorYaml": {
-      "type": "object",
-      "properties": {
-        "expression": {
-          "type": "boolean"
-        },
-        "expressionValue": {
-          "type": "string"
-        },
-        "inputSetValidator": {
-          "$ref": "#/definitions/InputSetValidator"
-        },
-        "jsonResponseField": {
-          "type": "boolean"
-        },
-        "responseField": {
-          "type": "string"
-        },
-        "typeString": {
-          "type": "boolean"
-        },
-        "value": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/TaskSelectorYaml"
-          }
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -1500,6 +1487,10 @@
             "default": {
               "type": "string"
             },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+            },
             "type": {
               "type": "string",
               "enum": [
@@ -1588,10 +1579,12 @@
           }
         },
         "identifier": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
         },
         "timeout": {
           "type": "string"
@@ -1796,6 +1789,10 @@
             "default": {
               "type": "string"
             },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+            },
             "type": {
               "type": "string",
               "enum": [
@@ -1808,15 +1805,6 @@
           }
         }
       ],
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "TaskSelectorYaml": {
-      "type": "object",
-      "properties": {
-        "delegateSelectors": {
-          "type": "string"
-        }
-      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "TestVerificationJobSpec": {

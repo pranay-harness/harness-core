@@ -4,10 +4,10 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.batch.processing.billing.service.UtilizationData;
 import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationData;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.beans.InstanceType;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.entities.InstanceData;
-import io.harness.ccm.commons.utils.DataUtils;
+import io.harness.ccm.commons.utils.TimeUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -33,7 +33,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class UtilizationDataServiceImpl {
   @Autowired private TimeScaleDBService timeScaleDBService;
-  @Autowired private DataUtils utils;
+  @Autowired private TimeUtils utils;
 
   private static final int MAX_RETRY_COUNT = 2;
   private static final int SELECT_MAX_RETRY_COUNT = 5;

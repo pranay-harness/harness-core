@@ -39,7 +39,6 @@ import java.util.Objects;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.Nullable;
 import org.mongodb.morphia.query.Query;
 
 /**
@@ -206,20 +205,6 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       wingsPersistence.save(arnKeyData);
     }
     return parentId;
-  }
-
-  @Nullable
-  private NGEncryptedDataMetadata getNgEncryptedDataMetadata(KmsConfig kmsConfig) {
-    NGEncryptedDataMetadata metadata = null;
-    if (null != kmsConfig.getNgMetadata()) {
-      metadata = NGEncryptedDataMetadata.builder()
-                     .identifier(kmsConfig.getNgMetadata().getIdentifier())
-                     .accountIdentifier(kmsConfig.getNgMetadata().getAccountIdentifier())
-                     .orgIdentifier(kmsConfig.getNgMetadata().getOrgIdentifier())
-                     .projectIdentifier(kmsConfig.getNgMetadata().getProjectIdentifier())
-                     .build();
-    }
-    return metadata;
   }
 
   private EncryptedData saveOrUpdateEncryptedRecord(String accountId, KmsConfig kmsConfig, String newKeyToUpdate,

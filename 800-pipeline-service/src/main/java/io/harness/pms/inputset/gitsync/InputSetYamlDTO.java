@@ -15,4 +15,5 @@ import lombok.Value;
 @Builder
 public class InputSetYamlDTO implements YamlDTO {
   @JsonProperty("inputSet") @Valid InputSetYamlInfoDTO inputSetInfo;
+  @JsonProperty("overlayInputSet") @Valid OverlayInputSetYamlInfoDTO overlayInputSetInfo;
 }

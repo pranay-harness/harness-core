@@ -5,10 +5,12 @@ package io.harness.timescaledb;
 
 import io.harness.timescaledb.tables.CeRecommendations;
 import io.harness.timescaledb.tables.NodeInfo;
+import io.harness.timescaledb.tables.NodePoolAggregated;
 import io.harness.timescaledb.tables.PodInfo;
 import io.harness.timescaledb.tables.WorkloadInfo;
 import io.harness.timescaledb.tables.records.CeRecommendationsRecord;
 import io.harness.timescaledb.tables.records.NodeInfoRecord;
+import io.harness.timescaledb.tables.records.NodePoolAggregatedRecord;
 import io.harness.timescaledb.tables.records.PodInfoRecord;
 import io.harness.timescaledb.tables.records.WorkloadInfoRecord;
 
@@ -33,6 +35,13 @@ public class Keys {
   public static final UniqueKey<NodeInfoRecord> NODE_INFO_UNIQUE_RECORD_INDEX =
       Internal.createUniqueKey(NodeInfo.NODE_INFO, DSL.name("node_info_unique_record_index"),
           new TableField[] {NodeInfo.NODE_INFO.ACCOUNTID, NodeInfo.NODE_INFO.CLUSTERID, NodeInfo.NODE_INFO.INSTANCEID},
+          true);
+  public static final UniqueKey<NodePoolAggregatedRecord> NODE_POOL_AGGREGATED_UNIQUE_RECORD_INDEX =
+      Internal.createUniqueKey(NodePoolAggregated.NODE_POOL_AGGREGATED,
+          DSL.name("node_pool_aggregated_unique_record_index"),
+          new TableField[] {NodePoolAggregated.NODE_POOL_AGGREGATED.ACCOUNTID,
+              NodePoolAggregated.NODE_POOL_AGGREGATED.CLUSTERID, NodePoolAggregated.NODE_POOL_AGGREGATED.NAME,
+              NodePoolAggregated.NODE_POOL_AGGREGATED.STARTTIME, NodePoolAggregated.NODE_POOL_AGGREGATED.ENDTIME},
           true);
   public static final UniqueKey<PodInfoRecord> POD_INFO_UNIQUE_RECORD_INDEX =
       Internal.createUniqueKey(PodInfo.POD_INFO, DSL.name("pod_info_unique_record_index"),

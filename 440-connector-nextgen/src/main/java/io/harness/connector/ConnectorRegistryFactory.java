@@ -6,7 +6,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.heartbeat.ArtifactoryValidationParamsProvider;
 import io.harness.connector.heartbeat.AwsKmsConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.AwsValidationParamsProvider;
+import io.harness.connector.heartbeat.AzureKeyVaultConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.CEK8sConnectorValidationParamsProvider;
+import io.harness.connector.heartbeat.CVConnectorParamsProvider;
 import io.harness.connector.heartbeat.ConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.DockerConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.GcpKmsConnectorValidationParamsProvider;
@@ -35,6 +37,8 @@ import io.harness.connector.mappers.ceazure.CEAzureDTOToEntity;
 import io.harness.connector.mappers.ceazure.CEAzureEntityToDTO;
 import io.harness.connector.mappers.cek8s.CEKubernetesDTOToEntity;
 import io.harness.connector.mappers.cek8s.CEKubernetesEntityToDTO;
+import io.harness.connector.mappers.datadogmapper.DatadogDTOToEntity;
+import io.harness.connector.mappers.datadogmapper.DatadogEntityToDTO;
 import io.harness.connector.mappers.docker.DockerDTOToEntity;
 import io.harness.connector.mappers.docker.DockerEntityToDTO;
 import io.harness.connector.mappers.gcpcloudcost.GcpCloudCostDTOToEntity;
@@ -61,6 +65,8 @@ import io.harness.connector.mappers.prometheusmapper.PrometheusDTOToEntity;
 import io.harness.connector.mappers.prometheusmapper.PrometheusEntityToDTO;
 import io.harness.connector.mappers.secretmanagermapper.AwsKmsDTOToEntity;
 import io.harness.connector.mappers.secretmanagermapper.AwsKmsEntityToDTO;
+import io.harness.connector.mappers.secretmanagermapper.AzureKeyVaultDTOToEntity;
+import io.harness.connector.mappers.secretmanagermapper.AzureKeyVaultEntityToDTO;
 import io.harness.connector.mappers.secretmanagermapper.GcpKmsDTOToEntity;
 import io.harness.connector.mappers.secretmanagermapper.GcpKmsEntityToDTO;
 import io.harness.connector.mappers.secretmanagermapper.LocalDTOToEntity;
@@ -111,19 +117,26 @@ public class ConnectorRegistryFactory {
             ScmConnectorValidationParamsProvider.class, GitDTOToEntity.class, GitEntityToDTO.class));
     registrar.put(ConnectorType.APP_DYNAMICS,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
-            NoOpConnectorValidationParamsProvider.class, AppDynamicsDTOToEntity.class, AppDynamicsEntityToDTO.class));
+            CVConnectorParamsProvider.class, AppDynamicsDTOToEntity.class, AppDynamicsEntityToDTO.class));
     registrar.put(ConnectorType.NEW_RELIC,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
-            NoOpConnectorValidationParamsProvider.class, NewRelicDTOToEntity.class, NewRelicEntityToDTO.class));
+            CVConnectorParamsProvider.class, NewRelicDTOToEntity.class, NewRelicEntityToDTO.class));
+    registrar.put(ConnectorType.DATADOG,
+        new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
+            CVConnectorParamsProvider.class, DatadogDTOToEntity.class, DatadogEntityToDTO.class));
     registrar.put(ConnectorType.SPLUNK,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
-            NoOpConnectorValidationParamsProvider.class, SplunkDTOToEntity.class, SplunkEntityToDTO.class));
+            CVConnectorParamsProvider.class, SplunkDTOToEntity.class, SplunkEntityToDTO.class));
     registrar.put(ConnectorType.PROMETHEUS,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
-            NoOpConnectorValidationParamsProvider.class, PrometheusDTOToEntity.class, PrometheusEntityToDTO.class));
+            CVConnectorParamsProvider.class, PrometheusDTOToEntity.class, PrometheusEntityToDTO.class));
     registrar.put(ConnectorType.VAULT,
         new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, SecretManagerConnectorValidator.class,
             VaultConnectorValidationParamsProvider.class, VaultDTOToEntity.class, VaultEntityToDTO.class));
+    registrar.put(ConnectorType.AZURE_KEY_VAULT,
+        new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, SecretManagerConnectorValidator.class,
+            AzureKeyVaultConnectorValidationParamsProvider.class, AzureKeyVaultDTOToEntity.class,
+            AzureKeyVaultEntityToDTO.class));
     registrar.put(ConnectorType.GCP_KMS,
         new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, SecretManagerConnectorValidator.class,
             GcpKmsConnectorValidationParamsProvider.class, GcpKmsDTOToEntity.class, GcpKmsEntityToDTO.class));

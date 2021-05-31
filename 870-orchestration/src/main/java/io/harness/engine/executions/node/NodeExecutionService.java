@@ -68,4 +68,6 @@ public interface NodeExecutionService {
   List<NodeExecution> fetchNodeExecutionsByStatusAndIdIn(String planExecutionId, Status status, List<String> targetIds);
 
   List<NodeExecution> fetchNodeExecutionsByParentId(String nodeExecutionId, boolean oldRetry);
+
+  boolean errorOutActiveNodes(String planExecutionId);
 }

@@ -16,12 +16,9 @@ import io.harness.beans.execution.WebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.execution.WebhookGitUser;
 import io.harness.ci.beans.entities.CIBuild;
-import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
-import io.harness.service.GraphGenerationService;
 
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,8 +30,6 @@ public class BuildDtoMapper {
   private static final String PR_MERGED = "merged";
   private static final String PR = "pullRequest";
   private static final String BRANCH = "branch";
-
-  @Inject private GraphGenerationService graphGenerationService;
 
   public CIBuildResponseDTO writeBuildDto(CIBuild ciBuild, NgPipelineEntity ngPipelineEntity) throws InternalError {
     if (ngPipelineEntity == null) {
@@ -64,10 +59,6 @@ public class BuildDtoMapper {
         }
       }
     }
-
-    // TODO - CI-192 these values should be masked while sending to UI
-    OrchestrationGraphDTO graph = graphGenerationService.generateOrchestrationGraphV2(ciBuild.getExecutionId());
-    ciBuildResponseDTO.setGraph(graph);
     return ciBuildResponseDTO;
   }
 

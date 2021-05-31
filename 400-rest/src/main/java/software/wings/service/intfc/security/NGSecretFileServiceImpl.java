@@ -63,6 +63,7 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
     EncryptedRecord encryptedRecord;
     switch (secretManagerConfig.getEncryptionType()) {
       case VAULT:
+      case AZURE_VAULT:
         VaultEncryptor vaultEncryptor = vaultRegistry.getVaultEncryptor(secretManagerConfig.getEncryptionType());
         if (savedEncryptedData == null) {
           encryptedRecord = vaultEncryptor.createSecret(accountIdentifier, name, fileContent, secretManagerConfig);

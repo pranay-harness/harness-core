@@ -4,12 +4,13 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.UnitProgress;
-import io.harness.pms.contracts.advisers.InterruptConfig;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
+import io.harness.pms.contracts.interrupts.InterruptConfig;
+import io.harness.pms.contracts.interrupts.InterruptEffectProto;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
@@ -24,6 +25,7 @@ import io.harness.serializer.json.ExecutionPrincipalInfoSerializer;
 import io.harness.serializer.json.ExecutionTriggerInfoSerializer;
 import io.harness.serializer.json.FailureInfoSerializer;
 import io.harness.serializer.json.InterruptConfigSerializer;
+import io.harness.serializer.json.InterruptEffectJsonSerializer;
 import io.harness.serializer.json.LayoutNodeInfoSerializer;
 import io.harness.serializer.json.NodeRunInfoSerializer;
 import io.harness.serializer.json.SkipInfoSerializer;
@@ -51,5 +53,6 @@ public class PmsBeansJacksonModule extends SimpleModule {
     addSerializer(InterruptConfig.class, new InterruptConfigSerializer());
     addSerializer(NodeRunInfo.class, new NodeRunInfoSerializer());
     addSerializer(ExecutionPrincipalInfo.class, new ExecutionPrincipalInfoSerializer());
+    addSerializer(InterruptEffectProto.class, new InterruptEffectJsonSerializer());
   }
 }

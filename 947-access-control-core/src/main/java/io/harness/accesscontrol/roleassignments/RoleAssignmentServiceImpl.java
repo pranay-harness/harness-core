@@ -51,8 +51,8 @@ public class RoleAssignmentServiceImpl implements RoleAssignmentService {
   }
 
   @Override
-  public Optional<RoleAssignment> get(String identifier, String parentIdentifier) {
-    return roleAssignmentDao.get(identifier, parentIdentifier);
+  public Optional<RoleAssignment> get(String identifier, String scopeIdentifier) {
+    return roleAssignmentDao.get(identifier, scopeIdentifier);
   }
 
   @Override
@@ -86,8 +86,8 @@ public class RoleAssignmentServiceImpl implements RoleAssignmentService {
   }
 
   @Override
-  public Optional<RoleAssignment> delete(String identifier, String parentIdentifier) {
-    return roleAssignmentDao.delete(identifier, parentIdentifier);
+  public Optional<RoleAssignment> delete(String identifier, String scopeIdentifier) {
+    return roleAssignmentDao.delete(identifier, scopeIdentifier);
   }
 
   @Override

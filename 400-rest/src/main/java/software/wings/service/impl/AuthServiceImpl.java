@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
@@ -16,7 +15,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.app.ManagerCacheRegistrar.AUTH_TOKEN_CACHE;
 import static software.wings.app.ManagerCacheRegistrar.PRIMARY_CACHE_PREFIX;
-import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.security.PermissionAttribute.Action.CREATE;
@@ -43,12 +41,12 @@ import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.exception.AccessDeniedException;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.InvalidTokenException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.HPersistence;
+import io.harness.security.DelegateTokenAuthenticator;
 import io.harness.security.dto.UserPrincipal;
 import io.harness.version.VersionInfoManager;
 
@@ -109,13 +107,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWEDecrypter;
-import com.nimbusds.jose.KeyLengthException;
-import com.nimbusds.jose.crypto.DirectDecrypter;
-import com.nimbusds.jwt.EncryptedJWT;
 import java.io.UnsupportedEncodingException;
-import java.text.ParseException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -131,11 +123,8 @@ import javax.annotation.Nullable;
 import javax.cache.Cache;
 import javax.cache.expiry.AccessedExpiryPolicy;
 import javax.cache.expiry.Duration;
-import javax.crypto.spec.SecretKeySpec;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.Key;
@@ -166,6 +155,7 @@ public class AuthServiceImpl implements AuthService {
   @Inject @Nullable private SegmentHandler segmentHandler;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private DelegateTokenAuthenticator delegateTokenAuthenticator;
 
   @Inject
   public AuthServiceImpl(GenericDbCache dbCache, HPersistence persistence, UserService userService,
@@ -375,47 +365,7 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void validateDelegateToken(String accountId, String tokenString) {
-    Account account = dbCache.get(Account.class, accountId);
-
-    if (account == null || GLOBAL_ACCOUNT_ID.equals(accountId)) {
-      throw new InvalidRequestException("Access denied", USER_ADMIN);
-    }
-
-    EncryptedJWT encryptedJWT;
-    try {
-      encryptedJWT = EncryptedJWT.parse(tokenString);
-    } catch (ParseException e) {
-      throw new InvalidTokenException("Invalid delegate token format", USER_ADMIN);
-    }
-
-    byte[] encodedKey;
-    try {
-      encodedKey = Hex.decodeHex(account.getAccountKey().toCharArray());
-    } catch (DecoderException e) {
-      throw new WingsException(DEFAULT_ERROR_CODE, USER_ADMIN, e);
-    }
-
-    JWEDecrypter decrypter;
-    try {
-      decrypter = new DirectDecrypter(new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES"));
-    } catch (KeyLengthException e) {
-      throw new WingsException(DEFAULT_ERROR_CODE, USER_ADMIN, e);
-    }
-
-    try {
-      encryptedJWT.decrypt(decrypter);
-    } catch (JOSEException e) {
-      throw new InvalidTokenException("Invalid delegate token", USER_ADMIN);
-    }
-
-    try {
-      Date expirationDate = encryptedJWT.getJWTClaimsSet().getExpirationTime();
-      if (System.currentTimeMillis() > expirationDate.getTime()) {
-        throw new InvalidRequestException("Unauthorized", EXPIRED_TOKEN, null);
-      }
-    } catch (ParseException ex) {
-      throw new InvalidRequestException("Unauthorized", ex, EXPIRED_TOKEN, null);
-    }
+    delegateTokenAuthenticator.validateDelegateToken(accountId, tokenString);
   }
 
   @Override
@@ -616,6 +566,56 @@ public class AuthServiceImpl implements AuthService {
     return getUserRestrictionInfoFromDB(accountId, user, userPermissionInfo);
   }
 
+  public void updateUserPermissionCacheInfo(String accountId, User user, boolean cacheOnly) {
+    Cache<String, UserPermissionInfo> userPermissionInfoCache = getUserPermissionCache(accountId);
+    if (userPermissionInfoCache == null && cacheOnly) {
+      return;
+    }
+    String key = user.getUuid();
+    UserPermissionInfo value;
+    try {
+      value = userPermissionInfoCache.get(key);
+      if (value == null && cacheOnly) {
+        return;
+      }
+
+      value = getUserPermissionInfoFromDB(accountId, user);
+      userPermissionInfoCache.put(key, value);
+
+    } catch (Exception e) {
+      log.warn("Error in fetching user while updating UserPermissionInfo from Cache of accountId: " + accountId
+              + " userId: " + key,
+          e);
+    }
+  }
+
+  public void updateUserRestrictionCacheInfo(
+      String accountId, User user, UserPermissionInfo userPermissionInfo, boolean cacheOnly) {
+    Cache<String, UserRestrictionInfo> userRestrictionInfoCache = getUserRestrictionCache(accountId);
+    if (userRestrictionInfoCache == null) {
+      if (cacheOnly) {
+        return;
+      }
+      log.error("UserInfoCache is null. This should not happen. Fall back to DB");
+    }
+    String key = user.getUuid();
+    UserRestrictionInfo value;
+    try {
+      value = userRestrictionInfoCache.get(key);
+      if (value == null) {
+        if (cacheOnly) {
+          return;
+        }
+      }
+      value = getUserRestrictionInfoFromDB(accountId, user, userPermissionInfo);
+      userRestrictionInfoCache.put(key, value);
+    } catch (Exception e) {
+      log.warn("Error in fetching user while updating UserRestrictionInfo from Cache of accountId: " + accountId
+              + " userId: " + key,
+          e);
+    }
+  }
+
   @Override
   public void evictUserPermissionAndRestrictionCacheForAccount(
       String accountId, boolean rebuildUserPermissionInfo, boolean rebuildUserRestrictionInfo) {
@@ -709,7 +709,7 @@ public class AuthServiceImpl implements AuthService {
       }
     } else {
       if (!harnessUserGroupService.isHarnessSupportUser(user.getUuid())
-          || !harnessUserGroupService.isHarnessSupportEnabledForAccount(accountId)) {
+          || !harnessUserGroupService.isHarnessSupportEnabled(accountId, user.getUuid())) {
         return Optional.empty();
       }
     }

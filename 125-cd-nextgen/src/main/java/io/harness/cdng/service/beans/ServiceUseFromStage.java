@@ -1,7 +1,6 @@
 package io.harness.cdng.service.beans;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.visitor.helpers.serviceconfig.ServiceUseFromOverridesVisitorHelper;
@@ -17,19 +16,22 @@ import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
 import java.util.Collections;
 import javax.validation.constraints.NotNull;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.TypeAlias;
 
+@OwnedBy(HarnessTeam.CDC)
 @Data
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @SimpleVisitorHelper(helperClass = ServiceUseFromStageVisitorHelper.class)
 @TypeAlias("serviceUseFromStage")
-@OwnedBy(CDC)
 public class ServiceUseFromStage implements Serializable, Visitable {
   // Stage identifier of the stage to select from.
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @NotNull ParameterField<String> stage;
+  @NotNull String stage;
   Overrides overrides;
 
   // For Visitor Framework Impl

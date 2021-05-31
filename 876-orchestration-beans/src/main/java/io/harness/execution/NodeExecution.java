@@ -74,7 +74,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   // Relationships
   String parentId;
   String nextId;
-  String previousId;
+  @FdIndex String previousId;
 
   // Mutable
   @Wither @LastModifiedDate Long lastUpdatedAt;

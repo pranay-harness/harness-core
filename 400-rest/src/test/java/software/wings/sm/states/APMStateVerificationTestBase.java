@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
+import io.harness.cv.api.WorkflowVerificationResultService;
 import io.harness.ff.FeatureFlagService;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
@@ -83,6 +84,7 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
   @Inject protected TemplateExpressionProcessor templateExpressionProcessor;
 
   @Inject protected WorkflowExecutionService workflowExecutionService;
+  @Inject protected WorkflowVerificationResultService workflowVerificationResultService;
 
   @Mock protected PhaseElement phaseElement;
   @Mock protected Environment environment;

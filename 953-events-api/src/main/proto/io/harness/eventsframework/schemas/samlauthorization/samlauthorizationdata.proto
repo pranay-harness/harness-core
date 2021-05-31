@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package io.harness.eventsframework.samlauthorization.samlauthorizationdata;
+
+option java_multiple_files = true;
+option go_package = "953_events_api";
+
+message SamlAuthorizationDTO {
+  string accountIdentifier = 1;
+  string ssoId = 2;
+  string email = 3;
+  repeated string userGroups = 4;
+}

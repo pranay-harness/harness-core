@@ -8,6 +8,7 @@ import io.harness.pms.preflight.PreFlightEntityErrorInfo;
 import io.harness.pms.preflight.PreFlightStatus;
 import io.harness.pms.preflight.connector.ConnectorCheckResponse;
 import io.harness.pms.preflight.entity.PreFlightEntity;
+import io.harness.pms.preflight.inputset.PipelineInputResponse;
 
 import java.io.IOException;
 import java.util.List;
@@ -21,8 +22,9 @@ public interface PreflightService {
   List<ConnectorCheckResponse> updateConnectorCheckResponses(String accountId, String orgId, String projectId,
       String preflightEntityId, Map<String, Object> fqnToObjectMapMergedYaml, List<EntityDetail> connectorUsages);
 
-  PreFlightEntity saveEmptyPreflightEntity(String accountId, String orgIdentifier, String projectIdentifier,
-      String pipelineIdentifier, String pipelineYaml, List<EntityDetail> entityDetails);
+  PreFlightEntity saveInitialPreflightEntity(String accountId, String orgIdentifier, String projectIdentifier,
+      String pipelineIdentifier, String pipelineYaml, List<EntityDetail> entityDetails,
+      List<PipelineInputResponse> pipelineInputResponses);
 
   PreFlightDTO getPreflightCheckResponse(String preflightCheckId);
 

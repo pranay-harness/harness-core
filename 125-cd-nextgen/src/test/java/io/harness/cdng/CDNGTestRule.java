@@ -6,6 +6,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static org.mockito.Mockito.mock;
 
+import io.harness.ModuleType;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.annotations.dev.HarnessTeam;
@@ -20,7 +21,6 @@ import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
-import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
@@ -31,13 +31,11 @@ import io.harness.ng.core.entitysetupusage.EntitySetupUsageModule;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
-import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueController;
 import io.harness.registrars.CDServiceAdviserRegistrar;
-import io.harness.registrars.NGExecutionEventHandlerRegistrar;
-import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.CDNGRegistrars;
@@ -170,11 +168,10 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
       }
     });
     modules.add(TimeModule.getInstance());
-    modules.add(NGModule.getInstance(getOrchestrationConfig()));
+    modules.add(NGModule.getInstance());
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
     modules.add(OrchestrationModule.getInstance(getOrchestrationConfig()));
-    modules.add(ExecutionPlanModule.getInstance());
     modules.add(mongoTypeModule(annotations));
     modules.add(new EntitySetupUsageModule());
 
@@ -211,12 +208,10 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
   }
   private PmsSdkConfiguration getPmsSdkConfiguration() {
     return PmsSdkConfiguration.builder()
-        .deploymentMode(DeployMode.LOCAL)
-        .serviceName("cd")
+        .deploymentMode(SdkDeployMode.LOCAL)
+        .moduleType(ModuleType.CD)
         .engineSteps(NgStepRegistrar.getEngineSteps())
         .engineAdvisers(CDServiceAdviserRegistrar.getEngineAdvisers())
-        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
-        .engineEventHandlersMap(NGExecutionEventHandlerRegistrar.getEngineEventHandlers(false))
         .build();
   }
 

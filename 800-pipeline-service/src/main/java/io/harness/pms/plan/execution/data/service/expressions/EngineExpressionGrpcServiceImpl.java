@@ -11,8 +11,10 @@ import io.harness.pms.expression.PmsEngineExpressionService;
 
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PIPELINE)
+@Slf4j
 public class EngineExpressionGrpcServiceImpl extends EngineExpressionProtoServiceImplBase {
   private final PmsEngineExpressionService pmsEngineExpressionService;
 

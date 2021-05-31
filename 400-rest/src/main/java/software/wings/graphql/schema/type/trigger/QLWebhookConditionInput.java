@@ -27,4 +27,5 @@ public class QLWebhookConditionInput {
   Boolean deployOnlyIfFilesChanged;
   List<String> filePaths;
   String gitConnectorId;
+  String webhookSecret;
 }

@@ -54,9 +54,13 @@ public class BlueGreenVerificationJob extends CanaryBlueGreenVerificationJob {
     @Override
     public void setUpdateOperations(UpdateOperations<T> updateOperations, D dto) {
       setCommonOperations(updateOperations, dto);
-      updateOperations.set(CanaryVerificationJob.DeploymentVerificationJobKeys.sensitivity, dto.getSensitivity())
-          .set(CanaryVerificationJob.DeploymentVerificationJobKeys.trafficSplitPercentage,
-              dto.getTrafficSplitPercentage());
+      updateOperations
+          .set(CanaryBlueGreenVerificationJobKeys.sensitivity,
+              VerificationJob.getRunTimeParameter(
+                  dto.getSensitivity(), VerificationJobDTO.isRuntimeParam(dto.getSensitivity())))
+          .set(CanaryBlueGreenVerificationJobKeys.trafficSplitPercentageV2,
+              VerificationJob.getRunTimeParameter(
+                  dto.getTrafficSplitPercentage(), VerificationJobDTO.isRuntimeParam(dto.getTrafficSplitPercentage())));
     }
   }
 

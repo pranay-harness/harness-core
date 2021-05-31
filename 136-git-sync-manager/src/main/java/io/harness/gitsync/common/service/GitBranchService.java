@@ -11,7 +11,7 @@ import io.harness.ng.beans.PageRequest;
 @OwnedBy(DX)
 public interface GitBranchService {
   GitBranchListDTO listBranchesWithStatus(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      String yamlGitConfigIdentifier, PageRequest pageRequest, String searchTerm);
+      String yamlGitConfigIdentifier, PageRequest pageRequest, String searchTerm, BranchSyncStatus branchSyncStatus);
 
   Boolean syncNewBranch(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String yamlGitConfigIdentifier, String branchName);
@@ -27,4 +27,6 @@ public interface GitBranchService {
   GitBranch get(String accountIdentifier, String repoURL, String branchName);
 
   void checkBranchIsNotAlreadyShortlisted(String repoURL, String accountId, String branch);
+
+  boolean isBranchExists(String accountIdentifier, String repoURL, String branch, BranchSyncStatus branchSyncStatus);
 }

@@ -57,6 +57,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.BuildSourceService;
+import software.wings.service.intfc.DelegateTaskServiceClassic;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
@@ -82,6 +83,7 @@ import java.util.Set;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.springframework.util.Assert;
 
 @ValidateOnExecution
 @Singleton
@@ -104,6 +106,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private ArtifactStreamHelper artifactStreamHelper;
   @Inject private DelegateServiceImpl delegateService;
+  @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
 
   @Override
   public Set<JobDetails> getJobs(String appId, String settingId, String parentJobName) {
@@ -708,7 +711,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   public List<String> getGcbTriggers(String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     if (settingAttribute == null) {
-      throw new InvalidRequestException("GCP Cloud provider Settings Attribute is null", USER);
+      throw new InvalidRequestException("GCP Clo∂ud provider Settings Attribute is null", USER);
     }
     SettingValue settingValue = settingAttribute.getValue();
     if (settingValue == null) {
@@ -716,20 +719,26 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     }
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
     GcpConfig gcpConfig = (GcpConfig) settingValue;
-    GcbState.GcbDelegateResponse delegateResponseData = delegateService.executeTask(
-        DelegateTask.builder()
-            .accountId(gcpConfig.getAccountId())
-            .data(TaskData.builder()
-                      .async(true)
-                      .taskType(GCB.name())
-                      .parameters(new Object[] {GcbTaskParams.builder()
-                                                    .gcpConfig(gcpConfig)
-                                                    .encryptedDataDetails(encryptedDataDetails)
-                                                    .type(GcbTaskParams.GcbTaskType.FETCH_TRIGGERS)
-                                                    .build()})
-                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                      .build())
-            .build());
+    GcbState.GcbDelegateResponse delegateResponseData = null;
+    try {
+      delegateResponseData = delegateTaskServiceClassic.executeTask(
+          DelegateTask.builder()
+              .accountId(gcpConfig.getAccountId())
+              .data(TaskData.builder()
+                        .async(true)
+                        .taskType(GCB.name())
+                        .parameters(new Object[] {GcbTaskParams.builder()
+                                                      .gcpConfig(gcpConfig)
+                                                      .encryptedDataDetails(encryptedDataDetails)
+                                                      .type(GcbTaskParams.GcbTaskType.FETCH_TRIGGERS)
+                                                      .build()})
+                        .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                        .build())
+              .build());
+    } catch (InterruptedException e) {
+      log.error("Exception on getGcbTriggers: ", e);
+    }
+    Assert.notNull(delegateResponseData, "Delegate Response data should not be null!");
     return delegateResponseData.getTriggers();
   }
 

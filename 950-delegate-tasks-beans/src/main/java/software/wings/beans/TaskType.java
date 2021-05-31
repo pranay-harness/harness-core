@@ -251,6 +251,7 @@ public enum TaskType {
   K8S_COMMAND_TASK_NG(TaskGroup.K8S_NG, "K8s Task"),
   K8S_WATCH_TASK(TaskGroup.CE),
   TRIGGER_TASK(TaskGroup.TRIGGER),
+  WEBHOOK_TRIGGER_TASK(TaskGroup.TRIGGER),
   JIRA(TaskGroup.JIRA),
   CONNECTIVITY_VALIDATION(TaskGroup.CONNECTIVITY_VALIDATION),
   GIT_COMMAND(TaskGroup.GIT),
@@ -308,8 +309,11 @@ public enum TaskType {
   NG_DECRYT_GIT_API_ACCESS_TASK(TaskGroup.GIT_NG),
   TERRAFORM_TASK_NG(TaskGroup.TERRAFORM_NG, "Terraform Task"),
   SCM_PUSH_TASK(TaskGroup.GIT, "SCM Push Task"),
+  SCM_PATH_FILTER_EVALUATION_TASK(TaskGroup.GIT, "SCM Path Filter Evaluation Task"),
   SCM_GIT_REF_TASK(TaskGroup.GIT, "SCM Git Ref Task"),
-  SCM_GIT_FILE_TASK(TaskGroup.GIT, "SCM Git File Task");
+  SCM_GIT_FILE_TASK(TaskGroup.GIT, "SCM Git File Task"),
+  SCM_PULL_REQUEST_TASK(TaskGroup.GIT, "SCM Git PR Task"),
+  SCM_GIT_WEBHOOK_TASK(TaskGroup.GIT, "SCM Git Webhook Task");
 
   private final TaskGroup taskGroup;
   private final String displayName;

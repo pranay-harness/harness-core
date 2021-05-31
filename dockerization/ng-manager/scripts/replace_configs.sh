@@ -225,6 +225,32 @@ if [[ "" != "$FILE_STORAGE_CLUSTER_NAME" ]]; then
   yq write -i $CONFIG_FILE fileServiceConfiguration.clusterName "$FILE_STORAGE_CLUSTER_NAME"
 fi
 
+if [[ "" != "$CVNG_SERVICE_CONNECT_TIMEOUT_IN_SECONDS" ]]; then
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.cvng.serviceHttpClientConfig.connectTimeOutSeconds $CVNG_SERVICE_CONNECT_TIMEOUT_IN_SECONDS
+fi
+
+if [[ "" != "$CVNG_SERVICE_READ_TIMEOUT_IN_SECONDS" ]]; then
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.cvng.serviceHttpClientConfig.readTimeOutSeconds $CVNG_SERVICE_READ_TIMEOUT_IN_SECONDS
+fi
+
+if [[ "" != "$LOCK_CONFIG_REDIS_SENTINELS" ]]; then
+  IFS=',' read -ra SENTINEL_URLS <<< "$LOCK_CONFIG_REDIS_SENTINELS"
+  INDEX=0
+  for REDIS_SENTINEL_URL in "${SENTINEL_URLS[@]}"; do
+    yq write -i $CONFIG_FILE redisLockConfig.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
+    INDEX=$(expr $INDEX + 1)
+  done
+fi
+
+replace_key_value distributedLockImplementation $DISTRIBUTED_LOCK_IMPLEMENTATION
+
+replace_key_value redisLockConfig.sentinel $LOCK_CONFIG_USE_SENTINEL
+replace_key_value redisLockConfig.envNamespace $LOCK_CONFIG_ENV_NAMESPACE
+replace_key_value redisLockConfig.redisUrl $LOCK_CONFIG_REDIS_URL
+replace_key_value redisLockConfig.masterName $LOCK_CONFIG_SENTINEL_MASTER_NAME
+replace_key_value redisLockConfig.userName $LOCK_CONFIG_REDIS_USERNAME
+replace_key_value redisLockConfig.password $LOCK_CONFIG_REDIS_PASSWORD
+
 replace_key_value eventsFramework.redis.sentinel $EVENTS_FRAMEWORK_USE_SENTINEL
 replace_key_value eventsFramework.redis.envNamespace $EVENTS_FRAMEWORK_ENV_NAMESPACE
 replace_key_value eventsFramework.redis.redisUrl $EVENTS_FRAMEWORK_REDIS_URL
@@ -270,9 +296,15 @@ replace_key_value gitSdkConfiguration.scmConnectionConfig.url "$SCM_SERVICE_URL"
 replace_key_value resourceGroupClientConfig.serviceConfig.baseUrl "$RESOURCE_GROUP_BASE_URL"
 
 replace_key_value baseUrls.currentGenUiUrl "$CURRENT_GEN_UI_URL"
+replace_key_value baseUrls.nextGenUiUrl "$NEXT_GEN_UI_URL"
+replace_key_value baseUrls.nextGenAuthUiUrl "$NG_AUTH_UI_URL"
+
+replace_key_value ngAuthUIEnabled "$HARNESS_ENABLE_NG_AUTH_UI_PLACEHOLDER"
 
 replace_key_value enableDefaultResourceGroupCreation "${ENABLE_DEFAULT_RESOURCE_GROUP_CREATION:-false}"
 
 replace_key_value yamlSchemaClientConfig.yamlSchemaHttpClientMap.cvng.secret "$CVNG_SERVICE_SECRET"
 
 replace_key_value yamlSchemaClientConfig.yamlSchemaHttpClientMap.cvng.serviceHttpClientConfig.baseUrl $CVNG_BASE_URL
+
+replace_key_value useRedisForSdkResponseEvents "$USE_REDIS_FOR_SDK_RESPONSE_EVENTS"

@@ -1,17 +1,21 @@
 package software.wings.delegatetasks;
 
+import static io.harness.beans.shared.tasks.NgSetupFields.OWNER;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.utils.TaskSetupAbstractionHelper;
 
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
@@ -25,15 +29,19 @@ import software.wings.settings.SettingValue;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
+@OwnedBy(HarnessTeam.DEL)
 @TargetModule(HarnessModule._910_DELEGATE_SERVICE_DRIVER)
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class DelegateInvocationHandler implements InvocationHandler {
   private DelegateService delegateService;
   private SyncTaskContext syncTaskContext;
+  private TaskSetupAbstractionHelper taskSetupAbstractionHelper;
 
-  public DelegateInvocationHandler(SyncTaskContext syncTaskContext, DelegateService delegateService) {
+  public DelegateInvocationHandler(SyncTaskContext syncTaskContext, DelegateService delegateService,
+      TaskSetupAbstractionHelper taskSetupAbstractionHelper) {
     this.delegateService = delegateService;
     this.syncTaskContext = syncTaskContext;
+    this.taskSetupAbstractionHelper = taskSetupAbstractionHelper;
   }
 
   @Override
@@ -59,6 +67,9 @@ public class DelegateInvocationHandler implements InvocationHandler {
             .setupAbstraction(
                 Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, syncTaskContext.getInfrastructureMappingId())
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, syncTaskContext.getServiceId())
+            .setupAbstraction(OWNER,
+                taskSetupAbstractionHelper.getOwner(syncTaskContext.getAccountId(), syncTaskContext.getOrgIdentifier(),
+                    syncTaskContext.getProjectIdentifier()))
             .tags(syncTaskContext.getTags());
 
     String awsConfigTag = getAwsConfigTags(args);

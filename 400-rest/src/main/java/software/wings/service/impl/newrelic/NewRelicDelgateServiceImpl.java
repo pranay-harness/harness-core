@@ -3,13 +3,9 @@ package software.wings.service.impl.newrelic;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.network.Http.getOkHttpClientBuilder;
-import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.common.VerificationConstants.URL_STRING;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
-import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
-
-import static java.time.Duration.ofMillis;
 
 import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.eraro.ErrorCode;
@@ -53,7 +49,6 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
@@ -297,8 +292,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
 
   @Override
   public List<NewRelicApplicationInstance> getApplicationInstances(NewRelicConfig newRelicConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId, ThirdPartyApiCallLog apiCallLog)
-      throws IOException {
+      List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId, ThirdPartyApiCallLog apiCallLog) {
     List<NewRelicApplicationInstance> rv = new ArrayList<>();
     if (apiCallLog == null) {
       apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), null);
@@ -311,36 +305,18 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       final Call<NewRelicApplicationInstancesResponse> request =
           getNewRelicRestClient(newRelicConfig)
               .listAppInstances(getApiKey(newRelicConfig, encryptedDataDetails), newRelicApplicationId, pageCount);
-      apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                       .name(URL_STRING)
-                                       .value(request.request().url().toString())
-                                       .type(FieldType.URL)
-                                       .build());
-      Response<NewRelicApplicationInstancesResponse> response;
+      NewRelicApplicationInstancesResponse response;
       try {
-        response = request.execute();
+        response = requestExecutor.executeRequest(apiCallLog, request);
       } catch (Exception e) {
-        apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-        apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
-        delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
         throw new WingsException("Unsuccessful response while fetching data from NewRelic. Error message: "
             + e.getMessage() + " Request: " + request.request().url().toString());
       }
-      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-      if (response.isSuccessful()) {
-        apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
-        List<NewRelicApplicationInstance> applicationInstances = response.body().getApplication_instances();
-        delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-        if (isEmpty(applicationInstances)) {
-          break;
-        } else {
-          rv.addAll(applicationInstances);
-        }
+      List<NewRelicApplicationInstance> applicationInstances = response.getApplication_instances();
+      if (isEmpty(applicationInstances)) {
+        break;
       } else {
-        apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
-        delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-        throw new WingsException(
-            ErrorCode.NEWRELIC_ERROR, response.errorBody().string(), EnumSet.of(ReportTarget.UNIVERSAL));
+        rv.addAll(applicationInstances);
       }
       pageCount++;
     }
@@ -351,7 +327,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   @Override
   public List<NewRelicMetric> getTxnsWithData(NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptionDetails, long applicationId, boolean checkNotAllowedStrings,
-      ThirdPartyApiCallLog apiCallLog) throws IOException {
+      ThirdPartyApiCallLog apiCallLog) {
     Set<NewRelicMetric> txnNameToCollect =
         getTxnNameToCollect(newRelicConfig, encryptionDetails, applicationId, apiCallLog);
     Set<NewRelicMetric> txnsWithDataInLastHour = getTxnsWithDataInLastHour(
@@ -361,66 +337,33 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
 
   @Override
   public Set<NewRelicMetric> getTxnNameToCollect(NewRelicConfig newRelicConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, long newRelicAppId, ThirdPartyApiCallLog apiCallLog)
-      throws IOException {
+      List<EncryptedDataDetail> encryptedDataDetails, long newRelicAppId, ThirdPartyApiCallLog apiCallLog) {
     Set<NewRelicMetric> newRelicMetrics = new HashSet<>();
     if (apiCallLog == null) {
       apiCallLog = createApiCallLog(newRelicConfig.getAccountId(), null);
     }
-    int failedAttempts = 0;
-    while (true) {
+    for (String txnName : txnsToCollect) {
+      apiCallLog.setTitle("Fetching web transactions names from " + newRelicConfig.getNewRelicUrl());
+      final Call<NewRelicMetricResponse> request =
+          getNewRelicRestClient(newRelicConfig)
+              .listMetricNames(getApiKey(newRelicConfig, encryptedDataDetails), newRelicAppId, txnName);
+      NewRelicMetricResponse response;
       try {
-        for (String txnName : txnsToCollect) {
-          apiCallLog.setTitle("Fetching web transactions names from " + newRelicConfig.getNewRelicUrl());
-          apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-          final Call<NewRelicMetricResponse> request =
-              getNewRelicRestClient(newRelicConfig)
-                  .listMetricNames(getApiKey(newRelicConfig, encryptedDataDetails), newRelicAppId, txnName);
-          apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                           .name(URL_STRING)
-                                           .value(request.request().url().toString())
-                                           .type(FieldType.URL)
-                                           .build());
-          Response<NewRelicMetricResponse> response;
-          try {
-            response = request.execute();
-          } catch (Exception e) {
-            apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-            apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
-            delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
-            throw new WingsException("Unsuccessful response while fetching data from NewRelic. Error message: "
-                + e.getMessage() + " Request: " + request.request().url().toString());
+        response = requestExecutor.executeRequest(apiCallLog, request);
+      } catch (Exception e) {
+        throw new WingsException("Unsuccessful response while fetching data from NewRelic. Error message: "
+            + e.getMessage() + " Request: " + request.request().url().toString());
+      }
+      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+      if (isNotEmpty(response.getMetrics())) {
+        response.getMetrics().forEach(metric -> {
+          if (metric.getName().startsWith(txnName)) {
+            newRelicMetrics.add(metric);
           }
-          apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-          if (response.isSuccessful()) {
-            apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
-            List<NewRelicMetric> metrics = response.body().getMetrics();
-            if (isNotEmpty(metrics)) {
-              metrics.forEach(metric -> {
-                if (metric.getName().startsWith(txnName)) {
-                  newRelicMetrics.add(metric);
-                }
-              });
-            }
-          } else if (response.code() != HttpServletResponse.SC_NOT_FOUND) {
-            apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
-            throw new WingsException(
-                ErrorCode.NEWRELIC_ERROR, response.errorBody().string(), EnumSet.of(ReportTarget.UNIVERSAL));
-          }
-        }
-        return newRelicMetrics;
-      } catch (RuntimeException e) {
-        failedAttempts++;
-        log.warn("txn name fetch failed. trial num: {}", failedAttempts, e);
-        if (failedAttempts == NUM_OF_RETRIES) {
-          log.error("txn name fetch failed after {} retries", failedAttempts, e);
-          throw new IOException("txn name fetch failed after " + NUM_OF_RETRIES + " retries", e);
-        }
-        sleep(ofMillis(1000));
-      } finally {
-        delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
+        });
       }
     }
+    return newRelicMetrics;
   }
 
   @Override

@@ -36,6 +36,12 @@ public class UserGroupDTO {
   List<String> users;
   List<NotificationSettingConfigDTO> notificationConfigs;
 
+  private boolean isSsoLinked;
+  private String linkedSsoId;
+  private String linkedSsoDisplayName;
+  private String ssoGroupId;
+  private String ssoGroupName;
+
   @Size(max = 1024) String description;
   @Size(max = 128) Map<String, String> tags;
 }

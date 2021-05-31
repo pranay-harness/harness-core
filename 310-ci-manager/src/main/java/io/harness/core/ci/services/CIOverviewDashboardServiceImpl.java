@@ -10,6 +10,7 @@ import io.harness.app.beans.entities.BuildRepositoryCount;
 import io.harness.app.beans.entities.DashboardBuildExecutionInfo;
 import io.harness.app.beans.entities.DashboardBuildRepositoryInfo;
 import io.harness.app.beans.entities.DashboardBuildsHealthInfo;
+import io.harness.app.beans.entities.LastRepositoryInfo;
 import io.harness.app.beans.entities.RepositoryBuildInfo;
 import io.harness.app.beans.entities.RepositoryInfo;
 import io.harness.app.beans.entities.RepositoryInformation;
@@ -26,8 +27,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -42,13 +41,16 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
 
   private String tableName = "pipeline_execution_summary_ci";
   private String staticQuery = "select * from " + tableName + " where ";
+  private final long HR_IN_MS = 60 * 60 * 1000;
+  private final long DAY_IN_MS = 24 * HR_IN_MS;
+
   private List<String> failedList =
       Arrays.asList(ExecutionStatus.FAILED.name(), ExecutionStatus.ABORTED.name(), ExecutionStatus.EXPIRED.name());
 
   private static final int MAX_RETRY_COUNT = 5;
 
   private String queryBuilderSelectStatusAndTime(
-      String accountId, String orgId, String projectId, String startInterval, String endInterval) {
+      String accountId, String orgId, String projectId, long startInterval, long endInterval) {
     String selectStatusQuery = "select status,startts from " + tableName + " where ";
     StringBuilder totalBuildSqlBuilder = new StringBuilder();
     totalBuildSqlBuilder.append(selectStatusQuery);
@@ -65,8 +67,8 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
       totalBuildSqlBuilder.append(String.format("projectidentifier='%s' and ", projectId));
     }
 
-    if (startInterval != null && endInterval != null) {
-      totalBuildSqlBuilder.append(String.format("startts between '%s' and '%s';", startInterval, endInterval));
+    if (startInterval > 0 && endInterval > 0) {
+      totalBuildSqlBuilder.append(String.format("startts>=%s and startts<%s;", startInterval, endInterval));
     }
 
     return totalBuildSqlBuilder.toString();
@@ -136,9 +138,10 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
   }
 
   private String queryBuilderSelectRepoInfo(
-      String accountId, String orgId, String projectId, String previousStartInterval, String endInterval) {
-    String selectStatusQuery = "select moduleinfo_repository, status, startts, moduleinfo_branch_commit_message  from "
-        + tableName + " where ";
+      String accountId, String orgId, String projectId, long previousStartInterval, long endInterval) {
+    String selectStatusQuery =
+        "select moduleinfo_repository, status, startts, endts, moduleinfo_branch_commit_message  from " + tableName
+        + " where ";
 
     StringBuilder totalBuildSqlBuilder = new StringBuilder(1024);
     totalBuildSqlBuilder.append(selectStatusQuery);
@@ -156,8 +159,8 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
 
     totalBuildSqlBuilder.append(String.format("moduleinfo_repository IS NOT NULL and "));
 
-    if (previousStartInterval != null && endInterval != null) {
-      totalBuildSqlBuilder.append(String.format("startts between '%s' and '%s';", previousStartInterval, endInterval));
+    if (previousStartInterval > 0 && endInterval > 0) {
+      totalBuildSqlBuilder.append(String.format("startts>=%s and startts<%s;", previousStartInterval, endInterval));
     }
 
     return totalBuildSqlBuilder.toString();
@@ -167,7 +170,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     long totalTries = 0;
 
     List<String> status = new ArrayList<>();
-    List<String> time = new ArrayList<>();
+    List<Long> time = new ArrayList<>();
     boolean successfulOperation = false;
     while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
       ResultSet resultSet = null;
@@ -176,7 +179,11 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         resultSet = statement.executeQuery();
         while (resultSet != null && resultSet.next()) {
           status.add(resultSet.getString("status"));
-          time.add(resultSet.getString("startts"));
+          if (resultSet.getString("startts") != null) {
+            time.add(Long.valueOf(resultSet.getString("startts")));
+          } else {
+            time.add(null);
+          }
         }
         successfulOperation = true;
       } catch (SQLException ex) {
@@ -189,7 +196,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
   }
 
   public BuildFailureInfo getBuildFailureInfo(
-      String name, String branch_name, String commit, String commit_id, String startTs, String endTs) {
+      String name, String branch_name, String commit, String commit_id, long startTs, long endTs) {
     return BuildFailureInfo.builder()
         .piplineName(name)
         .branch(branch_name)
@@ -201,7 +208,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
   }
 
   public BuildActiveInfo getBuildActiveInfo(
-      String name, String branch_name, String commit, String commit_id, String startTs, String status, String endTs) {
+      String name, String branch_name, String commit, String commit_id, long startTs, String status, long endTs) {
     return BuildActiveInfo.builder()
         .piplineName(name)
         .branch(branch_name)
@@ -225,22 +232,23 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
 
   @Override
   public DashboardBuildsHealthInfo getDashBoardBuildHealthInfoWithRate(String accountId, String orgId, String projectId,
-      String startInterval, String endInterval, String previousStartInterval) {
-    LocalDate startDate = LocalDate.parse(startInterval);
-    LocalDate endDate = LocalDate.parse(endInterval);
-    LocalDate previousStartDate = LocalDate.parse(previousStartInterval);
-    String query = queryBuilderSelectStatusAndTime(
-        accountId, orgId, projectId, previousStartInterval, endDate.plusDays(1).toString());
+      long startInterval, long endInterval, long previousStartInterval) {
+    startInterval = getStartingDateEpochValue(startInterval);
+    endInterval = getStartingDateEpochValue(endInterval);
+    previousStartInterval = getStartingDateEpochValue(previousStartInterval);
+
+    endInterval = endInterval + DAY_IN_MS;
+
+    String query = queryBuilderSelectStatusAndTime(accountId, orgId, projectId, previousStartInterval, endInterval);
     StatusAndTime statusAndTime = queryCalculatorForStatusAndTime(query);
     List<String> status = statusAndTime.getStatus();
-    List<String> time = statusAndTime.getTime();
+    List<Long> time = statusAndTime.getTime();
 
     long currentTotal = 0, currentSuccess = 0, currentFailed = 0;
     long previousTotal = 0, previousSuccess = 0, previousFailed = 0;
     for (int i = 0; i < time.size(); i++) {
-      // make time.get(i) in yyyy-mm-dd format
-      LocalDate variableDate = LocalDate.parse(time.get(i).substring(0, time.get(i).indexOf(' ')));
-      if (startDate.compareTo(variableDate) <= 0 && endDate.compareTo(variableDate) >= 0) {
+      long currentEpochValue = time.get(i);
+      if (currentEpochValue >= startInterval && currentEpochValue < endInterval) {
         currentTotal++;
         if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
           currentSuccess++;
@@ -250,7 +258,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
       }
 
       // previous interval record
-      if (previousStartDate.compareTo(variableDate) <= 0 && startDate.compareTo(variableDate) > 0) {
+      if (currentEpochValue >= previousStartInterval && currentEpochValue < startInterval) {
         previousTotal++;
         if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
           previousSuccess++;
@@ -271,21 +279,25 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
 
   @Override
   public DashboardBuildExecutionInfo getBuildExecutionBetweenIntervals(
-      String accountId, String orgId, String projectId, String startInterval, String endInterval) {
-    List<BuildExecutionInfo> buildExecutionInfoList = new ArrayList<>();
-    LocalDate startDate = LocalDate.parse(startInterval);
-    LocalDate endDate = LocalDate.parse(endInterval);
+      String accountId, String orgId, String projectId, long startInterval, long endInterval) {
+    startInterval = getStartingDateEpochValue(startInterval);
+    endInterval = getStartingDateEpochValue(endInterval);
 
-    String query =
-        queryBuilderSelectStatusAndTime(accountId, orgId, projectId, startInterval, endDate.plusDays(1).toString());
+    endInterval = endInterval + DAY_IN_MS;
+
+    List<BuildExecutionInfo> buildExecutionInfoList = new ArrayList<>();
+
+    String query = queryBuilderSelectStatusAndTime(accountId, orgId, projectId, startInterval, endInterval);
     StatusAndTime statusAndTime = queryCalculatorForStatusAndTime(query);
     List<String> status = statusAndTime.getStatus();
-    List<String> time = statusAndTime.getTime();
+    List<Long> time = statusAndTime.getTime();
 
-    while (!startDate.isAfter(endDate)) {
+    long startDateCopy = startInterval;
+    long endDateCopy = endInterval;
+    while (startDateCopy < endDateCopy) {
       long total = 0, success = 0, failed = 0;
       for (int i = 0; i < time.size(); i++) {
-        if (time.get(i).contains(startDate.toString())) {
+        if (startDateCopy == getStartingDateEpochValue(time.get(i))) {
           total++;
           if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
             success++;
@@ -295,8 +307,8 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         }
       }
       BuildCount buildCount = BuildCount.builder().total(total).success(success).failed(failed).build();
-      buildExecutionInfoList.add(BuildExecutionInfo.builder().time(startDate.toString()).builds(buildCount).build());
-      startDate = startDate.plusDays(1);
+      buildExecutionInfoList.add(BuildExecutionInfo.builder().time(startDateCopy).builds(buildCount).build());
+      startDateCopy = startDateCopy + DAY_IN_MS;
     }
 
     return DashboardBuildExecutionInfo.builder().buildExecutionInfoList(buildExecutionInfoList).build();
@@ -312,10 +324,17 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
            PreparedStatement statement = connection.prepareStatement(query)) {
         resultSet = statement.executeQuery();
         while (resultSet != null && resultSet.next()) {
+          long startTime = -1L;
+          long endTime = -1L;
+          if (resultSet.getString("startts") != null) {
+            startTime = Long.parseLong(resultSet.getString("startts"));
+          }
+          if (resultSet.getString("endts") != null) {
+            endTime = Long.parseLong(resultSet.getString("endts"));
+          }
           buildFailureInfos.add(getBuildFailureInfo(resultSet.getString("name"),
               resultSet.getString("moduleinfo_branch_name"), resultSet.getString("moduleinfo_branch_commit_message"),
-              resultSet.getString("moduleinfo_branch_commit_id"), resultSet.getString("startts"),
-              resultSet.getString("endts")));
+              resultSet.getString("moduleinfo_branch_commit_id"), startTime, endTime));
         }
         successfulOperation = true;
       } catch (SQLException ex) {
@@ -337,10 +356,13 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
            PreparedStatement statement = connection.prepareStatement(query)) {
         resultSet = statement.executeQuery();
         while (resultSet != null && resultSet.next()) {
+          long startTime = -1L;
+          if (resultSet.getString("startts") != null) {
+            startTime = Long.parseLong(resultSet.getString("startts"));
+          }
           buildActiveInfos.add(getBuildActiveInfo(resultSet.getString("name"),
               resultSet.getString("moduleinfo_branch_name"), resultSet.getString("moduleinfo_branch_commit_message"),
-              resultSet.getString("moduleinfo_branch_commit_id"), resultSet.getString("startts"),
-              resultSet.getString("status"), LocalDateTime.now().toString().replace('T', ' ')));
+              resultSet.getString("moduleinfo_branch_commit_id"), startTime, resultSet.getString("status"), -1L));
         }
         successfulOperation = true;
       } catch (SQLException ex) {
@@ -370,7 +392,8 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
   public RepositoryInformation queryRepositoryCalculator(String query) {
     List<String> repoName = new ArrayList<>();
     List<String> status = new ArrayList<>();
-    List<String> time = new ArrayList<>();
+    List<Long> startTime = new ArrayList<>();
+    List<Long> endTime = new ArrayList<>();
     List<String> commitMessage = new ArrayList<>();
 
     int totalTries = 0;
@@ -383,7 +406,12 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         while (resultSet != null && resultSet.next()) {
           repoName.add(resultSet.getString("moduleinfo_repository"));
           status.add(resultSet.getString("status"));
-          time.add(resultSet.getString("startts"));
+          startTime.add(Long.valueOf(resultSet.getString("startts")));
+          if (resultSet.getString("endts") != null) {
+            endTime.add(Long.valueOf(resultSet.getString("endts")));
+          } else {
+            endTime.add(null);
+          }
           commitMessage.add(resultSet.getString("moduleinfo_branch_commit_message"));
         }
         successfulOperation = true;
@@ -397,22 +425,25 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     return RepositoryInformation.builder()
         .repoName(repoName)
         .status(status)
-        .time(time)
+        .startTime(startTime)
+        .endTime(endTime)
         .commitMessage(commitMessage)
         .build();
   }
 
   @Override
   public DashboardBuildRepositoryInfo getDashboardBuildRepository(String accountId, String orgId, String projectId,
-      String startInterval, String endInterval, String previousStartInterval) {
-    LocalDate startDate = LocalDate.parse(startInterval);
-    LocalDate endDate = LocalDate.parse(endInterval);
-    LocalDate previousStartDate = LocalDate.parse(previousStartInterval);
-    String query =
-        queryBuilderSelectRepoInfo(accountId, orgId, projectId, previousStartInterval, endDate.plusDays(1).toString());
+      long startInterval, long endInterval, long previousStartInterval) {
+    startInterval = getStartingDateEpochValue(startInterval);
+    endInterval = getStartingDateEpochValue(endInterval);
+    previousStartInterval = getStartingDateEpochValue(previousStartInterval);
+
+    endInterval = endInterval + DAY_IN_MS;
+    String query = queryBuilderSelectRepoInfo(accountId, orgId, projectId, previousStartInterval, endInterval);
     List<String> repoName = new ArrayList<>();
     List<String> status = new ArrayList<>();
-    List<String> time = new ArrayList<>();
+    List<Long> startTime = new ArrayList<>();
+    List<Long> endTime = new ArrayList<>();
     List<String> commitMessage = new ArrayList<>();
 
     HashMap<String, Integer> uniqueRepoName = new HashMap<>();
@@ -420,7 +451,8 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     RepositoryInformation repositoryInformation = queryRepositoryCalculator(query);
     repoName = repositoryInformation.getRepoName();
     status = repositoryInformation.getStatus();
-    time = repositoryInformation.getTime();
+    startTime = repositoryInformation.getStartTime();
+    endTime = repositoryInformation.getEndTime();
     commitMessage = repositoryInformation.getCommitMessage();
 
     for (String repository_name : repoName) {
@@ -434,39 +466,42 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
       long success = 0;
       long previousSuccess = 0;
       String lastCommit = null;
-      String lastCommitTime = null;
+      long lastCommitTime = -1L;
+      long lastCommitEndTime = -1L;
       String lastStatus = null;
 
-      HashMap<String, Integer> buildCountMap = new HashMap<>();
-      LocalDate startDateCopy = startDate;
-      LocalDate endDateCopy = endDate;
+      HashMap<Long, Integer> buildCountMap = new HashMap<>();
+      long startDateCopy = startInterval;
+      long endDateCopy = endInterval;
 
-      while (!startDateCopy.isAfter(endDateCopy)) {
-        buildCountMap.put(startDateCopy.toString(), 0);
-        startDateCopy = startDateCopy.plusDays(1);
+      while (startDateCopy < endDateCopy) {
+        buildCountMap.put(startDateCopy, 0);
+        startDateCopy = startDateCopy + DAY_IN_MS;
       }
 
       for (int i = 0; i < repoName.size(); i++) {
         if (repoName.get(i).contentEquals(repositoryName)) {
-          LocalDate variableDate = LocalDate.parse(time.get(i).substring(0, time.get(i).indexOf(' ')));
-          if (startDate.compareTo(variableDate) <= 0 && endDate.compareTo(variableDate) >= 0) {
+          Long variableEpochValue = getStartingDateEpochValue(startTime.get(i));
+          if (variableEpochValue >= startInterval && variableEpochValue < endInterval) {
             totalBuild++;
 
-            buildCountMap.put(variableDate.toString(), buildCountMap.get(variableDate.toString()) + 1);
+            buildCountMap.put(variableEpochValue, buildCountMap.get(variableEpochValue) + 1);
 
             if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
               success++;
             }
 
-            if (lastCommit == null) {
+            if (lastCommitTime == -1) {
               lastCommit = commitMessage.get(i);
-              lastCommitTime = time.get(i);
+              lastCommitTime = startTime.get(i);
               lastStatus = status.get(i);
+              lastCommitEndTime = endTime.get(i);
             } else {
-              if (lastCommitTime.compareTo(time.get(i)) <= 0) {
-                lastCommitTime = time.get(i);
+              if (lastCommitTime < startTime.get(i)) {
+                lastCommitTime = startTime.get(i);
                 lastCommit = commitMessage.get(i);
                 lastStatus = status.get(i);
+                lastCommitEndTime = endTime.get(i);
               }
             }
           } else if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
@@ -476,21 +511,26 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
       }
 
       List<RepositoryBuildInfo> buildCount = new ArrayList<>();
-      startDateCopy = startDate;
-      endDateCopy = endDate;
+      startDateCopy = startInterval;
+      endDateCopy = endInterval;
 
-      while (!startDateCopy.isAfter(endDateCopy)) {
-        buildCount.add(
-            RepositoryBuildInfo.builder()
-                .time(startDateCopy.toString())
-                .builds(BuildRepositoryCount.builder().count(buildCountMap.get(startDateCopy.toString())).build())
-                .build());
-        startDateCopy = startDateCopy.plusDays(1);
+      while (startDateCopy < endDateCopy) {
+        buildCount.add(RepositoryBuildInfo.builder()
+                           .time(startDateCopy)
+                           .builds(BuildRepositoryCount.builder().count(buildCountMap.get(startDateCopy)).build())
+                           .build());
+        startDateCopy = startDateCopy + DAY_IN_MS;
       }
 
       if (totalBuild > 0) {
-        repositoryInfoList.add(getRepositoryInfo(
-            repositoryName, totalBuild, success, previousSuccess, lastCommit, lastCommitTime, buildCount, lastStatus));
+        LastRepositoryInfo lastRepositoryInfo = LastRepositoryInfo.builder()
+                                                    .StartTime(lastCommitTime)
+                                                    .EndTime(lastCommitEndTime)
+                                                    .status(lastStatus)
+                                                    .commit(lastCommit)
+                                                    .build();
+        repositoryInfoList.add(
+            getRepositoryInfo(repositoryName, totalBuild, success, previousSuccess, lastRepositoryInfo, buildCount));
       }
     }
 
@@ -498,7 +538,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
   }
 
   private RepositoryInfo getRepositoryInfo(String repoName, long totalBuild, long success, long previousSuccess,
-      String lastCommit, String lastCommitTime, List<RepositoryBuildInfo> buildCount, String lastStatus) {
+      LastRepositoryInfo lastRepositoryInfo, List<RepositoryBuildInfo> buildCount) {
     // percentOfSuccess
     double percentOfSuccess = 0.0;
     if (totalBuild != 0) {
@@ -518,10 +558,12 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         .buildCount(totalBuild)
         .successRate(successRate)
         .percentSuccess(percentOfSuccess)
-        .lastCommit(lastCommit)
-        .time(lastCommitTime)
+        .lastRepository(lastRepositoryInfo)
         .countList(buildCount)
-        .lastStatus(lastStatus)
         .build();
+  }
+
+  public long getStartingDateEpochValue(long epochValue) {
+    return epochValue - epochValue % DAY_IN_MS;
   }
 }

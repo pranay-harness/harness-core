@@ -7,9 +7,9 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.helper.ScmGitCapabilityHelper;
 import io.harness.security.encryption.EncryptedDataDetail;
 
-import java.util.Collections;
 import java.util.List;
 import lombok.Builder;
 import lombok.Value;
@@ -21,10 +21,11 @@ public class ScmGitRefTaskParams implements TaskParameters, ExecutionCapabilityD
   ScmConnector scmConnector;
   String branch;
   GitRefType gitRefType;
+  long prNumber;
   List<EncryptedDataDetail> encryptedDataDetails;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return Collections.emptyList();
+    return ScmGitCapabilityHelper.getHttpConnectionCapability(scmConnector);
   }
 }

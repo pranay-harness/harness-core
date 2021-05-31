@@ -63,9 +63,11 @@ public class WinRmExecutorHelper {
       // for correct escaping
       commandList.add(format(appendPSInvokeCommandtoCommandString, psScriptFile, commandString + "`r`n"));
     }
-    // last command to run the script we just built - This will execute our command.
-    commandList.add(format("%s -f \"%s\" ", powershell, psScriptFile));
     return Lists.partition(commandList, SPLITLISTOFCOMMANDSBY);
+  }
+
+  public static String getScriptExecutingCommand(String psScriptFile, String powershell) {
+    return format("%s -f \"%s\" ", powershell, psScriptFile);
   }
 
   public static List<String> constructPSScriptWithCommandsBulk(String command, String psScriptFile, String powershell) {

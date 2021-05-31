@@ -3,6 +3,8 @@ package io.harness.pms.filter.creation;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
@@ -10,11 +12,11 @@ import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.FilterCreationBlobRequest;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
 import io.harness.pms.contracts.plan.FilterCreationResponse;
-import io.harness.pms.contracts.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
 import io.harness.pms.contracts.plan.SetupMetadata;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.exception.PmsExceptionUtils;
 import io.harness.pms.filter.creation.FilterCreationResponseWrapper.FilterCreationResponseWrapperBuilder;
+import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineSetupUsageHelper;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
@@ -26,6 +28,7 @@ import io.harness.pms.yaml.YamlUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.ByteString;
 import io.grpc.StatusRuntimeException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,22 +41,23 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 @Slf4j
 public class FilterCreatorMergeService {
-  private Map<String, PlanCreationServiceBlockingStub> planCreatorServices;
   private final PmsSdkHelper pmsSdkHelper;
   private final PipelineSetupUsageHelper pipelineSetupUsageHelper;
+  private final PmsGitSyncHelper pmsGitSyncHelper;
 
   public static final int MAX_DEPTH = 10;
   private final Executor executor = Executors.newFixedThreadPool(5);
 
   @Inject
-  public FilterCreatorMergeService(Map<String, PlanCreationServiceBlockingStub> planCreatorServices,
-      PmsSdkHelper pmsSdkHelper, PipelineSetupUsageHelper pipelineSetupUsageHelper) {
-    this.planCreatorServices = planCreatorServices;
+  public FilterCreatorMergeService(
+      PmsSdkHelper pmsSdkHelper, PipelineSetupUsageHelper pipelineSetupUsageHelper, PmsGitSyncHelper pmsGitSyncHelper) {
     this.pmsSdkHelper = pmsSdkHelper;
     this.pipelineSetupUsageHelper = pipelineSetupUsageHelper;
+    this.pmsGitSyncHelper = pmsGitSyncHelper;
   }
 
   public FilterCreatorMergeServiceResponse getPipelineInfo(PipelineEntity pipelineEntity) throws IOException {
@@ -65,12 +69,16 @@ public class FilterCreatorMergeService {
     dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
 
     Map<String, String> filters = new HashMap<>();
-    SetupMetadata setupMetadata = SetupMetadata.newBuilder()
-                                      .setAccountId(pipelineEntity.getAccountId())
-                                      .setProjectId(pipelineEntity.getProjectIdentifier())
-                                      .setOrgId(pipelineEntity.getOrgIdentifier())
-                                      .build();
-    FilterCreationBlobResponse response = obtainFiltersRecursively(services, dependencies, filters, setupMetadata);
+    SetupMetadata.Builder setupMetadataBuilder = SetupMetadata.newBuilder()
+                                                     .setAccountId(pipelineEntity.getAccountId())
+                                                     .setProjectId(pipelineEntity.getProjectIdentifier())
+                                                     .setOrgId(pipelineEntity.getOrgIdentifier());
+    ByteString gitSyncBranchContext = pmsGitSyncHelper.getGitSyncBranchContextBytesThreadLocal();
+    if (gitSyncBranchContext != null) {
+      setupMetadataBuilder.setGitSyncBranchContext(gitSyncBranchContext);
+    }
+    FilterCreationBlobResponse response =
+        obtainFiltersRecursively(services, dependencies, filters, setupMetadataBuilder.build());
     validateFilterCreationBlobResponse(response);
     pipelineSetupUsageHelper.publishSetupUsageEvent(pipelineEntity, response.getReferredEntitiesList());
     return FilterCreatorMergeServiceResponse.builder()

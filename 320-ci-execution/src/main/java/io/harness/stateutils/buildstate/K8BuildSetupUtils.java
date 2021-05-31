@@ -7,6 +7,7 @@ import static io.harness.beans.sweepingoutputs.ContainerPortDetails.PORT_DETAILS
 import static io.harness.beans.sweepingoutputs.PodCleanupDetails.CLEANUP_DETAILS;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_AWS_REGION;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_MACHINE;
+import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_PORT;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_USERNAME;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_REMOTE_URL;
 import static io.harness.common.CIExecutionConstants.ACCOUNT_ID_ATTR;
@@ -111,10 +112,10 @@ import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.rbac.PipelineRbacHelper;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider;
-import io.harness.steps.StepOutcomeGroup;
 import io.harness.tiserviceclient.TIServiceUtils;
 import io.harness.util.GithubApiFunctor;
 import io.harness.util.GithubApiTokenEvaluator;
@@ -148,7 +149,6 @@ import org.jetbrains.annotations.NotNull;
 public class K8BuildSetupUtils {
   @Inject private SecretUtils secretUtils;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
-  @Inject private ServiceTokenUtils serviceTokenUtils;
   @Inject private ConnectorUtils connectorUtils;
   @Inject private InternalContainerParamsProvider internalContainerParamsProvider;
   @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
@@ -451,9 +451,8 @@ public class K8BuildSetupUtils {
       Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys, Ambiance ambiance) {
     Map<String, ConnectorDetails> stepConnectorDetails = new HashMap<>();
 
-    String serviceToken = serviceTokenUtils.getServiceToken();
     return internalContainerParamsProvider.getLiteEngineContainerParams(connectorDetails, stepConnectorDetails,
-        k8PodDetails, serviceToken, stageCpuRequest, stageMemoryRequest, serviceGrpcPortList, logEnvVars, tiEnvVars,
+        k8PodDetails, stageCpuRequest, stageMemoryRequest, serviceGrpcPortList, logEnvVars, tiEnvVars,
         volumeToMountPath, workDirPath, logPrefix, ambiance);
   }
 
@@ -562,13 +561,16 @@ public class K8BuildSetupUtils {
     validateGitConnector(gitConnector);
     if (gitConnector.getConnectorType() == GITHUB) {
       GithubConnectorDTO gitConfigDTO = (GithubConnectorDTO) gitConnector.getConnectorConfig();
-      envVars = retrieveGithubEnvVar(gitConfigDTO, ciCodebase);
+      validateGithubConnectorAuth(gitConfigDTO);
+      envVars = retrieveGitSCMEnvVar(ciCodebase, gitConfigDTO.getConnectionType(), gitConfigDTO.getUrl());
     } else if (gitConnector.getConnectorType() == GITLAB) {
       GitlabConnectorDTO gitConfigDTO = (GitlabConnectorDTO) gitConnector.getConnectorConfig();
-      envVars = retrieveGitlabEnvVar(gitConfigDTO, ciCodebase);
+      validateGitlabConnectorAuth(gitConfigDTO);
+      envVars = retrieveGitSCMEnvVar(ciCodebase, gitConfigDTO.getConnectionType(), gitConfigDTO.getUrl());
     } else if (gitConnector.getConnectorType() == BITBUCKET) {
       BitbucketConnectorDTO gitConfigDTO = (BitbucketConnectorDTO) gitConnector.getConnectorConfig();
-      envVars = retrieveBitbucketEnvVar(gitConfigDTO, ciCodebase);
+      validateBitbucketConnectorAuth(gitConfigDTO);
+      envVars = retrieveGitSCMEnvVar(ciCodebase, gitConfigDTO.getConnectionType(), gitConfigDTO.getUrl());
     } else if (gitConnector.getConnectorType() == CODECOMMIT) {
       AwsCodeCommitConnectorDTO gitConfigDTO = (AwsCodeCommitConnectorDTO) gitConnector.getConnectorConfig();
       envVars = retrieveAwsCodeCommitEnvVar(gitConfigDTO, ciCodebase);
@@ -582,13 +584,21 @@ public class K8BuildSetupUtils {
     return envVars;
   }
 
-  private Map<String, String> retrieveGithubEnvVar(GithubConnectorDTO gitConfigDTO, CodeBase ciCodebase) {
+  private Map<String, String> retrieveGitSCMEnvVar(CodeBase ciCodebase, GitConnectionType connectionType, String url) {
     Map<String, String> envVars = new HashMap<>();
-    String gitUrl = getGitURL(ciCodebase, gitConfigDTO.getConnectionType(), gitConfigDTO.getUrl());
+    String gitUrl = getGitURL(ciCodebase, connectionType, url);
     String domain = GitClientHelper.getGitSCM(gitUrl);
+    String port = GitClientHelper.getGitSCMPort(gitUrl);
+    if (port != null) {
+      envVars.put(DRONE_NETRC_PORT, port);
+    }
 
     envVars.put(DRONE_REMOTE_URL, gitUrl);
     envVars.put(DRONE_NETRC_MACHINE, domain);
+    return envVars;
+  }
+
+  private void validateGithubConnectorAuth(GithubConnectorDTO gitConfigDTO) {
     switch (gitConfigDTO.getAuthentication().getAuthType()) {
       case HTTP:
         GithubHttpCredentialsDTO gitAuth = (GithubHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
@@ -603,16 +613,26 @@ public class K8BuildSetupUtils {
         throw new CIStageExecutionException(
             "Unsupported github connector auth" + gitConfigDTO.getAuthentication().getAuthType());
     }
-    return envVars;
   }
 
-  private Map<String, String> retrieveGitlabEnvVar(GitlabConnectorDTO gitConfigDTO, CodeBase ciCodebase) {
-    Map<String, String> envVars = new HashMap<>();
-    String gitUrl = getGitURL(ciCodebase, gitConfigDTO.getConnectionType(), gitConfigDTO.getUrl());
-    String domain = GitClientHelper.getGitSCM(gitUrl);
+  private void validateBitbucketConnectorAuth(BitbucketConnectorDTO gitConfigDTO) {
+    switch (gitConfigDTO.getAuthentication().getAuthType()) {
+      case HTTP:
+        BitbucketHttpCredentialsDTO gitAuth =
+            (BitbucketHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
+        if (gitAuth.getType() != BitbucketHttpAuthenticationType.USERNAME_AND_PASSWORD) {
+          throw new CIStageExecutionException("Unsupported bitbucket connector auth type" + gitAuth.getType());
+        }
+        break;
+      case SSH:
+        break;
+      default:
+        throw new CIStageExecutionException(
+            "Unsupported bitbucket connector auth" + gitConfigDTO.getAuthentication().getAuthType());
+    }
+  }
 
-    envVars.put(DRONE_REMOTE_URL, gitUrl);
-    envVars.put(DRONE_NETRC_MACHINE, domain);
+  private void validateGitlabConnectorAuth(GitlabConnectorDTO gitConfigDTO) {
     switch (gitConfigDTO.getAuthentication().getAuthType()) {
       case HTTP:
         GitlabHttpCredentialsDTO gitAuth = (GitlabHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
@@ -627,13 +647,11 @@ public class K8BuildSetupUtils {
         throw new CIStageExecutionException(
             "Unsupported gitlab connector auth" + gitConfigDTO.getAuthentication().getAuthType());
     }
-    return envVars;
   }
 
   private Map<String, String> retrieveGitEnvVar(GitConfigDTO gitConfigDTO, CodeBase ciCodebase) {
     Map<String, String> envVars = new HashMap<>();
-    String gitUrl =
-        retrieveGenericGitConnectorURL(ciCodebase, gitConfigDTO.getGitConnectionType(), gitConfigDTO.getUrl());
+    String gitUrl = getGitURL(ciCodebase, gitConfigDTO.getGitConnectionType(), gitConfigDTO.getUrl());
     String domain = GitClientHelper.getGitSCM(gitUrl);
 
     envVars.put(DRONE_REMOTE_URL, gitUrl);
@@ -647,30 +665,6 @@ public class K8BuildSetupUtils {
         break;
       default:
         throw new CIStageExecutionException("Unsupported bitbucket connector auth" + gitConfigDTO.getGitAuthType());
-    }
-    return envVars;
-  }
-
-  private Map<String, String> retrieveBitbucketEnvVar(BitbucketConnectorDTO gitConfigDTO, CodeBase ciCodebase) {
-    Map<String, String> envVars = new HashMap<>();
-    String gitUrl = getGitURL(ciCodebase, gitConfigDTO.getConnectionType(), gitConfigDTO.getUrl());
-    String domain = GitClientHelper.getGitSCM(gitUrl);
-
-    envVars.put(DRONE_REMOTE_URL, gitUrl);
-    envVars.put(DRONE_NETRC_MACHINE, domain);
-    switch (gitConfigDTO.getAuthentication().getAuthType()) {
-      case HTTP:
-        BitbucketHttpCredentialsDTO gitAuth =
-            (BitbucketHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
-        if (gitAuth.getType() != BitbucketHttpAuthenticationType.USERNAME_AND_PASSWORD) {
-          throw new CIStageExecutionException("Unsupported bitbucket connector auth type" + gitAuth.getType());
-        }
-        break;
-      case SSH:
-        break;
-      default:
-        throw new CIStageExecutionException(
-            "Unsupported bitbucket connector auth" + gitConfigDTO.getAuthentication().getAuthType());
     }
     return envVars;
   }

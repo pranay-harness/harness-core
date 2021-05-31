@@ -25,8 +25,10 @@ import io.harness.manage.GlobalContextManager;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.utils.NGYamlUtils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.google.protobuf.StringValue;
 import java.util.Arrays;
 import java.util.List;
@@ -36,7 +38,6 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
@@ -47,7 +48,6 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
 @OwnedBy(DX)
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class GitAwarePersistenceImpl implements GitAwarePersistence {
   private MongoTemplate mongoTemplate;
@@ -56,6 +56,21 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
   private Map<String, GitSdkEntityHandlerInterface> gitPersistenceHelperServiceMap;
   private SCMGitSyncHelper scmGitSyncHelper;
   private GitSyncMsvcHelper gitSyncMsvcHelper;
+  private ObjectMapper objectMapper;
+
+  @Inject
+  public GitAwarePersistenceImpl(MongoTemplate mongoTemplate, EntityKeySource entityKeySource,
+      GitBranchingHelper gitBranchingHelper, Map<String, GitSdkEntityHandlerInterface> gitPersistenceHelperServiceMap,
+      SCMGitSyncHelper scmGitSyncHelper, GitSyncMsvcHelper gitSyncMsvcHelper,
+      @Named("GitSyncObjectMapper") ObjectMapper objectMapper) {
+    this.mongoTemplate = mongoTemplate;
+    this.entityKeySource = entityKeySource;
+    this.gitBranchingHelper = gitBranchingHelper;
+    this.gitPersistenceHelperServiceMap = gitPersistenceHelperServiceMap;
+    this.scmGitSyncHelper = scmGitSyncHelper;
+    this.gitSyncMsvcHelper = gitSyncMsvcHelper;
+    this.objectMapper = objectMapper;
+  }
 
   @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> Long count(@NotNull Criteria criteria,
@@ -190,7 +205,7 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
     if (changeType != ChangeType.NONE
         && isGitSyncEnabled(entityDetail.getEntityRef().getProjectIdentifier(),
             entityDetail.getEntityRef().getOrgIdentifier(), entityDetail.getEntityRef().getAccountIdentifier())) {
-      final String yamlString = NGYamlUtils.getYamlString(yaml);
+      final String yamlString = NGYamlUtils.getYamlString(yaml, objectMapper);
       final GitEntityInfo gitBranchInfo = ((GitSyncBranchContext) Objects.requireNonNull(
                                                GlobalContextManager.get(GitSyncBranchContext.NG_GIT_SYNC_CONTEXT)))
                                               .getGitBranchInfo();

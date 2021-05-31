@@ -19,6 +19,9 @@ import io.harness.engine.expressions.EngineExpressionServiceImpl;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.InterruptServiceImpl;
+import io.harness.engine.interrupts.handlers.publisher.InterruptEventPublisher;
+import io.harness.engine.interrupts.handlers.publisher.MongoInterruptEventPublisher;
+import io.harness.engine.interrupts.handlers.publisher.RedisInterruptEventPublisher;
 import io.harness.engine.pms.data.PmsEngineExpressionServiceImpl;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.pms.data.PmsOutcomeServiceImpl;
@@ -86,12 +89,12 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
       }
     });
     install(OrchestrationBeansModule.getInstance());
-    install(OrchestrationQueueModule.getInstance(config));
+    install(OrchestrationQueueModule.getInstance());
 
     bind(NodeExecutionService.class).to(NodeExecutionServiceImpl.class).in(Singleton.class);
     bind(PlanExecutionService.class).to(PlanExecutionServiceImpl.class).in(Singleton.class);
-    bind(InterruptService.class).to(InterruptServiceImpl.class);
-    bind(OrchestrationService.class).to(OrchestrationServiceImpl.class);
+    bind(InterruptService.class).to(InterruptServiceImpl.class).in(Singleton.class);
+    bind(OrchestrationService.class).to(OrchestrationServiceImpl.class).in(Singleton.class);
 
     MapBinder<TaskCategory, TaskExecutor> taskExecutorMap =
         MapBinder.newMapBinder(binder(), TaskCategory.class, TaskExecutor.class);
@@ -112,6 +115,13 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     Provider<KryoSerializer> kryoSerializerProvider = getProvider(Key.get(KryoSerializer.class));
     testExecutionMapBinder.addBinding("Callback Kryo Registration")
         .toInstance(() -> OrchestrationComponentTester.testKryoRegistration(kryoSerializerProvider));
+
+    install(new OrchestrationEventsFrameworkModule(config.getEventsFrameworkConfiguration()));
+    if (config.isUseRedisForInterrupts()) {
+      bind(InterruptEventPublisher.class).to(RedisInterruptEventPublisher.class);
+    } else {
+      bind(InterruptEventPublisher.class).to(MongoInterruptEventPublisher.class);
+    }
   }
 
   @Provides

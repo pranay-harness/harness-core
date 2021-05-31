@@ -4,8 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.k8s.K8sCanaryBaseStepInfo.K8sCanaryBaseStepInfoKeys;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
@@ -23,14 +25,13 @@ import io.harness.plancreator.steps.common.rollback.TaskChainExecutableWithRollb
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
-import io.harness.pms.yaml.ParameterField;
-import io.harness.steps.StepOutcomeGroup;
 import io.harness.supplier.ThrowingSupplier;
 import io.harness.tasks.ResponseData;
 
@@ -70,8 +71,8 @@ public class K8sCanaryStep extends TaskChainExecutableWithRollback implements K8
     final K8sCanaryStepParameters canaryStepParameters = (K8sCanaryStepParameters) stepElementParameters.getSpec();
     final Integer instancesValue = canaryStepParameters.getInstanceSelection().getSpec().getInstances();
     final String accountId = AmbianceHelper.getAccountId(ambiance);
-    final boolean skipDryRun =
-        !ParameterField.isNull(canaryStepParameters.getSkipDryRun()) && canaryStepParameters.getSkipDryRun().getValue();
+    final boolean skipDryRun = K8sStepHelper.getParameterFieldBooleanValue(
+        canaryStepParameters.getSkipDryRun(), K8sCanaryBaseStepInfoKeys.skipDryRun, stepElementParameters);
     List<String> manifestFilesContents = k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents);
     boolean isOpenshiftTemplate = ManifestType.OpenshiftTemplate.equals(k8sManifestOutcome.getType());
 
@@ -105,6 +106,10 @@ public class K8sCanaryStep extends TaskChainExecutableWithRollback implements K8
 
     if (passThroughData instanceof HelmValuesFetchResponsePassThroughData) {
       return k8sStepHelper.handleHelmValuesFetchFailure((HelmValuesFetchResponsePassThroughData) passThroughData);
+    }
+
+    if (passThroughData instanceof StepExceptionPassThroughData) {
+      return k8sStepHelper.handleStepExceptionFailure((StepExceptionPassThroughData) passThroughData);
     }
 
     K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();

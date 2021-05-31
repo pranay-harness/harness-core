@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
+import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsAuthType;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
@@ -29,13 +30,13 @@ import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecA
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecDTO;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecManualConfigDTO;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialType;
+import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultConnectorDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.AwsCurAttributesDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
-import io.harness.delegate.beans.connector.ceawsconnector.CEAwsFeatures;
 import io.harness.delegate.beans.connector.ceazure.BillingExportSpecDTO;
 import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
-import io.harness.delegate.beans.connector.ceazure.CEAzureFeatures;
 import io.harness.delegate.beans.connector.cek8s.CEKubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.datadog.DatadogConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerAuthCredentialsDTO;
 import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
@@ -201,7 +202,6 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(GithubCredentialsDTO.class, 19453);
     kryo.register(CEAwsConnectorDTO.class, 19454);
     kryo.register(AwsCurAttributesDTO.class, 19455);
-    kryo.register(CEAwsFeatures.class, 19456);
     kryo.register(ArtifactoryConnectorDTO.class, 19487);
     kryo.register(ArtifactoryAuthCredentialsDTO.class, 19488);
     kryo.register(ArtifactoryAuthenticationDTO.class, 19489);
@@ -241,7 +241,6 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsKmsCredentialSpecAssumeSTSDTO.class, 543294);
 
     kryo.register(CEAzureConnectorDTO.class, 19540);
-    kryo.register(CEAzureFeatures.class, 19541);
     kryo.register(BillingExportSpecDTO.class, 19542);
     kryo.register(LinkedHashSet.class, 100030);
     kryo.register(CEKubernetesClusterConfigDTO.class, 19543);
@@ -271,5 +270,8 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(GcpCloudCostConnectorDTO.class, 19666);
     kryo.register(BitbucketSshCredentialsDTO.class, 19667);
     kryo.register(PrometheusConnectorDTO.class, 19668);
+    kryo.register(DatadogConnectorDTO.class, 19669);
+    kryo.register(AzureKeyVaultConnectorDTO.class, 19670);
+    kryo.register(CEFeatures.class, 19671);
   }
 }

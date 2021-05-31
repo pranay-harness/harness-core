@@ -279,7 +279,6 @@ public class NGTriggerServiceImpl implements NGTriggerService {
           throw new InvalidArgumentsException("cannot find iteration time!");
         }
         return;
-      case NEW_ARTIFACT: // fall through
       default:
         return; // not implemented
     }

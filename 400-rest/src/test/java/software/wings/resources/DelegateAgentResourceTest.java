@@ -101,6 +101,8 @@ import org.mockito.ArgumentCaptor;
 @OwnedBy(HarnessTeam.DEL)
 public class DelegateAgentResourceTest {
   private static final DelegateService delegateService = mock(DelegateService.class);
+  private static final software.wings.service.intfc.DelegateTaskServiceClassic delegateTaskServiceClassic =
+      mock(software.wings.service.intfc.DelegateTaskServiceClassic.class);
   private static final ConfigurationController configurationController = mock(ConfigurationController.class);
 
   private static final HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
@@ -134,7 +136,7 @@ public class DelegateAgentResourceTest {
           .instance(new DelegateAgentResource(delegateService, accountService, wingsPersistence,
               delegateRequestRateLimiter, subdomainUrlHelper, artifactCollectionResponseHandler,
               instanceSyncResponseHandler, manifestCollectionResponseHandler, connectorHearbeatPublisher,
-              kryoSerializer, configurationController))
+              kryoSerializer, configurationController, delegateTaskServiceClassic))
           .instance(new AbstractBinder() {
             @Override
             protected void configure() {
@@ -283,14 +285,15 @@ public class DelegateAgentResourceTest {
   public void shouldGetDelegateTaskEvents() {
     List<DelegateTaskEvent> delegateTaskEventList =
         singletonList(DelegateTaskEventBuilder.aDelegateTaskEvent().build());
-    when(delegateService.getDelegateTaskEvents(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegateTaskEventList);
+    when(delegateTaskServiceClassic.getDelegateTaskEvents(ACCOUNT_ID, DELEGATE_ID, false))
+        .thenReturn(delegateTaskEventList);
     List<DelegateTaskEvent> restResponse = RESOURCES.client()
                                                .target("/agent/delegates/" + DELEGATE_ID + "/task-events?delegateId="
                                                    + DELEGATE_ID + "&accountId=" + ACCOUNT_ID + "&syncOnly=" + false)
                                                .request()
                                                .get(new GenericType<List<DelegateTaskEvent>>() {});
 
-    verify(delegateService, atLeastOnce()).getDelegateTaskEvents(ACCOUNT_ID, DELEGATE_ID, false);
+    verify(delegateTaskServiceClassic, atLeastOnce()).getDelegateTaskEvents(ACCOUNT_ID, DELEGATE_ID, false);
     assertThat(restResponse).isInstanceOf(List.class).isNotNull();
   }
 
@@ -474,7 +477,7 @@ public class DelegateAgentResourceTest {
         .target("/agent/delegates/" + DELEGATE_ID + "/tasks/" + taskId + "/fail?accountId=" + ACCOUNT_ID)
         .request()
         .get(new GenericType<RestResponse<String>>() {});
-    verify(delegateService, atLeastOnce()).failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, taskId);
+    verify(delegateTaskServiceClassic, atLeastOnce()).failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, taskId);
   }
 
   @Test
@@ -494,7 +497,8 @@ public class DelegateAgentResourceTest {
         .target("/agent/delegates/" + DELEGATE_ID + "/tasks/" + taskId + "/report?accountId=" + ACCOUNT_ID)
         .request()
         .post(entity(connectionResults, "application/x-kryo"), new GenericType<RestResponse<DelegateTaskPackage>>() {});
-    verify(delegateService, atLeastOnce()).reportConnectionResults(ACCOUNT_ID, DELEGATE_ID, taskId, connectionResults);
+    verify(delegateTaskServiceClassic, atLeastOnce())
+        .reportConnectionResults(ACCOUNT_ID, DELEGATE_ID, taskId, connectionResults);
   }
 
   @Test
@@ -521,7 +525,7 @@ public class DelegateAgentResourceTest {
         .target("/agent/delegates/" + DELEGATE_ID + "/tasks/" + taskId + "/acquire?accountId=" + ACCOUNT_ID)
         .request()
         .put(entity(taskResponse, "application/x-kryo"), Response.class);
-    verify(delegateService, atLeastOnce()).acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, taskId);
+    verify(delegateTaskServiceClassic, atLeastOnce()).acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, taskId);
   }
 
   @Test

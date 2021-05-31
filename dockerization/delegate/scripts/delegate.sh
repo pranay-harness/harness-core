@@ -167,10 +167,6 @@ if [ ! -z "$GRPC_SERVICE_CONNECTOR_PORT" ] && ! `grep grpcServiceConnectorPort c
   echo "grpcServiceConnectorPort: $GRPC_SERVICE_CONNECTOR_PORT" >> config-delegate.yml
 fi
 
-if [ ! -z "$MANAGER_SERVICE_SECRET" ] && ! `grep managerServiceSecret config-delegate.yml > /dev/null` ; then
-  echo "managerServiceSecret: $MANAGER_SERVICE_SECRET" >> config-delegate.yml
-fi
-
 rm -f -- *.bak
 
 export HOSTNAME

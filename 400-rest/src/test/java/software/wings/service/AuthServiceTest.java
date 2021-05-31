@@ -3,7 +3,6 @@ package software.wings.service;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANUBHAW;
-import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.RAMA;
@@ -40,7 +39,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.FeatureName;
 import io.harness.cache.HarnessCacheManager;
@@ -49,12 +50,11 @@ import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.InvalidTokenException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
-import io.harness.security.TokenGenerator;
+import io.harness.security.DelegateTokenAuthenticator;
 
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
@@ -88,16 +88,12 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.google.inject.Inject;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import javax.cache.Cache;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -111,13 +107,13 @@ import org.mongodb.morphia.AdvancedDatastore;
  * Created by anubhaw on 8/31/16.
  */
 @OwnedBy(PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class AuthServiceTest extends WingsBaseTest {
   private final String VALID_TOKEN = "VALID_TOKEN";
   private final String INVALID_TOKEN = "INVALID_TOKEN";
   private final String EXPIRED_TOKEN = "EXPIRED_TOKEN";
   private final String NOT_AVAILABLE_TOKEN = "NOT_AVAILABLE_TOKEN";
   private final String AUTH_SECRET = "AUTH_SECRET";
-  private static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
 
   @Mock private GenericDbCache cache;
   @Mock private Cache<String, User> userCache;
@@ -130,6 +126,7 @@ public class AuthServiceTest extends WingsBaseTest {
   @Mock private ConfigurationController configurationController;
   @Mock private HarnessCacheManager harnessCacheManager;
   @Mock PortalConfig portalConfig;
+  @Mock private DelegateTokenAuthenticator delegateTokenAuthenticator;
   @Inject MainConfiguration mainConfiguration;
   @Inject @InjectMocks private UserService userService;
   @Inject @InjectMocks private AuthService authService;
@@ -232,6 +229,14 @@ public class AuthServiceTest extends WingsBaseTest {
       UserThreadLocal.unset();
     }
     assertThat(exceptionThrown).isFalse();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testValidateDelegateToken() {
+    authService.validateDelegateToken(ACCOUNT_ID, VALID_TOKEN);
+    verify(delegateTokenAuthenticator).validateDelegateToken(ACCOUNT_ID, VALID_TOKEN);
   }
 
   @Test
@@ -565,90 +570,6 @@ public class AuthServiceTest extends WingsBaseTest {
                                asList(new PermissionAttribute(ResourceType.APPLICATION, Action.UPDATE)), null))
         .isInstanceOf(AccessDeniedException.class)
         .hasMessage("Not authorized");
-  }
-
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldValidateDelegateToken() {
-    TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
-    authService.validateDelegateToken(ACCOUNT_ID, tokenGenerator.getToken("https", "localhost", 9090, "hostname"));
-  }
-
-  @Test
-  @Owner(developers = UJJAWAL)
-  @Category(UnitTests.class)
-  public void shouldNotValidateDelegateToken() {
-    TokenGenerator tokenGenerator = new TokenGenerator(GLOBAL_ACCOUNT_ID, accountKey);
-    assertThatThrownBy(()
-                           -> authService.validateDelegateToken(
-                               GLOBAL_ACCOUNT_ID, tokenGenerator.getToken("https", "localhost", 9090, "hostname")))
-        .isInstanceOf(InvalidRequestException.class)
-        .hasMessage("Access denied");
-  }
-
-  @Test
-  @Owner(developers = MARKO)
-  @Category(UnitTests.class)
-  public void shouldNotValidateExpiredDelegateToken() {
-    String expiredToken =
-        "eyJlbmMiOiJBMTI4R0NNIiwiYWxnIjoiZGlyIn0..SFvYSml0znPxoa7K.JcsFw5GiYevubqqzjy-nQyDMzjtA64YhxZjnQz6VH7lRCAGP5JML9Ov86rSRV1V7Kb-a12UvTNzqEqdJ4PCLv4R7GA5SzCwxLEYrlTLtUWX40r0GKuRGoiJVJqax2bBy3gOqDftETZCm_90lD3NxDeJ__RICl4osp9IxCKmlfGyoqriAswoEvkVtu0wjRlvBS-FtY42AeyCf9XIH5rppw-AsXoHH40M6_8FN-mFkilfqv3QKPaGL6Zph.1ipAjbMS834AKSotvHy4sg";
-    assertThatThrownBy(() -> authService.validateDelegateToken(ACCOUNT_ID, expiredToken))
-        .isInstanceOf(InvalidRequestException.class)
-        .hasMessage("Unauthorized");
-  }
-
-  @Test
-  @Owner(developers = UJJAWAL)
-  @Category(UnitTests.class)
-  public void shouldThrowDenyAccessWhenAccountIdNullForDelegate() {
-    TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
-    assertThatThrownBy(
-        () -> authService.validateDelegateToken(null, tokenGenerator.getToken("https", "localhost", 9090, "hostname")))
-        .isInstanceOf(InvalidRequestException.class)
-        .hasMessage("Access denied");
-  }
-
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldThrowDenyAccessWhenAccountIdNotFoundForDelegate() {
-    TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
-    assertThatThrownBy(()
-                           -> authService.validateDelegateToken(
-                               ACCOUNT_ID + "1", tokenGenerator.getToken("https", "localhost", 9090, "hostname")))
-        .isInstanceOf(InvalidRequestException.class)
-        .hasMessage("Access denied");
-  }
-
-  @Test
-  @Owner(developers = ANUBHAW)
-  @Category(UnitTests.class)
-  public void shouldThrowThrowInavlidTokenForDelegate() {
-    assertThatThrownBy(() -> authService.validateDelegateToken(ACCOUNT_ID, "Dummy"))
-        .isInstanceOf(InvalidTokenException.class);
-  }
-
-  @Test
-  @Owner(developers = ANUBHAW)
-  @Category(UnitTests.class)
-  public void shouldThrowExceptionWhenUnableToDecryptToken() {
-    assertThatThrownBy(() -> authService.validateDelegateToken(ACCOUNT_ID, getDelegateToken()))
-        .isInstanceOf(InvalidTokenException.class);
-  }
-
-  private String getDelegateToken() {
-    KeyGenerator keyGen = null;
-    try {
-      keyGen = KeyGenerator.getInstance("AES");
-    } catch (NoSuchAlgorithmException e) {
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE);
-    }
-    keyGen.init(128);
-    SecretKey secretKey = keyGen.generateKey();
-    byte[] encoded = secretKey.getEncoded();
-    TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, Hex.encodeHexString(encoded));
-    return tokenGenerator.getToken("https", "localhost", 9090, "hostname");
   }
 
   @Test

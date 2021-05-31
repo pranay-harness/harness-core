@@ -11,7 +11,7 @@ import io.harness.batch.processing.pricing.data.EcsFargatePricingInfo.EcsFargate
 import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomPricingService;
 import io.harness.batch.processing.service.impl.SettingValueServiceImpl;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.persistence.HPersistence;
 

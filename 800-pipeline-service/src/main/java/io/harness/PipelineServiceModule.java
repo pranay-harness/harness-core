@@ -19,7 +19,6 @@ import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
-import io.harness.engine.StepTypeLookupService;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.filter.FilterType;
 import io.harness.filter.FiltersModule;
@@ -73,7 +72,6 @@ import io.harness.pms.rbac.validator.PipelineRbacService;
 import io.harness.pms.rbac.validator.PipelineRbacServiceImpl;
 import io.harness.pms.resourceconstraints.service.PMSResourceConstraintService;
 import io.harness.pms.resourceconstraints.service.PMSResourceConstraintServiceImpl;
-import io.harness.pms.sdk.StepTypeLookupServiceImpl;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionServiceV2;
 import io.harness.pms.triggers.webhook.service.impl.TriggerWebhookExecutionServiceImpl;
@@ -153,12 +151,19 @@ public class PipelineServiceModule extends AbstractModule {
     install(PipelineServiceGrpcModule.getInstance());
     install(new PipelinePersistenceModule());
     install(DelegateServiceDriverModule.getInstance(true));
-    install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
-                                                .serviceName("PIPELINE")
-                                                .expressionEvaluatorProvider(new PMSExpressionEvaluatorProvider())
-                                                .withPMS(false)
-                                                .isPipelineService(true)
-                                                .build()));
+    install(OrchestrationModule.getInstance(
+        OrchestrationModuleConfig.builder()
+            .serviceName("PIPELINE")
+            .expressionEvaluatorProvider(new PMSExpressionEvaluatorProvider())
+            .withPMS(false)
+            .isPipelineService(true)
+            .corePoolSize(10)
+            .maxPoolSize(100)
+            .idleTimeInSecs(500L)
+            .eventsFrameworkConfiguration(configuration.getEventsFrameworkConfiguration())
+            .useRedisForInterrupts(configuration.getUseRedisForInterrupts())
+            .useRedisForEvents(configuration.getUseRedisForOrchestrationEvents())
+            .build()));
     install(OrchestrationStepsModule.getInstance(configuration.getOrchestrationStepConfig()));
     install(OrchestrationVisualizationModule.getInstance());
     install(PrimaryVersionManagerModule.getInstance());
@@ -205,7 +210,6 @@ public class PipelineServiceModule extends AbstractModule {
     bind(PMSYamlSchemaService.class).to(PMSYamlSchemaServiceImpl.class);
     bind(ApprovalNotificationHandler.class).to(ApprovalNotificationHandlerImpl.class);
 
-    bind(StepTypeLookupService.class).to(StepTypeLookupServiceImpl.class);
     bind(NodeTypeLookupService.class).to(NodeTypeLookupServiceImpl.class);
 
     bind(ScheduledExecutorService.class)
@@ -381,5 +385,13 @@ public class PipelineServiceModule extends AbstractModule {
   public PipelineServiceIteratorsConfig getIteratorsConfig() {
     return configuration.getIteratorsConfig() == null ? PipelineServiceIteratorsConfig.builder().build()
                                                       : configuration.getIteratorsConfig();
+  }
+
+  @Provides
+  @Singleton
+  @Named("PipelineExecutorService")
+  public ExecutorService pipelineExecutorService() {
+    return ThreadPool.create(
+        5, 10, 10, TimeUnit.SECONDS, new ThreadFactoryBuilder().setNameFormat("PipelineExecutorService-%d").build());
   }
 }

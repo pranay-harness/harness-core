@@ -1,5 +1,6 @@
 package io.harness.encryptors.managerproxy;
 
+import static io.harness.beans.shared.tasks.NgSetupFields.OWNER;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 
@@ -10,6 +11,7 @@ import static software.wings.beans.TaskType.VALIDATE_SECRET_REFERENCE;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.utils.TaskSetupAbstractionHelper;
 import io.harness.delegatetasks.FetchSecretTaskParameters;
 import io.harness.delegatetasks.FetchSecretTaskResponse;
 import io.harness.delegatetasks.ValidateSecretManagerConfigurationTaskParameters;
@@ -18,6 +20,7 @@ import io.harness.delegatetasks.ValidateSecretReferenceTaskParameters;
 import io.harness.delegatetasks.ValidateSecretReferenceTaskResponse;
 import io.harness.encryptors.DelegateTaskUtils;
 import io.harness.exception.SecretManagementException;
+import io.harness.ng.core.NGAccess;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionConfig;
 
@@ -27,15 +30,29 @@ import com.google.inject.Inject;
 
 public class ManagerEncryptorHelper {
   private final DelegateService delegateService;
+  private final TaskSetupAbstractionHelper taskSetupAbstractionHelper;
 
   @Inject
-  public ManagerEncryptorHelper(DelegateService delegateService) {
+  public ManagerEncryptorHelper(
+      DelegateService delegateService, TaskSetupAbstractionHelper taskSetupAbstractionHelper) {
     this.delegateService = delegateService;
+    this.taskSetupAbstractionHelper = taskSetupAbstractionHelper;
+  }
+
+  public String getOwner(EncryptionConfig encryptionConfig) {
+    String owner = null;
+    if (encryptionConfig instanceof NGAccess) {
+      NGAccess ngAccess = (NGAccess) encryptionConfig;
+      owner = taskSetupAbstractionHelper.getOwner(
+          encryptionConfig.getAccountId(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
+    }
+    return owner;
   }
 
   public char[] fetchSecretValue(String accountId, EncryptedRecord encryptedRecord, EncryptionConfig encryptionConfig) {
     FetchSecretTaskParameters parameters =
         FetchSecretTaskParameters.builder().encryptedRecord(encryptedRecord).encryptionConfig(encryptionConfig).build();
+
     DelegateTask delegateTask = DelegateTask.builder()
                                     .data(TaskData.builder()
                                               .async(false)
@@ -44,6 +61,7 @@ public class ManagerEncryptorHelper {
                                               .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
                                               .build())
                                     .accountId(accountId)
+                                    .setupAbstraction(OWNER, getOwner(encryptionConfig))
                                     .build();
     try {
       DelegateResponseData delegateResponseData = delegateService.executeTask(delegateTask);
@@ -70,6 +88,7 @@ public class ManagerEncryptorHelper {
                                               .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
                                               .build())
                                     .accountId(accountId)
+                                    .setupAbstraction(OWNER, getOwner(parameters.getEncryptionConfig()))
                                     .build();
     try {
       DelegateResponseData delegateResponseData = delegateService.executeTask(delegateTask);
@@ -96,7 +115,9 @@ public class ManagerEncryptorHelper {
                                               .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
                                               .build())
                                     .accountId(accountId)
+                                    .setupAbstraction(OWNER, getOwner(parameters.getEncryptionConfig()))
                                     .build();
+
     try {
       DelegateResponseData delegateResponseData = delegateService.executeTask(delegateTask);
       DelegateTaskUtils.validateDelegateTaskResponse(delegateResponseData);

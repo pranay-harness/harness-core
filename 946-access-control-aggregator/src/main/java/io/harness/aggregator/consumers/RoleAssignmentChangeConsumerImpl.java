@@ -13,15 +13,17 @@ import io.harness.accesscontrol.principals.usergroups.UserGroup;
 import io.harness.accesscontrol.principals.usergroups.UserGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroup;
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
+import io.harness.accesscontrol.roleassignments.RoleAssignment;
+import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
 import io.harness.accesscontrol.roles.Role;
 import io.harness.accesscontrol.roles.RoleService;
-import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -39,8 +41,7 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
   private final RoleService roleService;
   private final UserGroupService userGroupService;
   private final ResourceGroupService resourceGroupService;
-  private final ScopeService scopeService;
-  private static final String DELIMITER = "/";
+  private final RoleAssignmentService roleAssignmentService;
 
   @Override
   public long consumeUpdateEvent(String id, RoleAssignmentDBO updatedEntity) {
@@ -56,14 +57,12 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
   @Override
   public long consumeDeleteEvent(String id) {
     long count = aclService.deleteByRoleAssignment(id);
-    log.info("{} ACLs deleted", count);
+    log.info("ACLs deleted: {}", count);
     return count;
   }
 
-  private long createACLs(String permission, RoleAssignmentDBO roleAssignment, ResourceGroup resourceGroup) {
+  private long createACLs(RoleAssignmentDBO roleAssignment, Role role, ResourceGroup resourceGroup) {
     Set<String> principals = new HashSet<>();
-    List<ACL> aclsToCreate = new ArrayList<>();
-    long createdCount = 0;
     if (USER_GROUP.equals(roleAssignment.getPrincipalType())) {
       Optional<UserGroup> userGroup =
           userGroupService.get(roleAssignment.getPrincipalIdentifier(), roleAssignment.getScopeIdentifier());
@@ -72,15 +71,19 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
       principals.add(roleAssignment.getPrincipalIdentifier());
     }
 
-    principals.forEach(principalIdentifier -> {
-      if (resourceGroup.isFullScopeSelected()) {
-        aclsToCreate.add(getACL(permission, Principal.of(USER, principalIdentifier), roleAssignment, "/*/*"));
-      } else {
-        resourceGroup.getResourceSelectors().forEach(resourceSelector
-            -> aclsToCreate.add(
-                getACL(permission, Principal.of(USER, principalIdentifier), roleAssignment, resourceSelector)));
-      }
-    });
+    List<String> resourceSelectors = resourceGroup.isFullScopeSelected()
+        ? Collections.singletonList("/*/*")
+        : new ArrayList<>(resourceGroup.getResourceSelectors());
+
+    List<ACL> aclsToCreate = new ArrayList<>();
+    long createdCount = 0;
+
+    role.getPermissions().forEach(permission
+        -> principals.forEach(principalIdentifier
+            -> resourceSelectors.forEach(resourceSelector
+                -> aclsToCreate.add(
+                    getACL(permission, Principal.of(USER, principalIdentifier), roleAssignment, resourceSelector)))));
+
     if (!aclsToCreate.isEmpty()) {
       createdCount += aclService.saveAll(aclsToCreate);
     }
@@ -89,6 +92,12 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
 
   @Override
   public long consumeCreateEvent(String id, RoleAssignmentDBO roleAssignmentDBO) {
+    Optional<RoleAssignment> roleAssignmentOptional =
+        roleAssignmentService.get(roleAssignmentDBO.getIdentifier(), roleAssignmentDBO.getScopeIdentifier());
+    if (!roleAssignmentOptional.isPresent()) {
+      log.info("Role assignment has been deleted, not processing role assignment create event for id: {}", id);
+      return 0;
+    }
     Role role =
         roleService
             .get(roleAssignmentDBO.getRoleIdentifier(), roleAssignmentDBO.getScopeIdentifier(), ManagedFilter.NO_FILTER)
@@ -103,10 +112,7 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
                                  "No such resource group found: " + roleAssignmentDBO.getResourceGroupIdentifier()
                                  + " in scope " + roleAssignmentDBO.getScopeIdentifier()));
 
-    long createdCount = role.getPermissions()
-                            .stream()
-                            .mapToLong(permission -> createACLs(permission, roleAssignmentDBO, resourceGroup))
-                            .sum();
+    long createdCount = createACLs(roleAssignmentDBO, role, resourceGroup);
     log.info("ACLs created: {}", createdCount);
     return createdCount;
   }

@@ -25,6 +25,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.FieldNameConstants;
 import lombok.experimental.Wither;
 import org.springframework.data.annotation.TypeAlias;
 
@@ -33,12 +34,13 @@ import org.springframework.data.annotation.TypeAlias;
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(ManifestType.Kustomize)
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldNameConstants(innerTypeName = "KustomizeManifestKeys")
 @SimpleVisitorHelper(helperClass = KustomizeManifestVisitorHelper.class)
 @TypeAlias("kustomizeManifest")
 @OwnedBy(CDC)
 public class KustomizeManifest implements ManifestAttributes, Visitable {
   @EntityIdentifier String identifier;
-  @Wither @JsonProperty("store") StoreConfigWrapper storeConfigWrapper;
+  @Wither @JsonProperty("store") StoreConfigWrapper store;
   @Wither @YamlSchemaTypes({string, bool}) ParameterField<Boolean> skipResourceVersioning;
   @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) ParameterField<String> pluginPath;
 
@@ -49,17 +51,16 @@ public class KustomizeManifest implements ManifestAttributes, Visitable {
 
   @Override
   public StoreConfig getStoreConfig() {
-    return this.storeConfigWrapper.getStoreConfig();
+    return this.store.getSpec();
   }
 
   @Override
   public ManifestAttributes applyOverrides(ManifestAttributes overrideConfig) {
     KustomizeManifest kustomizeManifest = (KustomizeManifest) overrideConfig;
     KustomizeManifest resultantManifest = this;
-    if (kustomizeManifest.getStoreConfigWrapper() != null) {
-      StoreConfigWrapper storeConfigOverride = kustomizeManifest.getStoreConfigWrapper();
-      resultantManifest =
-          resultantManifest.withStoreConfigWrapper(storeConfigWrapper.applyOverrides(storeConfigOverride));
+    if (kustomizeManifest.getStore() != null) {
+      StoreConfigWrapper storeConfigOverride = kustomizeManifest.getStore();
+      resultantManifest = resultantManifest.withStore(store.applyOverrides(storeConfigOverride));
     }
     if (kustomizeManifest.getSkipResourceVersioning() != null) {
       resultantManifest = resultantManifest.withSkipResourceVersioning(kustomizeManifest.getSkipResourceVersioning());

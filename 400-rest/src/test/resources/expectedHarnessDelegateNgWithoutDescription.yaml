@@ -170,8 +170,6 @@ spec:
           value: "false"
         - name: GRPC_SERVICE_CONNECTOR_PORT
           value: "0"
-        - name: MANAGER_SERVICE_SECRET
-          value: "**********"
         - name: DELEGATE_NAMESPACE
           valueFrom:
             fieldRef:

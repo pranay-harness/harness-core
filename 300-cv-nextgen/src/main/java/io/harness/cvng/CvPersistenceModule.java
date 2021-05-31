@@ -3,7 +3,7 @@ package io.harness.cvng;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.notification.NotificationChannelPersistenceConfig;
-import io.harness.pms.sdk.PmsSdkPersistenceConfig;
+import io.harness.pms.sdk.core.PmsSdkPersistenceConfig;
 import io.harness.springdata.SpringPersistenceConfig;
 import io.harness.springdata.SpringPersistenceModule;
 @OwnedBy(HarnessTeam.CV)

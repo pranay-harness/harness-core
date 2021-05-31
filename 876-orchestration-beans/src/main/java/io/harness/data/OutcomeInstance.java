@@ -64,7 +64,6 @@ public class OutcomeInstance implements PersistentEntity, UuidAccess {
   @NotEmpty @Trimmed String name;
   String levelRuntimeIdIdx;
   org.bson.Document outcome;
-  boolean isGraphOutcome;
   @Wither @CreatedDate Long createdAt;
   @Wither @Version Long version;
 

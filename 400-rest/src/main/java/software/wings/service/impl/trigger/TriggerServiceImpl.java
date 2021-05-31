@@ -284,9 +284,9 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public Trigger save(Trigger trigger) {
-    validateInput(trigger, null);
     String accountId = appService.getAccountIdByAppId(trigger.getAppId());
     trigger.setAccountId(accountId);
+    validateInput(trigger, null);
     Trigger savedTrigger =
         duplicateCheck(() -> wingsPersistence.saveAndGet(Trigger.class, trigger), "name", trigger.getName());
     if (trigger.getCondition().getConditionType() == SCHEDULED) {
@@ -308,10 +308,12 @@ public class TriggerServiceImpl implements TriggerService {
     notNullCheck("Trigger was deleted ", existingTrigger, USER);
     equalCheck(trigger.getWorkflowType(), existingTrigger.getWorkflowType());
 
-    validateInput(trigger, existingTrigger);
-
-    String accountId = appService.getAccountIdByAppId(existingTrigger.getAppId());
+    String accountId = isEmpty(existingTrigger.getAccountId())
+        ? appService.getAccountIdByAppId(existingTrigger.getAppId())
+        : existingTrigger.getAccountId();
     trigger.setAccountId(accountId);
+
+    validateInput(trigger, existingTrigger);
 
     Trigger updatedTrigger =
         duplicateCheck(() -> wingsPersistence.saveAndGet(Trigger.class, trigger), "name", trigger.getName());
@@ -1613,6 +1615,9 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   private void validateWebHookSecret(Trigger trigger, WebHookTriggerCondition webHookTriggerCondition) {
+    if (webHookTriggerCondition.getWebHookSecret() == null) {
+      return;
+    }
     if (featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, trigger.getAccountId())) {
       if (webHookTriggerCondition.getWebHookSecret() != null
           && !GITHUB.equals(webHookTriggerCondition.getWebhookSource())) {
@@ -1623,6 +1628,10 @@ public class TriggerServiceImpl implements TriggerService {
           wingsPersistence.get(EncryptedData.class, webHookTriggerCondition.getWebHookSecret());
       notNullCheck(
           "No encrypted record found for webhook secret in Trigger: " + trigger.getName(), encryptedData, USER);
+    } else {
+      if (webHookTriggerCondition.getWebHookSecret() != null) {
+        throw new InvalidRequestException("Please enable feature flag to authenticate your webhook sources");
+      }
     }
   }
 

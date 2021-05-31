@@ -1,6 +1,8 @@
 package io.harness.grpc.server;
 
 import io.harness.PipelineServiceConfiguration;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.interrupts.InterruptGrpcService;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc;
@@ -23,6 +25,7 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.grpc.BindableService;
 import io.grpc.Channel;
+import io.grpc.ServerInterceptor;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.internal.GrpcUtil;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
@@ -30,7 +33,6 @@ import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.grpc.services.HealthStatusManager;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -38,6 +40,7 @@ import java.util.Set;
 import javax.net.ssl.SSLException;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 public class PipelineServiceGrpcModule extends AbstractModule {
   private static PipelineServiceGrpcModule instance;
@@ -52,6 +55,10 @@ public class PipelineServiceGrpcModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    Multibinder<ServerInterceptor> serverInterceptorMultibinder =
+        Multibinder.newSetBinder(binder(), ServerInterceptor.class);
+    serverInterceptorMultibinder.addBinding().to(PipelineServiceGrpcErrorHandler.class);
+
     Multibinder<Service> serviceBinder = Multibinder.newSetBinder(binder(), Service.class);
     serviceBinder.addBinding().to(Key.get(Service.class, Names.named("pms-grpc-service")));
     serviceBinder.addBinding().to(Key.get(Service.class, Names.named("pms-grpc-internal-service")));
@@ -112,17 +119,18 @@ public class PipelineServiceGrpcModule extends AbstractModule {
   @Singleton
   @Named("pms-grpc-service")
   public Service pmsGrpcService(PipelineServiceConfiguration configuration, HealthStatusManager healthStatusManager,
-      Set<BindableService> services) {
-    return new GrpcServer(configuration.getGrpcServerConfig().getConnectors().get(0), services, Collections.emptySet(),
-        healthStatusManager);
+      Set<BindableService> services, Set<ServerInterceptor> serverInterceptors) {
+    return new GrpcServer(
+        configuration.getGrpcServerConfig().getConnectors().get(0), services, serverInterceptors, healthStatusManager);
   }
 
   @Provides
   @Singleton
   @Named("pms-grpc-internal-service")
-  public Service pmsGrpcInternalService(HealthStatusManager healthStatusManager, Set<BindableService> services) {
+  public Service pmsGrpcInternalService(HealthStatusManager healthStatusManager, Set<BindableService> services,
+      Set<ServerInterceptor> serverInterceptors) {
     return new GrpcInProcessServer(
-        PmsConstants.INTERNAL_SERVICE_NAME, services, Collections.emptySet(), healthStatusManager);
+        PmsConstants.INTERNAL_SERVICE_NAME, services, serverInterceptors, healthStatusManager);
   }
 
   @Provides

@@ -23,6 +23,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.FieldNameConstants;
 import lombok.experimental.Wither;
 import org.springframework.data.annotation.TypeAlias;
 
@@ -31,17 +32,18 @@ import org.springframework.data.annotation.TypeAlias;
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(ManifestType.OpenshiftTemplate)
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldNameConstants(innerTypeName = "OpenshiftManifestKeys")
 @SimpleVisitorHelper(helperClass = OpenshiftManifestVisitorHelper.class)
 @TypeAlias("openshiftManifest")
 @OwnedBy(CDC)
 public class OpenshiftManifest implements ManifestAttributes, Visitable {
   @EntityIdentifier String identifier;
-  @Wither @JsonProperty("store") StoreConfigWrapper storeConfigWrapper;
+  @Wither @JsonProperty("store") StoreConfigWrapper store;
   @Wither @YamlSchemaTypes({string, bool}) ParameterField<Boolean> skipResourceVersioning;
 
   @Override
   public StoreConfig getStoreConfig() {
-    return this.storeConfigWrapper.getStoreConfig();
+    return this.store.getSpec();
   }
 
   @Override
@@ -53,10 +55,9 @@ public class OpenshiftManifest implements ManifestAttributes, Visitable {
   public ManifestAttributes applyOverrides(ManifestAttributes overrideConfig) {
     OpenshiftManifest openshiftManifest = (OpenshiftManifest) overrideConfig;
     OpenshiftManifest resultantManifest = this;
-    if (openshiftManifest.getStoreConfigWrapper() != null) {
-      StoreConfigWrapper storeConfigOverride = openshiftManifest.getStoreConfigWrapper();
-      resultantManifest =
-          resultantManifest.withStoreConfigWrapper(storeConfigWrapper.applyOverrides(storeConfigOverride));
+    if (openshiftManifest.getStore() != null) {
+      StoreConfigWrapper storeConfigOverride = openshiftManifest.getStore();
+      resultantManifest = resultantManifest.withStore(store.applyOverrides(storeConfigOverride));
     }
     if (openshiftManifest.getSkipResourceVersioning() != null) {
       resultantManifest = resultantManifest.withSkipResourceVersioning(openshiftManifest.getSkipResourceVersioning());

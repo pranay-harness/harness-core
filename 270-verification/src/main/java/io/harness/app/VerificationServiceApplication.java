@@ -60,6 +60,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.UserProvider;
 import io.harness.redis.RedisConfig;
+import io.harness.resource.VersionInfoResource;
 import io.harness.resources.LogVerificationResource;
 import io.harness.scheduler.ServiceGuardAccountPoller;
 import io.harness.scheduler.WorkflowVerificationTaskPoller;
@@ -154,6 +155,10 @@ public class VerificationServiceApplication extends Application<VerificationServ
    * @throws Exception the exception
    */
   public static void main(String[] args) throws Exception {
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      log.info("Shutdown hook, entering maintenance...");
+      MaintenanceController.forceMaintenance(true);
+    }));
     new VerificationServiceApplication().run(args);
   }
 
@@ -357,6 +362,8 @@ public class VerificationServiceApplication extends Application<VerificationServ
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
   }
 
   private void registerManagedBeans(Environment environment, Injector injector) {

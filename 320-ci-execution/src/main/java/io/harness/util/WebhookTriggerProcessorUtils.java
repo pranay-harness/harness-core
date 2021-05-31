@@ -74,7 +74,9 @@ public class WebhookTriggerProcessorUtils {
   }
 
   private WebhookEvent convertPRWebhookEvent(PullRequestHook prHook) {
-    // TODO Add commit details
+    List<CommitDetails> commitDetailsList = new ArrayList<>();
+    prHook.getPr().getCommitsList().forEach(commit -> commitDetailsList.add(convertCommit(commit)));
+
     PullRequest pr = prHook.getPr();
     return PRWebhookEvent.builder()
         .sourceBranch(pr.getSource())
@@ -87,6 +89,7 @@ public class WebhookTriggerProcessorUtils {
         .merged(pr.getMerged())
         .repository(convertRepository(prHook.getRepo()))
         .baseAttributes(convertPrHookBaseAttributes(prHook))
+        .commitDetailsList(commitDetailsList)
         .build();
   }
 

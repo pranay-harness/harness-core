@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 
 import software.wings.beans.TaskType;
@@ -18,6 +19,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -102,6 +104,12 @@ public class HelmDeployStateExecutionData extends StateExecutionData implements 
 
   @Override
   public HelmSetupExecutionSummary getStepExecutionSummary() {
+    final List<String> allNamespaces = CollectionUtils.emptyIfNull(newInstanceStatusSummaries)
+                                           .stream()
+                                           .map(InstanceStatusSummary::getInstanceElement)
+                                           .map(InstanceElement::getNamespace)
+                                           .distinct()
+                                           .collect(Collectors.toList());
     return HelmSetupExecutionSummary.builder()
         .releaseName(releaseName)
         .prevVersion(releaseOldVersion)
@@ -109,6 +117,7 @@ public class HelmDeployStateExecutionData extends StateExecutionData implements 
         .rollbackVersion(rollbackVersion)
         .namespace(namespace)
         .commandFlags(commandFlags)
+        .namespaces(allNamespaces)
         .build();
   }
 }

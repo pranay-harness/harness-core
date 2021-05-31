@@ -1,5 +1,7 @@
 package io.harness.connector.mappers;
 
+import static io.harness.connector.ConnectivityStatus.UNKNOWN;
+
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -15,14 +17,9 @@ import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.awskmsconnector.AwsKmsConnector;
 import io.harness.connector.entities.embedded.gcpkmsconnector.GcpKmsConnector;
 import io.harness.connector.entities.embedded.localconnector.LocalConnector;
-import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsDTOToEntity;
-import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsEntityToDTO;
-import io.harness.connector.mappers.gitconnectormapper.GitDTOToEntity;
-import io.harness.connector.mappers.gitconnectormapper.GitEntityToDTO;
-import io.harness.connector.mappers.kubernetesMapper.KubernetesDTOToEntity;
-import io.harness.connector.mappers.kubernetesMapper.KubernetesEntityToDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.encryption.Scope;
+import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
@@ -31,7 +28,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -40,13 +39,6 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @OwnedBy(HarnessTeam.DX)
 public class ConnectorMapper {
-  KubernetesDTOToEntity kubernetesDTOToEntity;
-  KubernetesEntityToDTO kubernetesEntityToDTO;
-  GitDTOToEntity gitDTOToEntity;
-  GitEntityToDTO gitEntityToDTO;
-  AppDynamicsDTOToEntity appDynamicsDTOToEntity;
-  AppDynamicsEntityToDTO appDynamicsEntityToDTO;
-
   @Inject private Map<String, ConnectorDTOToEntityMapper> connectorDTOToEntityMapperMap;
   @Inject private Map<String, ConnectorEntityToDTOMapper> connectorEntityToDTOMapperMap;
 
@@ -90,14 +82,15 @@ public class ConnectorMapper {
     ConnectorInfoDTO connectorInfo = getConnectorInfoDTO(connector);
     Long timeWhenConnectorIsLastUpdated =
         getTimeWhenTheConnectorWasUpdated(connector.getTimeWhenConnectorIsLastUpdated(), connector.getLastModifiedAt());
+    EntityGitDetails entityGitDetails = EntityGitDetailsMapper.mapEntityGitDetails(connector);
     return ConnectorResponseDTO.builder()
         .connector(connectorInfo)
-        .status(updateLastTestedAt(connector.getConnectivityDetails()))
+        .status(updateTheConnectivityStatus(connector.getConnectivityDetails(), connector.getIsFromDefaultBranch()))
         .createdAt(connector.getCreatedAt())
         .lastModifiedAt(timeWhenConnectorIsLastUpdated)
         .harnessManaged(isHarnessManaged(connector))
         .activityDetails(getConnectorActivity(connector.getActivityDetails(), timeWhenConnectorIsLastUpdated))
-        .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(connector))
+        .gitDetails(entityGitDetails)
         .build();
   }
 
@@ -122,6 +115,17 @@ public class ConnectorMapper {
       return ConnectorActivityDetails.builder().lastActivityTime(timeWhenConnectorIsLastUpdated).build();
     }
     return activityDetails;
+  }
+
+  private ConnectorConnectivityDetails updateTheConnectivityStatus(
+      ConnectorConnectivityDetails connectivityDetails, Boolean isFromDefaultBranch) {
+    updateLastTestedAt(connectivityDetails);
+    if (connectivityDetails == null) {
+      if (isFromDefaultBranch != null && !isFromDefaultBranch) {
+        return ConnectorConnectivityDetails.builder().status(UNKNOWN).build();
+      }
+    }
+    return connectivityDetails;
   }
 
   private ConnectorConnectivityDetails updateLastTestedAt(ConnectorConnectivityDetails connectivityDetails) {
@@ -161,7 +165,7 @@ public class ConnectorMapper {
         connectorEntityToDTOMapperMap.get(connector.getType().toString());
     ConnectorConfigDTO connectorDTO = connectorEntityToDTOMapper.createConnectorDTO(connector);
     if (connectorDTO instanceof DelegateSelectable) {
-      Set<String> delegateSelectors = connector.getDelegateSelectors();
+      Set<String> delegateSelectors = Optional.ofNullable(connector.getDelegateSelectors()).orElse(new HashSet<>());
       ((DelegateSelectable) connectorDTO).setDelegateSelectors(delegateSelectors);
     }
     return connectorDTO;

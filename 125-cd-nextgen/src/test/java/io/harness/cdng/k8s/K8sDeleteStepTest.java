@@ -3,6 +3,7 @@ package io.harness.cdng.k8s;
 import static io.harness.cdng.k8s.K8sDeleteStep.K8S_DELETE_COMMAND_NAME;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,6 +13,9 @@ import static org.mockito.Mockito.doReturn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.delegate.task.k8s.K8sDeleteRequest;
@@ -163,6 +167,34 @@ public class K8sDeleteStepTest extends AbstractK8sStepExecutorTestBase {
         deleteStep.finalizeExecution(ambiance, stepElementParameters, null, () -> k8sDeployResponse);
     assertThat(response.getStatus()).isEqualTo(Status.FAILED);
     assertThat(response.getFailureInfo().getErrorMessage()).isEqualTo("Execution failed.");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testHandleTaskResultPassThroughFailed() throws Exception {
+    final K8sDeleteStepParameters stepParameters = K8sDeleteStepParameters.infoBuilder().build();
+    final StepElementParameters stepElementParameters = StepElementParameters.builder().spec(stepParameters).build();
+    final GitFetchResponsePassThroughData gitFetchPassThroughData = GitFetchResponsePassThroughData.builder().build();
+    final HelmValuesFetchResponsePassThroughData helmValuesPassThroughData =
+        HelmValuesFetchResponsePassThroughData.builder().build();
+    final StepExceptionPassThroughData stepExceptionPassThroughData = StepExceptionPassThroughData.builder().build();
+    final StepResponse gitFetchValuesFailed = StepResponse.builder().status(Status.FAILED).build();
+    final StepResponse helmFetchValuesFailed = StepResponse.builder().status(Status.FAILED).build();
+    final StepResponse stepException = StepResponse.builder().status(Status.FAILED).build();
+
+    doReturn(gitFetchValuesFailed).when(k8sStepHelper).handleGitTaskFailure(gitFetchPassThroughData);
+    doReturn(helmFetchValuesFailed).when(k8sStepHelper).handleHelmValuesFetchFailure(helmValuesPassThroughData);
+    doReturn(stepException).when(k8sStepHelper).handleStepExceptionFailure(stepExceptionPassThroughData);
+
+    assertThat(deleteStep.finalizeExecution(ambiance, stepElementParameters, gitFetchPassThroughData, () -> null))
+        .isSameAs(gitFetchValuesFailed);
+
+    assertThat(deleteStep.finalizeExecution(ambiance, stepElementParameters, helmValuesPassThroughData, () -> null))
+        .isSameAs(helmFetchValuesFailed);
+
+    assertThat(deleteStep.finalizeExecution(ambiance, stepElementParameters, stepExceptionPassThroughData, () -> null))
+        .isSameAs(stepException);
   }
 
   @Test

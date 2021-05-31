@@ -26,6 +26,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
@@ -62,6 +63,15 @@ public class AzureArtifactsPATConfig extends SettingValue implements AzureArtifa
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Collections.singletonList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
         azureDevopsUrl, maskingEvaluator));
+  }
+
+  @Override
+  public boolean shouldDeleteArtifact(SettingValue prev) {
+    if (!(prev instanceof AzureArtifactsPATConfig)) {
+      return true;
+    }
+    AzureArtifactsPATConfig prevConfig = (AzureArtifactsPATConfig) prev;
+    return !StringUtils.equals(prevConfig.getAzureDevopsUrl(), azureDevopsUrl);
   }
 
   @Data

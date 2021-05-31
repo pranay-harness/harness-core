@@ -31,6 +31,12 @@ func oauthTransport(token string, skip bool) http.RoundTripper {
 		),
 	}
 }
+func privateTokenTransport(token string, skip bool) http.RoundTripper {
+	return &transport.PrivateToken{
+		Base:  defaultTransport(skip),
+		Token: token,
+	}
+}
 
 func giteaTransport(token string, skip bool) http.RoundTripper {
 	return &oauth2.Transport{
@@ -114,12 +120,18 @@ func GetGitClient(p pb.Provider, log *zap.SugaredLogger) (client *scm.Client, er
 		switch p.GetGitlab().GetProvider().(type) {
 		case *pb.GitlabProvider_AccessToken:
 			token = p.GetGitlab().GetAccessToken()
+			client.Client = &http.Client{
+				Transport: oauthTransport(token, p.GetSkipVerify()),
+			}
+		case *pb.GitlabProvider_PersonalToken:
+			token = p.GetGitlab().GetPersonalToken()
+			client.Client = &http.Client{
+				Transport: privateTokenTransport(token, p.GetSkipVerify()),
+			}
 		default:
-			return nil, status.Errorf(codes.Unimplemented, "Gitlab personal token not implemented yet")
+			return nil, status.Errorf(codes.Unimplemented, "Gitlab provider not implemented yet")
 		}
-		client.Client = &http.Client{
-			Transport: oauthTransport(token, p.GetSkipVerify()),
-		}
+
 	case *pb.Provider_Gitea:
 		if p.GetEndpoint() == "" {
 			log.Error("getGitClient failure Gitea, endpoint is empty")

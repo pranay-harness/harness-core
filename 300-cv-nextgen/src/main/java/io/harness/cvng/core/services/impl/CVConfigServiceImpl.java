@@ -447,19 +447,6 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
-  public List<CVConfig> getExistingMappedConfigs(
-      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String identifier) {
-    return hPersistence.createQuery(CVConfig.class, excludeAuthority)
-        .filter(CVConfigKeys.accountId, accountId)
-        .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
-        .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
-        .filter(CVConfigKeys.connectorIdentifier, connectorIdentifier)
-        .field(CVConfigKeys.identifier)
-        .notEqual(identifier)
-        .asList();
-  }
-
-  @Override
   public List<CVConfig> getExistingMappedConfigs(String accountId, String orgIdentifier, String projectIdentifier,
       String identifier, DataSourceType dataSourceType) {
     List<CVConfig> cvConfigList = hPersistence.createQuery(CVConfig.class, excludeAuthority)

@@ -3,12 +3,14 @@ package io.harness.waiter;
 import static java.time.Duration.ofDays;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.CreatedAtAccess;
 
 import com.google.common.collect.ImmutableList;
@@ -38,6 +40,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "progressUpdate", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @OwnedBy(HarnessTeam.DEL)
+@StoreIn(DbAliases.ALL)
 public class ProgressUpdate implements WaitEngineEntity, CreatedAtAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

@@ -71,7 +71,7 @@ public class TerraformPlanStep extends TaskExecutableWithRollback<TerraformTaskN
         .currentStateFileId(helper.getLatestFileId(entityId))
         .workspace(ParameterFieldHelper.getParameterFieldValue(configuration.getWorkspace()))
         .configFile(helper.getGitFetchFilesConfig(
-            configuration.getConfigFiles().getStore().getStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
+            configuration.getConfigFiles().getStore().getSpec(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
         .varFileInfos(helper.toTerraformVarFileInfo(configuration.getVarFiles(), ambiance))
         .backendConfig(helper.getBackendConfig(configuration.getBackendConfig()))
         .targets(ParameterFieldHelper.getParameterFieldValue(configuration.getTargets()))
@@ -80,8 +80,9 @@ public class TerraformPlanStep extends TaskExecutableWithRollback<TerraformTaskN
         .encryptionConfig(helper.getEncryptionConfig(ambiance, planStepParameters))
         .terraformCommand(TerraformPlanCommand.APPLY == planStepParameters.getConfiguration().getCommand()
                 ? TerraformCommand.APPLY
-                : TerraformCommand.DESTROY);
-
+                : TerraformCommand.DESTROY)
+        .timeoutInMillis(
+            StepUtils.getTimeoutMillis(stepElementParameters.getTimeout(), TerraformConstants.DEFAULT_TIMEOUT));
     TaskData taskData =
         TaskData.builder()
             .async(true)
@@ -90,8 +91,9 @@ public class TerraformPlanStep extends TaskExecutableWithRollback<TerraformTaskN
             .parameters(new Object[] {builder.build()})
             .build();
 
-    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer,
-        Collections.singletonList(TerraformCommandUnit.Plan.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName());
+    return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+        Collections.singletonList(TerraformCommandUnit.Plan.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName(),
+        StepUtils.getTaskSelectors(planStepParameters.getDelegateSelectors()));
   }
 
   @Override

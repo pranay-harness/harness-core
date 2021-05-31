@@ -46,8 +46,7 @@ public class CD10ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = KAMAL)
   @Category({UnitTests.class})
   public void getNextGenEnvIdentifier() {
-    String activitySourceUUID = activitySourceService.saveActivitySource(
-        accountId, orgIdentifier, projectIdentifier, createActivitySourceDTO());
+    String activitySourceUUID = activitySourceService.create(accountId, createActivitySourceDTO());
     CD10ActivitySource cd10ActivitySource =
         (CD10ActivitySource) activitySourceService.getActivitySource(activitySourceUUID);
     cd10ActivitySource.getEnvMappings().forEach(envMapping
@@ -65,8 +64,7 @@ public class CD10ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = KAMAL)
   @Category({UnitTests.class})
   public void testValidateMapping_mappingMatchesServiceEnvValues() {
-    String activitySourceUUID = activitySourceService.saveActivitySource(
-        accountId, orgIdentifier, projectIdentifier, createActivitySourceDTO());
+    String activitySourceUUID = activitySourceService.create(accountId, createActivitySourceDTO());
     CD10ActivitySource cd10ActivitySource =
         (CD10ActivitySource) activitySourceService.getActivitySource(activitySourceUUID);
 
@@ -96,8 +94,7 @@ public class CD10ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = KAMAL)
   @Category({UnitTests.class})
   public void testValidateMapping_failWithMismatch() {
-    String activitySourceUUID = activitySourceService.saveActivitySource(
-        accountId, orgIdentifier, projectIdentifier, createActivitySourceDTO());
+    String activitySourceUUID = activitySourceService.create(accountId, createActivitySourceDTO());
     CD10ActivitySource cd10ActivitySource =
         (CD10ActivitySource) activitySourceService.getActivitySource(activitySourceUUID);
 
@@ -150,8 +147,7 @@ public class CD10ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = KAMAL)
   @Category({UnitTests.class})
   public void testValidateMapping_serviceEnvAreRuntimeParams() {
-    String activitySourceUUID = activitySourceService.saveActivitySource(
-        accountId, orgIdentifier, projectIdentifier, createActivitySourceDTO());
+    String activitySourceUUID = activitySourceService.create(accountId, createActivitySourceDTO());
     CD10ActivitySource cd10ActivitySource =
         (CD10ActivitySource) activitySourceService.getActivitySource(activitySourceUUID);
 
@@ -175,8 +171,7 @@ public class CD10ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = KAMAL)
   @Category({UnitTests.class})
   public void getNextGenEnvIdentifier_noCDMappingPresent() {
-    String activitySourceUUID = activitySourceService.saveActivitySource(
-        accountId, orgIdentifier, projectIdentifier, createActivitySourceDTO());
+    String activitySourceUUID = activitySourceService.create(accountId, createActivitySourceDTO());
     CD10ActivitySource cd10ActivitySource =
         (CD10ActivitySource) activitySourceService.getActivitySource(activitySourceUUID);
     cd10ActivitySource.getEnvMappings().forEach(envMapping
@@ -191,8 +186,7 @@ public class CD10ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = KAMAL)
   @Category({UnitTests.class})
   public void getNextGenServiceIdentifier() {
-    String activitySourceUUID = activitySourceService.saveActivitySource(
-        accountId, orgIdentifier, projectIdentifier, createActivitySourceDTO());
+    String activitySourceUUID = activitySourceService.create(accountId, createActivitySourceDTO());
     CD10ActivitySource cd10ActivitySource =
         (CD10ActivitySource) activitySourceService.getActivitySource(activitySourceUUID);
     cd10ActivitySource.getServiceMappings().forEach(serviceMappingDTO
@@ -210,8 +204,7 @@ public class CD10ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = KAMAL)
   @Category({UnitTests.class})
   public void getNextGenServiceIdentifier_noCDMappingPresent() {
-    String activitySourceUUID = activitySourceService.saveActivitySource(
-        accountId, orgIdentifier, projectIdentifier, createActivitySourceDTO());
+    String activitySourceUUID = activitySourceService.create(accountId, createActivitySourceDTO());
     CD10ActivitySource cd10ActivitySource =
         (CD10ActivitySource) activitySourceService.getActivitySource(activitySourceUUID);
     cd10ActivitySource.getServiceMappings().forEach(serviceMappingDTO
@@ -233,6 +226,8 @@ public class CD10ActivitySourceServiceImplTest extends CvNextGenTestBase {
     CD10ActivitySourceDTO cd10ActivitySourceDTO = CD10ActivitySourceDTO.builder()
                                                       .identifier(identifier)
                                                       .name("some-name")
+                                                      .orgIdentifier(orgIdentifier)
+                                                      .projectIdentifier(projectIdentifier)
                                                       .envMappings(cd10EnvMappingDTOS)
                                                       .serviceMappings(cd10ServiceMappingDTOS)
                                                       .build();

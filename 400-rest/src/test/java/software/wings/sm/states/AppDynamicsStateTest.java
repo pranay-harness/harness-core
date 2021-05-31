@@ -152,6 +152,8 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     FieldUtils.writeField(appDynamicsState, "appService", appService, true);
     FieldUtils.writeField(appDynamicsState, "accountService", accountService, true);
     FieldUtils.writeField(appDynamicsState, "cvActivityLogService", cvActivityLogService, true);
+    FieldUtils.writeField(
+        appDynamicsState, "workflowVerificationResultService", workflowVerificationResultService, true);
     when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString())).thenReturn(mock(Logger.class));
 
     when(executionContext.getContextElement(ContextElementType.PARAM, AbstractAnalysisStateTestBase.PHASE_PARAM))
@@ -200,7 +202,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.ERROR);
     assertThat(executionResponse.getErrorMessage())
-        .isEqualTo("DataCollectionException: Expression ${workflow.variables.applicationId} could not be resolved");
+        .isEqualTo("Error: Expression ${workflow.variables.applicationId} could not be resolved");
   }
 
   @Test
@@ -226,7 +228,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.ERROR);
     assertThat(executionResponse.getErrorMessage())
-        .isEqualTo("DataCollectionException: Expression ${workflow.variables.appd_tier_name} could not be resolved");
+        .isEqualTo("Error: Expression ${workflow.variables.appd_tier_name} could not be resolved");
   }
   @Test
   @Owner(developers = KAMAL)
@@ -252,7 +254,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.ERROR);
     assertThat(executionResponse.getErrorMessage())
-        .isEqualTo("DataCollectionException: Expression ${workflow.variables.appd_tier_name} could not be resolved");
+        .isEqualTo("Error: Expression ${workflow.variables.appd_tier_name} could not be resolved");
   }
 
   @Test

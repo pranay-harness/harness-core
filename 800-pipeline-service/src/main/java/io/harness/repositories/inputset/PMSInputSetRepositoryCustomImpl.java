@@ -37,11 +37,15 @@ public class PMSInputSetRepositoryCustomImpl implements PMSInputSetRepositoryCus
   private final MongoTemplate mongoTemplate;
 
   @Override
-  public Page<InputSetEntity> findAll(Criteria criteria, Pageable pageable) {
-    Query query = new Query(criteria).with(pageable);
-    List<InputSetEntity> inputSetEntities = mongoTemplate.find(query, InputSetEntity.class);
+  public Page<InputSetEntity> findAll(
+      Criteria criteria, Pageable pageable, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    List<InputSetEntity> inputSetEntities = gitAwarePersistence.find(
+        criteria, pageable, projectIdentifier, orgIdentifier, accountIdentifier, InputSetEntity.class);
+
     return PageableExecutionUtils.getPage(inputSetEntities, pageable,
-        () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), InputSetEntity.class));
+        ()
+            -> gitAwarePersistence.count(
+                criteria, projectIdentifier, orgIdentifier, accountIdentifier, InputSetEntity.class));
   }
 
   @Override

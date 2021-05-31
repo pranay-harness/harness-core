@@ -74,7 +74,6 @@ import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.message.Message;
 import io.harness.delegate.message.MessageService;
 import io.harness.event.client.impl.tailer.ChronicleEventTailer;
-import io.harness.exception.GeneralException;
 import io.harness.filesystem.FileIo;
 import io.harness.grpc.utils.DelegateGrpcConfigExtractor;
 import io.harness.managerclient.ManagerClientV2;
@@ -945,7 +944,7 @@ public class WatcherServiceImpl implements WatcherService {
     } catch (Exception e) {
       log.warn("Unable to fetch delegate version information", e);
     }
-    throw new GeneralException("Couldn't get delegate versions.");
+    return null;
   }
 
   private int getMinorVersion(String delegateVersion) {
@@ -1063,11 +1062,12 @@ public class WatcherServiceImpl implements WatcherService {
             FileUtils.moveFile(downloadDestination, finalDestination);
             log.info("Moved delegate jar version {} to the final location", version);
           } else {
-            log.error("Downloaded delegate jar version {} is corrupted. Removing invalid file.", version);
+            log.warn("Downloaded delegate jar version {} is corrupted. Removing invalid file.", version);
             FileUtils.forceDelete(downloadDestination);
           }
         } catch (Exception ex) {
-          log.error("Unexpected error occurred during jar file verification. File will be deleted.", ex);
+          log.warn("Unexpected error occurred during jar file verification with message: {}. File will be deleted.",
+              ex.getMessage());
         } finally {
           if (downloadDestination.exists()) {
             FileUtils.forceDelete(downloadDestination);

@@ -16,6 +16,7 @@ import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.SECRET_YAML;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -29,9 +30,11 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -50,6 +53,8 @@ import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResource;
+import io.harness.k8s.model.KubernetesResourceId;
+import io.harness.k8s.model.Release;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
@@ -324,6 +329,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     verify(k8sTaskHelperBase, times(1))
         .applyManifests(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
             any(ExecutionLogCallback.class), anyBoolean());
+    verify(handler, never()).prune(any(), any(), any());
   }
 
   @Test
@@ -667,5 +673,92 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
                 K8sRollingDeployTaskParameters.builder().releaseName("releaseName").isInCanaryWorkflow(false).build(),
                 K8sDelegateTaskParams.builder().build()))
         .isEqualTo(thrownException);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testPruneWithNoPreviousSuccessfulRelease() throws Exception {
+    K8sRollingDeployTaskHandler handler = spy(k8sRollingDeployTaskHandler);
+    K8sRollingDeployTaskParameters taskParameters = K8sRollingDeployTaskParameters.builder().build();
+    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
+
+    List<KubernetesResourceId> prunedResource = handler.prune(taskParameters, delegateTaskParams, null);
+
+    assertThat(prunedResource).isEmpty();
+    // do nothing if no previous successful release exist
+    verifyNoMoreInteractions(k8sTaskHelperBase);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testPruneWhenNoResourceToBePruned() throws Exception {
+    K8sRollingDeployTaskHandler handler = spy(k8sRollingDeployTaskHandler);
+    K8sRollingDeployTaskParameters taskParameters = K8sRollingDeployTaskParameters.builder().build();
+    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
+    Release previousSuccessfulRelease = Release.builder().build();
+    doReturn(emptyList()).when(k8sTaskHelperBase).getResourcesToBePrunedInOrder(any(), any());
+
+    List<KubernetesResourceId> prunedResource =
+        handler.prune(taskParameters, delegateTaskParams, previousSuccessfulRelease);
+
+    assertThat(prunedResource).isEmpty();
+    verify(k8sTaskHelperBase, times(1)).getResourcesToBePrunedInOrder(any(), any());
+    verify(k8sTaskHelperBase, never())
+        .executeDeleteHandlingPartialExecution(
+            any(Kubectl.class), any(K8sDelegateTaskParams.class), anyList(), any(LogCallback.class), anyBoolean());
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testPruneFail() throws Exception {
+    K8sRollingDeployTaskHandler handler = spy(k8sRollingDeployTaskHandler);
+    K8sRollingDeployTaskParameters taskParameters = K8sRollingDeployTaskParameters.builder().build();
+    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
+    Release previousSuccessfulRelease = Release.builder().build();
+
+    doReturn(singletonList(KubernetesResourceId.builder().build()))
+        .when(k8sTaskHelperBase)
+        .getResourcesToBePrunedInOrder(any(), any());
+    doThrow(new InvalidRequestException("dummy exception"))
+        .when(k8sTaskHelperBase)
+        .executeDeleteHandlingPartialExecution(
+            any(Kubectl.class), any(K8sDelegateTaskParams.class), anyList(), any(LogCallback.class), anyBoolean());
+
+    List<KubernetesResourceId> prunedResource =
+        handler.prune(taskParameters, delegateTaskParams, previousSuccessfulRelease);
+
+    assertThat(prunedResource).isEmpty();
+    verify(k8sTaskHelperBase, times(1))
+        .executeDeleteHandlingPartialExecution(
+            any(Kubectl.class), any(K8sDelegateTaskParams.class), anyList(), any(LogCallback.class), anyBoolean());
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testPruneSuccess() throws Exception {
+    K8sRollingDeployTaskHandler handler = spy(k8sRollingDeployTaskHandler);
+    K8sRollingDeployTaskParameters taskParameters = K8sRollingDeployTaskParameters.builder().build();
+    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
+    Release previousSuccessfulRelease = Release.builder().build();
+
+    KubernetesResourceId resources = KubernetesResourceId.builder().name("config-map").build();
+    doReturn(singletonList(resources)).when(k8sTaskHelperBase).getResourcesToBePrunedInOrder(any(), any());
+    doReturn(singletonList(resources))
+        .when(k8sTaskHelperBase)
+        .executeDeleteHandlingPartialExecution(
+            any(Kubectl.class), any(K8sDelegateTaskParams.class), anyList(), any(LogCallback.class), anyBoolean());
+
+    List<KubernetesResourceId> prunedResource =
+        handler.prune(taskParameters, delegateTaskParams, previousSuccessfulRelease);
+
+    assertThat(prunedResource).hasSize(1);
+    assertThat(prunedResource.get(0).getName()).isEqualTo("config-map");
+    verify(k8sTaskHelperBase, times(1))
+        .executeDeleteHandlingPartialExecution(
+            any(Kubectl.class), any(K8sDelegateTaskParams.class), anyList(), any(LogCallback.class), anyBoolean());
   }
 }

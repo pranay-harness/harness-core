@@ -176,7 +176,7 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
                                             .serviceName("ORCHESTRATION_STEPS_TEST")
                                             .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
                                             .build()));
-    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder().serviceName("orchestrationStepsTest").build();
+    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder().build();
     modules.add(PmsSdkModule.getInstance(sdkConfig));
     modules.add(OrchestrationStepsModule.getInstance(null));
     return modules;

@@ -5,7 +5,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.AdviserType;
-import io.harness.pms.contracts.advisers.InterruptConfig;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.commons.RepairActionCode;
@@ -20,6 +19,8 @@ import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.contracts.interrupts.InterruptConfig;
+import io.harness.pms.contracts.interrupts.InterruptEffectProto;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.contracts.refobjects.RefType;
@@ -31,6 +32,7 @@ import io.harness.pms.serializer.kryo.serializers.ExecutableResponseSerializer;
 import io.harness.pms.serializer.kryo.serializers.FailureDataKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.FailureInfoKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.InterruptConfigKryoSerializer;
+import io.harness.pms.serializer.kryo.serializers.InterruptEffectKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.LevelKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.NodeRunInfoKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.RefTypeKryoSerializer;
@@ -69,5 +71,6 @@ public class PmsContractsKryoRegistrar implements KryoRegistrar {
     kryo.register(SdkResponseEventRequest.class, SdkResponseEventRequestKryoSerializer.getInstance(), 2621);
     kryo.register(NodeRunInfo.class, NodeRunInfoKryoSerializer.getInstance(), 2622);
     kryo.register(FailureData.class, FailureDataKryoSerializer.getInstance(), 2623);
+    kryo.register(InterruptEffectProto.class, InterruptEffectKryoSerializer.getInstance(), 2623);
   }
 }

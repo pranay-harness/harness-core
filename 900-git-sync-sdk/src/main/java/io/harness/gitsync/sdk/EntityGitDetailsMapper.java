@@ -21,4 +21,13 @@ public class EntityGitDetailsMapper {
         .filePath(gitSyncableEntity.getFilePath())
         .build();
   }
+
+  public void copyEntityGitDetails(GitSyncableEntity fromGitSyncableEntity, GitSyncableEntity toGitSyncableEntity) {
+    toGitSyncableEntity.setBranch(fromGitSyncableEntity.getBranch());
+    toGitSyncableEntity.setIsFromDefaultBranch(fromGitSyncableEntity.getIsFromDefaultBranch());
+    toGitSyncableEntity.setRootFolder(fromGitSyncableEntity.getRootFolder());
+    toGitSyncableEntity.setYamlGitConfigRef(fromGitSyncableEntity.getYamlGitConfigRef());
+    toGitSyncableEntity.setFilePath(fromGitSyncableEntity.getFilePath());
+    toGitSyncableEntity.setObjectIdOfYaml(fromGitSyncableEntity.getObjectIdOfYaml());
+  }
 }

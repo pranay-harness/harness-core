@@ -10,6 +10,7 @@ import io.harness.ngtriggers.service.impl.NGTriggerServiceImpl;
 import io.harness.ngtriggers.service.impl.NGTriggerYamlSchemaServiceImpl;
 import io.harness.ngtriggers.utils.AwsCodeCommitDataObtainer;
 import io.harness.ngtriggers.utils.GitProviderBaseDataObtainer;
+import io.harness.ngtriggers.utils.SCMDataObtainer;
 import io.harness.webhook.WebhookConfigProvider;
 
 import com.google.inject.AbstractModule;
@@ -43,8 +44,12 @@ public class NGTriggersModule extends AbstractModule {
         return pmsApiBaseUrl;
       }
     });
-    MapBinder.newMapBinder(binder(), String.class, GitProviderBaseDataObtainer.class)
-        .addBinding(WebhookSourceRepo.AWS_CODECOMMIT.name())
+    MapBinder<String, GitProviderBaseDataObtainer> gitProviderBaseDataObtainerMap =
+        MapBinder.newMapBinder(binder(), String.class, GitProviderBaseDataObtainer.class);
+    gitProviderBaseDataObtainerMap.addBinding(WebhookSourceRepo.AWS_CODECOMMIT.name())
         .to(AwsCodeCommitDataObtainer.class);
+    gitProviderBaseDataObtainerMap.addBinding(WebhookSourceRepo.GITHUB.name()).to(SCMDataObtainer.class);
+    gitProviderBaseDataObtainerMap.addBinding(WebhookSourceRepo.BITBUCKET.name()).to(SCMDataObtainer.class);
+    gitProviderBaseDataObtainerMap.addBinding(WebhookSourceRepo.GITLAB.name()).to(SCMDataObtainer.class);
   }
 }

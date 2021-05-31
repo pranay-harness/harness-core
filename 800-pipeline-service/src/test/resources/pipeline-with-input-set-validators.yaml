@@ -1,0 +1,66 @@
+pipeline:
+  name: Test Pipline
+  identifier: Test_Pipline11
+  variables:
+    - name: port
+      value: 6060
+      type: String
+    - name: port2
+      value: <+input>.allowedValues(8080, 80, 8000, 12000)
+      type: String
+  stages:
+    - stage:
+        identifier: qaStage
+        name: qa stage
+        type: Deployment
+        spec:
+          service:
+            identifier: manager
+            name: manager
+            serviceDefinition:
+              type: Kubernetes
+              spec:
+                manifests:
+                  - manifest:
+                      identifier: baseValues
+                      type: K8sManifest
+                      spec:
+                        store:
+                          type: Git
+                          spec:
+                            connectorRef: <+input>.regex(acc\..*)
+                            gitFetchType: COMMIT
+                            branch: master
+                            paths:
+                              - test
+          infrastructure:
+            environment:
+              identifier: stagingInfra
+              type: PreProduction
+              tags:
+                cloud: GCP
+                team: <+input>.allowedValues(CD, CI)
+            infrastructureDefinition:
+              type: KubernetesDirect
+              spec:
+                connectorRef: <+input>.regex(org\..*)
+                namespace: <+input>.allowedValues(default, harness, pipelines)
+                releaseName: <+input>.allowedValues(<+some.expr>)
+          execution:
+            steps:
+              - step:
+                  name: http step 1
+                  identifier: httpStep1
+                  type: Http
+                  spec:
+                    socketTimeoutMillis: 1000
+                    method: GET
+                    url: <+input>
+              - step:
+                  name: http step 2
+                  identifier: httpStep2
+                  type: Http
+                  spec:
+                    socketTimeoutMillis: 1000
+                    method: <+input>.regex(P.*)
+                    url: https://google.com

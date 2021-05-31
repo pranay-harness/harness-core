@@ -1,5 +1,6 @@
 package io.harness.cvng;
 
+import static io.harness.cvng.cdng.services.impl.CVNGNotifyEventListener.CVNG_ORCHESTRATION;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -51,6 +52,7 @@ import io.harness.cvng.client.VerificationManagerServiceImpl;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig.AppDynamicsCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.CVConfig.CVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.NewRelicCVConfig.NewRelicCVConfigUpdatableEntity;
+import io.harness.cvng.core.entities.PrometheusCVConfig.PrometheusUpdatableEntity;
 import io.harness.cvng.core.entities.SplunkCVConfig.SplunkCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.StackdriverCVConfig.StackDriverCVConfigUpdatableEntity;
 import io.harness.cvng.core.jobs.AccountChangeEventMessageProcessor;
@@ -80,6 +82,7 @@ import io.harness.cvng.core.services.api.MonitoringSourceImportStatusCreator;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.NewRelicService;
 import io.harness.cvng.core.services.api.OnboardingService;
+import io.harness.cvng.core.services.api.PrometheusService;
 import io.harness.cvng.core.services.api.SplunkService;
 import io.harness.cvng.core.services.api.StackdriverService;
 import io.harness.cvng.core.services.api.TimeSeriesRecordService;
@@ -106,11 +109,15 @@ import io.harness.cvng.core.services.impl.NewRelicCVConfigTransformer;
 import io.harness.cvng.core.services.impl.NewRelicDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.NewRelicServiceImpl;
 import io.harness.cvng.core.services.impl.OnboardingServiceImpl;
+import io.harness.cvng.core.services.impl.PrometheusCVConfigTransformer;
+import io.harness.cvng.core.services.impl.PrometheusDataCollectionInfoMapper;
+import io.harness.cvng.core.services.impl.PrometheusServiceImpl;
 import io.harness.cvng.core.services.impl.SplunkCVConfigTransformer;
 import io.harness.cvng.core.services.impl.SplunkDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.SplunkServiceImpl;
 import io.harness.cvng.core.services.impl.StackdriverCVConfigTransformer;
 import io.harness.cvng.core.services.impl.StackdriverDataCollectionInfoMapper;
+import io.harness.cvng.core.services.impl.StackdriverLogCVConfigTransformer;
 import io.harness.cvng.core.services.impl.StackdriverServiceImpl;
 import io.harness.cvng.core.services.impl.TimeSeriesRecordServiceImpl;
 import io.harness.cvng.core.services.impl.VerificationTaskServiceImpl;
@@ -141,7 +148,6 @@ import io.harness.cvng.verificationjob.services.impl.VerificationJobServiceImpl;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
-import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.redis.RedisConfig;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
@@ -255,11 +261,17 @@ public class CVServiceModule extends AbstractModule {
         .annotatedWith(Names.named(DataSourceType.NEW_RELIC.name()))
         .to(NewRelicCVConfigTransformer.class);
     bind(CVConfigTransformer.class)
+        .annotatedWith(Names.named(DataSourceType.PROMETHEUS.name()))
+        .to(PrometheusCVConfigTransformer.class);
+    bind(CVConfigTransformer.class)
         .annotatedWith(Names.named(DataSourceType.SPLUNK.name()))
         .to(SplunkCVConfigTransformer.class);
     bind(CVConfigTransformer.class)
         .annotatedWith(Names.named(DataSourceType.STACKDRIVER.name()))
         .to(StackdriverCVConfigTransformer.class);
+    bind(CVConfigTransformer.class)
+        .annotatedWith(Names.named(DataSourceType.STACKDRIVER_LOG.name()))
+        .to(StackdriverLogCVConfigTransformer.class);
     bind(DataCollectionInfoMapper.class)
         .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
         .to(AppDynamicsDataCollectionInfoMapper.class);
@@ -272,6 +284,9 @@ public class CVServiceModule extends AbstractModule {
     bind(DataCollectionInfoMapper.class)
         .annotatedWith(Names.named(DataSourceType.NEW_RELIC.name()))
         .to(NewRelicDataCollectionInfoMapper.class);
+    bind(DataCollectionInfoMapper.class)
+        .annotatedWith(Names.named(DataSourceType.PROMETHEUS.name()))
+        .to(PrometheusDataCollectionInfoMapper.class);
 
     bind(MetricPackService.class).to(MetricPackServiceImpl.class);
     bind(AppDynamicsService.class).to(AppDynamicsServiceImpl.class);
@@ -341,6 +356,7 @@ public class CVServiceModule extends AbstractModule {
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.APP_DYNAMICS)
         .to(AppDynamicsCVConfigUpdatableEntity.class);
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.NEW_RELIC).to(NewRelicCVConfigUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.PROMETHEUS).to(PrometheusUpdatableEntity.class);
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.STACKDRIVER).to(StackDriverCVConfigUpdatableEntity.class);
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkCVConfigUpdatableEntity.class);
     // We have not used FeatureFlag module as it depends on stream and we don't have reliable way to tracking
@@ -348,6 +364,7 @@ public class CVServiceModule extends AbstractModule {
     // We are dependent on source of truth (Manager) for this.
     bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
     bind(CVNGStepTaskService.class).to(CVNGStepTaskServiceImpl.class);
+    bind(PrometheusService.class).to(PrometheusServiceImpl.class);
     bind(CVNGYamlSchemaService.class).to(CVNGYamlSchemaServiceImpl.class);
   }
 
@@ -369,7 +386,7 @@ public class CVServiceModule extends AbstractModule {
   @Provides
   @Singleton
   public AsyncWaitEngine asyncWaitEngine(WaitNotifyEngine waitNotifyEngine) {
-    return new AsyncWaitEngineImpl(waitNotifyEngine, NgOrchestrationNotifyEventListener.NG_ORCHESTRATION);
+    return new AsyncWaitEngineImpl(waitNotifyEngine, CVNG_ORCHESTRATION);
   }
 
   @Provides

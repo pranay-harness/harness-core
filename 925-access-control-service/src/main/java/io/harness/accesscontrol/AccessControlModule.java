@@ -21,6 +21,7 @@ import io.harness.DecisionModule;
 import io.harness.accesscontrol.commons.events.EventConsumer;
 import io.harness.accesscontrol.commons.iterators.AccessControlIteratorsConfig;
 import io.harness.accesscontrol.commons.outbox.AccessControlOutboxEventHandler;
+import io.harness.accesscontrol.commons.validation.HarnessActionValidator;
 import io.harness.accesscontrol.preference.AccessControlPreferenceModule;
 import io.harness.accesscontrol.preference.events.NGRBACEnabledFeatureFlagEventConsumer;
 import io.harness.accesscontrol.principals.PrincipalType;
@@ -34,6 +35,8 @@ import io.harness.accesscontrol.principals.usergroups.events.UserGroupEventConsu
 import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupServiceImpl;
 import io.harness.accesscontrol.resources.resourcegroups.events.ResourceGroupEventConsumer;
+import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
+import io.harness.accesscontrol.roleassignments.validation.RoleAssignmentActionValidator;
 import io.harness.accesscontrol.scopes.core.ScopeLevel;
 import io.harness.accesscontrol.scopes.core.ScopeParamsFactory;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParamsFactory;
@@ -218,6 +221,11 @@ public class AccessControlModule extends AbstractModule {
     Multibinder<EventConsumer> userMembershipEventConsumers =
         Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(USERMEMBERSHIP));
     userMembershipEventConsumers.addBinding().to(UserMembershipEventConsumer.class);
+
+    binder()
+        .bind(HarnessActionValidator.class)
+        .annotatedWith(Names.named(RoleAssignmentDTO.MODEL_NAME))
+        .to(RoleAssignmentActionValidator.class);
 
     registerRequiredBindings();
   }

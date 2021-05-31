@@ -1,12 +1,12 @@
 package io.harness.batch.processing.service.impl;
 
-import static io.harness.batch.processing.pricing.data.CloudProvider.AWS;
-import static io.harness.batch.processing.pricing.data.CloudProvider.AZURE;
-import static io.harness.batch.processing.pricing.data.CloudProvider.GCP;
-import static io.harness.batch.processing.pricing.data.CloudProvider.ON_PREM;
+import static io.harness.ccm.commons.constants.CloudProvider.AWS;
+import static io.harness.ccm.commons.constants.CloudProvider.AZURE;
+import static io.harness.ccm.commons.constants.CloudProvider.GCP;
+import static io.harness.ccm.commons.constants.CloudProvider.ON_PREM;
 
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.CloudProviderService;
+import io.harness.ccm.commons.constants.CloudProvider;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;

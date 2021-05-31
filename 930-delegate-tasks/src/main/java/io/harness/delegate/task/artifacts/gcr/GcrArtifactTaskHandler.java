@@ -2,6 +2,8 @@ package io.harness.delegate.task.artifacts.gcr;
 
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifacts.beans.BuildDetailsInternal;
 import io.harness.artifacts.comparator.BuildDetailsInternalComparatorDescending;
 import io.harness.artifacts.gcr.beans.GcrInternalConfig;
@@ -14,7 +16,10 @@ import io.harness.delegate.task.artifacts.DelegateArtifactTaskHandler;
 import io.harness.delegate.task.artifacts.mappers.GcrRequestResponseMapper;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse;
 import io.harness.delegate.task.gcp.helpers.GcpHelperService;
+import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.runtime.GcpClientRuntimeException;
+import io.harness.exception.runtime.SecretNotFoundRuntimeException;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -26,6 +31,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @Slf4j
@@ -61,7 +67,7 @@ public class GcrArtifactTaskHandler extends DelegateArtifactTaskHandler<GcrArtif
       gcrInternalConfig = getGcrInternalConfig(attributesRequest);
     } catch (IOException e) {
       log.error("Could not get basic auth header", e);
-      throw new InvalidRequestException("Could not get basic auth header - " + e.getMessage(), USER);
+      throw new GcpClientRuntimeException(e.getMessage());
     }
     if (EmptyPredicate.isNotEmpty(attributesRequest.getTagRegex())) {
       lastSuccessfulBuild = gcrService.getLastSuccessfulBuildFromRegex(
@@ -118,8 +124,13 @@ public class GcrArtifactTaskHandler extends DelegateArtifactTaskHandler<GcrArtif
       if (credential.getGcpCredentialType() == GcpCredentialType.INHERIT_FROM_DELEGATE) {
         isUseDelegate = true;
       } else {
-        serviceAccountKeyFileContent =
-            ((GcpManualDetailsDTO) credential.getConfig()).getSecretKeyRef().getDecryptedValue();
+        SecretRefData secretRef = ((GcpManualDetailsDTO) credential.getConfig()).getSecretKeyRef();
+        if (secretRef.getDecryptedValue() == null) {
+          throw new SecretNotFoundRuntimeException("Could not find secret " + secretRef.getIdentifier()
+                  + " under the scope of current " + secretRef.getScope(),
+              secretRef.getIdentifier(), secretRef.getScope().toString(), attributesRequest.getConnectorRef());
+        }
+        serviceAccountKeyFileContent = secretRef.getDecryptedValue();
       }
     }
     return GcrRequestResponseMapper.toGcrInternalConfig(

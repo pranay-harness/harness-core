@@ -1,5 +1,6 @@
 package io.harness.cvng.migration.impl;
 
+import static io.harness.concurrent.HTimeLimiter.callInterruptible;
 import static io.harness.cvng.migration.beans.CVNGSchema.CVNGMigrationStatus.PENDING;
 import static io.harness.cvng.migration.beans.CVNGSchema.SCHEMA_ID;
 
@@ -13,9 +14,9 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -45,7 +46,7 @@ public class CVNGMigrationServiceImpl implements CVNGMigrationService {
     if (cvngSchema.getVersion() < maxBackgroundVersion) {
       executorService.submit(() -> {
         try {
-          timeLimiter.<Boolean>callWithTimeout(() -> {
+          callInterruptible(timeLimiter, Duration.ofHours(2), () -> {
             log.info(
                 "[Migration] - Updating schema version from {} to {}", cvngSchema.getVersion(), maxBackgroundVersion);
             for (int i = cvngSchema.getVersion() + 1; i <= maxBackgroundVersion; i++) {
@@ -66,7 +67,7 @@ public class CVNGMigrationServiceImpl implements CVNGMigrationService {
             }
             log.info("[Migration] - Migration complete");
             return true;
-          }, 2, TimeUnit.HOURS, true);
+          });
         } catch (Exception ex) {
           log.warn("background work", ex);
         }

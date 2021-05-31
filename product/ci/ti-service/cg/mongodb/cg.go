@@ -239,6 +239,7 @@ func (cgs *CgServiceImpl) GetTestsToRun(ctx context.Context, req types.SelectTes
 	var cls []string
 	var selectAll bool
 	updated := 0
+	new := 0 // Keep track of new files. Don't count them in the current total. The count will get updated using partial CG
 	for _, node := range nodes {
 		// A file which is not recognized. Need to add logic for handling these type of files
 		if !utils.IsSupported(node) {
@@ -262,6 +263,7 @@ func (cgs *CgServiceImpl) GetTestsToRun(ctx context.Context, req types.SelectTes
 						t.Selection = types.SelectNewTest
 						// Mark Methods field as * since it's a new test.
 						// We can get method information only from the PCG.
+						new++
 						t.Method = "*"
 						l = append(l, t)
 					} else {
@@ -314,9 +316,9 @@ func (cgs *CgServiceImpl) GetTestsToRun(ctx context.Context, req types.SelectTes
 	}
 	return types.SelectTestsResp{
 		TotalTests:    totalTests,
-		SelectedTests: len(l),
+		SelectedTests: len(l) - new, // new tests will be added later in upsert with uploading of partial CG
 		UpdatedTests:  updated,
-		SrcCodeTests:  len(l) - updated,
+		SrcCodeTests:  len(l) - updated - new,
 		Tests:         l,
 	}, nil
 }

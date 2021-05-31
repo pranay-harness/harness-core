@@ -173,3 +173,4 @@ outboxPollConfig:
   initialDelayInSeconds: ${OUTBOX_POLL_INITIAL_DELAY:-5}
   pollingIntervalInSeconds: ${OUTBOX_POLL_INTERVAL:-5}
   maximumRetryAttemptsForAnEvent: ${OUTBOX_MAX_RETRY_ATTEMPTS:-7}
+  lockId: AccessControlService
