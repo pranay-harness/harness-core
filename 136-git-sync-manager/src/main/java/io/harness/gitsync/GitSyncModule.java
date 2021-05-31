@@ -11,6 +11,7 @@ import io.harness.gitsync.common.impl.GitBranchServiceImpl;
 import io.harness.gitsync.common.impl.GitBranchSyncServiceImpl;
 import io.harness.gitsync.common.impl.GitEntityServiceImpl;
 import io.harness.gitsync.common.impl.GitSyncSettingsServiceImpl;
+import io.harness.gitsync.common.impl.GitToHarnessProgressServiceImpl;
 import io.harness.gitsync.common.impl.HarnessToGitHelperServiceImpl;
 import io.harness.gitsync.common.impl.ScmDelegateFacilitatorServiceImpl;
 import io.harness.gitsync.common.impl.ScmManagerFacilitatorServiceImpl;
@@ -21,6 +22,7 @@ import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.GitBranchSyncService;
 import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.gitsync.common.service.GitSyncSettingsService;
+import io.harness.gitsync.common.service.GitToHarnessProgressService;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
 import io.harness.gitsync.common.service.ScmClientFacilitatorService;
 import io.harness.gitsync.common.service.ScmOrchestratorService;
@@ -104,6 +106,7 @@ public class GitSyncModule extends AbstractModule {
         .toInstance(new ManagedScheduledExecutorService("GitChangeSet"));
     bind(ScmOrchestratorService.class).to(ScmOrchestratorServiceImpl.class);
     bind(GitBranchSyncService.class).to(GitBranchSyncServiceImpl.class);
+    bind(GitToHarnessProgressService.class).to(GitToHarnessProgressServiceImpl.class);
     registerRequiredBindings();
   }
 

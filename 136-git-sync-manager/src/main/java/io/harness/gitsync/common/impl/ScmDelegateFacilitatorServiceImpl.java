@@ -25,12 +25,12 @@ import io.harness.delegate.task.scm.ScmGitRefTaskResponseData;
 import io.harness.delegate.task.scm.ScmPRTaskParams;
 import io.harness.delegate.task.scm.ScmPRTaskResponseData;
 import io.harness.exception.UnexpectedException;
+import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
-import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.product.ci.scm.proto.ListBranchesResponse;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
@@ -183,7 +183,7 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
   }
 
   @Override
-  public FileBatchContentResponse listFilesOfBranches(String accountIdentifier, String orgIdentifier,
+  public List<GitFileChangeDTO> listFilesOfBranches(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String yamlGitConfigRef, List<String> foldersList, String branchName) {
     return null;
   }

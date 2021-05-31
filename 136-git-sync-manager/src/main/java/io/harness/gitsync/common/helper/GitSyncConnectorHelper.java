@@ -72,11 +72,12 @@ public class GitSyncConnectorHelper {
             gitSyncConfigDTO.getProjectIdentifier(), gitSyncConfigDTO.getOrganizationIdentifier());
         scmConnector.setUrl(gitSyncConfigDTO.getRepo());
         return scmConnector;
+      } else {
+        throw new UnexpectedException(
+            String.format("The connector with the  id %s, accountId %s, orgId %s, projectId %s is not a scm connector",
+                gitSyncConfigDTO.getIdentifier(), accountId, gitSyncConfigDTO.getOrganizationIdentifier(),
+                gitSyncConfigDTO.getProjectIdentifier()));
       }
-      throw new UnexpectedException(
-          String.format("The connector with the  id %s, accountId %s, orgId %s, projectId %s is not a scm connector",
-              gitSyncConfigDTO.getIdentifier(), accountId, gitSyncConfigDTO.getOrganizationIdentifier(),
-              gitSyncConfigDTO.getProjectIdentifier()));
     } else {
       throw new UnexpectedException(String.format(
           "No connector found with the id %s, accountId %s, orgId %s, projectId %s", gitSyncConfigDTO.getIdentifier(),
