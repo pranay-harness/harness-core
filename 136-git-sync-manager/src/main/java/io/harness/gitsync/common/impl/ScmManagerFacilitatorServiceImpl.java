@@ -97,4 +97,10 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
     FileBatchContentResponse filesList = scmClient.listFiles(decryptedConnector, foldersList, branchName);
     return FileBatchResponseMapper.createGitFileChangeList(filesList);
   }
+
+  @Override
+  public List<GitFileChangeDTO> listFilesByFilePaths(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String yamlGitConfigIdentifier, List<String> filePaths, String branchName) {
+    return null;
+  }
 }

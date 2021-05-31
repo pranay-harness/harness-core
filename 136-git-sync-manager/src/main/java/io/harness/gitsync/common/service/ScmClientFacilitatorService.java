@@ -27,4 +27,7 @@ public interface ScmClientFacilitatorService {
 
   List<GitFileChangeDTO> listFilesOfBranches(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String yamlGitConfigIdentifier, List<String> foldersList, String branchName);
+
+  List<GitFileChangeDTO> listFilesByFilePaths(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String yamlGitConfigIdentifier, List<String> filePaths, String branchName);
 }

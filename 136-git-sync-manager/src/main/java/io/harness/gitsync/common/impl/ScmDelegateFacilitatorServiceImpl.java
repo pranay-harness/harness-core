@@ -188,6 +188,12 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     return null;
   }
 
+  @Override
+  public List<GitFileChangeDTO> listFilesByFilePaths(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String yamlGitConfigIdentifier, List<String> filePaths, String branchName) {
+    return null;
+  }
+
   DelegateTaskRequest getDelegateTaskRequest(
       String accountIdentifier, TaskParameters taskParameters, TaskType taskType) {
     return DelegateTaskRequest.builder()
