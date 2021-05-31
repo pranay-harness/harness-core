@@ -4,7 +4,7 @@ import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.get
 
 import io.harness.batch.processing.ccm.PricingSource;
 import io.harness.batch.processing.pricing.service.support.StorageCustomPricingProvider;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
 import io.harness.perpetualtask.k8s.watch.PVInfo.PVType;
 
 import java.util.Map;

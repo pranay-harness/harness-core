@@ -1,8 +1,8 @@
-package io.harness.ccm.graphql.dto.recommendation;
+package io.harness.ccm.commons.beans.recommendation;
 
 public enum ResourceType {
   WORKLOAD,
-  NODE;
+  NODE_POOL;
   //  CLUSTER,
   //  AUTO_STOPPING;
 }

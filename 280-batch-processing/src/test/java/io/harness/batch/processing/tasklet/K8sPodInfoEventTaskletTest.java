@@ -1,8 +1,8 @@
 package io.harness.batch.processing.tasklet;
 
 import static io.harness.batch.processing.billing.timeseries.data.PrunedInstanceData.PrunedInstanceDataBuilder;
-import static io.harness.batch.processing.pricing.data.CloudProvider.AZURE;
 import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
+import static io.harness.ccm.commons.constants.CloudProvider.AZURE;
 import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.NIKUNJ;
 import static io.harness.rule.OwnerRule.UTSAV;
@@ -22,17 +22,17 @@ import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.tasklet.support.HarnessServiceInfoFetcher;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.ccm.commons.beans.InstanceType;
+import io.harness.ccm.commons.constants.CloudProvider;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.ff.FeatureFlagService;
 import io.harness.grpc.utils.HTimestamps;
@@ -63,7 +63,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.batch.repeat.RepeatStatus;
 
@@ -111,8 +110,6 @@ public class K8sPodInfoEventTaskletTest extends BaseTaskletTest {
 
   @Before
   public void setup() {
-    MockitoAnnotations.initMocks(this);
-    mockChunkContext();
     when(config.getBatchQueryConfig()).thenReturn(BatchQueryConfig.builder().queryBatchSize(50).build());
     when(clusterDataGenerationValidator.shouldGenerateClusterData(any(), any())).thenReturn(true);
     when(instanceDataBulkWriteService.updateList(any())).thenReturn(true);

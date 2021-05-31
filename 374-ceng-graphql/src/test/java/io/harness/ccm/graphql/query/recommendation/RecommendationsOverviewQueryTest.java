@@ -18,6 +18,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
+import io.harness.ccm.commons.beans.recommendation.ResourceType;
 import io.harness.ccm.graphql.core.recommendation.RecommendationService;
 import io.harness.ccm.graphql.dto.recommendation.ContainerHistogramDTO;
 import io.harness.ccm.graphql.dto.recommendation.ContainerHistogramDTO.HistogramExp;
@@ -25,7 +26,6 @@ import io.harness.ccm.graphql.dto.recommendation.FilterStatsDTO;
 import io.harness.ccm.graphql.dto.recommendation.RecommendationDetailsDTO;
 import io.harness.ccm.graphql.dto.recommendation.RecommendationItemDTO;
 import io.harness.ccm.graphql.dto.recommendation.RecommendationsDTO;
-import io.harness.ccm.graphql.dto.recommendation.ResourceType;
 import io.harness.ccm.graphql.dto.recommendation.WorkloadRecommendationDTO;
 import io.harness.ccm.graphql.utils.GraphQLUtils;
 import io.harness.rule.Owner;
@@ -206,7 +206,10 @@ public class RecommendationsOverviewQueryTest extends CategoryTest {
     String columnName = "resourceType";
     List<String> columns = Collections.singletonList(columnName);
     List<FilterStatsDTO> actualResponse =
-        ImmutableList.of(FilterStatsDTO.builder().key(columnName).values(ImmutableList.of("WORKLOAD", "NODE")).build());
+        ImmutableList.of(FilterStatsDTO.builder()
+                             .key(columnName)
+                             .values(ImmutableList.of(ResourceType.WORKLOAD.name(), ResourceType.NODE_POOL.name()))
+                             .build());
 
     when(recommendationService.getFilterStats(eq(ACCOUNT_ID), any(), eq(columns), eq(CE_RECOMMENDATIONS)))
         .thenReturn(actualResponse);
@@ -218,7 +221,8 @@ public class RecommendationsOverviewQueryTest extends CategoryTest {
 
     assertThat(result).isNotNull().hasSize(1);
     assertThat(result.get(0).getKey()).isEqualTo(columnName);
-    assertThat(result.get(0).getValues()).containsExactlyInAnyOrder("WORKLOAD", "NODE");
+    assertThat(result.get(0).getValues())
+        .containsExactlyInAnyOrder(ResourceType.WORKLOAD.name(), ResourceType.NODE_POOL.name());
 
     assertCommonCondition(conditionCaptor.getValue());
   }
@@ -229,8 +233,8 @@ public class RecommendationsOverviewQueryTest extends CategoryTest {
   public void testRecommendationFilterStatsWithPreselectedFilters() {
     String columnName = "resourceType";
     List<String> columns = Collections.singletonList(columnName);
-    List<FilterStatsDTO> actualResponse =
-        ImmutableList.of(FilterStatsDTO.builder().key(columnName).values(ImmutableList.of("WORKLOAD")).build());
+    List<FilterStatsDTO> actualResponse = ImmutableList.of(
+        FilterStatsDTO.builder().key(columnName).values(ImmutableList.of(ResourceType.WORKLOAD.name())).build());
 
     when(recommendationService.getFilterStats(eq(ACCOUNT_ID), any(), eq(columns), eq(CE_RECOMMENDATIONS)))
         .thenReturn(actualResponse);
@@ -242,7 +246,7 @@ public class RecommendationsOverviewQueryTest extends CategoryTest {
 
     assertThat(result).isNotNull().hasSize(1);
     assertThat(result.get(0).getKey()).isEqualTo(columnName);
-    assertThat(result.get(0).getValues()).containsExactly("WORKLOAD");
+    assertThat(result.get(0).getValues()).containsExactly(ResourceType.WORKLOAD.name());
 
     Condition condition = conditionCaptor.getValue();
     assertCommonCondition(condition);
@@ -255,7 +259,7 @@ public class RecommendationsOverviewQueryTest extends CategoryTest {
         .contains(CE_RECOMMENDATIONS.CLUSTERNAME.getQualifiedName().toString())
         .contains("clusterName0")
         .contains(CE_RECOMMENDATIONS.RESOURCETYPE.getQualifiedName().toString())
-        .contains("WORKLOAD")
+        .contains(ResourceType.WORKLOAD.name())
         .contains(CE_RECOMMENDATIONS.MONTHLYCOST.getQualifiedName().toString())
         .contains("100")
         .contains(CE_RECOMMENDATIONS.MONTHLYSAVING.getQualifiedName().toString())

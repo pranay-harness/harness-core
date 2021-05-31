@@ -32,7 +32,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -53,8 +52,6 @@ public class GcpBillingDataPipelineTaskletTest extends BaseTaskletTest {
 
   @Before
   public void setup() throws IOException {
-    MockitoAnnotations.initMocks(this);
-    mockChunkContext();
     BillingDataPipelineConfig billingDataPipelineConfig =
         BillingDataPipelineConfig.builder().gcpProjectId(gcpProjectId).build();
     when(mainConfig.getBillingDataPipelineConfig()).thenReturn(billingDataPipelineConfig);
