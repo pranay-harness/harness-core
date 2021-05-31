@@ -21,6 +21,8 @@ import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.InvalidTagException;
 import io.harness.exception.InvalidThirdPartyCredentialsException;
+import io.harness.exception.InvalidYamlException;
+import io.harness.exception.JiraClientException;
 import io.harness.exception.KryoHandlerNotFoundException;
 import io.harness.exception.SecretNotFoundException;
 import io.harness.exception.ServiceNowException;
@@ -84,5 +86,7 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(EngineExpressionEvaluationException.class, 980006);
     kryo.register(EngineFunctorException.class, 980007);
     kryo.register(UnresolvedExpressionsException.class, 980008);
+    kryo.register(JiraClientException.class, 980009);
+    kryo.register(InvalidYamlException.class, 980010);
   }
 }
