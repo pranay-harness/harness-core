@@ -5,6 +5,7 @@ go_library(
     srcs = [
         "connection_info.go",
         "db.go",
+        "db_util.go",
         "mock.go",
         "mongodb.go",
         "persistence.go",

@@ -102,6 +102,16 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 			log.Errorw("unable to connect to mongo DB")
 			return errors.New("unable to connect to mongo DB")
 		}
+		// configure mgm.
+		// TODO remove this option once we have removed dependency on mgm. We should only use one framework for
+		// interacting with mongo
+		mdb.ConfigureMgm(
+			config.MongoDb.Username,
+			config.MongoDb.Password,
+			config.MongoDb.Host,
+			config.MongoDb.Port,
+			config.MongoDb.DbName,
+			config.MongoDb.ConnStr)
 
 		// Callgraph service
 		cgs = &mongodb.CgServiceImpl{
