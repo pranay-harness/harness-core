@@ -15,6 +15,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationVisualizationEventLogHandlerAsync;
 import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.delay.DelayEventListener;
+import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.OrchestrationServiceImpl;
 import io.harness.engine.events.NodeExecutionStatusUpdateEventHandler;
@@ -22,7 +23,10 @@ import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.executions.plan.PlanExecutionServiceImpl;
 import io.harness.engine.observers.OrchestrationLogPublisher;
+import io.harness.event.OrchestrationEndEventHandler;
+import io.harness.event.OrchestrationStartEventHandler;
 import io.harness.exception.GeneralException;
 import io.harness.execution.SdkResponseEventListener;
 import io.harness.execution.consumers.SdkResponseEventMessageListener;
@@ -72,10 +76,12 @@ import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
 import io.harness.pms.plan.creation.PipelineServiceFilterCreationResponseMerger;
 import io.harness.pms.plan.creation.PipelineServiceInternalInfoProvider;
 import io.harness.pms.plan.execution.PmsExecutionServiceInfoProvider;
+import io.harness.pms.plan.execution.handlers.ExecutionInfoUpdateEventHandler;
+import io.harness.pms.plan.execution.handlers.ExecutionSummaryCreateEventHandler;
 import io.harness.pms.plan.execution.handlers.ExecutionSummaryUpdateEventHandler;
+import io.harness.pms.plan.execution.handlers.PipelineStatusUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.PlanStatusEventEmitterHandler;
 import io.harness.pms.plan.execution.observers.PipelineExecutionSummaryDeleteObserver;
-import io.harness.pms.plan.execution.registrar.PmsOrchestrationEventRegistrar;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
@@ -116,6 +122,7 @@ import io.harness.yaml.YamlSdkInitHelper;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -335,6 +342,14 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     planStatusEventEmitterHandler.getPlanExecutionSubject().register(
         injector.getInstance(Key.get(NotificationInformHandler.class)));
 
+    PlanExecutionServiceImpl planExecutionService =
+        (PlanExecutionServiceImpl) injector.getInstance(Key.get(PlanExecutionService.class));
+    planExecutionService.getPlanStatusUpdateSubject().register(
+        injector.getInstance(Key.get(ExecutionInfoUpdateEventHandler.class)));
+    planExecutionService.getPlanStatusUpdateSubject().register(planStatusEventEmitterHandler);
+    planExecutionService.getPlanStatusUpdateSubject().register(
+        injector.getInstance(Key.get(PipelineStatusUpdateEventHandler.class)));
+
     OrchestrationServiceImpl orchestrationService =
         (OrchestrationServiceImpl) injector.getInstance(Key.get(OrchestrationService.class));
     orchestrationService.getOrchestrationStartSubject().register(
@@ -343,6 +358,14 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         injector.getInstance(Key.get(BarrierInitializer.class)));
     orchestrationService.getOrchestrationStartSubject().register(
         injector.getInstance(Key.get(ResourceRestraintInitializer.class)));
+    orchestrationService.getOrchestrationStartSubject().register(
+        injector.getInstance(Key.get(OrchestrationStartEventHandler.class)));
+    orchestrationService.getOrchestrationStartSubject().register(
+        injector.getInstance(Key.get(ExecutionSummaryCreateEventHandler.class)));
+
+    OrchestrationEngine orchestrationEngine = injector.getInstance(Key.get(OrchestrationEngine.class));
+    orchestrationEngine.getOrchestrationEndSubject().register(
+        injector.getInstance(Key.get(OrchestrationEndEventHandler.class)));
 
     SdkResponseEventListener sdkResponseEventListener = injector.getInstance(SdkResponseEventListener.class);
     sdkResponseEventListener.getEventListenerObserverSubject().register(
@@ -398,7 +421,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .engineSteps(PipelineServiceStepRegistrar.getEngineSteps())
         .engineFacilitators(PipelineServiceFacilitatorRegistrar.getEngineFacilitators())
         .engineAdvisers(PipelineServiceUtilAdviserRegistrar.getEngineAdvisers())
-        .engineEventHandlersMap(PmsOrchestrationEventRegistrar.getEngineEventHandlers())
+        .engineEventHandlersMap(ImmutableMap.of())
         .executionSummaryModuleInfoProviderClass(PmsExecutionServiceInfoProvider.class)
         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
         .useRedisForSdkResponseEvents(config.getUseRedisForSdkResponseEvents())
