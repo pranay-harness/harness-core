@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.marketplace.gcp.GcpMarketPlaceApiHandler;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -53,13 +54,14 @@ public class AccountResourceTest extends CategoryTest {
   private static SampleDataProviderService sampleDataProviderService = mock(SampleDataProviderService.class);
   private static Provider<SampleDataProviderService> sampleDataProviderServiceProvider =
       (Provider<SampleDataProviderService>) mock(Provider.class);
+  private static FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
 
   @ClassRule
   public static ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
           .instance(new AccountResource(accountService, userService, licenseServiceProvider, accountPermissionUtils,
               featureService, jobScheduler, gcpMarketPlaceApiHandler, sampleDataProviderServiceProvider,
-              mock(AuthService.class)))
+              mock(AuthService.class), featureFlagService))
           .build();
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
