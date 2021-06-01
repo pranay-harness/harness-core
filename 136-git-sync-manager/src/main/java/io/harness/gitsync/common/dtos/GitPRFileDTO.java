@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 
-import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -14,6 +13,9 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(DX)
-public class GitPrFileListDTO {
-  List<GitPRFileDTO> prFileList;
+public class GitPRFileDTO {
+  boolean added;
+  boolean deleted;
+  boolean renamed;
+  String path;
 }
