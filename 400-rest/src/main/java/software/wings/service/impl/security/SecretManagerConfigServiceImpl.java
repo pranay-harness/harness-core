@@ -111,10 +111,10 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
     }
     secretManagerConfig.setScopedToAccount(false);
     if (isEmpty(secretManagerConfig.getUuid())) {
-      log.info("test sm : secretManagerConfig.getUuid() is null" );
+      log.info("test sm : secretManagerConfig.getUuid is null" );
       secretsManagerRBACService.canSetPermissions(accountId, secretManagerConfig);
     } else {
-      log.info("test sm : secretManagerConfig.getUuid() is not null" );
+      log.info("test sm : secretManagerConfig.getUuid is not null" );
       SecretManagerConfig oldConfig = wingsPersistence.get(SecretManagerConfig.class, secretManagerConfig.getUuid());
       secretsManagerRBACService.canChangePermissions(accountId, secretManagerConfig, oldConfig);
       secretService.updateConflictingSecretsToInheritScopes(accountId, secretManagerConfig);
@@ -123,7 +123,7 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
     //[PL-11328] DO NOT remove this innocent redundant looking line which is actually setting the encryptionType.
     secretManagerConfig.setEncryptionType(secretManagerConfig.getEncryptionType());
 
-    log.info("test sm : secretManagerConfig.getUuid() is not null" );
+    log.info("test sm : secretManagerConfig reached to final" );
     return wingsPersistence.save(secretManagerConfig);
   }
 
