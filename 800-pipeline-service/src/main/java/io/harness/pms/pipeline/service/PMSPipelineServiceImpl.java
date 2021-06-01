@@ -122,8 +122,10 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
-  public PipelineEntity updatePipelineMetadata(Criteria criteria, Update updateOperations) {
-    return pmsPipelineRepository.updatePipelineMetadata(criteria, updateOperations);
+  public PipelineEntity updatePipelineMetadata(
+      String accountId, String orgIdentifier, String projectIdentifier, Criteria criteria, Update updateOperations) {
+    return pmsPipelineRepository.updatePipelineMetadata(
+        accountId, orgIdentifier, projectIdentifier, criteria, updateOperations);
   }
 
   @Override
@@ -134,7 +136,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
 
     Update update = new Update();
     update.set(PipelineEntityKeys.executionSummaryInfo, executionSummaryInfo);
-    updatePipelineMetadata(criteria, update);
+    updatePipelineMetadata(accountId, orgId, projectId, criteria, update);
   }
 
   @Override
@@ -144,7 +146,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false, null);
     Update update = new Update();
     update.inc(PipelineEntityKeys.runSequence);
-    return Optional.ofNullable(updatePipelineMetadata(criteria, update));
+    return Optional.ofNullable(updatePipelineMetadata(accountId, orgIdentifier, projectIdentifier, criteria, update));
   }
 
   @Override
