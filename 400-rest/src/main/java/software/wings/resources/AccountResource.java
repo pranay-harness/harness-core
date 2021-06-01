@@ -17,12 +17,15 @@ import static org.apache.commons.lang3.StringUtils.substringAfter;
 import io.harness.account.ProvisionStep;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.cvng.beans.ServiceGuardLimitDTO;
 import io.harness.datahandler.models.AccountDetails;
+import io.harness.exception.HintException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.marketplace.gcp.GcpMarketPlaceApiHandler;
@@ -107,6 +110,7 @@ public class AccountResource {
   private final GcpMarketPlaceApiHandler gcpMarketPlaceApiHandler;
   private final Provider<SampleDataProviderService> sampleDataProviderServiceProvider;
   private final AuthService authService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Inject
   public AccountResource(AccountService accountService, UserService userService,
@@ -510,6 +514,9 @@ public class AccountResource {
   @Path("{accountId}/disableRestrictedAccess")
   @AuthRule(permissionType = MANAGE_RESTRICTED_ACCESS)
   public RestResponse<Boolean> enableHarnessUserGroupAccess(@PathParam("accountId") String accountId) {
+    if (!featureFlagService.isEnabled(FeatureName.LIMITED_ACCESS_FOR_HARNESS_USER_GROUP, accountId)) {
+      throw new HintException(String.format("Restricted Access Feature not allowed for account: %s ", accountId));
+    }
     return new RestResponse<>(accountService.enableHarnessUserGroupAccess(accountId));
   }
 
@@ -517,6 +524,9 @@ public class AccountResource {
   @Path("{accountId}/enableRestrictedAccess")
   @AuthRule(permissionType = MANAGE_RESTRICTED_ACCESS)
   public RestResponse<Boolean> disableHarnessUserGroupAccess(@PathParam("accountId") String accountId) {
+    if (!featureFlagService.isEnabled(FeatureName.LIMITED_ACCESS_FOR_HARNESS_USER_GROUP, accountId)) {
+      throw new HintException(String.format("Restricted Access Feature not allowed for account: %s ", accountId));
+    }
     return new RestResponse<>(accountService.disableHarnessUserGroupAccess(accountId));
   }
 

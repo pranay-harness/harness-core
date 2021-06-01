@@ -8,6 +8,9 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.FeatureName;
+import io.harness.exception.HintException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rest.RestResponse;
 
 import software.wings.beans.security.AccessRequestDTO;
@@ -39,6 +42,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @TargetModule(_970_RBAC_CORE)
 public class AccessRequestResource {
   private final AccessRequestService accessRequestService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Inject
   public AccessRequestResource(AccessRequestService accessRequestService) {
@@ -61,6 +65,9 @@ public class AccessRequestResource {
   @AuthRule(permissionType = MANAGE_RESTRICTED_ACCESS)
   public RestResponse<AccessRequestDTO> createAccessRequest(
       @PathParam("accountId") String accountId, @RequestBody @NotNull AccessRequestDTO accessRequestDTO) {
+    if (!featureFlagService.isEnabled(FeatureName.LIMITED_ACCESS_FOR_HARNESS_USER_GROUP, accountId)) {
+      throw new HintException(String.format("Restricted Access Feature not allowed for account: %s ", accountId));
+    }
     return new RestResponse<>(
         accessRequestService.toAccessRequestDTO(accessRequestService.createAccessRequest(accessRequestDTO)));
   }
