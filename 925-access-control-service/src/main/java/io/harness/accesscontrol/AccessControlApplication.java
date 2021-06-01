@@ -30,6 +30,8 @@ import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.metrics.jobs.RecordMetricsJob;
+import io.harness.metrics.service.api.MetricService;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
@@ -133,7 +135,16 @@ public class AccessControlApplication extends Application<AccessControlConfigura
       environment.lifecycle().manage(injector.getInstance(AggregatorService.class));
     }
 
+    if (appConfig.getAggregatorConfiguration().isExportMetricsToStackDriver()) {
+      initializeMonitoring(injector);
+    }
+
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void initializeMonitoring(Injector injector) {
+    injector.getInstance(MetricService.class).initializeMetrics();
+    injector.getInstance(RecordMetricsJob.class).scheduleMetricsTasks();
   }
 
   private void registerHealthCheck(Environment environment, Injector injector) {

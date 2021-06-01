@@ -66,6 +66,8 @@ public class AggregatorModule extends AbstractModule {
     bind(new TypeLiteral<ChangeConsumer<RoleDBO>>() {
     }).to(new TypeLiteral<RoleChangeConsumerImpl>() {
       }).in(Scopes.SINGLETON);
+
+    bind(AggregatorMetricsService.class).to(AggregatorMetricsServiceImpl.class).in(Scopes.SINGLETON);
   }
 
   private void registerRequiredBindings() {

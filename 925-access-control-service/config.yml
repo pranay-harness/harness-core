@@ -152,6 +152,7 @@ aggregatorModuleConfig:
     database.include.list: ${DATABASE_INCLUDE_LIST:-accesscontrol}
     collection.include.list: ${COLLECTION_INCLUDE_LIST:-accesscontrol.roles,accesscontrol.roleassignments,accesscontrol.resourcegroups,accesscontrol.usergroups}
   enabled: ${AGGREGATOR_ENABLED:-true}
+  exportMetricsToStackDriver: ${EXPORT_METRICS_TO_STACK_DRIVER:-false}
 
 accessControlPreferenceConfig:
   enabled: ${ACCESS_CONTROL_PREFERENCE_ENABLED:-true}
