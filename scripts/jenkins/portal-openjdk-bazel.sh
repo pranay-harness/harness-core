@@ -154,6 +154,7 @@ cd dist/${FOLDER_NAME}
 cp ${HOME}/.bazel-dirs/bin/${MODULE_NAME}/module_deploy.jar ce-nextgen-capsule.jar
 cp ../../${MODULE_NAME}/keystore.jks .
 cp ../../${MODULE_NAME}/config.yml .
+cp ../../alpn-boot-8.1.13.v20181017.jar .
 cp ../../dockerization/${FOLDER_NAME}/Dockerfile-ce-nextgen-jenkins-k8-gcr-openjdk Dockerfile-gcr
 cp ../../dockerization/${FOLDER_NAME}/Dockerfile-ce-nextgen-jenkins-k8-openjdk Dockerfile
 cp -r ../../dockerization/${FOLDER_NAME}/scripts/ .

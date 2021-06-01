@@ -40,8 +40,8 @@ replace_key_value eventsFramework.redis.sslConfig.enabled $EVENTS_FRAMEWORK_REDI
 replace_key_value eventsFramework.redis.sslConfig.CATrustStorePath $EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PATH
 replace_key_value eventsFramework.redis.sslConfig.CATrustStorePassword $EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PASSWORD
 
-replace_key_with_value gcpConfig.gcpProjectId "$GCP_PROJECT_ID"
-replace_key_with_value azureConfig.azureAppClientId "$AZURE_APP_CLIENT_ID"
+replace_key_value gcpConfig.gcpProjectId "$GCP_PROJECT_ID"
+replace_key_value azureConfig.azureAppClientId "$AZURE_APP_CLIENT_ID"
 
 if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
   IFS=',' read -ra SENTINEL_URLS <<< "$EVENTS_FRAMEWORK_REDIS_SENTINELS"
@@ -50,4 +50,11 @@ if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
     yq write -i $CONFIG_FILE eventsFramework.redis.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
     INDEX=$(expr $INDEX + 1)
   done
+fi
+
+if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
+  yq delete -i $CONFIG_FILE logging.appenders[0]
+  yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
+else
+  yq delete -i $CONFIG_FILE logging.appenders[1]
 fi
