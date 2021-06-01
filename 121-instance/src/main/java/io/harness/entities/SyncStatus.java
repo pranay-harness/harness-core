@@ -32,13 +32,13 @@ public class SyncStatus implements PersistentEntity {
                  .field(SyncStatusKeys.projectIdentifier)
                  .field(SyncStatusKeys.serviceId)
                  .field(SyncStatusKeys.envId)
-                 .field(SyncStatusKeys.infraMappingId)
+                 .field(SyncStatusKeys.infrastructureMappingId)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("compositeIdx2")
                  .field(SyncStatusKeys.orgIdentifier)
                  .field(SyncStatusKeys.projectIdentifier)
-                 .field(SyncStatusKeys.infraMappingId)
+                 .field(SyncStatusKeys.infrastructureMappingId)
                  .build())
         .build();
   }
@@ -49,8 +49,8 @@ public class SyncStatus implements PersistentEntity {
   private String projectIdentifier;
   private String envId;
   private String serviceId;
-  private String infraMappingId;
-  private String infraMappingName;
+  private String infrastructureMappingId;
+  private String infrastructureMappingName;
 
   private long lastSyncedAt;
   private long lastSuccessfullySyncedAt;

@@ -176,6 +176,7 @@ public class TriggerConditionController {
                 .filePaths(webHookTriggerCondition.getFilePaths())
                 .deployOnlyIfFilesChanged(webHookTriggerCondition.isCheckFileContentChanged())
                 .triggerConditionType(QLTriggerConditionType.valueOf(webHookTriggerCondition.getConditionType().name()))
+                .webhookSecret(webHookTriggerCondition.getWebHookSecret())
                 .build();
 
         break;
@@ -369,6 +370,7 @@ public class TriggerConditionController {
     if (QLWebhookSource.CUSTOM != qlWebhookConditionInput.getWebhookSourceType()) {
       builder.webhookSource(WebhookSource.valueOf(qlWebhookConditionInput.getWebhookSourceType().name()));
     }
+    builder.webHookSecret(qlWebhookConditionInput.getWebhookSecret());
     return builder.build();
   }
 

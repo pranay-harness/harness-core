@@ -211,8 +211,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
         } else {
           if (responseData != null && instanceSyncFlow == PERPETUAL_TASK) {
             ContainerSyncResponse syncResponse = (ContainerSyncResponse) responseData;
-            if (isNotEmpty(syncResponse.getControllerName())
-                && !syncResponse.getControllerName().equals(containerMetadata.getContainerServiceName())) {
+            if (!responseBelongsToCurrentSetOfContainers(containerMetadata, syncResponse)) {
               continue;
             }
           }
@@ -224,6 +223,21 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
         }
       }
     }
+  }
+
+  private boolean responseBelongsToCurrentSetOfContainers(
+      ContainerMetadata containerMetadata, ContainerSyncResponse syncResponse) {
+    final boolean controllerNamePresent = isNotEmpty(syncResponse.getControllerName());
+    final boolean sameControllerName =
+        controllerNamePresent && syncResponse.getControllerName().equals(containerMetadata.getContainerServiceName());
+    final boolean releaseNamePresent = isNotEmpty(syncResponse.getReleaseName());
+    final boolean sameReleaseName =
+        releaseNamePresent && syncResponse.getReleaseName().equals(containerMetadata.getReleaseName());
+    final boolean namespacePresent = isNotEmpty(syncResponse.getNamespace());
+    final boolean sameNamespace =
+        namespacePresent && syncResponse.getNamespace().equals(containerMetadata.getNamespace());
+    return (!controllerNamePresent || sameControllerName) && (!releaseNamePresent || sameReleaseName)
+        && (!namespacePresent || sameNamespace);
   }
 
   /**
@@ -604,6 +618,8 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
           namespace = containerDeploymentInfo.getNamespace();
         }
 
+        final List<String> namespaces = containerDeploymentInfo.getNamespaces();
+
         boolean isControllerNamesRetrievable = emptyIfNull(containerDeploymentInfo.getContainerInfoList())
                                                    .stream()
                                                    .map(io.harness.container.ContainerInfo::getWorkloadName)
@@ -629,12 +645,26 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
             containerInstances.put(containerMetadata, null);
           }
         } else {
-          ContainerMetadata containerMetadata = ContainerMetadata.builder()
-                                                    .namespace(namespace)
-                                                    .releaseName(containerDeploymentInfo.getReleaseName())
-                                                    .build();
-          deploymentSummaryMap.put(containerMetadata, deploymentSummary);
-          containerInstances.put(containerMetadata, null);
+          if (isNotEmpty(namespaces)) {
+            namespaces.stream()
+                .map(ns
+                    -> ContainerMetadata.builder()
+                           .releaseName(containerDeploymentInfo.getReleaseName())
+                           .namespace(ns)
+                           .build())
+                .forEach(containerMetadata -> {
+                  deploymentSummaryMap.put(containerMetadata, deploymentSummary);
+                  containerInstances.put(containerMetadata, null);
+                });
+          } else {
+            // should not be called now
+            ContainerMetadata containerMetadata = ContainerMetadata.builder()
+                                                      .namespace(namespace)
+                                                      .releaseName(containerDeploymentInfo.getReleaseName())
+                                                      .build();
+            deploymentSummaryMap.put(containerMetadata, deploymentSummary);
+            containerInstances.put(containerMetadata, null);
+          }
         }
       }
     } else if (newDeploymentSummaries.stream().iterator().next().getDeploymentInfo() instanceof K8sDeploymentInfo) {
@@ -934,6 +964,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
         .helmChartInfo(helmExecutionSummary.getHelmChartInfo())
         .containerInfoList(helmExecutionSummary.getContainerInfoList())
         .releaseName(helmExecutionSummary.getReleaseName())
+        .namespaces(executionSummary.getNamespaces())
         .build();
   }
 

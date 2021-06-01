@@ -9,13 +9,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @OwnedBy(PL)
 public enum ModuleType {
-  @JsonProperty("CD") CD,
-  @JsonProperty("CI") CI,
-  @JsonProperty("CORE") CORE,
-  @JsonProperty("CV") CV,
-  @JsonProperty("CF") CF,
-  @JsonProperty("CE") CE;
+  @JsonProperty("CD") CD("Continuous Deployment"),
+  @JsonProperty("CI") CI("Continuous Integeration"),
+  @JsonProperty("CORE") CORE("Core"),
+  @JsonProperty("CV") CV("Continuous Verification"),
+  @JsonProperty("CF") CF("Continuous Features"),
+  @JsonProperty("CE") CE("Continuous Efficiency");
 
+  String displayName;
+  ModuleType(String displayName) {
+    this.displayName = displayName;
+  }
   @JsonCreator
   public static ModuleType fromString(String moduleType) {
     for (ModuleType moduleEnum : ModuleType.values()) {
@@ -24,5 +28,9 @@ public enum ModuleType {
       }
     }
     throw new IllegalArgumentException("Invalid value: " + moduleType);
+  }
+
+  public String getDisplayName() {
+    return displayName;
   }
 }

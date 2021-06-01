@@ -13,6 +13,8 @@ import io.harness.event.model.EventType;
 import io.harness.ng.core.common.beans.Generation;
 import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.invites.InviteOperationResponse;
+import io.harness.ng.core.user.PasswordChangeDTO;
+import io.harness.ng.core.user.PasswordChangeResponse;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 
@@ -450,13 +452,22 @@ public interface UserService extends OwnedByAccount {
   boolean resetPassword(UserResource.ResetPasswordRequest resetPasswordRequest);
 
   /**
-   * Update password boolean.
+   * Update password via reset-password link.
    *
    * @param resetPasswordToken the reset password token
    * @param password           the password
    * @return the boolean
    */
   boolean updatePassword(String resetPasswordToken, char[] password);
+
+  /**
+   * Change password from user profile page
+   *
+   * @param userId                 User ID for the user submitting the change request
+   * @param passwordChangeDTO      DTO with the new password
+   * @return the boolean
+   */
+  PasswordChangeResponse changePassword(String userId, PasswordChangeDTO passwordChangeDTO);
 
   LogoutResponse logout(String accountId, String userId);
 

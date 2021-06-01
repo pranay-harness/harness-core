@@ -1,15 +1,12 @@
 package io.harness.ng.core.entitysetupusage;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.context.GlobalContextData;
-import io.harness.exception.InvalidRequestException;
-import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.manage.GlobalContextManager;
@@ -116,29 +113,7 @@ public class EntitySetupUsageQueryFilterHelper {
     if (globalContextData == null) {
       return null;
     }
-    final GitEntityInfo gitBranchInfo =
-        ((GitSyncBranchContext) Objects.requireNonNull(globalContextData)).getGitBranchInfo();
-    if (gitBranchInfo != null && !isNullGitContext(gitBranchInfo)) {
-      return EntityGitDetails.builder()
-          .branch(gitBranchInfo.getBranch())
-          .repoIdentifier(gitBranchInfo.getYamlGitConfigId())
-          .build();
-    }
-    return null;
-  }
-
-  private boolean isNullGitContext(GitEntityInfo gitBranchInfo) {
-    // todo @Abhinav Maybe we should use null in place of default
-    final String DEFAULT = "__default__";
-    boolean isRepoNull =
-        isEmpty(gitBranchInfo.getYamlGitConfigId()) || gitBranchInfo.getYamlGitConfigId().equals(DEFAULT);
-    boolean isBranchNull = isEmpty(gitBranchInfo.getBranch()) || gitBranchInfo.getBranch().equals(DEFAULT);
-    if (!isRepoNull && isBranchNull || isRepoNull && !isBranchNull) {
-      throw new InvalidRequestException(
-          String.format("The repo should be provided with the branch, the request has repo %s, branch %s",
-              gitBranchInfo.getYamlGitConfigId(), gitBranchInfo.getBranch()));
-    }
-    return isRepoNull && isBranchNull;
+    return ((GitSyncBranchContext) Objects.requireNonNull(globalContextData)).toEntityGitDetails();
   }
 
   private void populateGitCriteriaForReferredByEntity(Criteria criteria) {

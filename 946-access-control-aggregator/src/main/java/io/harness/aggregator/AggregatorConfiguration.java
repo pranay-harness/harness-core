@@ -14,4 +14,5 @@ import lombok.Data;
 public class AggregatorConfiguration {
   @JsonProperty("debezium") private DebeziumConfig debeziumConfig;
   private boolean enabled;
+  private boolean exportMetricsToStackDriver;
 }

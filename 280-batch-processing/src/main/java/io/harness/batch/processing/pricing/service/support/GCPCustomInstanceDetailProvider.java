@@ -1,9 +1,9 @@
 package io.harness.batch.processing.pricing.service.support;
 
 import io.harness.batch.processing.billing.service.PricingData;
-import io.harness.batch.processing.ccm.InstanceCategory;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.ccm.commons.beans.Resource;
+import io.harness.ccm.commons.beans.billing.InstanceCategory;
+import io.harness.ccm.commons.constants.CloudProvider;
 
 import org.springframework.stereotype.Component;
 

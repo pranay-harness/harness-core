@@ -32,7 +32,7 @@ import static io.harness.k8s.KubernetesConvention.getPrefixFromControllerName;
 import static io.harness.k8s.KubernetesConvention.getRevisionFromControllerName;
 import static io.harness.k8s.KubernetesConvention.getServiceNameFromControllerName;
 import static io.harness.k8s.model.ContainerApiVersions.KUBERNETES_V1;
-import static io.harness.network.Http.connectableHost;
+import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static io.harness.threading.Morpheus.sleep;
 
@@ -433,7 +433,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     if (url == null) {
       throw new UrlNotProvidedException("Url does not exist in the config");
     }
-    final boolean isHostConnectable = connectableHost(url);
+    final boolean isHostConnectable = connectableHttpUrl(url);
     if (!isHostConnectable) {
       throw new UrlNotReachableException("Could not connect to the master url: " + url);
     }
@@ -1836,23 +1836,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     }
 
     return createOrReplaceSecret(kubernetesConfig, secret);
-  }
-
-  @Override
-  @Deprecated
-  public List<Pod> getRunningPodsWithLabelsFabric8(
-      KubernetesConfig kubernetesConfig, String namespace, Map<String, String> labels) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
-        .pods()
-        .inNamespace(namespace)
-        .withLabels(labels)
-        .list()
-        .getItems()
-        .stream()
-        .filter(pod
-            -> StringUtils.isBlank(pod.getMetadata().getDeletionTimestamp())
-                && StringUtils.equals(pod.getStatus().getPhase(), RUNNING))
-        .collect(Collectors.toList());
   }
 
   @Override

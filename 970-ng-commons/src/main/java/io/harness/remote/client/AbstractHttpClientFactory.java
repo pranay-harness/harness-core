@@ -70,7 +70,7 @@ public abstract class AbstractHttpClientFactory {
     this.clientMode = ClientMode.NON_PRIVILEGED;
   }
 
-  public AbstractHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
+  protected AbstractHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
       ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId,
       boolean enableCircuitBreaker, ClientMode clientMode) {
     this.serviceHttpClientConfig = secretManagerConfig;

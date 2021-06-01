@@ -18,9 +18,8 @@ public class DelegateGrpcConfigExtractor {
   private static String MANAGER_GRPC_PORT = "9879";
   public static String extractTarget(String managerUrl) {
     try {
-      if (("KUBERNETES_ONPREM".equals(System.getenv().get(DEPLOY_MODE)))
-          && ("http".equals(extractScheme(managerUrl)))) {
-        return new URI(managerUrl).getAuthority() + ":" + MANAGER_GRPC_PORT;
+      if ("KUBERNETES_ONPREM".equals(System.getenv().get(DEPLOY_MODE))) {
+        return new URI(managerUrl).getHost() + ":" + MANAGER_GRPC_PORT;
       }
       return new URI(managerUrl).getAuthority();
     } catch (URISyntaxException e) {
@@ -29,11 +28,15 @@ public class DelegateGrpcConfigExtractor {
   }
 
   public static String extractAuthority(String managerUrl, String svc) {
-    if ("http".equals(extractScheme(managerUrl))) {
-      return "default-authority.harness.io";
-    }
     try {
       URI uri = new URI(managerUrl);
+      if ("KUBERNETES_ONPREM".equals(System.getenv().get(DEPLOY_MODE))) {
+        if ("https".equals(extractScheme(managerUrl))) {
+          return uri.getAuthority();
+        } else {
+          return "default-authority.harness.io";
+        }
+      }
       String path = uri.getPath();
       String[] parts = path.split("/");
       String prefix = null;

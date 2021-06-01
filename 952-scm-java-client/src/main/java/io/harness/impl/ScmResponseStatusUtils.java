@@ -20,6 +20,8 @@ public class ScmResponseStatusUtils {
   public void checkScmResponseStatusAndThrowException(int statusCode, String errorMsg) {
     try {
       switch (statusCode) {
+        case 304:
+          throw new ScmException(ErrorCode.SCM_NOT_MODIFIED);
         case 404:
           throw new ScmException(ErrorCode.SCM_NOT_FOUND_ERROR);
         case 409:
@@ -29,7 +31,7 @@ public class ScmResponseStatusUtils {
         case 401:
           throw new ScmException(ErrorCode.SCM_UNAUTHORIZED);
         default:
-          if (!(statusCode == 200 || statusCode == 201 || statusCode == 0)) {
+          if (statusCode >= 300) {
             log.error("Encountered new status code: [{}] from scm", statusCode);
             throw new UnexpectedException("Unexpected error occurred while doing scm operation");
           }

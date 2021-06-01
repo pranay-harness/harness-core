@@ -15,7 +15,6 @@ import io.harness.pms.contracts.plan.PlanCreationBlobRequest;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.plan.PlanCreationResponse;
-import io.harness.pms.contracts.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.exception.PmsExceptionUtils;
 import io.harness.pms.sdk.PmsSdkHelper;
@@ -45,13 +44,10 @@ public class PlanCreatorMergeService {
 
   private final Executor executor = Executors.newFixedThreadPool(5);
 
-  private final Map<String, PlanCreationServiceBlockingStub> planCreatorServices;
   private final PmsSdkHelper pmsSdkHelper;
 
   @Inject
-  public PlanCreatorMergeService(
-      Map<String, PlanCreationServiceBlockingStub> planCreatorServices, PmsSdkHelper pmsSdkHelper) {
-    this.planCreatorServices = planCreatorServices;
+  public PlanCreatorMergeService(PmsSdkHelper pmsSdkHelper) {
     this.pmsSdkHelper = pmsSdkHelper;
   }
 

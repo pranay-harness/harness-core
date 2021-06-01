@@ -6,5 +6,6 @@ import io.harness.annotations.dev.TargetModule;
 public enum QLServiceEntityAggregation {
   Application,
   ArtifactType,
-  DeploymentType
+  DeploymentType,
+  Service
 }

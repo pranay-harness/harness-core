@@ -369,7 +369,10 @@
               "type": "string"
             },
             "delegateSelectors": {
-              "$ref": "#/definitions/ParameterFieldListTaskSelectorYaml"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "headers": {
               "type": "array",
@@ -405,22 +408,6 @@
           }
         }
       ],
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "InputSetValidator": {
-      "type": "object",
-      "properties": {
-        "parameters": {
-          "type": "string"
-        },
-        "validatorType": {
-          "type": "string",
-          "enum": [
-            "ALLOWED_VALUES",
-            "REGEX"
-          ]
-        }
-      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "JexlCriteriaSpec": {
@@ -645,63 +632,6 @@
       "discriminator": "type",
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "ParameterField": {
-      "type": "object",
-      "properties": {
-        "expression": {
-          "type": "boolean"
-        },
-        "expressionValue": {
-          "type": "string"
-        },
-        "inputSetValidator": {
-          "$ref": "#/definitions/InputSetValidator"
-        },
-        "jsonResponseField": {
-          "type": "boolean"
-        },
-        "responseField": {
-          "type": "string"
-        },
-        "typeString": {
-          "type": "boolean"
-        },
-        "value": {
-          "type": "object"
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "ParameterFieldListTaskSelectorYaml": {
-      "type": "object",
-      "properties": {
-        "expression": {
-          "type": "boolean"
-        },
-        "expressionValue": {
-          "type": "string"
-        },
-        "inputSetValidator": {
-          "$ref": "#/definitions/InputSetValidator"
-        },
-        "jsonResponseField": {
-          "type": "boolean"
-        },
-        "responseField": {
-          "type": "string"
-        },
-        "typeString": {
-          "type": "boolean"
-        },
-        "value": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/TaskSelectorYaml"
-          }
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
     "PatchInstruction": {
       "type": "object",
       "discriminator": "type",
@@ -910,15 +840,6 @@
           }
         }
       ],
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "TaskSelectorYaml": {
-      "type": "object",
-      "properties": {
-        "delegateSelectors": {
-          "type": "string"
-        }
-      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "TransitionTo": {

@@ -18,6 +18,7 @@ import io.harness.waiter.WaitNotifyEngine;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -28,6 +29,7 @@ import org.mockito.MockitoAnnotations;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class FacilitateEventSdkResponseHandlerTest {
   @Mock private WaitNotifyEngine waitNotifyEngine;
+  @Mock private io.harness.engine.OrchestrationEngine orchestrationEngine;
   @InjectMocks private FacilitateResponseRequestHandler facilitateResponseRequestHandler;
 
   @Before
@@ -43,6 +45,7 @@ public class FacilitateEventSdkResponseHandlerTest {
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
+  @Ignore("Modify it to use orchestrationEngine inplace of waitEngine")
   public void testHandleAdviseEvent() {
     FacilitatorResponseRequest request =
         FacilitatorResponseRequest.newBuilder()

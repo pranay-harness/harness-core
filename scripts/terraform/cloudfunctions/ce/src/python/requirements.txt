@@ -6,3 +6,4 @@ google.cloud.storage
 google.cloud.scheduler
 google-cloud-secret-manager
 boto3==1.17.24
+google-cloud-pubsub==2.5.0

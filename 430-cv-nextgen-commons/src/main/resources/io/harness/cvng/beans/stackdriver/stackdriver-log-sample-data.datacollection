@@ -1,0 +1,26 @@
+Var authTokenUrl = "https://www.googleapis.com/oauth2/v4/token"
+Var authBodyMap = {}
+Var:authBodyMap.put("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer")
+Var:authBodyMap.put("assertion",Env:jwtToken)
+
+Var bearerTokenResponse = sync-call(url=Var:authTokenUrl,body=Var:authBodyMap, bodyType=FORM_URL_ENCODED)
+Var token = extract(Var:bearerTokenResponse, $.access_token)
+
+Var header = {}
+Var headerVal = concat("Bearer ", Var:token)
+Var:header.put("Authorization", Var:headerVal)
+
+Var body = {}
+Var projects = []
+Var:projects.append(Env:project)
+Var:body.put("projectIds", Var:projects)
+Var:body.put("filter", Env:query)
+Var:body.put("pageSize", "10")
+Var:body.put("orderBy", "timestamp desc")
+
+Var url = concat(Env:baseUrl, "entries:list")
+
+Var logsResponse = sync-call(url=Var:url, header=Var:header, body=Var:body)
+Var logs = extract(Var:logsResponse, $.entries)
+
+return Var:logs

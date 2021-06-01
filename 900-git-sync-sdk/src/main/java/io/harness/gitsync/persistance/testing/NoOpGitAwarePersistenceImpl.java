@@ -38,6 +38,12 @@ public class NoOpGitAwarePersistenceImpl implements GitAwarePersistence {
   }
 
   @Override
+  public Criteria getCriteriaWithGitSync(
+      String projectIdentifier, String orgIdentifier, String accountId, Class entityClass) {
+    return new Criteria();
+  }
+
+  @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> Long count(@NotNull Criteria criteria,
       String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
     Query query = new Query(criteria).skip(-1).limit(-1);

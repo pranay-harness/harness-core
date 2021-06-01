@@ -1,7 +1,7 @@
 package io.harness.ccm.graphql.query.recommendation;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
-import static io.harness.ccm.commons.Constants.ZONE_OFFSET;
+import static io.harness.ccm.commons.constants.Constants.ZONE_OFFSET;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.timescaledb.Tables.CE_RECOMMENDATIONS;
 
@@ -9,12 +9,13 @@ import static com.google.common.base.MoreObjects.firstNonNull;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
+import io.harness.ccm.commons.beans.recommendation.ResourceType;
 import io.harness.ccm.graphql.core.recommendation.RecommendationService;
 import io.harness.ccm.graphql.dto.recommendation.FilterStatsDTO;
+import io.harness.ccm.graphql.dto.recommendation.NodeRecommendationDTO;
 import io.harness.ccm.graphql.dto.recommendation.RecommendationDetailsDTO;
 import io.harness.ccm.graphql.dto.recommendation.RecommendationItemDTO;
 import io.harness.ccm.graphql.dto.recommendation.RecommendationsDTO;
-import io.harness.ccm.graphql.dto.recommendation.ResourceType;
 import io.harness.ccm.graphql.utils.GraphQLUtils;
 import io.harness.ccm.graphql.utils.annotations.GraphQLApi;
 import io.harness.exception.InvalidRequestException;
@@ -100,6 +101,9 @@ public class RecommendationsOverviewQuery {
     switch (resourceType) {
       case WORKLOAD:
         return recommendationService.getWorkloadRecommendationById(accountIdentifier, id, startTime, endTime);
+      case NODE_POOL:
+        // TODO(UTSAV):  nodeRecommendationService.getById(accountIdentifier, ceRecommendationId, start, end);
+        return NodeRecommendationDTO.builder().id("id1").build();
       default:
         throw new InvalidRequestException("Not Implemented");
     }

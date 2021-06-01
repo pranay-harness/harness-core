@@ -5,7 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.facilitator.sync.SyncFacilitator;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.cf.FlagConfigurationStep;
 import io.harness.steps.cf.FlagConfigurationStepParameters;
@@ -54,7 +54,7 @@ public class FlagConfigurationStepInfo implements PMSStepInfo {
 
   @Override
   public String getFacilitatorType() {
-    return SyncFacilitator.FACILITATOR_TYPE.getType();
+    return OrchestrationFacilitatorType.SYNC;
   }
 
   @Override

@@ -851,8 +851,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             dispatchDelegateTask(delegateTaskEvent);
           }
         }
-      } catch (Exception e) {
-        log.info(message);
+      } catch (Throwable e) {
         log.error("Exception while decoding task", e);
       }
     }
@@ -2071,7 +2070,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private void addSystemSecrets(Set<String> secrets) {
     // Add config file secrets
     secrets.add(delegateConfiguration.getAccountSecret());
-    secrets.add(delegateConfiguration.getManagerServiceSecret());
 
     // Add environment variable secrets
     String delegateProfileId = System.getenv().get("DELEGATE_PROFILE");

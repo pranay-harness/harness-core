@@ -103,7 +103,7 @@ public class ScmDelegateFacilitatorServiceImplTest extends GitSyncTestBase {
   @Category(UnitTests.class)
   public void getFileContentTest() {
     when(delegateGrpcClientWrapper.executeSyncTask(any()))
-        .thenReturn(GitFileTaskResponseData.builder().fileContent(fileContent).build());
+        .thenReturn(GitFileTaskResponseData.builder().fileContent(fileContent.toByteArray()).build());
     final GitFileContent gitFileContent = scmDelegateFacilitatorService.getFileContent(
         yamlGitConfigIdentifier, accountIdentifier, orgIdentifier, projectIdentifier, filePath, branch, null);
     assertThat(gitFileContent)

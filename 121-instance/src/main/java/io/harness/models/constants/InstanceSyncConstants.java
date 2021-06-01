@@ -2,6 +2,8 @@ package io.harness.models.constants;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.entities.ArtifactDetails.ArtifactDetailsKeys;
+import io.harness.entities.instance.Instance.InstanceKeys;
 
 import lombok.experimental.UtilityClass;
 
@@ -20,4 +22,6 @@ public final class InstanceSyncConstants {
   public static final int TIMEOUT_SECONDS = 600;
   public static final int INTERVAL_MINUTES = 10;
   public static final int VALIDATION_TIMEOUT_MINUTES = 2;
+  public static final String count = "count";
+  public static final String primaryArtifactTag = InstanceKeys.primaryArtifact + "." + ArtifactDetailsKeys.tag;
 }

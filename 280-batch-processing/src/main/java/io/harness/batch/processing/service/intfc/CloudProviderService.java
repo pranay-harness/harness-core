@@ -1,6 +1,6 @@
 package io.harness.batch.processing.service.intfc;
 
-import io.harness.batch.processing.pricing.data.CloudProvider;
+import io.harness.ccm.commons.constants.CloudProvider;
 
 import java.util.List;
 

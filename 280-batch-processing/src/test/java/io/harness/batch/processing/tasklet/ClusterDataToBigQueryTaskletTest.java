@@ -24,7 +24,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.batch.repeat.RepeatStatus;
 
@@ -39,9 +38,6 @@ public class ClusterDataToBigQueryTaskletTest extends BaseTaskletTest {
 
   @Before
   public void setup() {
-    MockitoAnnotations.initMocks(this);
-    mockChunkContext();
-
     InstanceBillingData instanceBillingData = InstanceBillingData.builder()
                                                   .startTimestamp(START_TIME_MILLIS)
                                                   .endTimestamp(END_TIME_MILLIS)

@@ -1,6 +1,7 @@
 package io.harness.cvng.beans.stackdriver;
 
 import static io.harness.annotations.dev.HarnessTeam.CV;
+import static io.harness.cvng.utils.StackdriverUtils.Scope.METRIC_SCOPE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.utils.StackdriverUtils;
@@ -35,7 +36,7 @@ public class StackdriverDashboardDetailsRequest extends StackdriverRequest {
   @Override
   public Map<String, Object> fetchDslEnvVariables() {
     StackdriverCredential credential = StackdriverCredential.fromGcpConnector(getConnectorConfigDTO());
-    Map<String, Object> envVariables = StackdriverUtils.getCommonEnvVariables(credential);
+    Map<String, Object> envVariables = StackdriverUtils.getCommonEnvVariables(credential, METRIC_SCOPE);
     envVariables.put("path", path);
     return envVariables;
   }

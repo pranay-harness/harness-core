@@ -99,6 +99,8 @@ input WebhookConditionInput {
   branchName: String
   #Git repository name in case when Account level Git connector is provided
   repoName: String
+  #Beta: Webhook secret to authorize Github webhooks
+  webhookSecret: String
 }
 
 input GitHubEvent {

@@ -1,11 +1,14 @@
 package io.harness.pms.sdk;
 
+import io.harness.ModuleType;
+import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.contracts.plan.ConsumerConfig;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.sdk.core.adviser.Adviser;
@@ -15,17 +18,20 @@ import io.harness.pms.sdk.core.facilitator.Facilitator;
 import io.harness.pms.sdk.core.pipeline.filters.FilterCreationResponseMerger;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.steps.Step;
+import io.harness.pms.utils.PmsConstants;
+import io.harness.redis.RedisConfig;
 
 import java.util.Map;
 import java.util.Set;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Value;
 
 @Value
 @Builder
 public class PmsSdkConfiguration {
   @Builder.Default SdkDeployMode deploymentMode = SdkDeployMode.LOCAL;
-  String serviceName;
+  ModuleType moduleType;
   MongoConfig mongoConfig;
   GrpcServerConfig grpcServerConfig;
   GrpcClientConfig pmsGrpcClientConfig;
@@ -36,4 +42,19 @@ public class PmsSdkConfiguration {
   Map<FacilitatorType, Class<? extends Facilitator>> engineFacilitators;
   Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap;
   Class<? extends ExecutionSummaryModuleInfoProvider> executionSummaryModuleInfoProviderClass;
+
+  public String getServiceName() {
+    if (moduleType == null) {
+      return PmsConstants.INTERNAL_SERVICE_NAME;
+    }
+    return moduleType.name().toLowerCase();
+  }
+  @Default
+  EventsFrameworkConfiguration eventsFrameworkConfiguration =
+      EventsFrameworkConfiguration.builder()
+          .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
+          .build();
+  boolean useRedisForSdkResponseEvents;
+  ConsumerConfig interruptConsumerConfig;
+  ConsumerConfig orchestrationEventConsumerConfig;
 }

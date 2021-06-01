@@ -1,6 +1,7 @@
 package io.harness.delegate.beans.connector.ceawsconnector;
 
 import io.harness.beans.DecryptableEntity;
+import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
 
@@ -23,7 +24,7 @@ public class CEAwsConnectorDTO extends ConnectorConfigDTO {
   @NotNull @Valid CrossAccountAccessDTO crossAccountAccess;
   @Valid AwsCurAttributesDTO curAttributes;
   String awsAccountId;
-  @NotEmpty(message = "At least one CEAwsFeatures should be enabled") List<CEAwsFeatures> featuresEnabled;
+  @NotEmpty(message = "FeaturesEnabled can't be empty") List<CEFeatures> featuresEnabled;
 
   @Override
   public List<DecryptableEntity> getDecryptableEntities() {

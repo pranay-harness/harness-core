@@ -183,6 +183,28 @@ public class ServiceEntityServiceImplTest extends NGCoreTestBase {
     assertThat(serviceEntityList.size()).isEqualTo(numOfServices);
   }
 
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testGetActiveServiceCount() {
+    List<ServiceEntity> serviceEntities = new ArrayList<>();
+    for (int i = 1; i <= 20; i++) {
+      String serviceIdentifier = "identifier " + i;
+      String serviceName = "serviceName " + i;
+      ServiceEntity serviceEntity = createServiceEntity(serviceIdentifier, serviceName);
+      serviceEntity.setCreatedAt((long) i);
+      if (i % 5 == 0) {
+        serviceEntity.setDeleted(true);
+        serviceEntity.setDeletedAt((long) (i + 5));
+      }
+      serviceEntities.add(serviceEntity);
+    }
+    serviceEntityService.bulkCreate(ACCOUNT_ID, serviceEntities);
+    Integer activeServiceCount =
+        serviceEntityService.findActiveServicesCountAtGivenTimestamp(ACCOUNT_ID, ORG_ID, PROJECT_ID, 16);
+    assertThat(activeServiceCount).isEqualTo(16 - 2);
+  }
+
   private ServiceEntity createServiceEntity(String identifier, String name) {
     return ServiceEntity.builder()
         .accountId(ACCOUNT_ID)
@@ -190,6 +212,7 @@ public class ServiceEntityServiceImplTest extends NGCoreTestBase {
         .orgIdentifier(ORG_ID)
         .projectIdentifier(PROJECT_ID)
         .name(name)
+        .deleted(false)
         .build();
   }
 

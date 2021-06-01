@@ -11,10 +11,10 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
-import io.harness.pms.inputset.helpers.MergeHelper;
+import io.harness.pms.inputset.InputSetErrorWrapperDTOPMS;
+import io.harness.pms.inputset.helpers.MergeUtils;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
-import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetErrorWrapperDTOPMS;
 import io.harness.pms.ngpipeline.inputset.mappers.PMSInputSetElementMapper;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.pipeline.PipelineEntity;
@@ -45,12 +45,13 @@ public class ValidateAndMergeHelper {
       throw new InvalidRequestException("Identifier cannot be empty");
     }
     confirmPipelineIdentifier(yaml, pipelineIdentifier);
+    confirmOrgAndProjectIdentifier(yaml, orgIdentifier, projectIdentifier);
 
     String pipelineYaml = getPipelineYaml(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineBranch, pipelineRepoID);
 
     try {
-      return MergeHelper.getErrorMap(pipelineYaml, yaml);
+      return MergeUtils.getErrorMap(pipelineYaml, yaml);
     } catch (IOException e) {
       throw new InvalidRequestException("Invalid input set yaml");
     }
@@ -64,7 +65,7 @@ public class ValidateAndMergeHelper {
             .build();
 
     String pipelineYaml;
-    try (PmsGitSyncBranchContextGuard ignored = new PmsGitSyncBranchContextGuard(gitSyncBranchContext)) {
+    try (PmsGitSyncBranchContextGuard ignored = new PmsGitSyncBranchContextGuard(gitSyncBranchContext, true)) {
       Optional<PipelineEntity> pipelineEntity =
           pmsPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
       if (pipelineEntity.isPresent()) {
@@ -89,7 +90,7 @@ public class ValidateAndMergeHelper {
     inputSetReferences.forEach(identifier
         -> inputSets.add(pmsInputSetService.get(
             accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, identifier, false)));
-    return MergeHelper.getInvalidInputSetReferences(inputSets, inputSetReferences);
+    return MergeUtils.getInvalidInputSetReferences(inputSets, inputSetReferences);
   }
 
   public String getPipelineTemplate(
@@ -173,6 +174,18 @@ public class ValidateAndMergeHelper {
     String identifierInYaml = PMSInputSetElementMapper.getStringField(pipelineComponent, "identifier", "pipeline");
     if (!pipelineIdentifier.equals(identifierInYaml)) {
       throw new InvalidRequestException("Pipeline identifier in input set does not match");
+    }
+  }
+
+  private void confirmOrgAndProjectIdentifier(String yaml, String orgIdentifier, String projectIdentifier) {
+    String orgIdInYaml = PMSInputSetElementMapper.getStringField(yaml, "orgIdentifier", "inputSet");
+    String projectIdInYaml = PMSInputSetElementMapper.getStringField(yaml, "projectIdentifier", "inputSet");
+
+    if (!orgIdentifier.equals(orgIdInYaml)) {
+      throw new InvalidRequestException("Org identifier in input set does not match");
+    }
+    if (!projectIdentifier.equals(projectIdInYaml)) {
+      throw new InvalidRequestException("Project identifier in input set does not match");
     }
   }
 }

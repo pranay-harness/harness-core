@@ -12,7 +12,7 @@ import io.harness.batch.processing.billing.timeseries.data.InstanceLifecycleInfo
 import io.harness.batch.processing.billing.timeseries.data.NodePodId;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.commons.utils.DataUtils;
+import io.harness.ccm.commons.utils.TimeUtils;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 
@@ -45,7 +45,7 @@ public class PodCountComputationServiceImplTest extends CategoryTest {
   @Mock private TimeScaleDBService timeScaleDBService;
   @Mock private PreparedStatement statement;
   @Mock private InstanceDataService instanceDataService;
-  @Mock private DataUtils utils;
+  @Mock private TimeUtils utils;
   @Mock ResultSet nodeIdResultSet, podDataResultSet;
 
   final int[] count = {0};

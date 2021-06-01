@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 
+
 CONFIG_FILE=/opt/harness/batch-processing-config.yml
+
+replace_key_value () {
+  CONFIG_KEY="$1";
+  CONFIG_VALUE="$2";
+  if [[ "" != "$CONFIG_VALUE" ]]; then
+    yq write -i "$CONFIG_FILE" "$CONFIG_KEY" "$CONFIG_VALUE"
+  fi
+}
 
 if [[ "" != "$MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE harness-mongo.uri "$MONGO_URI"
@@ -204,3 +213,4 @@ if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
   yq write -i $CONFIG_FILE ngManagerServiceSecret "$NEXT_GEN_MANAGER_SECRET"
 fi
 
+replace_key_value banzaiRecommenderConfig.baseUrl "$BANZAI_RECOMMENDER_BASEURL"

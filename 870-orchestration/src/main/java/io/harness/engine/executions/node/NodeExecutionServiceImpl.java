@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.pms.contracts.execution.Status.DISCONTINUING;
+import static io.harness.pms.contracts.execution.Status.ERRORED;
 import static io.harness.springdata.SpringDataMongoUtils.returnNewOptions;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
@@ -13,6 +14,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.interrupts.statusupdate.StepStatusUpdate;
 import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
+import io.harness.engine.observers.NodeExecutionStartObserver;
+import io.harness.engine.observers.NodeUpdateInfo;
+import io.harness.engine.observers.NodeUpdateObserver;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.execution.NodeExecution;
@@ -51,6 +55,8 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Inject private OrchestrationEventEmitter eventEmitter;
 
   @Getter private final Subject<StepStatusUpdate> stepStatusUpdateSubject = new Subject<>();
+  @Getter private final Subject<NodeExecutionStartObserver> nodeExecutionStartSubject = new Subject<>();
+  @Getter private final Subject<NodeUpdateObserver> nodeUpdateObserverSubject = new Subject<>();
 
   @Override
   public NodeExecution get(String nodeExecutionId) {
@@ -153,8 +159,11 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       throw new NodeExecutionUpdateFailedException(
           "Node Execution Cannot be updated with provided operations" + nodeExecutionId);
     }
-
-    emitEvent(updated, OrchestrationEventType.NODE_EXECUTION_UPDATE);
+    nodeUpdateObserverSubject.fireInform(NodeUpdateObxxxxxxxx:onNodeUpdate,
+        NodeUpdateInfo.builder()
+            .nodeExecutionId(nodeExecutionId)
+            .planExecutionId(updated.getAmbiance().getPlanExecutionId())
+            .build());
     return updated;
   }
 
@@ -175,6 +184,9 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
                                  .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
                                  .eventType(OrchestrationEventType.NODE_EXECUTION_START)
                                  .build());
+
+      nodeExecutionStartSubject.fireInform(
+          NodeExecutionStartObxxxxxxxx:onNodeStart, OrchestrationEventType.NODE_EXECUTION_START, nodeExecution);
       return mongoTemplate.insert(nodeExecution);
     } else {
       return mongoTemplate.save(nodeExecution);
@@ -252,7 +264,11 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       log.error("Failed to mark node as retry");
       return false;
     }
-    emitEvent(nodeExecution, OrchestrationEventType.NODE_EXECUTION_UPDATE);
+    nodeUpdateObserverSubject.fireInform(NodeUpdateObxxxxxxxx:onNodeUpdate,
+        NodeUpdateInfo.builder()
+            .nodeExecutionId(nodeExecutionId)
+            .planExecutionId(nodeExecution.getAmbiance().getPlanExecutionId())
+            .build());
     return true;
   }
 
@@ -280,6 +296,21 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     Query query = query(where(NodeExecutionKeys.parentId).is(nodeExecutionId))
                       .addCriteria(where(NodeExecutionKeys.oldRetry).is(false));
     return mongoTemplate.find(query, NodeExecution.class);
+  }
+
+  @Override
+  public boolean errorOutActiveNodes(String planExecutionId) {
+    Update ops = new Update();
+    ops.set(NodeExecutionKeys.status, ERRORED);
+    ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis());
+    Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
+                      .addCriteria(where(NodeExecutionKeys.status).in(StatusUtils.activeStatuses()));
+    UpdateResult updateResult = mongoTemplate.updateMulti(query, ops, NodeExecution.class);
+    if (!updateResult.wasAcknowledged()) {
+      log.warn("No NodeExecutions could be marked as ERRORED -  planExecutionId: {}", planExecutionId);
+      return false;
+    }
+    return true;
   }
 
   @Override

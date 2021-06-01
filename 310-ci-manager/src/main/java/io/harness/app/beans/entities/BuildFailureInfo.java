@@ -10,6 +10,6 @@ public class BuildFailureInfo {
   private String branch;
   private String commit;
   private String commitID;
-  private String startTs;
-  private String endTs;
+  private long startTs;
+  private long endTs;
 }

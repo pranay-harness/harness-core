@@ -89,6 +89,7 @@ public class GraphQLController {
 
   @GET
   @Path("/schema")
+  @Produces(MediaType.TEXT_PLAIN)
   public String getSchema() {
     return schemaAsString;
   }

@@ -44,7 +44,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.batch.repeat.RepeatStatus;
 
@@ -72,9 +71,6 @@ public class K8sPVInfoEventTaskletTest extends BaseTaskletTest {
 
   @Before
   public void setup() {
-    MockitoAnnotations.initMocks(this);
-    mockChunkContext();
-
     when(config.getBatchQueryConfig()).thenReturn(BatchQueryConfig.builder().queryBatchSize(50).build());
     when(instanceDataBulkWriteService.updateList(any())).thenReturn(true);
   }

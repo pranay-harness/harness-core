@@ -21,6 +21,7 @@ import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.remote.client.NGRestUtils;
@@ -33,6 +34,8 @@ import io.harness.supplier.ThrowingSupplier;
 import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -44,7 +47,7 @@ public class JiraStepHelperServiceImpl implements JiraStepHelperService {
 
   @Inject
   public JiraStepHelperServiceImpl(ConnectorResourceClient connectorResourceClient,
-      SecretManagerClientService secretManagerClientService, KryoSerializer kryoSerializer) {
+      @Named("PRIVILEGED") SecretManagerClientService secretManagerClientService, KryoSerializer kryoSerializer) {
     this.connectorResourceClient = connectorResourceClient;
     this.secretManagerClientService = secretManagerClientService;
     this.kryoSerializer = kryoSerializer;
@@ -81,7 +84,8 @@ public class JiraStepHelperServiceImpl implements JiraStepHelperService {
                             .taskType(NGTaskType.JIRA_TASK_NG.name())
                             .parameters(new Object[] {params})
                             .build();
-    return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer, taskName,
+    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2,
+        Collections.emptyList(), false, taskName,
         params.getDelegateSelectors()
             .stream()
             .map(s -> TaskSelector.newBuilder().setSelector(s).build())

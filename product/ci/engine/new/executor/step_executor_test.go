@@ -1,7 +1,9 @@
 package executor
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"testing"
 	"time"
 
@@ -79,7 +81,7 @@ func TestStepValidations(t *testing.T) {
 		return nil
 	}
 	for _, tc := range tests {
-		e := NewStepExecutor(tmpFilePath, "", log.Sugar())
+		e := NewStepExecutor(tmpFilePath, "", log.Sugar(), new(bytes.Buffer))
 		got := e.Run(ctx, tc.step)
 		if tc.expectedErr == (got == nil) {
 			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
@@ -114,7 +116,7 @@ func TestStepError(t *testing.T) {
 	oldAddonExecutor := executeStepOnAddon
 	defer func() { executeStepOnAddon = oldAddonExecutor }()
 	executeStepOnAddon = func(ctx context.Context, step *pb.UnitStep, tmpFilePath string,
-		log *zap.SugaredLogger) (*output.StepOutput, *pb.Artifact, error) {
+		log *zap.SugaredLogger, buf io.Writer) (*output.StepOutput, *pb.Artifact, error) {
 		return nil, nil, errors.New("failed")
 	}
 
@@ -125,7 +127,7 @@ func TestStepError(t *testing.T) {
 		return nil
 	}
 
-	e := NewStepExecutor(tmpFilePath, "foo", log.Sugar())
+	e := NewStepExecutor(tmpFilePath, "foo", log.Sugar(), new(bytes.Buffer))
 	err := e.Run(ctx, stepProto)
 	assert.NotEqual(t, err, nil)
 }
@@ -163,7 +165,7 @@ func TestStepRunSuccess(t *testing.T) {
 	oldAddonExecutor := executeStepOnAddon
 	defer func() { executeStepOnAddon = oldAddonExecutor }()
 	executeStepOnAddon = func(ctx context.Context, step *pb.UnitStep, tmpFilePath string,
-		log *zap.SugaredLogger) (*output.StepOutput, *pb.Artifact, error) {
+		log *zap.SugaredLogger, buf io.Writer) (*output.StepOutput, *pb.Artifact, error) {
 		return o, nil, nil
 	}
 
@@ -181,7 +183,7 @@ func TestStepRunSuccess(t *testing.T) {
 		return nil
 	}
 
-	e := NewStepExecutor(tmpFilePath, "foo", log.Sugar())
+	e := NewStepExecutor(tmpFilePath, "foo", log.Sugar(), new(bytes.Buffer))
 	err := e.Run(ctx, stepProto)
 	assert.Equal(t, err, nil)
 }

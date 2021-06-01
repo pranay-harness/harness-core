@@ -13,7 +13,7 @@ import java.util.List;
 public class AmbianceTestUtils {
   public static final String ACCOUNT_ID = generateUuid();
   public static final String APP_ID = generateUuid();
-  public static final String EXECUTION_INSTANCE_ID = generateUuid();
+  public static final String PLAN_EXECUTION_ID = generateUuid();
   public static final String PHASE_RUNTIME_ID = generateUuid();
   public static final String PHASE_SETUP_ID = generateUuid();
   public static final String SECTION_RUNTIME_ID = generateUuid();
@@ -36,7 +36,7 @@ public class AmbianceTestUtils {
     levels.add(phaseLevel);
     levels.add(sectionLevel);
     return Ambiance.newBuilder()
-        .setPlanExecutionId(EXECUTION_INSTANCE_ID)
+        .setPlanExecutionId(PLAN_EXECUTION_ID)
         .putAllSetupAbstractions(ImmutableMap.of("accountId", ACCOUNT_ID, "appId", APP_ID))
         .addAllLevels(levels)
         .setExpressionFunctorToken(1234)

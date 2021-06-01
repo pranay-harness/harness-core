@@ -1,5 +1,7 @@
 package io.harness.pms.plan.execution.handlers;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -30,6 +32,7 @@ import java.util.Map;
 import java.util.Optional;
 import org.bson.Document;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEventHandler {
   @Inject PMSPipelineService pmsPipelineService;
@@ -87,7 +90,8 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
             .accountId(accountId)
             .projectIdentifier(projectId)
             .orgIdentifier(orgId)
-            .executionTriggerInfo(planExecution.getMetadata().getTriggerInfo())
+            .executionTriggerInfo(metadata.getTriggerInfo())
+            .gitSyncBranchContext(metadata.getGitSyncBranchContext())
             .tags(pipelineEntity.get().getTags())
             .modules(modules)
             .build();

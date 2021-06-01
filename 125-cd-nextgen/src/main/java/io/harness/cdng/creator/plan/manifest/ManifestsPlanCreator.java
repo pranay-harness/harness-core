@@ -17,8 +17,8 @@ import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
-import io.harness.pms.sdk.core.facilitator.chilidren.ChildrenFacilitator;
-import io.harness.pms.sdk.core.facilitator.sync.SyncFacilitator;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.yaml.ParameterField;
@@ -68,7 +68,9 @@ public class ManifestsPlanCreator {
             .identifier(YamlTypes.MANIFEST_LIST_CONFIG)
             .stepParameters(stepParameters)
             .facilitatorObtainment(
-                FacilitatorObtainment.newBuilder().setType(ChildrenFacilitator.FACILITATOR_TYPE).build())
+                FacilitatorObtainment.newBuilder()
+                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
+                    .build())
             .skipExpressionChain(false)
             .build();
     planNodes.add(manifestsNode);
@@ -85,7 +87,10 @@ public class ManifestsPlanCreator {
         .name(PlanCreatorConstants.MANIFEST_NODE_NAME)
         .identifier(identifier)
         .stepParameters(manifestInfo.getParams())
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(SyncFacilitator.FACILITATOR_TYPE).build())
+        .facilitatorObtainment(
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                .build())
         .skipExpressionChain(false)
         .build();
   }

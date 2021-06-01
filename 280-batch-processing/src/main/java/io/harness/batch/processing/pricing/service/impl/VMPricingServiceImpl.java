@@ -4,12 +4,12 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 
 import io.harness.batch.processing.pricing.client.BanzaiPricingClient;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.pricing.data.EcsFargatePricingInfo;
 import io.harness.batch.processing.pricing.data.PricingResponse;
 import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
 import io.harness.batch.processing.pricing.data.ZonePrice;
 import io.harness.batch.processing.pricing.service.intfc.VMPricingService;
+import io.harness.ccm.commons.constants.CloudProvider;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;

@@ -9,10 +9,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.billing.service.intfc.InstancePricingStrategy;
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.PricingSource;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.beans.CostAttribution;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.StorageResource;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.entities.InstanceData;
 
 import com.google.common.annotations.VisibleForTesting;

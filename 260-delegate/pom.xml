@@ -51,6 +51,10 @@
             <artifactId>mongo-java-server-memory-backend</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-retry</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.harness.cv</groupId>
             <artifactId>data-collection-dsl</artifactId>
         </dependency>
@@ -95,6 +99,21 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>870-cg-yaml</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>870-yaml-beans</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>871-cg-beans</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>910-delegate-task-grpc-service</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -110,12 +129,22 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>940-feature-flag</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>950-log-client</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>952-scm-java-client</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>956-feature-flag-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

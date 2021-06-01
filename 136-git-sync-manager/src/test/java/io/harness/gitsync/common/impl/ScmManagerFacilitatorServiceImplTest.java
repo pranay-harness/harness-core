@@ -20,6 +20,7 @@ import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.gitsync.GitSyncTestBase;
 import io.harness.gitsync.common.dtos.GitFileContent;
+import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.ng.beans.PageRequest;
 import io.harness.product.ci.scm.proto.FileContent;
@@ -47,6 +48,7 @@ public class ScmManagerFacilitatorServiceImplTest extends GitSyncTestBase {
   @Mock ConnectorService connectorService;
   @Mock AbstractScmClientFacilitatorServiceImpl abstractScmClientFacilitatorService;
   @Mock YamlGitConfigService yamlGitConfigService;
+  @Mock GitSyncConnectorHelper gitSyncConnectorHelper;
   @InjectMocks @Inject ScmManagerFacilitatorServiceImpl scmManagerFacilitatorService;
   String accountIdentifier = "accountIdentifier";
   String projectIdentifier = "projectIdentifier";
@@ -73,6 +75,10 @@ public class ScmManagerFacilitatorServiceImplTest extends GitSyncTestBase {
     doReturn(Optional.of(ConnectorResponseDTO.builder().connector(connectorInfo).build()))
         .when(connectorService)
         .get(anyString(), anyString(), anyString(), anyString());
+    doReturn(githubConnector).when(gitSyncConnectorHelper).getDecryptedConnector(any(), any());
+    doReturn(githubConnector)
+        .when(gitSyncConnectorHelper)
+        .getDecryptedConnector(anyString(), anyString(), anyString(), anyString());
     when(abstractScmClientFacilitatorService.getYamlGitConfigDTO(
              accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigIdentifier))
         .thenReturn(YamlGitConfigDTO.builder().build());

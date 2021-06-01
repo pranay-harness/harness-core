@@ -11,6 +11,6 @@ import lombok.Value;
 @Value
 @Builder
 public class StatusAndTime {
-  private List<String> time;
+  private List<Long> time;
   private List<String> status;
 }

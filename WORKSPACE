@@ -8,9 +8,9 @@ rules_pmd_dependencies()
 
 http_archive(
     name = "com_github_bazelbuild_buildtools",
-    sha256 = "58bbb9b06e14d71c620b7e2206a6d83668b602e1d51374b7bd264f9cc462d4de",
-    strip_prefix = "buildtools-master",
-    url = "https://github.com/bazelbuild/buildtools/archive/master.zip",
+    sha256 = "932160d5694e688cb7a05ac38efba4b9a90470c75f39716d85fb1d2f95eec96d",
+    strip_prefix = "buildtools-4.0.1",
+    url = "https://github.com/bazelbuild/buildtools/archive/refs/tags/4.0.1.zip",
 )
 
 # Download the Go rules
@@ -55,29 +55,11 @@ go_repository(
 )
 
 http_archive(
-    name = "com_google_protobuf",
-    sha256 = "9748c0d90e54ea09e5e75fb7fac16edce15d2028d4356f32211cfa3c0e956564",
-    strip_prefix = "protobuf-3.11.4",
-    urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.11.4.zip"],
-)
-
-load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
-
-protobuf_deps()
-
-http_archive(
     name = "rules_proto_grpc",
     sha256 = "5f0f2fc0199810c65a2de148a52ba0aff14d631d4e8202f41aff6a9d590a471b",
     strip_prefix = "rules_proto_grpc-1.0.2",
     urls = ["https://github.com/rules-proto-grpc/rules_proto_grpc/archive/1.0.2.tar.gz"],
 )
-
-#git_repository(
-#    name = "rules_proto_grpc",
-#    remote = "https://github.com/wings-software/rules_proto_grpc.git",
-#    commit = "7508bee4e4c09edc5934098e65ef6ea4e4aa5bff",
-#    shallow_since = "1590812925 -0700",
-#)
 
 load("@rules_proto_grpc//:repositories.bzl", "rules_proto_grpc_repos", "rules_proto_grpc_toolchains")
 
@@ -89,18 +71,9 @@ load("@rules_proto_grpc//java:repositories.bzl", rules_proto_grpc_java_repos = "
 
 rules_proto_grpc_java_repos()
 
-load("@io_grpc_grpc_java//:repositories.bzl", "com_google_guava")
-
-com_google_guava()
-
 load("@io_grpc_grpc_java//:repositories.bzl", "grpc_java_repositories")
 
-grpc_java_repositories(
-    omit_bazel_skylib = True,
-    omit_com_google_protobuf = True,
-    omit_com_google_protobuf_javalite = False,
-    omit_net_zlib = True,
-)
+grpc_java_repositories()
 
 go_repository(
     name = "co_honnef_go_tools",
@@ -960,8 +933,8 @@ go_repository(
 go_repository(
     name = "com_github_drone_go_scm",
     importpath = "github.com/drone/go-scm",
-    sum = "h1:L6g6wUzM6pV90S0VFQL/HjcTmW5JoaSGAX8VDiN76g4=",
-    version = "v1.13.1",
+    sum = "h1:G+0P1jC425/Uk+7SYYfUIZ933YcvEEYg9zEPuvyO0+g=",
+    version = "v1.14.1",
 )
 
 go_repository(
@@ -982,7 +955,6 @@ go_repository(
 # ######################################   Java code ######################################
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_jar")
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 RULES_JVM_EXTERNAL_TAG = "3.3"
 
@@ -1005,7 +977,7 @@ http_jar(
 
 load("@rules_jvm_external//:defs.bzl", "maven_install")
 load("@rules_jvm_external//:specs.bzl", "maven")
-load("//:macros.bzl", "maven_test_artifact")
+load("//:tools/bazel/macros.bzl", "maven_test_artifact")
 
 plain_artifacts = [
     "aopalliance:aopalliance:1.0",
@@ -1310,7 +1282,7 @@ plain_artifacts = [
     "io.fabric8:kubernetes-api:3.0.11",
     "io.fabric8:kubernetes-client:3.1.12",
     "io.fabric8:kubernetes-model:2.0.8",
-    "io.fabric8:openshift-client:3.0.3",
+    "io.fabric8:openshift-client:3.1.12",
     "io.fabric8:zjsonpatch:0.3.0",
     "io.github.benas:random-beans:3.7.0",
     "io.github.resilience4j:resilience4j-circuitbreaker:1.5.0",
@@ -1331,7 +1303,7 @@ plain_artifacts = [
     "io.grpc:grpc-services:1.33.1",
     "io.grpc:grpc-stub:1.33.1",
     "io.gsonfire:gson-fire:1.8.3",
-    "io.harness:ff-java-server-sdk:0.0.7",
+    "io.harness:ff-java-server-sdk:0.0.8",
     "io.jsonwebtoken:jjwt:0.9.1",
     "io.kubernetes:client-java-api:9.0.2",
     "io.kubernetes:client-java-extended:9.0.2",
@@ -4578,8 +4550,6 @@ go_repository(
     version = "v4.0.0",
 )
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
 http_archive(
     name = "rules_rust",
     sha256 = "e6d835ee673f388aa5b62dc23d82db8fc76497e93fa47d8a4afe97abaf09b10d",
@@ -5266,6 +5236,42 @@ go_repository(
     version = "v1.3.1",
 )
 
+#========== Python Configuration Begin=========================
+
+# Special logic for building python interpreter with OpenSSL from homebrew.
+# See https://devguide.python.org/setup/#macos-and-os-x
+_py_configure = """
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    ./configure --prefix=$(pwd)/bazel_install --with-openssl=$(brew --prefix openssl)
+else
+    ./configure --prefix=$(pwd)/bazel_install
+fi
+"""
+
+http_archive(
+    name = "python_interpreter",
+    build_file_content = """
+exports_files(["python_bin"])
+filegroup(
+    name = "files",
+    srcs = glob(["bazel_install/**"], exclude = ["**/* *"]),
+    visibility = ["//visibility:public"],
+)
+""",
+    patch_cmds = [
+        "mkdir $(pwd)/bazel_install",
+        _py_configure,
+        "make",
+        "make install",
+        "ln -s bazel_install/bin/python3 python_bin",
+    ],
+    sha256 = "991c3f8ac97992f3d308fefeb03a64db462574eadbff34ce8bc5bb583d9903ff",
+    strip_prefix = "Python-3.9.1",
+    urls = ["https://www.python.org/ftp/python/3.9.1/Python-3.9.1.tar.xz"],
+)
+
+register_toolchains("//:py_toolchain")
+
 #========== Docker Rules Configuration Begin=========================
 
 http_archive(
@@ -5296,6 +5302,14 @@ container_pull(
     tag = "safe-alpine3.12-sec1096-apm",
 )
 
+container_pull(
+    name = "platform_ubuntu",
+    digest = "sha256:8540a3afd5c6d43a9f6549f19f56abff42c7010265426c3c39ccc64d1d88a1c2",
+    registry = "us.gcr.io",
+    repository = "platform-205701/ubuntu",
+    tag = "safe-ubuntu18.04-sec1096",
+)
+
 load(
     "@io_bazel_rules_docker//repositories:repositories.bzl",
     container_repositories = "repositories",
@@ -5304,3 +5318,35 @@ load(
 container_repositories()
 
 #========== Docker Rules Configuration End=========================
+
+http_archive(
+    name = "rules_pkg",
+    sha256 = "038f1caa773a7e35b3663865ffb003169c6a71dc995e39bf4815792f385d837d",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_pkg/releases/download/0.4.0/rules_pkg-0.4.0.tar.gz",
+        "https://github.com/bazelbuild/rules_pkg/releases/download/0.4.0/rules_pkg-0.4.0.tar.gz",
+    ],
+)
+
+load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
+
+rules_pkg_dependencies()
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+
+http_archive(
+    name = "jre_x64_linux_8u242b08",
+    build_file_content = """
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
+
+pkg_tar(
+    name = "jre_x64_linux_8u242b08",
+    package_dir = "/opt/harness-delegate",
+    srcs = glob(["jdk8u242-b08-jre/**"]),
+    strip_prefix = '.',
+    visibility = ["//visibility:public"],
+)
+""",
+    sha256 = "5edfaefdbb0469d8b24d61c8aef80c076611053b1738029c0232b9a632fe2708",
+    urls = ["https://app.harness.io/storage/wingsdelegates/jre/openjdk-8u242/jre_x64_linux_8u242b08.tar.gz"],
+)

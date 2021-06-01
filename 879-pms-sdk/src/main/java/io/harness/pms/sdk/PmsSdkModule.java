@@ -51,13 +51,15 @@ public class PmsSdkModule extends AbstractModule {
   private List<Module> getModules() {
     List<Module> modules = new ArrayList<>();
     modules.add(PmsSdkCoreModule.getInstance(PmsSdkCoreConfig.builder()
+                                                 .serviceName(config.getServiceName())
                                                  .grpcClientConfig(config.getPmsGrpcClientConfig())
                                                  .grpcServerConfig(config.getGrpcServerConfig())
                                                  .sdkDeployMode(config.getDeploymentMode())
+                                                 .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
+                                                 .useRedisForSdkResponseEvents(config.isUseRedisForSdkResponseEvents())
                                                  .build()));
     modules.add(PmsSdkRegistryModule.getInstance(config));
     modules.add(PmsSdkProviderModule.getInstance(config));
-    modules.add(PmsSdkQueueModule.getInstance(config));
     modules.add(SdkMonitoringModule.getInstance());
     return modules;
   }

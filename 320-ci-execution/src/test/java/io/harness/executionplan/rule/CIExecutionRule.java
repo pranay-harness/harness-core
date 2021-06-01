@@ -6,6 +6,7 @@ import static org.mockito.Mockito.mock;
 
 import io.harness.CIExecutionServiceModule;
 import io.harness.CIExecutionTestModule;
+import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallbackToken;
@@ -25,7 +26,6 @@ import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.queue.QueueController;
 import io.harness.registrars.ExecutionAdvisers;
 import io.harness.registrars.ExecutionRegistrar;
-import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.springdata.SpringPersistenceTestModule;
@@ -141,11 +141,10 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
   private PmsSdkConfiguration getPmsSdkConfiguration() {
     return PmsSdkConfiguration.builder()
         .deploymentMode(SdkDeployMode.LOCAL)
-        .serviceName("ci")
+        .moduleType(ModuleType.CI)
         .engineSteps(ExecutionRegistrar.getEngineSteps())
         .engineAdvisers(ExecutionAdvisers.getEngineAdvisers())
-        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
-        .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(false))
+        .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())
         .build();
   }
 

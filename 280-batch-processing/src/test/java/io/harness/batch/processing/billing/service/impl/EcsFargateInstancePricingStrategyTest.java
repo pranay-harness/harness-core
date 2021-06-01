@@ -7,14 +7,14 @@ import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.service.PricingData;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.pricing.data.EcsFargatePricingInfo;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService;
 import io.harness.batch.processing.pricing.service.intfc.VMPricingService;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.Resource;
+import io.harness.ccm.commons.constants.CloudProvider;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.rule.Owner;
 
