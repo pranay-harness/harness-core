@@ -43,7 +43,6 @@ import software.wings.beans.VaultConfig;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 import com.google.inject.Singleton;
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
