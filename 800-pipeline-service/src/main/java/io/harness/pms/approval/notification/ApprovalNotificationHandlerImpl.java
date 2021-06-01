@@ -115,7 +115,7 @@ public class ApprovalNotificationHandlerImpl implements ApprovalNotificationHand
       ApprovalSummary approvalSummary, Map<String, GraphLayoutNodeDTO> layoutNodeMap, String currentNodeId) {
     GraphLayoutNodeDTO node = layoutNodeMap.get(currentNodeId);
     if (node.getNodeGroup().matches(STAGE_IDENTIFIER)) {
-      if (node.getStatus() == ExecutionStatus.NOT_STARTED) {
+      if (node.getStatus() == ExecutionStatus.NOTSTARTED) {
         approvalSummary.getUpcomingStages().add(node.getName());
       } else if (StatusUtils.finalStatuses().stream().anyMatch(
                      status -> ExecutionStatus.getExecutionStatus(status) == node.getStatus())) {
