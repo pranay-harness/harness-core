@@ -1,5 +1,7 @@
 package io.harness.ci.integrationstage;
 
+import static io.harness.beans.serializer.RunTimeInputHandler.UNRESOLVED_PARAMETER;
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameter;
 import static io.harness.common.CIExecutionConstants.HARNESS_SERVICE_ARGS;
 import static io.harness.common.CIExecutionConstants.HARNESS_SERVICE_ENTRYPOINT;
 import static io.harness.common.CIExecutionConstants.SERVICE_PREFIX;
@@ -118,14 +120,17 @@ public class CIServiceBuilder {
 
     if (resource != null && resource.getLimits() != null) {
       if (resource.getLimits().getCpu() != null) {
-        String cpuQuantity = RunTimeInputHandler.resolveStringParameter(
-            "cpu", "Service", identifier, resource.getLimits().getCpu(), false);
-        cpu = QuantityUtils.getCpuQuantityValueInUnit(cpuQuantity, DecimalQuantityUnit.m);
+        String cpuQuantity = resolveStringParameter("cpu", "Service", identifier, resource.getLimits().getCpu(), false);
+        if (isNotEmpty(cpuQuantity) && !UNRESOLVED_PARAMETER.equals(cpuQuantity)) {
+          cpu = QuantityUtils.getCpuQuantityValueInUnit(cpuQuantity, DecimalQuantityUnit.m);
+        }
       }
       if (resource.getLimits().getMemory() != null) {
         String memoryQuantity = RunTimeInputHandler.resolveStringParameter(
             "memory", "Service", identifier, resource.getLimits().getMemory(), false);
-        memory = QuantityUtils.getMemoryQuantityValueInUnit(memoryQuantity, MemoryQuantityUnit.Mi);
+        if (isNotEmpty(memoryQuantity) && !UNRESOLVED_PARAMETER.equals(memoryQuantity)) {
+          memory = QuantityUtils.getMemoryQuantityValueInUnit(memoryQuantity, MemoryQuantityUnit.Mi);
+        }
       }
     }
     return ContainerResourceParams.builder()
