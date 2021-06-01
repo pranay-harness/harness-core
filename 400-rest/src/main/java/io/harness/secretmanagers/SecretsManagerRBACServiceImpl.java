@@ -52,6 +52,7 @@ public class SecretsManagerRBACServiceImpl implements SecretsManagerRBACService 
 
   @Override
   public void canSetPermissions(String accountId, ScopedEntity scopedEntity) {
+    log.info("test sm : inside SecretsManagerRBACServiceImpl:canSetPermissions " );
     usageRestrictionsService.validateUsageRestrictionsOnEntitySave(
         accountId, MANAGE_SECRET_MANAGERS, scopedEntity.getUsageRestrictions(), scopedEntity.isScopedToAccount());
   }
