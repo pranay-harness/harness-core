@@ -8,7 +8,6 @@ import static io.harness.rule.OwnerRule.VUK;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.when;
 
@@ -19,7 +18,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.concurent.HTimeLimiterMocker;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.message.MessageService;
-import io.harness.exception.GeneralException;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.watcher.service.WatcherServiceImpl;
@@ -329,11 +327,6 @@ public class WatcherServiceImplTest extends CategoryTest {
 
     List<String> expectedDelegateVersions = watcherService.findExpectedDelegateVersions();
     assertThat(expectedDelegateVersions).containsExactlyInAnyOrder("1", "2");
-
-    assertThatThrownBy(() -> watcherService.findExpectedDelegateVersions())
-        .isInstanceOf(
-            GeneralException.class); // This will be throw because test framework does not allow System.exit
-                                     // to be used in test code, which is being invoked fom selfDestruct method
 
     expectedDelegateVersions = watcherService.findExpectedDelegateVersions();
     assertThat(expectedDelegateVersions).isNull();
