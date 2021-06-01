@@ -388,6 +388,14 @@ public class ScmServiceClientImpl implements ScmServiceClient {
   }
 
   @Override
+  public FileBatchContentResponse listFilesByFilePaths(
+      ScmConnector connector, List<String> filePaths, String branch, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(connector);
+    String slug = scmGitProviderHelper.getSlug(connector);
+    return getContentOfFiles(filePaths, slug, gitProvider, branch, scmBlockingStub);
+  }
+
+  @Override
   public void createNewBranch(
       ScmConnector scmConnector, String branch, String defaultBranchName, SCMGrpc.SCMBlockingStub scmBlockingStub) {
     String slug = scmGitProviderHelper.getSlug(scmConnector);

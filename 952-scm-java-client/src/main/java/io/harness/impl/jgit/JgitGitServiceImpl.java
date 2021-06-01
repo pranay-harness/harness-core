@@ -110,6 +110,12 @@ public class JgitGitServiceImpl implements ScmClient {
   }
 
   @Override
+  public FileBatchContentResponse listFilesByFilePaths(
+      ScmConnector connector, List<String> filePathsList, String branchName) {
+    return null;
+  }
+
+  @Override
   public void createNewBranch(ScmConnector scmConnector, String branch, String defaultBranchName) {}
 
   @Override
