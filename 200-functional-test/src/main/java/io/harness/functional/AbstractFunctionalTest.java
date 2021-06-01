@@ -239,7 +239,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
             log.info(
                 "State: {} failed with error: {}", stateExecutionData.getStateName(), stateExecutionData.getErrorMsg());
           } else {
-            log.info("No error message found for state: {}, checking phase execution summary...",
+            log.info("No error message found for state: {}, checking phase execution summary....",
                 stateExecutionData.getStateName());
           }
           if (stateExecutionData instanceof PhaseStepExecutionData) {
