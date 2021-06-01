@@ -166,11 +166,11 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
       throw new InvalidRequestException("There should be atleast one failure strategy configured at stage level.");
     }
 
-    // checking stageFailureStrategies is having one strategy with error type as AnyOther and along with that no
+    // checking stageFailureStrategies is having one strategy with error type as AllErrors and along with that no
     // error type is involved
-    if (!GenericStepPMSPlanCreator.containsOnlyAnyOtherErrorInSomeConfig(stageFailureStrategies)) {
+    if (!GenericStepPMSPlanCreator.containsOnlyAllErrorsInSomeConfig(stageFailureStrategies)) {
       throw new InvalidRequestException(
-          "There should be a Failure strategy that contains one error type as AnyOther, with no other error type along with it in that Failure Strategy.");
+          "There should be a Failure strategy that contains one error type as AllErrors, with no other error type along with it in that Failure Strategy.");
     }
   }
 }

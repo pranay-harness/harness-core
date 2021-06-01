@@ -9,7 +9,8 @@ import io.harness.annotations.dev.TargetModule;
 // TODO this should go to yaml commons
 @TargetModule(HarnessModule._884_PMS_COMMONS)
 public interface NGFailureTypeConstants {
-  String ANY_OTHER_ERRORS = "AnyOther";
+  String ALL_ERRORS = "AllErrors";
+  String UNKNOWN = "Unknown";
   String AUTHENTICATION_ERROR = "Authentication";
   String CONNECTIVITY_ERROR = "Connectivity";
   String TIMEOUT_ERROR = "Timeout";

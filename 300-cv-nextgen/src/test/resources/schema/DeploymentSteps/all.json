@@ -1146,7 +1146,8 @@
           "items": {
             "type": "string",
             "enum": [
-              "AnyOther",
+              "Unknown",
+              "AllErrors",
               "Authentication",
               "Connectivity",
               "Timeout",
