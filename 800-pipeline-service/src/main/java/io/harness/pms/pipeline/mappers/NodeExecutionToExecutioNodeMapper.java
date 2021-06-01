@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.bson.Document;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -27,8 +28,9 @@ public class NodeExecutionToExecutioNodeMapper {
   @Inject private DelegateInfoHelper delegateInfoHelper;
 
   public ExecutionNode mapNodeExecutionToExecutionNode(NodeExecution nodeExecution) {
-    List<Document> outcomes = PmsOutcomeMapper.convertJsonToDocument(pmsOutcomeService.findAllByRuntimeId(
-        nodeExecution.getAmbiance().getPlanExecutionId(), nodeExecution.getUuid()));
+    Map<String, Document> outcomes =
+        PmsOutcomeMapper.convertJsonToDocument(pmsOutcomeService.findAllOutcomesMapByRuntimeId(
+            nodeExecution.getAmbiance().getPlanExecutionId(), nodeExecution.getUuid()));
 
     List<GraphDelegateSelectionLogParams> graphDelegateSelectionLogParamsList =
         delegateInfoHelper.getDelegateInformationForGivenTask(nodeExecution.getExecutableResponses(),

@@ -16,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
 import org.bson.Document;
@@ -46,7 +47,7 @@ public class GraphVertexDTO {
   List<GraphDelegateSelectionLogParams> graphDelegateSelectionLogParams;
   List<ExecutableResponse> executableResponses;
   List<InterruptEffect> interruptHistories;
-  List<Document> outcomes;
+  Map<String, Document> outcomes;
   List<String> retryIds;
 
   List<UnitProgress> unitProgresses;
