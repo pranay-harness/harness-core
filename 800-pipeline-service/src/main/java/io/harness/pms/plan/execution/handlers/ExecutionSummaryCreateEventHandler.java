@@ -84,7 +84,7 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
             .name(pipelineEntity.get().getName())
             .inputSetYaml(metadata.getInputSetYaml())
             .internalStatus(Status.NO_OP)
-            .status(ExecutionStatus.NOT_STARTED)
+            .status(ExecutionStatus.NOTSTARTED)
             .startTs(planExecution.getStartTs())
             .startingNodeId(startingNodeId)
             .accountId(accountId)
