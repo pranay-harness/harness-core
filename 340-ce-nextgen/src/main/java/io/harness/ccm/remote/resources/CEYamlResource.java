@@ -36,6 +36,8 @@ public class CEYamlResource {
   private static final String CONTENT_DISPOSITION = "Content-Disposition";
   private static final String ATTACHMENT_FILENAME = "attachment; filename=";
   public static final String YAML = ".yaml";
+  private static final String CONTENT_TRANSFER_ENCODING = "Content-Transfer-Encoding";
+  private static final String BINARY = "binary";
 
   @POST
   @Path("/generate-cost-optimisation-yaml")
@@ -45,6 +47,8 @@ public class CEYamlResource {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       File yamlFile = ceYamlService.downloadCostOptimisationYaml(accountId, connectorIdentifier);
       return Response.ok(yamlFile)
+          .header(CONTENT_TRANSFER_ENCODING, BINARY)
+          .type("text/plain; charset=UTF-8")
           .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + "cost-optimisation-crd" + YAML)
           .build();
     }

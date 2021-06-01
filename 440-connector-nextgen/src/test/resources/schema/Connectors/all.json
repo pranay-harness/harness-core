@@ -1056,6 +1056,17 @@
           "properties": {
             "connectorRef": {
               "type": "string"
+            },
+            "featuresEnabled": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "BILLING",
+                  "OPTIMIZATION",
+                  "VISIBILITY"
+                ]
+              }
             }
           }
         }
