@@ -45,6 +45,7 @@ public class ValidateAndMergeHelper {
       throw new InvalidRequestException("Identifier cannot be empty");
     }
     confirmPipelineIdentifier(yaml, pipelineIdentifier);
+    confirmOrgAndProjectIdentifier(yaml, orgIdentifier, projectIdentifier);
 
     String pipelineYaml = getPipelineYaml(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineBranch, pipelineRepoID);
@@ -173,6 +174,18 @@ public class ValidateAndMergeHelper {
     String identifierInYaml = PMSInputSetElementMapper.getStringField(pipelineComponent, "identifier", "pipeline");
     if (!pipelineIdentifier.equals(identifierInYaml)) {
       throw new InvalidRequestException("Pipeline identifier in input set does not match");
+    }
+  }
+
+  private void confirmOrgAndProjectIdentifier(String yaml, String orgIdentifier, String projectIdentifier) {
+    String orgIdInYaml = PMSInputSetElementMapper.getStringField(yaml, "orgIdentifier", "inputSet");
+    String projectIdInYaml = PMSInputSetElementMapper.getStringField(yaml, "projectIdentifier", "inputSet");
+
+    if (!orgIdentifier.equals(orgIdInYaml)) {
+      throw new InvalidRequestException("Org identifier in input set does not match");
+    }
+    if (!projectIdentifier.equals(projectIdInYaml)) {
+      throw new InvalidRequestException("Project identifier in input set does not match");
     }
   }
 }

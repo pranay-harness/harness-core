@@ -1,6 +1,7 @@
 package io.harness.pms.ngpipeline.inputset.mappers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.pms.merger.helpers.MergeHelper.getPipelineComponent;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
@@ -43,6 +44,19 @@ public class PMSInputSetElementMapper {
         .inputSetEntityType(InputSetEntityType.INPUT_SET)
         .yaml(yaml)
         .build();
+  }
+  public InputSetEntity toInputSetEntity(String accountId, String yaml) {
+    String topKey = getTopKey(yaml);
+    String orgIdentifier = getStringField(yaml, "orgIdentifier", topKey);
+    String projectIdentifier = getStringField(yaml, "projectIdentifier", topKey);
+    if (topKey.equals("inputSet")) {
+      String pipelineComponent = getPipelineComponent(yaml);
+      String pipelineIdentifier = PMSInputSetElementMapper.getStringField(pipelineComponent, "identifier", "pipeline");
+      return toInputSetEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
+    } else {
+      String pipelineIdentifier = PMSInputSetElementMapper.getStringField(yaml, "pipelineIdentifier", topKey);
+      return toInputSetEntityForOverlay(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
+    }
   }
 
   public InputSetEntity toInputSetEntityForOverlay(
@@ -174,6 +188,19 @@ public class PMSInputSetElementMapper {
         res.put(key, value);
       }
       return res;
+    } catch (IOException e) {
+      throw new InvalidRequestException("Could not convert yaml to JsonNode");
+    }
+  }
+
+  private String getTopKey(String yaml) {
+    try {
+      JsonNode node = (new PipelineYamlConfig(yaml)).getYamlMap();
+      JsonNode innerMap = node.get("inputSet");
+      if (innerMap == null) {
+        return "overlayInputSet";
+      }
+      return "inputSet";
     } catch (IOException e) {
       throw new InvalidRequestException("Could not convert yaml to JsonNode");
     }

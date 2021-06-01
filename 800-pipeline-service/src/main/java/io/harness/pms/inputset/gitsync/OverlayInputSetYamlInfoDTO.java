@@ -20,5 +20,10 @@ public class OverlayInputSetYamlInfoDTO {
 
   String description;
   Map<String, String> tags;
+
+  String orgIdentifier;
+  String projectIdentifier;
+  String pipelineIdentifier;
+
   List<String> inputSetReferences;
 }
