@@ -4,8 +4,10 @@ import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.FdIndex;
+import io.harness.ng.DbAliases;
 
 import software.wings.beans.Base;
 import software.wings.beans.EntityVersion;
@@ -32,6 +34,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "serviceCommands", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ServiceCommandKeys")
+@StoreIn(DbAliases.CG_MANAGER)
 public class ServiceCommand extends Base {
   public static final String TEMPLATE_UUID_KEY = "templateUuid";
 

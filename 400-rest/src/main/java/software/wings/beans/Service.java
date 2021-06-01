@@ -6,6 +6,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.util.Arrays.asList;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
@@ -16,6 +17,7 @@ import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 
@@ -61,6 +63,7 @@ import org.mongodb.morphia.annotations.Version;
 @Entity(value = "services", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @TargetModule(_871_CG_BEANS)
+@StoreIn(DbAliases.CG_MANAGER)
 public class Service
     extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, CustomDeploymentTypeAware {
   public static List<MongoIndex> mongoIndexes() {
