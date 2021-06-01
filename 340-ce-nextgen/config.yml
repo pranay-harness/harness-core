@@ -124,3 +124,6 @@ awsConnectorTemplate: https://continuous-efficiency-templates.s3.amazonaws.com/t
 
 gcpConfig:
   gcpProjectId: gcpProjectIdPlaceHolder
+
+azureConfig:
+  azureAppClientId: azureAppClientIdPlaceholder
