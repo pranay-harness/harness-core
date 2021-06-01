@@ -10,6 +10,7 @@ import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.ng.core.EntityDetail;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity.InputSetEntityKeys;
+import io.harness.pms.ngpipeline.inputset.mappers.PMSInputSetElementMapper;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 
 import com.google.inject.Inject;
@@ -56,11 +57,11 @@ public class InputSetEntityGitSyncHelper implements GitSdkEntityHandlerInterface
         .build();
   }
 
-  // confirm this impl from Garvit
   @Override
   public InputSetYamlDTO save(String accountIdentifier, String yaml) {
-    InputSetEntity entity = InputSetYamlDTOMapper.toEntity(null, accountIdentifier);
-    return InputSetYamlDTOMapper.toDTO(entity);
+    InputSetEntity initEntity = PMSInputSetElementMapper.toInputSetEntity(accountIdentifier, yaml);
+    InputSetEntity savedEntity = pmsInputSetService.create(initEntity);
+    return InputSetYamlDTOMapper.toDTO(savedEntity);
   }
 
   @Override
