@@ -42,11 +42,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 @TargetModule(_970_RBAC_CORE)
 public class AccessRequestResource {
   private final AccessRequestService accessRequestService;
-  @Inject private FeatureFlagService featureFlagService;
+  private final FeatureFlagService featureFlagService;
 
   @Inject
-  public AccessRequestResource(AccessRequestService accessRequestService) {
+  public AccessRequestResource(AccessRequestService accessRequestService, FeatureFlagService featureFlagService) {
     this.accessRequestService = accessRequestService;
+    this.featureFlagService = featureFlagService;
   }
 
   @POST

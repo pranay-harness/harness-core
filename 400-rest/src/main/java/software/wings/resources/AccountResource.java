@@ -110,14 +110,15 @@ public class AccountResource {
   private final GcpMarketPlaceApiHandler gcpMarketPlaceApiHandler;
   private final Provider<SampleDataProviderService> sampleDataProviderServiceProvider;
   private final AuthService authService;
-  @Inject private FeatureFlagService featureFlagService;
+  private final FeatureFlagService featureFlagService;
 
   @Inject
   public AccountResource(AccountService accountService, UserService userService,
       Provider<LicenseService> licenseServiceProvider, AccountPermissionUtils accountPermissionUtils,
       FeatureService featureService, @Named("BackgroundJobScheduler") PersistentScheduler jobScheduler,
       GcpMarketPlaceApiHandler gcpMarketPlaceApiHandler,
-      Provider<SampleDataProviderService> sampleDataProviderServiceProvider, AuthService authService) {
+      Provider<SampleDataProviderService> sampleDataProviderServiceProvider, AuthService authService,
+      FeatureFlagService featureFlagService) {
     this.accountService = accountService;
     this.userService = userService;
     this.licenseServiceProvider = licenseServiceProvider;
@@ -127,6 +128,7 @@ public class AccountResource {
     this.gcpMarketPlaceApiHandler = gcpMarketPlaceApiHandler;
     this.sampleDataProviderServiceProvider = sampleDataProviderServiceProvider;
     this.authService = authService;
+    this.featureFlagService = featureFlagService;
   }
 
   @GET
