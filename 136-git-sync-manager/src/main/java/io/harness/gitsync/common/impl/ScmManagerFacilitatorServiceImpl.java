@@ -10,9 +10,11 @@ import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.connector.impl.ConnectorErrorMessagesHelper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.ScmException;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 import io.harness.gitsync.common.dtos.GitFileContent;
+import io.harness.gitsync.common.dtos.GitPrFileListDTO;
 import io.harness.gitsync.common.helper.FileBatchResponseMapper;
 import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
@@ -96,5 +98,10 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
         yamlGitConfigIdentifier, projectIdentifier, orgIdentifier, accountIdentifier);
     FileBatchContentResponse filesList = scmClient.listFiles(decryptedConnector, foldersList, branchName);
     return FileBatchResponseMapper.createGitFileChangeList(filesList);
+  }
+
+  @Override
+  public GitPrFileListDTO listPrFiles(YamlGitConfigDTO yamlGitConfigDTO, String initialCommitId, String finalCommitId) {
+    return null;
   }
 }
