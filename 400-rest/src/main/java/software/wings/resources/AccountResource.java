@@ -53,6 +53,7 @@ import software.wings.service.impl.LicenseUtils;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.AccountPermissionUtils;
 
@@ -108,6 +109,7 @@ public class AccountResource {
   private final GcpMarketPlaceApiHandler gcpMarketPlaceApiHandler;
   private final Provider<SampleDataProviderService> sampleDataProviderServiceProvider;
   private final AuthService authService;
+  private final HarnessUserGroupService harnessUserGroupService;
 
   @Inject
   public AccountResource(AccountService accountService, UserService userService,
