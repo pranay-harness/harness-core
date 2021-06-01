@@ -6,6 +6,7 @@ import static io.harness.connector.ConnectivityStatus.FAILURE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.errorhandling.NGErrorHelper.DEFAULT_ERROR_SUMMARY;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
 import static java.lang.String.format;
@@ -43,6 +44,7 @@ import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.encryption.SecretRefData;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.errorhandling.NGErrorHelper;
+import io.harness.exception.ConnectorNotFoundException;
 import io.harness.exception.DelegateServiceDriverException;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
@@ -76,6 +78,7 @@ import java.util.Optional;
 import javax.ws.rs.NotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -555,6 +558,50 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   public ConnectorStatistics getConnectorStatistics(
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     return connectorStatisticsHelper.getStats(accountIdentifier, orgIdentifier, projectIdentifier);
+  }
+
+  @Override
+  public String getHeartbeatPerpetualTaskId(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    Optional<Connector> connectorOptional = connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
+        fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
+
+    return connectorOptional
+        .filter(connector -> connector.getIsFromDefaultBranch() == null || connector.getIsFromDefaultBranch())
+        .map(connector -> {
+          if (isEmpty(connector.getHeartbeatPerpetualTaskId())) {
+            PerpetualTaskId connectorHeatbeatTaskId = connectorHeartbeatService.createConnectorHeatbeatTask(
+                accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+            if (connectorHeatbeatTaskId != null) {
+              updateConnectorEntityWithPerpetualtaskId(
+                  accountIdentifier, orgIdentifier, projectIdentifier, identifier, connectorHeatbeatTaskId.getId());
+              return connectorHeatbeatTaskId.getId();
+            } else {
+              return null;
+            }
+          } else {
+            return connector.getHeartbeatPerpetualTaskId();
+          }
+        })
+        .orElseThrow(
+            ()
+                -> new ConnectorNotFoundException(
+                    format(
+                        "No connector found with identifier [%s] with accountidentifier [%s], orgIdentifier [%s] and projectIdentifier [%s]",
+                        identifier, accountIdentifier, orgIdentifier, projectIdentifier),
+                    USER));
+  }
+
+  @Override
+  public void resetHeartbeatForReferringConnectors(List<Pair<String, String>> connectorPerpetualTaskInfo) {
+    for (Pair<String, String> item : connectorPerpetualTaskInfo) {
+      log.info("Resetting perpetual task with id {} in account {}", item.getValue(), item.getKey());
+      if (item.getValue() != null) {
+        connectorHeartbeatService.resetPerpetualTask(item.getKey(), item.getValue());
+      }
+    }
   }
 
   @Override
