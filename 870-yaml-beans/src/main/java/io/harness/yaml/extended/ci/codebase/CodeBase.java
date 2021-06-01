@@ -23,4 +23,6 @@ public class CodeBase {
   @ApiModelProperty(dataType = "io.harness.yaml.extended.ci.codebase.Build")
   @NotNull
   ParameterField<Build> build;
+  Integer depth;
+  Boolean sslVerify;
 }

@@ -7,6 +7,7 @@ import static io.harness.encryption.Scope.ACCOUNT;
 import static io.harness.encryption.Scope.ORG;
 import static io.harness.encryption.Scope.PROJECT;
 import static io.harness.filter.FilterType.CONNECTOR;
+import static io.harness.springdata.SpringDataMongoUtils.populateAllFilter;
 import static io.harness.springdata.SpringDataMongoUtils.populateInFilter;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -19,7 +20,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorCategory;
 import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.entities.Connector.ConnectorKeys;
+import io.harness.connector.entities.embedded.ceawsconnector.CEAwsConfig.CEAwsConfigKeys;
+import io.harness.connector.entities.embedded.ceazure.CEAzureConfig.CEAzureConfigKeys;
 import io.harness.connector.services.ConnectorFilterService;
+import io.harness.delegate.beans.connector.CcmConnectorFilter;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.encryption.ScopeHelper;
 import io.harness.exception.InvalidRequestException;
@@ -132,6 +136,10 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
         connectorFilter.getDescription(), searchTerm, connectorFilter.getInheritingCredentialsFromDelegate());
     populateInFilter(criteria, ConnectorKeys.identifier, connectorFilter.getConnectorIdentifiers());
     populateInFilter(criteria, ConnectorKeys.connectionStatus, connectorFilter.getConnectivityStatuses());
+    CcmConnectorFilter ccmConnectorFilter = connectorFilter.getCcmConnectorFilter();
+    if (ccmConnectorFilter != null) {
+      populateCcmFilters(criteria, ccmConnectorFilter);
+    }
     populateTagsFilter(criteria, connectorFilter.getTags());
   }
 
@@ -261,5 +269,27 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
       criteria.andOperator(seachCriteria);
     }
     return criteria;
+  }
+
+  private void populateCcmFilters(Criteria criteria, CcmConnectorFilter ccmConnectorFilter) {
+    populateAwsFilters(criteria, ccmConnectorFilter);
+    populateAzureFilters(criteria, ccmConnectorFilter);
+    populateAllFilter(criteria, CEAzureConfigKeys.featuresEnabled, ccmConnectorFilter.getFeaturesEnabled());
+  }
+
+  private void populateAwsFilters(Criteria criteria, CcmConnectorFilter ccmConnectorFilter) {
+    if (ccmConnectorFilter.getAwsAccountId() != null) {
+      populateInFilter(criteria, CEAwsConfigKeys.awsAccountId, Arrays.asList(ccmConnectorFilter.getAwsAccountId()));
+    }
+  }
+
+  private void populateAzureFilters(Criteria criteria, CcmConnectorFilter ccmConnectorFilter) {
+    if (ccmConnectorFilter.getAzureSubscriptionId() != null) {
+      populateInFilter(
+          criteria, CEAzureConfigKeys.subscriptionId, Arrays.asList(ccmConnectorFilter.getAzureSubscriptionId()));
+    }
+    if (ccmConnectorFilter.getAzureTenantId() != null) {
+      populateInFilter(criteria, CEAzureConfigKeys.tenantId, Arrays.asList(ccmConnectorFilter.getAzureTenantId()));
+    }
   }
 }

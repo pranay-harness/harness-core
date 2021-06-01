@@ -9,4 +9,5 @@ public interface ConnectorHeartbeatService {
   boolean deletePerpetualTask(String accountIdentifier, String perpetualTaskId, String connectorFQN);
   ConnectorValidationParams getConnectorValidationParams(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier);
+  void resetPerpetualTask(String accountIdentifier, String perpetualTaskId);
 }

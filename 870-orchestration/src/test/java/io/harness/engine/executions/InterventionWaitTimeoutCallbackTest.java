@@ -36,7 +36,7 @@ public class InterventionWaitTimeoutCallbackTest extends OrchestrationTestBase {
   public void shouldTestGetInterruptPackage() {
     InterventionWaitAdvise advise =
         InterventionWaitAdvise.newBuilder().setRepairActionCode(RepairActionCode.IGNORE).build();
-    InterruptPackage interruptPackage = interventionWaitTimeoutCallback.getInterruptPackage(advise);
+    InterruptPackage interruptPackage = interventionWaitTimeoutCallback.getInterruptPackage(advise, "");
     assertThat(interruptPackage).isNotNull();
     assertThat(interruptPackage.getInterruptType()).isEqualTo(InterruptType.IGNORE);
     assertThat(interruptPackage.getNodeExecutionId()).isEqualTo(NODE_EXECUTION_ID);

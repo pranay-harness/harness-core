@@ -138,7 +138,6 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
     modules.add(mongoTypeModule(annotations));
 
     PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
-                                        .serviceName("pmsTest")
                                         .engineEventHandlersMap(PmsOrchestrationEventRegistrar.getEngineEventHandlers())
                                         .build();
     modules.add(PmsSdkModule.getInstance(sdkConfig));

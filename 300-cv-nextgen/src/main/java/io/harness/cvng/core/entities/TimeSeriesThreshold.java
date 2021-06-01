@@ -1,6 +1,7 @@
 package io.harness.cvng.core.entities;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.beans.TimeSeriesThresholdActionType;
@@ -8,6 +9,7 @@ import io.harness.cvng.beans.TimeSeriesThresholdCriteria;
 import io.harness.cvng.beans.TimeSeriesThresholdDTO;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -37,6 +39,7 @@ import org.mongodb.morphia.annotations.Id;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Entity(value = "timeSeriesThresholds", noClassnameStored = true)
 @HarnessEntity(exportable = true)
+@StoreIn(DbAliases.CVNG)
 public final class TimeSeriesThreshold
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {

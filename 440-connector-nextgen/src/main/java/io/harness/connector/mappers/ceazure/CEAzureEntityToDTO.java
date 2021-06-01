@@ -6,10 +6,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.embedded.ceazure.BillingExportDetails;
 import io.harness.connector.entities.embedded.ceazure.CEAzureConfig;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
+import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ceazure.BillingExportSpecDTO;
 import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
 import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO.CEAzureConnectorDTOBuilder;
-import io.harness.delegate.beans.connector.ceazure.CEAzureFeatures;
 
 import com.google.inject.Singleton;
 import javax.validation.constraints.NotNull;
@@ -24,7 +24,7 @@ public class CEAzureEntityToDTO implements ConnectorEntityToDTOMapper<CEAzureCon
                                                          .subscriptionId(connector.getSubscriptionId())
                                                          .tenantId(connector.getTenantId());
 
-    if (connector.getFeaturesEnabled().contains(CEAzureFeatures.BILLING)) {
+    if (connector.getFeaturesEnabled().contains(CEFeatures.BILLING)) {
       populateBillingExportDetails(connectorDTOBuilder, connector.getBillingExportDetails());
     }
 

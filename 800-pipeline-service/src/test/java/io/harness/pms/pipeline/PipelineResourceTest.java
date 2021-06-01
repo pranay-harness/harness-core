@@ -23,6 +23,7 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.JsonSchemaValidationException;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.NodeExecutionToExecutioNodeMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
@@ -41,6 +42,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
@@ -60,6 +62,7 @@ public class PipelineResourceTest extends CategoryTest {
   @Mock NodeExecutionService nodeExecutionService;
   @Mock NodeExecutionToExecutioNodeMapper nodeExecutionToExecutioNodeMapper;
   @Mock AccessControlClient accessControlClient;
+  @Mock PmsGitSyncHelper pmsGitSyncHelper;
 
   private final String ACCOUNT_ID = "account_id";
   private final String ORG_IDENTIFIER = "orgId";
@@ -78,7 +81,7 @@ public class PipelineResourceTest extends CategoryTest {
   public void setUp() throws IOException {
     MockitoAnnotations.initMocks(this);
     pipelineResource = new PipelineResource(pmsPipelineService, pmsExecutionService, pmsYamlSchemaService,
-        nodeExecutionService, accessControlClient, nodeExecutionToExecutioNodeMapper);
+        nodeExecutionService, accessControlClient, nodeExecutionToExecutioNodeMapper, pmsGitSyncHelper);
     ClassLoader classLoader = this.getClass().getClassLoader();
     String filename = "failure-strategy.yaml";
     yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
@@ -126,7 +129,7 @@ public class PipelineResourceTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testCreatePipeline() {
+  public void testCreatePipeline() throws IOException {
     doReturn(entityWithVersion).when(pmsPipelineService).create(entity);
     ResponseDTO<String> identifier =
         pipelineResource.createPipeline(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, yaml);
@@ -137,6 +140,7 @@ public class PipelineResourceTest extends CategoryTest {
   @Test
   @Owner(developers = SAMARTH)
   @Category(UnitTests.class)
+  @Ignore("Ignored till Schema validation is behind FF")
   public void testCreatePipelineWithSchemaErrors() throws IOException {
     doThrow(JsonSchemaValidationException.class)
         .when(pmsYamlSchemaService)
@@ -192,7 +196,7 @@ public class PipelineResourceTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testUpdatePipeline() {
+  public void testUpdatePipeline() throws IOException {
     doReturn(entityWithVersion).when(pmsPipelineService).updatePipelineYaml(entity);
     ResponseDTO<String> responseDTO = pipelineResource.updatePipeline(
         null, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null, yaml);
@@ -202,6 +206,7 @@ public class PipelineResourceTest extends CategoryTest {
   @Test
   @Owner(developers = SAMARTH)
   @Category(UnitTests.class)
+  @Ignore("Ignored till Schema validation is behind FF")
   public void testUpdatePipelineWithSchemaErrors() {
     doThrow(JsonSchemaValidationException.class)
         .when(pmsYamlSchemaService)
@@ -300,7 +305,7 @@ public class PipelineResourceTest extends CategoryTest {
 
     Page<PipelineExecutionSummaryDTO> content = pipelineResource
                                                     .getListOfExecutions(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER,
-                                                        null, null, null, 0, 10, null, null, null, null, null, true)
+                                                        null, null, 0, 10, null, null, null, null, null, false)
                                                     .getData();
     assertThat(content).isNotEmpty();
     assertThat(content.getNumberOfElements()).isEqualTo(1);
@@ -325,7 +330,7 @@ public class PipelineResourceTest extends CategoryTest {
         .get(anyString(), anyString(), anyString(), anyString(), anyBoolean());
 
     ResponseDTO<PipelineExecutionDetailDTO> executionDetails = pipelineResource.getExecutionDetail(
-        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, STAGE_NODE_ID, PLAN_EXECUTION_ID, null);
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, STAGE_NODE_ID, PLAN_EXECUTION_ID);
 
     assertThat(executionDetails.getData().getPipelineExecutionSummary().getPipelineIdentifier())
         .isEqualTo(PIPELINE_IDENTIFIER);
@@ -350,7 +355,7 @@ public class PipelineResourceTest extends CategoryTest {
 
     assertThatThrownBy(()
                            -> pipelineResource.getExecutionDetail(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null,
-                               STAGE_NODE_ID, invalidPlanExecutionId, null))
+                               STAGE_NODE_ID, invalidPlanExecutionId))
         .isInstanceOf(InvalidRequestException.class);
   }
 }

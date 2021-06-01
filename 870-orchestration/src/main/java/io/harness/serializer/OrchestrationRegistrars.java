@@ -20,9 +20,11 @@ import io.harness.serializer.morphia.converters.FacilitatorObtainmentMorphiaConv
 import io.harness.serializer.morphia.converters.FacilitatorTypeMorphiaConverter;
 import io.harness.serializer.morphia.converters.FailureInfoMorphiaConverter;
 import io.harness.serializer.morphia.converters.InterruptConfigMorphiaConverter;
+import io.harness.serializer.morphia.converters.InterruptEffectMorphiaConverter;
 import io.harness.serializer.morphia.converters.LevelMorphiaConverter;
 import io.harness.serializer.morphia.converters.RefObjectMorphiaConverter;
 import io.harness.serializer.morphia.converters.RefTypeMorphiaConverter;
+import io.harness.serializer.morphia.converters.SdkModuleInfoMorphiaConverter;
 import io.harness.serializer.morphia.converters.SdkResponseEventRequestMorphiaConverter;
 import io.harness.serializer.morphia.converters.StepTypeMorphiaConverter;
 import io.harness.serializer.morphia.converters.TriggerPayloadMorphiaConverter;
@@ -35,6 +37,8 @@ import io.harness.serializer.spring.converters.advisers.type.AdviserTypeReadConv
 import io.harness.serializer.spring.converters.advisers.type.AdviserTypeWriteConverter;
 import io.harness.serializer.spring.converters.ambiance.AmbianceReadConverter;
 import io.harness.serializer.spring.converters.ambiance.AmbianceWriteConverter;
+import io.harness.serializer.spring.converters.consumerconfig.ConsumerConfigReadConverter;
+import io.harness.serializer.spring.converters.consumerconfig.ConsumerConfigWriteConverter;
 import io.harness.serializer.spring.converters.errorInfo.ExecutionErrorInfoReadConverter;
 import io.harness.serializer.spring.converters.errorInfo.ExecutionErrorInfoWriteConverter;
 import io.harness.serializer.spring.converters.executableresponse.ExecutableResponseReadConverter;
@@ -57,6 +61,8 @@ import io.harness.serializer.spring.converters.graphlayout.LayoutNodeInfoReadCon
 import io.harness.serializer.spring.converters.graphlayout.LayoutNodeInfoWriteConverter;
 import io.harness.serializer.spring.converters.interrupt.InterruptConfigReadConverter;
 import io.harness.serializer.spring.converters.interrupt.InterruptConfigWriteConverter;
+import io.harness.serializer.spring.converters.interrupt.InterruptEffectReadConverter;
+import io.harness.serializer.spring.converters.interrupt.InterruptEffectWriteConverter;
 import io.harness.serializer.spring.converters.level.LevelReadConverter;
 import io.harness.serializer.spring.converters.level.LevelWriteConverter;
 import io.harness.serializer.spring.converters.logging.UnitProgressReadConverter;
@@ -73,6 +79,8 @@ import io.harness.serializer.spring.converters.reftype.RefTypeReadConverter;
 import io.harness.serializer.spring.converters.reftype.RefTypeWriteConverter;
 import io.harness.serializer.spring.converters.run.NodeRunInfoReadConverter;
 import io.harness.serializer.spring.converters.run.NodeRunInfoWriteConverter;
+import io.harness.serializer.spring.converters.sdk.SdkModuleInfoReadConverter;
+import io.harness.serializer.spring.converters.sdk.SdkModuleInfoWriteConverter;
 import io.harness.serializer.spring.converters.skip.SkipInfoReadConverter;
 import io.harness.serializer.spring.converters.skip.SkipInfoWriteConverter;
 import io.harness.serializer.spring.converters.stepoutcomeref.StepOutcomeRefReadConverter;
@@ -127,6 +135,7 @@ public class OrchestrationRegistrars {
       ImmutableSet.<Class<? extends TypeConverter>>builder()
           .addAll(OrchestrationBeansRegistrars.morphiaConverters)
           .add(AmbianceMorphiaConverter.class)
+          .add(SdkModuleInfoMorphiaConverter.class)
           .add(LevelMorphiaConverter.class)
           .add(StepTypeMorphiaConverter.class)
           .add(RefObjectMorphiaConverter.class)
@@ -139,7 +148,7 @@ public class OrchestrationRegistrars {
           .add(ExecutableResponseMorphiaConverter.class)
           .add(ExecutionTriggerInfoMorphiaConverter.class)
           .add(ExecutionPrincipalInfoMorphiaConverter.class)
-
+          .add(InterruptEffectMorphiaConverter.class)
           .add(TriggeredByMorphiaConverter.class)
           .add(ExecutionMetadataMorphiaConverter.class)
           .add(TriggerPayloadMorphiaConverter.class)
@@ -170,7 +179,9 @@ public class OrchestrationRegistrars {
       InterruptConfigReadConverter.class, InterruptConfigWriteConverter.class,
       SdkResponseEventRequestReadConverter.class, SdkResponseEventRequestWriteConverter.class,
       NodeRunInfoReadConverter.class, NodeRunInfoWriteConverter.class, ExecutionPrincipalInfoReadConverter.class,
-      ExecutionPrincipalInfoWriteConverter.class);
+      ExecutionPrincipalInfoWriteConverter.class, InterruptEffectReadConverter.class,
+      InterruptEffectWriteConverter.class, SdkModuleInfoReadConverter.class, SdkModuleInfoWriteConverter.class,
+      ConsumerConfigReadConverter.class, ConsumerConfigWriteConverter.class);
 
   public static final List<Class<? extends Converter<?, ?>>> springConverters =
       ImmutableList.<Class<? extends Converter<?, ?>>>builder()

@@ -887,6 +887,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
     ensureNoDuplicateVars(terraformProvisioner.getBackendConfigs());
     ensureNoDuplicateVars(terraformProvisioner.getEnvironmentVariables());
+    ensureSelectedSecretManagerExist(terraformProvisioner.getAccountId(), terraformProvisioner.getKmsId());
 
     boolean areVariablesValid = areKeysMongoCompliant(terraformProvisioner.getVariables(),
         terraformProvisioner.getBackendConfigs(), terraformProvisioner.getEnvironmentVariables());
@@ -896,9 +897,20 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     }
   }
 
+  private void ensureSelectedSecretManagerExist(@NotNull String accountId, String secretManagerId) {
+    if (isEmpty(secretManagerId)) {
+      return;
+    }
+    if (secretManager.getSecretManager(accountId, secretManagerId) == null) {
+      throw new InvalidRequestException(
+          format("No secret manger found with id: %s", secretManagerId), WingsException.USER);
+    }
+  }
+
   private void validateTerragruntProvisioner(TerragruntInfrastructureProvisioner provisioner) {
     validateSourceRepoConfig(provisioner.getSourceRepoBranch(), provisioner.getCommitId(), provisioner.getPath(),
         provisioner.getRepoName(), provisioner.getSourceRepoSettingId());
+    ensureSelectedSecretManagerExist(provisioner.getAccountId(), provisioner.getSecretManagerId());
   }
 
   private void validateSourceRepoConfig(

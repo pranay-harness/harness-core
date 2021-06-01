@@ -5,10 +5,12 @@ import static io.harness.rule.OwnerRule.UTSAV;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
@@ -22,6 +24,7 @@ import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.rule.Owner;
 import io.harness.threading.CurrentThreadExecutor;
 
+import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.Options;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
@@ -44,7 +47,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -74,6 +76,8 @@ public class K8sResourceValidatorImplTest extends CategoryTest {
   final String VERB = "delete";
   final String RESOURCE = "pods";
   final String REASON = "REASON";
+  static final String URL_REGEX_SUFFIX = "/?(\\?(.*))?";
+  static final Gson GSON = new Gson();
 
   @Before
   public void setup() throws ApiException {
@@ -228,34 +232,32 @@ public class K8sResourceValidatorImplTest extends CategoryTest {
   @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
-  @Ignore("This test failes after migration to the new version of WireMockRule")
   public void shouldValidateMetricsServer() throws ApiException {
-    stubFor(get(urlPathEqualTo("/apis"))
-                .willReturn(aResponse().withStatus(200).withBody(new Gson().toJson(
-                    new V1APIGroupListBuilder()
+    stubFor(getForApiVersionCall().willReturn(aResponse().withStatus(200).withBody(
+        GSON.toJson(new V1APIGroupListBuilder()
                         .withGroups(ImmutableList.of(new V1APIGroupBuilder().withName("metrics.k8s.io").build()))
                         .build()))));
 
     assertThat(k8sResourceValidator.validateMetricsServer(apiClient)).isTrue();
+    WireMock.verify(getRequestedFor(urlPathEqualTo("/apis/")));
   }
 
   @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
-  @Ignore("This test failes after migration to the new version of WireMockRule")
   public void shouldThrowErrorWhenMetricsServerAbsent() throws ApiException {
-    stubFor(get(urlPathEqualTo("/apis"))
-                .willReturn(aResponse().withStatus(200).withBody(
-                    new Gson().toJson(new V1APIGroupListBuilder().withGroups(new ArrayList<>()).build()))));
+    stubFor(getForApiVersionCall().willReturn(aResponse().withStatus(200).withBody(
+        GSON.toJson(new V1APIGroupListBuilder().withGroups(new ArrayList<>()).build()))));
 
     assertThat(k8sResourceValidator.validateMetricsServer(apiClient)).isFalse();
+    WireMock.verify(getRequestedFor(urlPathEqualTo("/apis/")));
   }
 
   @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void throwErrorWhenValidatingMetricServer() {
-    stubFor(get(urlPathEqualTo("/apis")).willReturn(aResponse().withStatus(404).withBody("404 page not found")));
+    stubFor(getForApiVersionCall().willReturn(aResponse().withStatus(404).withBody("404 page not found")));
 
     assertThatThrownBy(() -> k8sResourceValidator.validateMetricsServer(apiClient))
         .isInstanceOf(ApiException.class)
@@ -266,8 +268,8 @@ public class K8sResourceValidatorImplTest extends CategoryTest {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testValidateCEPermissions2AllPermissionsGranted() {
-    stubFor(post(urlPathEqualTo("/apis/authorization.k8s.io/v1/selfsubjectaccessreviews"))
-                .willReturn(aResponse().withStatus(200).withBody(new Gson().toJson(v1SelfSubjectAccessReview))));
+    stubFor(postForPathAccessReviewCall().willReturn(
+        aResponse().withStatus(200).withBody(GSON.toJson(v1SelfSubjectAccessReview))));
 
     List<CEK8sDelegatePrerequisite.Rule> requiredPermissions = k8sResourceValidator.validateCEPermissions2(apiClient);
 
@@ -282,8 +284,8 @@ public class K8sResourceValidatorImplTest extends CategoryTest {
   public void testValidateCEPermissions2NoneGranted() {
     v1SubjectAccessReviewStatus = v1SubjectAccessReviewStatus.allowed(false).reason(REASON);
 
-    stubFor(post(urlPathEqualTo("/apis/authorization.k8s.io/v1/selfsubjectaccessreviews"))
-                .willReturn(aResponse().withStatus(200).withBody(new Gson().toJson(v1SelfSubjectAccessReview))));
+    stubFor(postForPathAccessReviewCall().willReturn(
+        aResponse().withStatus(200).withBody(GSON.toJson(v1SelfSubjectAccessReview))));
 
     List<CEK8sDelegatePrerequisite.Rule> requiredPermissions = k8sResourceValidator.validateCEPermissions2(apiClient);
 
@@ -291,5 +293,13 @@ public class K8sResourceValidatorImplTest extends CategoryTest {
     assertThat(requiredPermissions).isNotNull();
     assertThat(requiredPermissions).isNotEmpty();
     assertThat(requiredPermissions.get(0).getMessage()).isEqualTo(REASON);
+  }
+
+  private static MappingBuilder postForPathAccessReviewCall() {
+    return post(urlPathMatching("^/apis/authorization.k8s.io/v1/selfsubjectaccessreviews" + URL_REGEX_SUFFIX));
+  }
+
+  private static MappingBuilder getForApiVersionCall() {
+    return get(urlPathMatching("^/apis" + URL_REGEX_SUFFIX));
   }
 }

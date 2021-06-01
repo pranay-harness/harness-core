@@ -149,8 +149,15 @@
         "connectorRef": {
           "type": "string"
         },
+        "depth": {
+          "type": "integer",
+          "format": "int32"
+        },
         "repoName": {
           "type": "string"
+        },
+        "sslVerify": {
+          "type": "boolean"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"

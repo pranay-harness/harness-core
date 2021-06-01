@@ -296,7 +296,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
       return false;
     }
 
-    return getAppPrefixByRemovingNumber(applicationSummary.getName()).equals(prefix);
+    return getAppPrefixByRemovingNumber(applicationSummary.getName()).equalsIgnoreCase(prefix);
   }
 
   @Override

@@ -194,7 +194,7 @@ public class K8sRollingDeployTest extends CategoryTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testCommandUnitList() {
-    List<CommandUnit> blueGreenCommandUnits = k8sRollingDeploy.commandUnitList(true);
+    List<CommandUnit> blueGreenCommandUnits = k8sRollingDeploy.commandUnitList(true, "accountId");
     assertThat(blueGreenCommandUnits).isNotEmpty();
     assertThat(blueGreenCommandUnits.get(0).getName()).isEqualTo(K8sCommandUnitConstants.FetchFiles);
     assertThat(blueGreenCommandUnits.get(1).getName()).isEqualTo(K8sCommandUnitConstants.Init);

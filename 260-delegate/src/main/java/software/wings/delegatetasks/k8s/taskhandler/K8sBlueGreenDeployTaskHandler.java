@@ -6,6 +6,7 @@ import static io.harness.k8s.K8sCommandUnitConstants.Apply;
 import static io.harness.k8s.K8sCommandUnitConstants.FetchFiles;
 import static io.harness.k8s.K8sCommandUnitConstants.Init;
 import static io.harness.k8s.K8sCommandUnitConstants.Prepare;
+import static io.harness.k8s.K8sCommandUnitConstants.Prune;
 import static io.harness.k8s.K8sCommandUnitConstants.WaitForSteadyState;
 import static io.harness.k8s.K8sCommandUnitConstants.WrapUp;
 import static io.harness.k8s.K8sConstants.MANIFEST_FILES_DIR;
@@ -35,6 +36,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.delegate.k8s.K8sBGBaseHandler;
+import io.harness.delegate.k8s.PrePruningInfo;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.ExceptionUtils;
@@ -98,6 +100,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
   private String stageColor;
   private String releaseName;
   private String manifestFilesDirectory;
+  private PrePruningInfo prePruningInfo;
 
   @Override
   public K8sTaskExecutionResponse executeTaskInternal(
@@ -179,6 +182,14 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
           kubernetesConfig, k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
 
       wrapUpLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+
+      if (k8sBlueGreenDeployTaskParameters.isPruningEnabled()) {
+        ExecutionLogCallback pruneExecutionLogCallback =
+            k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, Prune);
+        k8sBGBaseHandler.pruneForBg(k8sDelegateTaskParams, prePruningInfo, pruneExecutionLogCallback, primaryColor,
+            stageColor, currentRelease, client);
+      }
+
       return k8sTaskHelper.getK8sTaskExecutionResponse(K8sBlueGreenDeployResponse.builder()
                                                            .releaseNumber(currentRelease.getNumber())
                                                            .k8sPodList(podList)
@@ -323,11 +334,15 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
         return false;
       }
 
-      currentRelease = releaseHistory.createNewRelease(
-          resources.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList()));
+      if (k8sBlueGreenDeployTaskParameters.isPruningEnabled()) {
+        currentRelease = releaseHistory.createNewReleaseWithResourceMap(resources);
+      } else {
+        currentRelease = releaseHistory.createNewRelease(
+            resources.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList()));
+      }
 
-      k8sBGBaseHandler.cleanupForBlueGreen(k8sDelegateTaskParams, releaseHistory, executionLogCallback, primaryColor,
-          stageColor, currentRelease, client);
+      prePruningInfo = k8sBGBaseHandler.cleanupForBlueGreen(k8sDelegateTaskParams, releaseHistory, executionLogCallback,
+          primaryColor, stageColor, currentRelease, client);
 
       executionLogCallback.saveExecutionLog("\nCurrent release number is: " + currentRelease.getNumber());
 

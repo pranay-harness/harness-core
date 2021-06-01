@@ -3,9 +3,9 @@ package io.harness.batch.processing.service.impl;
 import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.getCredentials;
 
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.AccountExpiryService;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
+import io.harness.ccm.commons.constants.CloudProvider;
 
 import software.wings.beans.Account;
 

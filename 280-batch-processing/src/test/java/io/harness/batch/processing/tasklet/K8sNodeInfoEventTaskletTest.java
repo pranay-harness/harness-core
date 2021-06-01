@@ -1,8 +1,8 @@
 package io.harness.batch.processing.tasklet;
 
-import static io.harness.batch.processing.pricing.data.CloudProvider.AWS;
-import static io.harness.batch.processing.pricing.data.CloudProvider.AZURE;
-import static io.harness.batch.processing.pricing.data.CloudProvider.GCP;
+import static io.harness.ccm.commons.constants.CloudProvider.AWS;
+import static io.harness.ccm.commons.constants.CloudProvider.AZURE;
+import static io.harness.ccm.commons.constants.CloudProvider.GCP;
 import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.NIKUNJ;
 
@@ -15,22 +15,22 @@ import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.CloudProviderService;
 import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.InstanceResourceService;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
+import io.harness.ccm.commons.beans.billing.InstanceCategory;
+import io.harness.ccm.commons.constants.CloudProvider;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.ff.FeatureFlagService;
@@ -59,7 +59,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.batch.repeat.RepeatStatus;
 
@@ -87,7 +86,6 @@ public class K8sNodeInfoEventTaskletTest extends BaseTaskletTest {
       "azure:///subscriptions/20d6a917-99fa-4b1b-9b2e-a3d624e9dcf0/resourceGroups/mc_ce_dev-resourcegroup_ce-dev-cluster2_eastus/providers/Microsoft.Compute/virtualMachineScaleSets/aks-agentpool-14257926-vmss/virtualMachines/1";
   private static final String PROVIDER_ID_AZURE_VM =
       "azure:///subscriptions/20d6a917-99fa-4b1b-9b2e-a3d624e9dcf0/resourceGroups/mc_ce_dev-resourcegroup_cetest1_eastus/providers/Microsoft.Compute/virtualMachines/aks-agentpool-41737416-1";
-  private static final String ACCOUNT_ID = "account_id";
   private static final String CLUSTER_ID = "cluster_id";
   private static final String CLUSTER_NAME = "cluster_name";
   private final Instant NOW = Instant.now();
@@ -95,8 +93,6 @@ public class K8sNodeInfoEventTaskletTest extends BaseTaskletTest {
 
   @Before
   public void setup() {
-    MockitoAnnotations.initMocks(this);
-    mockChunkContext();
     when(config.getBatchQueryConfig()).thenReturn(BatchQueryConfig.builder().queryBatchSize(50).build());
     when(instanceDataBulkWriteService.updateList(any())).thenReturn(true);
     when(featureFlagService.isEnabled(eq(FeatureName.NODE_RECOMMENDATION_1), eq(ACCOUNT_ID))).thenReturn(false);

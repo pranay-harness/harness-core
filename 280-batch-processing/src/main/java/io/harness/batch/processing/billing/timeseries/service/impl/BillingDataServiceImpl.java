@@ -8,7 +8,7 @@ import io.harness.batch.processing.ccm.ActualIdleCostWriterData;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.entities.ClusterDataDetails;
 import io.harness.ccm.commons.beans.InstanceType;
-import io.harness.ccm.commons.utils.DataUtils;
+import io.harness.ccm.commons.utils.TimeUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -35,10 +35,11 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class BillingDataServiceImpl {
   @Autowired private TimeScaleDBService timeScaleDBService;
-  @Autowired private DataUtils utils;
+  @Autowired private TimeUtils utils;
 
   private static final int BATCH_SIZE = 500;
   private static final int MAX_RETRY_COUNT = 2;
+  private static final int DELETE_MAX_RETRY_COUNT = 5;
   private static final int SELECT_MAX_RETRY_COUNT = 5;
   static final String INSERT_STATEMENT =
       "INSERT INTO %s (STARTTIME, ENDTIME, ACCOUNTID, INSTANCETYPE, BILLINGACCOUNTID, BILLINGAMOUNT, CPUBILLINGAMOUNT, MEMORYBILLINGAMOUNT, USAGEDURATIONSECONDS, INSTANCEID, CLUSTERNAME, CLUSTERID, SETTINGID,  SERVICEID, APPID, CLOUDPROVIDERID, ENVID, CPUUNITSECONDS, MEMORYMBSECONDS, PARENTINSTANCEID, REGION, LAUNCHTYPE, CLUSTERTYPE, CLOUDPROVIDER, WORKLOADNAME, WORKLOADTYPE, NAMESPACE, CLOUDSERVICENAME, TASKID, IDLECOST, CPUIDLECOST, MEMORYIDLECOST, MAXCPUUTILIZATION, MAXMEMORYUTILIZATION, AVGCPUUTILIZATION, AVGMEMORYUTILIZATION, SYSTEMCOST, CPUSYSTEMCOST, MEMORYSYSTEMCOST, ACTUALIDLECOST, CPUACTUALIDLECOST, MEMORYACTUALIDLECOST, UNALLOCATEDCOST, CPUUNALLOCATEDCOST, MEMORYUNALLOCATEDCOST, INSTANCENAME, CPUREQUEST, MEMORYREQUEST, CPULIMIT, MEMORYLIMIT, MAXCPUUTILIZATIONVALUE, MAXMEMORYUTILIZATIONVALUE, AVGCPUUTILIZATIONVALUE, AVGMEMORYUTILIZATIONVALUE, NETWORKCOST, PRICINGSOURCE, STORAGEACTUALIDLECOST, STORAGEUNALLOCATEDCOST, STORAGEUTILIZATIONVALUE, STORAGEREQUEST, STORAGEMBSECONDS, STORAGECOST) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING";
@@ -348,7 +349,7 @@ public class BillingDataServiceImpl {
     boolean successfulUpdate = false;
     if (timeScaleDBService.isValid()) {
       int retryCount = 0;
-      while (!successfulUpdate && retryCount < MAX_RETRY_COUNT) {
+      while (!successfulUpdate && retryCount < DELETE_MAX_RETRY_COUNT) {
         try (Connection dbConnection = timeScaleDBService.getDBConnection();
              PreparedStatement statement = dbConnection.prepareStatement(
                  String.format(DELETE_EXISTING_BILLING_DATA, BillingDataTableNameProvider.getTableName(batchJobType),

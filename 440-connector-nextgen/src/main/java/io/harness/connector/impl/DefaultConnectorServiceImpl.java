@@ -5,8 +5,8 @@ import static io.harness.NGConstants.CONNECTOR_STRING;
 import static io.harness.connector.ConnectivityStatus.FAILURE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.beans.connector.ConnectorType.GIT;
 import static io.harness.errorhandling.NGErrorHelper.DEFAULT_ERROR_SUMMARY;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
 import static java.lang.String.format;
@@ -38,11 +38,13 @@ import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.stats.ConnectorStatistics;
 import io.harness.connector.validator.ConnectionValidator;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.encryption.SecretRefData;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.errorhandling.NGErrorHelper;
+import io.harness.exception.ConnectorNotFoundException;
 import io.harness.exception.DelegateServiceDriverException;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
@@ -51,6 +53,7 @@ import io.harness.exception.WingsException;
 import io.harness.exception.ngexception.ConnectorValidationException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.persistance.GitSyncSdkService;
+import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
@@ -75,6 +78,7 @@ import java.util.Optional;
 import javax.ws.rs.NotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -286,16 +290,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     newConnector.setCreatedAt(existingConnector.getCreatedAt());
     newConnector.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
     newConnector.setActivityDetails(existingConnector.getActivityDetails());
-    if (existingConnector.getHeartbeatPerpetualTaskId() == null
-        && !harnessManagedConnectorHelper.isHarnessManagedSecretManager(connector)) {
-      PerpetualTaskId connectorHeartbeatTaskId =
-          connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier, existingConnector.getOrgIdentifier(),
-              existingConnector.getProjectIdentifier(), existingConnector.getIdentifier());
-      newConnector.setHeartbeatPerpetualTaskId(
-          connectorHeartbeatTaskId == null ? null : connectorHeartbeatTaskId.getId());
-    } else {
-      newConnector.setHeartbeatPerpetualTaskId(existingConnector.getHeartbeatPerpetualTaskId());
-    }
+    setGitDetails(existingConnector, newConnector);
     Connector updatedConnector;
     try {
       updatedConnector = connectorRepository.save(newConnector, connectorRequest, ChangeType.MODIFY);
@@ -303,7 +298,26 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(format("Connector [%s] already exists", existingConnector.getIdentifier()));
     }
+
+    if (existingConnector.getIsFromDefaultBranch() == null || existingConnector.getIsFromDefaultBranch()) {
+      if (existingConnector.getHeartbeatPerpetualTaskId() == null
+          && !harnessManagedConnectorHelper.isHarnessManagedSecretManager(connector)) {
+        PerpetualTaskId connectorHeartbeatTaskId = connectorHeartbeatService.createConnectorHeatbeatTask(
+            accountIdentifier, existingConnector.getOrgIdentifier(), existingConnector.getProjectIdentifier(),
+            existingConnector.getIdentifier());
+        newConnector.setHeartbeatPerpetualTaskId(
+            connectorHeartbeatTaskId == null ? null : connectorHeartbeatTaskId.getId());
+      } else {
+        connectorHeartbeatService.resetPerpetualTask(
+            accountIdentifier, existingConnector.getHeartbeatPerpetualTaskId());
+        newConnector.setHeartbeatPerpetualTaskId(existingConnector.getHeartbeatPerpetualTaskId());
+      }
+    }
     return connectorMapper.writeDTO(updatedConnector);
+  }
+
+  private void setGitDetails(Connector existingConnector, Connector newConnector) {
+    EntityGitDetailsMapper.copyEntityGitDetails(existingConnector, newConnector);
   }
 
   private void validateTheUpdateRequestIsValid(
@@ -423,7 +437,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
         getConnectorWithIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     ConnectorValidationResult validationResult;
 
-    if (connector.getType() != GIT) {
+    if (connector.getCategories() != null & !connector.getCategories().contains(ConnectorCategory.CODE_REPO)) {
       log.info("Test Connection failed for connector with identifier[{}] in account[{}] with error [{}]",
           connector.getIdentifier(), accountIdentifier, "Non git connector is provided for repo verification");
       validationResult = ConnectorValidationResult.builder().status(FAILURE).build();
@@ -432,11 +446,13 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
     ConnectorResponseDTO connectorDTO = connectorMapper.writeDTO(connector);
     ConnectorInfoDTO connectorInfo = connectorDTO.getConnector();
-    GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorInfo.getConnectorConfig();
+    ConnectorConfigDTO connectorConfig = connectorInfo.getConnectorConfig();
     // Use Repo URL from parameter instead of using configured URL
-    gitConfigDTO.setUrl(gitRepoURL);
-    connectorInfo.setConnectorConfig(gitConfigDTO);
-
+    if (isNotEmpty(gitRepoURL)) {
+      ScmConnector scmConnector = (ScmConnector) connectorConfig;
+      scmConnector.setUrl(gitRepoURL);
+      connectorInfo.setConnectorConfig(connectorConfig);
+    }
     return validateConnector(connector, connectorDTO, connectorInfo, accountIdentifier, orgIdentifier,
         projectIdentifier, connectorIdentifier);
   }
@@ -542,6 +558,50 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   public ConnectorStatistics getConnectorStatistics(
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     return connectorStatisticsHelper.getStats(accountIdentifier, orgIdentifier, projectIdentifier);
+  }
+
+  @Override
+  public String getHeartbeatPerpetualTaskId(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    Optional<Connector> connectorOptional = connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
+        fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
+
+    return connectorOptional
+        .filter(connector -> connector.getIsFromDefaultBranch() == null || connector.getIsFromDefaultBranch())
+        .map(connector -> {
+          if (isEmpty(connector.getHeartbeatPerpetualTaskId())) {
+            PerpetualTaskId connectorHeatbeatTaskId = connectorHeartbeatService.createConnectorHeatbeatTask(
+                accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+            if (connectorHeatbeatTaskId != null) {
+              updateConnectorEntityWithPerpetualtaskId(
+                  accountIdentifier, orgIdentifier, projectIdentifier, identifier, connectorHeatbeatTaskId.getId());
+              return connectorHeatbeatTaskId.getId();
+            } else {
+              return null;
+            }
+          } else {
+            return connector.getHeartbeatPerpetualTaskId();
+          }
+        })
+        .orElseThrow(
+            ()
+                -> new ConnectorNotFoundException(
+                    format(
+                        "No connector found with identifier [%s] with accountidentifier [%s], orgIdentifier [%s] and projectIdentifier [%s]",
+                        identifier, accountIdentifier, orgIdentifier, projectIdentifier),
+                    USER));
+  }
+
+  @Override
+  public void resetHeartbeatForReferringConnectors(List<Pair<String, String>> connectorPerpetualTaskInfo) {
+    for (Pair<String, String> item : connectorPerpetualTaskInfo) {
+      log.info("Resetting perpetual task with id {} in account {}", item.getValue(), item.getKey());
+      if (item.getValue() != null) {
+        connectorHeartbeatService.resetPerpetualTask(item.getKey(), item.getValue());
+      }
+    }
   }
 
   @Override

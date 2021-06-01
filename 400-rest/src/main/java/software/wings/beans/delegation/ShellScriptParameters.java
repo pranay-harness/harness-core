@@ -5,6 +5,8 @@ import static io.harness.expression.Expression.DISALLOW_SECRETS;
 import static io.harness.k8s.K8sConstants.HARNESS_KUBE_CONFIG_PATH;
 import static io.harness.shell.SshSessionConfig.Builder.aSshSessionConfig;
 
+import static java.lang.Boolean.FALSE;
+
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -92,6 +94,7 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
   private String role;
   private String publicKey;
   private SSHVaultConfig sshVaultConfig;
+  private Boolean includeInfraSelectors;
 
   private Map<String, String> getResolvedEnvironmentVariables() {
     Map<String, String> resolvedEnvironment = new HashMap<>();
@@ -185,7 +188,7 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
 
     if (executeOnDelegate) {
-      if (containerServiceParams != null) {
+      if (containerServiceParams != null && includeInfraSelectors != FALSE) {
         SettingAttribute settingAttribute = containerServiceParams.getSettingAttribute();
         if (settingAttribute != null) {
           SettingValue value = settingAttribute.getValue();

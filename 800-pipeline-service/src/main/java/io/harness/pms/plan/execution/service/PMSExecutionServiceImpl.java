@@ -18,9 +18,9 @@ import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
 import io.harness.interrupts.Interrupt;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
-import io.harness.pms.contracts.advisers.InterruptConfig;
-import io.harness.pms.contracts.advisers.IssuedBy;
-import io.harness.pms.contracts.advisers.ManualIssuer;
+import io.harness.pms.contracts.interrupts.InterruptConfig;
+import io.harness.pms.contracts.interrupts.IssuedBy;
+import io.harness.pms.contracts.interrupts.ManualIssuer;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.filter.utils.ModuleInfoFilterUtils;
@@ -34,6 +34,7 @@ import io.harness.pms.plan.execution.beans.dto.PipelineExecutionFilterProperties
 import io.harness.pms.utils.PmsConstants;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 import io.harness.serializer.JsonUtils;
+import io.harness.serializer.ProtoUtils;
 import io.harness.service.GraphGenerationService;
 
 import com.google.inject.Inject;
@@ -82,12 +83,13 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
     }
     criteria.and(PlanExecutionSummaryKeys.pipelineDeleted).ne(!pipelineDeleted);
 
+    Criteria filterCriteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(filterIdentifier) && filterProperties != null) {
       throw new InvalidRequestException("Can not apply both filter properties and saved filter together");
     } else if (EmptyPredicate.isNotEmpty(filterIdentifier) && filterProperties == null) {
-      populatePipelineFilterUsingIdentifier(criteria, accountId, orgId, projectId, filterIdentifier);
+      populatePipelineFilterUsingIdentifier(filterCriteria, accountId, orgId, projectId, filterIdentifier);
     } else if (EmptyPredicate.isEmpty(filterIdentifier) && filterProperties != null) {
-      populatePipelineFilter(criteria, filterProperties);
+      populatePipelineFilter(filterCriteria, filterProperties);
     }
 
     if (myDeployments) {
@@ -98,26 +100,30 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
                   .build());
     }
 
+    Criteria moduleCriteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(moduleName)) {
       // Check for pipeline with no filters also - empty pipeline or pipelines with only approval stage
-      criteria.orOperator(Criteria.where(PlanExecutionSummaryKeys.modules).is(Collections.emptyList()),
+      moduleCriteria.orOperator(Criteria.where(PlanExecutionSummaryKeys.modules).is(Collections.emptyList()),
           Criteria.where(PlanExecutionSummaryKeys.modules)
               .is(Collections.singletonList(PmsConstants.INTERNAL_SERVICE_NAME)),
           Criteria.where(PlanExecutionSummaryKeys.modules).in(moduleName),
           Criteria.where(String.format("moduleInfo.%s", moduleName)).exists(true));
     }
+
+    Criteria searchCriteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(searchTerm)) {
-      Criteria searchCriteria =
-          new Criteria().orOperator(where(PlanExecutionSummaryKeys.pipelineIdentifier)
-                                        .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-              where(PlanExecutionSummaryKeys.name)
-                  .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-              where(PlanExecutionSummaryKeys.tags + "." + NGTagKeys.key)
-                  .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-              where(PlanExecutionSummaryKeys.tags + "." + NGTagKeys.value)
-                  .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
-      criteria.andOperator(searchCriteria);
+      searchCriteria.orOperator(where(PlanExecutionSummaryKeys.pipelineIdentifier)
+                                    .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(PlanExecutionSummaryKeys.name)
+              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(PlanExecutionSummaryKeys.tags + "." + NGTagKeys.key)
+              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(PlanExecutionSummaryKeys.tags + "." + NGTagKeys.value)
+              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
     }
+
+    criteria.andOperator(filterCriteria, moduleCriteria, searchCriteria);
+
     return criteria;
   }
 
@@ -134,7 +140,11 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
 
   private void populatePipelineFilter(Criteria criteria, @NotNull PipelineExecutionFilterPropertiesDTO piplineFilter) {
     if (EmptyPredicate.isNotEmpty(piplineFilter.getPipelineName())) {
-      criteria.and(PlanExecutionSummaryKeys.name).is(piplineFilter.getPipelineName());
+      criteria.orOperator(
+          where(PlanExecutionSummaryKeys.name)
+              .regex(piplineFilter.getPipelineName(), NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(PlanExecutionSummaryKeys.pipelineIdentifier)
+              .regex(piplineFilter.getPipelineName(), NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
     }
     if (EmptyPredicate.isNotEmpty(piplineFilter.getStatus())) {
       criteria.and(PlanExecutionSummaryKeys.status).in(piplineFilter.getStatus());
@@ -196,7 +206,10 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
             .nodeExecutionId(nodeExecutionId)
             .interruptConfig(
                 InterruptConfig.newBuilder()
-                    .setIssuedBy(IssuedBy.newBuilder().setManualIssuer(ManualIssuer.newBuilder().build()).build())
+                    .setIssuedBy(IssuedBy.newBuilder()
+                                     .setManualIssuer(ManualIssuer.newBuilder().build())
+                                     .setIssueTime(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
+                                     .build())
                     .build())
             .metadata(getMetadata(executionInterruptType))
             .build();

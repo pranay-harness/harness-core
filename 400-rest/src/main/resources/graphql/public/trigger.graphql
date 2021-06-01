@@ -69,6 +69,8 @@ type OnWebhook implements TriggerCondition {
   filePaths: [String]
   gitConnectorId: String
   gitConnectorName: String
+  #Beta: Webhook secret to authorize Github webhooks
+  webhookSecret: String
 }
 
 type OnSchedule implements TriggerCondition {

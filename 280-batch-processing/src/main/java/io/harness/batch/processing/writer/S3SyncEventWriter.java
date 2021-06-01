@@ -14,12 +14,13 @@ import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.connector.ConnectorResponseDTO;
+import io.harness.delegate.beans.connector.CEFeatures;
+import io.harness.delegate.beans.connector.CcmConnectorFilter;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.AwsCurAttributesDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
-import io.harness.delegate.beans.connector.ceawsconnector.CEAwsFeatures;
 import io.harness.ff.FeatureFlagService;
 import io.harness.ng.beans.PageResponse;
 
@@ -93,7 +94,7 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
                                                  .awsAccountId(ceAwsConfig.getAwsMasterAccountId())
                                                  .crossAccountAccess(crossAccountAccessBuilder)
                                                  .curAttributes(awsCurAttributesBuilder)
-                                                 .featuresEnabled(Arrays.asList(CEAwsFeatures.CUR))
+                                                 .featuresEnabled(Arrays.asList(CEFeatures.BILLING))
                                                  .build();
         ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder()
                                                 .connectorConfig(connectorConfig)
@@ -115,7 +116,12 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
     int size = 100;
     do {
       response = execute(connectorResourceClient.listConnectors(accountId, null, null, page, size,
-          ConnectorFilterPropertiesDTO.builder().types(Arrays.asList(ConnectorType.CE_AWS)).build(), false));
+          ConnectorFilterPropertiesDTO.builder()
+              .types(Arrays.asList(ConnectorType.CE_AWS))
+              .ccmConnectorFilter(
+                  CcmConnectorFilter.builder().featuresEnabled(Arrays.asList(CEFeatures.BILLING)).build())
+              .build(),
+          false));
       if (response != null && isNotEmpty(response.getContent())) {
         nextGenConnectorResponses.addAll(response.getContent());
       }
@@ -128,8 +134,7 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
   public void syncAwsContainers(List<ConnectorResponseDTO> connectorResponses, String accountId) {
     connectorResponses.forEach(connector -> {
       CEAwsConnectorDTO ceAwsConnectorDTO = (CEAwsConnectorDTO) connector.getConnector().getConnectorConfig();
-      if (ceAwsConnectorDTO != null && ceAwsConnectorDTO.getCurAttributes() != null
-          && ceAwsConnectorDTO.getCrossAccountAccess() != null) {
+      if (ceAwsConnectorDTO != null && ceAwsConnectorDTO.getCrossAccountAccess() != null) {
         AwsCurAttributesDTO curAttributes = ceAwsConnectorDTO.getCurAttributes();
         CrossAccountAccessDTO crossAccountAccess = ceAwsConnectorDTO.getCrossAccountAccess();
         S3SyncRecord s3SyncRecord = S3SyncRecord.builder()

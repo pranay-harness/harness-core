@@ -29,6 +29,7 @@ import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.config.PublisherConfiguration;
+import io.harness.delegate.authenticator.DelegateTokenAuthenticatorImpl;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
@@ -54,6 +55,7 @@ import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.Cache;
 import io.harness.rule.InjectorRuleMixin;
+import io.harness.security.DelegateTokenAuthenticator;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
@@ -378,6 +380,13 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
         bind(BroadcasterFactory.class).toInstance(mock(BroadcasterFactory.class));
         bind(MetricRegistry.class);
         bind(CommandLibraryServiceHttpClient.class).toInstance(mock(CommandLibraryServiceHttpClient.class));
+      }
+    });
+
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(DelegateTokenAuthenticator.class).to(DelegateTokenAuthenticatorImpl.class).in(Singleton.class);
       }
     });
 

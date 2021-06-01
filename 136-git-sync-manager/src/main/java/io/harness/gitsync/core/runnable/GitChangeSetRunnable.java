@@ -11,11 +11,15 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.UnsupportedOperationException;
 import io.harness.exception.WingsException;
 import io.harness.gitsync.common.YamlProcessingLogContext;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.beans.YamlChangeSet.YamlChangeSetKeys;
 import io.harness.gitsync.common.beans.YamlChangeSetStatus;
+import io.harness.gitsync.core.dtos.YamlChangeSetDTO;
+import io.harness.gitsync.core.impl.YamlChangeSetEventHandlerFactory;
+import io.harness.gitsync.core.service.YamlChangeSetHandler;
 import io.harness.gitsync.core.service.YamlChangeSetService;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.AccountLogContext;
@@ -33,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -57,6 +62,8 @@ public class GitChangeSetRunnable implements Runnable {
   @Inject private GitChangeSetRunnableHelper gitChangeSetRunnableHelper;
   @Inject private GitChangeSetRunnableQueueHelper gitChangeSetRunnableQueueHelper;
   @Inject private PersistentLocker persistentLocker;
+  @Inject private YamlChangeSetEventHandlerFactory yamlChangeSetHandlerFactory;
+  @Inject private ExecutorService executorService;
 
   @Override
   public void run() {
@@ -71,7 +78,7 @@ public class GitChangeSetRunnable implements Runnable {
 
       handleStuckChangeSets();
 
-      final List<YamlChangeSet> yamlChangeSets = getYamlChangeSetsToProcess();
+      final List<YamlChangeSetDTO> yamlChangeSets = getYamlChangeSetsToProcess();
 
       if (!yamlChangeSets.isEmpty()) {
         yamlChangeSets.forEach(this::processChangeSet);
@@ -87,7 +94,7 @@ public class GitChangeSetRunnable implements Runnable {
     }
   }
 
-  private List<YamlChangeSet> getYamlChangeSetsToProcess() {
+  private List<YamlChangeSetDTO> getYamlChangeSetsToProcess() {
     return getYamlChangeSetsPerQueueKey();
   }
 
@@ -98,18 +105,24 @@ public class GitChangeSetRunnable implements Runnable {
         .build(OVERRIDE_ERROR);
   }
 
+  private AutoLogContext createLogContextForChangeSet(YamlChangeSetDTO yamlChangeSet) {
+    return YamlProcessingLogContext.builder().changeSetId(yamlChangeSet.getChangesetId()).build(OVERRIDE_ERROR);
+  }
+
   @VisibleForTesting
-  void processChangeSet(YamlChangeSet yamlChangeSet) {
+  void processChangeSet(YamlChangeSetDTO yamlChangeSet) {
     final String accountId = yamlChangeSet.getAccountId();
     try (AccountLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = createLogContextForChangeSet(yamlChangeSet)) {
-      log.info("GIT_YAML_LOG_ENTRY: Processing  changeSetId: [{}]", yamlChangeSet.getUuid());
-      // todo(abhinav): add processing logic
+      log.info("GIT_YAML_LOG_ENTRY: Processing  changeSetId: [{}]", yamlChangeSet.getChangesetId());
+      final YamlChangeSetHandler changeSetHandler = yamlChangeSetHandlerFactory.getChangeSetHandler(yamlChangeSet);
+      executorService.submit(() -> changeSetHandler.process(yamlChangeSet));
+    } catch (UnsupportedOperationException ex) {
+      log.error("Couldn't process change set : {}", yamlChangeSet, ex);
     }
   }
 
-  @NotNull
-  private List<YamlChangeSet> getYamlChangeSetsPerQueueKey() {
+  private List<YamlChangeSetDTO> getYamlChangeSetsPerQueueKey() {
     final Set<ChangeSetGroupingKey> queuedChangeSetKeys = getQueuedChangesetKeys();
     final Set<ChangeSetGroupingKey> runningChangeSetKeys = getRunningChangesetKeys();
     final Set<String> maxedOutAccountIds = getMaxedOutAccountIds(runningChangeSetKeys);
@@ -141,11 +154,11 @@ public class GitChangeSetRunnable implements Runnable {
         || (System.currentTimeMillis() - lastTimestampForStatusLogPrint.get() > TimeUnit.MINUTES.toMillis(5));
   }
 
-  private YamlChangeSet getQueuedChangeSetForWaitingQueueKey(String accountId, String queueKey) {
+  private YamlChangeSetDTO getQueuedChangeSetForWaitingQueueKey(String accountId, String queueKey) {
     try (
         AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
         AutoLogContext ignore2 = YamlProcessingLogContext.builder().changeSetQueueKey(queueKey).build(OVERRIDE_ERROR)) {
-      final YamlChangeSet yamlChangeSet =
+      final YamlChangeSetDTO yamlChangeSet =
           gitChangeSetRunnableQueueHelper.getQueuedChangeSetForWaitingQueueKey(accountId, queueKey,
               getMaxRunningChangesetsForAccount(), yamlChangeSetService, runningStatusList, persistentLocker);
       if (yamlChangeSet == null) {
@@ -202,21 +215,21 @@ public class GitChangeSetRunnable implements Runnable {
       return;
     }
 
-    List<YamlChangeSet> stuckChangeSets = gitChangeSetRunnableHelper.getStuckYamlChangeSets(
+    List<YamlChangeSetDTO> stuckChangeSets = gitChangeSetRunnableHelper.getStuckYamlChangeSets(
         yamlChangeSetService, runningAccountIdList, runningStatusList);
 
     if (isNotEmpty(stuckChangeSets)) {
       // Map Acc vs such yamlChangeSets (with multigit support, there can be more than 1 for an account)
-      Map<String, List<YamlChangeSet>> accountIdToStuckChangeSets =
-          stuckChangeSets.stream().collect(Collectors.groupingBy(YamlChangeSet::getAccountId));
+      Map<String, List<YamlChangeSetDTO>> accountIdToStuckChangeSets =
+          stuckChangeSets.stream().collect(Collectors.groupingBy(YamlChangeSetDTO::getAccountId));
 
       // Mark these yamlChagneSets as Queued.
       accountIdToStuckChangeSets.forEach(this::retryOrSkipStuckChangeSets);
     }
   }
 
-  private void retryOrSkipStuckChangeSets(String accountId, List<YamlChangeSet> changeSets) {
-    final List<String> yamlChangeSetIds = uuidsOfChangeSets(changeSets);
+  private void retryOrSkipStuckChangeSets(String accountId, List<YamlChangeSetDTO> changeSets) {
+    final List<String> yamlChangeSetIds = idsOfChangeSets(changeSets);
     yamlChangeSetService.updateStatusAndIncrementRetryCountForYamlChangeSets(
         accountId, YamlChangeSetStatus.QUEUED, runningStatusList, yamlChangeSetIds);
     log.info("Retrying stuck changesets: [{}]", yamlChangeSetIds);
@@ -225,8 +238,8 @@ public class GitChangeSetRunnable implements Runnable {
   }
 
   @NotNull
-  private List<String> uuidsOfChangeSets(List<YamlChangeSet> changeSets) {
-    return changeSets.stream().map(YamlChangeSet::getUuid).collect(toList());
+  private List<String> idsOfChangeSets(List<YamlChangeSetDTO> changeSets) {
+    return changeSets.stream().map(YamlChangeSetDTO::getChangesetId).collect(toList());
   }
 
   private Set<String> getMaxedOutAccountIds(Set<ChangeSetGroupingKey> runningQueueKeys) {

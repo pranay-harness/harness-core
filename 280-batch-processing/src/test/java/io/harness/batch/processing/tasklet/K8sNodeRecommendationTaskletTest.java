@@ -3,53 +3,240 @@ package io.harness.batch.processing.tasklet;
 import static io.harness.rule.OwnerRule.UTSAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.offset;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.batch.processing.pricing.client.BanzaiRecommenderClient;
+import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
+import io.harness.batch.processing.pricing.service.intfc.VMPricingService;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.beans.billing.InstanceCategory;
+import io.harness.ccm.commons.beans.recommendation.K8sServiceProvider;
 import io.harness.ccm.commons.beans.recommendation.NodePoolId;
+import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
 import io.harness.ccm.commons.beans.recommendation.TotalResourceUsage;
+import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequest;
+import io.harness.ccm.commons.beans.recommendation.models.RecommendationResponse;
+import io.harness.ccm.commons.constants.CloudProvider;
 import io.harness.ccm.commons.dao.recommendation.K8sRecommendationDAO;
 import io.harness.rule.Owner;
 import io.harness.testsupport.BaseTaskletTest;
 
 import com.google.common.collect.ImmutableList;
-import lombok.extern.slf4j.Slf4j;
+import com.google.gson.Gson;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import lombok.SneakyThrows;
+import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.mockito.Answers;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import retrofit2.Response;
 
-@Slf4j
 @RunWith(MockitoJUnitRunner.class)
 public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
   @Mock private K8sRecommendationDAO k8sRecommendationDAO;
+  @Mock private VMPricingService vmPricingService;
+  @Mock(answer = Answers.RETURNS_DEEP_STUBS) private BanzaiRecommenderClient banzaiRecommenderClient;
   @InjectMocks private K8sNodeRecommendationTasklet tasklet;
+
+  private static final String NODE_POOL_NAME = "nodePoolName";
+  private static final String CLUSTER_ID = "clusterId";
+  private static final Gson GSON = new Gson();
 
   @Before
   public void setUp() throws Exception {
-    mockChunkContext();
+    TotalResourceUsage resourceUsage =
+        TotalResourceUsage.builder().maxcpu(1).maxmemory(3).sumcpu(8).summemory(64).build();
+    NodePoolId nodePoolId = NodePoolId.builder().clusterid(CLUSTER_ID).nodepoolname(NODE_POOL_NAME).build();
+    K8sServiceProvider k8sServiceProvider = K8sServiceProvider.builder()
+                                                .cloudProvider(CloudProvider.GCP)
+                                                .instanceCategory(InstanceCategory.ON_DEMAND)
+                                                .region("us-west-1")
+                                                .instanceFamily("xyz")
+                                                .build();
+    VMComputePricingInfo pricingInfo = VMComputePricingInfo.builder().onDemandPrice(2D).build();
+
+    // #execute
+    when(k8sRecommendationDAO.getUniqueNodePools(eq(ACCOUNT_ID))).thenReturn(ImmutableList.of(nodePoolId));
+
+    // #getTotalResourceUsageAndInsert
+    when(k8sRecommendationDAO.maxResourceOfAllTimeBucketsForANodePool(any(), eq(nodePoolId))).thenReturn(resourceUsage);
+    doNothing().when(k8sRecommendationDAO).insertNodePoolAggregated(any(), eq(nodePoolId), eq(resourceUsage));
+
+    // #getRecommendation
+    when(banzaiRecommenderClient
+             .getRecommendation(eq(k8sServiceProvider.getCloudProvider().getCloudProviderName()),
+                 eq(k8sServiceProvider.getCloudProvider().getK8sService()), eq(k8sServiceProvider.getRegion()), any())
+             .execute())
+        .thenReturn(Response.success(getRecommendationResponse()));
+
+    // #getMonthlyCostAndSaving
+    when(k8sRecommendationDAO.getNodeCount(any(), eq(nodePoolId))).thenReturn(6);
+    when(vmPricingService.getComputeVMPricingInfo(eq(k8sServiceProvider.getInstanceFamily()),
+             eq(k8sServiceProvider.getRegion()), eq(k8sServiceProvider.getCloudProvider())))
+        .thenReturn(pricingInfo);
+
+    // #calculateAndSaveRecommendation
+    String entityUuid = "entityUuid";
+    when(k8sRecommendationDAO.getServiceProvider(eq(ACCOUNT_ID), eq(nodePoolId))).thenReturn(k8sServiceProvider);
+    when(k8sRecommendationDAO.insertNodeRecommendationResponse(
+             any(), eq(nodePoolId), eq(resourceUsage), eq(getRecommendationResponse())))
+        .thenReturn(entityUuid);
+    doNothing().when(k8sRecommendationDAO).updateCeRecommendation(eq(entityUuid), any(), eq(nodePoolId), any(), any());
   }
 
   @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
-  public void testExecute() throws Exception {
-    String NODE_POOL_NAME = "nodePoolName";
-    String CLUSTER_ID = "clusterId";
-    NodePoolId nodePoolId = NodePoolId.builder().clusterid(CLUSTER_ID).nodepoolname(NODE_POOL_NAME).build();
-    TotalResourceUsage resourceUsage =
-        TotalResourceUsage.builder().maxcpu(100).maxmemory(100).sumcpu(200).summemory(200).build();
+  public void testExecuteSuccess() throws Exception {
+    assertThat(tasklet.execute(null, chunkContext)).isNull();
+  }
 
-    when(k8sRecommendationDAO.getUniqueNodePools(eq(ACCOUNT_ID))).thenReturn(ImmutableList.of(nodePoolId));
-    when(k8sRecommendationDAO.maxResourceOfAllTimeBucketsForANodePool(any(), any())).thenReturn(resourceUsage);
-    doNothing().when(k8sRecommendationDAO).insertNodePoolAggregated(any(), any(), any());
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testExecuteNoNodePools() throws Exception {
+    when(k8sRecommendationDAO.getUniqueNodePools(any())).thenReturn(Collections.emptyList());
+    assertThat(tasklet.execute(null, chunkContext)).isNull();
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testExecuteWithNullNodePoolName() throws Exception {
+    NodePoolId nodePoolId = NodePoolId.builder().clusterid(CLUSTER_ID).nodepoolname(null).build();
+
+    when(k8sRecommendationDAO.getUniqueNodePools(any())).thenReturn(Collections.singletonList(nodePoolId));
 
     assertThat(tasklet.execute(null, chunkContext)).isNull();
+
+    verify(k8sRecommendationDAO, times(0)).maxResourceOfAllTimeBucketsForANodePool(any(), any());
+    verify(k8sRecommendationDAO, times(0)).insertNodePoolAggregated(any(), any(), any());
+    // first time it's invoked at K8sNodeRecommendationTaskletTest#setUp, due to deep stub probably, so effectively 0
+    // execution.
+    verify(banzaiRecommenderClient, times(1)).getRecommendation(any(), any(), any(), any());
+    verify(k8sRecommendationDAO, times(0)).insertNodeRecommendationResponse(any(), any(), any(), any());
+    verify(k8sRecommendationDAO, times(0)).updateCeRecommendation(any(), any(), any(), any(), any());
+    verify(k8sRecommendationDAO, times(0)).getNodeCount(any(), any());
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testWithInconsistentTotalResourceUsage_Inconsistent() throws Exception {
+    TotalResourceUsage totalResourceUsage =
+        TotalResourceUsage.builder().sumcpu(16D).summemory(64D).maxcpu(20D).maxmemory(4.1D).build();
+
+    when(k8sRecommendationDAO.maxResourceOfAllTimeBucketsForANodePool(any(), any())).thenReturn(totalResourceUsage);
+
+    // job was successful but the recommendtion was not generated and skipped
+    assertThat(tasklet.execute(null, chunkContext)).isNull();
+
+    // effectively 0 times
+    verify(banzaiRecommenderClient, times(1)).getRecommendation(any(), any(), any(), any());
+    verify(k8sRecommendationDAO, times(0)).insertNodeRecommendationResponse(any(), any(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testWithInconsistentTotalResourceUsage_zeroResource() throws Exception {
+    TotalResourceUsage totalResourceUsage =
+        TotalResourceUsage.builder().sumcpu(0D).summemory(64D).maxcpu(20D).maxmemory(4.1D).build();
+
+    when(k8sRecommendationDAO.maxResourceOfAllTimeBucketsForANodePool(any(), any())).thenReturn(totalResourceUsage);
+
+    // job was successful but the recommendtion was not generated and skipped
+    assertThat(tasklet.execute(null, chunkContext)).isNull();
+
+    // effectively 0 times
+    verify(banzaiRecommenderClient, times(1)).getRecommendation(any(), any(), any(), any());
+    verify(k8sRecommendationDAO, times(0)).insertNodeRecommendationResponse(any(), any(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testCorrectNumNodesInRequest() throws Exception {
+    TotalResourceUsage totalResourceUsage =
+        TotalResourceUsage.builder().sumcpu(16D).summemory(64D).maxcpu(0.9D).maxmemory(4.1D).build();
+
+    RecommendClusterRequest request = captureRequest(totalResourceUsage);
+
+    assertThat(request).isNotNull();
+    assertThat(request.getMinNodes()).isEqualTo(3L);
+    // CPU wise: 16.0/0.9 = 17.777 floor-> 17, Memory wise: 64.0/4.1 = 15.61 floor-> 15
+    // Satisfy both: min(17, 15) = 15
+    assertThat(request.getMaxNodes()).isEqualTo(15L);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testRequestHasAtLeastOneNode() throws Exception {
+    TotalResourceUsage totalResourceUsage =
+        TotalResourceUsage.builder().sumcpu(16D).summemory(64D).maxcpu(8.1D).maxmemory(4.1D).build();
+
+    RecommendClusterRequest request = captureRequest(totalResourceUsage);
+
+    assertThat(request).isNotNull();
+    assertThat(request.getMinNodes()).isEqualTo(1L);
+    // CPU wise: 16.0/8.1 = 1.975 floor-> 1, Memory wise: 64.0/4.1 = 15.61 floor-> 15
+    // Satisfy both: min(1, 15) = 1
+    assertThat(request.getMaxNodes()).isEqualTo(1L);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testCalculateCostAndSaving() throws Exception {
+    assertThat(tasklet.execute(null, chunkContext)).isNull();
+
+    ArgumentCaptor<RecommendationOverviewStats> captor = ArgumentCaptor.forClass(RecommendationOverviewStats.class);
+    verify(k8sRecommendationDAO, times(1)).updateCeRecommendation(any(), any(), any(), captor.capture(), any());
+
+    RecommendationOverviewStats stats = captor.getValue();
+    assertThat(stats).isNotNull();
+    // $2 per node * 6 nodes * 24 hrs * 30 days
+    assertThat(stats.getTotalMonthlyCost()).isCloseTo(2D * 6 * 24 * 30, offset(0.5D));
+    // $1.329993 per vm * 24 hrs * 30 days - monthlyCost
+    assertThat(stats.getTotalMonthlySaving()).isCloseTo(1.329993D * 24 * 30 - 2D * 6 * 24 * 30, offset(0.5D));
+  }
+
+  private RecommendClusterRequest captureRequest(TotalResourceUsage totalResourceUsage) throws Exception {
+    when(k8sRecommendationDAO.maxResourceOfAllTimeBucketsForANodePool(any(), any())).thenReturn(totalResourceUsage);
+
+    ArgumentCaptor<RecommendClusterRequest> captor = ArgumentCaptor.forClass(RecommendClusterRequest.class);
+
+    assertThat(tasklet.execute(null, chunkContext)).isNull();
+
+    // effectively 1 times
+    verify(banzaiRecommenderClient, times(2)).getRecommendation(any(), any(), any(), captor.capture());
+
+    verify(k8sRecommendationDAO, times(1)).insertNodeRecommendationResponse(any(), any(), any(), any());
+
+    return captor.getAllValues().get(1);
+  }
+
+  @SneakyThrows
+  private RecommendationResponse getRecommendationResponse() {
+    // any better way to read file ?
+    final URL path = this.getClass().getResource("/recommendation/nodeRecommendationResponse.json");
+    final String body = IOUtils.toString(path, StandardCharsets.UTF_8);
+
+    return GSON.fromJson(body, RecommendationResponse.class);
   }
 }

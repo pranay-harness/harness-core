@@ -770,22 +770,12 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>835-notification-senders</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>860-orchestration-steps</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>860-orchestration-visualization</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>870-cg-yaml</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

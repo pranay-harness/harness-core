@@ -5,7 +5,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
-import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
@@ -57,7 +58,10 @@ public class FeatureFlagStagePlanCreator extends ChildrenPlanCreator<StageElemen
         .stepParameters(stepParameters)
         .stepType(NGSectionStep.STEP_TYPE)
         .skipCondition(config.getSkipCondition() != null ? config.getSkipCondition().getValue() : null)
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+        .facilitatorObtainment(
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                .build())
         .build();
   }
 

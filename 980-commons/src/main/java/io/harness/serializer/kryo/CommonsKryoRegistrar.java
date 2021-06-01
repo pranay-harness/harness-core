@@ -8,18 +8,26 @@ import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ArtifactoryServerException;
 import io.harness.exception.ContextException;
 import io.harness.exception.DelegateErrorHandlerException;
+import io.harness.exception.DelegateNotAvailableException;
+import io.harness.exception.EngineExpressionEvaluationException;
+import io.harness.exception.EngineFunctorException;
 import io.harness.exception.ExceptionHandlerNotFoundException;
 import io.harness.exception.GcpServerException;
 import io.harness.exception.GeneralException;
 import io.harness.exception.HttpResponseException;
+import io.harness.exception.IllegalArgumentException;
 import io.harness.exception.ImageNotFoundException;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.InvalidTagException;
+import io.harness.exception.InvalidThirdPartyCredentialsException;
+import io.harness.exception.InvalidYamlException;
+import io.harness.exception.JiraClientException;
 import io.harness.exception.KryoHandlerNotFoundException;
 import io.harness.exception.SecretNotFoundException;
 import io.harness.exception.ServiceNowException;
 import io.harness.exception.ShellExecutionException;
+import io.harness.exception.UnresolvedExpressionsException;
 import io.harness.exception.VerificationOperationException;
 import io.harness.logging.LogLevel;
 import io.harness.security.PrincipalContextData;
@@ -66,11 +74,19 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(ContextException.class, 31019);
     kryo.register(InvalidTagException.class, 31020);
     kryo.register(SecretNotFoundException.class, 31021);
+    kryo.register(DelegateNotAvailableException.class, 31022);
+    kryo.register(IllegalArgumentException.class, 31023);
+    kryo.register(InvalidThirdPartyCredentialsException.class, 31024);
 
     kryo.register(PrincipalContextData.class, 980001);
     kryo.register(UserPrincipal.class, 980002);
     kryo.register(SourcePrincipalContextData.class, 980003);
     kryo.register(Principal.class, 980004);
     kryo.register(PrincipalType.class, 980005);
+    kryo.register(EngineExpressionEvaluationException.class, 980006);
+    kryo.register(EngineFunctorException.class, 980007);
+    kryo.register(UnresolvedExpressionsException.class, 980008);
+    kryo.register(JiraClientException.class, 980009);
+    kryo.register(InvalidYamlException.class, 980010);
   }
 }

@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.rule.OwnerRule.UTSAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.offset;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -12,6 +13,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.queryconverter.dto.GridRequest;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.Tables;
@@ -120,5 +122,65 @@ public class SQLConverterImplTest extends CategoryTest {
 
     CeRecommendations ceRecommendations = (CeRecommendations) actualResult.get(0);
     assertThat(ceRecommendations.getName()).isEqualTo("nginx");
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testSQLConverter_GetField() {
+    // cameCase column
+    assertThat(SQLConverter.getField("accountId", Tables.CE_RECOMMENDATIONS))
+        .isEqualTo(Tables.CE_RECOMMENDATIONS.ACCOUNTID);
+
+    // lowercase column
+    assertThat(SQLConverter.getField("accountid", Tables.CE_RECOMMENDATIONS))
+        .isEqualTo(Tables.CE_RECOMMENDATIONS.ACCOUNTID);
+
+    // uppercase column
+    assertThat(SQLConverter.getField("accountid", Tables.CE_RECOMMENDATIONS))
+        .isEqualTo(Tables.CE_RECOMMENDATIONS.ACCOUNTID);
+
+    // should throw runtime exception on no column present
+    assertThatThrownBy(() -> SQLConverter.getField("ndmfbvd", Tables.CE_RECOMMENDATIONS))
+        .isExactlyInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("doesnt exist");
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testSQLConverter_GetFieldWithStringTableName() {
+    // cameCase column
+    assertThat(SQLConverter.getField("accountId", "ce_Recommendations")).isEqualTo(Tables.CE_RECOMMENDATIONS.ACCOUNTID);
+
+    // lowercase column
+    assertThat(SQLConverter.getField("accountid", "ce_recommendations")).isEqualTo(Tables.CE_RECOMMENDATIONS.ACCOUNTID);
+
+    // uppercase column
+    assertThat(SQLConverter.getField("accountid", "CE_RECOMMENDATIONS")).isEqualTo(Tables.CE_RECOMMENDATIONS.ACCOUNTID);
+
+    // should throw runtime exception on no column present
+    assertThatThrownBy(() -> SQLConverter.getField("ndmfbvd", "ce_recommendations"))
+        .isExactlyInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("doesnt exist");
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testSQLConverter_getTable() {
+    // cameCase column
+    assertThat(SQLConverter.getTable("ce_Recommendations")).isEqualTo(Tables.CE_RECOMMENDATIONS);
+
+    // lowercase column
+    assertThat(SQLConverter.getTable("ce_recommendations")).isEqualTo(Tables.CE_RECOMMENDATIONS);
+
+    // uppercase column
+    assertThat(SQLConverter.getTable("CE_RECOMMENDATIONS")).isEqualTo(Tables.CE_RECOMMENDATIONS);
+
+    // should throw runtime exception on no column present
+    assertThatThrownBy(() -> SQLConverter.getTable("ndmfbvd"))
+        .isExactlyInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("doesnt exist");
   }
 }

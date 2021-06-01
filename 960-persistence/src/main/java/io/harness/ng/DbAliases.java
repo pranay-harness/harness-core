@@ -14,4 +14,5 @@ public class DbAliases {
   public static final String PMS = "pms-harness";
   public static final String CIMANAGER = "ci-manager";
   public static final String ALL = "all";
+  public static final String CVNG = "cvng";
 }

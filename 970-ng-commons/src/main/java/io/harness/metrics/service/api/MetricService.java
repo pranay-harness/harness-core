@@ -8,4 +8,6 @@ public interface MetricService {
   void initializeMetrics(List<MetricDefinitionInitializer> metricDefinitionInitializers);
 
   void recordMetric(String metricName, double value);
+
+  void incCounter(String metricName);
 }

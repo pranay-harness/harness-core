@@ -11,6 +11,7 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.exception.UnknownEnumTypeException;
 import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
@@ -48,9 +49,15 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
     secretDecryptionService.decrypt(apiAccessDecryptableEntity, scmPushTaskParams.getEncryptedDataDetails());
     switch (scmPushTaskParams.getChangeType()) {
       case ADD: {
-        CreateFileResponse createFileResponse = scmDelegateClient.processScmRequest(c
-            -> scmServiceClient.createFile(scmPushTaskParams.getScmConnector(), scmPushTaskParams.getGitFileDetails(),
-                SCMGrpc.newBlockingStub(c)));
+        CreateFileResponse createFileResponse = scmDelegateClient.processScmRequest(c -> {
+          final SCMGrpc.SCMBlockingStub scmBlockingStub = SCMGrpc.newBlockingStub(c);
+          if (scmPushTaskParams.isNewBranch()) {
+            scmServiceClient.createNewBranch(scmPushTaskParams.getScmConnector(),
+                scmPushTaskParams.getGitFileDetails().getBranch(), scmPushTaskParams.getBaseBranch(), scmBlockingStub);
+          }
+          return scmServiceClient.createFile(
+              scmPushTaskParams.getScmConnector(), scmPushTaskParams.getGitFileDetails(), scmBlockingStub);
+        });
         ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
             createFileResponse.getStatus(), createFileResponse.getError());
         return ScmPushTaskResponseData.builder()
@@ -74,9 +81,15 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
             .build();
       }
       case MODIFY: {
-        UpdateFileResponse updateFileResponse = scmDelegateClient.processScmRequest(c
-            -> scmServiceClient.updateFile(scmPushTaskParams.getScmConnector(), scmPushTaskParams.getGitFileDetails(),
-                SCMGrpc.newBlockingStub(c)));
+        UpdateFileResponse updateFileResponse = scmDelegateClient.processScmRequest(c -> {
+          final SCMGrpc.SCMBlockingStub scmBlockingStub = SCMGrpc.newBlockingStub(c);
+          if (scmPushTaskParams.isNewBranch()) {
+            scmServiceClient.createNewBranch(scmPushTaskParams.getScmConnector(), scmPushTaskParams.getBaseBranch(),
+                scmPushTaskParams.getGitFileDetails().getBranch(), scmBlockingStub);
+          }
+          return scmServiceClient.updateFile(
+              scmPushTaskParams.getScmConnector(), scmPushTaskParams.getGitFileDetails(), scmBlockingStub);
+        });
         ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
             updateFileResponse.getStatus(), updateFileResponse.getError());
         return ScmPushTaskResponseData.builder()
@@ -88,7 +101,7 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
       case NONE:
         throw new NotImplementedException("Not Implemented");
       default: {
-        throw new NotImplementedException("Not Implemented");
+        throw new UnknownEnumTypeException("ChangeType", scmPushTaskParams.getChangeType().toString());
       }
     }
   }

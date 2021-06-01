@@ -16,7 +16,6 @@ import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.InstanceInfoTimescaleDAO;
@@ -25,13 +24,14 @@ import io.harness.batch.processing.tasklet.reader.PublishedMessageReader;
 import io.harness.batch.processing.tasklet.support.HarnessServiceInfoFetcher;
 import io.harness.batch.processing.tasklet.util.K8sResourceUtils;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.beans.FeatureName;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
+import io.harness.ccm.commons.constants.CloudProvider;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.ff.FeatureFlagService;
 import io.harness.grpc.utils.HTimestamps;
@@ -176,8 +176,8 @@ public class K8sPodInfoTasklet implements Tasklet {
       }
       populateNodePoolNameFromLabel(nodeMetaData, metaData);
     } else {
-      log.debug("Node detail not found settingId {} node name {} podid {} podname {}", podInfo.getCloudProviderId(),
-          podInfo.getNodeName(), podUid, podInfo.getPodName());
+      log.warn("Node detail not found clusterId {} node name {} podid {} podname {}", clusterId, podInfo.getNodeName(),
+          podUid, podInfo.getPodName());
     }
 
     Map<String, String> labelsMap = podInfo.getLabelsMap();

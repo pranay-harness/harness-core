@@ -99,6 +99,18 @@ public class PivotalDeploymentManagerImplTest extends WingsBaseTest {
 
     applicationSummary = ApplicationSummary.builder()
                              .id("id1")
+                             .name("A__b__c__1")
+                             .diskQuota(1)
+                             .instances(1)
+                             .memoryLimit(1)
+                             .requestedState("RUNNING")
+                             .runningInstances(0)
+                             .build();
+
+    assertThat(deploymentManager.matchesPrefix("a__b__C", applicationSummary)).isTrue();
+
+    applicationSummary = ApplicationSummary.builder()
+                             .id("id1")
                              .name("a__b__c__2")
                              .diskQuota(1)
                              .instances(1)

@@ -8,6 +8,7 @@ import static java.lang.String.format;
 import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.encryption.Scope;
 import io.harness.exception.JsonSchemaValidationException;
 import io.harness.jackson.JsonNodeUtils;
@@ -16,9 +17,12 @@ import io.harness.plancreator.stages.parallel.ParallelStageElementConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.pms.helpers.PmsFeatureFlagHelper;
+import io.harness.pms.merger.helpers.FQNUtils;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.utils.PmsConstants;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.steps.approval.stage.ApprovalStageConfig;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
@@ -45,6 +49,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.inject.Inject;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -91,6 +96,8 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
               return getPipelineYamlSchema(schemaKey.getProjectId(), schemaKey.getOrgId(), schemaKey.getScope());
             }
           });
+
+  private final PmsFeatureFlagHelper pmsFeatureFlagHelper;
 
   public JsonNode getPipelineYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope) {
     JsonNode pipelineSchema =
@@ -309,6 +316,18 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
       log.error(ex.getMessage());
       throw new JsonSchemaValidationException(ex.getMessage());
     }
+  }
+
+  @Override
+  public void validateYamlSchema(String accountId, String orgId, String projectId, String yaml) {
+    if (pmsFeatureFlagHelper.isEnabled(accountId, FeatureName.NG_SCHEMA_VALIDATION)) {
+      validateYamlSchema(orgId, projectId, yaml);
+    }
+  }
+
+  @Override
+  public void validateUniqueFqn(String yaml) throws IOException {
+    FQNUtils.generateFQNMap(YamlUtils.readTree(yaml).getNode().getCurrJsonNode());
   }
 
   private void removeUnwantedNodes(JsonNode definitions) {

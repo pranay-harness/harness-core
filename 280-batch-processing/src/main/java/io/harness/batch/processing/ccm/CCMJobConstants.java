@@ -15,12 +15,14 @@ public class CCMJobConstants extends JobConstants {
   public static final String JOB_START_DATE = "startDate";
   public static final String BATCH_JOB_TYPE = "batchJobType";
 
-  public CCMJobConstants(final StepExecution stepExecution) {
-    final JobParameters jobParameters = stepExecution.getJobParameters();
-
+  public CCMJobConstants(final JobParameters jobParameters) {
     super.accountId = jobParameters.getString(ACCOUNT_ID);
     super.jobStartTime = getFieldLongValueFromJobParams(jobParameters, JOB_START_DATE);
     super.jobEndTime = getFieldLongValueFromJobParams(jobParameters, JOB_END_DATE);
+  }
+
+  public CCMJobConstants(final StepExecution stepExecution) {
+    this(stepExecution.getJobParameters());
   }
 
   public CCMJobConstants(final ChunkContext chunkContext) {

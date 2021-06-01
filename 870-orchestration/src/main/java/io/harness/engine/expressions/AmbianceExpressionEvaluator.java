@@ -13,16 +13,16 @@ import io.harness.engine.expressions.functors.OutcomeFunctor;
 import io.harness.engine.expressions.functors.SecretFunctor;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
-import io.harness.exception.CriticalExpressionEvaluationException;
+import io.harness.exception.EngineExpressionEvaluationException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.expression.ExpressionEvaluatorUtils;
-import io.harness.expression.JsonFunctor;
 import io.harness.expression.RegexFunctor;
 import io.harness.expression.ResolveObjectResponse;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.expression.XmlFunctor;
+import io.harness.expression.functors.NGJsonFunctor;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.expression.ProcessorResult;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
@@ -90,7 +90,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
     if (!refObjectSpecific) {
       // Add basic functors.
       addToContext("regex", new RegexFunctor());
-      addToContext("json", new JsonFunctor());
+      addToContext("json", new NGJsonFunctor());
       addToContext("xml", new XmlFunctor());
       addToContext("secrets", new SecretFunctor(ambiance.getExpressionFunctorToken()));
     }
@@ -210,7 +210,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
     private void processObjectInternal(ParameterDocumentField documentField) {
       ProcessorResult processorResult = parameterFieldProcessor.process(documentField);
       if (processorResult.isError()) {
-        throw new CriticalExpressionEvaluationException(processorResult.getMessage());
+        throw new EngineExpressionEvaluationException(processorResult.getMessage(), processorResult.getExpression());
       }
     }
   }

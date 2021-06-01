@@ -151,7 +151,9 @@ public class ResourceGroupServiceModule extends AbstractModule {
   @Provides
   @Singleton
   public OutboxPollConfiguration getOutboxPollConfiguration() {
-    return OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
+    OutboxPollConfiguration outboxPollConfiguration = OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
+    outboxPollConfiguration.setLockId(RESOUCE_GROUP_SERVICE.getServiceId());
+    return outboxPollConfiguration;
   }
 
   @Provides

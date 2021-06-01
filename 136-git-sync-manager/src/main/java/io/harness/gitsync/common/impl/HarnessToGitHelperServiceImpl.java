@@ -36,15 +36,19 @@ import io.harness.gitsync.common.beans.BranchSyncStatus;
 import io.harness.gitsync.common.beans.GitBranch;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.common.beans.InfoForGitPush.InfoForGitPushBuilder;
+import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.dtos.GitSyncEntityDTO;
 import io.harness.gitsync.common.dtos.GitSyncSettingsDTO;
 import io.harness.gitsync.common.service.GitBranchService;
+import io.harness.gitsync.common.service.GitBranchSyncService;
 import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.gitsync.common.service.GitSyncSettingsService;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
-import io.harness.gitsync.common.service.gittoharness.GitToHarnessProcessorService;
+import io.harness.gitsync.interceptor.GitEntityInfo;
+import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.gitsync.scm.ScmGitUtils;
+import io.harness.manage.GlobalContextManager;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
@@ -62,8 +66,10 @@ import com.google.inject.name.Named;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 
+@Slf4j
 @Singleton
 @OwnedBy(DX)
 public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService {
@@ -72,31 +78,31 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   private final GitEntityService gitEntityService;
   private final YamlGitConfigService yamlGitConfigService;
   private final EntityDetailProtoToRestMapper entityDetailRestToProtoMapper;
-  private final GitToHarnessProcessorService gitToHarnessProcessorService;
   private final ExecutorService executorService;
   private final GitBranchService gitBranchService;
   private final EncryptionHelper encryptionHelper;
   private final SourceCodeManagerService sourceCodeManagerService;
   private final GitSyncSettingsService gitSyncSettingsService;
+  private final GitBranchSyncService gitBranchSyncService;
 
   @Inject
   public HarnessToGitHelperServiceImpl(@Named("connectorDecoratorService") ConnectorService connectorService,
       DecryptGitApiAccessHelper decryptScmApiAccess, GitEntityService gitEntityService,
       YamlGitConfigService yamlGitConfigService, EntityDetailProtoToRestMapper entityDetailRestToProtoMapper,
-      GitToHarnessProcessorService gitToHarnessProcessorService, ExecutorService executorService,
-      GitBranchService gitBranchService, EncryptionHelper encryptionHelper,
-      SourceCodeManagerService sourceCodeManagerService, GitSyncSettingsService gitSyncSettingsService) {
+      ExecutorService executorService, GitBranchService gitBranchService, EncryptionHelper encryptionHelper,
+      SourceCodeManagerService sourceCodeManagerService, GitSyncSettingsService gitSyncSettingsService,
+      GitBranchSyncService gitBranchSyncService) {
     this.connectorService = connectorService;
     this.decryptScmApiAccess = decryptScmApiAccess;
     this.gitEntityService = gitEntityService;
     this.yamlGitConfigService = yamlGitConfigService;
     this.entityDetailRestToProtoMapper = entityDetailRestToProtoMapper;
-    this.gitToHarnessProcessorService = gitToHarnessProcessorService;
     this.executorService = executorService;
     this.gitBranchService = gitBranchService;
     this.encryptionHelper = encryptionHelper;
     this.sourceCodeManagerService = sourceCodeManagerService;
     this.gitSyncSettingsService = gitSyncSettingsService;
+    this.gitBranchSyncService = gitBranchSyncService;
   }
 
   @Override
@@ -186,7 +192,13 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     }
     final ConnectorResponseDTO connector = connectorResponseDTO.get();
     setConnectorDetailsFromUserProfile(yamlGitConfig, userPrincipal, connector);
+    setRepoUrlInConnector(yamlGitConfig, connector);
     return Optional.of(connector);
+  }
+
+  private void setRepoUrlInConnector(YamlGitConfigDTO yamlGitConfig, ConnectorResponseDTO connector) {
+    final ScmConnector connectorConfigDTO = (ScmConnector) connector.getConnector().getConnectorConfig();
+    connectorConfigDTO.setUrl(yamlGitConfig.getRepo());
   }
 
   private void setConnectorDetailsFromUserProfile(
@@ -277,11 +289,20 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   @Override
   public void processFilesInBranch(String accountId, String gitSyncConfigId, String projectIdentifier,
       String orgIdentifier, String branch, String filePathToBeExcluded, String repoURL) {
-    final YamlGitConfigDTO yamlGitConfigDTO =
-        yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountId, gitSyncConfigId);
-    gitToHarnessProcessorService.readFilesFromBranchAndProcess(
-        yamlGitConfigDTO, branch, accountId, yamlGitConfigDTO.getBranch(), filePathToBeExcluded);
-    gitBranchService.updateBranchSyncStatus(accountId, repoURL, branch, SYNCED);
+    final GitEntityInfo emptyRepoBranch =
+        GitEntityInfo.builder().branch(null).yamlGitConfigId(null).findDefaultFromOtherBranches(true).build();
+    try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+      GlobalContextManager.upsertGlobalContextRecord(
+          GitSyncBranchContext.builder().gitBranchInfo(emptyRepoBranch).build());
+      final YamlGitConfigDTO yamlGitConfigDTO =
+          yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountId, gitSyncConfigId);
+      // todo @deepak, remove this dummy yamlchangeset
+      gitBranchSyncService.syncBranch(yamlGitConfigDTO, branch, accountId, filePathToBeExcluded,
+          YamlChangeSet.builder().uuid(String.valueOf(System.currentTimeMillis())).build());
+      log.info("Branch sync completed {}", branch);
+      gitBranchService.updateBranchSyncStatus(accountId, repoURL, branch, SYNCED);
+      log.info("Branch sync status updated completed {}", branch);
+    }
   }
 
   private void createGitBranch(

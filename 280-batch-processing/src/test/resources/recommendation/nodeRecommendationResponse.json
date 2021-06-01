@@ -1,0 +1,44 @@
+{
+    "provider": "google",
+    "service": "gke",
+    "region": "us-west1",
+    "nodePools": [
+        {
+            "vm": {
+                "avgPrice": 0.04,
+                "onDemandPrice": 0.189999,
+                "cpusPerVm": 4,
+                "allocatableCpusPerVm": 3.52,
+                "memPerVm": 15,
+                "allocatableMemPerVm": 12.01171875,
+                "gpusPerVm": 0,
+                "burst": false,
+                "currentGen": false,
+                "zones": [
+                    "us-west1-b",
+                    "us-west1-c",
+                    "us-west1-a"
+                ],
+                "category": "General purpose",
+                "type": "n1-standard-4",
+                "networkPerf": "8 Gbit/s",
+                "networkPerfCategory": "medium"
+            },
+            "sumNodes": 7,
+            "vmClass": "regular",
+            "role": "worker"
+        }
+    ],
+    "accuracy": {
+        "memory": 105,
+        "cpu": 28,
+        "nodes": 7,
+        "regularPrice": 1.329993,
+        "regularNodes": 7,
+        "spotPrice": 0,
+        "spotNodes": 0,
+        "workerPrice": 1.329993,
+        "masterPrice": 0,
+        "totalPrice": 1.329993
+    }
+}

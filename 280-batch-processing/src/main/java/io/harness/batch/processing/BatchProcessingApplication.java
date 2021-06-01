@@ -9,11 +9,13 @@ import org.springframework.boot.autoconfigure.hazelcast.HazelcastAutoConfigurati
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration;
+import org.springframework.context.annotation.PropertySource;
 
 @SpringBootApplication(
     exclude = {DataSourceAutoConfiguration.class, MongoAutoConfiguration.class, MongoDataAutoConfiguration.class,
         EmbeddedMongoAutoConfiguration.class, HazelcastAutoConfiguration.class})
 @EnableBatchProcessing(modular = true)
+@PropertySource("classpath:batch.properties")
 @Slf4j
 public class BatchProcessingApplication {
   public static void main(String[] args) {

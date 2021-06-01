@@ -656,7 +656,8 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
       activity =
           createK8sActivity(context, k8sStateExecutor.commandName(), k8sStateExecutor.stateType(), activityService,
               k8sStateExecutor.commandUnitList(
-                  valuesInGit || valuesInHelmChartRepo || kustomizeSource || ocTemplateSource || valuesInCustomSource));
+                  valuesInGit || valuesInHelmChartRepo || kustomizeSource || ocTemplateSource || valuesInCustomSource,
+                  context.getAccountId()));
       boolean isCustomManifestFeatureEnabled =
           featureFlagService.isEnabled(FeatureName.CUSTOM_MANIFEST, context.getAccountId());
       if (valuesInHelmChartRepo) {

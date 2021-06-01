@@ -6,6 +6,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.context.ContextElementType;
+import io.harness.k8s.model.KubernetesResourceId;
 
 import software.wings.beans.TaskType;
 import software.wings.sm.ContextElement;
@@ -26,6 +27,7 @@ public class K8sContextElement implements ContextElement {
   Integer targetInstances;
   TaskType currentTaskType;
   List<String> delegateSelectors;
+  List<KubernetesResourceId> prunedResourcesIds;
 
   @Override
   public ContextElementType getElementType() {

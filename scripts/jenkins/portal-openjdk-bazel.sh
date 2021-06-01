@@ -154,6 +154,7 @@ cd dist/${FOLDER_NAME}
 cp ${HOME}/.bazel-dirs/bin/${MODULE_NAME}/module_deploy.jar ce-nextgen-capsule.jar
 cp ../../${MODULE_NAME}/keystore.jks .
 cp ../../${MODULE_NAME}/config.yml .
+cp ../../alpn-boot-8.1.13.v20181017.jar .
 cp ../../dockerization/${FOLDER_NAME}/Dockerfile-ce-nextgen-jenkins-k8-gcr-openjdk Dockerfile-gcr
 cp ../../dockerization/${FOLDER_NAME}/Dockerfile-ce-nextgen-jenkins-k8-openjdk Dockerfile
 cp -r ../../dockerization/${FOLDER_NAME}/scripts/ .
@@ -166,7 +167,8 @@ fi
 cd ../..
 
 mkdir -p dist/delegate
-cp ${HOME}/.bazel-dirs/bin/260-delegate/module_deploy.jar dist/delegate/delegate-capsule.jar
+cp 260-delegate/target/delegate-capsule.jar dist/delegate/delegate-capsule.jar
+#cp ${HOME}/.bazel-dirs/bin/260-delegate/module_deploy.jar dist/delegate/delegate-capsule.jar
 cp 260-delegate/config-delegate.yml dist/delegate/config-delegate.yml
 jarsigner -storetype pkcs12 -keystore ${KEY_STORE} -storepass ${KEY_STORE_PASSWORD} dist/delegate/delegate-capsule.jar ${KEY_STORE_ALIAS}
 cp dist/delegate/delegate-capsule.jar delegate-${VERSION}.jar

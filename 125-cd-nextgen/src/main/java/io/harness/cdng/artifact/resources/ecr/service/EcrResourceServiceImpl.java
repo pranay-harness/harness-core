@@ -1,11 +1,14 @@
 package io.harness.cdng.artifact.resources.ecr.service;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.artifact.resources.ecr.dtos.EcrBuildDetailsDTO;
+import io.harness.cdng.artifact.resources.ecr.dtos.EcrListImagesDTO;
 import io.harness.cdng.artifact.resources.ecr.dtos.EcrRequestDTO;
 import io.harness.cdng.artifact.resources.ecr.dtos.EcrResponseDTO;
 import io.harness.cdng.artifact.resources.ecr.mappers.EcrResourceMapper;
@@ -47,6 +50,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Singleton
+@OwnedBy(PIPELINE)
 public class EcrResourceServiceImpl implements EcrResourceService {
   private final ConnectorService connectorService;
   private final SecretManagerClientService secretManagerClientService;
@@ -142,6 +146,24 @@ public class EcrResourceServiceImpl implements EcrResourceService {
         executeSyncTask(ecrRequest, ArtifactTaskType.VALIDATE_ARTIFACT_SOURCE, baseNGAccess,
             "Ecr validate artifact source task failure due to error");
     return artifactTaskExecutionResponse.isArtifactServerValid();
+  }
+
+  @Override
+  public EcrListImagesDTO getImages(
+      IdentifierRef ecrConnectorRef, String region, String orgIdentifier, String projectIdentifier) {
+    AwsConnectorDTO connector = getConnector(ecrConnectorRef);
+    BaseNGAccess baseNGAccess =
+        getBaseNGAccess(ecrConnectorRef.getAccountIdentifier(), orgIdentifier, projectIdentifier);
+    List<EncryptedDataDetail> encryptionDetails = getEncryptionDetails(connector, baseNGAccess);
+    EcrArtifactDelegateRequest ecrRequest = EcrArtifactDelegateRequest.builder()
+                                                .awsConnectorDTO(connector)
+                                                .encryptedDataDetails(encryptionDetails)
+                                                .sourceType(ArtifactSourceType.ECR)
+                                                .region(region)
+                                                .build();
+    ArtifactTaskExecutionResponse artifactTaskExecutionResponse = executeSyncTask(
+        ecrRequest, ArtifactTaskType.GET_IMAGES, baseNGAccess, "Ecr Get Images task failure due to error");
+    return EcrListImagesDTO.builder().images(artifactTaskExecutionResponse.getArtifactImages()).build();
   }
 
   private AwsConnectorDTO getConnector(IdentifierRef ecrConnectorRef) {

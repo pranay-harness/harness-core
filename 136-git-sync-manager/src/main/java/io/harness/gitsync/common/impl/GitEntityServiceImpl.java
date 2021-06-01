@@ -137,7 +137,7 @@ public class GitEntityServiceImpl implements GitEntityService {
         .branch(entity.getBranch())
         .entityIdentifier(entity.getEntityIdentifier())
         .entityName(entity.getEntityName())
-        .entityType(EntityType.getEntityFromYamlType(entity.getEntityType()))
+        .entityType(EntityType.valueOf(entity.getEntityType()))
         .gitConnectorId(entity.getGitConnectorId())
         .repo(getDisplayRepositoryUrl(entity.getRepo()))
         .repoProviderType(getGitProvider(entity.getRepo()))

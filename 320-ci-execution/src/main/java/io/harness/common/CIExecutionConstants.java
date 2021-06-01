@@ -32,6 +32,7 @@ public class CIExecutionConstants {
   public static final Integer GIT_CLONE_DEPTH = 50;
   public static final Integer GIT_CLONE_MANUAL_DEPTH = 1;
   public static final String GIT_CLONE_DEPTH_ATTRIBUTE = "depth";
+  public static final String GIT_SSL_NO_VERIFY = "GIT_SSL_NO_VERIFY";
   public static final String GIT_URL_SUFFIX = ".git";
   public static final String PATH_SEPARATOR = "/";
 
@@ -83,7 +84,6 @@ public class CIExecutionConstants {
   public static final String TI_SERVICE_ENDPOINT_VARIABLE = "HARNESS_TI_SERVICE_ENDPOINT";
   public static final String TI_SERVICE_TOKEN_VARIABLE = "HARNESS_TI_SERVICE_TOKEN";
 
-  public static final String DELEGATE_SERVICE_TOKEN_VARIABLE = "DELEGATE_SERVICE_TOKEN";
   public static final String DELEGATE_SERVICE_ENDPOINT_VARIABLE = "DELEGATE_SERVICE_ENDPOINT";
   public static final String DELEGATE_SERVICE_ID_VARIABLE = "DELEGATE_SERVICE_ID";
   public static final String DELEGATE_SERVICE_ID_VARIABLE_VALUE = "delegate-grpc-service";

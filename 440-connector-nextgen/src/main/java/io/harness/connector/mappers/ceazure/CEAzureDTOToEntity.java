@@ -7,9 +7,9 @@ import io.harness.connector.entities.embedded.ceazure.BillingExportDetails;
 import io.harness.connector.entities.embedded.ceazure.CEAzureConfig;
 import io.harness.connector.entities.embedded.ceazure.CEAzureConfig.CEAzureConfigBuilder;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
+import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ceazure.BillingExportSpecDTO;
 import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
-import io.harness.delegate.beans.connector.ceazure.CEAzureFeatures;
 import io.harness.exception.InvalidRequestException;
 
 import com.google.inject.Singleton;
@@ -20,14 +20,14 @@ import java.util.List;
 public class CEAzureDTOToEntity implements ConnectorDTOToEntityMapper<CEAzureConnectorDTO, CEAzureConfig> {
   @Override
   public CEAzureConfig toConnectorEntity(CEAzureConnectorDTO connectorDTO) {
-    final List<CEAzureFeatures> featuresEnabled = connectorDTO.getFeaturesEnabled();
+    final List<CEFeatures> featuresEnabled = connectorDTO.getFeaturesEnabled();
 
     final CEAzureConfigBuilder configBuilder = CEAzureConfig.builder()
                                                    .subscriptionId(connectorDTO.getSubscriptionId())
                                                    .tenantId(connectorDTO.getTenantId())
                                                    .featuresEnabled(featuresEnabled);
 
-    if (featuresEnabled.contains(CEAzureFeatures.BILLING)) {
+    if (featuresEnabled.contains(CEFeatures.BILLING)) {
       populateBillingExportDetails(configBuilder, connectorDTO.getBillingExportSpec());
     }
 
@@ -39,7 +39,7 @@ public class CEAzureDTOToEntity implements ConnectorDTOToEntityMapper<CEAzureCon
     if (billingExportSpecDTO == null) {
       throw new InvalidRequestException(
           String.format("billingExportSpec should be provided when the features %s is enabled.",
-              CEAzureFeatures.BILLING.getDescription()));
+              CEFeatures.BILLING.getDescription()));
     }
 
     final BillingExportDetails billingExportDetails =

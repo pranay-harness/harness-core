@@ -11,6 +11,7 @@ import static java.util.stream.Collectors.joining;
 
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -29,6 +30,7 @@ import software.wings.beans.alert.SSOSyncFailedAlert;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
+import software.wings.beans.sso.SSOSettings.SSOSettingsKeys;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.dl.WingsPersistence;
@@ -287,10 +289,13 @@ public class SSOSettingServiceImpl implements SSOSettingService {
 
   @Override
   public LdapSettings getLdapSettingsByAccountId(@NotBlank String accountId) {
+    if (EmptyPredicate.isEmpty(accountId)) {
+      return null;
+    }
     return wingsPersistence.createQuery(LdapSettings.class)
-        .field(LdapSettings.ACCOUNT_ID_KEY2)
+        .field(SSOSettingsKeys.accountId)
         .equal(accountId)
-        .field("type")
+        .field(SSOSettingsKeys.type)
         .equal(SSOType.LDAP)
         .get();
   }

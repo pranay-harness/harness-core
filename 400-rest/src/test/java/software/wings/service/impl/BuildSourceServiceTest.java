@@ -133,6 +133,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Mock AzureArtifactsBuildService azureArtifactsBuildService;
   @Mock ServiceResourceService serviceResourceService;
   @Mock DelegateServiceImpl delegateService;
+  @Mock DelegateTaskServiceClassicImpl delegateTaskServiceClassic;
   @Inject @InjectMocks private BuildSourceServiceImpl buildSourceService;
   @Mock DelegateProxyFactory delegateProxyFactory;
   @Mock ExpressionEvaluator evaluator;
@@ -1192,7 +1193,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
         SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).withValue(gcpConfig).build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(gcbService.getAllTriggers(any(), any())).thenReturn(triggers);
-    when(delegateService.executeTask(any(DelegateTask.class))).thenReturn(delegateResponse);
+    when(delegateTaskServiceClassic.executeTask(any(DelegateTask.class))).thenReturn(delegateResponse);
 
     List<String> actualTriggerNames = buildSourceService.getGcbTriggers(SETTING_ID);
     assertThat(actualTriggerNames).hasSize(1);

@@ -1,6 +1,7 @@
 package software.wings.core.winrm.executors;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.windows.CmdUtils.escapeEnvValueSpecialChars;
 
 import static java.lang.String.format;
@@ -115,8 +116,8 @@ public class WinRmSession implements AutoCloseable {
     return shell.execute(command, output, error);
   }
 
-  public int executeCommandsList(List<List<String>> commandList, Writer output, Writer error, boolean isOutputWriter)
-      throws IOException {
+  public int executeCommandsList(List<List<String>> commandList, Writer output, Writer error, boolean isOutputWriter,
+      String scriptExecCommand) throws IOException {
     WinRmToolResponse winRmToolResponse = null;
     if (commandList.isEmpty()) {
       return -1;
@@ -144,6 +145,9 @@ public class WinRmSession implements AutoCloseable {
         if (statusCode != 0) {
           return statusCode;
         }
+      }
+      if (isNotEmpty(scriptExecCommand)) {
+        statusCode = shell.execute(scriptExecCommand, output, error);
       }
     }
 

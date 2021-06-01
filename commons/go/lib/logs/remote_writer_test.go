@@ -30,6 +30,7 @@ func Test_RemoteWriter_Open_Success(t *testing.T) {
 	rw, _ := NewRemoteWriter(mclient, "key")
 	err := rw.Open()
 	assert.Equal(t, err, nil)
+	assert.Equal(t, rw.opened, true)
 }
 
 func Test_RemoteWriter_Open_Failure(t *testing.T) {
@@ -88,7 +89,7 @@ func Test_RemoteWriter_Limits(t *testing.T) {
 
 	// Opening of the stream has failed but we can still use the writer
 	rw.SetInterval(time.Duration(100) * time.Second)
-	rw.SetLimit(30)
+	rw.SetLimit(200)
 	rw.Write([]byte(msg1))
 	err = rw.flush()
 	assert.Nil(t, err)
@@ -115,6 +116,7 @@ func Test_RemoteWriter_WriteSingleLine(t *testing.T) {
 	mclient := mock.NewMockClient(ctrl)
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
 	rw, _ := NewRemoteWriter(mclient, key)
+	rw.opened = true // open the stream to write to it
 	rw.SetInterval(time.Duration(100) * time.Second)
 	rw.Write([]byte(msg))
 	rw.flush() // Force write to the remote
@@ -138,6 +140,7 @@ func Test_RemoteWriter_WriteMultiple(t *testing.T) {
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
 	rw, _ := NewRemoteWriter(mclient, key)
+	rw.opened = true // open the stream to write to it
 	rw.SetInterval(time.Duration(100) * time.Second)
 	rw.Write([]byte(msg1))
 	rw.flush() // Force write to the remote
@@ -172,6 +175,7 @@ func Test_RemoteWriter_MultipleCharacters(t *testing.T) {
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
 	rw, _ := NewRemoteWriter(mclient, key)
+	rw.opened = true // open the stream to write to it
 	rw.SetInterval(time.Duration(100) * time.Second)
 
 	// Write character by character followed by new line
@@ -236,6 +240,7 @@ func Test_RemoteWriter_VariousCases(t *testing.T) {
 	mclient := mock.NewMockClient(ctrl)
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
 	rw, _ := NewRemoteWriter(mclient, key)
+	rw.opened = true // open the stream to write to it
 	rw.SetInterval(time.Duration(100) * time.Second)
 
 	// Write character by character followed by new line
@@ -294,6 +299,7 @@ func Test_RemoteWriter_VariousCases_WithFlushes(t *testing.T) {
 	mclient := mock.NewMockClient(ctrl)
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any()).Times(5)
 	rw, _ := NewRemoteWriter(mclient, key)
+	rw.opened = true // open the stream to write to it
 	rw.SetInterval(time.Duration(100) * time.Second)
 
 	// Write character by character followed by new line
@@ -325,6 +331,7 @@ func Test_RemoteWriter_JSON(t *testing.T) {
 	mclient := mock.NewMockClient(ctrl)
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
 	rw, _ := NewRemoteWriter(mclient, key)
+	rw.opened = true // open the stream to write to it
 	rw.SetInterval(time.Duration(100) * time.Second)
 
 	rw.Write([]byte(msg1))
@@ -356,6 +363,7 @@ func Test_RemoteWriter_Close(t *testing.T) {
 	mclient.EXPECT().UploadUsingLink(context.Background(), strLink, gomock.Any())
 	mclient.EXPECT().Close(context.Background(), key)
 	rw, _ := NewRemoteWriter(mclient, key)
+	rw.opened = true // open the stream to write to it
 	rw.SetInterval(time.Duration(100) * time.Second)
 
 	rw.Write([]byte(msg1))

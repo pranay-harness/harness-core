@@ -9,9 +9,10 @@ import io.harness.plancreator.beans.OrchestrationConstants;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.steps.SkipType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
-import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
@@ -74,7 +75,10 @@ public class CfExecutionPMSPlanCreator extends ChildrenPlanCreator<ExecutionElem
         .group(StepOutcomeGroup.EXECUTION.name())
         .name(OrchestrationConstants.EXECUTION_NODE_NAME)
         .stepParameters(stepParameters)
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+        .facilitatorObtainment(
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                .build())
         .adviserObtainment(AdviserObtainment.newBuilder().setType(ADVISER_TYPE).build())
         .skipExpressionChain(false)
         .build();
@@ -124,7 +128,10 @@ public class CfExecutionPMSPlanCreator extends ChildrenPlanCreator<ExecutionElem
         .stepType(NGSectionStep.STEP_TYPE)
         .name(YAMLFieldNameConstants.STEPS)
         .stepParameters(stepParameters)
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+        .facilitatorObtainment(
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                .build())
         .skipGraphType(SkipType.SKIP_NODE)
         .build();
   }

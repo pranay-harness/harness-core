@@ -4,8 +4,11 @@
 
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.context.ContextElementType;
 import io.harness.ecs.EcsContainerDetails;
 
@@ -17,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Objects;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * The Class InstanceElement.
@@ -24,6 +29,7 @@ import java.util.Map;
  * @author Rishi
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@OwnedBy(CDP)
 public class InstanceElement implements ContextElement, VerificationElement {
   private String uuid;
   private String displayName;
@@ -32,6 +38,7 @@ public class InstanceElement implements ContextElement, VerificationElement {
   private HostElement host;
   private ServiceTemplateElement serviceTemplateElement;
   private String podName;
+  @Getter @Setter private String namespace;
   private String workloadName;
   private EcsContainerDetails ecsContainerDetails;
   private boolean newInstance;
@@ -226,6 +233,7 @@ public class InstanceElement implements ContextElement, VerificationElement {
     private HostElement host;
     private ServiceTemplateElement serviceTemplateElement;
     private String podName;
+    private String namespace;
     private String workloadName;
     private EcsContainerDetails ecsContainerDetails;
     private boolean newInstance;
@@ -276,6 +284,11 @@ public class InstanceElement implements ContextElement, VerificationElement {
       return this;
     }
 
+    public Builder namespace(String namespace) {
+      this.namespace = namespace;
+      return this;
+    }
+
     public Builder workloadName(String workloadName) {
       this.workloadName = workloadName;
       return this;
@@ -295,6 +308,7 @@ public class InstanceElement implements ContextElement, VerificationElement {
           .host(host)
           .serviceTemplateElement(serviceTemplateElement)
           .podName(podName)
+          .namespace(namespace)
           .workloadName(workloadName)
           .ecsContainerDetails(ecsContainerDetails)
           .newInstance(newInstance);
@@ -312,6 +326,7 @@ public class InstanceElement implements ContextElement, VerificationElement {
       instanceElement.setWorkloadName(workloadName);
       instanceElement.setEcsContainerDetails(ecsContainerDetails);
       instanceElement.setNewInstance(newInstance);
+      instanceElement.setNamespace(namespace);
       return instanceElement;
     }
   }

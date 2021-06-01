@@ -13,6 +13,7 @@ replace_key_value () {
 yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
 yq delete -i $CONFIG_FILE grpcServerConfig.connectors[0]
+yq delete -i $CONFIG_FILE gitSdkConfiguration.gitSdkGrpcServerConfig.connectors[0]
 
 if [[ "" != "$LOGGING_LEVEL" ]]; then
     yq write -i $CONFIG_FILE logging.level "$LOGGING_LEVEL"
@@ -87,12 +88,28 @@ if [[ "" != "$CI_MANAGER_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.ci.serviceHttpClientConfig.baseUrl $CI_MANAGER_BASE_URL
 fi
 
+if [[ "" != "$CI_MANAGER_SERVICE_CONNECT_TIMEOUT_IN_SECONDS" ]]; then
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.ci.serviceHttpClientConfig.connectTimeOutSeconds $CI_MANAGER_SERVICE_CONNECT_TIMEOUT_IN_SECONDS
+fi
+
+if [[ "" != "$CI_MANAGER_SERVICE_READ_TIMEOUT_IN_SECONDS" ]]; then
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.ci.serviceHttpClientConfig.readTimeOutSeconds $CI_MANAGER_SERVICE_READ_TIMEOUT_IN_SECONDS
+fi
+
 if [[ "" != "$CI_MANAGER_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.ci.secret $CI_MANAGER_SERVICE_SECRET
 fi
 
 if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.cd.serviceHttpClientConfig.baseUrl $NG_MANAGER_BASE_URL
+fi
+
+if [[ "" != "$NG_MANAGER_SERVICE_CONNECT_TIMEOUT_IN_SECONDS" ]]; then
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.cd.serviceHttpClientConfig.connectTimeOutSeconds $NG_MANAGER_SERVICE_CONNECT_TIMEOUT_IN_SECONDS
+fi
+
+if [[ "" != "$NG_MANAGER_SERVICE_READ_TIMEOUT_IN_SECONDS" ]]; then
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.cd.serviceHttpClientConfig.readTimeOutSeconds $NG_MANAGER_SERVICE_READ_TIMEOUT_IN_SECONDS
 fi
 
 if [[ "" != "$NG_MANAGER_SERVICE_SECRET" ]]; then
@@ -121,6 +138,14 @@ fi
 
 if [[ "" != "$CI_MANAGER_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE grpcClientConfigs.ci.authority $CI_MANAGER_AUTHORITY
+fi
+
+if [[ "" != "$NG_MANAGER_GITSYNC_TARGET" ]]; then
+  yq write -i $CONFIG_FILE gitSdkConfiguration.gitManagerGrpcClientConfig.target $NG_MANAGER_GITSYNC_TARGET
+fi
+
+if [[ "" != "$NG_MANAGER_GITSYNC_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE gitSdkConfiguration.gitManagerGrpcClientConfig.authority $NG_MANAGER_GITSYNC_AUTHORITY
 fi
 
 if [[ "" != "$SCM_SERVICE_URI" ]]; then
@@ -214,3 +239,10 @@ replace_key_value logStreamingServiceConfig.serviceToken "$LOG_STREAMING_SERVICE
 replace_key_value iteratorsConfig.approvalInstanceIteratorConfig.enabled "$APPROVAL_INSTANCE_ITERATOR_ENABLED"
 replace_key_value iteratorsConfig.approvalInstanceIteratorConfig.targetIntervalInSeconds "$APPROVAL_INSTANCE_ITERATOR_INTERVAL_SEC"
 replace_key_value orchestrationStepConfig.ffServerBaseUrl "$FF_SERVER_BASE_URL"
+
+replace_key_value shouldDeployWithGitSync "$ENABLE_GIT_SYNC"
+
+replace_key_value useRedisForInterrupts "$USE_REDIS_FOR_INTERRUPTS"
+replace_key_value useRedisForOrchestrationEvents "$USE_REDIS_FOR_ORCHESTRATION_EVENTS"
+replace_key_value useRedisForSdkResponseEvents "$USE_REDIS_FOR_SDK_RESPONSE_EVENTS"
+

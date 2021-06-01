@@ -91,6 +91,6 @@ public class PMSBarrierServiceImpl implements PMSBarrierService {
                           .mapToLong(timeoutInstance -> timeoutInstance.getTracker().getExpiryTime())
                           .max()
                           .orElse(-1L);
-    return expiryTime < 0 ? expiryTime : expiryTime - System.currentTimeMillis();
+    return expiryTime < 0 ? expiryTime : expiryTime - barrierNode.getStartTs();
   }
 }

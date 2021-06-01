@@ -39,4 +39,5 @@ public class BatchMainConfig {
   @JsonProperty("banzaiConfig") private BanzaiConfig banzaiConfig;
   @JsonProperty("ngManagerServiceHttpClientConfig") private ServiceHttpClientConfig ngManagerServiceHttpClientConfig;
   @JsonProperty("ngManagerServiceSecret") private String ngManagerServiceSecret;
+  @JsonProperty("banzaiRecommenderConfig") private ServiceHttpClientConfig banzaiRecommenderConfig;
 }

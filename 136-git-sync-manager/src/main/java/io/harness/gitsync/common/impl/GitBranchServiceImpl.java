@@ -82,6 +82,7 @@ public class GitBranchServiceImpl implements GitBranchService {
         yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, yamlGitConfigIdentifier);
     checkBranchIsNotAlreadyShortlisted(yamlGitConfig.getRepo(), accountIdentifier, branchName);
     updateBranchSyncStatus(accountIdentifier, yamlGitConfig.getRepo(), branchName, SYNCING);
+    log.info("Branch sync started {}", branchName);
     executorService.submit(
         ()
             -> harnessToGitHelperService.processFilesInBranch(accountIdentifier, yamlGitConfigIdentifier,
@@ -128,7 +129,7 @@ public class GitBranchServiceImpl implements GitBranchService {
     try {
       gitBranchesRepository.save(gitBranch);
     } catch (DuplicateKeyException duplicateKeyException) {
-      log.error("The branch %s in repo %s is already stored", gitBranch.getRepoURL(), gitBranch.getRepoURL());
+      log.error("The branch {} in repo {} is already saved", gitBranch.getRepoURL(), gitBranch.getRepoURL());
     }
   }
 
@@ -174,5 +175,15 @@ public class GitBranchServiceImpl implements GitBranchService {
       throw new InvalidRequestException(
           String.format("The branch %s in repo %s is already %s", branch, repoURL, gitBranch.getBranchSyncStatus()));
     }
+  }
+
+  @Override
+  public boolean isBranchExists(
+      String accountIdentifier, String repoURL, String branch, BranchSyncStatus branchSyncStatus) {
+    GitBranch gitBranch = get(accountIdentifier, repoURL, branch);
+    if (gitBranch != null) {
+      return gitBranch.getBranchSyncStatus().equals(branchSyncStatus);
+    }
+    return false;
   }
 }

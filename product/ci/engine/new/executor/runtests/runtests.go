@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"time"
 
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
@@ -37,6 +38,7 @@ type runTestsStep struct {
 	containerPort uint32
 	so            output.StageOutput // Output variables of the stage
 	log           *zap.SugaredLogger // Logger
+	procWriter    io.Writer
 }
 
 // RunTestsStep represents interface to execute a run step
@@ -45,7 +47,7 @@ type RunTestsStep interface {
 }
 
 // NewRunTestsStep creates a run step executor
-func NewRunTestsStep(step *pb.UnitStep, tmpFilePath string, so output.StageOutput, log *zap.SugaredLogger) RunTestsStep {
+func NewRunTestsStep(step *pb.UnitStep, tmpFilePath string, so output.StageOutput, log *zap.SugaredLogger, procWriter io.Writer) RunTestsStep {
 	return &runTestsStep{
 		id:           step.GetId(),
 		tmpFilePath:  tmpFilePath,
@@ -53,6 +55,7 @@ func NewRunTestsStep(step *pb.UnitStep, tmpFilePath string, so output.StageOutpu
 		step:         step,
 		so:           so,
 		log:          log,
+		procWriter:   procWriter,
 	}
 }
 
@@ -61,7 +64,7 @@ func (e *runTestsStep) getDiffFiles(ctx context.Context) ([]types.File, error) {
 	if err != nil {
 		return []types.File{}, err
 	}
-	chFiles, err := getChFiles(ctx, workspace, e.log)
+	chFiles, err := getChFiles(ctx, workspace, e.log, e.procWriter)
 	if err != nil {
 		e.log.Errorw("failed to get changed filed in runTests step", "step_id", e.id, zap.Error(err))
 		return []types.File{}, err

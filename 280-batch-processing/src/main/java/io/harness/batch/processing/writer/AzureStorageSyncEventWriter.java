@@ -16,6 +16,8 @@ import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.connector.ConnectorResponseDTO;
+import io.harness.delegate.beans.connector.CEFeatures;
+import io.harness.delegate.beans.connector.CcmConnectorFilter;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ceazure.BillingExportSpecDTO;
@@ -99,7 +101,12 @@ public class AzureStorageSyncEventWriter extends EventWriter implements ItemWrit
     int size = 100;
     do {
       response = execute(connectorResourceClient.listConnectors(accountId, null, null, page, size,
-          ConnectorFilterPropertiesDTO.builder().types(Arrays.asList(ConnectorType.CE_AZURE)).build(), false));
+          ConnectorFilterPropertiesDTO.builder()
+              .types(Arrays.asList(ConnectorType.CE_AZURE))
+              .ccmConnectorFilter(
+                  CcmConnectorFilter.builder().featuresEnabled(Arrays.asList(CEFeatures.BILLING)).build())
+              .build(),
+          false));
       if (response != null && isNotEmpty(response.getContent())) {
         nextGenConnectors.addAll(response.getContent());
       }

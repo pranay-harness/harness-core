@@ -65,9 +65,16 @@ public class EventServerExecutor {
         if (isHealthy()) {
           return;
         }
+
+        String home = System.getProperty("user.home");
+        if (home.contains("root")) {
+          home = "/home/jenkins";
+        }
+
         log.info("Execute the event-server from {}", directory);
-        final Path jar = Paths.get("/home/jenkins"
-            + "/.bazel-dirs/bin/350-event-server/module_deploy.jar");
+        final Path jar = Paths.get(home + "/.bazel-dirs/bin/350-event-server/module_deploy.jar");
+        log.info("The event-server jar path is: {}", jar.toString());
+
         final Path config = Paths.get(directory.getPath(), "350-event-server", "event-service-config.yml");
         String alpn = Alpn.location();
 

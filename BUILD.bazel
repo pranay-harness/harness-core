@@ -55,6 +55,9 @@ java_library(
 modules = [
     "//110-change-data-capture",
     "//120-ng-manager",
+    "//121-access-control-migration",
+    "//122-ng-authentication-settings",
+    "//123-ng-core-user",
     "//125-cd-nextgen",
     "//136-git-sync-manager",
     #"//160-model-gen-tool",
@@ -82,6 +85,7 @@ modules = [
     "//410-cg-rest",
     "//420-delegate-agent",
     "//420-delegate-service",
+    "//425-verification-commons",
     "//430-cv-nextgen-commons",
     "//440-connector-nextgen",
     "//445-cg-connectors",
@@ -182,7 +186,7 @@ modules = [
     "//970-rbac-core",
     "//970-telemetry-beans",
     "//980-commons",
-    "//990-commons-test",
+    #"//990-commons-test",
 ]
 
 filegroup(
@@ -228,4 +232,26 @@ filegroup(
         "keystore.jks",
     ],
     visibility = ["//visibility:public"],
+)
+
+load("@rules_python//python:defs.bzl", "py_runtime", "py_runtime_pair")
+
+py_runtime(
+    name = "python3_runtime",
+    files = ["@python_interpreter//:files"],
+    interpreter = "@python_interpreter//:python_bin",
+    python_version = "PY3",
+    visibility = ["//visibility:public"],
+)
+
+py_runtime_pair(
+    name = "py_runtime_pair",
+    py2_runtime = None,
+    py3_runtime = ":python3_runtime",
+)
+
+toolchain(
+    name = "py_toolchain",
+    toolchain = ":py_runtime_pair",
+    toolchain_type = "@bazel_tools//tools/python:toolchain_type",
 )

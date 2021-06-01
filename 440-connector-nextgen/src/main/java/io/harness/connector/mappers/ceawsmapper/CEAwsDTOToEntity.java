@@ -7,10 +7,10 @@ import io.harness.connector.entities.embedded.ceawsconnector.CURAttributes;
 import io.harness.connector.entities.embedded.ceawsconnector.S3BucketDetails;
 import io.harness.connector.entities.embedded.ceawsconnector.S3BucketDetails.S3BucketDetailsBuilder;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
+import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.AwsCurAttributesDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
-import io.harness.delegate.beans.connector.ceawsconnector.CEAwsFeatures;
 import io.harness.exception.InvalidRequestException;
 import io.harness.remote.CEAwsSetupConfig;
 
@@ -34,12 +34,12 @@ public class CEAwsDTOToEntity implements ConnectorDTOToEntityMapper<CEAwsConnect
   public CEAwsConfig toConnectorEntity(CEAwsConnectorDTO connectorDTO) {
     CEAwsConfigBuilder ceAwsConfigBuilder = CEAwsConfig.builder();
 
-    List<CEAwsFeatures> featuresList = connectorDTO.getFeaturesEnabled();
-    if (featuresList.contains(CEAwsFeatures.CUR)) {
+    List<CEFeatures> featuresList = connectorDTO.getFeaturesEnabled();
+    if (featuresList.contains(CEFeatures.BILLING)) {
       final AwsCurAttributesDTO awsCurAttributes = connectorDTO.getCurAttributes();
 
       if (awsCurAttributes == null) {
-        throw new InvalidRequestException("curAttributes should be provided when the features 'CUR' is enabled.");
+        throw new InvalidRequestException("curAttributes should be provided when the features 'BILLING' is enabled.");
       }
 
       final S3BucketDetailsBuilder s3BucketDetailsBuilder =

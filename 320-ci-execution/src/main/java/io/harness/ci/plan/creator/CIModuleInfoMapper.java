@@ -1,5 +1,7 @@
 package io.harness.ci.plan.creator;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.BranchWebhookEvent;
@@ -56,6 +58,10 @@ public class CIModuleInfoMapper {
     } else if (pr.isMerged()) {
       state = PR_MERGED;
     }
+    List<CIBuildCommit> commitList = new ArrayList<>();
+    if (isNotEmpty(pr.getCommitDetailsList())) {
+      pr.getCommitDetailsList().forEach(commit -> commitList.add(convertCommit(commit)));
+    }
     return CIBuildPRHook.builder()
         .id(pr.getPullRequestId())
         .link(pr.getPullRequestLink())
@@ -64,6 +70,7 @@ public class CIModuleInfoMapper {
         .sourceBranch(pr.getSourceBranch())
         .targetBranch(pr.getTargetBranch())
         .state(state)
+        .commits(commitList)
         .build();
   }
 

@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.gitsync.common.beans.YamlChangeSet.MAX_QUEUE_DURATION_EXCEEDED_CODE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.beans.YamlChangeSetStatus;
+import io.harness.gitsync.core.dtos.YamlChangeSetDTO;
 import io.harness.gitsync.core.service.YamlChangeSetService;
 
 import com.google.inject.Singleton;
@@ -21,7 +21,7 @@ public class GitChangeSetRunnableHelper {
   private static final long TIMEOUT_FOR_RUNNING_CHANGESET = 30;
   private static final long TIMEOUT_FOR_MARKING_SKIPPED = 3 /*days*/;
 
-  public List<YamlChangeSet> getStuckYamlChangeSets(YamlChangeSetService yamlChangeSetService,
+  public List<YamlChangeSetDTO> getStuckYamlChangeSets(YamlChangeSetService yamlChangeSetService,
       List<String> runningAccountIdList, List<YamlChangeSetStatus> runningStatusList) {
     return yamlChangeSetService.findByAccountIdsStatusLastUpdatedAtLessThan(
         runningAccountIdList, runningStatusList, TIMEOUT_FOR_RUNNING_CHANGESET);

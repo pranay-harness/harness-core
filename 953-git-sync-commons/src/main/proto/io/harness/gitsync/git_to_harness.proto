@@ -15,18 +15,15 @@ service GitToHarnessService {
 
 message ChangeSets {
   repeated ChangeSet change_set = 1;
-  string account_id = 2;
 }
 
 message ChangeSet {
-  string id = 1;
-  string yaml = 2;
-  string account_id = 3;
-  io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum entity_type = 4;
-  google.protobuf.StringValue commit_id = 5;
-  google.protobuf.StringValue object_id = 6;
-  io.harness.gitsync.ChangeType change_type = 7;
-  string filePath = 8;
+  string yaml = 1;
+  string account_id = 2;
+  io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum entity_type = 3;
+  google.protobuf.StringValue object_id = 4;
+  io.harness.gitsync.ChangeType change_type = 5;
+  string file_path = 6;
 }
 
 message ProcessingResponse {
@@ -36,10 +33,9 @@ message ProcessingResponse {
 }
 
 message FileProcessingResponse {
-  string id = 1;
-  string account_id = 2;
-  FileProcessingStatus status = 3;
-  string error_msg = 4;
+  string file_path = 1;
+  FileProcessingStatus status = 2;
+  google.protobuf.StringValue error_msg = 3;
 }
 
 enum FileProcessingStatus {
@@ -48,7 +44,6 @@ enum FileProcessingStatus {
   SKIPPED = 2;
   // Used for internal flag for files not processed. Externally it is same as SKIPPED.
   UNPROCESSED = 3;
-  // todo(abhinav): Already processed?
 }
 
 enum ProcessingFailureStage {
@@ -59,14 +54,16 @@ enum ProcessingFailureStage {
 }
 
 message GitToHarnessInfo {
-  string accountIdentifier = 1;
-  string yamlGitConfigOrgIdentifier = 2;
-  string yamlGitConfigProjectIdentifier = 3;
-  string yamlGitConfigId = 4;
-  string branch = 5;
+  string yamlGitConfigOrgIdentifier = 1;
+  string yamlGitConfigProjectIdentifier = 2;
+  string yamlGitConfigId = 3;
+  string branch = 4;
+  string repo_url = 5;
 }
 
 message GitToHarnessProcessRequest {
   ChangeSets change_sets = 1;
   GitToHarnessInfo gitToHarnessBranchInfo = 2;
+  string account_id = 3;
+  google.protobuf.StringValue commit_id = 4;
 }

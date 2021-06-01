@@ -27,15 +27,16 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.annotations.PipelineServiceAuth;
+import io.harness.pms.inputset.InputSetErrorWrapperDTOPMS;
+import io.harness.pms.inputset.MergeInputSetResponseDTOPMS;
+import io.harness.pms.inputset.MergeInputSetTemplateRequestDTO;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity.InputSetEntityKeys;
-import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetErrorWrapperDTOPMS;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetListTypePMS;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetResponseDTOPMS;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetSummaryResponseDTOPMS;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetTemplateResponseDTOPMS;
 import io.harness.pms.ngpipeline.inputset.beans.resource.MergeInputSetRequestDTOPMS;
-import io.harness.pms.ngpipeline.inputset.beans.resource.MergeInputSetResponseDTOPMS;
 import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
 import io.harness.pms.ngpipeline.inputset.mappers.PMSInputSetElementMapper;
 import io.harness.pms.ngpipeline.inputset.mappers.PMSInputSetFilterHelper;
@@ -155,6 +156,8 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
+      @QueryParam("pipelineBranch") @ResourceIdentifier String pipelineBranch,
+      @QueryParam("pipelineRepoID") @ResourceIdentifier String pipelineRepoID,
       @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo, @NotNull @ApiParam(hidden = true) String yaml) {
     try {
       yaml = removeRuntimeInputFromYaml(yaml);
@@ -162,8 +165,8 @@ public class InputSetResourcePMS {
       throw new InvalidRequestException("Could not clear <+input> fields from yaml : " + e.getMessage());
     }
 
-    InputSetErrorWrapperDTOPMS errorWrapperDTO =
-        validateAndMergeHelper.validateInputSet(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
+    InputSetErrorWrapperDTOPMS errorWrapperDTO = validateAndMergeHelper.validateInputSet(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml, pipelineBranch, pipelineRepoID);
     if (errorWrapperDTO != null) {
       return ResponseDTO.newResponse(PMSInputSetElementMapper.toInputSetResponseDTOPMS(
           accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml, errorWrapperDTO));
@@ -211,6 +214,8 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
+      @QueryParam("pipelineBranch") @ResourceIdentifier String pipelineBranch,
+      @QueryParam("pipelineRepoID") @ResourceIdentifier String pipelineRepoID,
       @BeanParam GitEntityUpdateInfoDTO gitEntityInfo, @NotNull @ApiParam(hidden = true) String yaml) {
     try {
       yaml = removeRuntimeInputFromYaml(yaml);
@@ -218,8 +223,8 @@ public class InputSetResourcePMS {
       throw new InvalidRequestException("Could not clear <+input> fields from yaml : " + e.getMessage());
     }
 
-    InputSetErrorWrapperDTOPMS errorWrapperDTO =
-        validateAndMergeHelper.validateInputSet(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
+    InputSetErrorWrapperDTOPMS errorWrapperDTO = validateAndMergeHelper.validateInputSet(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml, pipelineBranch, pipelineRepoID);
     if (errorWrapperDTO != null) {
       return ResponseDTO.newResponse(PMSInputSetElementMapper.toInputSetResponseDTOPMS(
           accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml, errorWrapperDTO));
@@ -331,15 +336,17 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
+      @QueryParam("pipelineBranch") @ResourceIdentifier String pipelineBranch,
+      @QueryParam("pipelineRepoID") @ResourceIdentifier String pipelineRepoID,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @NotNull @Valid MergeInputSetRequestDTOPMS mergeInputSetRequestDTO) {
     List<String> inputSetReferences = mergeInputSetRequestDTO.getInputSetReferences();
-    String mergedYaml = validateAndMergeHelper.getMergeInputSetFromPipelineTemplate(
-        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences);
+    String mergedYaml = validateAndMergeHelper.getMergeInputSetFromPipelineTemplate(accountId, orgIdentifier,
+        projectIdentifier, pipelineIdentifier, inputSetReferences, pipelineBranch, pipelineRepoID);
     String fullYaml = "";
     if (mergeInputSetRequestDTO.isWithMergedPipelineYaml()) {
       fullYaml = validateAndMergeHelper.mergeInputSetIntoPipeline(
-          accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, mergedYaml);
+          accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, mergedYaml, pipelineBranch, pipelineRepoID);
     }
     return ResponseDTO.newResponse(MergeInputSetResponseDTOPMS.builder()
                                        .isErrorResponse(false)
@@ -354,18 +361,22 @@ public class InputSetResourcePMS {
       value = "Merges given runtime input yaml on pipeline and return input set template format of applied pipeline",
       nickname = "getMergeInputSetFromPipelineTemplate")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
+  // TODO(Naman): Correct PipelineServiceClient when modifying this api
   public ResponseDTO<MergeInputSetResponseDTOPMS>
   getMergeInputSetFromPipelineTemplate(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
-      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo, @NotNull @ApiParam(hidden = true) String runtimeInputYaml) {
-    String fullYaml = validateAndMergeHelper.mergeInputSetIntoPipeline(
-        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, runtimeInputYaml);
+      @QueryParam("pipelineBranch") @ResourceIdentifier String pipelineBranch,
+      @QueryParam("pipelineRepoID") @ResourceIdentifier String pipelineRepoID,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
+      @NotNull @Valid MergeInputSetTemplateRequestDTO mergeInputSetTemplateRequestDTO) {
+    String fullYaml = validateAndMergeHelper.mergeInputSetIntoPipeline(accountId, orgIdentifier, projectIdentifier,
+        pipelineIdentifier, mergeInputSetTemplateRequestDTO.getRuntimeInputYaml(), pipelineBranch, pipelineRepoID);
     return ResponseDTO.newResponse(MergeInputSetResponseDTOPMS.builder()
                                        .isErrorResponse(false)
-                                       .pipelineYaml(runtimeInputYaml)
+                                       .pipelineYaml(mergeInputSetTemplateRequestDTO.getRuntimeInputYaml())
                                        .completePipelineYaml(fullYaml)
                                        .build());
   }

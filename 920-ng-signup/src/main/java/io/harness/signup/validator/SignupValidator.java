@@ -59,7 +59,7 @@ public class SignupValidator {
 
     final String emailAddress = email.trim();
 
-    boolean userExists = RestClientUtils.getResponse(userClient.getUserByEmailId(email)).isPresent();
+    boolean userExists = RestClientUtils.getResponse(userClient.getUserByEmailId(email.toLowerCase())).isPresent();
 
     if (userExists) {
       throw new UserAlreadyPresentException("This email is already registered to a user. email=" + emailAddress);

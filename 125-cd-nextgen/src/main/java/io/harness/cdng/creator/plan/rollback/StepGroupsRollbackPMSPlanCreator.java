@@ -12,7 +12,7 @@ import io.harness.plancreator.beans.OrchestrationConstants;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.steps.SkipType;
-import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
@@ -30,8 +30,6 @@ public class StepGroupsRollbackPMSPlanCreator {
     }
     List<YamlNode> stepsArrayFields = executionStepsField.getNode().asArray();
 
-    YamlNode stageNode =
-        YamlUtils.getGivenYamlNodeFromParentPath(executionStepsField.getNode(), YAMLFieldNameConstants.STAGE);
     RollbackOptionalChildChainStepParametersBuilder sectionOptionalChildChainStepParametersBuilder =
         RollbackOptionalChildChainStepParameters.builder();
 

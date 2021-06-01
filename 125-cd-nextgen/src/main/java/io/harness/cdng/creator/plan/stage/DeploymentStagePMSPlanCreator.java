@@ -1,7 +1,6 @@
 package io.harness.cdng.creator.plan.stage;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.plan.execution.CDExecutionPMSPlanCreator;
@@ -23,7 +22,6 @@ import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.utilities.ResourceConstraintUtility;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -39,6 +37,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 @OwnedBy(CDC)
 public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
@@ -120,17 +119,13 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
         infraNode.getUuid(), PlanCreationResponse.builder().node(infraNode.getUuid(), infraSectionPlanNode).build());
 
     // Add dependency for resource constraint
-    if (!ParameterField.isNull(pipelineInfrastructure.getAllowSimultaneousDeployments())
-        && pipelineInfrastructure.getAllowSimultaneousDeployments().isExpression()) {
-      throw new InvalidRequestException(
-          "AllowedSimultaneous Deployment field is not a fixed value during execution of pipeline.");
-    }
-    boolean allowSimultaneousDeployments = false;
-    if (!ParameterField.isNull(pipelineInfrastructure.getAllowSimultaneousDeployments())) {
-      allowSimultaneousDeployments = pipelineInfrastructure.getAllowSimultaneousDeployments().getValue();
-    }
-    if (allowSimultaneousDeployments) {
+    boolean allowSimultaneousDeployments = ResourceConstraintUtility.isSimultaneousDeploymentsAllowed(
+        pipelineInfrastructure.getAllowSimultaneousDeployments(), rcYamlField);
+
+    if (!allowSimultaneousDeployments && rcYamlField != null) {
       dependenciesNodeMap.put(rcYamlField.getNode().getUuid(), rcYamlField);
+      planCreationResponseMap.put(
+          rcYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(dependenciesNodeMap).build());
     }
 
     // Add dependency for execution
@@ -141,27 +136,27 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
     PlanCreationResponse planForExecution = CDExecutionPMSPlanCreator.createPlanForExecution(executionField);
     planCreationResponseMap.put(executionField.getNode().getUuid(), planForExecution);
 
-    planCreationResponseMap.put(
-        rcYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(dependenciesNodeMap).build());
-
     return planCreationResponseMap;
   }
 
+  @Nullable
   private YamlField constructResourceConstraintYamlField(YamlNode infraNode) {
-    JsonNode resourceConstraintJsonNode =
-        ResourceConstraintUtility.getResourceConstraintJsonNode(obtainResourceUnitFromInfrastructure(infraNode));
+    String resourceUnit = obtainResourceUnitFromInfrastructure(infraNode);
+    if (resourceUnit == null) {
+      return null;
+    }
+    JsonNode resourceConstraintJsonNode = ResourceConstraintUtility.getResourceConstraintJsonNode(resourceUnit);
     return new YamlField("step", new YamlNode(resourceConstraintJsonNode, infraNode.getParentNode()));
   }
 
+  @Nullable
   private String obtainResourceUnitFromInfrastructure(YamlNode infraNode) {
     JsonNode infrastructureKey = infraNode.getCurrJsonNode().get("infrastructureKey");
-    String resourceUnit;
-    if (infrastructureKey == null) {
-      resourceUnit = generateUuid();
-    } else {
-      resourceUnit = infrastructureKey.asText();
+    if (infrastructureKey == null || EmptyPredicate.isEmpty(infrastructureKey.asText())) {
+      return null;
     }
-    return resourceUnit;
+
+    return infrastructureKey.asText();
   }
 
   private void validateFailureStrategy(StageElementConfig stageElementConfig) {

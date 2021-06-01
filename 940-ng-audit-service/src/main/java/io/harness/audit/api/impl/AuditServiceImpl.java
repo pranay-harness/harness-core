@@ -3,6 +3,7 @@ package io.harness.audit.api.impl;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.audit.mapper.AuditEventMapper.fromDTO;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import static java.lang.System.currentTimeMillis;
@@ -29,11 +30,8 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.common.beans.KeyValuePair;
 import io.harness.ng.core.common.beans.KeyValuePair.KeyValuePairKeys;
-import io.harness.utils.RetryUtils;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -46,7 +44,6 @@ import net.jodah.failsafe.RetryPolicy;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @OwnedBy(PL)
@@ -55,8 +52,7 @@ public class AuditServiceImpl implements AuditService {
   private static final long MAXIMUM_ALLOWED_YAML_SIZE = 512L * 512;
   private final TransactionTemplate transactionTemplate;
 
-  private final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
-      "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
+  private final RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
 
   private final AuditRepository auditRepository;
   private final AuditYamlService auditYamlService;

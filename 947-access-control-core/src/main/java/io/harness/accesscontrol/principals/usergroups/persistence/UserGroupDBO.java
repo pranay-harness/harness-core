@@ -66,8 +66,8 @@ public class UserGroupDBO implements PersistentRegularIterable, AccessControlEnt
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
                  .name("uniqueUserGroupPrimaryKey")
-                 .field(UserGroupDBOKeys.scopeIdentifier)
                  .field(UserGroupDBOKeys.identifier)
+                 .field(UserGroupDBOKeys.scopeIdentifier)
                  .unique(true)
                  .build())
         .build();

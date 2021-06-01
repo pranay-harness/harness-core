@@ -13,6 +13,5 @@ managerAuthority: localhost
 queueFilePath: ../eventQueue
 grpcServiceEnabled: true
 grpcServiceConnectorPort: 8080
-managerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 logStreamingServiceBaseUrl: http://localhost:8079
 

@@ -11,7 +11,7 @@ import io.harness.security.annotations.NextGenManagerAuth;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import javax.ws.rs.POST;
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -29,14 +29,21 @@ import org.springframework.stereotype.Service;
 public class ConnectorSetup {
   @Inject CENextGenConfiguration configuration;
 
-  @POST
-  @Path("/getceawstemplateurl")
-  @ApiOperation(value = "Get CE Aws Connector Template URL Environment Wise", nickname = "getCEAwsTemplate")
+  @GET
+  @Path("/ceawstemplateurl")
+  @ApiOperation(value = "Get CE Aws Connector Template URL Environment Wise", nickname = "ceawstemplateurl")
   public ResponseDTO<String> getCEAwsTemplate(
       @QueryParam(NGCommonEntityConstants.IS_EVENTS_ENABLED) Boolean eventsEnabled,
       @QueryParam(NGCommonEntityConstants.IS_CUR_ENABLED) Boolean curEnabled,
       @QueryParam(NGCommonEntityConstants.IS_OPTIMIZATION_ENABLED) Boolean optimizationEnabled) {
     final String templateURL = configuration.getAwsConnectorTemplate();
     return ResponseDTO.newResponse(templateURL);
+  }
+
+  @GET
+  @Path("/azureappclientid")
+  @ApiOperation(value = "Get Azure application client Id", nickname = "azureappclientid")
+  public ResponseDTO<String> getAzureAppClientId() {
+    return ResponseDTO.newResponse(configuration.getAzureConfig().getAzureAppClientId());
   }
 }

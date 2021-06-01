@@ -8,7 +8,7 @@ import io.harness.filters.WithConnectorRef;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.steps.StepSpecTypeConstants;
@@ -56,7 +56,7 @@ public class JiraCreateStepInfo implements PMSStepInfo, WithConnectorRef {
         .connectorRef(connectorRef)
         .projectKey(projectKey)
         .issueType(issueType)
-        .fields(JiraStepUtils.prepareFieldMap(fields))
+        .fields(JiraStepUtils.processJiraFieldsList(fields))
         .build();
   }
 

@@ -18,7 +18,7 @@ import io.harness.batch.processing.ccm.ActualIdleCostWriterData;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.InstanceType;
-import io.harness.ccm.commons.utils.DataUtils;
+import io.harness.ccm.commons.utils.TimeUtils;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 
@@ -49,7 +49,7 @@ public class BillingDataServiceImplTest extends CategoryTest {
   @InjectMocks private BillingDataServiceImpl billingDataService;
   @Mock private TimeScaleDBService timeScaleDBService;
   @Mock private PreparedStatement statement;
-  @Mock private DataUtils utils;
+  @Mock private TimeUtils utils;
   @Mock private ResultSet resultSet;
 
   private final Instant NOW = Instant.now();

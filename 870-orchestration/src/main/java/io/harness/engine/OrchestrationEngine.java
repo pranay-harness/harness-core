@@ -3,6 +3,7 @@ package io.harness.engine;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.pms.contracts.execution.Status.ERRORED;
 import static io.harness.pms.contracts.execution.Status.RUNNING;
 import static io.harness.springdata.SpringDataMongoUtils.setUnset;
 
@@ -19,11 +20,11 @@ import io.harness.engine.executables.InvocationHelper;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionTimeoutCallback;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.facilitation.FacilitationHelper;
 import io.harness.engine.facilitation.RunPreFacilitationChecker;
 import io.harness.engine.facilitation.SkipPreFacilitationChecker;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.pms.EngineAdviseCallback;
-import io.harness.engine.pms.EngineFacilitationCallback;
 import io.harness.engine.resume.EngineWaitResumeCallback;
 import io.harness.engine.utils.TransactionUtils;
 import io.harness.eraro.ResponseMessage;
@@ -44,6 +45,7 @@ import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
+import io.harness.pms.contracts.steps.io.StepResponseProto.Builder;
 import io.harness.pms.execution.AdviseNodeExecutionEventData;
 import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.execution.ResumeNodeExecutionEventData;
@@ -111,6 +113,7 @@ public class OrchestrationEngine {
   @Inject private InvocationHelper invocationHelper;
   @Inject private TransactionUtils transactionUtils;
   @Inject private ExceptionManager exceptionManager;
+  @Inject private FacilitationHelper facilitationHelper;
 
   public void startNodeExecution(String nodeExecutionId) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
@@ -159,14 +162,19 @@ public class OrchestrationEngine {
       PlanNodeProto node = nodeExecution.getNode();
       String stepParameters = node.getStepParameters();
       boolean skipUnresolvedExpressionsCheck = node.getSkipUnresolvedExpressionsCheck();
+      log.info("Starting to Resolve step parameters");
       Object resolvedStepParameters = stepParameters == null
           ? null
           : pmsEngineExpressionService.resolve(
               ambiance, NodeExecutionUtils.extractObject(stepParameters), skipUnresolvedExpressionsCheck);
+      log.info("Step Parameter Resolution complete");
+
+      log.info("Starting to Resolve step inputs");
       Object resolvedStepInputs = node.getStepInputs() == null
           ? null
           : pmsEngineExpressionService.resolve(
               ambiance, NodeExecutionUtils.extractObject(node.getStepInputs()), skipUnresolvedExpressionsCheck);
+      log.info("Step Inputs Resolution complete");
 
       NodeExecution updatedNodeExecution =
           Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(), ops -> {
@@ -174,17 +182,15 @@ public class OrchestrationEngine {
             setUnset(ops, NodeExecutionKeys.resolvedStepInputs, resolvedStepInputs);
           }));
 
-      NodeExecutionEvent event = NodeExecutionEvent.builder()
-                                     .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(updatedNodeExecution))
-                                     .eventType(NodeExecutionEventType.FACILITATE)
-                                     .build();
-      transactionUtils.performTransaction(() -> {
+      if (facilitationHelper.customFacilitatorPresent(node)) {
+        NodeExecutionEvent event = NodeExecutionEvent.builder()
+                                       .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(updatedNodeExecution))
+                                       .eventType(NodeExecutionEventType.FACILITATE)
+                                       .build();
         nodeExecutionEventQueuePublisher.send(event);
-        waitNotifyEngine.waitForAllOn(publisherName,
-            EngineFacilitationCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build(), event.getNotifyId());
-        return null;
-      });
-
+      } else {
+        facilitationHelper.facilitateExecution(nodeExecution);
+      }
     } catch (Exception exception) {
       log.error("Exception Occurred in facilitateAndStartStep", exception);
       handleError(ambiance, exception);
@@ -229,7 +235,7 @@ public class OrchestrationEngine {
 
     PlanExecution planExecution = Preconditions.checkNotNull(planExecutionService.get(ambiance.getPlanExecutionId()));
     NodeExecution nodeExecution = prepareNodeExecutionForInvocation(ambiance);
-
+    log.info("Sending NodeExecution START event");
     StartNodeExecutionEventData startNodeExecutionEventData = StartNodeExecutionEventData.builder()
                                                                   .facilitatorResponse(facilitatorResponse)
                                                                   .nodes(planExecution.getPlan().getNodes())
@@ -420,22 +426,35 @@ public class OrchestrationEngine {
     NodeExecution updatedNodeExecution = nodeExecutionService.update(
         nodeExecutionId, ops -> ops.set(NodeExecutionKeys.adviserResponse, adviserResponse));
     AdviserResponseHandler adviserResponseHandler = adviseHandlerFactory.obtainHandler(adviserResponse.getType());
-    adviserResponseHandler.handleAdvise(nodeExecution, adviserResponse);
+    adviserResponseHandler.handleAdvise(updatedNodeExecution, adviserResponse);
   }
 
   void handleError(Ambiance ambiance, Exception exception) {
     try {
+      Builder builder = StepResponseProto.newBuilder().setStatus(Status.FAILED);
       List<ResponseMessage> responseMessages = exceptionManager.buildResponseFromException(exception);
-      StepResponseProto response =
-          StepResponseProto.newBuilder()
-              .setStatus(Status.FAILED)
-              .setFailureInfo(EngineExceptionUtils.transformResponseMessagesToFailureInfo(responseMessages))
-              .build();
+      if (isNotEmpty(responseMessages)) {
+        builder.setFailureInfo(EngineExceptionUtils.transformResponseMessagesToFailureInfo(responseMessages));
+      }
       NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-      handleStepResponseInternal(nodeExecution, response);
-    } catch (RuntimeException ex) {
+      handleStepResponseInternal(nodeExecution, builder.build());
+    } catch (Exception ex) {
       // Smile if you see irony in this
-      log.error("Exception Occurred while handling Exception", ex);
+      log.error("This is very BAD!!!. Exception Occurred while handling Exception. Erroring out Execution", ex);
+      errorOutPlanExecution(ambiance);
+    }
+  }
+
+  void errorOutPlanExecution(Ambiance ambiance) {
+    try {
+      boolean nodeErrored = nodeExecutionService.errorOutActiveNodes(ambiance.getPlanExecutionId());
+      if (!nodeErrored) {
+        log.warn("No Nodes Can be marked as ERRORED");
+      }
+      planExecutionService.updateStatus(
+          ambiance.getPlanExecutionId(), ERRORED, ops -> ops.set(PlanExecutionKeys.endTs, System.currentTimeMillis()));
+    } catch (Exception ex) {
+      log.error("Give Up!!!. Execution Will be stuck. We cannot do anything more", ex);
     }
   }
 }

@@ -22,6 +22,9 @@ import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -35,57 +38,72 @@ public class UserGroupChangeConsumerImpl implements ChangeConsumer<UserGroupDBO>
   private final ACLRepository aclRepository;
   private final RoleAssignmentRepository roleAssignmentRepository;
   private final ChangeConsumer<RoleAssignmentDBO> roleAssignmentChangeConsumer;
+  private final ExecutorService executorService = Executors.newFixedThreadPool(4);
+
+  private long processRoleAssignmentInternal(RoleAssignmentDBO roleAssignmentDBO, UserGroupDBO updatedUserGroup) {
+    long createdCount = 0;
+    Set<String> existingPrincipals =
+        Sets.newHashSet(aclRepository.getDistinctPrincipalsInACLsForRoleAssignment(roleAssignmentDBO.getId()));
+
+    if (existingPrincipals.isEmpty()) {
+      createdCount += roleAssignmentChangeConsumer.consumeCreateEvent(roleAssignmentDBO.getId(), roleAssignmentDBO);
+    } else {
+      Set<String> principalsToDelete = Sets.difference(existingPrincipals, updatedUserGroup.getUsers());
+      Set<String> principalsToAdd = Sets.difference(updatedUserGroup.getUsers(), existingPrincipals);
+      Set<String> existingResourceSelectors =
+          Sets.newHashSet(aclRepository.getDistinctResourceSelectorsInACLs(roleAssignmentDBO.getId()));
+      Set<String> existingPermissions =
+          Sets.newHashSet(aclRepository.getDistinctPermissionsInACLsForRoleAssignment(roleAssignmentDBO.getId()));
+
+      long deletedCount =
+          aclRepository.deleteByRoleAssignmentIdAndPrincipals(roleAssignmentDBO.getId(), principalsToDelete);
+      log.info("ACLs deleted: {}", deletedCount);
+
+      List<ACL> aclsToCreate = new ArrayList<>();
+      existingResourceSelectors.forEach(resourceSelector
+          -> existingPermissions.forEach(permissionIdentifier
+              -> principalsToAdd.forEach(principalIdentifier
+                  -> aclsToCreate.add(getACL(permissionIdentifier, Principal.of(USER, principalIdentifier),
+                      roleAssignmentDBO, resourceSelector)))));
+      if (!aclsToCreate.isEmpty()) {
+        createdCount += aclRepository.insertAllIgnoringDuplicates(aclsToCreate);
+        log.info("ACLs created: {}", createdCount);
+      }
+    }
+    return createdCount;
+  }
+
+  private long processRoleAssignments(List<RoleAssignmentDBO> roleAssignments, UserGroupDBO updatedUserGroup) {
+    List<CompletableFuture<Long>> futures = new ArrayList<>();
+    for (RoleAssignmentDBO roleAssignmentDBO : roleAssignments) {
+      futures.add(CompletableFuture.supplyAsync(
+          () -> processRoleAssignmentInternal(roleAssignmentDBO, updatedUserGroup), executorService));
+    }
+
+    return futures.stream().mapToLong(CompletableFuture::join).sum();
+  }
 
   @Override
-  public long consumeUpdateEvent(String id, UserGroupDBO updatedEntity) {
+  public long consumeUpdateEvent(String id, UserGroupDBO updatedUserGroup) {
     long createdCount = 0;
     int pageIdx = 0;
     int pageSize = 1000;
     int iterations = 100;
-    Page<RoleAssignmentDBO> roleAssignments;
+    Page<RoleAssignmentDBO> roleAssignmentsPage;
 
     do {
-      roleAssignments = roleAssignmentRepository.findAll(Criteria.where(RoleAssignmentDBOKeys.scopeIdentifier)
-                                                             .is(updatedEntity.getScopeIdentifier())
-                                                             .and(RoleAssignmentDBOKeys.principalType)
-                                                             .is(USER_GROUP)
-                                                             .and(RoleAssignmentDBOKeys.principalIdentifier)
-                                                             .is(updatedEntity.getIdentifier()),
+      roleAssignmentsPage = roleAssignmentRepository.findAll(Criteria.where(RoleAssignmentDBOKeys.principalType)
+                                                                 .is(USER_GROUP)
+                                                                 .and(RoleAssignmentDBOKeys.principalIdentifier)
+                                                                 .is(updatedUserGroup.getIdentifier())
+                                                                 .and(RoleAssignmentDBOKeys.scopeIdentifier)
+                                                                 .is(updatedUserGroup.getScopeIdentifier()),
           getPageRequest(PageRequest.builder().pageIndex(pageIdx).pageSize(pageSize).build()));
 
-      for (RoleAssignmentDBO roleAssignmentDBO : roleAssignments.getContent()) {
-        Set<String> existingPrincipals =
-            Sets.newHashSet(aclRepository.getDistinctPrincipalsInACLsForRoleAssignment(roleAssignmentDBO.getId()));
-
-        if (existingPrincipals.isEmpty()) {
-          roleAssignmentChangeConsumer.consumeCreateEvent(roleAssignmentDBO.getId(), roleAssignmentDBO);
-        } else {
-          Set<String> principalsToDelete = Sets.difference(existingPrincipals, updatedEntity.getUsers());
-          Set<String> principalsToAdd = Sets.difference(updatedEntity.getUsers(), existingPrincipals);
-          Set<String> existingResourceSelectors =
-              Sets.newHashSet(aclRepository.getDistinctResourceSelectorsInACLs(roleAssignmentDBO.getId()));
-          Set<String> existingPermissions =
-              Sets.newHashSet(aclRepository.getDistinctPermissionsInACLsForRoleAssignment(roleAssignmentDBO.getId()));
-
-          long deletedCount =
-              aclRepository.deleteByRoleAssignmentIdAndPrincipals(roleAssignmentDBO.getId(), principalsToDelete);
-          log.info("ACLs deleted: {}", deletedCount);
-
-          List<ACL> aclsToCreate = new ArrayList<>();
-          existingResourceSelectors.forEach(resourceSelector
-              -> existingPermissions.forEach(permissionIdentifier
-                  -> principalsToAdd.forEach(principalIdentifier
-                      -> aclsToCreate.add(getACL(permissionIdentifier, Principal.of(USER, principalIdentifier),
-                          roleAssignmentDBO, resourceSelector)))));
-          if (!aclsToCreate.isEmpty()) {
-            createdCount += aclRepository.insertAllIgnoringDuplicates(aclsToCreate);
-            log.info("ACLs created: {}", createdCount);
-          }
-        }
-      }
+      createdCount += processRoleAssignments(roleAssignmentsPage.getContent(), updatedUserGroup);
       pageIdx++;
       iterations--;
-    } while (iterations > 0 && !roleAssignments.getContent().isEmpty());
+    } while (iterations > 0 && !roleAssignmentsPage.getContent().isEmpty());
 
     return createdCount;
   }

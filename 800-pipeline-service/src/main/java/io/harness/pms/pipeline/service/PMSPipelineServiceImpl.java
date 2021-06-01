@@ -15,12 +15,12 @@ import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.observer.Subject;
-import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.PipelineFilterPropertiesDto;
 import io.harness.pms.pipeline.StepCategory;
+import io.harness.pms.pipeline.StepPalleteInfo;
 import io.harness.pms.pipeline.mappers.PipelineYamlDtoMapper;
 import io.harness.pms.pipeline.observer.PipelineActionObserver;
 import io.harness.pms.sdk.PmsSdkInstanceService;
@@ -31,7 +31,6 @@ import io.harness.repositories.pipeline.PMSPipelineRepository;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.Getter;
@@ -123,8 +122,10 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
-  public PipelineEntity updatePipelineMetadata(Criteria criteria, Update updateOperations) {
-    return pmsPipelineRepository.updatePipelineMetadata(criteria, updateOperations);
+  public PipelineEntity updatePipelineMetadata(
+      String accountId, String orgIdentifier, String projectIdentifier, Criteria criteria, Update updateOperations) {
+    return pmsPipelineRepository.updatePipelineMetadata(
+        accountId, orgIdentifier, projectIdentifier, criteria, updateOperations);
   }
 
   @Override
@@ -135,7 +136,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
 
     Update update = new Update();
     update.set(PipelineEntityKeys.executionSummaryInfo, executionSummaryInfo);
-    updatePipelineMetadata(criteria, update);
+    updatePipelineMetadata(accountId, orgId, projectId, criteria, update);
   }
 
   @Override
@@ -145,7 +146,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false, null);
     Update update = new Update();
     update.inc(PipelineEntityKeys.runSequence);
-    return Optional.ofNullable(updatePipelineMetadata(criteria, update));
+    return Optional.ofNullable(updatePipelineMetadata(accountId, orgIdentifier, projectIdentifier, criteria, update));
   }
 
   @Override
@@ -181,16 +182,16 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
 
   @Override
   public StepCategory getSteps(String module, String category, String accountId) {
-    Map<String, List<StepInfo>> serviceInstanceNameToSupportedSteps =
-        pmsSdkInstanceService.getInstanceNameToSupportedSteps();
+    Map<String, StepPalleteInfo> serviceInstanceNameToSupportedSteps =
+        pmsSdkInstanceService.getModuleNameToStepPalleteInfo();
     StepCategory stepCategory = pmsPipelineServiceStepHelper.calculateStepsForModuleBasedOnCategory(
-        category, serviceInstanceNameToSupportedSteps.get(module), accountId);
-    for (Map.Entry<String, List<StepInfo>> entry : serviceInstanceNameToSupportedSteps.entrySet()) {
-      if (entry.getKey().equals(module) || EmptyPredicate.isEmpty(entry.getValue())) {
+        category, serviceInstanceNameToSupportedSteps.get(module).getStepTypes(), accountId);
+    for (Map.Entry<String, StepPalleteInfo> entry : serviceInstanceNameToSupportedSteps.entrySet()) {
+      if (entry.getKey().equals(module) || EmptyPredicate.isEmpty(entry.getValue().getStepTypes())) {
         continue;
       }
-      stepCategory.addStepCategory(
-          PMSPipelineServiceStepHelper.calculateStepsForCategory(entry.getKey(), entry.getValue()));
+      stepCategory.addStepCategory(pmsPipelineServiceStepHelper.calculateStepsForCategory(
+          entry.getValue().getModuleName(), entry.getValue().getStepTypes(), accountId));
     }
     return stepCategory;
   }
@@ -227,25 +228,27 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     } else if (EmptyPredicate.isEmpty(filterIdentifier) && filterProperties != null) {
       PMSPipelineServiceHelper.populateFilter(criteria, filterProperties);
     }
+
+    Criteria moduleCriteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(module)) {
       // Check for pipeline with no filters also - empty pipeline or pipelines with only approval stage
       // criteria = { "$or": [ { "filters": {} } , { "filters.MODULE": { $exists: true } } ] }
-      Criteria moduleCriteria = new Criteria().orOperator(where(PipelineEntityKeys.filters).is(new Document()),
+      moduleCriteria.orOperator(where(PipelineEntityKeys.filters).is(new Document()),
           where(String.format("%s.%s", PipelineEntityKeys.filters, module)).exists(true));
-      criteria.andOperator(moduleCriteria);
     }
 
+    Criteria searchCriteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(searchTerm)) {
-      Criteria searchCriteria = new Criteria().orOperator(
-          where(PipelineEntityKeys.identifier)
-              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+      searchCriteria.orOperator(where(PipelineEntityKeys.identifier)
+                                    .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
           where(PipelineEntityKeys.name).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
           where(PipelineEntityKeys.tags + "." + NGTagKeys.key)
               .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
           where(PipelineEntityKeys.tags + "." + NGTagKeys.value)
               .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
-      criteria.andOperator(searchCriteria);
     }
+
+    criteria.andOperator(moduleCriteria, searchCriteria);
 
     return criteria;
   }
