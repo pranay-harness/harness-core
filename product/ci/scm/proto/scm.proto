@@ -278,26 +278,33 @@ message GetLatestFileRequest {
 message DeleteFileRequest {
   string slug = 1;
   string path = 2;
-  oneof type {
-    string branch = 3;
-    string ref = 4;
-  }
-  Provider provider = 5;
+  string branch = 3;
+  string message = 4;
+  string commit_id = 5;
+  string blob_id = 6;
+  Signature signature = 7;
+  Provider provider = 8;
 }
 
 message DeleteFileResponse {
   int32 status = 1;
   string error = 2;
+  string commit_id = 3;
+  string blob_id = 4;
 }
 
 message CreateFileResponse {
   int32 status = 1;
   string error = 2;
+  string commit_id = 3;
+  string blob_id = 4;
 }
 
 message UpdateFileResponse {
   int32 status = 1;
   string error = 2;
+  string commit_id = 3;
+  string blob_id = 4;
 }
 
 message FileModifyRequest {
@@ -393,6 +400,7 @@ message CreatePRRequest {
 
 message CreatePRResponse {
   int32 status = 1;
+  int32 number = 2;
 }
 
 message FindFilesInPRRequest {
@@ -443,6 +451,19 @@ message ListBranchesRequest {
 
 message ListBranchesResponse {
   repeated string branches = 1;
+  PageResponse pagination = 2;
+}
+
+message CompareCommitsRequest {
+  string slug = 1;
+  string source = 2;
+  string target = 3;
+  PageRequest pagination = 4;
+  Provider provider = 5;
+}
+
+message CompareCommitsResponse {
+  repeated PRFile files = 1;
   PageResponse pagination = 2;
 }
 
@@ -603,6 +624,7 @@ service SCM {
   rpc GetLatestCommit(GetLatestCommitRequest) returns (GetLatestCommitResponse);
   rpc ListBranches(ListBranchesRequest) returns (ListBranchesResponse);
   rpc ListCommits(ListCommitsRequest) returns (ListCommitsResponse);
+  rpc CompareCommits(CompareCommitsRequest) returns (CompareCommitsResponse);
 
   // Push Request functions.
   rpc ListCommitsInPR(ListCommitsInPRRequest) returns (ListCommitsInPRResponse);

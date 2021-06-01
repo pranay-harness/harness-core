@@ -11,9 +11,11 @@ import (
 	"go.uber.org/zap"
 )
 
+var gitGitlabToken = os.Getenv("GITLAB_ACCESS_TOKEN")
+
 // NB make sure there is no existing Branch by this name
 func TestCreateBranchGitlab(t *testing.T) {
-	if os.Getenv("GITLAB_ACCESS_TOKEN") == "" {
+	if gitGitlabToken == "" {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.CreateBranchRequest{
@@ -24,7 +26,7 @@ func TestCreateBranchGitlab(t *testing.T) {
 			Hook: &pb.Provider_Gitlab{
 				Gitlab: &pb.GitlabProvider{
 					Provider: &pb.GitlabProvider_AccessToken{
-						AccessToken: os.Getenv("GITLAB_ACCESS_TOKEN"),
+						AccessToken: gitGitlabToken,
 					},
 				},
 			},
@@ -39,7 +41,7 @@ func TestCreateBranchGitlab(t *testing.T) {
 }
 
 func TestCreatePRGitlab(t *testing.T) {
-	if os.Getenv("GITLAB_ACCESS_TOKEN") == "" {
+	if gitGitlabToken == "" {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.CreatePRRequest{
@@ -52,7 +54,7 @@ func TestCreatePRGitlab(t *testing.T) {
 			Hook: &pb.Provider_Gitlab{
 				Gitlab: &pb.GitlabProvider{
 					Provider: &pb.GitlabProvider_AccessToken{
-						AccessToken: os.Getenv("GITLAB_ACCESS_TOKEN"),
+						AccessToken: gitGitlabToken,
 					},
 				},
 			},
@@ -67,7 +69,7 @@ func TestCreatePRGitlab(t *testing.T) {
 }
 
 func TestGetLatestCommitGitlab(t *testing.T) {
-	if os.Getenv("GITLAB_ACCESS_TOKEN") == "" {
+	if gitGitlabToken == "" {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.GetLatestCommitRequest{
@@ -77,7 +79,7 @@ func TestGetLatestCommitGitlab(t *testing.T) {
 			Hook: &pb.Provider_Gitlab{
 				Gitlab: &pb.GitlabProvider{
 					Provider: &pb.GitlabProvider_AccessToken{
-						AccessToken: os.Getenv("GITLAB_ACCESS_TOKEN"),
+						AccessToken: gitGitlabToken,
 					},
 				},
 			},
@@ -93,7 +95,7 @@ func TestGetLatestCommitGitlab(t *testing.T) {
 }
 
 func TestListCommitsGitlab(t *testing.T) {
-	if os.Getenv("GITLAB_ACCESS_TOKEN") == "" {
+	if gitGitlabToken == "" {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.ListCommitsRequest{
@@ -105,7 +107,7 @@ func TestListCommitsGitlab(t *testing.T) {
 			Hook: &pb.Provider_Gitlab{
 				Gitlab: &pb.GitlabProvider{
 					Provider: &pb.GitlabProvider_AccessToken{
-						AccessToken: os.Getenv("GITLAB_ACCESS_TOKEN"),
+						AccessToken: gitGitlabToken,
 					},
 				},
 			},
@@ -122,7 +124,7 @@ func TestListCommitsGitlab(t *testing.T) {
 }
 
 func TestListCommitsPage2Gitlab(t *testing.T) {
-	if os.Getenv("GITLAB_ACCESS_TOKEN") == "" {
+	if gitGitlabToken == "" {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.ListCommitsRequest{
@@ -137,7 +139,7 @@ func TestListCommitsPage2Gitlab(t *testing.T) {
 			Hook: &pb.Provider_Gitlab{
 				Gitlab: &pb.GitlabProvider{
 					Provider: &pb.GitlabProvider_AccessToken{
-						AccessToken: os.Getenv("GITLAB_ACCESS_TOKEN"),
+						AccessToken: gitGitlabToken,
 					},
 				},
 			},
@@ -150,11 +152,11 @@ func TestListCommitsPage2Gitlab(t *testing.T) {
 
 	assert.Nil(t, err, "no errors")
 	assert.Greater(t, len(got.CommitIds), 1, "more than 1 commit")
-	assert.Equal(t, int32(0), got.Pagination.Next, "there is no next page")
+	assert.Equal(t, int32(3), got.Pagination.Next, "there is a next page")
 }
 
 func TestListBranchesGitlab(t *testing.T) {
-	if os.Getenv("GITLAB_ACCESS_TOKEN") == "" {
+	if gitGitlabToken == "" {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.ListBranchesRequest{
@@ -163,7 +165,7 @@ func TestListBranchesGitlab(t *testing.T) {
 			Hook: &pb.Provider_Gitlab{
 				Gitlab: &pb.GitlabProvider{
 					Provider: &pb.GitlabProvider_AccessToken{
-						AccessToken: os.Getenv("GITLAB_ACCESS_TOKEN"),
+						AccessToken: gitGitlabToken,
 					},
 				},
 			},
@@ -177,4 +179,32 @@ func TestListBranchesGitlab(t *testing.T) {
 	assert.Nil(t, err, "no errors")
 	assert.GreaterOrEqual(t, len(got.Branches), 1, "status matches")
 	assert.Equal(t, int32(2), got.Pagination.Next, "there is a next page")
+}
+
+func TestCompareCommitsGitlab(t *testing.T) {
+	if gitGitlabToken == "" {
+		t.Skip("Skipping, Acceptance test")
+	}
+	in := &pb.CompareCommitsRequest{
+		Slug:   "tphoney/test_repo",
+		Target: "1d96f6e180f445a1b463e9461599b250dc43105c",
+		Source: "fd016649d74eb9e49b40379c8558b7f3ee9456f2",
+		Provider: &pb.Provider{
+			Hook: &pb.Provider_Gitlab{
+				Gitlab: &pb.GitlabProvider{
+					Provider: &pb.GitlabProvider_AccessToken{
+						AccessToken: gitGitlabToken,
+					},
+				},
+			},
+			Debug: true,
+		},
+	}
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	got, err := CompareCommits(context.Background(), in, log.Sugar())
+
+	assert.Nil(t, err, "no errors")
+	assert.GreaterOrEqual(t, len(got.Files), 1, "1 file is different")
+	assert.Equal(t, int32(0), got.Pagination.Next, "there is no next page")
 }
