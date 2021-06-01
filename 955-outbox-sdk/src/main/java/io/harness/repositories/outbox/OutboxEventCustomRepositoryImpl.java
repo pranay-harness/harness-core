@@ -1,4 +1,4 @@
-package io.harness.repositories;
+package io.harness.repositories.outbox;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
