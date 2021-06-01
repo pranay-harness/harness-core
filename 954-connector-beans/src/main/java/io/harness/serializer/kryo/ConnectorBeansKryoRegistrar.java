@@ -131,6 +131,7 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameTokenDTO;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
+import io.harness.delegate.beans.connector.sumologic.SumoLogicConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.serializer.KryoRegistrar;
 
@@ -274,5 +275,6 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(DatadogConnectorDTO.class, 19669);
     kryo.register(AzureKeyVaultConnectorDTO.class, 19670);
     kryo.register(CEFeatures.class, 19671);
+    kryo.register(SumoLogicConnectorDTO.class, 19672);
   }
 }

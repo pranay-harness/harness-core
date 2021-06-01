@@ -40,7 +40,8 @@ public enum ConnectorType implements EntitySubtype {
   @JsonProperty("CEK8sCluster") CE_KUBERNETES_CLUSTER("CEK8sCluster"),
   @JsonProperty("HttpHelmRepo") HTTP_HELM_REPO("HttpHelmRepo"),
   @JsonProperty("NewRelic") NEW_RELIC("NewRelic"),
-  @JsonProperty("Datadog") DATADOG("Datadog");
+  @JsonProperty("Datadog") DATADOG("Datadog"),
+  @JsonProperty("SumoLogic") SUMOLOGIC("SumoLogic");
   private final String displayName;
 
   @JsonCreator
