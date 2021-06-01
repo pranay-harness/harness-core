@@ -231,7 +231,8 @@ public class SSOSettingServiceImpl implements SSOSettingService {
       throw new InvalidRequestException("Ldap settings already exist for this account.");
     }
     settings.encryptFields(secretManager);
-    LdapSettings savedSettings = wingsPersistence.saveAndGet(LdapSettings.class, settings);
+    String id = wingsPersistence.save(settings);
+    LdapSettings savedSettings = wingsPersistence.get(LdapSettings.class, id);
     LdapGroupSyncJob.add(jobScheduler, savedSettings.getAccountId(), savedSettings.getUuid());
     auditServiceHelper.reportForAuditingUsingAccountId(settings.getAccountId(), null, settings, Event.Type.CREATE);
     log.info("Auditing creation of LDAP Settings for account={}", settings.getAccountId());
@@ -255,7 +256,8 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     oldSettings.setUserSettingsList(settings.getUserSettingsList());
     oldSettings.setGroupSettingsList(settings.getGroupSettingsList());
     oldSettings.encryptFields(secretManager);
-    LdapSettings savedSettings = wingsPersistence.saveAndGet(LdapSettings.class, oldSettings);
+    String id = wingsPersistence.save(settings);
+    LdapSettings savedSettings = wingsPersistence.get(LdapSettings.class, id);
     auditServiceHelper.reportForAuditingUsingAccountId(
         settings.getAccountId(), oldSettings, savedSettings, Event.Type.UPDATE);
     log.info("Auditing updation of LDAP for account={}", savedSettings.getAccountId());

@@ -2,22 +2,29 @@ package software.wings.beans.sso;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.EmbeddedUser;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
+import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.CreatedByAware;
+import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UpdatedByAware;
+import io.harness.persistence.UuidAware;
 
-import software.wings.beans.Base;
+import software.wings.beans.entityinterface.ApplicationAccess;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -27,6 +34,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
 
 @OwnedBy(PL)
 @TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
@@ -38,7 +46,9 @@ import org.mongodb.morphia.annotations.Entity;
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
-public abstract class SSOSettings extends Base implements AccountAccess, PersistentRegularIterable {
+public abstract class SSOSettings
+    implements AccountAccess, PersistentRegularIterable, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
+               UpdatedAtAware, UpdatedByAware, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -48,6 +58,17 @@ public abstract class SSOSettings extends Base implements AccountAccess, Persist
                  .build())
         .build();
   }
+
+  public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
+  @Deprecated public static final String ACCOUNT_ID_KEY2 = "accountId";
+
+  @Id private String uuid;
+  @FdIndex @NotNull @SchemaIgnore protected String appId;
+
+  @SchemaIgnore private EmbeddedUser createdBy;
+  @SchemaIgnore @FdIndex private long createdAt;
+  @SchemaIgnore private EmbeddedUser lastUpdatedBy;
+  @SchemaIgnore @NotNull private long lastUpdatedAt;
 
   @NotNull protected SSOType type;
   @NotEmpty protected String displayName;
