@@ -1167,8 +1167,15 @@ public class EcsSetupCommandTaskHelper {
           activeServiceCounts.get(existingServiceNames.get(existingServiceNames.size() - 1));
     }
 
+    String latestHealthyService = fetchLatestHealthyService(
+        activeServiceCounts, cloudProviderSetting, executionLogCallback, setupParams, encryptedDataDetails);
+    if (latestHealthyService != null) {
+      Map<String, Integer> oldServiceToRollback = new HashMap<>();
+      oldServiceToRollback.put(latestHealthyService, activeServiceCounts.get(latestHealthyService));
+      commandExecutionDataBuilder.activeServiceCounts(integerMapToListOfStringArray(oldServiceToRollback));
+    }
+
     commandExecutionDataBuilder.containerServiceName(containerServiceName)
-        .activeServiceCounts(integerMapToListOfStringArray(activeServiceCounts))
         .instanceCountForLatestVersion(instanceCountForLatestVersion);
 
     CreateServiceRequest createServiceRequest = getCreateServiceRequest(cloudProviderSetting, encryptedDataDetails,
@@ -1275,35 +1282,15 @@ public class EcsSetupCommandTaskHelper {
 
     return serviceEvents;
   }
+
   public void downsizeOldOrUnhealthy(SettingAttribute settingAttribute, EcsSetupParams setupParams,
       String containerServiceName, List<EncryptedDataDetail> encryptedDataDetails,
       ExecutionLogCallback executionLogCallback, boolean timeoutErrorSupported) {
     Map<String, Integer> activeCounts = awsClusterService.getActiveServiceCounts(setupParams.getRegion(),
         settingAttribute, encryptedDataDetails, setupParams.getClusterName(), containerServiceName);
-    String latestHealthyController = null;
     if (activeCounts.size() > 1) {
-      AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
-      executionLogCallback.saveExecutionLog("\nActive tasks:");
-      for (Entry<String, Integer> entry : activeCounts.entrySet()) {
-        String activeServiceName = entry.getKey();
-        List<String> originalTaskArns = awsHelperService
-                                            .listTasks(setupParams.getRegion(), awsConfig, encryptedDataDetails,
-                                                new ListTasksRequest()
-                                                    .withCluster(setupParams.getClusterName())
-                                                    .withServiceName(activeServiceName)
-                                                    .withDesiredStatus(DesiredStatus.RUNNING),
-                                                false)
-                                            .getTaskArns();
-        List<ContainerInfo> containerInfos =
-            ecsContainerService.getContainerInfosAfterEcsWait(setupParams.getRegion(), awsConfig, encryptedDataDetails,
-                setupParams.getClusterName(), activeServiceName, originalTaskArns, executionLogCallback);
-        boolean allContainersSuccess =
-            containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
-        if (allContainersSuccess) {
-          latestHealthyController = activeServiceName;
-        }
-      }
-
+      String latestHealthyController = fetchLatestHealthyService(
+          activeCounts, settingAttribute, executionLogCallback, setupParams, encryptedDataDetails);
       for (Entry<String, Integer> entry : activeCounts.entrySet()) {
         String serviceName = entry.getKey();
         if (!serviceName.equals(latestHealthyController)) {
@@ -1314,6 +1301,34 @@ public class EcsSetupCommandTaskHelper {
         }
       }
     }
+  }
+
+  public String fetchLatestHealthyService(Map<String, Integer> activeCounts, SettingAttribute settingAttribute,
+      ExecutionLogCallback executionLogCallback, EcsSetupParams setupParams,
+      List<EncryptedDataDetail> encryptedDataDetails) {
+    String latestHealthyController = null;
+    AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
+    executionLogCallback.saveExecutionLog("\nActive tasks:");
+    for (Entry<String, Integer> entry : activeCounts.entrySet()) {
+      String activeServiceName = entry.getKey();
+      List<String> originalTaskArns = awsHelperService
+                                          .listTasks(setupParams.getRegion(), awsConfig, encryptedDataDetails,
+                                              new ListTasksRequest()
+                                                  .withCluster(setupParams.getClusterName())
+                                                  .withServiceName(activeServiceName)
+                                                  .withDesiredStatus(DesiredStatus.RUNNING),
+                                              false)
+                                          .getTaskArns();
+      List<ContainerInfo> containerInfos =
+          ecsContainerService.getContainerInfosAfterEcsWait(setupParams.getRegion(), awsConfig, encryptedDataDetails,
+              setupParams.getClusterName(), activeServiceName, originalTaskArns, executionLogCallback);
+      boolean allContainersSuccess =
+          containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
+      if (allContainersSuccess) {
+        latestHealthyController = activeServiceName;
+      }
+    }
+    return latestHealthyController;
   }
 
   /**
