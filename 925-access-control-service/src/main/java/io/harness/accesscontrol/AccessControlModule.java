@@ -18,6 +18,7 @@ import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import io.harness.AccessControlClientModule;
 import io.harness.DecisionModule;
+import io.harness.accesscontrol.aggregator.AggregatorStackDriverMetricsPublisherImpl;
 import io.harness.accesscontrol.commons.events.EventConsumer;
 import io.harness.accesscontrol.commons.iterators.AccessControlIteratorsConfig;
 import io.harness.accesscontrol.commons.outbox.AccessControlOutboxEventHandler;
@@ -48,6 +49,8 @@ import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
+import io.harness.metrics.modules.MetricsModule;
+import io.harness.metrics.service.api.MetricsPublisher;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.outbox.TransactionOutboxModule;
@@ -66,6 +69,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
@@ -76,10 +80,12 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @OwnedBy(PL)
+@Slf4j
 public class AccessControlModule extends AbstractModule {
   private static AccessControlModule instance;
   private final AccessControlConfiguration config;
@@ -226,6 +232,13 @@ public class AccessControlModule extends AbstractModule {
         .bind(HarnessActionValidator.class)
         .annotatedWith(Names.named(RoleAssignmentDTO.MODEL_NAME))
         .to(RoleAssignmentActionValidator.class);
+
+    if (config.getAggregatorConfiguration().isExportMetricsToStackDriver()) {
+      install(new MetricsModule());
+      bind(MetricsPublisher.class).to(AggregatorStackDriverMetricsPublisherImpl.class).in(Scopes.SINGLETON);
+    } else {
+      log.info("No configuration provided for Stack Driver, aggregator metrics will not be recorded");
+    }
 
     registerRequiredBindings();
   }

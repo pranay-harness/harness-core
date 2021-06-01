@@ -188,7 +188,7 @@ public class AggregatorJob implements Runnable {
       DebeziumEngine<ChangeEvent<String, String>> debeziumEngine =
           getEngine(aggregatorConfiguration.getDebeziumConfig(), accessControlDebeziumChangeConsumer);
       Future<?> debeziumEngineFuture = executorService.submit(debeziumEngine);
-      log.info("waiting for debezium failure to release lock...");
+
       while (!debeziumEngineFuture.isDone()) {
         try {
           TimeUnit.SECONDS.sleep(60);
