@@ -24,6 +24,9 @@ JRE_SOLARIS_2=jre-8u191-solaris-x64.tar.gz
 JRE_MACOSX_2=jre-8u191-macosx-x64.tar.gz
 JRE_LINUX_2=jre-8u191-linux-x64.tar.gz
 
+ALPN_BOOT_JAR_URL=https://app.harness.io/public/shared/tools/alpn/release/8.1.13.v20181017
+ALPN_BOOT_JAR=alpn-boot-8.1.13.v20181017.jar
+
 KUBECTL_VERSION=v1.13.2
 
 KUBECTL_LINUX_DIR="${IMAGES_DIR}/kubectl/linux/$KUBECTL_VERSION/"
@@ -63,6 +66,7 @@ curl "${JRE_SOURCE_URL_2}/${JRE_SOLARIS_2}" > "${JRE_SOLARIS_2}"
 curl "${JRE_SOURCE_URL_2}/${JRE_MACOSX_2}" > "${JRE_MACOSX_2}"
 curl "${JRE_SOURCE_URL_2}/${JRE_LINUX_2}" > "${JRE_LINUX_2}"
 
+curl "${ALPN_BOOT_JAR_URL}/${ALPN_BOOT_JAR}" > "${ALPN_BOOT_JAR}"
 
 mkdir -p $KUBECTL_LINUX_DIR
 mkdir -p $KUBECTL_MAC_DIR
@@ -92,6 +96,7 @@ mv "${JRE_SOLARIS_2}" "${IMAGES_DIR}/"
 mv "${JRE_MACOSX_2}" "${IMAGES_DIR}/"
 mv "${JRE_LINUX_2}" "${IMAGES_DIR}/"
 
+mv "${ALPN_BOOT_JAR}" "${IMAGES_DIR}/"
 
 for goversion in v0.2 v0.3 v0.4; do
     echo "Adding goversion $goversion"
@@ -219,6 +224,9 @@ function setupDelegateJars(){
     mkdir -p $STORAGE_DIR_LOCATION/wingsdelegates/jre/8u191/
     cp images/jre*8u242b08.tar.gz $STORAGE_DIR_LOCATION/wingsdelegates/jre/openjdk-8u242/
     cp images/jre-8u191-*.gz $STORAGE_DIR_LOCATION/wingsdelegates/jre/8u191/
+
+    mkdir -p $STORAGE_DIR_LOCATION/wingsdelegates/tools/alpn/release/8.1.13.v20181017/
+    cp images/alpn-boot-8.1.13.v20181017.jar $STORAGE_DIR_LOCATION/wingsdelegates/tools/alpn/release/8.1.13.v20181017/
 
     rm -rf ${STORAGE_DIR_LOCATION}/wingsdelegates/jobs/deploy-prod-delegate/*
     mkdir -p  ${STORAGE_DIR_LOCATION}/wingsdelegates/jobs/deploy-prod-delegate/${DELEGATE_VERSION}

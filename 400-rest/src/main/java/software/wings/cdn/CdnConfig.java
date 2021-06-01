@@ -16,4 +16,5 @@ public class CdnConfig {
   String watcherJarPath;
   String watcherMetaDataFilePath;
   Map<String, String> cdnJreTarPaths;
+  String alpnJarPath;
 }
