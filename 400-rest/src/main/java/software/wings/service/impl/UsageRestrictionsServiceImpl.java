@@ -911,7 +911,9 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       String accountId, PermissionType permissionType, UsageRestrictions usageRestrictions, boolean scopedToAccount) {
     log.info("test sm : inside UsageRestrictionsServiceImpl:validateUsageRestrictionsOnEntitySave method " );
 
-    log.info("test sm : usageRestrictions is  " + usageRestrictions.toString() );
+    if (usageRestrictions != null) {
+      log.info("test sm : usageRestrictions is  " + usageRestrictions.toString() );
+    }
 
     if (!hasUserContext()) {
       log.info("test sm : inside hasUserContext is empty " );
@@ -927,7 +929,9 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     UsageRestrictions restrictionsFromUserPermissions =
         getRestrictionsAndAppEnvMapFromCache(accountId, Action.UPDATE).getUsageRestrictions();
 
-    log.info("test sm : restrictionsFromUserPermissions is finished " + restrictionsFromUserPermissions.toString());
+    if (restrictionsFromUserPermissions != null) {
+      log.info("test sm : restrictionsFromUserPermissions is finished " + restrictionsFromUserPermissions.toString());
+    }
 
     /**
      * Condition for which scopedToAccount will be false and also usage restrictions is null or empty
@@ -1101,8 +1105,10 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       return builder.build();
     }
 
-    log.info("test sm : userRestrictionInfo is null " + userRestrictionInfo.toString());
-
+    if (userRestrictionInfo != null) {
+      log.info("test sm : userRestrictionInfo is null " + userRestrictionInfo.toString());
+    }
+    
     switch (action) {
       case READ:
         builder.appEnvMap(userRestrictionInfo.getAppEnvMapForReadAction());
