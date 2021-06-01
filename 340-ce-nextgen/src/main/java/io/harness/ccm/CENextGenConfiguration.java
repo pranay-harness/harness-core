@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 import static java.util.stream.Collectors.toSet;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.commons.entities.AzureConfig;
 import io.harness.ccm.commons.entities.GcpConfig;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
@@ -61,6 +62,7 @@ public class CENextGenConfiguration extends Configuration {
 
   @JsonProperty(value = "awsConnectorTemplate", defaultValue = "") private String awsConnectorTemplate;
   @JsonProperty(value = "gcpConfig") private GcpConfig gcpConfig;
+  @JsonProperty(value = "azureConfig") private AzureConfig azureConfig;
 
   public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {
     SwaggerBundleConfiguration defaultSwaggerConf = new SwaggerBundleConfiguration();
