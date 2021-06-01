@@ -2,12 +2,12 @@ package io.harness.beans.stages;
 
 import io.harness.beans.dependencies.DependencyElement;
 import io.harness.beans.yaml.extended.CustomVariable;
-import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pipeline.executions.NGStageType;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.intfc.Connector;
+import io.harness.yaml.extended.ci.container.Container;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

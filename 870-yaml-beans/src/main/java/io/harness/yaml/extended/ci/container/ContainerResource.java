@@ -1,4 +1,4 @@
-package io.harness.beans.yaml.extended.container;
+package io.harness.yaml.extended.ci.container;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.number;

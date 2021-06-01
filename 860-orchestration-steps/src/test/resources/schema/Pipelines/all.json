@@ -156,8 +156,23 @@
         "repoName": {
           "type": "string"
         },
+        "resources": {
+          "$ref": "#/definitions/ContainerResource"
+        },
         "sslVerify": {
           "type": "boolean"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ContainerResource": {
+      "type": "object",
+      "required": [
+        "limits"
+      ],
+      "properties": {
+        "limits": {
+          "$ref": "#/definitions/Limits"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -266,6 +281,25 @@
           }
         }
       ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "Limits": {
+      "type": "object",
+      "properties": {
+        "cpu": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "memory": {
+          "type": "string"
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "ManualFailureSpecConfig": {
