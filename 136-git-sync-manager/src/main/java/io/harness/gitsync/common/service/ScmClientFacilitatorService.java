@@ -7,7 +7,7 @@ import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 import io.harness.gitsync.common.dtos.GitFileContent;
-import io.harness.gitsync.common.dtos.GitPrFileListDTO;
+import io.harness.gitsync.common.dtos.GitPRFileListDTO;
 import io.harness.ng.beans.PageRequest;
 
 import java.util.List;
@@ -30,5 +30,5 @@ public interface ScmClientFacilitatorService {
   List<GitFileChangeDTO> listFilesOfBranches(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String yamlGitConfigIdentifier, List<String> foldersList, String branchName);
 
-  GitPrFileListDTO listPrFiles(YamlGitConfigDTO yamlGitConfigDTO, String initialCommitId, String finalCommitId);
+  GitPRFileListDTO listPrFiles(YamlGitConfigDTO yamlGitConfigDTO, String initialCommitId, String finalCommitId);
 }

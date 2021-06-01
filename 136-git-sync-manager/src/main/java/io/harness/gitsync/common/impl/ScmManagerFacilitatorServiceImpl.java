@@ -14,7 +14,7 @@ import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.ScmException;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 import io.harness.gitsync.common.dtos.GitFileContent;
-import io.harness.gitsync.common.dtos.GitPrFileListDTO;
+import io.harness.gitsync.common.dtos.GitPRFileListDTO;
 import io.harness.gitsync.common.helper.FileBatchResponseMapper;
 import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
@@ -101,7 +101,7 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
   }
 
   @Override
-  public GitPrFileListDTO listPrFiles(YamlGitConfigDTO yamlGitConfigDTO, String initialCommitId, String finalCommitId) {
+  public GitPRFileListDTO listPrFiles(YamlGitConfigDTO yamlGitConfigDTO, String initialCommitId, String finalCommitId) {
     return null;
   }
 }

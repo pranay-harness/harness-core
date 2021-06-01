@@ -14,6 +14,6 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(DX)
-public class GitPrFileListDTO {
+public class GitPRFileListDTO {
   List<GitPRFileDTO> prFileList;
 }
