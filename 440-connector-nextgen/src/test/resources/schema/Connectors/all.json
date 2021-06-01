@@ -1145,7 +1145,8 @@
             "CEK8sCluster",
             "HttpHelmRepo",
             "NewRelic",
-            "Datadog"
+            "Datadog",
+            "SumoLogic"
           ]
         }
       },
@@ -1563,6 +1564,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/SplunkConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "SumoLogic"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/SumoLogicConnectorDTO"
               }
             }
           }
@@ -3422,6 +3439,40 @@
               "type": "string"
             },
             "username": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SumoLogicConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "accessIdRef",
+            "accessKeyRef",
+            "url"
+          ],
+          "properties": {
+            "accessIdRef": {
+              "type": "string"
+            },
+            "accessKeyRef": {
+              "type": "string"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "url": {
               "type": "string"
             }
           }
