@@ -1,3 +1,3 @@
 package io.harness.ccm.views.graphql;
 
-public enum QLCEViewTimeGroupType { DAY, MONTH }
+public enum QLCEViewTimeGroupType { DAY, MONTH, WEEK }
