@@ -1,9 +1,9 @@
-package io.harness.beans.yaml.extended.container.quantity;
+package io.harness.yaml.extended.ci.container.quantity;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.beans.yaml.extended.container.quantity.unit.DecimalQuantityUnit;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.yaml.extended.ci.container.quantity.unit.DecimalQuantityUnit;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;

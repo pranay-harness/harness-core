@@ -1,4 +1,4 @@
-package io.harness.beans.yaml.extended.container;
+package io.harness.yaml.extended.ci.container;
 
 import io.harness.beans.WithIdentifier;
 
