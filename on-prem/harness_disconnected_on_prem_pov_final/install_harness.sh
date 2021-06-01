@@ -460,6 +460,9 @@ function setupDelegateJars(){
     cp images/jre-8u191-*.gz $STORAGE_DIR_LOCATION/wingsdelegates/jre/8u191/
     cp images/jre_x64_*.gz $STORAGE_DIR_LOCATION/wingsdelegates/jre/openjdk-8u242/
 
+    mkdir -p $STORAGE_DIR_LOCATION/wingsdelegates/tools/alpn/release/8.1.13.v20181017/
+    cp images/alpn-boot-8.1.13.v20181017.jar $STORAGE_DIR_LOCATION/wingsdelegates/tools/alpn/release/8.1.13.v20181017/
+
     rm -rf ${STORAGE_DIR_LOCATION}/wingsdelegates/jobs/deploy-prod-delegate/*
     mkdir -p  ${STORAGE_DIR_LOCATION}/wingsdelegates/jobs/deploy-prod-delegate/${DELEGATE_VERSION}
     cp images/delegate.jar ${STORAGE_DIR_LOCATION}/wingsdelegates/jobs/deploy-prod-delegate/${DELEGATE_VERSION}/

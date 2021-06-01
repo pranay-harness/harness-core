@@ -15,4 +15,5 @@ public class JreConfig {
   String jreDirectory;
   String jreMacDirectory;
   String jreTarPath;
+  String alpnJarPath;
 }
