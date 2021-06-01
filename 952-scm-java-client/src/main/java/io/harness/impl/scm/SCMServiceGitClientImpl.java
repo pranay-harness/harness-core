@@ -115,6 +115,12 @@ public class SCMServiceGitClientImpl implements ScmClient {
   }
 
   @Override
+  public FileBatchContentResponse listFilesByFilePaths(
+      ScmConnector connector, List<String> filePathsList, String branchName) {
+    return scmServiceClient.listFilesByFilePaths(connector, filePathsList, branchName, scmBlockingStub);
+  }
+
+  @Override
   public void createNewBranch(ScmConnector scmConnector, String branch, String defaultBranchName) {
     scmServiceClient.createNewBranch(scmConnector, branch, defaultBranchName, scmBlockingStub);
   }

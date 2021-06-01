@@ -115,6 +115,12 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
   }
 
   @Override
+  public FileBatchContentResponse listFilesByFilePaths(
+      ScmConnector connector, List<String> filePathsList, String branchName) {
+    return scmServiceGitClient.listFilesByFilePaths(connector, filePathsList, branchName);
+  }
+
+  @Override
   public void createNewBranch(ScmConnector scmConnector, String branch, String defaultBranchName) {
     scmServiceGitClient.createNewBranch(scmConnector, branch, defaultBranchName);
   }
