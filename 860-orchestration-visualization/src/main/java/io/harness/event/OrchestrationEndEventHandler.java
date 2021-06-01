@@ -5,26 +5,38 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.observers.OrchestrationEndObserver;
 import io.harness.execution.PlanExecution;
+import io.harness.observer.AsyncInformObserver;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.service.GraphGenerationService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import java.util.concurrent.ExecutorService;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PIPELINE)
 @Slf4j
 @Singleton
-public class OrchestrationEndEventHandler implements AsyncOrchestrationEventHandler {
-  @Inject PlanExecutionService planExecutionService;
-  @Inject GraphGenerationService graphGenerationService;
+public class OrchestrationEndEventHandler implements AsyncInformObserver, OrchestrationEndObserver {
+  private final ExecutorService executorService;
+  private final PlanExecutionService planExecutionService;
+  private final GraphGenerationService graphGenerationService;
 
-  public void handleEvent(OrchestrationEvent event) {
+  @Inject
+  public OrchestrationEndEventHandler(
+      @Named("OrchestrationVisualizationExecutorService") ExecutorService executorService,
+      PlanExecutionService planExecutionService, GraphGenerationService graphGenerationService) {
+    this.executorService = executorService;
+    this.planExecutionService = planExecutionService;
+    this.graphGenerationService = graphGenerationService;
+  }
+
+  @Override
+  public void onEnd(Ambiance ambiance) {
     try {
-      Ambiance ambiance = event.getAmbiance();
       PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
       // One last time try to update the graph to process any unprocessed logs
       graphGenerationService.updateGraph(planExecution.getUuid());
@@ -40,5 +52,10 @@ public class OrchestrationEndEventHandler implements AsyncOrchestrationEventHand
       log.error("Cannot update Orchestration graph for ORCHESTRATION_END");
       throw e;
     }
+  }
+
+  @Override
+  public ExecutorService getInformExecutorService() {
+    return executorService;
   }
 }
