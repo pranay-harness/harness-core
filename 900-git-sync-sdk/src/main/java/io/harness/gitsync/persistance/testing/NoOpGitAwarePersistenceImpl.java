@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import javax.validation.constraints.NotNull;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -24,6 +25,12 @@ import org.springframework.data.mongodb.core.query.Query;
 @OwnedBy(DX)
 public class NoOpGitAwarePersistenceImpl implements GitAwarePersistence {
   @Inject MongoTemplate mongoTemplate;
+
+  @Override
+  public <B extends GitSyncableEntity, Y extends YamlDTO> B save(
+      B objectToSave, Y yaml, ChangeType changeType, Class<B> entityClass, Supplier functors) {
+    return mongoTemplate.save(objectToSave);
+  }
 
   @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> B save(
@@ -69,5 +76,11 @@ public class NoOpGitAwarePersistenceImpl implements GitAwarePersistence {
       String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
     Query query = new Query(criteria);
     return mongoTemplate.exists(query, entityClass);
+  }
+
+  @Override
+  public <B extends GitSyncableEntity, Y extends YamlDTO> B save(
+      B objectToSave, ChangeType changeType, Class<B> entityClass, Supplier functors) {
+    return mongoTemplate.save(objectToSave);
   }
 }

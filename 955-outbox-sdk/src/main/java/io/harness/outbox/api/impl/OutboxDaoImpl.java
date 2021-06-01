@@ -10,7 +10,7 @@ import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.OutboxEvent.OutboxEventKeys;
 import io.harness.outbox.api.OutboxDao;
 import io.harness.outbox.filter.OutboxEventFilter;
-import io.harness.repositories.OutboxEventRepository;
+import io.harness.repositories.outbox.OutboxEventRepository;
 
 import com.google.inject.Inject;
 import java.time.Instant;

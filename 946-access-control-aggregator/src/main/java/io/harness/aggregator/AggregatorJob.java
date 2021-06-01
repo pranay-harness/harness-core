@@ -9,6 +9,7 @@ import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
 import io.harness.accesscontrol.roles.persistence.RoleDBO;
 import io.harness.aggregator.consumers.AccessControlDebeziumChangeConsumer;
 import io.harness.aggregator.consumers.ChangeConsumer;
+import io.harness.aggregator.consumers.ChangeEventFailureHandler;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -45,6 +46,7 @@ public class AggregatorJob implements Runnable {
   private final ChangeConsumer<ResourceGroupDBO> resourceGroupChangeConsumer;
   private final ChangeConsumer<UserGroupDBO> userGroupChangeConsumer;
   private final AggregatorConfiguration aggregatorConfiguration;
+  private final ChangeEventFailureHandler changeEventFailureHandler;
   private final ExecutorService executorService;
   private final PersistentLocker persistentLocker;
   private static final String ACCESS_CONTROL_AGGREGATOR_LOCK = "ACCESS_CONTROL_AGGREGATOR_LOCK";
@@ -80,7 +82,7 @@ public class AggregatorJob implements Runnable {
       ChangeConsumer<RoleAssignmentDBO> roleAssignmentChangeConsumer,
       ChangeConsumer<ResourceGroupDBO> resourceGroupChangeConsumer,
       ChangeConsumer<UserGroupDBO> userGroupChangeConsumer, AggregatorConfiguration aggregatorConfiguration,
-      PersistentLocker persistentLocker) {
+      PersistentLocker persistentLocker, ChangeEventFailureHandler changeEventFailureHandler) {
     this.roleChangeConsumer = roleChangeConsumer;
     this.roleAssignmentChangeConsumer = roleAssignmentChangeConsumer;
     this.resourceGroupChangeConsumer = resourceGroupChangeConsumer;
@@ -89,6 +91,7 @@ public class AggregatorJob implements Runnable {
     this.executorService =
         Executors.newFixedThreadPool(4, new ThreadFactoryBuilder().setNameFormat("aggregator").build());
     this.persistentLocker = persistentLocker;
+    this.changeEventFailureHandler = changeEventFailureHandler;
   }
 
   private static DebeziumEngine<ChangeEvent<String, String>> getEngine(
@@ -182,8 +185,8 @@ public class AggregatorJob implements Runnable {
       collectionToDeserializerMap.put(USER_GROUPS, userGroupSerde.deserializer());
 
       // configuring debezium
-      AccessControlDebeziumChangeConsumer accessControlDebeziumChangeConsumer =
-          new AccessControlDebeziumChangeConsumer(idDeserializer, collectionToDeserializerMap, collectionToConsumerMap);
+      AccessControlDebeziumChangeConsumer accessControlDebeziumChangeConsumer = new AccessControlDebeziumChangeConsumer(
+          idDeserializer, collectionToDeserializerMap, collectionToConsumerMap, changeEventFailureHandler);
 
       DebeziumEngine<ChangeEvent<String, String>> debeziumEngine =
           getEngine(aggregatorConfiguration.getDebeziumConfig(), accessControlDebeziumChangeConsumer);
