@@ -27,15 +27,18 @@ import io.harness.delegate.task.scm.ScmPRTaskResponseData;
 import io.harness.exception.UnexpectedException;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 import io.harness.gitsync.common.dtos.GitFileContent;
+import io.harness.gitsync.common.helper.FileBatchResponseMapper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
+import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.product.ci.scm.proto.ListBranchesResponse;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.service.DelegateGrpcClientWrapper;
+import io.harness.utils.IdentifierRefHelper;
 
 import software.wings.beans.TaskType;
 
@@ -185,7 +188,30 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
   @Override
   public List<GitFileChangeDTO> listFilesOfBranches(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String yamlGitConfigRef, List<String> foldersList, String branchName) {
-    return null;
+    IdentifierRef identifierRef =
+        IdentifierRefHelper.getIdentifierRef(yamlGitConfigRef, accountIdentifier, orgIdentifier, projectIdentifier);
+    YamlGitConfigDTO yamlGitConfigDTO = getYamlGitConfigDTO(identifierRef.getAccountIdentifier(),
+        identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
+    final ScmConnector scmConnector =
+        getScmConnector(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
+            yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getGitConnectorRef());
+    scmConnector.setUrl(yamlGitConfigDTO.getRepo());
+    ScmGitFileTaskParams scmGitFileTaskParams = ScmGitFileTaskParams.builder()
+                                                    .gitFileTaskType(GitFileTaskType.GET_FILE_CONTENT_BATCH)
+                                                    .branchName(branchName)
+                                                    .scmConnector(scmConnector)
+                                                    .foldersList(foldersList)
+                                                    .build();
+    DelegateTaskRequest delegateTaskRequest =
+        getDelegateTaskRequest(identifierRef.getAccountIdentifier(), scmGitFileTaskParams, TaskType.SCM_GIT_FILE_TASK);
+    DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    GitFileTaskResponseData gitFileTaskResponseData = (GitFileTaskResponseData) responseData;
+    try {
+      return FileBatchResponseMapper.createGitFileChangeList(
+          FileBatchContentResponse.parseFrom(gitFileTaskResponseData.getFileBatchContentResponse()));
+    } catch (InvalidProtocolBufferException e) {
+      throw new UnexpectedException("Unexpected error occurred while doing scm operation");
+    }
   }
 
   DelegateTaskRequest getDelegateTaskRequest(
