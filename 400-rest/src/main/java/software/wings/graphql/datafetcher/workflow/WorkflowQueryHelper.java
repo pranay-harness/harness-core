@@ -74,6 +74,9 @@ public class WorkflowQueryHelper {
           case APPLICATION:
             query.field("appId").in(entityIds);
             break;
+          case WORKFLOW:
+            query.field("_id").in(entityIds);
+            break;
           default:
             log.error("EntityType {} not supported in query", triggerTagFilter.getEntityType());
             throw new InvalidRequestException("Error while compiling query", WingsException.USER);
@@ -86,6 +89,8 @@ public class WorkflowQueryHelper {
     switch (entityType) {
       case APPLICATION:
         return EntityType.APPLICATION;
+      case WORKFLOW:
+        return EntityType.WORKFLOW;
       default:
         log.error("Unsupported entity type {} for tag ", entityType);
         throw new InvalidRequestException("Unsupported entity type " + entityType);

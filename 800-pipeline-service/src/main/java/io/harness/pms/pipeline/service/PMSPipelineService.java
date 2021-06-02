@@ -24,7 +24,8 @@ public interface PMSPipelineService {
 
   PipelineEntity updatePipelineYaml(PipelineEntity pipelineEntity);
 
-  PipelineEntity updatePipelineMetadata(Criteria criteria, Update updateOperations);
+  PipelineEntity updatePipelineMetadata(
+      String accountId, String orgIdentifier, String projectIdentifier, Criteria criteria, Update updateOperations);
 
   void saveExecutionInfo(
       String accountId, String orgId, String projectId, String pipelineId, ExecutionSummaryInfo executionSummaryInfo);

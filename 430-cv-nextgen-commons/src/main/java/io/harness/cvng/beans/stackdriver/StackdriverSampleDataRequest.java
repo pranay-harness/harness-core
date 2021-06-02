@@ -1,6 +1,7 @@
 package io.harness.cvng.beans.stackdriver;
 
 import static io.harness.annotations.dev.HarnessTeam.CV;
+import static io.harness.cvng.utils.StackdriverUtils.Scope.METRIC_SCOPE;
 import static io.harness.cvng.utils.StackdriverUtils.checkForNullAndReturnValue;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -46,7 +47,7 @@ public class StackdriverSampleDataRequest extends StackdriverRequest {
   public Map<String, Object> fetchDslEnvVariables() {
     StackDriverMetricDefinition.Aggregation aggregation = metricDefinition.getAggregation();
     StackdriverCredential credential = StackdriverCredential.fromGcpConnector(getConnectorConfigDTO());
-    Map<String, Object> dslEnvVariables = StackdriverUtils.getCommonEnvVariables(credential);
+    Map<String, Object> dslEnvVariables = StackdriverUtils.getCommonEnvVariables(credential, METRIC_SCOPE);
     dslEnvVariables.put(
         AggregationKeys.alignmentPeriod, checkForNullAndReturnValue(aggregation.getAlignmentPeriod(), "60s"));
     dslEnvVariables.put(

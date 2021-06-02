@@ -22,10 +22,6 @@ public interface YamlGitConfigRepository extends CrudRepository<YamlGitConfig, S
   List<YamlGitConfig> findByGitConnectorRefAndRepoAndBranchAndAccountId(
       String gitConnectorId, String repo, String branchName, String accountId);
 
-  List<YamlGitConfig> findByRepoAndBranchAndAccountId(String repo, String branch, String accountId);
-
-  Optional<YamlGitConfig> findByUuidAndAccountId(String uuid, String accountId);
-
   Boolean existsByAccountIdAndOrgIdentifierAndProjectIdentifier(
       String accountIdentifier, String organizationIdentifier, String projectIdentifier);
 
@@ -34,5 +30,5 @@ public interface YamlGitConfigRepository extends CrudRepository<YamlGitConfig, S
 
   Boolean existsByRepo(String repo);
 
-  Boolean existsByRepoAndBranch(String repo, String branch);
+  List<YamlGitConfig> findByRepo(String repo);
 }

@@ -2,7 +2,7 @@ package io.harness.grpc.auth;
 
 import io.harness.grpc.InterceptorPriority;
 import io.harness.grpc.utils.GrpcAuthUtils;
-import io.harness.security.TokenAuthenticator;
+import io.harness.security.DelegateTokenAuthenticator;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
@@ -31,10 +31,10 @@ public class DelegateAuthServerInterceptor implements ServerInterceptor {
   private static final Set<String> INCLUDED_SERVICES = ImmutableSet.of("io.harness.perpetualtask.PerpetualTaskService",
       "io.harness.event.PingPongService", "io.harness.event.EventPublisher", "io.harness.delegate.DelegateService");
 
-  private final TokenAuthenticator tokenAuthenticator;
+  private final DelegateTokenAuthenticator tokenAuthenticator;
 
   @Inject
-  public DelegateAuthServerInterceptor(TokenAuthenticator tokenAuthenticator) {
+  public DelegateAuthServerInterceptor(DelegateTokenAuthenticator tokenAuthenticator) {
     this.tokenAuthenticator = tokenAuthenticator;
   }
 
@@ -70,7 +70,7 @@ public class DelegateAuthServerInterceptor implements ServerInterceptor {
     }
     Context ctx;
     try {
-      tokenAuthenticator.validateToken(accountId, token);
+      tokenAuthenticator.validateDelegateToken(accountId, token);
       ctx = GrpcAuthUtils.newAuthenticatedContext().withValue(ACCOUNT_ID_CTX_KEY, accountId);
     } catch (Exception e) {
       log.warn("Token verification failed. Unauthenticated", e);

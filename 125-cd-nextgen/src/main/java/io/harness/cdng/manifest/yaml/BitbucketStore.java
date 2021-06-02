@@ -90,10 +90,10 @@ public class BitbucketStore implements GitStoreConfig, Visitable, WithConnectorR
       resultantBitbucketStore = resultantBitbucketStore.withGitFetchType(bitbucketStore.getGitFetchType());
     }
     if (!ParameterField.isNull(bitbucketStore.getBranch())) {
-      resultantBitbucketStore = resultantBitbucketStore.withBranch(bitbucketStore.getBranch());
+      resultantBitbucketStore = resultantBitbucketStore.withBranch(bitbucketStore.getBranch()).withCommitId(null);
     }
     if (!ParameterField.isNull(bitbucketStore.getCommitId())) {
-      resultantBitbucketStore = resultantBitbucketStore.withCommitId(bitbucketStore.getCommitId());
+      resultantBitbucketStore = resultantBitbucketStore.withCommitId(bitbucketStore.getCommitId()).withBranch(null);
     }
     if (!ParameterField.isNull(bitbucketStore.getRepoName())) {
       resultantBitbucketStore = resultantBitbucketStore.withRepoName(bitbucketStore.getRepoName());

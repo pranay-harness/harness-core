@@ -2,10 +2,10 @@ package io.harness.ci.utils;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.yaml.extended.container.quantity.CpuQuantity;
-import io.harness.beans.yaml.extended.container.quantity.MemoryQuantity;
-import io.harness.beans.yaml.extended.container.quantity.unit.DecimalQuantityUnit;
-import io.harness.beans.yaml.extended.container.quantity.unit.MemoryQuantityUnit;
+import io.harness.yaml.extended.ci.container.quantity.CpuQuantity;
+import io.harness.yaml.extended.ci.container.quantity.MemoryQuantity;
+import io.harness.yaml.extended.ci.container.quantity.unit.DecimalQuantityUnit;
+import io.harness.yaml.extended.ci.container.quantity.unit.MemoryQuantityUnit;
 
 import lombok.experimental.UtilityClass;
 

@@ -15,6 +15,9 @@ import io.harness.gitsync.interceptor.GitSyncConstants;
 import io.harness.gitsync.scm.beans.ScmCreateFileResponse;
 import io.harness.gitsync.scm.beans.ScmDeleteFileResponse;
 import io.harness.gitsync.scm.beans.ScmUpdateFileResponse;
+import io.harness.product.ci.scm.proto.CreateFileResponse;
+import io.harness.product.ci.scm.proto.DeleteFileResponse;
+import io.harness.product.ci.scm.proto.UpdateFileResponse;
 
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +53,8 @@ public class ScmGitUtils {
     return folderPathWithoutStartingSlash + updatedFilePath;
   }
 
-  public ScmCreateFileResponse createScmCreateFileResponse(String yaml, InfoForGitPush infoForPush) {
+  public ScmCreateFileResponse createScmCreateFileResponse(
+      String yaml, InfoForGitPush infoForPush, CreateFileResponse createFileResponse) {
     return ScmCreateFileResponse.builder()
         .folderPath(infoForPush.getFolderPath())
         .filePath(infoForPush.getFilePath())
@@ -61,10 +65,12 @@ public class ScmGitUtils {
         .projectIdentifier(infoForPush.getProjectIdentifier())
         .objectId(EntityObjectIdUtils.getObjectIdOfYaml(yaml))
         .branch(infoForPush.getBranch())
+        .commitId(createFileResponse.getCommitId())
         .build();
   }
 
-  public ScmUpdateFileResponse createScmUpdateFileResponse(String yaml, InfoForGitPush infoForPush) {
+  public ScmUpdateFileResponse createScmUpdateFileResponse(
+      String yaml, InfoForGitPush infoForPush, UpdateFileResponse updateFileResponse) {
     return ScmUpdateFileResponse.builder()
         .folderPath(infoForPush.getFolderPath())
         .filePath(infoForPush.getFilePath())
@@ -75,10 +81,12 @@ public class ScmGitUtils {
         .projectIdentifier(infoForPush.getProjectIdentifier())
         .objectId(EntityObjectIdUtils.getObjectIdOfYaml(yaml))
         .branch(infoForPush.getBranch())
+        .commitId(updateFileResponse.getCommitId())
         .build();
   }
 
-  public ScmDeleteFileResponse createScmDeleteFileResponse(String yaml, InfoForGitPush infoForPush) {
+  public ScmDeleteFileResponse createScmDeleteFileResponse(
+      String yaml, InfoForGitPush infoForPush, DeleteFileResponse deleteFileResponse) {
     return ScmDeleteFileResponse.builder()
         .folderPath(infoForPush.getFolderPath())
         .filePath(infoForPush.getFilePath())
@@ -89,6 +97,7 @@ public class ScmGitUtils {
         .projectIdentifier(infoForPush.getProjectIdentifier())
         .objectId(EntityObjectIdUtils.getObjectIdOfYaml(yaml))
         .branch(infoForPush.getBranch())
+        .commitId(deleteFileResponse.getCommitId())
         .build();
   }
 }

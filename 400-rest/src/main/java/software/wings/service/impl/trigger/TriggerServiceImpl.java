@@ -284,9 +284,9 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public Trigger save(Trigger trigger) {
-    validateInput(trigger, null);
     String accountId = appService.getAccountIdByAppId(trigger.getAppId());
     trigger.setAccountId(accountId);
+    validateInput(trigger, null);
     Trigger savedTrigger =
         duplicateCheck(() -> wingsPersistence.saveAndGet(Trigger.class, trigger), "name", trigger.getName());
     if (trigger.getCondition().getConditionType() == SCHEDULED) {
@@ -308,10 +308,12 @@ public class TriggerServiceImpl implements TriggerService {
     notNullCheck("Trigger was deleted ", existingTrigger, USER);
     equalCheck(trigger.getWorkflowType(), existingTrigger.getWorkflowType());
 
-    validateInput(trigger, existingTrigger);
-
-    String accountId = appService.getAccountIdByAppId(existingTrigger.getAppId());
+    String accountId = isEmpty(existingTrigger.getAccountId())
+        ? appService.getAccountIdByAppId(existingTrigger.getAppId())
+        : existingTrigger.getAccountId();
     trigger.setAccountId(accountId);
+
+    validateInput(trigger, existingTrigger);
 
     Trigger updatedTrigger =
         duplicateCheck(() -> wingsPersistence.saveAndGet(Trigger.class, trigger), "name", trigger.getName());
@@ -932,6 +934,7 @@ public class TriggerServiceImpl implements TriggerService {
     ArtifactStream artifactStream = artifactStreamService.get(artifactSelection.getArtifactStreamId());
     notNullCheck("ArtifactStream was deleted", artifactStream, USER);
     Artifact lastCollectedArtifact;
+    reCollectArtifactsForLastCollectedSelection(artifactSelection, appId);
     if (isEmpty(artifactSelection.getArtifactFilter())) {
       lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(artifactStream);
       if (lastCollectedArtifact != null
@@ -946,6 +949,10 @@ public class TriggerServiceImpl implements TriggerService {
         artifacts.add(lastCollectedArtifact);
       }
     }
+  }
+
+  private void reCollectArtifactsForLastCollectedSelection(ArtifactSelection artifactSelection, String appId) {
+    triggerServiceHelper.collectArtifactsForSelection(artifactSelection, appId);
   }
 
   private void addLastDeployedArtifacts(String appId, String workflowId, String serviceId, List<Artifact> artifacts) {

@@ -64,9 +64,11 @@ public class ScmDelegateGitHelper implements ScmGitHelper {
       switch (changeType) {
         case ADD:
           try {
+            final CreateFileResponse createFileResponse =
+                CreateFileResponse.parseFrom(scmPushTaskResponseData.getCreateFileResponse());
             ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
-                CreateFileResponse.parseFrom(scmPushTaskResponseData.getCreateFileResponse()).getStatus(),
-                CreateFileResponse.parseFrom(scmPushTaskResponseData.getCreateFileResponse()).getError());
+                createFileResponse.getStatus(), createFileResponse.getError());
+            return ScmGitUtils.createScmCreateFileResponse(yaml, infoForPush, createFileResponse);
           } catch (ScmException e) {
             if (ErrorCode.SCM_CONFLICT_ERROR.equals(e.getCode())) {
               throw new InvalidRequestException(String.format(
@@ -74,17 +76,18 @@ public class ScmDelegateGitHelper implements ScmGitHelper {
             }
             throw e;
           }
-          return ScmGitUtils.createScmCreateFileResponse(yaml, infoForPush);
         case MODIFY:
+          final UpdateFileResponse updateFileResponse =
+              UpdateFileResponse.parseFrom(scmPushTaskResponseData.getUpdateFileResponse());
           ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
-              UpdateFileResponse.parseFrom(scmPushTaskResponseData.getUpdateFileResponse()).getStatus(),
-              UpdateFileResponse.parseFrom(scmPushTaskResponseData.getUpdateFileResponse()).getError());
-          return ScmGitUtils.createScmUpdateFileResponse(yaml, infoForPush);
+              updateFileResponse.getStatus(), updateFileResponse.getError());
+          return ScmGitUtils.createScmUpdateFileResponse(yaml, infoForPush, updateFileResponse);
         case DELETE:
+          final DeleteFileResponse deleteFileResponse =
+              DeleteFileResponse.parseFrom(scmPushTaskResponseData.getDeleteFileResponse());
           ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
-              DeleteFileResponse.parseFrom(scmPushTaskResponseData.getDeleteFileResponse()).getStatus(),
-              DeleteFileResponse.parseFrom(scmPushTaskResponseData.getDeleteFileResponse()).getError());
-          return ScmGitUtils.createScmDeleteFileResponse(yaml, infoForPush);
+              deleteFileResponse.getStatus(), deleteFileResponse.getError());
+          return ScmGitUtils.createScmDeleteFileResponse(yaml, infoForPush, deleteFileResponse);
         case NONE:
         case RENAME:
           throw new NotImplementedException(changeType + " is not Implemented");

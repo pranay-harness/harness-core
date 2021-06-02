@@ -37,6 +37,7 @@ import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.shell.SshSessionConfigMapper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.TerraformCommandExecutionException;
+import io.harness.exception.WingsException;
 import io.harness.git.GitClientHelper;
 import io.harness.git.GitClientV2;
 import io.harness.git.model.DownloadFilesRequest;
@@ -219,7 +220,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
               .varFilePaths(terraformExecuteStepRequest.getTfVarFilePaths())
               .varParams(terraformExecuteStepRequest.getVarParams())
               .targets(terraformExecuteStepRequest.getTargets())
-              .destroySet(false)
+              .destroySet(terraformExecuteStepRequest.isTfPlanDestroy())
               .uiLogs(terraformExecuteStepRequest.getUiLogs())
               .build();
       response = terraformClient.plan(terraformPlanCommandRequest, terraformExecuteStepRequest.getTimeoutInMillis(),
@@ -227,9 +228,11 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
           terraformExecuteStepRequest.getLogCallback());
 
       if (terraformExecuteStepRequest.isSaveTerraformJson()) {
-        response = executeTerraformShowCommandWithTfClient(APPLY, terraformExecuteStepRequest.getTimeoutInMillis(),
-            terraformExecuteStepRequest.getEnvVars(), terraformExecuteStepRequest.getScriptDirectory(),
-            terraformExecuteStepRequest.getLogCallback(), terraformExecuteStepRequest.getPlanJsonLogOutputStream());
+        response =
+            executeTerraformShowCommandWithTfClient(terraformExecuteStepRequest.isTfPlanDestroy() ? DESTROY : APPLY,
+                terraformExecuteStepRequest.getTimeoutInMillis(), terraformExecuteStepRequest.getEnvVars(),
+                terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback(),
+                terraformExecuteStepRequest.getPlanJsonLogOutputStream());
       }
     }
     return response;
@@ -491,8 +494,10 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
     try {
       gitClient.ensureRepoLocallyClonedAndUpdated(gitBaseRequestForConfigFile);
     } catch (RuntimeException ex) {
-      logCallback.saveExecutionLog("Failed", ERROR, CommandExecutionStatus.FAILURE);
-      log.error("Exception in processing git operation", ex);
+      logCallback.saveExecutionLog(format("Failed performing git operation. Reason: %s", ex.getMessage()), ERROR,
+          CommandExecutionStatus.RUNNING);
+      throw new TerraformCommandExecutionException(
+          format("Exception in processing git operation"), WingsException.USER);
     }
   }
 

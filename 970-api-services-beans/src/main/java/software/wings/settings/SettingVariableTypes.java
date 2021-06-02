@@ -281,7 +281,9 @@ public enum SettingVariableTypes {
 
   GIT_NG("Git Ng"),
 
-  GCP_SECRETS_MANAGER;
+  GCP_SECRETS_MANAGER,
+
+  TRIGGER;
 
   @Getter private String displayName;
 

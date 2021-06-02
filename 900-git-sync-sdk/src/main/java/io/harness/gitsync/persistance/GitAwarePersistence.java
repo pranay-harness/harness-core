@@ -8,12 +8,17 @@ import io.harness.gitsync.beans.YamlDTO;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import javax.validation.constraints.NotNull;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(DX)
 public interface GitAwarePersistence {
+  <B extends GitSyncableEntity, Y extends YamlDTO> B save(
+      B objectToSave, Y yaml, ChangeType changeType, Class<B> entityClass, Supplier functor);
+
+  @Deprecated
   <B extends GitSyncableEntity, Y extends YamlDTO> B save(
       B objectToSave, Y yaml, ChangeType changeType, Class<B> entityClass);
 
@@ -26,11 +31,21 @@ public interface GitAwarePersistence {
   <B extends GitSyncableEntity, Y extends YamlDTO> Optional<B> findOne(@NotNull Criteria criteria,
       String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass);
 
+  <B extends GitSyncableEntity, Y extends YamlDTO> Optional<B> findOne(
+      Criteria criteria, String repo, String branch, Class<B> entityClass);
+
   <B extends GitSyncableEntity, Y extends YamlDTO> List<B> find(@NotNull Criteria criteria, Pageable pageable,
       String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass);
 
   <B extends GitSyncableEntity, Y extends YamlDTO> boolean exists(@NotNull Criteria criteria, String projectIdentifier,
       String orgIdentifier, String accountId, Class<B> entityClass);
 
+  <B extends GitSyncableEntity, Y extends YamlDTO> B save(
+      B objectToSave, ChangeType changeType, Class<B> entityClass, Supplier functor);
+
+  @Deprecated
   <B extends GitSyncableEntity, Y extends YamlDTO> B save(B objectToSave, ChangeType changeType, Class<B> entityClass);
+
+  // added as a stop gap fix for PMS.
+  Criteria getCriteriaWithGitSync(String projectIdentifier, String orgIdentifier, String accountId, Class entityClass);
 }

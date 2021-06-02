@@ -10,8 +10,11 @@ import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.connector.impl.ConnectorErrorMessagesHelper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.ScmException;
+import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 import io.harness.gitsync.common.dtos.GitFileContent;
+import io.harness.gitsync.common.helper.FileBatchResponseMapper;
 import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.impl.ScmResponseStatusUtils;
@@ -88,10 +91,20 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
   }
 
   @Override
-  public FileBatchContentResponse listFilesOfBranches(String accountIdentifier, String orgIdentifier,
+  public List<GitFileChangeDTO> listFilesOfBranches(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String yamlGitConfigIdentifier, List<String> foldersList, String branchName) {
     final ScmConnector decryptedConnector = gitSyncConnectorHelper.getDecryptedConnector(
         yamlGitConfigIdentifier, projectIdentifier, orgIdentifier, accountIdentifier);
-    return scmClient.listFiles(decryptedConnector, foldersList, branchName);
+    FileBatchContentResponse filesList = scmClient.listFiles(decryptedConnector, foldersList, branchName);
+    return FileBatchResponseMapper.createGitFileChangeList(filesList);
+  }
+
+  @Override
+  public List<GitFileChangeDTO> listFilesByFilePaths(
+      YamlGitConfigDTO yamlGitConfigDTO, List<String> filePaths, String branchName) {
+    final ScmConnector decryptedConnector =
+        gitSyncConnectorHelper.getDecryptedConnector(yamlGitConfigDTO, yamlGitConfigDTO.getAccountIdentifier());
+    FileBatchContentResponse filesList = scmClient.listFiles(decryptedConnector, filePaths, branchName);
+    return FileBatchResponseMapper.createGitFileChangeList(filesList);
   }
 }

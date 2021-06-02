@@ -25,4 +25,6 @@ public interface GitCommitService {
       String accountId, String repo, String branchName, List<GitCommitProcessingStatus> status);
 
   boolean isCommitAlreadyProcessed(String accountId, String headCommit, String repo, String branch);
+
+  Optional<GitCommit> findLastGitCommit(String accountIdentifier, String repo, String branchName);
 }

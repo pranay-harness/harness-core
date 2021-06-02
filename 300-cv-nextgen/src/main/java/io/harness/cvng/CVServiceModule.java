@@ -85,6 +85,7 @@ import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.cvng.core.services.api.PrometheusService;
 import io.harness.cvng.core.services.api.SplunkService;
 import io.harness.cvng.core.services.api.StackdriverService;
+import io.harness.cvng.core.services.api.SumoLogicService;
 import io.harness.cvng.core.services.api.TimeSeriesRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.services.api.WebhookService;
@@ -117,7 +118,9 @@ import io.harness.cvng.core.services.impl.SplunkDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.SplunkServiceImpl;
 import io.harness.cvng.core.services.impl.StackdriverCVConfigTransformer;
 import io.harness.cvng.core.services.impl.StackdriverDataCollectionInfoMapper;
+import io.harness.cvng.core.services.impl.StackdriverLogCVConfigTransformer;
 import io.harness.cvng.core.services.impl.StackdriverServiceImpl;
+import io.harness.cvng.core.services.impl.SumoLogicServiceImpl;
 import io.harness.cvng.core.services.impl.TimeSeriesRecordServiceImpl;
 import io.harness.cvng.core.services.impl.VerificationTaskServiceImpl;
 import io.harness.cvng.core.services.impl.WebhookServiceImpl;
@@ -268,6 +271,9 @@ public class CVServiceModule extends AbstractModule {
     bind(CVConfigTransformer.class)
         .annotatedWith(Names.named(DataSourceType.STACKDRIVER.name()))
         .to(StackdriverCVConfigTransformer.class);
+    bind(CVConfigTransformer.class)
+        .annotatedWith(Names.named(DataSourceType.STACKDRIVER_LOG.name()))
+        .to(StackdriverLogCVConfigTransformer.class);
     bind(DataCollectionInfoMapper.class)
         .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
         .to(AppDynamicsDataCollectionInfoMapper.class);
@@ -362,6 +368,7 @@ public class CVServiceModule extends AbstractModule {
     bind(CVNGStepTaskService.class).to(CVNGStepTaskServiceImpl.class);
     bind(PrometheusService.class).to(PrometheusServiceImpl.class);
     bind(CVNGYamlSchemaService.class).to(CVNGYamlSchemaServiceImpl.class);
+    bind(SumoLogicService.class).to(SumoLogicServiceImpl.class);
   }
 
   private void bindTheMonitoringSourceImportStatusCreators() {

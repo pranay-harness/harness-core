@@ -76,7 +76,14 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
   }
 
   @Override
-  public PipelineEntity updatePipelineMetadata(Criteria criteria, Update update) {
+  public PipelineEntity updatePipelineMetadata(
+      String accountId, String orgIdentifier, String projectIdentifier, Criteria criteria, Update update) {
+    Criteria gitSyncCriteria =
+        gitAwarePersistence.getCriteriaWithGitSync(projectIdentifier, orgIdentifier, accountId, PipelineEntity.class);
+    if (gitSyncCriteria != null) {
+      criteria = new Criteria().andOperator(criteria, gitSyncCriteria);
+    }
+
     Query query = new Query(criteria);
     RetryPolicy<Object> retryPolicy = getRetryPolicyForPipelineUpdate();
     return Failsafe.with(retryPolicy)

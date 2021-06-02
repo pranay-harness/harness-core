@@ -60,8 +60,6 @@ import io.harness.beans.yaml.extended.CustomTextVariable;
 import io.harness.beans.yaml.extended.CustomVariable;
 import io.harness.beans.yaml.extended.artifact.DockerHubArtifactStreamYaml;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
-import io.harness.beans.yaml.extended.container.Container;
-import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml.K8sDirectInfraYamlSpec;
@@ -95,10 +93,6 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(CIExecutionArgs.class, 100016);
     kryo.register(BuildNumberDetails.class, 100017);
     kryo.register(IntegrationStage.class, 100018);
-    kryo.register(Container.class, 100019);
-    kryo.register(Container.Resources.class, 100020);
-    kryo.register(Container.Limit.class, 100021);
-    kryo.register(Container.Reserve.class, 100022);
     kryo.register(CustomVariable.class, 100023);
     kryo.register(K8BuildJobEnvInfo.class, 100024);
     kryo.register(K8BuildJobEnvInfo.PodsSetupInfo.class, 100025);
@@ -126,8 +120,6 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(ExecutionSource.Type.class, 100056);
     kryo.register(CIStepOutcome.class, 100057);
     kryo.register(PluginStepInfo.class, 100058);
-    kryo.register(ContainerResource.class, 100059);
-    kryo.register(ContainerResource.Limits.class, 100060);
     kryo.register(CustomSecretVariable.class, 100061);
     kryo.register(CustomTextVariable.class, 100062);
     kryo.register(CustomVariable.Type.class, 100063);

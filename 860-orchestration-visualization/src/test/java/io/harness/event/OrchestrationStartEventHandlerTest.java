@@ -45,7 +45,7 @@ public class OrchestrationStartEventHandlerTest extends OrchestrationVisualizati
                                    .eventType(ORCHESTRATION_START)
                                    .build();
 
-    assertThatThrownBy(() -> orchestrationStartEventHandler.handleEvent(event))
+    assertThatThrownBy(() -> orchestrationStartEventHandler.onStart(event.getAmbiance()))
         .isInstanceOf(InvalidRequestException.class);
   }
 
@@ -63,7 +63,7 @@ public class OrchestrationStartEventHandlerTest extends OrchestrationVisualizati
                                    .eventType(ORCHESTRATION_START)
                                    .build();
 
-    orchestrationStartEventHandler.handleEvent(event);
+    orchestrationStartEventHandler.onStart(event.getAmbiance());
 
     Awaitility.await().atMost(2, TimeUnit.SECONDS).pollInterval(500, TimeUnit.MILLISECONDS).until(() -> {
       OrchestrationGraph graphInternal = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());

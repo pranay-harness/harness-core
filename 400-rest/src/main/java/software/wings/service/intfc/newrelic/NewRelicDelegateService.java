@@ -34,8 +34,7 @@ public interface NewRelicDelegateService {
 
   @DelegateTaskType(TaskType.NEWRELIC_GET_APP_INSTANCES_TASK)
   List<NewRelicApplicationInstance> getApplicationInstances(NewRelicConfig newRelicConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId, ThirdPartyApiCallLog apiCallLog)
-      throws IOException, CloneNotSupportedException;
+      List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId, ThirdPartyApiCallLog apiCallLog);
 
   NewRelicMetricData getMetricDataApplicationInstance(NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId, long instanceId,
@@ -50,7 +49,7 @@ public interface NewRelicDelegateService {
       long newRelicApplicationId, NewRelicDeploymentMarkerPayload body, ThirdPartyApiCallLog apiCallLog);
 
   Set<NewRelicMetric> getTxnNameToCollect(NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      long newRelicAppId, ThirdPartyApiCallLog thirdPartyApiCallLog) throws IOException;
+      long newRelicAppId, ThirdPartyApiCallLog thirdPartyApiCallLog);
 
   Set<NewRelicMetric> getTxnsWithDataInLastHour(Collection<NewRelicMetric> metrics, NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptedDataDetails, long applicationId, boolean checkNotAllowedStrings,
@@ -58,7 +57,7 @@ public interface NewRelicDelegateService {
 
   @DelegateTaskType(TaskType.NEWRELIC_GET_TXNS_WITH_DATA)
   List<NewRelicMetric> getTxnsWithData(NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptionDetails,
-      long newRelicAppId, boolean checkNotAllowedStrings, ThirdPartyApiCallLog thirdPartyApiCallLog) throws IOException;
+      long newRelicAppId, boolean checkNotAllowedStrings, ThirdPartyApiCallLog thirdPartyApiCallLog);
 
   @DelegateTaskType(TaskType.NEWRELIC_GET_TXNS_WITH_DATA_FOR_NODE)
   VerificationNodeDataSetupResponse getMetricsWithDataForNode(NewRelicConfig newRelicConfig,

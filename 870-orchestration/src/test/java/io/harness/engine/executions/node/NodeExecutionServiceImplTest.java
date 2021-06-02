@@ -1,6 +1,8 @@
 package io.harness.engine.executions.node;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.pms.contracts.execution.Status.ERRORED;
+import static io.harness.pms.contracts.execution.Status.SUCCEEDED;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,6 +50,50 @@ public class NodeExecutionServiceImplTest extends OrchestrationTestBase {
                                       .build();
     NodeExecution savedExecution = nodeExecutionService.save(nodeExecution);
     assertThat(savedExecution.getUuid()).isEqualTo(nodeExecutionId);
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldTestErrorOutNodes() {
+    String nodeExecutionId1 = generateUuid();
+    String nodeExecutionId2 = generateUuid();
+    NodeExecution nodeExecution1 = NodeExecution.builder()
+                                       .uuid(nodeExecutionId1)
+                                       .ambiance(AmbianceTestUtils.buildAmbiance())
+                                       .node(PlanNodeProto.newBuilder()
+                                                 .setUuid(generateUuid())
+                                                 .setName("name")
+                                                 .setIdentifier("dummy")
+                                                 .setStepType(StepType.newBuilder().setType("DUMMY").build())
+                                                 .build())
+                                       .startTs(System.currentTimeMillis())
+                                       .status(Status.RUNNING)
+                                       .build();
+    NodeExecution nodeExecution2 = NodeExecution.builder()
+                                       .uuid(nodeExecutionId2)
+                                       .ambiance(AmbianceTestUtils.buildAmbiance())
+                                       .node(PlanNodeProto.newBuilder()
+                                                 .setUuid(generateUuid())
+                                                 .setName("name")
+                                                 .setIdentifier("dummy")
+                                                 .setStepType(StepType.newBuilder().setType("DUMMY").build())
+                                                 .build())
+                                       .startTs(System.currentTimeMillis())
+                                       .status(Status.SUCCEEDED)
+                                       .build();
+    nodeExecutionService.save(nodeExecution1);
+    nodeExecutionService.save(nodeExecution2);
+
+    boolean res = nodeExecutionService.errorOutActiveNodes(AmbianceTestUtils.PLAN_EXECUTION_ID);
+    assertThat(res).isTrue();
+    NodeExecution ne1 = nodeExecutionService.get(nodeExecutionId1);
+    assertThat(ne1).isNotNull();
+    assertThat(ne1.getStatus()).isEqualTo(ERRORED);
+
+    NodeExecution ne2 = nodeExecutionService.get(nodeExecutionId2);
+    assertThat(ne2).isNotNull();
+    assertThat(ne2.getStatus()).isEqualTo(SUCCEEDED);
   }
 
   @Test

@@ -2,6 +2,7 @@ package io.harness.ng.core.api.impl;
 
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
@@ -125,6 +126,9 @@ public class SecretCrudServiceImpl implements SecretCrudService {
 
   @Override
   public SecretResponseWrapper create(String accountIdentifier, SecretDTOV2 dto) {
+    if (SecretText.equals(dto.getType()) && isEmpty(((SecretTextSpecDTO) dto.getSpec()).getValue())) {
+      throw new InvalidRequestException("value cannot be empty for a secret text.");
+    }
     if (SecretText.equals(dto.getType())) {
       NGEncryptedData encryptedData = encryptedDataService.createSecretText(accountIdentifier, dto);
       if (Optional.ofNullable(encryptedData).isPresent()) {
@@ -145,8 +149,9 @@ public class SecretCrudServiceImpl implements SecretCrudService {
 
   @Override
   public SecretResponseWrapper createViaYaml(@NotNull String accountIdentifier, SecretDTOV2 dto) {
-    if (dto.getSpec().getErrorMessageForInvalidYaml().isPresent()) {
-      throw new InvalidRequestException(dto.getSpec().getErrorMessageForInvalidYaml().get(), USER);
+    Optional<String> message = dto.getSpec().getErrorMessageForInvalidYaml();
+    if (message.isPresent()) {
+      throw new InvalidRequestException(message.get(), USER);
     }
     if (SecretText.equals(dto.getType())) {
       NGEncryptedData encryptedData = encryptedDataService.createSecretText(accountIdentifier, dto);

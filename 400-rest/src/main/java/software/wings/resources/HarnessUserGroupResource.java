@@ -3,6 +3,7 @@ package software.wings.resources;
 import static io.harness.annotations.dev.HarnessModule._970_RBAC_CORE;
 
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_RESTRICTED_ACCESS;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -13,6 +14,7 @@ import software.wings.beans.security.HarnessSupportUserDTO;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.beans.security.HarnessUserGroupDTO;
 import software.wings.security.annotations.ApiKeyAuthorized;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.HarnessUserGroupService;
 
 import com.google.inject.Inject;
@@ -99,6 +101,7 @@ public class HarnessUserGroupResource {
 
   @GET
   @Path("listAllHarnessSupportUsers")
+  @AuthRule(permissionType = MANAGE_RESTRICTED_ACCESS)
   public RestResponse<List<HarnessSupportUserDTO>> listAllHarnessSupportUsers(
       @QueryParam("accountId") String accountId) {
     return new RestResponse<>(

@@ -27,7 +27,7 @@ pipeline:
                   type: StageRollback
             - onFailure:
                 errors:
-                  - AnyOther
+                  - AllErrors
                 action:
                   type: MarkAsSuccess
           type: Deployment

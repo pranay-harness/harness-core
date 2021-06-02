@@ -11,5 +11,6 @@ import java.util.List;
 @OwnedBy(HarnessTeam.DX)
 public interface GitToHarnessProcessorService {
   List<GitToHarnessProcessingResponse> processFiles(String accountId,
-      List<GitToHarnessFileProcessingRequest> filesToBeProcessed, String branch, YamlGitConfigDTO yamlGitConfigDTO);
+      List<GitToHarnessFileProcessingRequest> filesToBeProcessed, String branch, YamlGitConfigDTO yamlGitConfigDTO,
+      String gitToHarnessProgressRecordId);
 }
