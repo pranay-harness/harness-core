@@ -154,6 +154,11 @@ func (h *handler) ListCommitsInPR(ctx context.Context, in *pb.ListCommitsInPRReq
 	return git.ListCommitsInPR(ctx, in, h.log)
 }
 
+// ListCommits is used to return a list of commit ids given a ref or branch.
+func (h *handler) CompareCommits(ctx context.Context, in *pb.CompareCommitsRequest) (*pb.CompareCommitsResponse, error) {
+	return git.CompareCommits(ctx, in, h.log)
+}
+
 // CreateWebhook is used to add a webhook to a repo.
 func (h *handler) CreateWebhook(ctx context.Context, in *pb.CreateWebhookRequest) (*pb.CreateWebhookResponse, error) {
 	return repo.CreateWebhook(ctx, in, h.log)

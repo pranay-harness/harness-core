@@ -2,13 +2,16 @@ package io.harness.cdng.creator.filters;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import static java.lang.String.format;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.service.beans.ServiceDefinition;
 import io.harness.cdng.service.beans.ServiceYaml;
-import io.harness.exception.InvalidRequestException;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.FilterCreatorException;
 import io.harness.filters.GenericStageFilterJsonCreator;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.cdng.sample.cd.creator.filters.CdFilter;
@@ -18,6 +21,7 @@ import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
+import io.harness.pms.yaml.YamlUtils;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -43,7 +47,11 @@ public class DeploymentStageFilterJsonCreator extends GenericStageFilterJsonCrea
         && (deploymentStageConfig.getServiceConfig().getServiceRef() == null
             || deploymentStageConfig.getServiceConfig().getServiceRef().fetchFinalValue() == null)
         && deploymentStageConfig.getServiceConfig().getUseFromStage() == null) {
-      throw new InvalidRequestException("One of service, serviceRef and useFromStage should be present");
+      throw new FilterCreatorException(
+          format(
+              "One of service, serviceRef and useFromStage should be present in stage [%s]. Please add it and try again",
+              YamlUtils.getFullyQualifiedName(filterCreationContext.getCurrentField().getNode())),
+          ErrorCode.INVALID_YAML_ERROR);
     }
     if (service != null && isNotEmpty(service.getName())) {
       cdFilter.serviceName(service.getName());
@@ -56,12 +64,19 @@ public class DeploymentStageFilterJsonCreator extends GenericStageFilterJsonCrea
 
     PipelineInfrastructure infrastructure = deploymentStageConfig.getInfrastructure();
     if (infrastructure == null) {
-      throw new InvalidRequestException("Infrastructure cannot be null");
+      throw new FilterCreatorException(
+          format("Infrastructure cannot be null in stage [%s]. Please add it and try again",
+              YamlUtils.getFullyQualifiedName(filterCreationContext.getCurrentField().getNode())),
+          ErrorCode.INVALID_YAML_ERROR);
     }
     if (infrastructure.getEnvironment() == null
         && (infrastructure.getEnvironmentRef() == null || infrastructure.getEnvironmentRef().fetchFinalValue() == null)
         && infrastructure.getUseFromStage() == null) {
-      throw new InvalidRequestException("One of environment, environment and useFromStage should be present");
+      throw new FilterCreatorException(
+          format(
+              "One of environment, environment and useFromStage should be present in stage [%s]. Please add it and try again",
+              YamlUtils.getFullyQualifiedName(filterCreationContext.getCurrentField().getNode())),
+          ErrorCode.INVALID_YAML_ERROR);
     }
 
     if (infrastructure.getEnvironment() != null && isNotEmpty(infrastructure.getEnvironment().getName())) {

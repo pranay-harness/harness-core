@@ -96,6 +96,8 @@ public enum ErrorCode {
 
   SOCKET_CONNECTION_ERROR("Connection error"),
 
+  CONNECTION_ERROR,
+
   SOCKET_CONNECTION_TIMEOUT("Socket Connection timeout"),
 
   CONNECTION_TIMEOUT("Connection timeout"),
@@ -145,6 +147,12 @@ public enum ErrorCode {
   INVALID_REQUEST,
 
   SCHEMA_VALIDATION_FAILED,
+
+  FILTER_CREATION_ERROR,
+
+  INVALID_YAML_ERROR,
+
+  PLAN_CREATION_ERROR,
 
   INVALID_INFRA_STATE,
 
@@ -539,7 +547,7 @@ public enum ErrorCode {
   ENGINE_EXPRESSION_EVALUATION_ERROR,
   ENGINE_FUNCTOR_ERROR,
   JIRA_CLIENT_ERROR,
-  INVALID_YAML_ERROR;
+  SCM_NOT_MODIFIED;
 
   private Status status = BAD_REQUEST;
   private String description;

@@ -348,6 +348,7 @@ gitSyncError {"name": "previousErrors_idx_for_app_filter", "background": true} {
 gitSyncErrorNG {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 gitSyncWebhook {"name": "appId_1", "background": true} {"appId": 1}
 gitSyncWebhook {"name": "createdAt_1", "background": true} {"createdAt": 1}
+gitToHarnessProgress {"name": "yamlChangeSetId_1", "background": true} {"yamlChangeSetId": 1}
 governanceConfig {"name": "accountId_1", "background": true} {"accountId": 1}
 governanceConfig {"name": "enableNextCloseIterations_nextCloseIterations", "background": true} {"enableNextCloseIterations": 1, "nextCloseIterations": 1}
 governanceConfig {"name": "enableNextIterations_nextIterations", "background": true} {"enableNextIterations": 1, "nextIterations": 1}
@@ -891,11 +892,6 @@ workflowExecutions {"name": "service_guard", "background": true} {"appId": 1, "s
 workflowExecutions {"name": "status_1", "background": true} {"status": 1}
 workflowExecutions {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 workflowExecutions {"name": "workflowExecutionMonitor", "background": true} {"status": 1, "nextIteration": 1}
-workflowVerificationResults {"name": "accountId_1", "background": true} {"accountId": 1}
-workflowVerificationResults {"name": "createdAt_1", "background": true} {"createdAt": 1}
-workflowVerificationResults {"name": "lastUpdatedAt_1", "background": true} {"lastUpdatedAt": 1}
-workflowVerificationResults {"name": "stateExecutionId_1", "unique": true} {"stateExecutionId": 1}
-workflowVerificationResults {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 workflows {"name": "accountIdCreatedAt", "background": true} {"accountId": 1, "createdAt": -1}
 workflows {"name": "accountId_1", "background": true} {"accountId": 1}
 workflows {"name": "appId_1", "background": true} {"appId": 1}

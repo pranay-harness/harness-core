@@ -11,6 +11,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.UnsupportedOperationException;
 import io.harness.exception.WingsException;
 import io.harness.gitsync.common.YamlProcessingLogContext;
 import io.harness.gitsync.common.beans.YamlChangeSet;
@@ -116,6 +117,8 @@ public class GitChangeSetRunnable implements Runnable {
       log.info("GIT_YAML_LOG_ENTRY: Processing  changeSetId: [{}]", yamlChangeSet.getChangesetId());
       final YamlChangeSetHandler changeSetHandler = yamlChangeSetHandlerFactory.getChangeSetHandler(yamlChangeSet);
       executorService.submit(() -> changeSetHandler.process(yamlChangeSet));
+    } catch (UnsupportedOperationException ex) {
+      log.error("Couldn't process change set : {}", yamlChangeSet, ex);
     }
   }
 

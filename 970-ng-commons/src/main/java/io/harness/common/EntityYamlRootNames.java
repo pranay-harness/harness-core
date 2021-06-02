@@ -22,7 +22,7 @@ public class EntityYamlRootNames {
   public static String SECRET = "secret";
   public static String SERVICE = "service";
   public static String ENVIRONMENT = "environment";
-  public static String INPUT_SET = "inputSets";
+  public static String INPUT_SET = "inputSet";
   public static String CV_CONFIG = "cvConfig";
   public static String DELEGATE = "delegate";
   public static String DELEGATE_CONFIGURATION = "delegateConfigurations";

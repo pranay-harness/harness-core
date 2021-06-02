@@ -1,0 +1,9 @@
+Var jobUrl = concat(Env:baseUrl, "search/jobs/")
+Var bodyMap = {}
+Var query = "*exception*"
+Var:bodyMap.put("query", Var:query)
+Var:bodyMap.put("from", Env:startTimeSeconds)
+Var:bodyMap.put("to", Env:endTimeSeconds)
+Var job = sync-call(url=Var:jobUrl, header=Env:commonHeaders, body=Var:bodyMap)
+Var t = "true"
+return Var:t

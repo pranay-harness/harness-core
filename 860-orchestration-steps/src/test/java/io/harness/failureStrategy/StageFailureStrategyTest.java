@@ -2,7 +2,7 @@ package io.harness.failureStrategy;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
-import static io.harness.yaml.core.failurestrategy.NGFailureType.ANY_OTHER_ERRORS;
+import static io.harness.yaml.core.failurestrategy.NGFailureType.ALL_ERRORS;
 import static io.harness.yaml.core.failurestrategy.NGFailureType.AUTHORIZATION_ERROR;
 import static io.harness.yaml.core.failurestrategy.NGFailureType.CONNECTIVITY_ERROR;
 import static io.harness.yaml.core.failurestrategy.NGFailureType.TIMEOUT_ERROR;
@@ -44,9 +44,9 @@ public class StageFailureStrategyTest extends CategoryTest {
   @Test
   @Owner(developers = PRASHANTSHARMA)
   @Category(UnitTests.class)
-  public void testAtleastAnyOtherFailureStrategyExists() {
+  public void testAtleastAllErrorsFailureStrategyExists() {
     List<FailureStrategyConfig> stageFailureStrategies1, stageFailureStrategies2, stageFailureStrategies3;
-    // Not containing error type as ANY_OTHER_ERRORS
+    // Not containing error type as ALL_ERRORS
     stageFailureStrategies1 = Collections.singletonList(
         FailureStrategyConfig.builder()
             .onFailure(OnFailureConfig.builder()
@@ -61,31 +61,31 @@ public class StageFailureStrategyTest extends CategoryTest {
                            .build())
             .build());
 
-    boolean ans = GenericStepPMSPlanCreator.containsOnlyAnyOtherErrorInSomeConfig(stageFailureStrategies1);
+    boolean ans = GenericStepPMSPlanCreator.containsOnlyAllErrorsInSomeConfig(stageFailureStrategies1);
     assertThat(ans).isEqualTo(false);
 
-    // Containing error type as ANY_OTHER_ERRORS only
+    // Containing error type as ALL_ERRORS only
     stageFailureStrategies2 =
         Collections.singletonList(FailureStrategyConfig.builder()
                                       .onFailure(OnFailureConfig.builder()
-                                                     .errors(Collections.singletonList(ANY_OTHER_ERRORS))
+                                                     .errors(Collections.singletonList(ALL_ERRORS))
                                                      .action(AbortFailureActionConfig.builder().build())
                                                      .build())
                                       .build());
 
-    ans = GenericStepPMSPlanCreator.containsOnlyAnyOtherErrorInSomeConfig(stageFailureStrategies2);
+    ans = GenericStepPMSPlanCreator.containsOnlyAllErrorsInSomeConfig(stageFailureStrategies2);
     assertThat(ans).isEqualTo(true);
 
-    // Containing other error along with ANY_OTHER_ERRORS
+    // Containing other error along with ALL_ERRORS
     List<NGFailureType> test = new ArrayList<>();
     test.add(AUTHORIZATION_ERROR);
-    test.add(ANY_OTHER_ERRORS);
+    test.add(ALL_ERRORS);
     stageFailureStrategies3 = Collections.singletonList(
         FailureStrategyConfig.builder()
             .onFailure(
                 OnFailureConfig.builder().errors(test).action(AbortFailureActionConfig.builder().build()).build())
             .build());
-    ans = GenericStepPMSPlanCreator.containsOnlyAnyOtherErrorInSomeConfig(stageFailureStrategies3);
+    ans = GenericStepPMSPlanCreator.containsOnlyAllErrorsInSomeConfig(stageFailureStrategies3);
     assertThat(ans).isEqualTo(false);
   }
 
@@ -112,7 +112,7 @@ public class StageFailureStrategyTest extends CategoryTest {
 
     List<NGFailureType> test = new ArrayList<>();
     test.add(AUTHORIZATION_ERROR);
-    test.add(ANY_OTHER_ERRORS);
+    test.add(CONNECTIVITY_ERROR);
     List<FailureStrategyConfig> stageFailureStrategies2 = new ArrayList<>();
     stageFailureStrategies2.add(
         FailureStrategyConfig.builder()
@@ -125,8 +125,21 @@ public class StageFailureStrategyTest extends CategoryTest {
                                                    .action(IgnoreFailureActionConfig.builder().build())
                                                    .build())
                                     .build());
-
     assertThatThrownBy(() -> FailureStrategiesUtils.priorityMergeFailureStrategies(null, null, stageFailureStrategies2))
+        .isInstanceOf(InvalidRequestException.class);
+
+    // Check no other error can be clubbed with AllErrors
+    test = new ArrayList<>();
+    test.add(AUTHORIZATION_ERROR);
+    test.add(ALL_ERRORS);
+    List<FailureStrategyConfig> stageFailureStrategies3 = new ArrayList<>();
+    stageFailureStrategies3.add(
+        FailureStrategyConfig.builder()
+            .onFailure(
+                OnFailureConfig.builder().errors(test).action(AbortFailureActionConfig.builder().build()).build())
+            .build());
+
+    assertThatThrownBy(() -> FailureStrategiesUtils.priorityMergeFailureStrategies(null, null, stageFailureStrategies3))
         .isInstanceOf(InvalidRequestException.class);
   }
 

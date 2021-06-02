@@ -238,3 +238,36 @@ func TestListCommitsInPR(t *testing.T) {
 	assert.Equal(t, len(got.Commits), 1, "1 commit")
 	assert.Equal(t, int32(0), got.Pagination.Next, "No next page")
 }
+
+func TestCompareCommits(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(200)
+		content, _ := ioutil.ReadFile("testdata/compare.json")
+		fmt.Fprint(w, string(content))
+	}))
+	defer ts.Close()
+
+	in := &pb.CompareCommitsRequest{
+		Slug:   "tphoney/scm-test",
+		Source: "553c2077f0edc3d5dc5d17262f6aa498e69d6f8e",
+		Target: "7fd1a60b01f91b314f59955a4e4d4e80d8edf11d",
+		Provider: &pb.Provider{
+			Hook: &pb.Provider_Github{
+				Github: &pb.GithubProvider{
+					Provider: &pb.GithubProvider_AccessToken{
+						AccessToken: "963408579168567c07ff8bfd2a5455e5307f74d4",
+					},
+				},
+			},
+			Endpoint: ts.URL,
+		},
+	}
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	got, err := CompareCommits(context.Background(), in, log.Sugar())
+
+	assert.Nil(t, err, "no errors")
+	assert.Equal(t, len(got.Files), 1, "1 file")
+	assert.Equal(t, int32(0), got.Pagination.Next, "No next page")
+}

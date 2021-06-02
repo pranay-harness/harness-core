@@ -15,7 +15,7 @@ public class GraphLayoutDtoMapper {
         .nodeIdentifier(graphLayoutNode.getNodeIdentifier())
         .nodeType(graphLayoutNode.getNodeType())
         .nodeUuid(graphLayoutNode.getNodeUUID())
-        .status(ExecutionStatus.NOT_STARTED)
+        .status(ExecutionStatus.NOTSTARTED)
         .name(graphLayoutNode.getName())
         .nodeGroup(graphLayoutNode.getNodeGroup())
         .edgeLayoutList(toDto(graphLayoutNode.getEdgeLayoutList()))

@@ -40,4 +40,6 @@ public interface YamlGitConfigService {
   Boolean isGitSyncEnabled(String accountIdentifier, String organizationIdentifier, String projectIdentifier);
 
   Boolean isRepoExists(String repo);
+
+  List<YamlGitConfigDTO> getByRepo(String repo);
 }

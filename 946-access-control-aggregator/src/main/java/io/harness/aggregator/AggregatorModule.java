@@ -12,6 +12,7 @@ import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.roles.persistence.RoleDBO;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.aggregator.consumers.ChangeConsumer;
+import io.harness.aggregator.consumers.ChangeEventFailureHandler;
 import io.harness.aggregator.consumers.ResourceGroupChangeConsumerImpl;
 import io.harness.aggregator.consumers.RoleAssignmentChangeConsumerImpl;
 import io.harness.aggregator.consumers.RoleChangeConsumerImpl;
@@ -66,6 +67,8 @@ public class AggregatorModule extends AbstractModule {
     bind(new TypeLiteral<ChangeConsumer<RoleDBO>>() {
     }).to(new TypeLiteral<RoleChangeConsumerImpl>() {
       }).in(Scopes.SINGLETON);
+
+    bind(AggregatorMetricsService.class).to(AggregatorMetricsServiceImpl.class).in(Scopes.SINGLETON);
   }
 
   private void registerRequiredBindings() {
@@ -74,5 +77,6 @@ public class AggregatorModule extends AbstractModule {
     requireBinding(UserGroupService.class);
     requireBinding(ResourceGroupService.class);
     requireBinding(ScopeService.class);
+    requireBinding(ChangeEventFailureHandler.class);
   }
 }

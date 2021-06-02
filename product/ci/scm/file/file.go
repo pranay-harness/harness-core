@@ -2,6 +2,10 @@ package file
 
 import (
 	"context"
+	"encoding/json"
+	"io"
+	"io/ioutil"
+
 	"time"
 
 	"github.com/drone/go-scm/scm"
@@ -89,16 +93,23 @@ func DeleteFile(ctx context.Context, fileRequest *pb.DeleteFileRequest, log *zap
 		return nil, err
 	}
 
-	ref, err := gitclient.GetValidRef(*fileRequest.GetProvider(), fileRequest.GetRef(), fileRequest.GetBranch())
-	if err != nil {
-		log.Errorw("Deletefile failure bad ref/branch", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
-		return nil, err
-	}
 	inputParams := new(scm.ContentParams)
+	inputParams.Message = fileRequest.GetMessage()
 	inputParams.Branch = fileRequest.GetBranch()
-	inputParams.Ref = ref
+	// github uses blob id for update check, others use commit id
+	switch fileRequest.GetProvider().Hook.(type) {
+	case *pb.Provider_Github:
+		inputParams.BlobID = fileRequest.GetBlobId()
+	default:
+		inputParams.Sha = fileRequest.GetCommitId()
+	}
 
-	response, err := client.Contents.Delete(ctx, fileRequest.GetSlug(), fileRequest.GetPath(), fileRequest.GetRef())
+	inputParams.Signature = scm.Signature{
+		Name:  fileRequest.GetSignature().GetName(),
+		Email: fileRequest.GetSignature().GetEmail(),
+	}
+
+	response, err := client.Contents.Delete(ctx, fileRequest.GetSlug(), fileRequest.GetPath(), inputParams)
 	if err != nil {
 		log.Errorw("DeleteFile failure", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		// this is a hard error with no response
@@ -112,9 +123,13 @@ func DeleteFile(ctx context.Context, fileRequest *pb.DeleteFileRequest, log *zap
 		}
 		return out, nil
 	}
+	// go-scm doesnt provide CRUD content parsing lets do it our self
+	commitID, blobID := parseCrudResponse(response.Body, *fileRequest.GetProvider(), log)
 	log.Infow("DeleteFile success", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start))
 	out = &pb.DeleteFileResponse{
-		Status: int32(response.Status),
+		Status:   int32(response.Status),
+		CommitId: commitID,
+		BlobId:   blobID,
 	}
 	return out, nil
 }
@@ -162,10 +177,14 @@ func UpdateFile(ctx context.Context, fileRequest *pb.FileModifyRequest, log *zap
 		}
 		return out, nil
 	}
+	// go-scm doesnt provide CRUD content parsing lets do it our self
+	commitID, blobID := parseCrudResponse(response.Body, *fileRequest.GetProvider(), log)
 	log.Infow("UpdateFile success", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "branch", fileRequest.GetBranch(), "sha", inputParams.Sha, "branch", inputParams.Branch,
 		"elapsed_time_ms", utils.TimeSince(start))
 	out = &pb.UpdateFileResponse{
-		Status: int32(response.Status),
+		Status:   int32(response.Status),
+		BlobId:   blobID,
+		CommitId: commitID,
 	}
 	return out, nil
 }
@@ -262,9 +281,13 @@ func CreateFile(ctx context.Context, fileRequest *pb.FileModifyRequest, log *zap
 		}
 		return out, nil
 	}
+	// go-scm doesnt provide CRUD content parsing lets do it our self
+	commitID, blobID := parseCrudResponse(response.Body, *fileRequest.GetProvider(), log)
 	log.Infow("CreateFile success", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "branch", inputParams.Branch, "elapsed_time_ms", utils.TimeSince(start))
 	out = &pb.CreateFileResponse{
-		Status: int32(response.Status),
+		Status:   int32(response.Status),
+		BlobId:   blobID,
+		CommitId: commitID,
 	}
 	return out, nil
 }
@@ -351,4 +374,35 @@ func convertContent(from *scm.ContentInfo) *pb.FileChange {
 		returnValue.ContentType = pb.ContentType_UNKNOWN_CONTENT
 	}
 	return returnValue
+}
+
+// this function is best effort ie if we cannot find the commit id or blob id do not error.
+func parseCrudResponse(body io.Reader, p pb.Provider, log *zap.SugaredLogger) (commitID, blobID string) {
+	bodyBytes, readErr := ioutil.ReadAll(body)
+	if readErr != nil {
+		log.Errorw("parseCrudResponse unable to read response from provider %p", p.GetEndpoint(), zap.Error(readErr))
+		return "", ""
+	}
+	bodyStr := string(bodyBytes)
+	switch p.GetHook().(type) {
+	case *pb.Provider_Github:
+		type githubResponse struct {
+			Commit struct {
+				Sha string `json:"sha"`
+			} `json:"commit"`
+			Content struct {
+				Sha string `json:"sha"`
+			} `json:"content"`
+		}
+		out := githubResponse{}
+		err := json.Unmarshal([]byte(bodyStr), &out)
+		// there is no commit id or sha, no need to error
+		if err != nil {
+			log.Errorw("parseCrudResponse unable to get commitid/blobid from Github CRUD operation", zap.Error(err))
+			return "", ""
+		}
+		return out.Commit.Sha, out.Content.Sha
+	default:
+		return "", ""
+	}
 }

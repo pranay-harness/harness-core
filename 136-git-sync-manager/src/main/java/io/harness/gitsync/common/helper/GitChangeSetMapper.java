@@ -11,8 +11,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.ChangeSet;
 import io.harness.gitsync.ChangeType;
 import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest;
+import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 import io.harness.ng.core.event.EntityToEntityProtoHelper;
-import io.harness.product.ci.scm.proto.FileContent;
 
 import com.google.protobuf.StringValue;
 import java.util.List;
@@ -31,7 +31,7 @@ public class GitChangeSetMapper {
         .collect(toList());
   }
 
-  private ChangeSet mapToChangeSet(FileContent fileContent, String accountId, ChangeType changeType) {
+  private ChangeSet mapToChangeSet(GitFileChangeDTO fileContent, String accountId, ChangeType changeType) {
     EntityType entityType = GitSyncUtils.getEntityTypeFromYaml(fileContent.getContent());
     ChangeSet.Builder builder = ChangeSet.newBuilder()
                                     .setAccountId(accountId)
@@ -39,8 +39,11 @@ public class GitChangeSetMapper {
                                     .setEntityType(EntityToEntityProtoHelper.getEntityTypeFromProto(entityType))
                                     .setYaml(fileContent.getContent())
                                     .setFilePath(fileContent.getPath());
-    if (isNotBlank(fileContent.getBlobId())) {
-      builder.setObjectId(StringValue.of(fileContent.getBlobId()));
+    if (isNotBlank(fileContent.getObjectId())) {
+      builder.setObjectId(StringValue.of(fileContent.getObjectId()));
+    }
+    if (isNotBlank(fileContent.getCommitId())) {
+      builder.setObjectId(StringValue.of(fileContent.getCommitId()));
     }
     return builder.build();
   }

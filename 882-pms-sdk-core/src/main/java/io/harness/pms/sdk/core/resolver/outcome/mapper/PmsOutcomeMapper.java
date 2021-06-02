@@ -7,7 +7,9 @@ import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.experimental.UtilityClass;
 import org.bson.Document;
 
@@ -33,13 +35,13 @@ public class PmsOutcomeMapper {
     return outcomes;
   }
 
-  public List<Document> convertJsonToDocument(List<String> outcomeAsJsonList) {
+  public Map<String, Document> convertJsonToDocument(Map<String, String> outcomeAsJsonList) {
     if (isEmpty(outcomeAsJsonList)) {
-      return Collections.emptyList();
+      return Collections.emptyMap();
     }
-    List<Document> outcomes = new ArrayList<>();
-    for (String jsonOutcome : outcomeAsJsonList) {
-      outcomes.add(RecastOrchestrationUtils.toDocumentFromJson(jsonOutcome));
+    Map<String, Document> outcomes = new LinkedHashMap<>();
+    for (Map.Entry<String, String> entry : outcomeAsJsonList.entrySet()) {
+      outcomes.put(entry.getKey(), RecastOrchestrationUtils.toDocumentFromJson(entry.getValue()));
     }
     return outcomes;
   }

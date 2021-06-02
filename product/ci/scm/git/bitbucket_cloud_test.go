@@ -11,9 +11,11 @@ import (
 	"go.uber.org/zap"
 )
 
+var gitBitbucketCloudToken = os.Getenv("BITBUCKET_CLOUD_TOKEN")
+
 // NB make sure there this branch does not exist or the test will fail.
 func TestCreateBranchBitbucketCloud(t *testing.T) {
-	if os.Getenv("BITBUCKET_CLOUD_TOKEN") == "" {
+	if gitBitbucketCloudToken == "" {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.CreateBranchRequest{
@@ -24,7 +26,7 @@ func TestCreateBranchBitbucketCloud(t *testing.T) {
 			Hook: &pb.Provider_BitbucketCloud{
 				BitbucketCloud: &pb.BitbucketCloudProvider{
 					Username:    "tphoney",
-					AppPassword: os.Getenv("BITBUCKET_CLOUD_TOKEN"),
+					AppPassword: gitBitbucketCloudToken,
 				},
 			},
 			Debug: true,
@@ -38,7 +40,7 @@ func TestCreateBranchBitbucketCloud(t *testing.T) {
 }
 
 func TestCreatePRBitbucketCloud(t *testing.T) {
-	if os.Getenv("BITBUCKET_CLOUD_TOKEN") == "" {
+	if gitBitbucketCloudToken == "" {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.CreatePRRequest{
@@ -51,7 +53,7 @@ func TestCreatePRBitbucketCloud(t *testing.T) {
 			Hook: &pb.Provider_BitbucketCloud{
 				BitbucketCloud: &pb.BitbucketCloudProvider{
 					Username:    "tphoney",
-					AppPassword: os.Getenv("BITBUCKET_CLOUD_TOKEN"),
+					AppPassword: gitBitbucketCloudToken,
 				},
 			},
 			Debug: true,
@@ -64,7 +66,7 @@ func TestCreatePRBitbucketCloud(t *testing.T) {
 	assert.Equal(t, int32(201), got.Status, "Correct http response")
 }
 func TestGetLatestCommitBitbucketCloud(t *testing.T) {
-	if os.Getenv("BITBUCKET_CLOUD_TOKEN") == "" {
+	if gitBitbucketCloudToken == "" {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.GetLatestCommitRequest{
@@ -74,7 +76,7 @@ func TestGetLatestCommitBitbucketCloud(t *testing.T) {
 			Hook: &pb.Provider_BitbucketCloud{
 				BitbucketCloud: &pb.BitbucketCloudProvider{
 					Username:    "tphoney",
-					AppPassword: os.Getenv("BITBUCKET_CLOUD_TOKEN"),
+					AppPassword: gitBitbucketCloudToken,
 				},
 			},
 			Debug: true,
@@ -89,7 +91,7 @@ func TestGetLatestCommitBitbucketCloud(t *testing.T) {
 }
 
 func TestListCommitsBitbucketCloud(t *testing.T) {
-	if os.Getenv("BITBUCKET_CLOUD_TOKEN") == "" {
+	if gitBitbucketCloudToken == "" {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.ListCommitsRequest{
@@ -101,7 +103,7 @@ func TestListCommitsBitbucketCloud(t *testing.T) {
 			Hook: &pb.Provider_BitbucketCloud{
 				BitbucketCloud: &pb.BitbucketCloudProvider{
 					Username:    "tphoney",
-					AppPassword: os.Getenv("BITBUCKET_CLOUD_TOKEN"),
+					AppPassword: gitBitbucketCloudToken,
 				},
 			},
 			Debug: true,
@@ -117,7 +119,7 @@ func TestListCommitsBitbucketCloud(t *testing.T) {
 }
 
 func TestListCommitsPage2BitbucketCloud(t *testing.T) {
-	if os.Getenv("BITBUCKET_CLOUD_TOKEN") == "" {
+	if gitBitbucketCloudToken == "" {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.ListCommitsRequest{
@@ -132,7 +134,7 @@ func TestListCommitsPage2BitbucketCloud(t *testing.T) {
 			Hook: &pb.Provider_BitbucketCloud{
 				BitbucketCloud: &pb.BitbucketCloudProvider{
 					Username:    "tphoney",
-					AppPassword: os.Getenv("BITBUCKET_CLOUD_TOKEN"),
+					AppPassword: gitBitbucketCloudToken,
 				},
 			},
 			Debug: true,
@@ -148,7 +150,7 @@ func TestListCommitsPage2BitbucketCloud(t *testing.T) {
 }
 
 func TestListBranchesBitbucketCloud(t *testing.T) {
-	if os.Getenv("BITBUCKET_CLOUD_TOKEN") == "" {
+	if gitBitbucketCloudToken == "" {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.ListBranchesRequest{
@@ -157,7 +159,7 @@ func TestListBranchesBitbucketCloud(t *testing.T) {
 			Hook: &pb.Provider_BitbucketCloud{
 				BitbucketCloud: &pb.BitbucketCloudProvider{
 					Username:    "tphoney",
-					AppPassword: os.Getenv("BITBUCKET_CLOUD_TOKEN"),
+					AppPassword: gitBitbucketCloudToken,
 				},
 			},
 			Debug: true,
@@ -169,5 +171,32 @@ func TestListBranchesBitbucketCloud(t *testing.T) {
 
 	assert.Nil(t, err, "no errors")
 	assert.GreaterOrEqual(t, len(got.Branches), 1, "status matches")
+	assert.Equal(t, int32(0), got.Pagination.Next, "there is no next page")
+}
+
+func TestCompareCommitsBitbucketCloud(t *testing.T) {
+	if gitBitbucketCloudToken == "" {
+		t.Skip("Skipping, Acceptance test")
+	}
+	in := &pb.CompareCommitsRequest{
+		Slug:   "tphoney/scm-test",
+		Target: "23b6c0b0efe0",
+		Source: "cc4360f06a6d1f46ce262abda2a5508b29403576",
+		Provider: &pb.Provider{
+			Hook: &pb.Provider_BitbucketCloud{
+				BitbucketCloud: &pb.BitbucketCloudProvider{
+					Username:    "tphoney",
+					AppPassword: gitBitbucketCloudToken,
+				},
+			},
+			Debug: true,
+		},
+	}
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	got, err := CompareCommits(context.Background(), in, log.Sugar())
+
+	assert.Nil(t, err, "no errors")
+	assert.GreaterOrEqual(t, len(got.Files), 1, "1 file is different")
 	assert.Equal(t, int32(0), got.Pagination.Next, "there is no next page")
 }

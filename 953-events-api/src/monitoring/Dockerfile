@@ -2,7 +2,7 @@ FROM harness/alpine:safe-alpine3.12-sec1096-apm
 
 WORKDIR /code
 RUN apk add --no-cache python3 py3-pip
-RUN apk add --no-cache gcc musl-dev linux-headers wget
+RUN apk add --no-cache gcc musl-dev linux-headers wget openssl openssl-dev
 
 COPY . .
 

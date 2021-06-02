@@ -6,6 +6,7 @@ import io.harness.beans.KeyValuePair;
 import io.harness.encryption.Scope;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ArtifactoryServerException;
+import io.harness.exception.ConnectException;
 import io.harness.exception.ContextException;
 import io.harness.exception.DelegateErrorHandlerException;
 import io.harness.exception.DelegateNotAvailableException;
@@ -77,6 +78,7 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(DelegateNotAvailableException.class, 31022);
     kryo.register(IllegalArgumentException.class, 31023);
     kryo.register(InvalidThirdPartyCredentialsException.class, 31024);
+    kryo.register(ConnectException.class, 31025);
 
     kryo.register(PrincipalContextData.class, 980001);
     kryo.register(UserPrincipal.class, 980002);

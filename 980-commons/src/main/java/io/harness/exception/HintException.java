@@ -39,11 +39,11 @@ public class HintException extends WingsException {
   public static final String DELEGATE_NOT_AVAILABLE =
       "Please make sure that your delegates are connected. Refer %s for more information on delegate Installation";
   public static final String HINT_ILLEGAL_IMAGE_PATH = "Please provide valid image path";
+  public static final String HINT_HOST_UNREACHABLE = "Please ensure that registry host [%s] is reachable";
 
   public static final HintException MOVE_TO_THE_PARENT_OBJECT =
       new HintException("Navigate back to the parent object page and continue from there.");
   public static final HintException REFRESH_THE_PAGE = new HintException("Refresh the web page to update the data.");
-
   public HintException(String message) {
     super(message, null, HINT, INFO, null, null);
     super.excludeReportTarget(EXPLANATION, EnumSet.of(ReportTarget.LOG_SYSTEM));

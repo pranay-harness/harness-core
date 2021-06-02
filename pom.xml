@@ -6,7 +6,6 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <module>980-java-agent</module>
         <module>260-delegate</module>
     </modules>
     <scm>

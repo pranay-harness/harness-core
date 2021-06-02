@@ -27,6 +27,7 @@ go_test(
         "testdata/branches.json",
         "testdata/commit.json",
         "testdata/commits.json",
+        "testdata/compare.json",
         "testdata/pr.json",
         "testdata/pr_files.json",
     ],
