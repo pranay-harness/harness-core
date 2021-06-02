@@ -105,6 +105,7 @@ public class ApiKeyResource {
     return new RestResponse<>(status);
   }
 
+  // For internal use, to validate api key
   @POST
   @Path("validate")
   @Timed
