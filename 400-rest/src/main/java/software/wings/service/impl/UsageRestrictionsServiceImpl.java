@@ -787,13 +787,9 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   public boolean userHasPermissionsToChangeEntity(String accountId, PermissionType permissionType,
       UsageRestrictions entityUsageRestrictions, UsageRestrictions restrictionsFromUserPermissions,
       Map<String, List<Base>> appIdEnvMap, boolean scopedToAccount) {
-    log.info("test sm : userHasPermissionsToChangeEntity started  " );
     if (!hasUserContext()) {
       return true;
     }
-
-    log.info("test sm : userHasPermissionsToChangeEntity finished  " );
-
     return userHasPermissions(accountId, permissionType, entityUsageRestrictions, restrictionsFromUserPermissions,
         appIdEnvMap, scopedToAccount);
   }
@@ -819,17 +815,16 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   private boolean userHasPermissions(String accountId, PermissionType permissionType,
       UsageRestrictions entityUsageRestrictions, UsageRestrictions restrictionsFromUserPermissions,
       Map<String, List<Base>> appIdEnvMap, boolean scopedToAccount) {
-    log.info("test sm : userHasPermissions method started " );
+
     if (!hasUserContext()) {
-      log.info("test sm : hasUserContext false " );
+
       return true;
     }
-    log.info("test sm : hasUserContext finished " );
+
     if (scopedToAccount) {
       return isAdminOrHasAllEnvAccess(accountId, permissionType, restrictionsFromUserPermissions);
     }
 
-    log.info("test sm : scopedToAccount finished " );
 
     // If someone is updating a secret with no usage restrictions then no permission check is required.
     // This will allow env to be deleted if a secret only refers to the env being deleted
@@ -837,24 +832,20 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       return true;
     }
 
-    log.info("test sm : hasNoRestrictions entityUsageRestrictions finished " );
 
     if (hasNoRestrictions(restrictionsFromUserPermissions)) {
       return false;
     }
 
-    log.info("test sm : hasNoRestrictions restrictionsFromUserPermissions finished " );
+    Map<String, Set<String>> appEnvMapFromEntityRestrictions =
+            getAppEnvMap(entityUsageRestrictions.getAppEnvRestrictions(), appIdEnvMap);
+
+    log.info("test sm : appEnvMapFromEntityRestrictions " + appEnvMapFromEntityRestrictions);
 
     Map<String, Set<String>> appEnvMapFromUserPermissions =
         getRestrictionsAndAppEnvMapFromCache(accountId, Action.UPDATE).getAppEnvMap();
 
     log.info("test sm : appEnvMapFromUserPermissions " + appEnvMapFromUserPermissions);
-
-
-    Map<String, Set<String>> appEnvMapFromEntityRestrictions =
-        getAppEnvMap(entityUsageRestrictions.getAppEnvRestrictions(), appIdEnvMap);
-
-    log.info("test sm : appEnvMapFromEntityRestrictions " + appEnvMapFromEntityRestrictions);
 
     return isUsageRestrictionsSubsetInternal(entityUsageRestrictions, appEnvMapFromEntityRestrictions,
         restrictionsFromUserPermissions, appEnvMapFromUserPermissions);
@@ -909,22 +900,18 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   @Override
   public void validateUsageRestrictionsOnEntitySave(
       String accountId, PermissionType permissionType, UsageRestrictions usageRestrictions, boolean scopedToAccount) {
-    log.info("test sm : inside UsageRestrictionsServiceImpl:validateUsageRestrictionsOnEntitySave method " );
 
     if (usageRestrictions != null) {
       log.info("test sm : usageRestrictions is  " + usageRestrictions.toString() );
     }
 
     if (!hasUserContext()) {
-      log.info("test sm : inside hasUserContext is empty " );
       return;
     }
     checkForNonNullRestrictionWhenScopedToAccount(accountId, scopedToAccount, usageRestrictions);
-    log.info("test sm : checkForNonNullRestrictionWhenScopedToAccount is finished " );
 
     checkIfValidUsageRestrictions(usageRestrictions);
 
-    log.info("test sm : checkIfValidUsageRestrictions is finished " );
 
     UsageRestrictions restrictionsFromUserPermissions =
         getRestrictionsAndAppEnvMapFromCache(accountId, Action.UPDATE).getUsageRestrictions();
@@ -946,12 +933,11 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     }
 
     validatedIfEntityScopingAllowedForUser(accountId, permissionType, restrictionsFromUserPermissions, scopedToAccount);
-    log.info("test sm : validatedIfEntityScopingAllowedForUser finished " );
 
     Set<String> appIdsByAccountId = appService.getAppIdsAsSetByAccountId(accountId);
-    log.info("test sm : appIdsByAccountId finished " + appIdsByAccountId );
+
     Map<String, List<Base>> appIdEnvMap = environmentService.getAppIdEnvMap(appIdsByAccountId);
-    log.info("test sm : appIdEnvMap finished " + appIdEnvMap );
+
     boolean canUpdateEntity = userHasPermissionsToChangeEntity(
         accountId, permissionType, usageRestrictions, restrictionsFromUserPermissions, appIdEnvMap, scopedToAccount);
 
@@ -1080,41 +1066,43 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     log.info("test sm : RestrictionsAndAppEnvMap method started " );
 
     if (action == null) {
-      log.info("test sm : action is null " );
+
       return builder.build();
     }
 
     User user = UserThreadLocal.get();
 
     if (user == null) {
-      log.info("test sm : user thread local is null " );
+
       return builder.build();
     }
 
     UserRequestContext userRequestContext = user.getUserRequestContext();
 
     if (userRequestContext == null) {
-      log.info("test sm : userRequestContext is null " );
+
       return builder.build();
     }
 
     UserRestrictionInfo userRestrictionInfo = userRequestContext.getUserRestrictionInfo();
 
     if (userRestrictionInfo == null) {
-      log.info("test sm : userRestrictionInfo is null " );
+
       return builder.build();
     }
 
     if (userRestrictionInfo != null) {
       log.info("test sm : userRestrictionInfo is null " + userRestrictionInfo.toString());
     }
-    
+
     switch (action) {
       case READ:
         builder.appEnvMap(userRestrictionInfo.getAppEnvMapForReadAction());
         builder.usageRestrictions(userRestrictionInfo.getUsageRestrictionsForReadAction());
         break;
       case UPDATE:
+        log.info("test sm : userRestrictionInfo.getAppEnvMapForUpdateAction() is null " + userRestrictionInfo.getAppEnvMapForUpdateAction().toString());
+        log.info("test sm : userRestrictionInfo.getUsageRestrictionsForUpdateAction() is null " + userRestrictionInfo.getUsageRestrictionsForUpdateAction().toString());
         builder.appEnvMap(userRestrictionInfo.getAppEnvMapForUpdateAction());
         builder.usageRestrictions(userRestrictionInfo.getUsageRestrictionsForUpdateAction());
         break;
@@ -1123,7 +1111,8 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         break;
     }
     log.info("test sm : RestrictionsAndAppEnvMap method finished " );
-    return builder.build();
+    RestrictionsAndAppEnvMap build = builder.build();
+    return build;
   }
 
   @Override
