@@ -35,9 +35,9 @@ public class SimpleVisitorFactory {
   }
 
   public EntityReferenceExtractorVisitor obtainEntityReferenceExtractorVisitor(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    EntityReferenceExtractorVisitor entityReferenceExtractorVisitor =
-        new EntityReferenceExtractorVisitor(injector, accountIdentifier, orgIdentifier, projectIdentifier);
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> qualifiedNameLists) {
+    EntityReferenceExtractorVisitor entityReferenceExtractorVisitor = new EntityReferenceExtractorVisitor(
+        injector, accountIdentifier, orgIdentifier, projectIdentifier, qualifiedNameLists);
     injector.injectMembers(entityReferenceExtractorVisitor);
     return entityReferenceExtractorVisitor;
   }

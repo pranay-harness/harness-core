@@ -4,6 +4,8 @@ import static com.google.inject.Key.get;
 import static com.google.inject.name.Names.named;
 
 import io.harness.annotation.HarnessRepo;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 
 import com.google.inject.Injector;
 import com.mongodb.MongoClient;
@@ -18,12 +20,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.CustomConversions;
+import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.guice.annotation.GuiceModule;
 
+@OwnedBy(HarnessTeam.PL)
 @Configuration
 @GuiceModule
 @EnableMongoRepositories(basePackages = {"io.harness.repositories"},
@@ -69,5 +74,10 @@ public class SpringPersistenceTestConfig extends AbstractMongoConfiguration {
   @Override
   protected boolean autoIndexCreation() {
     return false;
+  }
+
+  @Bean
+  MongoTransactionManager transactionManager(MongoDbFactory dbFactory) {
+    return new MongoTransactionManager(dbFactory);
   }
 }

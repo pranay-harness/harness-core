@@ -1,5 +1,6 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.BOJANA;
 
@@ -20,12 +21,14 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
@@ -51,6 +54,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.ExecutionContextImpl;
@@ -70,6 +74,7 @@ import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.query.Query;
 
+@OwnedBy(CDP)
 public class CloudFormationDeleteStackStateTest extends WingsBaseTest {
   @Mock private ExecutionContextImpl mockContext;
   @Mock private InfrastructureProvisionerService infrastructureProvisionerService;
@@ -79,6 +84,7 @@ public class CloudFormationDeleteStackStateTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
   @Mock private ActivityService activityService;
   @Mock private SettingsService settingsService;
+  @Mock private StateExecutionService stateExecutionService;
 
   @InjectMocks private CloudFormationDeleteStackState state = new CloudFormationDeleteStackState("stateName");
 
@@ -96,6 +102,7 @@ public class CloudFormationDeleteStackStateTest extends WingsBaseTest {
     application.setAccountId(ACCOUNT_ID);
     application.setUuid(UUID);
     when(mockContext.getApp()).thenReturn(application);
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
 
     state.useCustomStackName = true;
     state.customStackName = "customStackName";

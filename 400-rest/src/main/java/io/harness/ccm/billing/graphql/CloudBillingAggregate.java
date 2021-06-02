@@ -1,5 +1,10 @@
 package io.harness.ccm.billing.graphql;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.RawBillingTableSchema;
 import io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema;
 
@@ -15,6 +20,8 @@ import lombok.Data;
 
 @Data
 @Builder
+@OwnedBy(CE)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 public class CloudBillingAggregate {
   // ideally, gcp specific constants should be organized in a constant class.
   public static final String BILLING_GCP_COST = "cost";

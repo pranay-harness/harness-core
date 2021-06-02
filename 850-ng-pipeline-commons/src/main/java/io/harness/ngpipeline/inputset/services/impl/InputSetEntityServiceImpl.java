@@ -4,6 +4,7 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.beans.InputSetReference;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
@@ -45,6 +46,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@ToBeDeleted
+@Deprecated
 public class InputSetEntityServiceImpl implements InputSetEntityService {
   private final InputSetRepository inputSetRepository;
   private final EntitySetupUsageClient entitySetupUsageClient;
@@ -255,8 +258,8 @@ public class InputSetEntityServiceImpl implements InputSetEntityService {
 
   private Set<EntityDetail> getReferences(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, NgPipeline pipeline) {
-    EntityReferenceExtractorVisitor visitor =
-        simpleVisitorFactory.obtainEntityReferenceExtractorVisitor(accountIdentifier, orgIdentifier, projectIdentifier);
+    EntityReferenceExtractorVisitor visitor = simpleVisitorFactory.obtainEntityReferenceExtractorVisitor(
+        accountIdentifier, orgIdentifier, projectIdentifier, null);
     visitor.walkElementTree(pipeline);
     return new HashSet<>(); // visitor.getEntityReferenceSet();
   }

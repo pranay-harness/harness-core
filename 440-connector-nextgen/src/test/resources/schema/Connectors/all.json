@@ -17,9 +17,7 @@
           "required": [
             "accountId",
             "accountname",
-            "controllerUrl",
-            "passwordRef",
-            "username"
+            "controllerUrl"
           ],
           "properties": {
             "accountId": {
@@ -28,8 +26,28 @@
             "accountname": {
               "type": "string"
             },
+            "authType": {
+              "type": "string",
+              "enum": [
+                "UsernamePassword",
+                "ApiClientToken"
+              ]
+            },
+            "clientId": {
+              "type": "string"
+            },
+            "clientSecretRef": {
+              "type": "string"
+            },
             "controllerUrl": {
               "type": "string"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "passwordRef": {
               "type": "string"
@@ -96,6 +114,13 @@
             },
             "auth": {
               "$ref": "#/definitions/ArtifactoryAuthentication"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             }
           }
         }
@@ -141,6 +166,164 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "AwsCodeCommitAuthenticationDTO": {
+      "type": "object",
+      "required": [
+        "spec",
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "HTTPS"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "HTTPS"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsCodeCommitHttpsCredentialsDTO"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "AwsCodeCommitConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "authentication",
+            "type",
+            "url"
+          ],
+          "properties": {
+            "authentication": {
+              "$ref": "#/definitions/AwsCodeCommitAuthenticationDTO"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "Repo",
+                "Region"
+              ]
+            },
+            "url": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsCodeCommitCredentialsDTO": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsCodeCommitHttpsCredentialsDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AwsCodeCommitCredentialsDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "AWSCredentials"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AWSCredentials"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsCodeCommitSecretKeyAccessKeyDTO"
+              }
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsCodeCommitHttpsCredentialsSpecDTO": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsCodeCommitSecretKeyAccessKeyDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AwsCodeCommitHttpsCredentialsSpecDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "secretKeyRef"
+          ],
+          "properties": {
+            "accessKey": {
+              "type": "string"
+            },
+            "accessKeyRef": {
+              "type": "string"
+            },
+            "secretKeyRef": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "accessKey"
+              ]
+            },
+            {
+              "required": [
+                "accessKeyRef"
+              ]
+            }
+          ]
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "AwsConnector": {
       "allOf": [
         {
@@ -154,6 +337,13 @@
           "properties": {
             "credential": {
               "$ref": "#/definitions/AwsCredential"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             }
           }
         }
@@ -163,7 +353,6 @@
     "AwsCredential": {
       "type": "object",
       "required": [
-        "spec",
         "type"
       ],
       "properties": {
@@ -180,22 +369,6 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
       "allOf": [
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "InheritFromDelegate"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/AwsInheritFromDelegateSpec"
-              }
-            }
-          }
-        },
         {
           "if": {
             "properties": {
@@ -225,19 +398,121 @@
         "s3BucketName"
       ],
       "properties": {
+        "region": {
+          "type": "string"
+        },
         "reportName": {
           "type": "string"
         },
         "s3BucketName": {
           "type": "string"
+        },
+        "s3Prefix": {
+          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "AwsInheritFromDelegateSpec": {
+    "AwsKmsConnectorCredential": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "AssumeIAMRole",
+            "AssumeSTSRole",
+            "ManualConfig"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "allOf": [
         {
-          "$ref": "#/definitions/AwsCredentialSpec"
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AssumeIAMRole"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsKmsCredentialSpecAssumeIAM"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AssumeSTSRole"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsKmsCredentialSpecAssumeSTS"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ManualConfig"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsKmsCredentialSpecManualConfig"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "AwsKmsConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "credential": {
+              "$ref": "#/definitions/AwsKmsConnectorCredential"
+            },
+            "default": {
+              "type": "boolean"
+            },
+            "kmsArn": {
+              "type": "string"
+            },
+            "region": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsKmsCredentialSpec": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsKmsCredentialSpecAssumeIAM": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AwsKmsCredentialSpec"
         },
         {
           "type": "object",
@@ -253,6 +528,65 @@
               },
               "maxItems": 2147483647,
               "minItems": 1
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsKmsCredentialSpecAssumeSTS": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AwsKmsCredentialSpec"
+        },
+        {
+          "type": "object",
+          "required": [
+            "delegateSelectors",
+            "roleArn"
+          ],
+          "properties": {
+            "assumeStsRoleDuration": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 2147483647,
+              "minItems": 1
+            },
+            "externalName": {
+              "type": "string"
+            },
+            "roleArn": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsKmsCredentialSpecManualConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AwsKmsCredentialSpec"
+        },
+        {
+          "type": "object",
+          "required": [
+            "accessKey",
+            "secretKey"
+          ],
+          "properties": {
+            "accessKey": {
+              "type": "string"
+            },
+            "secretKey": {
+              "type": "string"
             }
           }
         }
@@ -294,6 +628,50 @@
               ]
             }
           ]
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AzureKeyVaultConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "clientId",
+            "subscription",
+            "tenantId",
+            "vaultName"
+          ],
+          "properties": {
+            "azureEnvironmentType": {
+              "type": "string",
+              "enum": [
+                "AZURE",
+                "AZURE_US_GOVERNMENT"
+              ]
+            },
+            "clientId": {
+              "type": "string"
+            },
+            "default": {
+              "type": "boolean"
+            },
+            "secretKey": {
+              "type": "string"
+            },
+            "subscription": {
+              "type": "string"
+            },
+            "tenantId": {
+              "type": "string"
+            },
+            "vaultName": {
+              "type": "string"
+            }
+          }
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -425,6 +803,13 @@
             },
             "authentication": {
               "$ref": "#/definitions/BitbucketAuthentication"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "type": {
               "type": "string",
@@ -596,6 +981,9 @@
             "crossAccountAccess"
           ],
           "properties": {
+            "awsAccountId": {
+              "type": "string"
+            },
             "crossAccountAccess": {
               "$ref": "#/definitions/CrossAccountAccess"
             },
@@ -607,9 +995,9 @@
               "items": {
                 "type": "string",
                 "enum": [
-                  "CUR",
-                  "EVENTS",
-                  "OPTIMIZATION"
+                  "BILLING",
+                  "OPTIMIZATION",
+                  "VISIBILITY"
                 ]
               }
             }
@@ -639,7 +1027,8 @@
                 "type": "string",
                 "enum": [
                   "BILLING",
-                  "OPTIMIZATION"
+                  "OPTIMIZATION",
+                  "VISIBILITY"
                 ]
               }
             },
@@ -648,6 +1037,36 @@
             },
             "tenantId": {
               "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "CEKubernetesClusterConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "connectorRef"
+          ],
+          "properties": {
+            "connectorRef": {
+              "type": "string"
+            },
+            "featuresEnabled": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "BILLING",
+                  "OPTIMIZATION",
+                  "VISIBILITY"
+                ]
+              }
             }
           }
         }
@@ -704,9 +1123,12 @@
             "Git",
             "Splunk",
             "AppDynamics",
+            "Prometheus",
             "Vault",
+            "AzureKeyVault",
             "DockerRegistry",
             "Local",
+            "AwsKms",
             "GcpKms",
             "Gcp",
             "Aws",
@@ -716,8 +1138,15 @@
             "Github",
             "Gitlab",
             "Bitbucket",
+            "Codecommit",
             "CEAws",
-            "CEAzure"
+            "CEAzure",
+            "GcpCloudCost",
+            "CEK8sCluster",
+            "HttpHelmRepo",
+            "NewRelic",
+            "Datadog",
+            "SumoLogic"
           ]
         }
       },
@@ -775,6 +1204,38 @@
           "if": {
             "properties": {
               "type": {
+                "const": "AwsKms"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsKmsConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AzureKeyVault"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AzureKeyVaultConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
                 "const": "Bitbucket"
               }
             }
@@ -823,6 +1284,54 @@
           "if": {
             "properties": {
               "type": {
+                "const": "CEK8sCluster"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/CEKubernetesClusterConfig"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Codecommit"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsCodeCommitConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Datadog"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/DatadogConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
                 "const": "DockerRegistry"
               }
             }
@@ -847,6 +1356,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/GcpConnector"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "GcpCloudCost"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/GcpCloudCostConnector"
               }
             }
           }
@@ -919,6 +1444,22 @@
           "if": {
             "properties": {
               "type": {
+                "const": "HttpHelmRepo"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/HttpHelmConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
                 "const": "Jira"
               }
             }
@@ -967,6 +1508,22 @@
           "if": {
             "properties": {
               "type": {
+                "const": "NewRelic"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/NewRelicConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
                 "const": "Nexus"
               }
             }
@@ -983,6 +1540,22 @@
           "if": {
             "properties": {
               "type": {
+                "const": "Prometheus"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/PrometheusConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
                 "const": "Splunk"
               }
             }
@@ -991,6 +1564,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/SplunkConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "SumoLogic"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/SumoLogicConnectorDTO"
               }
             }
           }
@@ -1041,6 +1630,40 @@
           "type": "string"
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "DatadogConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "apiKeyRef",
+            "applicationKeyRef",
+            "url"
+          ],
+          "properties": {
+            "apiKeyRef": {
+              "type": "string"
+            },
+            "applicationKeyRef": {
+              "type": "string"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "url": {
+              "type": "string"
+            }
+          }
+        }
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "DockerAuthCredentialsDTO": {
@@ -1095,6 +1718,13 @@
           "properties": {
             "auth": {
               "$ref": "#/definitions/DockerAuthenticationDTO"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "dockerRegistryUrl": {
               "type": "string"
@@ -1152,6 +1782,47 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "GcpBillingExportSpec": {
+      "type": "object",
+      "required": [
+        "datasetId",
+        "projectId"
+      ],
+      "properties": {
+        "datasetId": {
+          "type": "string"
+        },
+        "projectId": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "GcpCloudCostConnector": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "billingExportSpec": {
+              "$ref": "#/definitions/GcpBillingExportSpec"
+            },
+            "featuresEnabled": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "BILLING"
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "GcpConnector": {
       "allOf": [
         {
@@ -1162,6 +1833,13 @@
           "properties": {
             "credential": {
               "$ref": "#/definitions/GcpConnectorCredential"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             }
           }
         }
@@ -1171,7 +1849,6 @@
     "GcpConnectorCredential": {
       "type": "object",
       "required": [
-        "spec",
         "type"
       ],
       "properties": {
@@ -1185,22 +1862,6 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
       "allOf": [
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "InheritFromDelegate"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/GcpDelegateDetails"
-              }
-            }
-          }
-        },
         {
           "if": {
             "properties": {
@@ -1221,31 +1882,6 @@
     },
     "GcpCredentialSpec": {
       "type": "object",
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "GcpDelegateDetails": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/GcpCredentialSpec"
-        },
-        {
-          "type": "object",
-          "required": [
-            "delegateSelectors"
-          ],
-          "properties": {
-            "delegateSelectors": {
-              "type": "array",
-              "uniqueItems": true,
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 2147483647,
-              "minItems": 1
-            }
-          }
-        }
-      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "GcpKmsConnectorDTO": {
@@ -1329,6 +1965,13 @@
                 "Account",
                 "Repo"
               ]
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "gitSync": {
               "$ref": "#/definitions/GitSyncConfig"
@@ -1603,6 +2246,13 @@
             },
             "authentication": {
               "$ref": "#/definitions/GithubAuthentication"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "type": {
               "type": "string",
@@ -1892,6 +2542,13 @@
             "authentication": {
               "$ref": "#/definitions/GitlabAuthentication"
             },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
             "type": {
               "type": "string",
               "enum": [
@@ -2109,6 +2766,112 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "HttpHelmAuthCredentialsDTO": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "HttpHelmAuthenticationDTO": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "UsernamePassword",
+            "Anonymous"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "UsernamePassword"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/HttpHelmUsernamePasswordDTO"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "HttpHelmConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "helmRepoUrl"
+          ],
+          "properties": {
+            "auth": {
+              "$ref": "#/definitions/HttpHelmAuthenticationDTO"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "helmRepoUrl": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "HttpHelmUsernamePasswordDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/HttpHelmAuthCredentialsDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "passwordRef"
+          ],
+          "properties": {
+            "passwordRef": {
+              "type": "string"
+            },
+            "username": {
+              "type": "string"
+            },
+            "usernameRef": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "usernameRef"
+              ]
+            },
+            {
+              "required": [
+                "username"
+              ]
+            }
+          ]
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "JiraConnector": {
       "allOf": [
         {
@@ -2121,6 +2884,13 @@
             "passwordRef"
           ],
           "properties": {
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
             "jiraUrl": {
               "type": "string"
             },
@@ -2270,6 +3040,13 @@
           "properties": {
             "credential": {
               "$ref": "#/definitions/KubernetesCredentialDTO"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             }
           }
         }
@@ -2302,7 +3079,6 @@
     "KubernetesCredentialDTO": {
       "type": "object",
       "required": [
-        "spec",
         "type"
       ],
       "properties": {
@@ -2316,22 +3092,6 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
       "allOf": [
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "InheritFromDelegate"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/KubernetesDelegateDetailsDTO"
-              }
-            }
-          }
-        },
         {
           "if": {
             "properties": {
@@ -2352,31 +3112,6 @@
     },
     "KubernetesCredentialSpecDTO": {
       "type": "object",
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "KubernetesDelegateDetailsDTO": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/KubernetesCredentialSpecDTO"
-        },
-        {
-          "type": "object",
-          "required": [
-            "delegateSelectors"
-          ],
-          "properties": {
-            "delegateSelectors": {
-              "type": "array",
-              "uniqueItems": true,
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 2147483647,
-              "minItems": 1
-            }
-          }
-        }
-      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "KubernetesOpenIdConnectDTO": {
@@ -2505,6 +3240,40 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "NewRelicConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "apiKeyRef",
+            "newRelicAccountId",
+            "url"
+          ],
+          "properties": {
+            "apiKeyRef": {
+              "type": "string"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "newRelicAccountId": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "NexusAuthCredentials": {
       "type": "object",
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -2558,6 +3327,13 @@
             "auth": {
               "$ref": "#/definitions/NexusAuthentication"
             },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
             "nexusServerUrl": {
               "type": "string"
             },
@@ -2608,6 +3384,32 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "PrometheusConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "url"
+          ],
+          "properties": {
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "url": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "SplunkConnectorDTO": {
       "allOf": [
         {
@@ -2623,6 +3425,13 @@
             "accountId": {
               "type": "string"
             },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
             "passwordRef": {
               "type": "string"
             },
@@ -2630,6 +3439,40 @@
               "type": "string"
             },
             "username": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SumoLogicConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "accessIdRef",
+            "accessKeyRef",
+            "url"
+          ],
+          "properties": {
+            "accessIdRef": {
+              "type": "string"
+            },
+            "accessKeyRef": {
+              "type": "string"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "url": {
               "type": "string"
             }
           }

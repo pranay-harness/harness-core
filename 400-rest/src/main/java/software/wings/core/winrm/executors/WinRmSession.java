@@ -1,9 +1,12 @@
 package software.wings.core.winrm.executors;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.windows.CmdUtils.escapeEnvValueSpecialChars;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.configuration.InstallUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -33,6 +36,7 @@ import java.util.Map.Entry;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CDP)
 public class WinRmSession implements AutoCloseable {
   private static final int retryCount = 1;
   @VisibleForTesting static final String COMMAND_PLACEHOLDER = "%s %s";
@@ -112,8 +116,8 @@ public class WinRmSession implements AutoCloseable {
     return shell.execute(command, output, error);
   }
 
-  public int executeCommandsList(List<List<String>> commandList, Writer output, Writer error, boolean isOutputWriter)
-      throws IOException {
+  public int executeCommandsList(List<List<String>> commandList, Writer output, Writer error, boolean isOutputWriter,
+      String scriptExecCommand) throws IOException {
     WinRmToolResponse winRmToolResponse = null;
     if (commandList.isEmpty()) {
       return -1;
@@ -141,6 +145,9 @@ public class WinRmSession implements AutoCloseable {
         if (statusCode != 0) {
           return statusCode;
         }
+      }
+      if (isNotEmpty(scriptExecCommand)) {
+        statusCode = shell.execute(scriptExecCommand, output, error);
       }
     }
 

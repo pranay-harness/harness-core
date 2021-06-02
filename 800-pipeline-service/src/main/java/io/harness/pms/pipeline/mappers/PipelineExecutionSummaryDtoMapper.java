@@ -1,6 +1,10 @@
 package io.harness.pms.pipeline.mappers;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
@@ -11,8 +15,10 @@ import java.util.Map;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(PIPELINE)
 public class PipelineExecutionSummaryDtoMapper {
-  public PipelineExecutionSummaryDTO toDto(PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity) {
+  public PipelineExecutionSummaryDTO toDto(
+      PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity, EntityGitDetails entityGitDetails) {
     Map<String, GraphLayoutNodeDTO> layoutNodeDTOMap = pipelineExecutionSummaryEntity.getLayoutNodeMap();
     String startingNodeId = pipelineExecutionSummaryEntity.getStartingNodeId();
     return PipelineExecutionSummaryDTO.builder()
@@ -37,6 +43,7 @@ public class PipelineExecutionSummaryDtoMapper {
         .modules(EmptyPredicate.isEmpty(pipelineExecutionSummaryEntity.getModules())
                 ? new ArrayList<>()
                 : pipelineExecutionSummaryEntity.getModules())
+        .gitDetails(entityGitDetails)
         .build();
   }
 

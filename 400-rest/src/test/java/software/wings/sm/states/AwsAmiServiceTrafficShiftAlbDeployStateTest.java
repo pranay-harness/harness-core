@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
@@ -24,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -32,6 +34,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SweepingOutputInstance;
@@ -60,6 +63,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -73,9 +77,11 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 
+@OwnedBy(CDP)
 public class AwsAmiServiceTrafficShiftAlbDeployStateTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ArtifactStreamService artifactStreamService;
@@ -86,7 +92,9 @@ public class AwsAmiServiceTrafficShiftAlbDeployStateTest extends WingsBaseTest {
   @Mock private AwsStateHelper awsStateHelper;
   @Mock private AwsAmiServiceStateHelper awsAmiServiceHelper;
   @Mock private SpotInstStateHelper spotinstStateHelper;
+  @Mock private StateExecutionService stateExecutionService;
 
+  @InjectMocks
   private final AwsAmiServiceTrafficShiftAlbDeployState state =
       spy(new AwsAmiServiceTrafficShiftAlbDeployState("deploy-state"));
 
@@ -95,6 +103,7 @@ public class AwsAmiServiceTrafficShiftAlbDeployStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExecuteSuccess() {
     ExecutionContextImpl mockContext = initializeMockSetup(true);
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
     ExecutionResponse response = state.execute(mockContext);
     verifyDelegateTaskCreationResult(response);
   }
@@ -162,6 +171,7 @@ public class AwsAmiServiceTrafficShiftAlbDeployStateTest extends WingsBaseTest {
     on(state).set("awsStateHelper", awsStateHelper);
     on(state).set("awsAmiServiceHelper", awsAmiServiceHelper);
     on(state).set("spotinstStateHelper", spotinstStateHelper);
+    on(state).set("stateExecutionService", stateExecutionService);
 
     LbDetailsForAlbTrafficShift lbDetails = LbDetailsForAlbTrafficShift.builder()
                                                 .loadBalancerName("lbName")

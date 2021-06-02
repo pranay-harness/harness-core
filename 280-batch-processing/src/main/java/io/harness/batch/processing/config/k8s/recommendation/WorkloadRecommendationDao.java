@@ -1,5 +1,6 @@
 package io.harness.batch.processing.config.k8s.recommendation;
 
+import io.harness.ccm.commons.beans.recommendation.ResourceId;
 import io.harness.persistence.HPersistence;
 
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
@@ -9,6 +10,7 @@ import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecomm
 
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import org.springframework.stereotype.Repository;
@@ -48,8 +50,8 @@ public class WorkloadRecommendationDao {
                               .build());
   }
 
-  void save(K8sWorkloadRecommendation recommendation) {
-    hPersistence.save(recommendation);
+  String save(K8sWorkloadRecommendation recommendation) {
+    return hPersistence.save(recommendation);
   }
 
   @NotNull
@@ -80,6 +82,27 @@ public class WorkloadRecommendationDao {
                               .date(jobStartDate)
                               .containerCheckpoints(new HashMap<>())
                               .build());
+  }
+
+  @NotNull
+  List<PartialRecommendationHistogram> fetchPartialRecommendationHistogramForWorkload(
+      ResourceId workloadId, Instant startDate, Instant endDate) {
+    return hPersistence.createQuery(PartialRecommendationHistogram.class)
+        .field(PartialRecommendationHistogramKeys.accountId)
+        .equal(workloadId.getAccountId())
+        .field(PartialRecommendationHistogramKeys.clusterId)
+        .equal(workloadId.getClusterId())
+        .field(PartialRecommendationHistogramKeys.namespace)
+        .equal(workloadId.getNamespace())
+        .field(PartialRecommendationHistogramKeys.workloadName)
+        .equal(workloadId.getName())
+        .field(PartialRecommendationHistogramKeys.workloadType)
+        .equal(workloadId.getKind())
+        .field(PartialRecommendationHistogramKeys.date)
+        .greaterThanOrEq(startDate)
+        .field(PartialRecommendationHistogramKeys.date)
+        .lessThanOrEq(endDate)
+        .asList();
   }
 
   public void save(PartialRecommendationHistogram partialRecommendationHistogram) {

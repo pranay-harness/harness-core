@@ -25,10 +25,16 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.authenticationservice.recaptcha.ReCaptchaVerifier;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.ng.core.common.beans.Generation;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 
@@ -39,11 +45,11 @@ import software.wings.beans.ErrorData;
 import software.wings.beans.LoginRequest;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
+import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.scheduler.AccountPasswordExpirationJob;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
-import software.wings.service.impl.ReCaptchaVerifier;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -73,6 +79,9 @@ import org.mockito.Mock;
 /**
  * Created by peeyushaggarwal on 4/1/16.
  */
+
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class UserResourceTest extends WingsBaseTest {
   public static final UserService USER_SERVICE = mock(UserService.class);
   public static final HarnessUserGroupService HARNESS_USER_GROUP_SERVICE = mock(HarnessUserGroupService.class);
@@ -85,6 +94,7 @@ public class UserResourceTest extends WingsBaseTest {
   public static final AccountPasswordExpirationJob ACCOUNT_PASSWORD_EXPIRATION_JOB =
       mock(AccountPasswordExpirationJob.class);
   public static final ReCaptchaVerifier RE_CAPTCHA_VERIFIER = mock(ReCaptchaVerifier.class);
+  public static final LoginSettingsService LOGIN_SETTINGS_SERVICE = mock(LoginSettingsService.class);
   public static final TwoFactorAuthenticationManager TWO_FACTOR_AUTHENTICATION_MANAGER =
       mock(TwoFactorAuthenticationManager.class);
   static final AccountPermissionUtils ACCOUNT_PERMISSION_UTILS = mock(AccountPermissionUtils.class);
@@ -101,7 +111,8 @@ public class UserResourceTest extends WingsBaseTest {
       ResourceTestRule.builder()
           .instance(new UserResource(USER_SERVICE, AUTH_SERVICE, ACCOUNT_SERVICE, ACCOUNT_PERMISSION_UTILS,
               AUTHENTICATION_MANAGER, TWO_FACTOR_AUTHENTICATION_MANAGER, CACHES, HARNESS_USER_GROUP_SERVICE,
-              USER_GROUP_SERVICE, MAIN_CONFIGURATION, ACCOUNT_PASSWORD_EXPIRATION_JOB, RE_CAPTCHA_VERIFIER))
+              USER_GROUP_SERVICE, MAIN_CONFIGURATION, ACCOUNT_PASSWORD_EXPIRATION_JOB, RE_CAPTCHA_VERIFIER,
+              LOGIN_SETTINGS_SERVICE))
           .type(WingsExceptionMapper.class)
           .type(MultiPartFeature.class)
           .build();
@@ -123,7 +134,7 @@ public class UserResourceTest extends WingsBaseTest {
     PageRequest pageRequest = mock(PageRequest.class);
     when(pageRequest.getOffset()).thenReturn("0");
     when(pageRequest.getPageSize()).thenReturn(30);
-    when(USER_SERVICE.listUsers(any(), any(), any(), anyInt(), anyInt(), anyBoolean()))
+    when(USER_SERVICE.listUsers(any(), any(), any(), anyInt(), anyInt(), anyBoolean(), anyBoolean()))
         .thenReturn(aPageResponse().withResponse(asList(anUser().build())).build());
     userResource.list(pageRequest, UUIDGenerator.generateUuid(), null, false);
     verify(USER_SERVICE).getTotalUserCount(any(), anyBoolean());
@@ -157,8 +168,8 @@ public class UserResourceTest extends WingsBaseTest {
   public void shouldCheckInvite() {
     String accountId = UUIDGenerator.generateUuid();
     String inviteId = UUIDGenerator.generateUuid();
-    userResource.checkInvite(accountId, inviteId);
-    verify(USER_SERVICE, times(1)).checkInviteStatus(any());
+    userResource.checkInvite(accountId, inviteId, Generation.CG);
+    verify(USER_SERVICE, times(1)).checkInviteStatus(any(), any());
   }
 
   @Test

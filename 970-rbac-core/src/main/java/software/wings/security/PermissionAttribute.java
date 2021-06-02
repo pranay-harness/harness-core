@@ -314,6 +314,10 @@ public class PermissionAttribute {
      */
     EXECUTE_PIPELINE,
     /**
+     * Execute Workflow Rollback
+     */
+    EXECUTE_WORKFLOW_ROLLBACK,
+    /**
      * default action.
      */
     DEFAULT
@@ -458,6 +462,11 @@ public class PermissionAttribute {
     MANAGE_SECRET_MANAGERS,
 
     /**
+     * Manage SSH and WinRM Connection
+     */
+    MANAGE_SSH_AND_WINRM,
+
+    /**
      * Manage Authentication Settings
      */
     MANAGE_AUTHENTICATION_SETTINGS,
@@ -507,6 +516,11 @@ public class PermissionAttribute {
     /**
      * Create custom dashboard
      */
-    CREATE_CUSTOM_DASHBOARDS;
+    CREATE_CUSTOM_DASHBOARDS,
+
+    /**
+     * Manage Restricted Access
+     */
+    MANAGE_RESTRICTED_ACCESS;
   }
 }

@@ -1,5 +1,6 @@
 package io.harness.encryptors;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.UTKARSH;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,6 +12,7 @@ import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.encryptors.clients.HashicorpVaultEncryptor;
@@ -37,6 +39,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @Slf4j
+@OwnedBy(PL)
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({VaultRestClientFactory.class})
 @PowerMockIgnore({"javax.security.*", "org.apache.http.conn.ssl.", "javax.net.ssl.", "javax.crypto.*"})
@@ -77,8 +80,8 @@ public class HashicorpVaultEncryptorTest extends CategoryTest {
     String name = UUIDGenerator.generateUuid();
     String plainText = UUIDGenerator.generateUuid();
     String fullPath = vaultConfig.getBasePath() + "/" + name;
-    when(
-        vaultRestClient.writeSecret(vaultConfig.getAuthToken(), vaultConfig.getSecretEngineName(), fullPath, plainText))
+    when(vaultRestClient.writeSecret(vaultConfig.getAuthToken(), vaultConfig.getNamespace(),
+             vaultConfig.getSecretEngineName(), fullPath, plainText))
         .thenReturn(true);
     EncryptedRecord encryptedRecord =
         hashicorpVaultEncryptor.createSecret(vaultConfig.getAccountId(), name, plainText, vaultConfig);
@@ -94,8 +97,8 @@ public class HashicorpVaultEncryptorTest extends CategoryTest {
     String name = UUIDGenerator.generateUuid();
     String plainText = UUIDGenerator.generateUuid();
     String fullPath = vaultConfig.getBasePath() + "/" + name;
-    when(
-        vaultRestClient.writeSecret(vaultConfig.getAuthToken(), vaultConfig.getSecretEngineName(), fullPath, plainText))
+    when(vaultRestClient.writeSecret(vaultConfig.getAuthToken(), vaultConfig.getNamespace(),
+             vaultConfig.getSecretEngineName(), fullPath, plainText))
         .thenThrow(new IOException("Dummy error"));
     try {
       hashicorpVaultEncryptor.createSecret(vaultConfig.getAccountId(), name, plainText, vaultConfig);
@@ -112,8 +115,8 @@ public class HashicorpVaultEncryptorTest extends CategoryTest {
     String name = UUIDGenerator.generateUuid();
     String plainText = UUIDGenerator.generateUuid();
     String fullPath = vaultConfig.getBasePath() + "/" + name;
-    when(
-        vaultRestClient.writeSecret(vaultConfig.getAuthToken(), vaultConfig.getSecretEngineName(), fullPath, plainText))
+    when(vaultRestClient.writeSecret(vaultConfig.getAuthToken(), vaultConfig.getNamespace(),
+             vaultConfig.getSecretEngineName(), fullPath, plainText))
         .thenReturn(false);
     try {
       hashicorpVaultEncryptor.createSecret(vaultConfig.getAccountId(), name, plainText, vaultConfig);
@@ -130,8 +133,8 @@ public class HashicorpVaultEncryptorTest extends CategoryTest {
     String name = UUIDGenerator.generateUuid();
     String plainText = UUIDGenerator.generateUuid();
     String fullPath = vaultConfig.getBasePath() + "/" + name;
-    when(
-        vaultRestClient.writeSecret(vaultConfig.getAuthToken(), vaultConfig.getSecretEngineName(), fullPath, plainText))
+    when(vaultRestClient.writeSecret(vaultConfig.getAuthToken(), vaultConfig.getNamespace(),
+             vaultConfig.getSecretEngineName(), fullPath, plainText))
         .thenReturn(true);
     EncryptedRecord oldRecord = EncryptedRecordData.builder()
                                     .encryptedValue(UUIDGenerator.generateUuid().toCharArray())
@@ -155,8 +158,8 @@ public class HashicorpVaultEncryptorTest extends CategoryTest {
                                     .encryptedValue(UUIDGenerator.generateUuid().toCharArray())
                                     .encryptionKey(UUIDGenerator.generateUuid())
                                     .build();
-    when(
-        vaultRestClient.writeSecret(vaultConfig.getAuthToken(), vaultConfig.getSecretEngineName(), fullPath, plainText))
+    when(vaultRestClient.writeSecret(vaultConfig.getAuthToken(), vaultConfig.getNamespace(),
+             vaultConfig.getSecretEngineName(), fullPath, plainText))
         .thenThrow(new IOException("Dummy error"));
     try {
       hashicorpVaultEncryptor.updateSecret(vaultConfig.getAccountId(), name, plainText, oldRecord, vaultConfig);
@@ -177,8 +180,8 @@ public class HashicorpVaultEncryptorTest extends CategoryTest {
                                     .encryptedValue(UUIDGenerator.generateUuid().toCharArray())
                                     .encryptionKey(UUIDGenerator.generateUuid())
                                     .build();
-    when(
-        vaultRestClient.writeSecret(vaultConfig.getAuthToken(), vaultConfig.getSecretEngineName(), fullPath, plainText))
+    when(vaultRestClient.writeSecret(vaultConfig.getAuthToken(), vaultConfig.getNamespace(),
+             vaultConfig.getSecretEngineName(), fullPath, plainText))
         .thenReturn(false);
     try {
       hashicorpVaultEncryptor.updateSecret(vaultConfig.getAccountId(), name, plainText, oldRecord, vaultConfig);
@@ -195,15 +198,15 @@ public class HashicorpVaultEncryptorTest extends CategoryTest {
     String name = UUIDGenerator.generateUuid();
     String plainText = UUIDGenerator.generateUuid();
     String fullPath = vaultConfig.getBasePath() + "/" + name;
-    when(
-        vaultRestClient.writeSecret(vaultConfig.getAuthToken(), vaultConfig.getSecretEngineName(), fullPath, plainText))
+    when(vaultRestClient.writeSecret(vaultConfig.getAuthToken(), vaultConfig.getNamespace(),
+             vaultConfig.getSecretEngineName(), fullPath, plainText))
         .thenReturn(true);
     EncryptedRecord oldRecord = EncryptedRecordData.builder()
                                     .encryptedValue(UUIDGenerator.generateUuid().toCharArray())
                                     .encryptionKey(UUIDGenerator.generateUuid())
                                     .build();
-    when(vaultRestClient.readSecret(vaultConfig.getAuthToken(), vaultConfig.getSecretEngineName(),
-             vaultConfig.getBasePath() + "/" + oldRecord.getEncryptionKey()))
+    when(vaultRestClient.readSecret(vaultConfig.getAuthToken(), vaultConfig.getNamespace(),
+             vaultConfig.getSecretEngineName(), vaultConfig.getBasePath() + "/" + oldRecord.getEncryptionKey()))
         .thenReturn(plainText);
     EncryptedRecord encryptedRecord =
         hashicorpVaultEncryptor.renameSecret(vaultConfig.getAccountId(), name, oldRecord, vaultConfig);
@@ -221,8 +224,8 @@ public class HashicorpVaultEncryptorTest extends CategoryTest {
                                     .encryptedValue(UUIDGenerator.generateUuid().toCharArray())
                                     .encryptionKey(UUIDGenerator.generateUuid())
                                     .build();
-    when(vaultRestClient.readSecret(vaultConfig.getAuthToken(), vaultConfig.getSecretEngineName(),
-             vaultConfig.getBasePath() + "/" + oldRecord.getEncryptionKey()))
+    when(vaultRestClient.readSecret(vaultConfig.getAuthToken(), vaultConfig.getNamespace(),
+             vaultConfig.getSecretEngineName(), vaultConfig.getBasePath() + "/" + oldRecord.getEncryptionKey()))
         .thenReturn("");
     try {
       hashicorpVaultEncryptor.renameSecret(vaultConfig.getAccountId(), name, oldRecord, vaultConfig);
@@ -240,8 +243,8 @@ public class HashicorpVaultEncryptorTest extends CategoryTest {
                                     .encryptedValue(UUIDGenerator.generateUuid().toCharArray())
                                     .encryptionKey(UUIDGenerator.generateUuid())
                                     .build();
-    when(vaultRestClient.readSecret(vaultConfig.getAuthToken(), vaultConfig.getSecretEngineName(),
-             vaultConfig.getBasePath() + "/" + oldRecord.getEncryptionKey()))
+    when(vaultRestClient.readSecret(vaultConfig.getAuthToken(), vaultConfig.getNamespace(),
+             vaultConfig.getSecretEngineName(), vaultConfig.getBasePath() + "/" + oldRecord.getEncryptionKey()))
         .thenThrow(new IOException("dummy error"));
     try {
       hashicorpVaultEncryptor.renameSecret(vaultConfig.getAccountId(), name, oldRecord, vaultConfig);
@@ -257,7 +260,8 @@ public class HashicorpVaultEncryptorTest extends CategoryTest {
     String plainText = "plainText";
     EncryptedRecord record =
         EncryptedRecordData.builder().path(UUIDGenerator.generateUuid() + "#" + UUIDGenerator.generateUuid()).build();
-    when(vaultRestClient.readSecret(vaultConfig.getAuthToken(), vaultConfig.getSecretEngineName(), record.getPath()))
+    when(vaultRestClient.readSecret(vaultConfig.getAuthToken(), vaultConfig.getNamespace(),
+             vaultConfig.getSecretEngineName(), record.getPath()))
         .thenReturn(plainText);
     char[] value = hashicorpVaultEncryptor.fetchSecretValue(vaultConfig.getAccountId(), record, vaultConfig);
     assertThat(value).isEqualTo(plainText.toCharArray());
@@ -271,8 +275,8 @@ public class HashicorpVaultEncryptorTest extends CategoryTest {
                                  .encryptedValue(UUIDGenerator.generateUuid().toCharArray())
                                  .encryptionKey(UUIDGenerator.generateUuid())
                                  .build();
-    when(vaultRestClient.readSecret(vaultConfig.getAuthToken(), vaultConfig.getSecretEngineName(),
-             vaultConfig.getBasePath() + "/" + record.getEncryptionKey()))
+    when(vaultRestClient.readSecret(vaultConfig.getAuthToken(), vaultConfig.getNamespace(),
+             vaultConfig.getSecretEngineName(), vaultConfig.getBasePath() + "/" + record.getEncryptionKey()))
         .thenThrow(new IOException("dummy error"));
     try {
       hashicorpVaultEncryptor.fetchSecretValue(vaultConfig.getAccountId(), record, vaultConfig);
@@ -290,8 +294,8 @@ public class HashicorpVaultEncryptorTest extends CategoryTest {
                                  .encryptedValue(UUIDGenerator.generateUuid().toCharArray())
                                  .encryptionKey(UUIDGenerator.generateUuid())
                                  .build();
-    when(vaultRestClient.readSecret(vaultConfig.getAuthToken(), vaultConfig.getSecretEngineName(),
-             vaultConfig.getBasePath() + "/" + record.getEncryptionKey()))
+    when(vaultRestClient.readSecret(vaultConfig.getAuthToken(), vaultConfig.getNamespace(),
+             vaultConfig.getSecretEngineName(), vaultConfig.getBasePath() + "/" + record.getEncryptionKey()))
         .thenReturn("");
     try {
       hashicorpVaultEncryptor.fetchSecretValue(vaultConfig.getAccountId(), record, vaultConfig);

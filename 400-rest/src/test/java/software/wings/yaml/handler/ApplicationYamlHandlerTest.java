@@ -1,5 +1,9 @@
 package software.wings.yaml.handler;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_YAML;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.RAMA;
 
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -8,15 +12,20 @@ import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
 
 import software.wings.beans.Application;
 import software.wings.beans.Application.Yaml;
+import software.wings.beans.Event;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
@@ -25,6 +34,7 @@ import software.wings.service.impl.yaml.handler.app.ApplicationYamlHandler;
 import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHelper;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.yaml.YamlPushService;
 
 import com.google.inject.Inject;
 import java.io.IOException;
@@ -39,17 +49,23 @@ import org.mockito.Mockito;
  * @author rktummala on 1/9/18
  */
 @SetupScheduler
+@OwnedBy(CDC)
+@TargetModule(_870_CG_YAML)
 public class ApplicationYamlHandlerTest extends YamlHandlerTestBase {
   @InjectMocks @Inject YamlHelper yamlHelper;
   @InjectMocks @Inject AppService appService;
   @InjectMocks @Inject private ApplicationYamlHandler yamlHandler;
   @Mock private LimitCheckerFactory limitCheckerFactory;
   @Mock private HarnessTagYamlHelper harnessTagYamlHelper;
+  @Mock private YamlPushService yamlPushService;
+  @Mock private FeatureFlagService featureFlagService;
 
   private final String APP_NAME = "app1";
   private Application application;
 
   private String validYamlContent = "harnessApiVersion: '1.0'\ntype: APPLICATION\ndescription: valid application yaml";
+  private String validYamlContentWithManualTriggerAuthorized =
+      "harnessApiVersion: '1.0'\ntype: APPLICATION\ndescription: valid application yaml\nisManualTriggerAuthorized: true";
   private String validYamlFilePath = "Setup/Applications/" + APP_NAME + "/Index.yaml";
   private String invalidYamlFilePath = "Setup/ApplicationsInvalid/" + APP_NAME + "/Index.yaml";
 
@@ -67,6 +83,10 @@ public class ApplicationYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws IOException {
+    testCRUDAndGet(validYamlContent);
+  }
+
+  private void testCRUDAndGet(String validYamlContent) throws IOException {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
     GitFileChange gitFileChange = new GitFileChange();
@@ -104,6 +124,38 @@ public class ApplicationYamlHandlerTest extends YamlHandlerTestBase {
   }
 
   @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGitSyncFlagOnCRUDFromYaml() throws IOException {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
+    GitFileChange gitFileChange = new GitFileChange();
+    gitFileChange.setFileContent(validYamlContent);
+    gitFileChange.setFilePath(validYamlFilePath);
+    gitFileChange.setAccountId(ACCOUNT_ID);
+    gitFileChange.setSyncFromGit(true);
+
+    ChangeContext<Application.Yaml> changeContext = new ChangeContext<>();
+    changeContext.setChange(gitFileChange);
+    changeContext.setYamlType(YamlType.APPLICATION);
+    changeContext.setYamlSyncHandler(yamlHandler);
+
+    Application.Yaml yamlObject = (Application.Yaml) getYaml(validYamlContent, Yaml.class);
+    changeContext.setYaml(yamlObject);
+
+    Application savedApplication = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
+    compareApp(application, savedApplication);
+    verify(yamlPushService).pushYamlChangeSet(ACCOUNT_ID, null, savedApplication, Event.Type.CREATE, true, false);
+
+    yamlHandler.delete(changeContext);
+    verify(yamlPushService)
+        .pushYamlChangeSet(application.getAccountId(), savedApplication, null, Event.Type.DELETE, true, false);
+
+    Application application = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
+    assertThat(application).isNull();
+  }
+
+  @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testFailures() throws IOException {
@@ -129,5 +181,29 @@ public class ApplicationYamlHandlerTest extends YamlHandlerTestBase {
     assertThat(rhs.getName()).isEqualTo(lhs.getName());
     assertThat(rhs.getAccountId()).isEqualTo(lhs.getAccountId());
     assertThat(rhs.getDescription()).isEqualTo(lhs.getDescription());
+    if (featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, ACCOUNT_ID)) {
+      assertThat(rhs.getIsManualTriggerAuthorized()).isEqualTo(lhs.getIsManualTriggerAuthorized());
+    }
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testCRUDAndGetWithManualTriggerAuthorizedField() throws IOException {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+    when(featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, ACCOUNT_ID)).thenReturn(true);
+    application.setIsManualTriggerAuthorized(true);
+
+    testCRUDAndGet(validYamlContentWithManualTriggerAuthorized);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testCRUDAndGetWithoutManualTriggerAuthorizedField() throws IOException {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+    when(featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, ACCOUNT_ID)).thenReturn(true);
+
+    testCRUDAndGet(validYamlContent);
   }
 }

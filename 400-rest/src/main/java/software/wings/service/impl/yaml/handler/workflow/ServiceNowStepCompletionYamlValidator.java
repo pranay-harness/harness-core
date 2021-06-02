@@ -2,9 +2,11 @@ package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import static software.wings.beans.servicenow.ServiceNowFields.CHANGE_REQUEST_NUMBER;
+
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.serializer.JsonUtils;
 
@@ -18,7 +20,7 @@ import software.wings.yaml.workflow.StepYaml;
 import java.util.Arrays;
 import java.util.Map;
 
-@TargetModule(Module._870_YAML_BEANS)
+@TargetModule(HarnessModule._870_YAML_BEANS)
 public class ServiceNowStepCompletionYamlValidator implements StepCompletionYamlValidator {
   private static final String SERVICE_NOW_ACTION = "action";
 
@@ -76,8 +78,14 @@ public class ServiceNowStepCompletionYamlValidator implements StepCompletionYaml
     if (isBlank(serviceNowCreateUpdateParams.getTicketType())) {
       throw new IncompleteStateException("\"ticketType\" could not be empty or null.");
     }
-    if (isBlank(serviceNowCreateUpdateParams.getIssueNumber())) {
+    if (isBlank(serviceNowCreateUpdateParams.getIssueNumber()) && !serviceNowCreateUpdateParams.isUpdateMultiple()) {
       throw new IncompleteStateException("\"issueNumber\" could not be empty or null.");
+    }
+    if (serviceNowCreateUpdateParams.isUpdateMultiple()) {
+      if (!serviceNowCreateUpdateParams.fetchFields().containsKey(CHANGE_REQUEST_NUMBER)
+          || isBlank(serviceNowCreateUpdateParams.fetchFields().get(CHANGE_REQUEST_NUMBER))) {
+        throw new IncompleteStateException("\"CHANGE_REQUEST_NUMBER\" could not be empty or null.");
+      }
     }
   }
 

@@ -1,0 +1,22 @@
+load("//:tools/bazel/protos/harness_grpc_library.bzl", "harness_grpc_library")
+load("//:tools/bazel/protos/harness_grpc_library.bzl", "harness_grpc_library")
+
+harness_grpc_library(
+    name = "970_ng_commons_proto",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity:970_ng_commons_proto",
+    ],
+)
+
+harness_grpc_library(
+    name = "970_ng_java_contract_proto",
+    java_deps = [
+        "//980-commons:module",
+    ],
+    java_sources = glob(["**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity:970_ng_commons_proto",
+    ],
+)

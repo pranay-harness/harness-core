@@ -2,7 +2,7 @@ package software.wings.service.impl.azure.manager;
 
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.azure.AzureConfigDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -15,6 +15,7 @@ import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 
 import java.util.ArrayList;
@@ -26,12 +27,13 @@ import lombok.Data;
 
 @Data
 @Builder
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class AzureTaskExecutionRequest
     implements TaskParameters, ExecutionCapabilityDemander, ActivityAccess, Cd1ApplicationAccess {
   private AzureConfigDTO azureConfigDTO;
   private List<EncryptedDataDetail> azureConfigEncryptionDetails;
   @Expression(ALLOW_SECRETS) private AzureTaskParameters azureTaskParameters;
+  private ArtifactStreamAttributes artifactStreamAttributes;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

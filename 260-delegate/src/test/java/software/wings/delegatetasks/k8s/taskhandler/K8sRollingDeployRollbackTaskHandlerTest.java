@@ -1,25 +1,36 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.BOJANA;
 
+import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.k8s.K8sRollingRollbackBaseHandler;
 import io.harness.delegate.k8s.beans.K8sRollingRollbackHandlerConfig;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.kubectl.Utils;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogLevel;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -43,7 +54,8 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({K8sTaskHelper.class, Utils.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
   @Mock private K8sTaskHelper taskHelper;
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
@@ -86,7 +98,7 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
     doReturn(true).when(k8sRollingRollbackBaseHandler).init(rollbackHandlerConfig, releaseName, logCallback);
     doReturn(true)
         .when(k8sRollingRollbackBaseHandler)
-        .rollback(rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback);
+        .rollback(rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback, emptySet());
     K8sTaskExecutionResponse response = k8sRollingDeployRollbackTaskHandler.executeTaskInternal(
         k8sRollingDeployRollbackTaskParameters, k8sDelegateTaskParams);
 
@@ -95,7 +107,7 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
     assertThat(rollbackHandlerConfig.getClient()).isNotNull();
     verify(k8sRollingRollbackBaseHandler).init(rollbackHandlerConfig, releaseName, logCallback);
     verify(k8sRollingRollbackBaseHandler)
-        .rollback(rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback);
+        .rollback(rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback, emptySet());
     verify(k8sRollingRollbackBaseHandler)
         .steadyStateCheck(rollbackHandlerConfig, k8sDelegateTaskParams, timeoutIntervalInMin, logCallback);
     verify(k8sRollingRollbackBaseHandler).postProcess(rollbackHandlerConfig, releaseName);
@@ -115,10 +127,27 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
     assertThat(rollbackHandlerConfig.getClient()).isNotNull();
     verify(k8sRollingRollbackBaseHandler).init(rollbackHandlerConfig, releaseName, logCallback);
     verify(k8sRollingRollbackBaseHandler, never())
-        .rollback(rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback);
+        .rollback(rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback, emptySet());
     verify(k8sRollingRollbackBaseHandler, never())
         .steadyStateCheck(rollbackHandlerConfig, k8sDelegateTaskParams, timeoutIntervalInMin, logCallback);
     verify(k8sRollingRollbackBaseHandler, never()).postProcess(rollbackHandlerConfig, releaseName);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRollbackInitThrownException() throws Exception {
+    InvalidRequestException thrownException = new InvalidRequestException("failed to init");
+
+    doThrow(thrownException).when(k8sRollingRollbackBaseHandler).init(rollbackHandlerConfig, releaseName, logCallback);
+
+    assertThatThrownBy(()
+                           -> k8sRollingDeployRollbackTaskHandler.executeTaskInternal(
+                               k8sRollingDeployRollbackTaskParameters, k8sDelegateTaskParams))
+        .isEqualTo(thrownException);
+
+    verify(k8sRollingRollbackBaseHandler).init(rollbackHandlerConfig, releaseName, logCallback);
+    verify(logCallback).saveExecutionLog(thrownException.getMessage(), ERROR, FAILURE);
   }
 
   @Test
@@ -128,7 +157,7 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
     doReturn(true).when(k8sRollingRollbackBaseHandler).init(rollbackHandlerConfig, releaseName, logCallback);
     doReturn(false)
         .when(k8sRollingRollbackBaseHandler)
-        .rollback(rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback);
+        .rollback(rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback, emptySet());
 
     K8sTaskExecutionResponse response = k8sRollingDeployRollbackTaskHandler.executeTaskInternal(
         k8sRollingDeployRollbackTaskParameters, k8sDelegateTaskParams);
@@ -138,7 +167,7 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
     assertThat(rollbackHandlerConfig.getClient()).isNotNull();
     verify(k8sRollingRollbackBaseHandler).init(rollbackHandlerConfig, releaseName, logCallback);
     verify(k8sRollingRollbackBaseHandler)
-        .rollback(rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback);
+        .rollback(rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback, emptySet());
     verify(k8sRollingRollbackBaseHandler, never())
         .steadyStateCheck(rollbackHandlerConfig, k8sDelegateTaskParams, timeoutIntervalInMin, logCallback);
     verify(k8sRollingRollbackBaseHandler, never()).postProcess(rollbackHandlerConfig, releaseName);
@@ -151,5 +180,30 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
     assertThatExceptionOfType(InvalidArgumentsException.class)
         .isThrownBy(() -> k8sRollingDeployRollbackTaskHandler.executeTaskInternal(null, null))
         .withMessageContaining("INVALID_ARGUMENT");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testExecuteTaskInternalPostProcessThrownException() throws Exception {
+    InvalidRequestException thrownException = new InvalidRequestException("failed post process");
+
+    doReturn(true).when(k8sRollingRollbackBaseHandler).init(rollbackHandlerConfig, releaseName, logCallback);
+    doReturn(true)
+        .when(k8sRollingRollbackBaseHandler)
+        .rollback(rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback, emptySet());
+
+    doThrow(thrownException).when(k8sRollingRollbackBaseHandler).postProcess(rollbackHandlerConfig, releaseName);
+
+    assertThatThrownBy(()
+                           -> k8sRollingDeployRollbackTaskHandler.executeTaskInternal(
+                               k8sRollingDeployRollbackTaskParameters, k8sDelegateTaskParams))
+        .isEqualTo(thrownException);
+
+    verify(k8sRollingRollbackBaseHandler)
+        .steadyStateCheck(rollbackHandlerConfig, k8sDelegateTaskParams, timeoutIntervalInMin, logCallback);
+    verify(k8sRollingRollbackBaseHandler).postProcess(rollbackHandlerConfig, releaseName);
+    verify(logCallback).saveExecutionLog(thrownException.getMessage(), ERROR, FAILURE);
+    verify(logCallback, never()).saveExecutionLog(anyString(), any(LogLevel.class), eq(CommandExecutionStatus.SUCCESS));
   }
 }

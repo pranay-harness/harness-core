@@ -1,5 +1,6 @@
 package software.wings.sm.states.azure;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.azure.AzureEnvironmentType.AZURE;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
@@ -22,6 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
 import io.harness.azure.model.AzureAppServiceConnectionStringType;
@@ -65,7 +67,7 @@ import software.wings.beans.VMSSAuthType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.beans.artifact.DockerArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.AzureWebAppCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
@@ -78,7 +80,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -87,7 +88,8 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.sm.states.azure.appservices.AzureAppServiceStateData;
 import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
-import software.wings.sm.states.azure.artifact.DockerArtifactStreamMapper;
+import software.wings.sm.states.azure.artifact.container.DockerArtifactStreamMapper;
+import software.wings.utils.ArtifactType;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -104,6 +106,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
+@OwnedBy(CDP)
 public class AzureVMSSStateHelperTest extends CategoryTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ActivityService activityService;
@@ -111,7 +114,6 @@ public class AzureVMSSStateHelperTest extends CategoryTest {
   @Mock private SettingsService settingsService;
   @Mock private SecretManager secretManager;
   @Mock private LogService logService;
-  @Mock private NGSecretService ngSecretService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
 
@@ -702,7 +704,7 @@ public class AzureVMSSStateHelperTest extends CategoryTest {
 
     doReturn(artifact).when(context).getDefaultArtifactForService("serviceId");
     doReturn(artifactStream).when(artifactStreamService).get("artifactStreamId");
-    doReturn(artifactStreamAttributes).when(artifactStream).fetchArtifactStreamAttributes();
+    doReturn(artifactStreamAttributes).when(artifactStream).fetchArtifactStreamAttributes(null);
 
     AzureMachineImageArtifactDTO azureMachineImageArtifactDTO =
         azureVMSSStateHelper.getAzureMachineImageArtifactDTO(context, "serviceId");
@@ -1144,11 +1146,24 @@ public class AzureVMSSStateHelperTest extends CategoryTest {
   @Owner(developers = OwnerRule.TMACARI)
   @Category(UnitTests.class)
   public void testGetConnectorMapper() {
+    String appId = "appUUID";
+    DeploymentExecutionContext executionContext = mock(DeploymentExecutionContext.class);
+    Application application = new Application();
+    application.setUuid(appId);
+    Service service = Service.builder().uuid("serviceUUID").artifactType(ArtifactType.DOCKER).build();
     Artifact artifact = anArtifact().withArtifactStreamId("artifactStreamId").build();
+    doReturn(service).when(azureVMSSStateHelper).getServiceByAppId(executionContext, appId);
+    doReturn(appId).when(executionContext).getAppId();
 
-    doReturn(new DockerArtifactStream()).when(azureVMSSStateHelper).getArtifactStream("artifactStreamId");
+    ArtifactStream artifactStream = mock(ArtifactStream.class);
+    doReturn(artifactStream).when(azureVMSSStateHelper).getArtifactStream("artifactStreamId");
 
-    ArtifactStreamMapper artifactStreamMapper = azureVMSSStateHelper.getConnectorMapper(artifact);
+    ArtifactStreamAttributes artifactStreamAttributes = mock(ArtifactStreamAttributes.class);
+    doReturn(ArtifactType.DOCKER).when(artifactStreamAttributes).getArtifactType();
+    doReturn(ArtifactStreamType.DOCKER.name()).when(artifactStreamAttributes).getArtifactStreamType();
+    doReturn(artifactStreamAttributes).when(artifactStream).fetchArtifactStreamAttributes(any());
+
+    ArtifactStreamMapper artifactStreamMapper = azureVMSSStateHelper.getConnectorMapper(executionContext, artifact);
     assertThat(artifactStreamMapper).isInstanceOf(DockerArtifactStreamMapper.class);
   }
 }

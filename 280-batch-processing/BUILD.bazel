@@ -1,43 +1,51 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
+load("//:tools/bazel/macros.bzl", "run_analysis")
 
-sources()
+HarnessTeam = "CE"
 
-shared_dependencies = [
+shared_dependencies = ["@batch//:com_squareup_okhttp3_okhttp"] + [
     "//350-event-xxxxxxxxmodule",
+    "//375-ce-graphql:module",
+    "//380-cg-graphql:module",
     "//400-rest:module",
     "//450-ce-views:module",
     "//490-ce-commons:module",
     "//870-orchestration:module",
     "//920-delegate-service-beans:module",
+    "//940-feature-flag:module",
     "//950-delegate-tasks-beans:module",
     "//950-events-framework:module",
+    "//959-psql-database-models:module",
+    "//960-continuous-features:module",
     "//960-persistence:module",
     "//970-grpc:module",
     "//970-rbac-core:module",
+    "@maven//:com_azure_azure_identity",
+    "@maven//:com_azure_azure_storage_blob",
+    "@maven//:com_azure_azure_storage_common",
+    "@maven//:com_microsoft_azure_msal4j",
     "@maven//:com_google_cloud_google_cloud_bigquerydatatransfer",
     "@maven//:com_google_cloud_google_cloud_storage",
     "@maven//:com_openpojo_openpojo",
     "@maven//:com_slack_api_slack_api_client",
+    "@maven//:com_slack_api_slack_api_model",
     "@maven//:de_bwaldvogel_mongo_java_server_core",
     "@maven//:de_bwaldvogel_mongo_java_server_memory_backend",
-    "@maven//:de_flapdoodle_embed_de_flapdoodle_embed_mongo",
+    "@maven//:io_github_resilience4j_resilience4j_core",
     "@maven//:io_github_resilience4j_resilience4j_retry",
+    "@maven//:io_github_resilience4j_resilience4j_retrofit",
+    "@maven//:io_github_resilience4j_resilience4j_circuitbreaker",
     "@maven//:org_apache_avro_avro",
     "@maven//:org_apache_httpcomponents_httpclient",
     "@maven//:org_apache_httpcomponents_httpcore",
-    "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
-    "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
     "@maven//:org_jetbrains_kotlin_kotlin_stdlib",
     "@maven//:org_mongodb_mongo_java_driver",
     "@maven//:org_springframework_batch_spring_batch_core",
     "@maven//:org_springframework_boot_spring_boot_autoconfigure",
     "@maven//:org_springframework_boot_spring_boot_starter_batch",
     "@maven//:org_springframework_data_spring_data_mongodb",
+    "@maven//:org_springframework_boot_spring_boot",
     "@maven//:org_springframework_guice_spring_guice",
     "@maven//:software_amazon_awssdk_athena",
     "@maven//:software_amazon_awssdk_auth",
@@ -54,6 +62,18 @@ shared_dependencies = [
     "@maven//:ch_qos_logback_logback_classic",
     "@maven//:ch_qos_logback_logback_core",
     "@maven//:javax_ws_rs_javax_ws_rs_api",
+    "@maven//:org_projectlombok_lombok",
+    "@maven//:org_zeroturnaround_zt_exec",
+    "@maven//:com_google_inject_guice",
+    "@maven//:com_google_code_gson_gson",
+    "@maven//:com_google_guava_guava",
+    "@maven//:io_vavr_vavr",
+    "@maven//:org_slf4j_jcl_over_slf4j",
+    "@maven//:org_slf4j_jul_to_slf4j",
+    "@maven//:org_slf4j_log4j_over_slf4j",
+    "@maven//:org_slf4j_slf4j_api",
+    "@maven//:org_apache_logging_log4j_log4j_api",
+    "@maven//:org_apache_logging_log4j_log4j_to_slf4j",
     "//:lombok",
 ]
 
@@ -72,14 +92,19 @@ java_binary(
     deps = shared_dependencies,
 )
 
-test_dependencies = shared_dependencies + [
-    ":module",
-    "//400-rest:supporter-test",
-    "//960-persistence:supporter-test",
-    "//990-commons-test:module",
-    "@maven//:org_powermock_powermock_api_mockito",
-    "@maven//:org_springframework_boot_spring_boot_starter_test",
-]
+java_library(
+    name = "supporter-test",
+    testonly = True,
+    srcs = glob(["src/supporter-test/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":module",
+        "//990-commons-test:module",
+        "@maven//:com_slack_api_slack_api_client",
+        "@maven//:com_slack_api_slack_api_model",
+        "@maven//:org_springframework_batch_spring_batch_core",
+    ],
+)
 
 filegroup(
     name = "resource",
@@ -88,6 +113,7 @@ filegroup(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = [
         "resource",
@@ -95,21 +121,24 @@ java_library(
     ],
     resources = [
         "//280-batch-processing/src/main/resources:resource",
+        "//280-batch-processing/src/test/resources:resource",
     ],
-    visibility = ["//visibility:private"],
-    deps = test_dependencies,
+    visibility = ["//visibility:public"],
+    deps = shared_dependencies + [
+        ":module",
+        ":supporter-test",
+        "//400-rest:supporter-test",
+        "//960-persistence:supporter-test",
+        "//990-commons-test:module",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_powermock_powermock_api_mockito",
+        "@maven//:org_powermock_powermock_module_junit4",
+        "@maven//:org_springframework_boot_spring_boot_starter_test",
+    ],
 )
 
 run_tests()
 
-checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":module",
-    ],
-)
-
-pmd()
+run_analysis()

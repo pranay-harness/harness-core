@@ -153,10 +153,12 @@ import software.wings.infra.PhysicalInfraWinrm;
 import software.wings.infra.ProvisionerAware;
 import software.wings.infra.SshBasedInfrastructure;
 import software.wings.infra.WinRmBasedInfrastructure;
+import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.PcfHelperService;
+import software.wings.service.impl.ServiceClassLocator;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
 import software.wings.service.impl.aws.model.AwsSecurityGroup;
@@ -183,6 +185,7 @@ import software.wings.service.intfc.azure.manager.AzureARMManager;
 import software.wings.service.intfc.azure.manager.AzureAppServiceManager;
 import software.wings.service.intfc.azure.manager.AzureVMSSHelperServiceManager;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
+import software.wings.service.intfc.ownership.OwnedByInfrastructureDefinition;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingVariableTypes;
@@ -566,7 +569,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     if (infraDefinition.getCloudProviderType() == CloudProviderType.GCP) {
       SettingAttribute cloudProvider = settingsService.getByAccountAndId(
           infraDefinition.getAccountId(), infraDefinition.getInfrastructure().getCloudProviderId());
-      if (((GcpConfig) cloudProvider.getValue()).isUseDelegate()) {
+      if (((GcpConfig) cloudProvider.getValue()).isUseDelegateSelectors()) {
         throw new InvalidRequestException(
             "Infrastructure Definition Using a GCP Cloud Provider Inheriting from Delegate is not yet supported", USER);
       }
@@ -798,7 +801,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
     ensureSafeToDelete(appId, infrastructureDefinition);
 
-    wingsPersistence.delete(InfrastructureDefinition.class, appId, infraDefinitionId);
+    prune(appId, infraDefinitionId);
     yamlPushService.pushYamlChangeSet(accountId, infrastructureDefinition, null, Type.DELETE, false, false);
   }
 
@@ -1033,6 +1036,29 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     final InfrastructureDefinition infrastructureDefinition =
         wingsPersistence.createQuery(InfrastructureDefinition.class)
             .filter(InfrastructureDefinitionKeys.appId, appId)
+            .filter(InfrastructureDefinitionKeys.envId, envId)
+            .filter(InfrastructureDefinitionKeys.name, infraDefName)
+            .get();
+
+    customDeploymentTypeService.putCustomDeploymentTypeNameIfApplicable(infrastructureDefinition);
+    return infrastructureDefinition;
+  }
+
+  public InfrastructureDefinition getInfraDefById(String accountId, String infraDefId) {
+    final InfrastructureDefinition infrastructureDefinition =
+        wingsPersistence.createQuery(InfrastructureDefinition.class)
+            .filter(InfrastructureDefinitionKeys.accountId, accountId)
+            .filter(InfrastructureDefinitionKeys.uuid, infraDefId)
+            .get();
+
+    customDeploymentTypeService.putCustomDeploymentTypeNameIfApplicable(infrastructureDefinition);
+    return infrastructureDefinition;
+  }
+
+  public InfrastructureDefinition getInfraByName(String accountId, String infraDefName, String envId) {
+    final InfrastructureDefinition infrastructureDefinition =
+        wingsPersistence.createQuery(InfrastructureDefinition.class)
+            .filter(InfrastructureDefinitionKeys.accountId, accountId)
             .filter(InfrastructureDefinitionKeys.envId, envId)
             .filter(InfrastructureDefinitionKeys.name, infraDefName)
             .get();
@@ -1281,17 +1307,28 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
     notNullCheck("Infrastructure Definition", infrastructureDefinition);
     InfraMappingInfrastructureProvider provider = infrastructureDefinition.getInfrastructure();
+
     String region = extractRegionFromInfrastructureProvider(provider);
     if (isEmpty(region)) {
       return Collections.emptyMap();
     }
     SettingAttribute computeProviderSetting = settingsService.get(provider.getCloudProviderId());
     notNullCheck("ComputeProvider", computeProviderSetting);
-    List<String> elasticBalancers = ((AwsInfrastructureProvider) infrastructureProviderMap.get(AWS.name()))
-                                        .listElasticBalancers(computeProviderSetting, region, appId);
+
     Map<String, String> lbMap = new HashMap<>();
-    for (String lbName : elasticBalancers) {
-      lbMap.put(lbName, lbName);
+    try {
+      List<String> elasticBalancers = ((AwsInfrastructureProvider) infrastructureProviderMap.get(AWS.name()))
+                                          .listElasticBalancers(computeProviderSetting, region, appId);
+
+      for (String lbName : elasticBalancers) {
+        lbMap.put(lbName, lbName);
+      }
+    } catch (Exception ex) {
+      if (isNotEmpty(infrastructureDefinition.getProvisionerId())) {
+        return emptyMap();
+      } else {
+        throw ex;
+      }
     }
 
     return lbMap;
@@ -1339,7 +1376,16 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
                                                                     : ((AwsEcsInfrastructure) provider).getRegion();
       AwsInfrastructureProvider infrastructureProvider =
           (AwsInfrastructureProvider) infrastructureProviderMap.get(AWS.name());
-      return infrastructureProvider.listTargetGroups(computeProviderSetting, region, loadbalancerName, appId);
+
+      try {
+        return infrastructureProvider.listTargetGroups(computeProviderSetting, region, loadbalancerName, appId);
+      } catch (Exception ex) {
+        if (isNotEmpty(infrastructureDefinition.getProvisionerId())) {
+          return emptyMap();
+        } else {
+          throw ex;
+        }
+      }
     }
     return Collections.emptyMap();
   }
@@ -1520,7 +1566,10 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
   @Override
   public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String infraDefinitionId) {
-    // no descending entity for infra definition
+    List<OwnedByInfrastructureDefinition> services = ServiceClassLocator.descendingServices(
+        this, InfrastructureDefinitionServiceImpl.class, OwnedByInfrastructureDefinition.class);
+    PruneEntityListener.pruneDescendingEntities(
+        services, descending -> descending.pruneByInfrastructureDefinition(appId, infraDefinitionId));
   }
 
   @Override

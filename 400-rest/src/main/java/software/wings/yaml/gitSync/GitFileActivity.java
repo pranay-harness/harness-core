@@ -2,9 +2,9 @@ package software.wings.yaml.gitSync;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.git.model.ChangeType;
-import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -13,6 +13,8 @@ import io.harness.persistence.UuidAware;
 
 import software.wings.beans.GitRepositoryInfo;
 
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import javax.ws.rs.DefaultValue;
 import lombok.Builder;
 import lombok.Data;
@@ -25,25 +27,46 @@ import org.mongodb.morphia.annotations.Transient;
  * @author vardanb
  */
 
-@CdIndex(name = "accountId_procCommitId_filePath_status",
-    fields = { @Field("accountId")
-               , @Field("processingCommitId"), @Field("filePath"), @Field("status") })
-@CdIndex(name = "accountId_procCommitId_status",
-    fields = { @Field("accountId")
-               , @Field("processingCommitId"), @Field("status") })
-@CdIndex(name = "accountId_filePath", fields = { @Field("accountId")
-                                                 , @Field("filePath") })
-@CdIndex(name = "accountId_commitId_Idx", fields = { @Field("accountId")
-                                                     , @Field("commitId") })
-@CdIndex(name = "accountId_appId_createdAt_Idx",
-    fields = { @Field("accountId")
-               , @Field("appId"), @Field(value = "createdAt", type = IndexType.DESC) })
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "GitFileActivityKeys")
 @Entity(value = "gitFileActivity")
 @HarnessEntity(exportable = false)
 public class GitFileActivity implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_procCommitId_filePath_status")
+                 .field(GitFileActivityKeys.accountId)
+                 .field(GitFileActivityKeys.processingCommitId)
+                 .field(GitFileActivityKeys.filePath)
+                 .field(GitFileActivityKeys.status)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_procCommitId_status")
+                 .field(GitFileActivityKeys.accountId)
+                 .field(GitFileActivityKeys.processingCommitId)
+                 .field(GitFileActivityKeys.status)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_filePath")
+                 .field(GitFileActivityKeys.accountId)
+                 .field(GitFileActivityKeys.filePath)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_commitId_Idx")
+                 .field(GitFileActivityKeys.accountId)
+                 .field(GitFileActivityKeys.commitId)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_appId_createdAt_Idx")
+                 .field(GitFileActivityKeys.accountId)
+                 .field(GitFileActivityKeys.appId)
+                 .descSortField(GitFileActivityKeys.createdAt)
+                 .build())
+        .build();
+  }
+
   @Id private String uuid;
   private String accountId;
   private String filePath;

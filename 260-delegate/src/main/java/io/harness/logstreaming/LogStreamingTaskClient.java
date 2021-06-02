@@ -9,11 +9,9 @@ import static software.wings.beans.LogWeight.Bold;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
-import io.harness.delegate.beans.logstreaming.LogLine;
-import io.harness.delegate.beans.logstreaming.LogStreamingSanitizer;
 import io.harness.delegate.beans.taskprogress.ITaskProgressClient;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.LogCallback;
@@ -32,10 +30,10 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @Builder
 @Slf4j
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class LogStreamingTaskClient implements ILogStreamingTaskClient {
   private final DelegateLogService logService;
-  private final DelegateAgentLogStreamingClient delegateAgentLogStreamingClient;
+  private final LogStreamingClient logStreamingClient;
   private final LogStreamingSanitizer logStreamingSanitizer;
   private final String token;
   private final String accountId;
@@ -51,7 +49,7 @@ public class LogStreamingTaskClient implements ILogStreamingTaskClient {
         baseLogKey + (isBlank(baseLogKeySuffix) ? "" : String.format(COMMAND_UNIT_PLACEHOLDER, baseLogKeySuffix));
 
     try {
-      SafeHttpCall.executeWithExceptions(delegateAgentLogStreamingClient.openLogStream(token, accountId, logKey));
+      SafeHttpCall.executeWithExceptions(logStreamingClient.openLogStream(token, accountId, logKey));
     } catch (Exception ex) {
       log.error("Unable to open log stream for account {} and key {}", accountId, logKey, ex);
     }
@@ -63,8 +61,7 @@ public class LogStreamingTaskClient implements ILogStreamingTaskClient {
         baseLogKey + (isBlank(baseLogKeySuffix) ? "" : String.format(COMMAND_UNIT_PLACEHOLDER, baseLogKeySuffix));
 
     try {
-      SafeHttpCall.executeWithExceptions(
-          delegateAgentLogStreamingClient.closeLogStream(token, accountId, logKey, true));
+      SafeHttpCall.executeWithExceptions(logStreamingClient.closeLogStream(token, accountId, logKey, true));
     } catch (Exception ex) {
       log.error("Unable to close log stream for account {} and key {}", accountId, logKey, ex);
     }
@@ -84,7 +81,7 @@ public class LogStreamingTaskClient implements ILogStreamingTaskClient {
 
     try {
       SafeHttpCall.executeWithExceptions(
-          delegateAgentLogStreamingClient.pushMessage(token, accountId, logKey, Arrays.asList(logLine)));
+          logStreamingClient.pushMessage(token, accountId, logKey, Arrays.asList(logLine)));
     } catch (Exception ex) {
       log.error("Unable to push message to log stream for account {} and key {}", accountId, logKey, ex);
     }

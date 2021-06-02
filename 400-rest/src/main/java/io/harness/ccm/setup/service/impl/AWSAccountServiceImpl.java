@@ -1,5 +1,8 @@
 package io.harness.ccm.setup.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.setup.CECloudAccountDao;
 import io.harness.ccm.setup.service.intfc.AWSAccountService;
 import io.harness.ccm.setup.service.support.intfc.AWSOrganizationHelperService;
@@ -21,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
+@OwnedBy(CE)
 public class AWSAccountServiceImpl implements AWSAccountService {
   private final MainConfiguration configuration;
   private final SettingsService settingsService;

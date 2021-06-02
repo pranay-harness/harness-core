@@ -1,6 +1,10 @@
 package io.harness.ngpipeline.pipeline.beans.yaml;
 
-import io.harness.common.SwaggerConstants;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.ToBeDeleted;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
@@ -9,7 +13,6 @@ import io.harness.ng.RsqlQueryable;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline.NgPipelineKeys;
 import io.harness.ngpipeline.visitor.helpers.ngpipeline.NgPipelineVisitorHelper;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -42,6 +45,9 @@ import org.springframework.data.annotation.TypeAlias;
     })
 @SimpleVisitorHelper(helperClass = NgPipelineVisitorHelper.class)
 @TypeAlias("ngPipeline")
+@OwnedBy(PIPELINE)
+@ToBeDeleted
+@Deprecated
 public class NgPipeline implements Pipeline, Visitable {
   @NotNull(groups = PreInputSet.class) @Required(groups = PostInputSet.class) @EntityName String name;
   @NotNull(groups = PreInputSet.class) @Required(groups = PostInputSet.class) @EntityIdentifier String identifier;
@@ -66,10 +72,5 @@ public class NgPipeline implements Pipeline, Visitable {
       stages.forEach(stage -> visitableChildren.add("stages", stage));
     }
     return visitableChildren;
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(identifier).build();
   }
 }

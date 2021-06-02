@@ -8,6 +8,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 
+import static com.google.common.cache.CacheLoader.InvalidCacheLoadException;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -15,13 +16,19 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.BreakDependencyOn;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
+import io.harness.beans.FeatureName;
+import io.harness.beans.shared.tasks.NgSetupFields;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateActivity;
+import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
@@ -39,7 +46,6 @@ import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.service.dto.RetryDelegate;
 import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateTaskRetryObserver;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -74,6 +80,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
@@ -81,14 +88,16 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @BreakDependencyOn("io.harness.beans.EnvironmentType")
-@BreakDependencyOn("io.harness.tasks.Cd1SetupFields")
+@BreakDependencyOn("io.harness.beans.Cd1SetupFields")
 @BreakDependencyOn("software.wings.beans.Environment")
 @BreakDependencyOn("software.wings.beans.InfrastructureMapping")
 @BreakDependencyOn("software.wings.service.intfc.EnvironmentService")
 @BreakDependencyOn("software.wings.service.intfc.InfrastructureMappingService")
+@OwnedBy(HarnessTeam.DEL)
 public class AssignDelegateServiceImpl implements AssignDelegateService, DelegateTaskRetryObserver {
+  public static final String SCOPE_WILDCARD = "*";
   private static final SecureRandom random = new SecureRandom();
   public static final long MAX_DELEGATE_LAST_HEARTBEAT = (5 * 60 * 1000L) + (15 * 1000L); // 5 minutes 15 seconds
 
@@ -132,10 +141,13 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
             public List<Delegate> load(String accountId) {
               return persistence.createQuery(Delegate.class)
                   .filter(DelegateKeys.accountId, accountId)
+                  .field(DelegateKeys.status)
+                  .notEqual(DelegateInstanceStatus.DELETED)
                   .project(DelegateKeys.uuid, true)
                   .project(DelegateKeys.lastHeartBeat, true)
                   .project(DelegateKeys.status, true)
                   .project(DelegateKeys.delegateGroupName, true)
+                  .project(DelegateKeys.delegateGroupId, true)
                   .asList();
             }
           });
@@ -158,7 +170,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       }
     }
 
-    boolean canAssign = canAssignDelegateScopes(batch, delegate, task)
+    boolean canAssign = canAssignOwner(batch, delegate, task.getSetupAbstractions())
+        && canAssignDelegateScopes(batch, delegate, task)
         && canAssignDelegateProfileScopes(batch, delegate, task.getSetupAbstractions())
         && canAssignSelectors(batch, delegate, task.getExecutionCapabilities());
 
@@ -195,9 +208,36 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     if (delegate == null) {
       return false;
     }
-    return canAssignDelegateScopes(batch, delegate, appId, envId, infraMappingId, taskGroup)
+    return canAssignOwner(batch, delegate, taskSetupAbstractions)
+        && canAssignDelegateScopes(batch, delegate, appId, envId, infraMappingId, taskGroup)
         && canAssignDelegateProfileScopes(batch, delegate, taskSetupAbstractions)
         && canAssignSelectors(batch, delegate, executionCapabilities);
+  }
+
+  private boolean canAssignOwner(
+      BatchDelegateSelectionLog batch, Delegate delegate, Map<String, String> taskSetupAbstractions) {
+    DelegateEntityOwner delegateOwner = delegate.getOwner();
+
+    // Account level delegate can handle anything. This is equivalent to CG behavior.
+    if (delegateOwner == null) {
+      return true;
+    }
+
+    // Account level task and delegate with an owner defined
+    if (isEmpty(taskSetupAbstractions) || taskSetupAbstractions.get(NgSetupFields.OWNER) == null) {
+      delegateSelectionLogsService.logOwnerRuleNotMatched(
+          batch, delegate.getAccountId(), delegate.getUuid(), delegateOwner);
+      return false;
+    }
+
+    // Delegate and task having owners that have to be matched
+    boolean canAssign = taskSetupAbstractions.get(NgSetupFields.OWNER).startsWith(delegateOwner.getIdentifier());
+    if (!canAssign) {
+      delegateSelectionLogsService.logOwnerRuleNotMatched(
+          batch, delegate.getAccountId(), delegate.getUuid(), delegateOwner);
+    }
+
+    return canAssign;
   }
 
   private boolean canAssignDelegateScopes(BatchDelegateSelectionLog batch, Delegate delegate, DelegateTask task) {
@@ -318,7 +358,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
 
     boolean includeMatched = includeScopes.isEmpty();
     for (DelegateScope scope : includeScopes) {
-      if (scopeMatch(scope, appId, envId, infraMappingId, taskGroup, delegate.getAccountId())) {
+      if (isDelegateAllowedForScope(
+              scopeMatch(scope, appId, envId, infraMappingId, taskGroup, delegate.getAccountId()))) {
         includeMatched = true;
         break;
       }
@@ -335,7 +376,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     }
 
     for (DelegateScope scope : excludeScopes) {
-      if (scopeMatch(scope, appId, envId, infraMappingId, taskGroup, delegate.getAccountId())) {
+      if (ScopeMatchResult.SCOPE_MATCHED
+          == scopeMatch(scope, appId, envId, infraMappingId, taskGroup, delegate.getAccountId())) {
         delegateSelectionLogsService.logExcludeScopeMatched(
             batch, delegate.getAccountId(), delegate.getUuid(), scope.getName());
         return false;
@@ -384,56 +426,98 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     return canAssignSelector;
   }
 
-  private boolean scopeMatch(
+  private ScopeMatchResult scopeMatch(
       DelegateScope scope, String appId, String envId, String infraMappingId, TaskGroup taskGroup, String accountId) {
     if (!scope.isValid()) {
       log.error("Delegate scope cannot be empty.");
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Delegate scope cannot be empty.");
     }
-    boolean match = true;
+    ScopeMatchResult scopeMatchResult = ScopeMatchResult.SCOPE_MATCHED;
 
     if (isNotEmpty(scope.getEnvironmentTypes())) {
-      if (isNotBlank(appId) && isNotBlank(envId)) {
-        Environment environment = environmentService.get(appId, envId, false);
-        if (environment == null) {
-          log.info("Environment {} referenced by scope {} does not exist.", envId, scope.getName());
-        }
-        match = environment != null && scope.getEnvironmentTypes().contains(environment.getEnvironmentType());
+      if (shouldFollowWildcardScope(appId, accountId) || shouldFollowWildcardScope(envId, accountId)) {
+        scopeMatchResult = ScopeMatchResult.ALLOWED_WILDCARD;
       } else {
-        match = false;
+        if (isNotBlank(appId) && isNotBlank(envId)) {
+          Environment environment = environmentService.get(appId, envId, false);
+          if (environment == null) {
+            log.info("Environment {} referenced by scope {} does not exist.", envId, scope.getName());
+          }
+          scopeMatchResult =
+              environment != null && scope.getEnvironmentTypes().contains(environment.getEnvironmentType())
+              ? ScopeMatchResult.SCOPE_MATCHED
+              : ScopeMatchResult.SCOPE_NOT_MATCHED;
+        } else {
+          scopeMatchResult = ScopeMatchResult.SCOPE_NOT_MATCHED;
+        }
       }
     }
-    if (match && isNotEmpty(scope.getTaskTypes())) {
-      match = scope.getTaskTypes().contains(taskGroup);
+
+    if (isDelegateAllowedForScope(scopeMatchResult) && isNotEmpty(scope.getTaskTypes())) {
+      scopeMatchResult = scope.getTaskTypes().contains(taskGroup) ? ScopeMatchResult.SCOPE_MATCHED
+                                                                  : ScopeMatchResult.SCOPE_NOT_MATCHED;
     }
-    if (match && isNotEmpty(scope.getApplications())) {
-      match = isNotBlank(appId) && scope.getApplications().contains(appId);
+
+    if (isDelegateAllowedForScope(scopeMatchResult) && isNotEmpty(scope.getApplications())) {
+      if (shouldFollowWildcardScope(appId, accountId)) {
+        scopeMatchResult = ScopeMatchResult.ALLOWED_WILDCARD;
+      } else {
+        scopeMatchResult = (isNotBlank(appId) && scope.getApplications().contains(appId))
+            ? ScopeMatchResult.SCOPE_MATCHED
+            : ScopeMatchResult.SCOPE_NOT_MATCHED;
+      }
     }
-    if (match && isNotEmpty(scope.getEnvironments())) {
-      match = isNotBlank(envId) && scope.getEnvironments().contains(envId);
+
+    if (isDelegateAllowedForScope(scopeMatchResult) && isNotEmpty(scope.getEnvironments())) {
+      if (shouldFollowWildcardScope(envId, accountId)) {
+        scopeMatchResult = ScopeMatchResult.ALLOWED_WILDCARD;
+      } else {
+        scopeMatchResult = (isNotBlank(envId) && scope.getEnvironments().contains(envId))
+            ? ScopeMatchResult.SCOPE_MATCHED
+            : ScopeMatchResult.SCOPE_NOT_MATCHED;
+      }
     }
 
     if (isNotEmpty(scope.getInfrastructureDefinitions()) || isNotEmpty(scope.getServices())) {
-      InfrastructureMapping infrastructureMapping =
-          isNotBlank(infraMappingId) ? infrastructureMappingService.get(appId, infraMappingId) : null;
-      if (infrastructureMapping != null) {
-        if (match && isNotEmpty(scope.getInfrastructureDefinitions())) {
-          match = scope.getInfrastructureDefinitions().contains(infrastructureMapping.getInfrastructureDefinitionId());
-        }
-        if (match && isNotEmpty(scope.getServices())) {
-          match = scope.getServices().contains(infrastructureMapping.getServiceId());
-        }
+      if (shouldFollowWildcardScope(appId, accountId) || shouldFollowWildcardScope(infraMappingId, accountId)) {
+        scopeMatchResult = ScopeMatchResult.ALLOWED_WILDCARD;
       } else {
-        match = false;
+        InfrastructureMapping infrastructureMapping =
+            isNotBlank(infraMappingId) ? infrastructureMappingService.get(appId, infraMappingId) : null;
+        if (infrastructureMapping != null) {
+          if (isDelegateAllowedForScope(scopeMatchResult) && isNotEmpty(scope.getInfrastructureDefinitions())) {
+            scopeMatchResult =
+                scope.getInfrastructureDefinitions().contains(infrastructureMapping.getInfrastructureDefinitionId())
+                ? ScopeMatchResult.SCOPE_MATCHED
+                : ScopeMatchResult.SCOPE_NOT_MATCHED;
+          }
+          if (isDelegateAllowedForScope(scopeMatchResult) && isNotEmpty(scope.getServices())) {
+            scopeMatchResult = scope.getServices().contains(infrastructureMapping.getServiceId())
+                ? ScopeMatchResult.SCOPE_MATCHED
+                : ScopeMatchResult.SCOPE_NOT_MATCHED;
+          }
+        } else {
+          scopeMatchResult = ScopeMatchResult.SCOPE_NOT_MATCHED;
+        }
       }
-
     } else {
-      if (match && isNotEmpty(scope.getServiceInfrastructures())) {
-        match = isNotBlank(infraMappingId) && scope.getServiceInfrastructures().contains(infraMappingId);
+      if (isDelegateAllowedForScope(scopeMatchResult) && isNotEmpty(scope.getServiceInfrastructures())) {
+        scopeMatchResult = (isNotBlank(infraMappingId) && scope.getServiceInfrastructures().contains(infraMappingId))
+            ? ScopeMatchResult.SCOPE_MATCHED
+            : ScopeMatchResult.SCOPE_NOT_MATCHED;
       }
     }
 
-    return match;
+    return scopeMatchResult;
+  }
+
+  private boolean shouldFollowWildcardScope(String entityId, String accountId) {
+    return isNotBlank(accountId) && featureFlagService.isEnabled(FeatureName.DELEGATE_ADD_WILDCARD_SCOPING, accountId)
+        && StringUtils.equals(entityId, SCOPE_WILDCARD);
+  }
+
+  private boolean isDelegateAllowedForScope(ScopeMatchResult scopeMatchResult) {
+    return scopeMatchResult == ScopeMatchResult.SCOPE_MATCHED || scopeMatchResult == ScopeMatchResult.ALLOWED_WILDCARD;
   }
 
   @Override
@@ -707,6 +791,16 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   }
 
   @Override
+  public List<Delegate> getAccountDelegates(String accountId) {
+    try {
+      return accountDelegatesCache.get(accountId);
+    } catch (ExecutionException | InvalidCacheLoadException ex) {
+      log.error("Unexpected error occurred while fetching delegates from cache.", ex);
+      return emptyList();
+    }
+  }
+
+  @Override
   public List<String> retrieveActiveDelegates(String accountId, BatchDelegateSelectionLog batch) {
     try {
       List<Delegate> accountDelegates = accountDelegatesCache.get(accountId);
@@ -839,4 +933,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   public void onTaskResponseProcessed(DelegateTask delegateTask, String delegateId) {
     this.refreshWhitelist(delegateTask, delegateId);
   }
+
+  private enum ScopeMatchResult { SCOPE_MATCHED, ALLOWED_WILDCARD, SCOPE_NOT_MATCHED }
 }

@@ -6,11 +6,19 @@ import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delay.DelayEventHelper;
 import io.harness.engine.advise.AdviserResponseHandler;
-import io.harness.engine.interrupts.helpers.RetryHelper;
+import io.harness.engine.interrupts.InterruptManager;
+import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.engine.resume.EngineWaitRetryCallback;
 import io.harness.execution.NodeExecution;
+import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.RetryAdvise;
+import io.harness.pms.contracts.interrupts.AdviserIssuer;
+import io.harness.pms.contracts.interrupts.InterruptConfig;
+import io.harness.pms.contracts.interrupts.InterruptType;
+import io.harness.pms.contracts.interrupts.IssuedBy;
+import io.harness.pms.contracts.interrupts.RetryInterruptConfig;
+import io.harness.serializer.ProtoUtils;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
@@ -23,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 public class RetryAdviserResponseHandler implements AdviserResponseHandler {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private DelayEventHelper delayEventHelper;
-  @Inject private RetryHelper retryHelper;
+  @Inject private InterruptManager interruptManager;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
 
   @Override
@@ -38,6 +46,21 @@ public class RetryAdviserResponseHandler implements AdviserResponseHandler {
           resumeId);
       return;
     }
-    retryHelper.retryNodeExecution(advise.getRetryNodeExecutionId(), null);
+    InterruptPackage interruptPackage =
+        InterruptPackage.builder()
+            .nodeExecutionId(advise.getRetryNodeExecutionId())
+            .planExecutionId(nodeExecution.getAmbiance().getPlanExecutionId())
+            .interruptType(InterruptType.RETRY)
+            .interruptConfig(
+                InterruptConfig.newBuilder()
+                    .setIssuedBy(
+                        IssuedBy.newBuilder()
+                            .setAdviserIssuer(AdviserIssuer.newBuilder().setAdviserType(AdviseType.RETRY).build())
+                            .setIssueTime(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
+                            .build())
+                    .setRetryInterruptConfig(RetryInterruptConfig.newBuilder().build())
+                    .build())
+            .build();
+    interruptManager.register(interruptPackage);
   }
 }

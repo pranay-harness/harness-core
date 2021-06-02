@@ -50,7 +50,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SecretUsageLog;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -495,6 +495,28 @@ public class ConfigServiceTest extends WingsBaseTest {
     return configFile;
   }
 
+  private ConfigFile createConfigFileOverrideForAllServices(String relativeFilePath, String uuid) {
+    ConfigFile configFile = ConfigFile.builder()
+                                .envId(ENV_ID)
+                                .entityType(EntityType.ENVIRONMENT)
+                                .entityId(ENV_ID)
+                                .templateId(TEMPLATE_ID)
+                                .relativeFilePath(relativeFilePath)
+                                .encrypted(true)
+                                .build();
+    configFile.setAccountId(ACCOUNT_ID);
+    configFile.setAppId(APP_ID);
+    configFile.setUuid(uuid);
+    configFile.setFileUuid("GFS_FILE_ID");
+    configFile.setFileName(FILE_NAME);
+    configFile.setChecksum("CHECKSUM");
+    configFile.setSize(12);
+    configFile.setEncryptedFileId("ENC_ID");
+    configFile.setName("Name00");
+
+    return configFile;
+  }
+
   @Test
   @Owner(developers = INDER)
   @Category(UnitTests.class)
@@ -698,6 +720,59 @@ public class ConfigServiceTest extends WingsBaseTest {
   public void shouldAllowRelativePathUpdateForService() {
     ConfigFile savedConfigFile = createConfigFile(PATH, UUID);
     ConfigFile configFile = createConfigFile(PATH + "/test", UUID);
+    configFile.setEncrypted(false);
+    configFile.setDescription("This is a test");
+    when(wingsPersistence.getWithAppId(ConfigFile.class, APP_ID, UUID)).thenAnswer(new Answer() {
+      private int count = 0;
+
+      @Override
+      public Object answer(InvocationOnMock invocationOnMock) {
+        if (count == 0) {
+          count++;
+          return savedConfigFile;
+        }
+        return configFile;
+      }
+    });
+
+    when(wingsPersistence.createQuery(ConfigFile.class)).thenReturn(query);
+    when(query.filter("appId", APP_ID)).thenReturn(query);
+    when(query.filter(ConfigFileKeys.relativeFilePath, savedConfigFile.getRelativeFilePath())).thenReturn(query);
+
+    FieldEnd fieldEnd = mock(FieldEnd.class);
+    CriteriaContainer container = mock(CriteriaContainer.class);
+    when(query.criteria(anyString())).thenReturn(fieldEnd);
+    when(fieldEnd.equal(anyString())).thenReturn(container);
+    when(fieldEnd.in(any(Iterable.class))).thenReturn(container);
+    when(query.or(any(), any())).thenReturn(container);
+    UpdateOperations updateOperations = mock(UpdateOperations.class);
+    when(wingsPersistence.createUpdateOperations(ConfigFile.class)).thenReturn(updateOperations);
+    when(updateOperations.set(eq("relativeFilePath"), anyString())).thenReturn(updateOperations);
+
+    BoundedInputStream boundedInputStream = new BoundedInputStream(this.inputStream);
+    when(query.get()).thenReturn(configFile);
+    when(fileService.saveFile(configFile, boundedInputStream, FileBucket.CONFIGS)).thenReturn(FILE_ID);
+
+    configService.update(configFile, boundedInputStream);
+    verify(wingsPersistence).update(query, updateOperations);
+    ArgumentCaptor<Map> argumentCaptor = ArgumentCaptor.forClass(Map.class);
+    verify(wingsPersistence).updateFields(eq(ConfigFile.class), eq(UUID), argumentCaptor.capture());
+    Map<String, Object> updateMap = argumentCaptor.getValue();
+    assertThat(updateMap.size()).isEqualTo(9);
+    assertThat(updateMap.get("encrypted")).isEqualTo(false);
+    assertThat(updateMap.get("encryptedFileId")).isEqualTo("");
+    assertThat(updateMap.get("size")).isNotNull();
+    assertThat(updateMap.get("fileUuid")).isEqualTo("GFS_FILE_ID");
+    assertThat(updateMap.get("checksum")).isEqualTo("CHECKSUM");
+    assertThat(updateMap.get("description")).isEqualTo("This is a test");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldAllowRelativePathUpdateForFileOverrideForAllServices() {
+    ConfigFile savedConfigFile = createConfigFileOverrideForAllServices(PATH, UUID);
+    ConfigFile configFile = createConfigFileOverrideForAllServices(PATH + "/test", UUID);
     configFile.setEncrypted(false);
     configFile.setDescription("This is a test");
     when(wingsPersistence.getWithAppId(ConfigFile.class, APP_ID, UUID)).thenAnswer(new Answer() {

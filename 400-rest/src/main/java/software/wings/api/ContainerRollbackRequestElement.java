@@ -1,7 +1,7 @@
 package software.wings.api;
 
+import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
-import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.sm.ContextElement;

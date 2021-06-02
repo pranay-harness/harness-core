@@ -1,7 +1,10 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
@@ -23,6 +26,7 @@ import lombok.experimental.FieldNameConstants;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "PcfInfrastructureMappingKeys")
+@OwnedBy(CDP)
 public class PcfInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Organization", required = true) private String organization;
   @Attributes(title = "Space", required = true) private String space;

@@ -25,6 +25,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceHelper.PCF_ROL
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.PCF_SETUP;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_PREFIX;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.SETUP;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.SHELL_SCRIPT;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.VERIFY_SERVICE;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.COMMAND;
@@ -256,16 +257,9 @@ public class WorkflowUtils {
                                     .build())
                        .build());
     phaseSteps.add(aPhaseStep(PhaseStepType.DISABLE_SERVICE, PhaseStepType.DISABLE_SERVICE.name()).build());
-    phaseSteps.add(
-        aPhaseStep(PhaseStepType.DEPLOY_SERVICE, PhaseStepType.DEPLOY_SERVICE.name())
-            .addStep(GraphNode.builder()
-                         .id(generateUuid())
-                         .type(COMMAND.name())
-                         .name("Install")
-                         .properties(ImmutableMap.<String, Object>builder().put("commandName", "Install").build())
-                         .rollback(false)
-                         .build())
-            .build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.DEPLOY_SERVICE, PhaseStepType.DEPLOY_SERVICE.name())
+                       .addStep(getInstallStep())
+                       .build());
     phaseSteps.add(aPhaseStep(PhaseStepType.ENABLE_SERVICE, PhaseStepType.ENABLE_SERVICE.name()).build());
     phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, PhaseStepType.VERIFY_SERVICE.name()).build());
     phaseSteps.add(aPhaseStep(WRAP_UP, WRAP_UP_CONSTANT).build());
@@ -305,16 +299,9 @@ public class WorkflowUtils {
                                     .build())
                        .build());
     phaseSteps.add(aPhaseStep(PhaseStepType.DISABLE_SERVICE, PhaseStepType.DISABLE_SERVICE.name()).build());
-    phaseSteps.add(
-        aPhaseStep(PhaseStepType.DEPLOY_SERVICE, PhaseStepType.DEPLOY_SERVICE.name())
-            .addStep(GraphNode.builder()
-                         .id(generateUuid())
-                         .type(COMMAND.name())
-                         .name("Install")
-                         .properties(ImmutableMap.<String, Object>builder().put("commandName", "Install").build())
-                         .rollback(false)
-                         .build())
-            .build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.DEPLOY_SERVICE, PhaseStepType.DEPLOY_SERVICE.name())
+                       .addStep(getInstallStep())
+                       .build());
     phaseSteps.add(aPhaseStep(PhaseStepType.ENABLE_SERVICE, PhaseStepType.ENABLE_SERVICE.name()).build());
     phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, PhaseStepType.VERIFY_SERVICE.name()).build());
     phaseSteps.add(aPhaseStep(WRAP_UP, WRAP_UP_CONSTANT).build());
@@ -325,7 +312,7 @@ public class WorkflowUtils {
                               .phaseSteps(phaseSteps)
                               .build();
     Map<String, WorkflowPhase> rollbackMap = new HashMap<>();
-    rollbackMap.put(phase.getUuid(), obtainRollbackPhase(phase));
+    rollbackMap.put(phase.getUuid(), obtainRollbackPhase(phase, getInstallStep()));
     return aWorkflow()
         .name(name)
         .appId(service.getAppId())
@@ -342,7 +329,7 @@ public class WorkflowUtils {
         .build();
   }
 
-  public WorkflowPhase obtainRollbackPhase(WorkflowPhase workflowPhase) {
+  public WorkflowPhase obtainRollbackPhase(WorkflowPhase workflowPhase, GraphNode graphNode) {
     WorkflowPhaseBuilder rollbackPhaseBuilder = aWorkflowPhase()
                                                     .name(ROLLBACK_PREFIX + workflowPhase.getName())
                                                     .deploymentType(workflowPhase.getDeploymentType())
@@ -361,13 +348,7 @@ public class WorkflowUtils {
                                .withRollback(true)
                                .build(),
             aPhaseStep(PhaseStepType.DEPLOY_SERVICE, PhaseStepType.DEPLOY_SERVICE.name())
-                .addStep(GraphNode.builder()
-                             .id(generateUuid())
-                             .type(COMMAND.name())
-                             .name("Install")
-                             .properties(ImmutableMap.<String, Object>builder().put("commandName", "Install").build())
-                             .rollback(false)
-                             .build())
+                .addStep(graphNode)
                 .withPhaseStepNameForRollback(PhaseStepType.DEPLOY_SERVICE.name())
                 .withStatusForRollback(SUCCESS)
                 .withRollback(true)
@@ -383,6 +364,16 @@ public class WorkflowUtils {
                 .withRollback(true)
                 .build(),
             aPhaseStep(PhaseStepType.WRAP_UP, PhaseStepType.WRAP_UP.name()).withRollback(true).build()))
+        .build();
+  }
+
+  private GraphNode getInstallStep() {
+    return GraphNode.builder()
+        .id(generateUuid())
+        .type(COMMAND.name())
+        .name("Install")
+        .properties(ImmutableMap.<String, Object>builder().put("commandName", "Install").build())
+        .rollback(false)
         .build();
   }
 
@@ -974,8 +965,124 @@ public class WorkflowUtils {
   }
 
   public Workflow createMultiPhaseSshWorkflowWithNoNodePhase(
-      String name, Service service, InfrastructureDefinition infrastructureDefinition) {
-    List<PhaseStep> phaseSteps = Lists.newArrayList();
+      String name, Service service, InfrastructureDefinition infrastructureDefinition, boolean withShellScript) {
+    List<PhaseStep> phaseSteps = createSshSteps();
+    List<WorkflowPhase> workflowPhases =
+        new ArrayList<>(asList(aWorkflowPhase()
+                                   .serviceId(service.getUuid())
+                                   .infraDefinitionId(infrastructureDefinition.getUuid())
+                                   .phaseSteps(phaseSteps)
+                                   .build(),
+            aWorkflowPhase()
+                .serviceId(service.getUuid())
+                .infraDefinitionId(infrastructureDefinition.getUuid())
+                .phaseSteps(phaseSteps)
+                .build(),
+            aWorkflowPhase()
+                .serviceId(service.getUuid())
+                .infraDefinitionId(infrastructureDefinition.getUuid())
+                .phaseSteps(phaseSteps)
+                .build()));
+
+    if (withShellScript) {
+      workflowPhases.add(aWorkflowPhase()
+                             .serviceId(service.getUuid())
+                             .infraDefinitionId(infrastructureDefinition.getUuid())
+                             .phaseSteps(Collections.singletonList(
+                                 aPhaseStep(PhaseStepType.ENABLE_SERVICE, PhaseStepType.ENABLE_SERVICE.name())
+                                     .addStep(WorkflowUtils.getShellScriptStep("exit 1"))
+                                     .build()))
+                             .build());
+    }
+
+    Map<String, WorkflowPhase> rollbackMap = new HashMap<>();
+    for (WorkflowPhase workflowPhase : workflowPhases) {
+      rollbackMap.put(
+          workflowPhase.getUuid(), obtainRollbackPhase(workflowPhase, WorkflowUtils.getShellScriptStep("exit 0")));
+    }
+
+    return aWorkflow()
+        .name(name)
+        .appId(service.getAppId())
+        .serviceId(service.getUuid())
+        .envId(infrastructureDefinition.getEnvId())
+        .infraDefinitionId(infrastructureDefinition.getUuid())
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                   .withWorkflowPhases(workflowPhases)
+                                   .withRollbackWorkflowPhaseIdMap(rollbackMap)
+                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                   .build())
+        .build();
+  }
+
+  public Workflow createRollingSshWorkflowWithNoNodePhase(
+      String name, Service service, InfrastructureDefinition infrastructureDefinition, boolean withShellScript) {
+    List<PhaseStep> phaseSteps = createSshSteps();
+    if (withShellScript) {
+      phaseSteps.get(0).getSteps().add(WorkflowUtils.getShellScriptStep("exit 1"));
+    }
+    WorkflowPhase workflowPhase = aWorkflowPhase()
+                                      .serviceId(service.getUuid())
+                                      .infraDefinitionId(infrastructureDefinition.getUuid())
+                                      .phaseSteps(phaseSteps)
+                                      .build();
+
+    Map<String, WorkflowPhase> rollbackMap = new HashMap<>();
+    rollbackMap.put(
+        workflowPhase.getUuid(), obtainRollbackPhase(workflowPhase, WorkflowUtils.getShellScriptStep("exit 0")));
+
+    return aWorkflow()
+        .name(name)
+        .appId(service.getAppId())
+        .serviceId(service.getUuid())
+        .envId(infrastructureDefinition.getEnvId())
+        .infraDefinitionId(infrastructureDefinition.getUuid())
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(aRollingOrchestrationWorkflow()
+                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                   .withWorkflowPhases(asList(workflowPhase))
+                                   .withRollbackWorkflowPhaseIdMap(rollbackMap)
+                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                   .build())
+        .build();
+  }
+
+  public Workflow createBasicSshWorkflowWithNoNodePhase(
+      String name, Service service, InfrastructureDefinition infrastructureDefinition, boolean withShellScript) {
+    List<PhaseStep> phaseSteps = createSshSteps();
+    if (withShellScript) {
+      phaseSteps.get(0).getSteps().add(WorkflowUtils.getShellScriptStep("exit 1"));
+    }
+    WorkflowPhase workflowPhase = aWorkflowPhase()
+                                      .serviceId(service.getUuid())
+                                      .infraDefinitionId(infrastructureDefinition.getUuid())
+                                      .phaseSteps(phaseSteps)
+                                      .build();
+
+    Map<String, WorkflowPhase> rollbackMap = new HashMap<>();
+    rollbackMap.put(
+        workflowPhase.getUuid(), obtainRollbackPhase(workflowPhase, WorkflowUtils.getShellScriptStep("exit 0")));
+
+    return aWorkflow()
+        .name(name)
+        .appId(service.getAppId())
+        .serviceId(service.getUuid())
+        .envId(infrastructureDefinition.getEnvId())
+        .infraDefinitionId(infrastructureDefinition.getUuid())
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(aBasicOrchestrationWorkflow()
+                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                                   .withWorkflowPhases(asList(workflowPhase))
+                                   .withRollbackWorkflowPhaseIdMap(rollbackMap)
+                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                                   .build())
+        .build();
+  }
+
+  private List<PhaseStep> createSshSteps() {
+    List<PhaseStep> phaseSteps = new ArrayList<>();
     phaseSteps.add(aPhaseStep(PhaseStepType.SELECT_NODE, PhaseStepType.SELECT_NODE.name())
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
@@ -993,33 +1100,7 @@ public class WorkflowUtils {
     phaseSteps.add(aPhaseStep(PhaseStepType.ENABLE_SERVICE, PhaseStepType.ENABLE_SERVICE.name()).build());
     phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, PhaseStepType.VERIFY_SERVICE.name()).build());
     phaseSteps.add(aPhaseStep(WRAP_UP, WRAP_UP_CONSTANT).build());
-    return aWorkflow()
-        .name(name)
-        .appId(service.getAppId())
-        .serviceId(service.getUuid())
-        .envId(infrastructureDefinition.getEnvId())
-        .infraDefinitionId(infrastructureDefinition.getUuid())
-        .workflowType(WorkflowType.ORCHESTRATION)
-        .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
-                                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
-                                   .withWorkflowPhases(asList(aWorkflowPhase()
-                                                                  .serviceId(service.getUuid())
-                                                                  .infraDefinitionId(infrastructureDefinition.getUuid())
-                                                                  .phaseSteps(phaseSteps)
-                                                                  .build(),
-                                       aWorkflowPhase()
-                                           .serviceId(service.getUuid())
-                                           .infraDefinitionId(infrastructureDefinition.getUuid())
-                                           .phaseSteps(phaseSteps)
-                                           .build(),
-                                       aWorkflowPhase()
-                                           .serviceId(service.getUuid())
-                                           .infraDefinitionId(infrastructureDefinition.getUuid())
-                                           .phaseSteps(phaseSteps)
-                                           .build()))
-                                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
-                                   .build())
-        .build();
+    return phaseSteps;
   }
 
   public static TemplateExpression getTemplateExpressionsForEnv() {
@@ -1043,6 +1124,20 @@ public class WorkflowUtils {
         .mandatory(true)
         .expressionAllowed(false)
         .metadata(metaData)
+        .build();
+  }
+
+  public static GraphNode getShellScriptStep(String script) {
+    return GraphNode.builder()
+        .id(generateUuid())
+        .name(SHELL_SCRIPT)
+        .type(StateType.SHELL_SCRIPT.name())
+        .properties(ImmutableMap.<String, Object>builder()
+                        .put("scriptType", "BASH")
+                        .put("scriptString", script)
+                        .put("timeoutMillis", 60000)
+                        .put("executeOnDelegate", true)
+                        .build())
         .build();
   }
 

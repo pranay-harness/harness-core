@@ -16,4 +16,9 @@ public interface KmsEncryptor {
 
   char[] fetchSecretValue(
       @NotEmpty String accountId, @NotNull EncryptedRecord encryptedRecord, @NotNull EncryptionConfig encryptionConfig);
+
+  default boolean validateKmsConfiguration(String accountId, EncryptionConfig encryptionConfig) {
+    throw new UnsupportedOperationException(
+        "Validating SecretManager Configuration on Delegate in not available yet for:" + encryptionConfig);
+  }
 }

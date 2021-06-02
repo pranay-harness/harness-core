@@ -1,6 +1,9 @@
 package software.wings.api.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.api.DeploymentInfo;
 import software.wings.api.PcfDeploymentInfo;
@@ -21,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Builder
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
+@OwnedBy(CDP)
 public class PcfDeployExecutionSummary extends StepExecutionSummary implements DeploymentInfoExtractor {
   private String releaseName;
   private List<PcfServiceData> instaceData;

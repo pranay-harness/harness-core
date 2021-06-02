@@ -1,5 +1,6 @@
 package io.harness.ng;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.PHOENIKX;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
@@ -11,6 +12,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
@@ -32,6 +34,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(PL)
 public class SecretManagerConnectorServiceImplTest extends CategoryTest {
   private static final String ACCOUNT = "account";
   private NGSecretManagerService ngSecretManagerService;
@@ -62,6 +65,8 @@ public class SecretManagerConnectorServiceImplTest extends CategoryTest {
                                          .build());
     connectorInfo.setName("name");
     connectorInfo.setIdentifier("identifier");
+    connectorInfo.setOrgIdentifier("orgIdentifier");
+    connectorInfo.setProjectIdentifier("projectIdentifier");
     return ConnectorDTO.builder().connectorInfo(connectorInfo).build();
   }
 
@@ -118,6 +123,14 @@ public class SecretManagerConnectorServiceImplTest extends CategoryTest {
         .thenReturn(random(VaultConfigDTO.class));
     when(defaultConnectorService.update(any(), any())).thenReturn(null);
     when(connectorRepository.updateMultiple(any(), any())).thenReturn(null);
+    when(defaultConnectorService.get(any(), any(), any(), any()))
+        .thenReturn(
+            Optional.of(ConnectorResponseDTO.builder()
+                            .connector(ConnectorInfoDTO.builder()
+                                           .connectorType(ConnectorType.VAULT)
+                                           .connectorConfig(VaultConnectorDTO.builder().isDefault(false).build())
+                                           .build())
+                            .build()));
     ConnectorResponseDTO connectorDTO = secretManagerConnectorService.update(getRequestDTO(), ACCOUNT);
     assertThat(connectorDTO).isEqualTo(null);
   }

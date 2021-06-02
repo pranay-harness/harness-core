@@ -28,9 +28,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.NonNull;
 import org.bson.Document;
@@ -86,16 +87,27 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
 
   @Override
   public List<String> findAllByRuntimeId(String planExecutionId, String runtimeId) {
+    Map<String, String> outcomesMap = findAllOutcomesMapByRuntimeId(planExecutionId, runtimeId);
+    if (isEmpty(outcomesMap)) {
+      return Collections.emptyList();
+    }
+    return new ArrayList<>(outcomesMap.keySet());
+  }
+
+  @Override
+  public Map<String, String> findAllOutcomesMapByRuntimeId(String planExecutionId, String runtimeId) {
     Query query = query(where(OutcomeInstanceKeys.planExecutionId).is(planExecutionId))
                       .addCriteria(where(OutcomeInstanceKeys.producedByRuntimeId).is(runtimeId))
                       .with(Sort.by(Sort.Direction.DESC, OutcomeInstanceKeys.createdAt));
 
     List<OutcomeInstance> outcomeInstances = mongoTemplate.find(query, OutcomeInstance.class);
     if (isEmpty(outcomeInstances)) {
-      return Collections.emptyList();
+      return Collections.emptyMap();
     }
 
-    return outcomeInstances.stream().map(oi -> oi.getOutcome().toJson()).collect(Collectors.toList());
+    Map<String, String> outcomesMap = new LinkedHashMap<>();
+    outcomeInstances.forEach(oi -> outcomesMap.put(oi.getName(), oi.getOutcome().toJson()));
+    return outcomesMap;
   }
 
   @Override
@@ -155,5 +167,52 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
       throw new OutcomeException(format("Could not resolve outcome with name '%s'", name));
     }
     return RecastOrchestrationUtils.toDocumentJson(instances.get(0).getOutcome());
+  }
+
+  @Override
+  public OptionalOutcome resolveOptional(Ambiance ambiance, RefObject refObject) {
+    if (EmptyPredicate.isNotEmpty(refObject.getProducerId())) {
+      return resolveOptionalUsingProducerSetupId(ambiance, refObject);
+    }
+    if (!refObject.getName().contains(".")) {
+      // It is not an expression-like ref-object.
+      return resolveOptionalUsingRuntimeId(ambiance, refObject);
+    }
+
+    EngineExpressionEvaluator evaluator =
+        expressionEvaluatorProvider.get(null, ambiance, EnumSet.of(NodeExecutionEntityType.OUTCOME), true);
+    injector.injectMembers(evaluator);
+    try {
+      Object value = evaluator.evaluateExpression(EngineExpressionEvaluator.createExpression(refObject.getName()));
+      return OptionalOutcome.builder().found(true).outcome(value == null ? null : ((Document) value).toJson()).build();
+    } catch (OutcomeException ignore) {
+      return OptionalOutcome.builder().found(false).build();
+    }
+  }
+
+  private OptionalOutcome resolveOptionalUsingProducerSetupId(Ambiance ambiance, RefObject refObject) {
+    String outcome;
+    boolean isResolvable;
+    try {
+      outcome = resolveUsingProducerSetupId(ambiance, refObject);
+      isResolvable = true;
+    } catch (OutcomeException ignore) {
+      outcome = null;
+      isResolvable = false;
+    }
+    return OptionalOutcome.builder().found(isResolvable).outcome(outcome).build();
+  }
+
+  private OptionalOutcome resolveOptionalUsingRuntimeId(Ambiance ambiance, RefObject refObject) {
+    String outcome;
+    boolean isResolvable;
+    try {
+      outcome = resolveUsingRuntimeId(ambiance, refObject);
+      isResolvable = true;
+    } catch (OutcomeException ignore) {
+      outcome = null;
+      isResolvable = false;
+    }
+    return OptionalOutcome.builder().found(isResolvable).outcome(outcome).build();
   }
 }

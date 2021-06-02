@@ -1,5 +1,6 @@
 package software.wings.cloudprovider.aws;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 
@@ -8,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
@@ -45,6 +47,7 @@ import org.mockito.MockitoAnnotations;
  * Created by anubhaw on 6/22/17.
  */
 @Slf4j
+@OwnedBy(CDP)
 public class AwsCodeDeployServiceTest extends WingsBaseTest {
   @InjectMocks @Inject private AwsCodeDeployService awsCodeDeployService;
   @Inject private ScmSecret scmSecret;

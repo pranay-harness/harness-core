@@ -12,6 +12,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceHelper.PRIMARY
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.STAGE_SERVICE_NAME_EXPRESSION;
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -24,7 +25,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.KubernetesConvention;
 import io.harness.serializer.KryoSerializer;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.ContainerServiceElement;
@@ -298,9 +298,12 @@ public class KubernetesSwapServiceSelectors extends State {
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, containerInfraMapping.getUuid())
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, containerInfraMapping.getServiceId())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("Kubernetes swap service selectors task execution")
             .build();
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
+    appendDelegateTaskDetails(context, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Arrays.asList(activity.getUuid()))
@@ -340,5 +343,10 @@ public class KubernetesSwapServiceSelectors extends State {
                                    .name(K8S_SWAP_SERVICE_ELEMENT)
                                    .output(kryoSerializer.asDeflatedBytes(k8sSwapServiceElement))
                                    .build());
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

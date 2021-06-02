@@ -2,7 +2,9 @@ package io.harness.perpetualtask.k8s.informer.handlers;
 
 import static io.harness.perpetualtask.k8s.informer.handlers.support.WorkloadSpecUtils.makeContainerSpecs;
 
-import io.harness.annotations.dev.Module;
+import static com.google.common.base.MoreObjects.firstNonNull;
+
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.event.client.EventPublisher;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
@@ -13,7 +15,7 @@ import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1StatefulSet;
 import java.util.List;
 
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class V1StatefulSetHandler extends BaseHandler<V1StatefulSet> {
   public V1StatefulSetHandler(EventPublisher eventPublisher, ClusterDetails clusterDetails) {
     super(eventPublisher, clusterDetails);
@@ -39,6 +41,9 @@ public class V1StatefulSetHandler extends BaseHandler<V1StatefulSet> {
                               .setWorkloadKind(getKind())
                               .setWorkloadName(statefulSet.getMetadata().getName())
                               .setNamespace(statefulSet.getMetadata().getNamespace())
+                              .setUid(statefulSet.getMetadata().getUid())
+                              .setVersion(1)
+                              .setReplicas(firstNonNull(statefulSet.getSpec().getReplicas(), 0))
                               .addAllContainerSpecs(makeContainerSpecs(containers))
                               .addAllInitContainerSpecs(makeContainerSpecs(initContainers))
                               .build(),
@@ -62,6 +67,9 @@ public class V1StatefulSetHandler extends BaseHandler<V1StatefulSet> {
                                      .setWorkloadKind(getKind())
                                      .addAllContainerSpecs(makeContainerSpecs(containers))
                                      .addAllInitContainerSpecs(makeContainerSpecs(initContainers))
+                                     .setReplicas(firstNonNull(oldStatefulSet.getSpec().getReplicas(), 0))
+                                     .setUid(oldStatefulSet.getMetadata().getUid())
+                                     .setVersion(VERSION)
                                      .build();
       List<V1Container> newContainers = newStatefulSet.getSpec().getTemplate().getSpec().getContainers();
       List<V1Container> newInitContainers = newStatefulSet.getSpec().getTemplate().getSpec().getInitContainers();
@@ -72,6 +80,9 @@ public class V1StatefulSetHandler extends BaseHandler<V1StatefulSet> {
                                      .setWorkloadKind(getKind())
                                      .addAllContainerSpecs(makeContainerSpecs(newContainers))
                                      .addAllInitContainerSpecs(makeContainerSpecs(newInitContainers))
+                                     .setReplicas(firstNonNull(newStatefulSet.getSpec().getReplicas(), 0))
+                                     .setUid(newStatefulSet.getMetadata().getUid())
+                                     .setVersion(VERSION)
                                      .build();
       if (!oldSpecs.equals(newSpecs)) {
         publishWorkloadSpec(newSpecs, occurredAt);

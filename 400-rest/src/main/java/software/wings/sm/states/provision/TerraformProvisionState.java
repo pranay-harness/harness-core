@@ -1,13 +1,15 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.context.ContextElementType.TERRAFORM_INHERIT_PLAN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.TERRAFORM_STATE;
+import static io.harness.delegate.beans.FileBucket.TERRAFORM_STATE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.provision.TerraformConstants.BACKEND_CONFIGS_KEY;
 import static io.harness.provision.TerraformConstants.ENCRYPTED_BACKEND_CONFIGS_KEY;
@@ -46,18 +48,27 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
-import io.harness.beans.FileMetadata;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.FileBucket;
+import io.harness.delegate.beans.FileMetadata;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.task.terraform.TerraformCommand;
+import io.harness.delegate.task.terraform.TerraformCommandUnit;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.provision.TfVarScriptRepositorySource;
 import io.harness.provision.TfVarSource;
@@ -65,7 +76,6 @@ import io.harness.provision.TfVarSource.TfVarSourceType;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.ScriptStateExecutionData;
@@ -91,8 +101,6 @@ import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.delegation.TerraformProvisionParameters;
-import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommand;
-import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommandUnit;
 import software.wings.beans.infrastructure.TerraformConfig;
 import software.wings.beans.infrastructure.TerraformConfig.TerraformConfigKeys;
 import software.wings.dl.WingsPersistence;
@@ -126,15 +134,21 @@ import com.github.reinert.jjschema.Attributes;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -143,6 +157,9 @@ import org.apache.commons.io.IOUtils;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public abstract class TerraformProvisionState extends State {
   @Inject private transient AppService appService;
   @Inject private transient ActivityService activityService;
@@ -182,6 +199,8 @@ public abstract class TerraformProvisionState extends State {
   @Getter @Setter private boolean exportPlanToApplyStep;
   @Getter @Setter private String workspace;
   @Getter @Setter private String delegateTag;
+
+  static final String DUPLICATE_VAR_MSG_PREFIX = "variable names should be unique, duplicate variable(s) found: ";
 
   /**
    * Instantiates a new state.
@@ -254,7 +273,7 @@ public abstract class TerraformProvisionState extends State {
 
     TerraformProvisionInheritPlanElement inheritPlanElement =
         TerraformProvisionInheritPlanElement.builder()
-            .entityId(generateEntityId(context, terraformExecutionData.getWorkspace()))
+            .entityId(generateEntityId(context, terraformExecutionData.getWorkspace(), terraformProvisioner, true))
             .provisionerId(provisionerId)
             .targets(terraformExecutionData.getTargets())
             .delegateTag(terraformExecutionData.getDelegateTag())
@@ -449,7 +468,7 @@ public abstract class TerraformProvisionState extends State {
           if (isNotEmpty(getTargets())) {
             saveTerraformConfig(context, terraformProvisioner, terraformExecutionData);
           } else {
-            deleteTerraformConfig(context, terraformExecutionData);
+            deleteTerraformConfig(context, terraformExecutionData, terraformProvisioner);
           }
         }
       }
@@ -492,6 +511,48 @@ public abstract class TerraformProvisionState extends State {
 
   protected void updateActivityStatus(String activityId, String appId, ExecutionStatus status) {
     activityService.updateStatus(activityId, appId, status);
+  }
+
+  private void validateTerraformVariables() {
+    ensureNoDuplicateVars(getBackendConfigs());
+    ensureNoDuplicateVars(getEnvironmentVariables());
+    ensureNoDuplicateVars(getVariables());
+
+    boolean areVariablesValid = areKeysMongoCompliant(getVariables(), getBackendConfigs(), getEnvironmentVariables());
+    if (!areVariablesValid) {
+      throw new InvalidRequestException("The following characters are not allowed in terraform "
+          + "variable names: . and $");
+    }
+  }
+
+  private void ensureNoDuplicateVars(List<NameValuePair> variables) {
+    if (isEmpty(variables)) {
+      return;
+    }
+
+    HashSet<String> distinctVariableNames = new HashSet<>();
+    Set<String> duplicateVariableNames = new HashSet<>();
+    for (NameValuePair variable : variables) {
+      if (!distinctVariableNames.contains(variable.getName().trim())) {
+        distinctVariableNames.add(variable.getName());
+      } else {
+        duplicateVariableNames.add(variable.getName());
+      }
+    }
+
+    if (!duplicateVariableNames.isEmpty()) {
+      throw new InvalidRequestException(
+          DUPLICATE_VAR_MSG_PREFIX + duplicateVariableNames.toString(), WingsException.USER);
+    }
+  }
+
+  private boolean areKeysMongoCompliant(List<NameValuePair>... variables) {
+    Predicate<String> terraformVariableNameCheckFail = value -> value.contains(".") || value.contains("$");
+    return Stream.of(variables)
+        .filter(EmptyPredicate::isNotEmpty)
+        .flatMap(Collection::stream)
+        .map(NameValuePair::getName)
+        .noneMatch(terraformVariableNameCheckFail);
   }
 
   protected static List<NameValuePair> validateAndFilterVariables(
@@ -541,8 +602,14 @@ public abstract class TerraformProvisionState extends State {
     }
 
     String workspace = context.renderExpression(element.getWorkspace());
-    String entityId = generateEntityId(context, workspace);
+    String entityId = generateEntityId(context, workspace, terraformProvisioner, true);
     String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
+    if (fileId == null) {
+      log.info("Retrieving fileId with old entityId");
+      fileId = fileService.getLatestFileId(
+          generateEntityId(context, workspace, terraformProvisioner, false), TERRAFORM_STATE);
+      log.info("{} fileId with old entityId", fileId == null ? "Didn't retrieve" : "Retrieved");
+    }
     GitConfig gitConfig = gitUtilsManager.getGitConfig(element.getSourceRepoSettingId());
     if (isNotEmpty(element.getSourceRepoReference())) {
       gitConfig.setReference(element.getSourceRepoReference());
@@ -559,8 +626,8 @@ public abstract class TerraformProvisionState extends State {
     Map<String, EncryptedDataDetail> encryptedBackendConfigs = null;
     if (isNotEmpty(allBackendConfigs)) {
       backendConfigs = infrastructureProvisionerService.extractTextVariables(allBackendConfigs, context);
-      encryptedBackendConfigs =
-          infrastructureProvisionerService.extractEncryptedTextVariables(allBackendConfigs, context.getAppId());
+      encryptedBackendConfigs = infrastructureProvisionerService.extractEncryptedTextVariables(
+          allBackendConfigs, context.getAppId(), context.getWorkflowExecutionId());
     }
 
     List<NameValuePair> allVariables = element.getVariables();
@@ -568,8 +635,8 @@ public abstract class TerraformProvisionState extends State {
     Map<String, EncryptedDataDetail> encryptedTextVariables = null;
     if (isNotEmpty(allVariables)) {
       textVariables = infrastructureProvisionerService.extractUnresolvedTextVariables(allVariables);
-      encryptedTextVariables =
-          infrastructureProvisionerService.extractEncryptedTextVariables(allVariables, context.getAppId());
+      encryptedTextVariables = infrastructureProvisionerService.extractEncryptedTextVariables(
+          allVariables, context.getAppId(), context.getWorkflowExecutionId());
     }
 
     List<NameValuePair> allEnvVars = element.getEnvironmentVariables();
@@ -577,7 +644,8 @@ public abstract class TerraformProvisionState extends State {
     Map<String, EncryptedDataDetail> encryptedEnvVars = null;
     if (isNotEmpty(allEnvVars)) {
       envVars = infrastructureProvisionerService.extractUnresolvedTextVariables(allEnvVars);
-      encryptedEnvVars = infrastructureProvisionerService.extractEncryptedTextVariables(allEnvVars, context.getAppId());
+      encryptedEnvVars = infrastructureProvisionerService.extractEncryptedTextVariables(
+          allEnvVars, context.getAppId(), context.getWorkflowExecutionId());
     }
 
     List<String> targets = element.getTargets();
@@ -624,6 +692,10 @@ public abstract class TerraformProvisionState extends State {
             .encryptedTfPlan(element.getEncryptedTfPlan())
             .secretManagerConfig(secretManagerConfig)
             .planName(getPlanName(context))
+            .useTfClient(
+                featureFlagService.isEnabled(FeatureName.USE_TF_CLIENT, executionContext.getApp().getAccountId()))
+            .isGitHostConnectivityCheck(
+                featureFlagService.isEnabled(GIT_HOST_CONNECTIVITY, executionContext.getApp().getAccountId()))
             .build();
     return createAndRunTask(activityId, executionContext, parameters, element.getDelegateTag());
   }
@@ -638,9 +710,11 @@ public abstract class TerraformProvisionState extends State {
   protected ExecutionResponse createAndRunTask(String activityId, ExecutionContextImpl executionContext,
       TerraformProvisionParameters parameters, String delegateTag) {
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
+    String accountId = requireNonNull(executionContext.getApp()).getAccountId();
+
     DelegateTask delegateTask =
         DelegateTask.builder()
-            .accountId(requireNonNull(executionContext.getApp()).getAccountId())
+            .accountId(accountId)
             .waitId(activityId)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, requireNonNull(executionContext.getApp()).getAppId())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD,
@@ -648,6 +722,8 @@ public abstract class TerraformProvisionState extends State {
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD,
                 executionContext.getEnv() != null ? executionContext.getEnv().getEnvironmentType().name() : null)
             .tags(getRenderedTaskTags(delegateTag, executionContext))
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("Terraform provision task execution")
             .data(TaskData.builder()
                       .async(true)
                       .taskType(TERRAFORM_PROVISION_TASK.name())
@@ -666,6 +742,8 @@ public abstract class TerraformProvisionState extends State {
     renderDelegateTask(executionContext, delegateTask, stateExecutionContext);
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(executionContext, delegateTask);
+
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(activityId))
@@ -703,8 +781,15 @@ public abstract class TerraformProvisionState extends State {
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     String workspace = context.renderExpression(this.workspace);
     workspace = handleDefaultWorkspace(workspace);
-    String entityId = generateEntityId(context, workspace);
+    String entityId = generateEntityId(context, workspace, terraformProvisioner, true);
     String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
+    if (fileId == null) {
+      log.info("Retrieving fileId with old entityId");
+      fileId = fileService.getLatestFileId(
+          generateEntityId(context, workspace, terraformProvisioner, false), TERRAFORM_STATE);
+      log.info("{} fileId with old entityId", fileId == null ? "Didn't retrieve" : "Retrieved");
+    }
+
     Map<String, String> variables = null;
     Map<String, EncryptedDataDetail> encryptedVariables = null;
     Map<String, String> backendConfigs = null;
@@ -713,31 +798,39 @@ public abstract class TerraformProvisionState extends State {
     Map<String, EncryptedDataDetail> encryptedEnvironmentVars = null;
     List<NameValuePair> rawVariablesList = new ArrayList<>();
 
+    validateTerraformVariables();
+
     if (isNotEmpty(this.variables) || isNotEmpty(this.backendConfigs) || isNotEmpty(this.environmentVariables)) {
-      List<NameValuePair> validVariables =
-          validateAndFilterVariables(getAllVariables(), terraformProvisioner.getVariables());
+      List<NameValuePair> validVariables = isNotEmpty(getVariables()) ? getVariables() : new ArrayList<>();
       rawVariablesList.addAll(validVariables);
 
       variables = infrastructureProvisionerService.extractUnresolvedTextVariables(validVariables);
-      encryptedVariables =
-          infrastructureProvisionerService.extractEncryptedTextVariables(validVariables, context.getAppId());
+      encryptedVariables = infrastructureProvisionerService.extractEncryptedTextVariables(
+          validVariables, context.getAppId(), context.getWorkflowExecutionId());
 
       if (this.backendConfigs != null) {
         backendConfigs = infrastructureProvisionerService.extractTextVariables(this.backendConfigs, context);
-        encryptedBackendConfigs =
-            infrastructureProvisionerService.extractEncryptedTextVariables(this.backendConfigs, context.getAppId());
+        encryptedBackendConfigs = infrastructureProvisionerService.extractEncryptedTextVariables(
+            this.backendConfigs, context.getAppId(), context.getWorkflowExecutionId());
       }
 
       if (this.environmentVariables != null) {
         List<NameValuePair> validEnvironmentVariables =
-            validateAndFilterVariables(this.environmentVariables, terraformProvisioner.getEnvironmentVariables());
+            isNotEmpty(getEnvironmentVariables()) ? getEnvironmentVariables() : new ArrayList<>();
         environmentVars = infrastructureProvisionerService.extractUnresolvedTextVariables(validEnvironmentVariables);
         encryptedEnvironmentVars = infrastructureProvisionerService.extractEncryptedTextVariables(
-            validEnvironmentVariables, context.getAppId());
+            validEnvironmentVariables, context.getAppId(), context.getWorkflowExecutionId());
       }
 
     } else if (this instanceof DestroyTerraformProvisionState) {
       fileId = fileService.getLatestFileIdByQualifier(entityId, TERRAFORM_STATE, QUALIFIER_APPLY);
+      if (fileId == null) {
+        log.info("Retrieving fileId with old entityId");
+        fileId = fileService.getLatestFileIdByQualifier(
+            generateEntityId(context, workspace, terraformProvisioner, false), TERRAFORM_STATE, QUALIFIER_APPLY);
+        log.info("{} fileId with old entityId", fileId == null ? "Didn't retrieve" : "Retrieved");
+      }
+
       if (fileId != null) {
         FileMetadata fileMetadata = fileService.getFileMetadata(fileId, FileBucket.TERRAFORM_STATE);
 
@@ -840,6 +933,10 @@ public abstract class TerraformProvisionState extends State {
             .secretManagerConfig(secretManagerConfig)
             .encryptedTfPlan(null)
             .planName(getPlanName(context))
+            .useTfClient(
+                featureFlagService.isEnabled(FeatureName.USE_TF_CLIENT, executionContext.getApp().getAccountId()))
+            .isGitHostConnectivityCheck(
+                featureFlagService.isEnabled(GIT_HOST_CONNECTIVITY, executionContext.getApp().getAccountId()))
             .build();
 
     return createAndRunTask(activityId, executionContext, parameters, delegateTag);
@@ -899,7 +996,7 @@ public abstract class TerraformProvisionState extends State {
     Map<String, EncryptedDataDetail> encryptedData = null;
     if (isNotEmpty(rawData)) {
       encryptedData = infrastructureProvisionerService.extractEncryptedTextVariables(
-          extractVariables(rawData, "ENCRYPTED_TEXT"), context.getAppId());
+          extractVariables(rawData, "ENCRYPTED_TEXT"), context.getAppId(), context.getWorkflowExecutionId());
     }
     return encryptedData;
   }
@@ -944,15 +1041,6 @@ public abstract class TerraformProvisionState extends State {
     return targets.stream().map(context::renderExpression).collect(toList());
   }
 
-  /**
-   * getVariables() returns all variables including backend configs.
-   * for just the variables, this method should be called.
-   * @return
-   */
-  private List<NameValuePair> getAllVariables() {
-    return variables;
-  }
-
   protected void saveTerraformConfig(
       ExecutionContext context, TerraformInfrastructureProvisioner provisioner, TerraformExecutionData executionData) {
     TfVarSource tfVarSource = executionData.getTfVarSource();
@@ -960,37 +1048,66 @@ public abstract class TerraformProvisionState extends State {
         ? ((TfVarGitSource) tfVarSource).getGitFileConfig()
         : null;
 
-    TerraformConfig terraformConfig = TerraformConfig.builder()
-                                          .entityId(generateEntityId(context, executionData.getWorkspace()))
-                                          .sourceRepoSettingId(provisioner.getSourceRepoSettingId())
-                                          .sourceRepoReference(executionData.getSourceRepoReference())
-                                          .variables(executionData.getVariables())
-                                          .delegateTag(executionData.getDelegateTag())
-                                          .backendConfigs(executionData.getBackendConfigs())
-                                          .environmentVariables(executionData.getEnvironmentVariables())
-                                          .tfVarFiles(executionData.getTfVarFiles())
-                                          .tfVarGitFileConfig(gitFileConfig)
-                                          .workflowExecutionId(context.getWorkflowExecutionId())
-                                          .targets(executionData.getTargets())
-                                          .command(executionData.getCommandExecuted())
-                                          .appId(context.getAppId())
-                                          .accountId(context.getAccountId())
-                                          .build();
+    TerraformConfig terraformConfig =
+        TerraformConfig.builder()
+            .entityId(generateEntityId(context, executionData.getWorkspace(), provisioner, true))
+            .sourceRepoSettingId(provisioner.getSourceRepoSettingId())
+            .sourceRepoReference(executionData.getSourceRepoReference())
+            .variables(executionData.getVariables())
+            .delegateTag(executionData.getDelegateTag())
+            .backendConfigs(executionData.getBackendConfigs())
+            .environmentVariables(executionData.getEnvironmentVariables())
+            .tfVarFiles(executionData.getTfVarFiles())
+            .tfVarGitFileConfig(gitFileConfig)
+            .workflowExecutionId(context.getWorkflowExecutionId())
+            .targets(executionData.getTargets())
+            .command(executionData.getCommandExecuted())
+            .appId(context.getAppId())
+            .accountId(context.getAccountId())
+            .build();
     wingsPersistence.save(terraformConfig);
   }
 
-  protected String generateEntityId(ExecutionContext context, String workspace) {
+  @VisibleForTesting
+  protected String generateEntityId(ExecutionContext context, String workspace,
+      TerraformInfrastructureProvisioner infrastructureProvisioner, boolean isNewEntityIdType) {
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     String envId = executionContext.getEnv() != null ? executionContext.getEnv().getUuid() : EMPTY;
-    return isEmpty(workspace) ? (provisionerId + "-" + envId) : (provisionerId + "-" + envId + "-" + workspace);
+
+    StringBuilder stringBuilder = new StringBuilder(provisionerId).append('-').append(envId);
+
+    if (isNewEntityIdType) {
+      String normalizedPath = null;
+      if (isNotEmpty(infrastructureProvisioner.getPath())) {
+        normalizedPath =
+            Paths.get("/", context.renderExpression(infrastructureProvisioner.getPath())).normalize().toString();
+      }
+      String branchAndPath = String.format("%s%s",
+          isNotEmpty(infrastructureProvisioner.getSourceRepoBranch())
+              ? context.renderExpression(infrastructureProvisioner.getSourceRepoBranch())
+              : EMPTY,
+          normalizedPath != null ? normalizedPath : EMPTY);
+      stringBuilder.append(isNotEmpty(branchAndPath) ? "-" + branchAndPath.hashCode() : EMPTY);
+    }
+    stringBuilder.append(isEmpty(workspace) ? EMPTY : "-" + workspace);
+
+    return stringBuilder.toString();
   }
 
-  protected void deleteTerraformConfig(ExecutionContext context, TerraformExecutionData terraformExecutionData) {
+  protected void deleteTerraformConfig(ExecutionContext context, TerraformExecutionData terraformExecutionData,
+      TerraformInfrastructureProvisioner infrastructureProvisioner) {
     Query<TerraformConfig> query =
         wingsPersistence.createQuery(TerraformConfig.class)
-            .filter(TerraformConfigKeys.entityId, generateEntityId(context, terraformExecutionData.getWorkspace()));
+            .filter(TerraformConfigKeys.entityId,
+                generateEntityId(context, terraformExecutionData.getWorkspace(), infrastructureProvisioner, true));
 
     wingsPersistence.delete(query);
+
+    boolean deleted = wingsPersistence.delete(
+        wingsPersistence.createQuery(TerraformConfig.class)
+            .filter(TerraformConfigKeys.entityId,
+                generateEntityId(context, terraformExecutionData.getWorkspace(), infrastructureProvisioner, false)));
+    log.info("{} TerraformConfig with old entityId", deleted ? "Deleted" : "Didn't delete");
   }
 
   protected TerraformInfrastructureProvisioner getTerraformInfrastructureProvisioner(ExecutionContext context) {
@@ -1067,5 +1184,10 @@ public abstract class TerraformProvisionState extends State {
   SecretManagerConfig getSecretManagerContainingTfPlan(String secretManagerId, String accountId) {
     return isEmpty(secretManagerId) ? secretManagerConfigService.getDefaultSecretManager(accountId)
                                     : secretManagerConfigService.getSecretManager(accountId, secretManagerId, false);
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

@@ -59,6 +59,7 @@ executionLogStorageMode: MONGO
 #                        GOOGLE_CLOUD_DATA_STORE
 fileStorageMode: MONGO
 clusterName: ""
+deploymentClusterName: ""
 bugsnagApiKey: ""
 numberOfRemindersBeforeAccountDeletion: 3
 
@@ -76,6 +77,8 @@ ceSetUpConfig:
   gcpProjectId: gcpProjectIdPlaceHolder
   awsRoleName: harnessContinuousEfficiencyRole
   sampleAccountId: ""
+  azureAppClientId: placeholder
+  azureAppClientSecret: placeholder
 
 mktPlaceConfig:
   awsAccessKey: awsMktPlaceAccessKeyPlaceHolder
@@ -215,7 +218,7 @@ logging:
       threshold: TRACE
       currentLogFilename: portal.log
       archive: true
-      archivedFileCount: 15
+      archivedFileCount: 5
       maxFileSize: 150MB
       archivedLogFilenamePattern: portal.%d.%i.log
       logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
@@ -233,6 +236,7 @@ timescaledb:
   instanceStatsMigrationQueryBatchSize: 100
   deploymentDataMigrationRowLimit: 1000
   deploymentDataMigrationQueryBatchSize: 100
+  isHealthCheckNeeded: false
 
 grpcServerConfig:
   connectors:
@@ -261,6 +265,10 @@ mongo:
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
   indexManagerMode: AUTO
+  mongoSSLConfig:
+    mongoSSLEnabled: false
+    mongoTrustStorePath:
+    mongoTrustStorePassword:
 
 events-mongo:
   uri: mongodb://localhost:27017/events
@@ -287,6 +295,7 @@ deployMode: KUBERNETES
 envPath: ""
 
 kubectlVersion: v1.13.2
+scmVersion: 444bed53
 
 portal:
   url: https://localhost:8000
@@ -321,6 +330,22 @@ gcpMarketplaceConfig:
 
 cfClientConfig:
   apiKey: ""
+  configUrl: "https://config.feature-flags.uat.harness.io/api/1.0"
+  eventUrl: "https://event.feature-flags.uat.harness.io/api/1.0"
+  analyticsEnabled: true
+  connectionTimeout: 10000
+  readTimeout: 30000
+
+cfMigrationConfig:
+  enabled: false
+  adminUrl : "http://localhost:3000/api/1.0"
+  apiKey: ""
+  account: "default"
+  org: "default_org"
+  project: "project1"
+  environment: "environment1"
+  connectionTimeout: 10000
+  readTimeout: 30000
 
 featuresEnabled: ""
 
@@ -504,11 +529,13 @@ jreConfigs:
     jreDirectory: jre1.8.0_191
     jreMacDirectory: jre1.8.0_191.jre
     jreTarPath: jre/8u191/jre-8u191-${OS}-x64.tar.gz
+    alpnJarPath: tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar
   openjdk8u242:
     version: 1.8.0_242
     jreDirectory: jdk8u242-b08-jre
     jreMacDirectory: jdk8u242-b08-jre
     jreTarPath: jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
+    alpnJarPath: tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar
 
 cdnConfig:
   url: https://qa.harness.io
@@ -518,6 +545,7 @@ cdnConfig:
   watcherJarBasePath: public/shared/watchers/builds
   watcherJarPath: oracle-8u191/%s/watcher.jar
   watcherMetaDataFilePath: public/%s/%s/watchers/current.version
+  alpnJarPath: public/shared/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar
   cdnJreTarPaths:
     oracle8u191: public/shared/jre/oracle-8u191/jre-8u191-${OS}-x64.tar.gz
     openjdk8u242: public/shared/jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
@@ -532,6 +560,7 @@ ngManagerServiceHttpClientConfig:
   baseUrl: http://localhost:7457/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
+  enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
 
 cvngClientConfig:
   baseUrl: https://localhost:6060/cv/
@@ -541,7 +570,7 @@ eventsFramework:
   redis:
     sentinel: false
     masterName: "test"
-    redisUrl: "dummyRedisUrl"
+    redisUrl: "redis://localhost:6379"
     sentinelUrls:
       - "redis://redis1:26379"
       - "redis://redis2:26379"
@@ -550,6 +579,8 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    userName: ""
+    password: ""
 
 mockServerConfig:
   baseUrl: http://localhost
@@ -560,3 +591,5 @@ delegateGrpcServicePort: 8080
 logStreamingServiceConfig:
   baseUrl: http://localhost:8079
   serviceToken: token
+
+exportAccountDataBatchSize: 1000

@@ -12,7 +12,6 @@ import static software.wings.utils.WingsTestConstants.USER_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -23,6 +22,7 @@ import io.harness.rule.Owner;
 
 import software.wings.beans.PipelineStage;
 import software.wings.beans.Variable;
+import software.wings.beans.Variable.VariableBuilder;
 import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
 import software.wings.beans.security.UserGroup;
@@ -103,7 +103,7 @@ public class PipelineStageYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void testEnvStageYamlWithOneVariableWithEmptyValue() throws IOException {
-    Variable emptyVariable = Variable.VariableBuilder.aVariable().name("var1").type(VariableType.TEXT).build();
+    Variable emptyVariable = VariableBuilder.aVariable().name("var1").type(VariableType.TEXT).build();
     Workflow workflow =
         aWorkflow()
             .name(workflowName)

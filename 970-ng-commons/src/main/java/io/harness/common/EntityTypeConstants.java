@@ -1,8 +1,14 @@
 package io.harness.common;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(PL)
 public interface EntityTypeConstants {
   String PROJECTS = "Projects";
   String PIPELINES = "Pipelines";
+  String PIPELINE_STEPS = "PipelineSteps";
   String CONNECTORS = "Connectors";
   String SECRETS = "Secrets";
   String SERVICE = "Service";
@@ -17,4 +23,6 @@ public interface EntityTypeConstants {
   String CV_KUBERNETES_ACTIVITY_SOURCE = "CvKubernetesActivitySource";
   String DEPLOYMENT_STEPS = "DeploymentSteps";
   String DEPLOYMENT_STAGE = "DeploymentStage";
+  String APPROVAL_STAGE = "ApprovalStage";
+  String TRIGGERS = "Triggers";
 }

@@ -4,7 +4,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static java.util.function.Function.identity;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.persistence.HIterator;
 
@@ -12,6 +12,8 @@ import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
+import software.wings.beans.Pipeline;
+import software.wings.beans.Pipeline.PipelineKeys;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.SettingAttribute;
@@ -38,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class NameServiceImpl implements NameService {
   @Inject WingsPersistence wingsPersistence;
 
@@ -51,6 +53,9 @@ public class NameServiceImpl implements NameService {
       case artifactType:
       case environmentType:
       case Type:
+      case deploymentType:
+      case orchestrationWorkflowType:
+        ids.remove(null);
         return nameResultBuilder.type(type)
             .idNameMap(ids.stream().collect(Collectors.toMap(identity(), identity())))
             .build();
@@ -75,6 +80,8 @@ public class NameServiceImpl implements NameService {
         return getUserNames(ids);
       case workflow:
         return getWorkflowNames(ids);
+      case pipeline:
+        return getPipelineNames(ids);
       default:
         log.warn("Unsupported type :[{}]", type);
         return NameResult.builder().type(type).build();
@@ -175,6 +182,19 @@ public class NameServiceImpl implements NameService {
                                                              .in(ids)
                                                              .fetch())) {
       workflows.forEachRemaining(workflow -> { names.put(workflow.getUuid(), workflow.getName()); });
+    }
+    return nameResultBuilder.idNameMap(names).build();
+  }
+
+  private NameResult getPipelineNames(Set<String> ids) {
+    NameResultBuilder nameResultBuilder = NameResult.builder();
+    Map<String, String> names = new HashMap<>();
+    try (HIterator<Pipeline> pipelines = new HIterator<>(wingsPersistence.createQuery(Pipeline.class, excludeAuthority)
+                                                             .project(PipelineKeys.name, true)
+                                                             .field(PipelineKeys.uuid)
+                                                             .in(ids)
+                                                             .fetch())) {
+      pipelines.forEachRemaining(pipeline -> { names.put(pipeline.getUuid(), pipeline.getName()); });
     }
     return nameResultBuilder.idNameMap(names).build();
   }

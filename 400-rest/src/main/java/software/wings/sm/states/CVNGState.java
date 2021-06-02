@@ -1,12 +1,13 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.DeploymentActivityDTO;
 import io.harness.cvng.beans.activity.cd10.CD10RegisterActivityDTO;
-import io.harness.cvng.beans.job.VerificationJobDTO;
-import io.harness.cvng.beans.job.VerificationJobDTO.VerificationJobDTOKeys;
 import io.harness.cvng.client.CVNGService;
 import io.harness.cvng.state.CVNGVerificationTask;
 import io.harness.cvng.state.CVNGVerificationTask.Status;
@@ -47,9 +48,11 @@ import lombok.NoArgsConstructor;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
+
 @Data
 @FieldNameConstants(innerTypeName = "CVNGStateKeys")
 @Slf4j
+@OwnedBy(CV)
 public class CVNGState extends State {
   @VisibleForTesting static final String DEFAULT_HOSTNAME_TEMPLATE = "${instanceDetails.hostName}";
   private static final Duration DEFAULT_INITIAL_DELAY = Duration.ofMinutes(2);
@@ -103,15 +106,7 @@ public class CVNGState extends State {
                                                 .runtimeValues(getRuntimeValues(context, workflowExecution))
                                                 .build()))
               .build();
-      String serviceIdentifier = getValue(context, VerificationJobDTOKeys.serviceIdentifier);
-      String envIdentifier = getValue(context, VerificationJobDTOKeys.envIdentifier);
 
-      if (!VerificationJobDTO.isRuntimeParam(serviceIdentifier)) {
-        activityDTO.setServiceIdentifier(serviceIdentifier);
-      }
-      if (!VerificationJobDTO.isRuntimeParam(envIdentifier)) {
-        activityDTO.setEnvironmentIdentifier(envIdentifier);
-      }
       CD10RegisterActivityDTO cd10RegisterActivityDTO =
           cvngService.registerActivity(context.getAccountId(), activityDTO);
       String correlationId = UUID.randomUUID().toString();
@@ -122,7 +117,7 @@ public class CVNGState extends State {
               .projectIdentifier(projectIdentifier)
               .orgIdentifier(orgIdentifier)
               .deploymentTag(getDeploymentTag(context))
-              .serviceIdentifier(serviceIdentifier)
+              .serviceIdentifier(cd10RegisterActivityDTO.getServiceIdentifier())
               .activityId(cd10RegisterActivityDTO.getActivityId())
               .deploymentTag(getDeploymentTag(context))
               .envIdentifier(cd10RegisterActivityDTO.getEnvIdentifier())
@@ -315,4 +310,6 @@ public class CVNGState extends State {
     private Set<String> newVersionHosts;
     private Optional<Integer> newNodesTrafficShiftPercent;
   }
+
+  public enum StepStatus { SUCCESS, FAILED }
 }

@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 
@@ -8,13 +9,15 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsElbListenerRuleData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.TimeoutException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
@@ -47,7 +50,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
   private static final String DELIMITER = "__";
   @Inject private AwsHelperService awsHelperService;
@@ -98,6 +102,17 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
           commandExecutionDataBuilder, executionLogCallback);
 
       ecsCommandResponse.setSetupData(commandExecutionDataBuilder.build());
+    } catch (TimeoutException ex) {
+      log.error("Completed operation with errors");
+      log.error(ExceptionUtils.getMessage(ex), ex);
+      Misc.logAllMessages(ex, executionLogCallback);
+
+      commandExecutionStatus = CommandExecutionStatus.FAILURE;
+      ecsCommandResponse.setCommandExecutionStatus(commandExecutionStatus);
+      ecsCommandResponse.setOutput(ExceptionUtils.getMessage(ex));
+      if (ecsCommandRequest.isTimeoutErrorSupported()) {
+        ecsCommandResponse.setTimeoutFailure(true);
+      }
     } catch (Exception ex) {
       log.error("Completed operation with errors");
       log.error(ExceptionUtils.getMessage(ex), ex);

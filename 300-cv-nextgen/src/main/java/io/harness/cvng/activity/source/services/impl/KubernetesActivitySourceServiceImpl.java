@@ -237,4 +237,17 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
                                                           .build()));
     return kubernetesActivityDetailsDTOBuilder.build();
   }
+
+  @Override
+  public void checkConnectivity(
+      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String tracingId) {
+    List<String> kubernetesNamespaces = verificationManagerService.getKubernetesNamespaces(
+        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, null);
+    if (!kubernetesNamespaces.isEmpty()) {
+      verificationManagerService.getKubernetesWorkloads(
+          accountId, orgIdentifier, projectIdentifier, connectorIdentifier, kubernetesNamespaces.get(0), null);
+    }
+    verificationManagerService.checkCapabilityToGetKubernetesEvents(
+        accountId, orgIdentifier, projectIdentifier, connectorIdentifier);
+  }
 }

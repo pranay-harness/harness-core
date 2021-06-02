@@ -2,6 +2,8 @@ package io.harness.util;
 
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.BranchWebhookEvent;
 import io.harness.beans.execution.CommitDetails;
 import io.harness.beans.execution.PRWebhookEvent;
@@ -26,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
 @Slf4j
+@OwnedBy(HarnessTeam.CI)
 public class WebhookTriggerProcessorUtils {
   public WebhookExecutionSource convertWebhookResponse(ParsedPayload parseWebhookResponse) {
     if (parseWebhookResponse.hasPr()) {
@@ -71,7 +74,9 @@ public class WebhookTriggerProcessorUtils {
   }
 
   private WebhookEvent convertPRWebhookEvent(PullRequestHook prHook) {
-    // TODO Add commit details
+    List<CommitDetails> commitDetailsList = new ArrayList<>();
+    prHook.getPr().getCommitsList().forEach(commit -> commitDetailsList.add(convertCommit(commit)));
+
     PullRequest pr = prHook.getPr();
     return PRWebhookEvent.builder()
         .sourceBranch(pr.getSource())
@@ -84,6 +89,7 @@ public class WebhookTriggerProcessorUtils {
         .merged(pr.getMerged())
         .repository(convertRepository(prHook.getRepo()))
         .baseAttributes(convertPrHookBaseAttributes(prHook))
+        .commitDetailsList(commitDetailsList)
         .build();
   }
 

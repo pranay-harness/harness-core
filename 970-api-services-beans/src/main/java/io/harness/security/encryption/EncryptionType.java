@@ -9,7 +9,8 @@ public enum EncryptionType {
   CYBERARK("cyberark"),
   VAULT("hashicorpvault"),
   GCP_SECRETS_MANAGER("gcpsecretsmanager"),
-  CUSTOM("custom");
+  CUSTOM("custom"),
+  VAULT_SSH("vaultssh");
 
   private final String yamlName;
 

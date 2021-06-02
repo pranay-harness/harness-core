@@ -1,5 +1,6 @@
 package io.harness.ng.core.api.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.PHOENIKX;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
@@ -12,6 +13,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
@@ -26,16 +28,15 @@ import io.harness.secretmanagerclient.dto.VaultMetadataSpecDTO;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import io.harness.security.encryption.EncryptionType;
 
-import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import retrofit2.Call;
 import retrofit2.Response;
 
+@OwnedBy(PL)
 public class NGSecretManagerServiceImplTest extends CategoryTest {
   SecretManagerClient secretManagerClient;
   private final String ACCOUNT_IDENTIFIER = "ACCOUNT_ID";
@@ -84,23 +85,6 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
-  public void testListSecretManagers() throws IOException {
-    List<SecretManagerConfigDTO> secretManagerConfigs = Lists.newArrayList(random(VaultConfigDTO.class));
-    Call<RestResponse<List<SecretManagerConfigDTO>>> request = mock(Call.class);
-
-    when(secretManagerClient.listSecretManagers(any(), any(), any())).thenReturn(request);
-    when(request.execute()).thenReturn(Response.success(new RestResponse<>(secretManagerConfigs)));
-
-    List<SecretManagerConfigDTO> secretManagerConfigList =
-        ngSecretManagerService.listSecretManagers(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER);
-
-    assertThat(secretManagerConfigList).isNotEmpty();
-    assertThat(secretManagerConfigList).isEqualTo(secretManagerConfigs);
-  }
-
-  @Test
-  @Owner(developers = PHOENIKX)
-  @Category(UnitTests.class)
   public void testValidateSecretManager() throws IOException {
     when(secretManagerClient.validateSecretManager(any(), any(), any(), any()).execute())
         .thenReturn(Response.success(
@@ -143,12 +127,12 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testGetSecretManager() throws IOException {
-    when(secretManagerClient.getSecretManager(any(), any(), any(), any()).execute())
+    when(secretManagerClient.getSecretManager(any(), any(), any(), any(), any()).execute())
         .thenReturn(Response.success(new RestResponse<>(LocalConfigDTO.builder().build())));
     SecretManagerConfigDTO secretManagerConfigDTO =
-        ngSecretManagerService.getSecretManager("account", null, null, "identifier");
+        ngSecretManagerService.getSecretManager("account", null, null, "identifier", true);
     assertThat(secretManagerConfigDTO).isNotNull();
-    verify(secretManagerClient, atLeastOnce()).getSecretManager(any(), any(), any(), any());
+    verify(secretManagerClient, atLeastOnce()).getSecretManager(any(), any(), any(), any(), any());
   }
 
   @Test

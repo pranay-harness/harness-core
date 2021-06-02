@@ -1,5 +1,6 @@
 package io.harness.ngtriggers.eventmapper.filters.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.EXCEPTION_WHILE_PROCESSING;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.FAILED_TO_FETCH_PR_DETAILS;
@@ -8,8 +9,11 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
+import io.harness.beans.IssueCommentWebhookEvent;
+import io.harness.beans.Repository;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.gitapi.GitApiFindPRTaskResponse;
 import io.harness.delegate.beans.gitapi.GitApiRequestType;
@@ -21,8 +25,6 @@ import io.harness.exception.WingsException;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse.WebhookEventMappingResponseBuilder;
-import io.harness.ngtriggers.beans.scm.IssueCommentWebhookEvent;
-import io.harness.ngtriggers.beans.scm.Repository;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.eventmapper.filters.TriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
@@ -36,6 +38,7 @@ import io.harness.product.ci.scm.proto.PullRequestHook;
 import io.harness.product.ci.scm.proto.Reference;
 import io.harness.product.ci.scm.proto.User;
 import io.harness.serializer.KryoSerializer;
+import io.harness.service.WebhookParserSCMService;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.ErrorResponseData;
 import io.harness.tasks.ResponseData;
@@ -52,16 +55,18 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
+@OwnedBy(PIPELINE)
 public class GithubIssueCommentTriggerFilter implements TriggerFilter {
   private TaskExecutionUtils taskExecutionUtils;
   private ConnectorUtils connectorUtils;
   private KryoSerializer kryoSerializer;
   private WebhookEventPayloadParser webhookEventPayloadParser;
   private PayloadConditionsTriggerFilter payloadConditionsTriggerFilter;
+  private WebhookParserSCMService webhookParserSCMService;
 
   @Override
   public WebhookEventMappingResponse applyFilter(FilterRequestData filterRequestData) {
-    WebhookEventMappingResponseBuilder mappingResponseBuilder = WebhookEventMappingResponse.builder();
+    WebhookEventMappingResponseBuilder mappingResponseBuilder = initWebhookEventMappingResponse(filterRequestData);
     String prJson = fetchPrDetailsFromGithub(filterRequestData);
     if (isBlank(prJson)) {
       return mappingResponseBuilder.failedToFindTrigger(true)
@@ -77,8 +82,8 @@ public class GithubIssueCommentTriggerFilter implements TriggerFilter {
     } catch (Exception e) {
       String errorMsg = new StringBuilder(128)
                             .append("Failed  while deserializing PR details for IssueComment event. ")
-                            .append("Project : ")
-                            .append(filterRequestData.getProjectFqn())
+                            .append("Account : ")
+                            .append(filterRequestData.getAccountId())
                             .append(", with Exception")
                             .append(e.getMessage())
                             .toString();
@@ -116,7 +121,7 @@ public class GithubIssueCommentTriggerFilter implements TriggerFilter {
         .originalEvent(originalWebhookPayloadData.getOriginalEvent())
         .webhookGitUser(originalWebhookPayloadData.getWebhookGitUser())
         .parseWebhookResponse(newParseWebhookResponse)
-        .webhookEvent(webhookEventPayloadParser.convertPRWebhookEvent(pullRequestHook))
+        .webhookEvent(webhookParserSCMService.convertPRWebhookEvent(pullRequestHook))
         .build();
   }
 
@@ -183,8 +188,8 @@ public class GithubIssueCommentTriggerFilter implements TriggerFilter {
       } catch (Exception e) {
         log.error(new StringBuilder(128)
                       .append("Failed  while deserializing PR details for IssueComment event. ")
-                      .append("Project : ")
-                      .append(filterRequestData.getProjectFqn())
+                      .append("Account : ")
+                      .append(filterRequestData.getAccountId())
                       .append(", with Exception")
                       .append(e.getMessage())
                       .toString(),

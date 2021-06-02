@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -20,6 +21,7 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusResponseData;
 import io.harness.beans.PageResponse;
@@ -99,6 +101,7 @@ import org.mongodb.morphia.annotations.Transient;
  * Created by rishi on 1/12/17.
  */
 @OwnedBy(CDC)
+@TargetModule(_870_CG_ORCHESTRATION)
 public class PhaseStepSubWorkflow extends SubWorkflowState {
   @Inject private ActivityService activityService;
 
@@ -398,11 +401,18 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
           K8sExecutionSummary k8sExecutionSummary = (K8sExecutionSummary) first.get();
 
-          K8sContextElement k8SContextElement = K8sContextElement.builder()
-                                                    .releaseNumber(k8sExecutionSummary.getReleaseNumber())
-                                                    .releaseName(k8sExecutionSummary.getReleaseName())
-                                                    .targetInstances(k8sExecutionSummary.getTargetInstances())
-                                                    .build();
+          K8sContextElement k8SContextElement =
+              K8sContextElement.builder()
+                  .releaseNumber(k8sExecutionSummary.getReleaseNumber())
+                  .releaseName(k8sExecutionSummary.getReleaseName())
+                  .targetInstances(k8sExecutionSummary.getTargetInstances())
+                  .delegateSelectors((k8sExecutionSummary.getDelegateSelectors() == null)
+                          ? emptyList()
+                          : new ArrayList<>(k8sExecutionSummary.getDelegateSelectors()))
+                  .prunedResourcesIds(k8sExecutionSummary.getPrunedResourcesIds() == null
+                          ? emptyList()
+                          : k8sExecutionSummary.getPrunedResourcesIds())
+                  .build();
           return asList(k8SContextElement);
         }
       }

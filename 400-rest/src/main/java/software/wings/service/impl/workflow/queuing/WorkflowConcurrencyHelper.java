@@ -10,13 +10,14 @@ import static software.wings.common.InfrastructureConstants.QUEUING_RC_NAME;
 import static software.wings.common.InfrastructureConstants.RC_INFRA_STEP_NAME;
 import static software.wings.common.InfrastructureConstants.STATE_TIMEOUT_KEY_NAME;
 import static software.wings.common.InfrastructureConstants.WEEK_TIMEOUT;
+import static software.wings.sm.StateType.ARM_CREATE_RESOURCE;
 import static software.wings.sm.StateType.CLOUD_FORMATION_CREATE_STACK;
 import static software.wings.sm.StateType.RESOURCE_CONSTRAINT;
 import static software.wings.sm.StateType.SHELL_SCRIPT_PROVISION;
 import static software.wings.sm.StateType.TERRAFORM_PROVISION;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
+import io.harness.beans.shared.ResourceConstraint;
 
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
@@ -51,8 +52,8 @@ public class WorkflowConcurrencyHelper {
   @Inject private ResourceConstraintService resourceConstraintService;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
 
-  private static final List<String> PROVISIONER_STEP_TYPES =
-      Arrays.asList(CLOUD_FORMATION_CREATE_STACK.name(), TERRAFORM_PROVISION.name(), SHELL_SCRIPT_PROVISION.name());
+  private static final List<String> PROVISIONER_STEP_TYPES = Arrays.asList(CLOUD_FORMATION_CREATE_STACK.name(),
+      TERRAFORM_PROVISION.name(), SHELL_SCRIPT_PROVISION.name(), ARM_CREATE_RESOURCE.name());
 
   public OrchestrationWorkflow enhanceWithConcurrencySteps(Workflow workflow, Map<String, String> workflowVariables) {
     try {

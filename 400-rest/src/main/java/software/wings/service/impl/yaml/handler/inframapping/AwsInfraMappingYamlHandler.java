@@ -1,11 +1,16 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_YAML;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static java.util.stream.Collectors.toList;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInfrastructureMapping.Yaml;
@@ -26,6 +31,8 @@ import java.util.List;
  * @author rktummala on 10/15/17
  */
 @Singleton
+@OwnedBy(CDP)
+@TargetModule(_870_CG_YAML)
 public class AwsInfraMappingYamlHandler
     extends InfraMappingYamlWithComputeProviderHandler<Yaml, AwsInfrastructureMapping> {
   @Override

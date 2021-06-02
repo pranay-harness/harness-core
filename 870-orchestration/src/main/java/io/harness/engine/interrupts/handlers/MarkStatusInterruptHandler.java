@@ -4,11 +4,11 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_UNSUCCESSFULLY;
 import static io.harness.pms.contracts.execution.Status.INTERVENTION_WAITING;
-import static io.harness.pms.contracts.execution.Status.RUNNING;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.exception.InvalidRequestException;
@@ -17,16 +17,18 @@ import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.execution.utils.StatusUtils;
 
 import com.google.inject.Inject;
+import java.util.EnumSet;
 import javax.validation.Valid;
 import lombok.NonNull;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public abstract class MarkStatusInterruptHandler implements InterruptHandler {
-  @Inject private NodeExecutionService nodeExecutionService;
-  @Inject private InterruptService interruptService;
+  @Inject protected NodeExecutionService nodeExecutionService;
+  @Inject protected InterruptService interruptService;
   @Inject private OrchestrationEngine orchestrationEngine;
-  @Inject private PlanExecutionService planExecutionService;
 
   @Override
   public Interrupt registerInterrupt(Interrupt interrupt) {
@@ -40,9 +42,10 @@ public abstract class MarkStatusInterruptHandler implements InterruptHandler {
     }
 
     NodeExecution nodeExecution = nodeExecutionService.get(interrupt.getNodeExecutionId());
-    if (nodeExecution.getStatus() != INTERVENTION_WAITING) {
+    if (!StatusUtils.brokeStatuses().contains(nodeExecution.getStatus())
+        && nodeExecution.getStatus() != INTERVENTION_WAITING) {
       throw new InvalidRequestException(
-          "NodeExecution is not in a finalizable status. Current Status: " + nodeExecution.getStatus());
+          "NodeExecution is not in a finalizable or broken status. Current Status: " + nodeExecution.getStatus());
     }
 
     interrupt.setState(Interrupt.State.PROCESSING);
@@ -55,6 +58,10 @@ public abstract class MarkStatusInterruptHandler implements InterruptHandler {
   }
 
   protected Interrupt handleInterruptStatus(Interrupt interrupt, Status status) {
+    return handleInterruptStatus(interrupt, status, EnumSet.noneOf(Status.class));
+  }
+
+  protected Interrupt handleInterruptStatus(Interrupt interrupt, Status status, EnumSet<Status> overrideStatusSet) {
     try {
       NodeExecution nodeExecution = nodeExecutionService.update(interrupt.getNodeExecutionId(),
           ops
@@ -63,10 +70,10 @@ public abstract class MarkStatusInterruptHandler implements InterruptHandler {
                   .interruptType(interrupt.getType())
                   .tookEffectAt(System.currentTimeMillis())
                   .interruptId(interrupt.getUuid())
+                  .interruptConfig(interrupt.getInterruptConfig())
                   .build()));
 
-      planExecutionService.updateStatus(interrupt.getPlanExecutionId(), RUNNING);
-      orchestrationEngine.concludeNodeExecution(nodeExecution, status);
+      orchestrationEngine.concludeNodeExecution(nodeExecution, status, overrideStatusSet);
     } catch (Exception ex) {
       interruptService.markProcessed(interrupt.getUuid(), PROCESSED_UNSUCCESSFULLY);
       throw ex;

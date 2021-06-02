@@ -87,7 +87,7 @@ public class SplunkConfig extends SettingValue implements EncryptableSetting, Ex
   @JsonIgnore
   public Map<String, String> collectionHeaders() {
     Preconditions.checkState(isDecrypted(), "Should be decrypted to use this");
-    String usernameColonPassword = username + ":" + String.valueOf(getPassword());
+    String usernameColonPassword = username + ":" + getPassword();
     String auth =
         "Basic " + Base64.getEncoder().encodeToString(usernameColonPassword.getBytes(Charset.forName("UTF-8")));
     Map<String, String> headers = new HashMap<>();

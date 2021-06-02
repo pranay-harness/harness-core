@@ -13,7 +13,13 @@ extend type Query {
 input CloudProviderFilter {
   cloudProvider: IdFilter
   cloudProviderType: CloudProviderTypeFilter
+  isCEEnabled: CEEnabledFilter
   createdAt: TimeFilter
+}
+
+input CEEnabledFilter {
+  operator: EnumOperator
+  values: [Boolean]
 }
 
 input CloudProviderTypeFilter {
@@ -105,6 +111,7 @@ type GcpCloudProvider implements CloudProvider {
   createdBy: User
   type: String
   isContinuousEfficiencyEnabled: Boolean
+  delegateSelectors: [String]
 }
 
 type KubernetesCloudProvider implements CloudProvider {

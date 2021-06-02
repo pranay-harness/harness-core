@@ -2,6 +2,8 @@ package io.harness.pms.sdk.core.plan.creation.mappers;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.PmsSdkModuleUtils;
@@ -12,6 +14,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 public class PlanNodeProtoMapper {
   @Inject @Named(PmsSdkModuleUtils.SDK_SERVICE_NAME) String serviceName;
@@ -32,12 +35,19 @@ public class PlanNodeProtoMapper {
             .setSkipExpressionChain(node.isSkipExpressionChain())
             .setSkipType(node.getSkipGraphType())
             .setServiceName(serviceName)
-            .addAllTimeoutObtainments(CollectionUtils.emptyIfNull(node.getTimeoutObtainments()));
+            .addAllTimeoutObtainments(CollectionUtils.emptyIfNull(node.getTimeoutObtainments()))
+            .setSkipUnresolvedExpressionsCheck(node.isSkipUnresolvedExpressionsCheck());
+    if (node.getWhenCondition() != null) {
+      builder.setWhenCondition(node.getWhenCondition());
+    }
     if (node.getSkipCondition() != null) {
       builder.setSkipCondition(node.getSkipCondition());
     }
     if (node.getGroup() != null) {
       builder.setGroup(node.getGroup());
+    }
+    if (node.getStepParameters() != null && node.getStepParameters().toViewJson() != null) {
+      builder.setStepInputs(node.getStepParameters().toViewJson());
     }
     return builder.build();
   }
@@ -59,12 +69,19 @@ public class PlanNodeProtoMapper {
             .addAllTimeoutObtainments(CollectionUtils.emptyIfNull(node.getTimeoutObtainments()))
             .setSkipExpressionChain(node.isSkipExpressionChain())
             .setSkipType(node.getSkipGraphType())
-            .addAllTimeoutObtainments(CollectionUtils.emptyIfNull(node.getTimeoutObtainments()));
+            .addAllTimeoutObtainments(CollectionUtils.emptyIfNull(node.getTimeoutObtainments()))
+            .setSkipUnresolvedExpressionsCheck(node.isSkipUnresolvedExpressionsCheck());
+    if (node.getWhenCondition() != null) {
+      builder.setWhenCondition(node.getWhenCondition());
+    }
     if (node.getSkipCondition() != null) {
       builder.setSkipCondition(node.getSkipCondition());
     }
     if (node.getGroup() != null) {
       builder.setGroup(node.getGroup());
+    }
+    if (node.getStepInputs() != null) {
+      builder.setStepInputs(node.getStepInputs());
     }
     return builder.build();
   }

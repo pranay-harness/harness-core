@@ -1,5 +1,9 @@
 package io.harness.lock;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import java.time.Duration;
 
 /**
@@ -7,6 +11,7 @@ import java.time.Duration;
  *
  * @author Rishi
  */
+@OwnedBy(PL)
 public interface PersistentLocker {
   /**
    * Acquire lock.
@@ -64,6 +69,15 @@ public interface PersistentLocker {
    * @return AcquiredLock object
    */
   AcquiredLock tryToAcquireLock(String name, Duration timeout);
+
+  /**
+   * Try to acquire an infinite lock with periodic lease refreshing after every 30 seconds
+   *
+   * @param name    the lock name
+   * @param waitTime wait time to acquire lock
+   * @return AcquiredLock object
+   */
+  AcquiredLock tryToAcquireInfiniteLockWithPeriodicRefresh(String name, Duration waitTime);
 
   /**
    * Try to acquire ephemeral lock.

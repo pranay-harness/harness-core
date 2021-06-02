@@ -7,6 +7,7 @@ import static io.harness.network.Http.getOkHttpClientBuilder;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.azure.client.AzureBlueprintRestClient;
 import io.harness.azure.client.AzureManagementRestClient;
 import io.harness.azure.context.AzureClientContext;
 import io.harness.azure.model.AzureConfig;
@@ -23,17 +24,28 @@ import com.microsoft.azure.AzureEnvironment;
 import com.microsoft.azure.credentials.ApplicationTokenCredentials;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.rest.LogLevel;
+import com.microsoft.rest.ServiceResponseBuilder;
+import com.microsoft.rest.serializer.JacksonAdapter;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Singleton
 @Slf4j
 public class AzureClient {
+  protected JacksonAdapter azureJacksonAdapter;
+  protected ServiceResponseBuilder.Factory serviceResponseFactory;
+
+  public AzureClient() {
+    azureJacksonAdapter = new JacksonAdapter();
+    serviceResponseFactory = new ServiceResponseBuilder.Factory();
+  }
+
   protected Azure getAzureClientByContext(AzureClientContext context) {
     AzureConfig azureConfig = context.getAzureConfig();
     String subscriptionId = context.getSubscriptionId();
@@ -111,6 +123,15 @@ public class AzureClient {
 
   protected AzureManagementRestClient getAzureManagementRestClient(AzureEnvironmentType azureEnvironmentType) {
     String url = getAzureEnvironment(azureEnvironmentType).resourceManagerEndpoint();
+    return getAzureRestClient(url, AzureManagementRestClient.class);
+  }
+
+  protected AzureBlueprintRestClient getAzureBlueprintRestClient(AzureEnvironmentType azureEnvironmentType) {
+    String url = getAzureEnvironment(azureEnvironmentType).resourceManagerEndpoint();
+    return getAzureRestClient(url, AzureBlueprintRestClient.class);
+  }
+
+  protected <T> T getAzureRestClient(String url, Class<T> clazz) {
     OkHttpClient okHttpClient = getOkHttpClientBuilder()
                                     .connectTimeout(AzureConstants.REST_CLIENT_CONNECT_TIMEOUT, TimeUnit.SECONDS)
                                     .readTimeout(AzureConstants.REST_CLIENT_READ_TIMEOUT, TimeUnit.SECONDS)
@@ -120,9 +141,10 @@ public class AzureClient {
     Retrofit retrofit = new Retrofit.Builder()
                             .client(okHttpClient)
                             .baseUrl(url)
+                            .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
                             .addConverterFactory(JacksonConverterFactory.create())
                             .build();
-    return retrofit.create(AzureManagementRestClient.class);
+    return retrofit.create(clazz);
   }
 
   protected String getAzureBearerAuthToken(AzureConfig azureConfig) {

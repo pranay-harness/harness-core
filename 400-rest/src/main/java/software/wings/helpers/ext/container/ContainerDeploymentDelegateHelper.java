@@ -4,7 +4,7 @@ import static com.google.common.base.Charsets.UTF_8;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.eraro.ErrorCode;
@@ -45,7 +45,7 @@ import org.apache.commons.io.FileUtils;
  */
 @Singleton
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class ContainerDeploymentDelegateHelper {
   @Inject private AzureHelperService azureHelperService;
   @Inject private GkeClusterService gkeClusterService;

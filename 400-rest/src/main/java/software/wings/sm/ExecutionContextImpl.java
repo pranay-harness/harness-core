@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.ExecutionStatus.RUNNING;
@@ -22,6 +23,7 @@ import static software.wings.service.intfc.ServiceVariableService.EncryptedField
 import static software.wings.sm.ContextElement.ARTIFACT;
 import static software.wings.sm.ContextElement.ENVIRONMENT_VARIABLE;
 import static software.wings.sm.ContextElement.HELM_CHART;
+import static software.wings.sm.ContextElement.ROLLBACK_ARTIFACT;
 import static software.wings.sm.ContextElement.SAFE_DISPLAY_SERVICE_VARIABLE;
 import static software.wings.sm.ContextElement.SERVICE_VARIABLE;
 
@@ -31,9 +33,11 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.join;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
@@ -49,7 +53,6 @@ import io.harness.expression.VariableResolverTracker;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
-import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.security.SimpleEncryption;
 import io.harness.serializer.KryoSerializer;
 
@@ -168,6 +171,7 @@ import org.mongodb.morphia.Key;
 
 @OwnedBy(CDC)
 @Slf4j
+@TargetModule(_870_CG_ORCHESTRATION)
 public class ExecutionContextImpl implements DeploymentExecutionContext {
   public static final String PHASE_PARAM = "PHASE_PARAM";
   private static final SecureRandom random = new SecureRandom();
@@ -236,7 +240,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   public static void addArtifactToContext(ArtifactStreamService artifactStreamService, String accountId,
-      Map<String, Object> map, Artifact artifact, BuildSourceService buildSourceService) {
+      Map<String, Object> map, Artifact artifact, BuildSourceService buildSourceService, boolean rollbackArtifact) {
     if (artifact != null) {
       artifact.setSource(
           artifactStreamService.fetchArtifactSourceProperties(accountId, artifact.getArtifactStreamId()));
@@ -247,7 +251,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
                            .buildSourceService(buildSourceService)
                            .artifactStream(artifactStream)
                            .build();
-      map.put(ARTIFACT, artifact);
+      map.put(rollbackArtifact ? ROLLBACK_ARTIFACT : ARTIFACT, artifact);
       String artifactFileName = null;
       if (isNotEmpty(artifact.getArtifactFiles())) {
         artifactFileName = artifact.getArtifactFiles().get(0).getName();
@@ -255,7 +259,15 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
         artifactFileName = artifact.getFileName();
       }
       if (isNotEmpty(artifactFileName)) {
-        map.put(ExpressionEvaluator.ARTIFACT_FILE_NAME_VARIABLE, artifactFileName);
+        map.put(rollbackArtifact ? ExpressionEvaluator.ROLLBACK_ARTIFACT_FILE_NAME_VARIABLE
+                                 : ExpressionEvaluator.ARTIFACT_FILE_NAME_VARIABLE,
+            artifactFileName);
+      }
+    } else {
+      if (rollbackArtifact) {
+        // Roll back artifact could be null if it is the first execution or service has changed/templatized since last
+        // execution
+        map.put(ROLLBACK_ARTIFACT, Artifact.Builder.anArtifact().build());
       }
     }
   }
@@ -1006,8 +1018,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       map = copyIfNeeded(map);
       Application app = getApp();
       if (app != null) {
-        addArtifactToContext(
-            artifactStreamService, app.getAccountId(), map, stateExecutionContext.getArtifact(), buildSourceService);
+        addArtifactToContext(artifactStreamService, app.getAccountId(), map, stateExecutionContext.getArtifact(),
+            buildSourceService, false);
       }
     }
     if (stateExecutionContext.getArtifactFileName() != null) {
@@ -1119,8 +1131,10 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
     PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     if (phaseElement != null && isNotEmpty(phaseElement.getVariableOverrides())) {
-      variables.putAll(phaseElement.getVariableOverrides().stream().collect(
-          Collectors.toMap(NameValuePair::getName, NameValuePair::getValue)));
+      variables.putAll(phaseElement.getVariableOverrides()
+                           .stream()
+                           .filter(variableOverride -> variableOverride.getValue() != null)
+                           .collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValue)));
     }
 
     if (contextMap != null) {

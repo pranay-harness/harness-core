@@ -96,6 +96,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   private String appId;
   private String envId;
   private List<String> artifactIds;
+  private List<String> rollbackArtifactIds;
   private List<String> helmChartIds;
   private WorkflowElement workflowElement;
 
@@ -105,6 +106,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   @JsonIgnore private transient Application app;
   @JsonIgnore @Transient private transient Environment env;
   @JsonIgnore @Transient private transient List<Artifact> artifacts;
+  @JsonIgnore @Transient private transient List<Artifact> rollbackArtifacts;
   @JsonIgnore @Transient private transient List<HelmChart> helmCharts;
   @JsonIgnore @Transient private transient Account account;
 
@@ -185,14 +187,24 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       if (isNotEmpty(artifactIds)) {
         Artifact artifact = artifactService.get(artifactIds.get(0));
         ExecutionContextImpl.addArtifactToContext(
-            artifactStreamService, getApp().getAccountId(), map, artifact, buildSourceService);
+            artifactStreamService, getApp().getAccountId(), map, artifact, buildSourceService, false);
+      }
+      if (isNotEmpty(rollbackArtifactIds)) {
+        Artifact rollbackArtifact = artifactService.get(rollbackArtifactIds.get(0));
+        ExecutionContextImpl.addArtifactToContext(
+            artifactStreamService, getApp().getAccountId(), map, rollbackArtifact, buildSourceService, true);
       }
     } else {
       String accountId = getApp().getAccountId();
       String serviceId = serviceElement.getUuid();
       if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
         Artifact artifact = getArtifactForService(serviceId);
-        ExecutionContextImpl.addArtifactToContext(artifactStreamService, accountId, map, artifact, buildSourceService);
+        ExecutionContextImpl.addArtifactToContext(
+            artifactStreamService, accountId, map, artifact, buildSourceService, false);
+
+        Artifact rollbackArtifact = getRollbackArtifactForService(serviceId);
+        ExecutionContextImpl.addArtifactToContext(
+            artifactStreamService, getApp().getAccountId(), map, rollbackArtifact, buildSourceService, true);
       }
       if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, accountId)) {
         HelmChart helmChart = getHelmChartForService(serviceId);
@@ -298,6 +310,24 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
    */
   public void setArtifactIds(List<String> artifactIds) {
     this.artifactIds = artifactIds;
+  }
+
+  /**
+   * Sets rollback artifact ids.
+   *
+   * @param rollbackArtifactIds the artifact ids
+   */
+  public void setRollbackArtifactIds(List<String> rollbackArtifactIds) {
+    this.rollbackArtifactIds = rollbackArtifactIds;
+  }
+
+  /**
+   * Gets rollback artifact ids.
+   *
+   * @return  the rollback artifact ids
+   */
+  public List<String> getRollbackArtifactIds() {
+    return rollbackArtifactIds;
   }
 
   /**
@@ -528,6 +558,25 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   }
 
   /**
+   * Gets rollback artifacts.
+   *
+   * @return the rollback artifacts
+   */
+  public List<Artifact> getRollbackArtifacts() {
+    if (rollbackArtifacts == null && isNotEmpty(rollbackArtifactIds)) {
+      List<Artifact> list = new ArrayList<>();
+      for (String rollbackArtifactId : rollbackArtifactIds) {
+        Artifact rollbackArtifact = artifactService.get(rollbackArtifactId);
+        if (rollbackArtifact != null) {
+          list.add(rollbackArtifact);
+        }
+      }
+      rollbackArtifacts = list;
+    }
+    return rollbackArtifacts;
+  }
+
+  /**
    * Gets artifact for service.
    *
    * @param serviceId the service id
@@ -546,6 +595,29 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
     return artifacts.stream()
         .filter(artifact -> artifactStreamIds.contains(artifact.getArtifactStreamId()))
+        .findFirst()
+        .orElse(null);
+  }
+
+  /**
+   * Gets rollback artifact for service.
+   *
+   * @param serviceId the service id
+   * @return the rollback artifact for service
+   */
+  public Artifact getRollbackArtifactForService(String serviceId) {
+    getRollbackArtifacts();
+    if (isEmpty(rollbackArtifacts)) {
+      return null;
+    }
+
+    List<String> rollbackArtifactStreamIds = artifactStreamServiceBindingService.listArtifactStreamIds(serviceId);
+    if (isEmpty(rollbackArtifactStreamIds)) {
+      return null;
+    }
+
+    return rollbackArtifacts.stream()
+        .filter(rollbackArtifact -> rollbackArtifactStreamIds.contains(rollbackArtifact.getArtifactStreamId()))
         .findFirst()
         .orElse(null);
   }

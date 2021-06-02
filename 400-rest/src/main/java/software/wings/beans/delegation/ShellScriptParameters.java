@@ -5,7 +5,9 @@ import static io.harness.expression.Expression.DISALLOW_SECRETS;
 import static io.harness.k8s.K8sConstants.HARNESS_KUBE_CONFIG_PATH;
 import static io.harness.shell.SshSessionConfig.Builder.aSshSessionConfig;
 
-import io.harness.annotations.dev.Module;
+import static java.lang.Boolean.FALSE;
+
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -26,6 +28,7 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.KubernetesClusterConfig;
+import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
@@ -33,6 +36,7 @@ import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapab
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.settings.SettingValue;
 import software.wings.sm.states.ShellScriptState;
 
@@ -51,7 +55,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Value
 @Builder
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class ShellScriptParameters implements TaskParameters, ActivityAccess, ExecutionCapabilityDemander {
   public static final String CommandUnit = "Execute";
 
@@ -86,6 +90,11 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
   private final boolean saveExecutionLogs;
   boolean disableWinRMCommandEncodingFFSet; // DISABLE_WINRM_COMMAND_ENCODING
   boolean disableWinRMEnvVariables; //  DISABLE_WINRM_ENV_VARIABLES stop passing service variables as env variables
+  private boolean isVaultSSH;
+  private String role;
+  private String publicKey;
+  private SSHVaultConfig sshVaultConfig;
+  private Boolean includeInfraSelectors;
 
   private Map<String, String> getResolvedEnvironmentVariables() {
     Map<String, String> resolvedEnvironment = new HashMap<>();
@@ -101,8 +110,12 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
     return resolvedEnvironment;
   }
 
-  public SshSessionConfig sshSessionConfig(EncryptionService encryptionService) throws IOException {
+  public SshSessionConfig sshSessionConfig(EncryptionService encryptionService,
+      SecretManagementDelegateService secretManagementDelegateService) throws IOException {
     encryptionService.decrypt(hostConnectionAttributes, keyEncryptedDataDetails, false);
+    if (isVaultSSH) {
+      secretManagementDelegateService.signPublicKey(hostConnectionAttributes, sshVaultConfig);
+    }
     SshSessionConfig.Builder sshSessionConfigBuilder = aSshSessionConfig();
     sshSessionConfigBuilder.withAccountId(accountId)
         .withAppId(appId)
@@ -121,7 +134,10 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
         .withKey(hostConnectionAttributes.getKey())
         .withKeyPassphrase(hostConnectionAttributes.getPassphrase())
         .withSshPassword(hostConnectionAttributes.getSshPassword())
-        .withPassword(hostConnectionAttributes.getKerberosPassword());
+        .withPassword(hostConnectionAttributes.getKerberosPassword())
+        .withVaultSSH(isVaultSSH)
+        .withSignedPublicKey(hostConnectionAttributes.getSignedPublicKey())
+        .withPublicKey(hostConnectionAttributes.getPublicKey());
     return sshSessionConfigBuilder.build();
   }
 
@@ -172,7 +188,7 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
 
     if (executeOnDelegate) {
-      if (containerServiceParams != null) {
+      if (containerServiceParams != null && includeInfraSelectors != FALSE) {
         SettingAttribute settingAttribute = containerServiceParams.getSettingAttribute();
         if (settingAttribute != null) {
           SettingValue value = settingAttribute.getValue();

@@ -29,4 +29,6 @@ public class ContainerDefinitionInfo {
   private List<Integer> ports;
   Map<String, String> envVars;
   List<SecretNGVariable> secretVariables;
+  private boolean privileged;
+  private Integer runAsUser;
 }

@@ -1,5 +1,6 @@
 package software.wings.service.impl.workflow;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -17,6 +18,7 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.exception.InvalidRequestException;
 
@@ -34,6 +36,7 @@ import software.wings.beans.WorkflowPhase;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.workflow.StepSkipStrategy;
+import software.wings.beans.workflow.StepSkipStrategy.Scope;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.template.TemplateService;
@@ -53,6 +56,7 @@ import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 @OwnedBy(CDC)
+@TargetModule(_870_CG_ORCHESTRATION)
 @Singleton
 public class WorkflowServiceTemplateHelper {
   private static final String ENV_VAR_DESC = "Variable for Environment entity";
@@ -149,7 +153,7 @@ public class WorkflowServiceTemplateHelper {
       StepSkipStrategy.validateStepSkipStrategies(phaseStep.getStepSkipStrategies());
     }
     if (phaseStep != null && phaseStep.getSteps() != null) {
-      compareOldNewProperties(oldPhaseStep, phaseStep, fromYaml);
+      compareOldNewPropertiesAndUpdateStepIds(oldPhaseStep, phaseStep, fromYaml);
       phaseStep.getSteps().stream().filter(step -> step.getTemplateUuid() != null).forEach((GraphNode step) -> {
         Template template = templateService.get(step.getTemplateUuid(), step.getTemplateVersion());
         notNullCheck("Template does not exist", template, USER);
@@ -160,17 +164,47 @@ public class WorkflowServiceTemplateHelper {
     }
   }
 
-  private void compareOldNewProperties(PhaseStep oldPhaseStep, PhaseStep newPhaseStep, boolean fromYaml) {
+  private void compareOldNewPropertiesAndUpdateStepIds(
+      PhaseStep oldPhaseStep, PhaseStep newPhaseStep, boolean fromYaml) {
     if (oldPhaseStep != null && oldPhaseStep.getSteps() != null) {
       final Function<GraphNode, String> keyDecider = gn -> fromYaml ? gn.getName() : gn.getId();
       final Map<String, GraphNode> oldGraphNodeMap = oldPhaseStep.getSteps().stream().collect(
           Collectors.toMap(keyDecider, Function.identity(), (key1, key2) -> null));
+      Map<String, String> oldStepIdToNewStepIdMap = new HashMap<>();
       newPhaseStep.getSteps().forEach(step -> {
         GraphNode oldStep = oldGraphNodeMap.get(keyDecider.apply(step));
         if (oldStep != null) {
+          // On workflow update, step id should be same as old step.
+          if (!step.getId().equals(oldStep.getId())) {
+            oldStepIdToNewStepIdMap.put(step.getId(), oldStep.getId());
+            step.setId(oldStep.getId());
+          }
           checkStepProperties(oldStep, step);
         }
       });
+      updateStepSkipAssertionsWithNewStepIds(newPhaseStep, oldStepIdToNewStepIdMap);
+    }
+  }
+
+  private void updateStepSkipAssertionsWithNewStepIds(
+      PhaseStep newPhaseStep, Map<String, String> oldStepIdToNewStepIdMap) {
+    List<StepSkipStrategy> stepSkipStrategies = newPhaseStep.getStepSkipStrategies();
+    if (isNotEmpty(stepSkipStrategies)) {
+      for (StepSkipStrategy stepSkipStrategy : stepSkipStrategies) {
+        List<String> stepIds = null;
+        if (stepSkipStrategy.getScope() == Scope.SPECIFIC_STEPS && isNotEmpty(stepSkipStrategy.getStepIds())) {
+          stepIds = new ArrayList<>();
+          for (String stepId : stepSkipStrategy.getStepIds()) {
+            String newStepId = oldStepIdToNewStepIdMap.get(stepId);
+            if (isNotEmpty(newStepId)) {
+              stepIds.add(newStepId);
+            } else {
+              stepIds.add(stepId);
+            }
+          }
+        }
+        stepSkipStrategy.setStepIds(stepIds);
+      }
     }
   }
 
@@ -222,6 +256,10 @@ public class WorkflowServiceTemplateHelper {
                           -> phaseStep.getUuid() != null && phaseStep.getUuid().equals(phaseStep1.getUuid()))
                       .findFirst()
                       .orElse(null);
+              if (oldPhaseStep != null) {
+                // On workflow update, phase step id should not change.
+                phaseStep.setUuid(oldPhaseStep.getUuid());
+              }
               updateLinkedPhaseStepTemplate(phaseStep, oldPhaseStep, fromYaml);
             });
       }
@@ -291,37 +329,13 @@ public class WorkflowServiceTemplateHelper {
       }
       // It means, user templatizing it from phase level
       addTemplateExpressions(phaseTemplateExpressions, templateExpressions);
-      validateTemplateExpressionsInfraRefactor(templateExpressions);
+      validateTemplateExpressions(templateExpressions);
 
       workflow.setTemplateExpressions(templateExpressions);
     }
   }
 
   public static void validateTemplateExpressions(List<TemplateExpression> templateExpressions) {
-    // Validate combinations
-    TemplateExpression envExpression =
-        WorkflowServiceTemplateHelper.getTemplateExpression(templateExpressions, "envId");
-    TemplateExpression serviceExpression = getTemplateExpression(templateExpressions, "serviceId");
-    TemplateExpression infraMappingExpression = getTemplateExpression(templateExpressions, "infraMappingId");
-
-    // It means nullifying both Service and InfraMappings .. throw an error if environment is templatized
-    // Infra not present
-    if (envExpression != null) {
-      if (infraMappingExpression == null) {
-        throw new InvalidRequestException(
-            "Service Infrastructure cannot be de-templatized because Environment is templatized", USER);
-      }
-    }
-    // Infra not present
-    if (serviceExpression != null) {
-      if (infraMappingExpression == null) {
-        throw new InvalidRequestException(
-            "Service Infrastructure cannot be de-templatized because Service is templatized", USER);
-      }
-    }
-  }
-
-  public static void validateTemplateExpressionsInfraRefactor(List<TemplateExpression> templateExpressions) {
     // Validate combinations
     TemplateExpression envExpression =
         WorkflowServiceTemplateHelper.getTemplateExpression(templateExpressions, "envId");

@@ -5,16 +5,26 @@ import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageF
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import io.harness.cvng.beans.TimeSeriesMetricType;
+import io.harness.cvng.beans.TimeSeriesThresholdActionType;
+import io.harness.cvng.beans.TimeSeriesThresholdCriteria;
+import io.harness.cvng.beans.TimeSeriesThresholdType;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.cvng.models.VerificationType;
 
+import com.google.gson.Gson;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Data
 @NoArgsConstructor
@@ -43,5 +53,46 @@ public abstract class MetricCVConfig extends CVConfig {
   @Override
   public boolean queueAnalysisForPreDeploymentTask() {
     return false;
+  }
+
+  public abstract static class MetricCVConfigUpdatableEntity<T extends MetricCVConfig, D extends MetricCVConfig>
+      extends CVConfigUpdatableEntity<T, D> {
+    protected void setCommonOperations(UpdateOperations<T> updateOperations, D metricCVConfig) {
+      super.setCommonOperations(updateOperations, metricCVConfig);
+      updateOperations.set(MetricCVConfigKeys.metricPack, metricCVConfig.getMetricPack());
+    }
+  }
+
+  public Set<TimeSeriesThreshold> getThresholdsToCreateOnSaveForCustomProviders(
+      String metricName, TimeSeriesMetricType metricType, List<TimeSeriesThresholdType> thresholdTypes) {
+    Set<TimeSeriesThreshold> thresholds = new HashSet<>();
+    metricType.getThresholds().forEach(threshold -> {
+      thresholdTypes.forEach(type -> {
+        Gson gson = new Gson();
+        TimeSeriesThresholdCriteria criteria = gson.fromJson(gson.toJson(threshold), TimeSeriesThresholdCriteria.class);
+        criteria.setThresholdType(type);
+        thresholds.add(TimeSeriesThreshold.builder()
+                           .accountId(getAccountId())
+                           .projectIdentifier(getProjectIdentifier())
+                           .dataSourceType(getType())
+                           .metricType(metricType)
+                           .metricName(metricName)
+                           .action(TimeSeriesThresholdActionType.IGNORE)
+                           .criteria(criteria)
+                           .build());
+      });
+    });
+    return thresholds;
+  }
+
+  public List<TimeSeriesThresholdType> getThresholdTypeOfMetric(String metricName, MetricCVConfig cvConfig) {
+    Set<TimeSeriesThresholdType> thresholdTypes = new HashSet<>();
+    for (MetricPack.MetricDefinition metricDefinition : cvConfig.getMetricPack().getMetrics()) {
+      if (metricDefinition.getName().equals(metricName)) {
+        metricDefinition.getThresholds().forEach(
+            threshold -> thresholdTypes.add(threshold.getCriteria().getThresholdType()));
+      }
+    }
+    return new ArrayList<>(thresholdTypes);
   }
 }

@@ -1,11 +1,13 @@
 package io.harness.ngtriggers.mapper;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.Collections.emptyList;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
@@ -21,6 +23,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 
 @UtilityClass
+@OwnedBy(PIPELINE)
 public class TriggerFilterHelper {
   public Criteria createCriteriaForGetList(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String targetIdentifier, NGTriggerType type, String searchTerm, boolean deleted) {
@@ -52,20 +55,15 @@ public class TriggerFilterHelper {
     return criteria;
   }
 
-  public Criteria createCriteriaForCustomWebhookTriggerGetList(TriggerWebhookEvent triggerWebhookEvent,
-      String decryptedAuthToken, String searchTerm, boolean deleted, boolean enabled) {
-    Criteria criteria = createCriteriaForWebhookTriggerGetList(triggerWebhookEvent.getAccountId(),
-        triggerWebhookEvent.getOrgIdentifier(), triggerWebhookEvent.getProjectIdentifier(), emptyList(), searchTerm,
-        deleted, enabled);
+  public Criteria createCriteriaForCustomWebhookTriggerGetList(
+      TriggerWebhookEvent triggerWebhookEvent, String searchTerm, boolean deleted, boolean enabled) {
+    Criteria criteria = createCriteriaForWebhookTriggerGetList(
+        triggerWebhookEvent.getAccountId(), null, null, emptyList(), searchTerm, deleted, enabled);
     if (triggerWebhookEvent.getSourceRepoType().equalsIgnoreCase(WebhookSourceRepo.CUSTOM.name())) {
       if (triggerWebhookEvent.getTriggerIdentifier() != null) {
         criteria.and(NGTriggerEntityKeys.identifier).is(triggerWebhookEvent.getTriggerIdentifier());
       }
       criteria.and("metadata.webhook.type").is("CUSTOM");
-      criteria.and("metadata.webhook.custom.customAuthTokenType")
-          .is("inline")
-          .and("metadata.webhook.custom.customAuthTokenValue")
-          .is(decryptedAuthToken);
     }
 
     return criteria;
@@ -114,6 +112,9 @@ public class TriggerFilterHelper {
     update.set(NGTriggerEntityKeys.enabled, triggerEntity.getEnabled());
     update.set(NGTriggerEntityKeys.tags, triggerEntity.getTags());
     update.set(NGTriggerEntityKeys.deleted, false);
+    if (triggerEntity.getNextIterations() != null) {
+      update.set(NGTriggerEntityKeys.nextIterations, triggerEntity.getNextIterations());
+    }
 
     return update;
   }
@@ -128,6 +129,7 @@ public class TriggerFilterHelper {
   public Update getUpdateOperationsForDelete() {
     Update update = new Update();
     update.set(NGTriggerEntityKeys.deleted, true);
+    update.set(NGTriggerEntityKeys.enabled, false);
     return update;
   }
 

@@ -16,7 +16,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
-import io.harness.DelegateTest;
+import io.harness.DelegateTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
@@ -75,7 +75,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class K8SWatchTaskExecutorTest extends DelegateTest {
+public class K8SWatchTaskExecutorTest extends DelegateTestBase {
   @Rule public final WireMockRule wireMockRule = new WireMockRule(65217);
 
   private ApiClient apiClient;

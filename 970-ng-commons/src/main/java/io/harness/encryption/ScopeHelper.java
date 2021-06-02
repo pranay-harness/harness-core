@@ -14,18 +14,18 @@ public class ScopeHelper {
     } else if (isNotEmpty(accountId)) {
       return Scope.ACCOUNT;
     }
-    return null;
+    return Scope.UNKNOWN;
   }
 
   public static String getScopeMessageForLogs(
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    StringBuilder scopeMessage = new StringBuilder();
-    scopeMessage.append("account " + accountIdentifier);
+    StringBuilder scopeMessage = new StringBuilder(32);
+    scopeMessage.append("account ").append(accountIdentifier);
     if (orgIdentifier != null) {
-      scopeMessage.append(", org " + orgIdentifier);
+      scopeMessage.append(", org ").append(orgIdentifier);
     }
     if (projectIdentifier != null) {
-      scopeMessage.append(", project " + projectIdentifier);
+      scopeMessage.append(", project ").append(projectIdentifier);
     }
     return scopeMessage.toString();
   }

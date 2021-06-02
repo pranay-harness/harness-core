@@ -19,21 +19,20 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.data.validator.EntityName;
-import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 
 import software.wings.api.DeploymentType;
-import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -52,13 +51,19 @@ import org.mongodb.morphia.annotations.Transient;
  */
 @OwnedBy(CDC)
 @Entity(value = "workflows", noClassnameStored = true)
-@CdIndex(name = "accountIdCreatedAt",
-    fields = { @Field(WorkflowKeys.accountId)
-               , @Field(value = WorkflowKeys.createdAt, type = IndexType.DESC) })
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "WorkflowKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Workflow extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, ApplicationAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountIdCreatedAt")
+                 .field(WorkflowKeys.accountId)
+                 .descSortField(WorkflowKeys.createdAt)
+                 .build())
+        .build();
+  }
   public static final String NAME_KEY = "name";
   public static final String ORCHESTRATION_KEY = "orchestration";
 

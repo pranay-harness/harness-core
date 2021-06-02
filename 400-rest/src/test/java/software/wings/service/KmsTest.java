@@ -11,6 +11,7 @@ import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VIKAS;
+import static io.harness.rule.TestUserProvider.testUserProvider;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -31,6 +32,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EnvironmentType;
@@ -168,6 +174,8 @@ import org.mongodb.morphia.query.Query;
  * Created by rsingh on 9/29/17.
  */
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class KmsTest extends WingsBaseTest {
   @Inject private KmsResource kmsResource;
   @Mock private AccountService accountService;
@@ -276,9 +284,11 @@ public class KmsTest extends WingsBaseTest {
     FieldUtils.writeField(secretManager, "secretService", secretService, true);
     userId = wingsPersistence.save(user);
     UserThreadLocal.set(user);
+    testUserProvider.setActiveUser(EmbeddedUser.builder().uuid(user.getUuid()).name(userName).email(userEmail).build());
 
     // Add current user to harness user group so that save-global-kms operation can succeed
-    HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder().memberIds(Sets.newHashSet(userId)).build();
+    HarnessUserGroup harnessUserGroup =
+        HarnessUserGroup.builder().memberIds(Sets.newHashSet(userId)).accountIds(Sets.newHashSet(accountId)).build();
     harnessUserGroupService.save(harnessUserGroup);
   }
 

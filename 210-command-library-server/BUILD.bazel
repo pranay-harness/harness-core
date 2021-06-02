@@ -1,15 +1,12 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
+load("//:tools/bazel/macros.bzl", "run_analysis")
 
 shared_dependencies = [
     "//400-rest:module",
+    "//940-primary-version-manager:module",
     "//960-persistence:module",
+    "//960-continuous-features:module",
     "//970-rbac-core:module",
     "//:lombok",
 ]
@@ -43,6 +40,7 @@ test_dependencies = shared_dependencies + [
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = [
         "//210-command-library-server/src/test/resources:resource",
@@ -61,15 +59,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":maven_deps",
-        ":module",
-    ],
-)
-
-pmd()
+run_analysis()

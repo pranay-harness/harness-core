@@ -1,17 +1,24 @@
 package io.harness.cvng;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.perpetualtask.PerpetualTaskType.DATA_COLLECTION_TASK;
 import static io.harness.perpetualtask.PerpetualTaskType.K8_ACTIVITY_COLLECTION_TASK;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NEMANJA;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.VUK;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorInfoDTO;
+import io.harness.cvng.beans.CVNGPerpetualTaskDTO;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskService;
@@ -29,25 +36,35 @@ import io.harness.grpc.utils.AnyUtils;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
 import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.perpetualtask.PerpetualTaskState;
+import io.harness.perpetualtask.PerpetualTaskUnassignedReason;
 import io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskParams;
 import io.harness.perpetualtask.datacollection.K8ActivityCollectionPerpetualTaskParams;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
+import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
 import io.harness.rule.Owner;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 
 import software.wings.WingsBaseTest;
 
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
+@OwnedBy(CV)
 public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
   @Inject private CVDataCollectionTaskService dataCollectionTaskService;
   @Inject private PerpetualTaskService perpetualTaskService;
+  @Inject private PerpetualTaskRecordDao perpetualTaskRecordDao;
+  @Mock private SecretManagerClientService ngSecretService;
   private String accountId;
   private String cvConfigId;
   private String connectorIdentifier;
@@ -63,6 +80,8 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
     orgIdentifier = generateUuid();
     projectIdentifier = generateUuid();
     dataCollectionWorkerId = generateUuid();
+    FieldUtils.writeField(dataCollectionTaskService, "ngSecretService", ngSecretService, true);
+    when(ngSecretService.getEncryptionDetails(any(), any())).thenReturn(emptyList());
   }
 
   @Test
@@ -114,6 +133,7 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
                 ConnectorInfoDTO.builder()
                     .connectorConfig(
                         KubernetesClusterConfigDTO.builder()
+                            .delegateSelectors(Collections.singleton("delegate"))
                             .credential(
                                 KubernetesCredentialDTO.builder()
                                     .kubernetesCredentialType(KubernetesCredentialType.MANUAL_CREDENTIALS)
@@ -226,5 +246,35 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
     assertThat(perpetualTaskService.getTaskRecord(taskId)).isNotNull();
     dataCollectionTaskService.delete(accountId, taskId);
     assertThat(perpetualTaskService.getTaskRecord(taskId)).isNull();
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testGetCVNGPerpetualTaskDTO() {
+    for (PerpetualTaskUnassignedReason reason : PerpetualTaskUnassignedReason.values()) {
+      for (PerpetualTaskState perpetualTaskState : PerpetualTaskState.values()) {
+        String accountId = generateUuid();
+        String delegateId = generateUuid();
+        String taskId = generateUuid();
+
+        PerpetualTaskRecord perpetualTaskRecord = PerpetualTaskRecord.builder()
+                                                      .uuid(taskId)
+                                                      .accountId(accountId)
+                                                      .perpetualTaskType(DATA_COLLECTION_TASK)
+                                                      .delegateId(delegateId)
+                                                      .state(perpetualTaskState)
+                                                      .unassignedReason(reason)
+                                                      .build();
+
+        perpetualTaskRecordDao.save(perpetualTaskRecord);
+
+        PerpetualTaskRecord record = perpetualTaskRecordDao.getTask(taskId);
+        assertThat(record).isNotNull();
+        CVNGPerpetualTaskDTO cvngPerpetualTaskDTO = dataCollectionTaskService.getCVNGPerpetualTaskDTO(taskId);
+        assertThat(cvngPerpetualTaskDTO.getDelegateId()).isEqualTo(record.getDelegateId());
+        assertThat(cvngPerpetualTaskDTO.getAccountId()).isEqualTo(record.getAccountId());
+      }
+    }
   }
 }

@@ -5,9 +5,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.shared.ResourceConstraint;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintRegistry;
-import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
 import io.harness.validation.Update;
 
 import software.wings.beans.ResourceConstraintInstance;

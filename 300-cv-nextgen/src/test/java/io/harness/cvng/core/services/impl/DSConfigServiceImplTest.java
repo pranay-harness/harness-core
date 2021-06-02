@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
 import io.harness.cvng.client.NextGenService;
@@ -146,8 +147,11 @@ public class DSConfigServiceImplTest extends CvNextGenTestBase {
         AppdynamicsAppConfig.builder()
             .applicationName(appName)
             .envIdentifier("harnessProd")
-            .metricPacks(Sets.newHashSet(
-                MetricPack.builder().accountId(accountId).identifier("appd performance metric pack").build()))
+            .metricPacks(Sets.newHashSet(MetricPack.builder()
+                                             .accountId(accountId)
+                                             .category(CVMonitoringCategory.INFRASTRUCTURE)
+                                             .identifier("appd performance metric pack")
+                                             .build()))
             .serviceMappings(Sets.newHashSet(
                 ServiceMapping.builder().serviceIdentifier("harness-manager").tierName("manager").build(),
                 ServiceMapping.builder().serviceIdentifier("harness-qa").tierName("manager-qa").build()))

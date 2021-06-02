@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import io.harness.cistatus.StatusCreationResponse;
 import io.harness.exception.InvalidRequestException;
+import io.harness.gitsync.common.impl.GitUtils;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -32,10 +33,19 @@ public class BitbucketServiceImpl implements BitbucketService {
     log.info("Sending status {} for sha {}", bodyObjectMap.get(STATE), sha);
 
     try {
-      Response<StatusCreationResponse> statusCreationResponseResponse =
-          getBitbucketClient(bitbucketConfig, encryptionDetails)
-              .createStatus(getHeaderWithCredentials(token, userName), owner, repo, sha, bodyObjectMap)
-              .execute();
+      Response<StatusCreationResponse> statusCreationResponseResponse;
+
+      if (!GitUtils.isBitBucketCloud(bitbucketConfig.getBitbucketUrl())) {
+        statusCreationResponseResponse =
+            getBitbucketClient(bitbucketConfig, encryptionDetails)
+                .createOnPremStatus(getHeaderWithCredentials(token, userName), sha, bodyObjectMap)
+                .execute();
+      } else {
+        statusCreationResponseResponse =
+            getBitbucketClient(bitbucketConfig, encryptionDetails)
+                .createStatus(getHeaderWithCredentials(token, userName), owner, repo, sha, bodyObjectMap)
+                .execute();
+      }
 
       return statusCreationResponseResponse.isSuccessful();
 

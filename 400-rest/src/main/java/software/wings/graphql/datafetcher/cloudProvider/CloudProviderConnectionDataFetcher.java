@@ -1,8 +1,11 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.graphql.datafetcher.cloudProvider.CloudProviderController.populateCloudProvider;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 
@@ -32,8 +35,9 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
+@OwnedBy(CDP)
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class CloudProviderConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLCloudProviderFilter, QLNoOpSortCriteria, QLCloudProviderConnection> {
   @Inject private SettingsService settingsService;

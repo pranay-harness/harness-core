@@ -2,7 +2,7 @@ package io.harness.perpetualtask.k8s.informer.handlers;
 
 import static io.harness.perpetualtask.k8s.informer.handlers.support.WorkloadSpecUtils.makeContainerSpecs;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.event.client.EventPublisher;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
@@ -13,7 +13,7 @@ import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1Job;
 import java.util.List;
 
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class V1JobHandler extends BaseHandler<V1Job> {
   public V1JobHandler(EventPublisher eventPublisher, ClusterDetails clusterDetails) {
     super(eventPublisher, clusterDetails);
@@ -38,6 +38,8 @@ public class V1JobHandler extends BaseHandler<V1Job> {
               .setWorkloadKind(getKind())
               .setWorkloadName(job.getMetadata().getName())
               .setNamespace(job.getMetadata().getNamespace())
+              .setUid(job.getMetadata().getUid())
+              .setVersion(VERSION)
               .addAllContainerSpecs(makeContainerSpecs(containers))
               .addAllInitContainerSpecs(makeContainerSpecs(job.getSpec().getTemplate().getSpec().getInitContainers()))
               .build(),
@@ -56,9 +58,11 @@ public class V1JobHandler extends BaseHandler<V1Job> {
                                      .setWorkloadKind(getKind())
                                      .setWorkloadName(oldJob.getMetadata().getName())
                                      .setNamespace(oldJob.getMetadata().getNamespace())
+                                     .setUid(oldJob.getMetadata().getUid())
                                      .setWorkloadKind(getKind())
                                      .addAllContainerSpecs(makeContainerSpecs(containers))
                                      .addAllInitContainerSpecs(makeContainerSpecs(initContainers))
+                                     .setVersion(VERSION)
                                      .build();
       List<V1Container> newContainers = newJob.getSpec().getTemplate().getSpec().getContainers();
       List<V1Container> newInitContainers = newJob.getSpec().getTemplate().getSpec().getInitContainers();
@@ -66,9 +70,11 @@ public class V1JobHandler extends BaseHandler<V1Job> {
                                      .setWorkloadKind(getKind())
                                      .setWorkloadName(newJob.getMetadata().getName())
                                      .setNamespace(newJob.getMetadata().getNamespace())
+                                     .setUid(newJob.getMetadata().getUid())
                                      .setWorkloadKind(getKind())
                                      .addAllContainerSpecs(makeContainerSpecs(newContainers))
                                      .addAllInitContainerSpecs(makeContainerSpecs(newInitContainers))
+                                     .setVersion(VERSION)
                                      .build();
       if (!oldSpecs.equals(newSpecs)) {
         publishWorkloadSpec(newSpecs, occurredAt);

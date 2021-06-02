@@ -23,6 +23,7 @@ import io.harness.azure.context.AzureClientContext;
 import io.harness.azure.model.ARMScopeType;
 import io.harness.azure.model.AzureARMRGTemplateExportOptions;
 import io.harness.azure.model.AzureARMTemplate;
+import io.harness.azure.model.AzureARMTemplate.AzureARMTemplateBuilder;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureDeploymentMode;
 import io.harness.category.element.UnitTests;
@@ -111,8 +112,7 @@ public class AzureManagementClientImplTest extends CategoryTest {
     List<String> locations = azureManagementClient.listLocationsBySubscriptionId(getAzureConfig(), EMPTY);
 
     assertThat(locations).isNotNull();
-    assertThat(locations.size()).isEqualTo(1);
-    assertThat(locations.get(0)).isEqualTo("West US");
+    assertThat(locations.size()).isEqualTo(46);
   }
 
   @Test
@@ -670,8 +670,8 @@ public class AzureManagementClientImplTest extends CategoryTest {
     return mockDeploymentsInner;
   }
 
-  private AzureARMTemplate getAzureARMTemplate(String deploymentName, AzureARMTemplate.AzureARMTemplateBuilder builder,
-      String templateJSON, String parametersJSON) {
+  private AzureARMTemplate getAzureARMTemplate(
+      String deploymentName, AzureARMTemplateBuilder builder, String templateJSON, String parametersJSON) {
     return builder.templateJSON(templateJSON)
         .deploymentMode(AzureDeploymentMode.INCREMENTAL)
         .deploymentName(deploymentName)

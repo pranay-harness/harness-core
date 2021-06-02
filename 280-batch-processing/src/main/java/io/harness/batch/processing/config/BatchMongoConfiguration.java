@@ -3,8 +3,9 @@ package io.harness.batch.processing.config;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.event.app.EventServiceApplication.EVENTS_STORE;
 
-import io.harness.mongo.MongoModule;
+import io.harness.mongo.AbstractMongoModule;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.UserProvider;
 
 import software.wings.security.ThreadLocalUserProvider;
 
@@ -24,7 +25,6 @@ public class BatchMongoConfiguration {
     final String eventsMongoUri = config.getEventsMongo().getUri();
     if (isNotEmpty(eventsMongoUri) && !eventsMongoUri.equals(config.getHarnessMongo().getUri())) {
       hPersistence.register(EVENTS_STORE, eventsMongoUri);
-      hPersistence.registerUserProvider(new ThreadLocalUserProvider());
     }
   }
 
@@ -43,7 +43,12 @@ public class BatchMongoConfiguration {
 
   @Bean
   @Profile("!test")
-  public MongoModule mongoModule() {
-    return MongoModule.getInstance();
+  public AbstractMongoModule mongoModule() {
+    return new AbstractMongoModule() {
+      @Override
+      public UserProvider userProvider() {
+        return new ThreadLocalUserProvider();
+      }
+    };
   }
 }

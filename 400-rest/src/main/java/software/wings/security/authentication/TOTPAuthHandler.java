@@ -125,7 +125,7 @@ public class TOTPAuthHandler implements TwoFactorAuthHandler {
   public boolean sendTwoFactorAuthenticationResetEmail(User user) {
     Map<String, String> templateModel = new HashMap<>();
     Account defaultAccount = authenticationUtils.getDefaultAccount(user);
-    templateModel.put("name", user.getName());
+    templateModel.put("name", userService.sanitizeUserName(user.getName()));
     templateModel.put("totpSecret", user.getTotpSecretKey());
     String totpUrl = generateOtpUrl(defaultAccount.getCompanyName(), user.getEmail(), user.getTotpSecretKey());
     templateModel.put("totpUrl", totpUrl);

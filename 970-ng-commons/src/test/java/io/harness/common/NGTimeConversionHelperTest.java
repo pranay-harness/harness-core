@@ -7,7 +7,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.common.NGTimeConversionHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 

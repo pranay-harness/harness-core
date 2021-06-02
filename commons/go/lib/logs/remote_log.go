@@ -3,15 +3,17 @@ package logs
 import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"time"
 )
 
 // defaultLimit is the default maximum log size in bytes.
 const (
-	defaultLimit = 5242880 // 5MB
-	messageKey   = "msg"
-	levelKey     = "level"
-	nameKey      = "logger"
-	defaultLevel = "info"
+	defaultLimit    = 5242880 // 5MB
+	defaultInterval = 1 * time.Second
+	messageKey      = "msg"
+	levelKey        = "level"
+	nameKey         = "logger"
+	defaultLevel    = "info"
 )
 
 type RemoteLogger struct {
@@ -37,9 +39,6 @@ func NewRemoteLogger(writer StreamWriter) (*RemoteLogger, error) {
 	log := logger.Sugar()
 	rl := &RemoteLogger{log, writer}
 	// Try to open the stream. Continue using the writer even if it's unsuccessful
-	err := rl.Writer.Open()
-	if err != nil {
-		log.Errorw("Unable to open log stream", zap.Error(err))
-	}
+	go rl.Writer.Open()
 	return rl, nil
 }

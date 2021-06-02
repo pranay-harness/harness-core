@@ -1,5 +1,6 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.SATYAM;
 
@@ -22,11 +23,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.SweepingOutputInstance;
@@ -55,6 +59,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
@@ -76,6 +81,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@OwnedBy(CDP)
 public class SpotInstDeployStateTest extends WingsBaseTest {
   @Mock private AppService mockAppService;
   @Mock private InfrastructureMappingService mockInfrastructureMappingService;
@@ -85,6 +91,7 @@ public class SpotInstDeployStateTest extends WingsBaseTest {
   @Mock private SpotInstStateHelper mockSpotinstStateHelper;
   @Spy private AwsStateHelper mockAwsStateHelper;
   @Mock private SweepingOutputService sweepingOutputService;
+  @Mock StateExecutionService stateExecutionService;
 
   @InjectMocks SpotInstDeployState state = new SpotInstDeployState("stateName");
 
@@ -133,15 +140,16 @@ public class SpotInstDeployStateTest extends WingsBaseTest {
                     .build())
             .build();
     doReturn(element).when(mockSpotinstStateHelper).getSetupElementFromSweepingOutput(any(), anyString());
-    DelegateTask task = DelegateTask.builder().build();
+    DelegateTask task = DelegateTask.builder().description("desc").build();
     doReturn(task)
         .when(mockSpotinstStateHelper)
-        .getDelegateTask(
-            anyString(), anyString(), any(), anyString(), anyString(), anyString(), any(), any(), anyString());
+        .getDelegateTask(anyString(), anyString(), any(), anyString(), anyString(), anyString(), any(), any(),
+            anyString(), eq(true));
     Activity activity = Activity.builder().uuid(ACTIVITY_ID).build();
     doReturn(activity)
         .when(mockSpotinstStateHelper)
         .createActivity(any(), any(), anyString(), anyString(), any(), anyList());
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
     SpotInstCommandRequestBuilder builder = SpotInstCommandRequest.builder();
     doReturn(builder).when(mockSpotinstStateHelper).generateSpotInstCommandRequest(any(), any());
     ExecutionResponse response = state.execute(mockContext);

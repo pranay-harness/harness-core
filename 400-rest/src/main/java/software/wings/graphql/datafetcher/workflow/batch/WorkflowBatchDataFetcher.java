@@ -2,7 +2,7 @@ package software.wings.graphql.datafetcher.workflow.batch;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -21,7 +21,7 @@ import org.dataloader.DataLoader;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class WorkflowBatchDataFetcher extends AbstractBatchDataFetcher<QLWorkflow, QLWorkflowQueryParameters, String> {
   @Override
   @AuthRule(permissionType = LOGGED_IN)

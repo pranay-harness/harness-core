@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -14,6 +15,8 @@ import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aSt
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -23,7 +26,6 @@ import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.deployment.InstanceDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.annotation.EncryptableSetting;
@@ -88,6 +90,7 @@ import org.mongodb.morphia.Key;
  * Created by brett on 6/22/17
  */
 @Slf4j
+@OwnedBy(CDP)
 public class AwsCodeDeployState extends State {
   public static final String ARTIFACT_S3_BUCKET_EXPRESSION = "${artifact.bucketName}";
   public static final String ARTIFACT_S3_KEY_EXPRESSION = "${artifact.key}";
@@ -217,7 +220,7 @@ public class AwsCodeDeployState extends State {
                                                           .codeDeployParams(codeDeployParams)
                                                           .build();
 
-    String delegateTaskId = delegateService.queueTask(
+    DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(app.getAccountId())
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getAppId())
@@ -233,7 +236,12 @@ public class AwsCodeDeployState extends State {
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMapping.getUuid())
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infrastructureMapping.getServiceId())
-            .build());
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("Aws code deploy task execution")
+            .build();
+
+    String delegateTaskId = delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .async(true)
@@ -527,5 +535,10 @@ public class AwsCodeDeployState extends State {
     stateDefaults.put("key", ARTIFACT_S3_KEY_EXPRESSION);
     stateDefaults.put("bundleType", "zip");
     return stateDefaults;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

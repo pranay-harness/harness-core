@@ -46,6 +46,7 @@ import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.datafetcher.connector.utils.Utility;
+import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.connector.input.QLConnectorInput;
 import software.wings.graphql.schema.mutation.connector.input.docker.QLDockerConnectorInput.QLDockerConnectorInputBuilder;
 import software.wings.graphql.schema.mutation.connector.input.git.QLCustomCommitDetailsInput;
@@ -61,6 +62,7 @@ import software.wings.graphql.schema.type.connector.QLGCSHelmRepoConnector;
 import software.wings.graphql.schema.type.connector.QLGitConnector;
 import software.wings.graphql.schema.type.connector.QLHttpHelmRepoConnector;
 import software.wings.graphql.schema.type.connector.QLNexusConnector;
+import software.wings.graphql.schema.type.secrets.QLUsageScope;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.SettingsService;
@@ -68,6 +70,7 @@ import software.wings.service.intfc.security.SecretManager;
 
 import java.lang.reflect.Method;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.HashSet;
 import javax.validation.ConstraintViolationException;
 import org.junit.Before;
@@ -80,10 +83,13 @@ import org.mockito.MockitoAnnotations;
 public class CreateConnectorDataFetcherTest {
   @Mock private SettingsService settingsService;
   @Mock private SettingServiceHelper settingServiceHelper;
-  @Mock private ConnectorsController connectorsController;
+  @Mock private software.wings.graphql.datafetcher.connector.ConnectorsController connectorsController;
   @Mock private SecretManager secretManager;
+  @Mock private UsageScopeController usageScopeController;
 
-  @InjectMocks private CreateConnectorDataFetcher dataFetcher = new CreateConnectorDataFetcher();
+  @InjectMocks
+  private software.wings.graphql.datafetcher.connector.CreateConnectorDataFetcher dataFetcher =
+      new software.wings.graphql.datafetcher.connector.CreateConnectorDataFetcher();
 
   @Before
   public void setup() throws SQLException {
@@ -94,7 +100,7 @@ public class CreateConnectorDataFetcherTest {
   @Owner(developers = MILOS)
   @Category(UnitTests.class)
   public void checkIfPermissionCorrect() throws NoSuchMethodException {
-    Method method = CreateConnectorDataFetcher.class.getDeclaredMethod(
+    Method method = software.wings.graphql.datafetcher.connector.CreateConnectorDataFetcher.class.getDeclaredMethod(
         "mutateAndFetch", QLConnectorInput.class, MutationContext.class);
     AuthRule annotation = method.getAnnotation(AuthRule.class);
     assertThat(annotation.permissionType()).isEqualTo(MANAGE_CONNECTORS);
@@ -134,10 +140,60 @@ public class CreateConnectorDataFetcherTest {
                                                                      .commitMessage(RequestField.ofNullable(MESSAGE))
                                                                      .build()))
                     .passwordSecretId(RequestField.ofNullable(PASSWORD))
+                    .delegateSelectors(RequestField.ofNull())
                     .build())
             .build(),
         MutationContext.builder().accountId(ACCOUNT_ID).build());
 
+    verify(usageScopeController, times(0)).populateUsageRestrictions(any(), any());
+    verify(settingsService, times(1))
+        .saveWithPruning(isA(SettingAttribute.class), isA(String.class), isA(String.class));
+    verify(settingServiceHelper, times(1))
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+    assertThat(payload.getConnector()).isNotNull();
+    assertThat(payload.getConnector()).isInstanceOf(QLGitConnector.class);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void createShhGitConnector() {
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+                                   .withValue(GitConfig.builder().accountId(ACCOUNT_ID).build())
+                                   .build();
+
+    doReturn(setting)
+        .when(settingsService)
+        .saveWithPruning(isA(SettingAttribute.class), isA(String.class), isA(String.class));
+    doNothing()
+        .when(settingServiceHelper)
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+    doReturn(QLGitConnector.builder()).when(connectorsController).getConnectorBuilder(any());
+    doReturn(QLGitConnector.builder()).when(connectorsController).populateConnector(any(), any());
+    doReturn(new SettingAttribute()).when(settingsService).getByAccount(ACCOUNT_ID, SSH);
+
+    QLCreateConnectorPayload payload = dataFetcher.mutateAndFetch(
+        QLConnectorInput.builder()
+            .connectorType(QLConnectorType.GIT)
+            .gitConnector(
+                getQlGitConnectorInputBuilder()
+                    .branch(RequestField.ofNullable(BRANCH))
+                    .generateWebhookUrl(RequestField.ofNullable(true))
+                    .urlType(RequestField.ofNullable(GitConfig.UrlType.REPO))
+                    .customCommitDetails(RequestField.ofNullable(QLCustomCommitDetailsInput.builder()
+                                                                     .authorName(RequestField.ofNullable(AUTHOR))
+                                                                     .authorEmailId(RequestField.ofNullable(EMAIL))
+                                                                     .commitMessage(RequestField.ofNullable(MESSAGE))
+                                                                     .build()))
+                    .sshSettingId(RequestField.ofNullable(SSH))
+                    .usageScope(RequestField.ofNullable(QLUsageScope.builder().build()))
+                    .delegateSelectors(RequestField.ofNull())
+                    .build())
+            .build(),
+        MutationContext.builder().accountId(ACCOUNT_ID).build());
+
+    verify(usageScopeController, times(1)).populateUsageRestrictions(any(), any());
     verify(settingsService, times(1))
         .saveWithPruning(isA(SettingAttribute.class), isA(String.class), isA(String.class));
     verify(settingServiceHelper, times(1))
@@ -219,11 +275,14 @@ public class CreateConnectorDataFetcherTest {
   @Owner(developers = MILOS)
   @Category(UnitTests.class)
   public void createDockerConnector() {
-    SettingAttribute setting =
-        SettingAttribute.Builder.aSettingAttribute()
-            .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
-            .withValue(DockerConfig.builder().accountId(ACCOUNT_ID).dockerRegistryUrl(URL).build())
-            .build();
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+                                   .withValue(DockerConfig.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .dockerRegistryUrl(URL)
+                                                  .delegateSelectors(Collections.singletonList("delegateSelector"))
+                                                  .build())
+                                   .build();
 
     doReturn(setting)
         .when(settingsService)
@@ -349,6 +408,7 @@ public class CreateConnectorDataFetcherTest {
         dataFetcher.mutateAndFetch(QLConnectorInput.builder()
                                        .connectorType(QLConnectorType.NEXUS)
                                        .nexusConnector(getQlNexusConnectorInputBuilder()
+                                                           .delegateSelectors(RequestField.ofNull())
                                                            .passwordSecretId(RequestField.ofNullable(PASSWORD))
                                                            .version(RequestField.ofNullable(QLNexusVersion.V2))
                                                            .build())

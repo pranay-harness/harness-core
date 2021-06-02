@@ -7,6 +7,7 @@ import (
 	addonlogs "github.com/wings-software/portal/product/ci/addon/logs"
 	pb "github.com/wings-software/portal/product/ci/addon/proto"
 	"github.com/wings-software/portal/product/ci/addon/tasks"
+	"github.com/wings-software/portal/product/ci/common/external"
 	"github.com/wings-software/portal/product/ci/engine/logutil"
 	enginepb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
@@ -23,6 +24,7 @@ type handler struct {
 var (
 	newGrpcRemoteLogger = logutil.GetGrpcRemoteLogger
 	newRunTask          = tasks.NewRunTask
+	newRunTestsTask     = tasks.NewRunTestsTask
 	newPluginTask       = tasks.NewPluginTask
 )
 
@@ -47,23 +49,36 @@ func (h *handler) SignalStop(ctx context.Context, in *pb.SignalStopRequest) (*pb
 
 // ExecuteStep executes a unit step.
 func (h *handler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*pb.ExecuteStepResponse, error) {
-	rl, err := newGrpcRemoteLogger(in.GetStep().GetId())
+	rl, err := newGrpcRemoteLogger(in.GetStep().GetLogKey())
 	if err != nil {
 		return &pb.ExecuteStepResponse{}, err
 	}
 	defer rl.Writer.Close()
 
+	lc := external.LogCloser()
+	lc.Add(rl)
+
+	h.log.Infow("Executing step", "arg", in)
+
 	switch x := in.GetStep().GetStep().(type) {
 	case *enginepb.UnitStep_Run:
-		stepOutput, numRetries, err := newRunTask(in.GetStep(), in.GetTmpFilePath(), rl.BaseLogger, rl.Writer, h.logMetrics, h.log).Run(ctx)
+		stepOutput, numRetries, err := newRunTask(in.GetStep(), in.GetPrevStepOutputs(), in.GetTmpFilePath(), rl.BaseLogger,
+			rl.Writer, h.logMetrics, h.log).Run(ctx)
 		response := &pb.ExecuteStepResponse{
 			Output:     stepOutput,
 			NumRetries: numRetries,
 		}
 		return response, err
-	case *enginepb.UnitStep_Plugin:
-		numRetries, err := newPluginTask(in.GetStep(), in.GetPrevStepOutputs(), rl.BaseLogger, rl.Writer, h.logMetrics, h.log).Run(ctx)
+	case *enginepb.UnitStep_RunTests:
+		numRetries, err := newRunTestsTask(in.GetStep(), in.GetTmpFilePath(), rl.BaseLogger, rl.Writer, h.logMetrics, h.log).Run(ctx)
 		response := &pb.ExecuteStepResponse{
+			NumRetries: numRetries,
+		}
+		return response, err
+	case *enginepb.UnitStep_Plugin:
+		artifact, numRetries, err := newPluginTask(in.GetStep(), in.GetPrevStepOutputs(), rl.BaseLogger, rl.Writer, h.logMetrics, h.log).Run(ctx)
+		response := &pb.ExecuteStepResponse{
+			Artifact:   artifact,
 			NumRetries: numRetries,
 		}
 		return response, err

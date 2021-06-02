@@ -1,8 +1,10 @@
 package io.harness.yaml.schema;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
@@ -18,6 +20,7 @@ import lombok.experimental.FieldDefaults;
 
 @Singleton
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OwnedBy(DX)
 public class YamlSchemaHelper {
   static Map<EntityType, YamlSchemaWithDetails> entityTypeSchemaMap = new HashMap<>();
   List<YamlSchemaRootClass> yamlSchemaRootClasses;

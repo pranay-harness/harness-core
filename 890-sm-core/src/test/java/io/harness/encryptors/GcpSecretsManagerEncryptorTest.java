@@ -1,8 +1,10 @@
 package io.harness.encryptors;
 
 import static io.harness.eraro.ErrorCode.GCP_SECRET_OPERATION_ERROR;
+import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 import static io.harness.rule.OwnerRule.PIYUSH;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.powermock.api.mockito.PowerMockito.doNothing;
@@ -107,7 +109,7 @@ public class GcpSecretsManagerEncryptorTest extends CategoryTest {
                                                 .build();
     EncryptedRecord actualEncryptedData = gcpSecretsManagerEncryptor.createSecret(
         accountId, SecretText.builder().name(secretName).value(plaintext).build(), gcpSecretsManagerConfig);
-    Assert.assertEquals(expectedEncryptedData, actualEncryptedData);
+    assertThat(expectedEncryptedData).isEqualTo(actualEncryptedData);
   }
 
   @Test
@@ -123,7 +125,7 @@ public class GcpSecretsManagerEncryptorTest extends CategoryTest {
     EncryptedRecord actualEncryptedData = gcpSecretsManagerEncryptor.createSecret(accountId,
         SecretText.builder().name(secretName).value(plaintext).additionalMetadata(metadata).build(),
         gcpSecretsManagerConfig);
-    Assert.assertEquals(expectedEncryptedData.getAdditionalMetadata(), actualEncryptedData.getAdditionalMetadata());
+    assertThat(expectedEncryptedData.getAdditionalMetadata()).isEqualTo(actualEncryptedData.getAdditionalMetadata());
   }
 
   @Test
@@ -144,8 +146,8 @@ public class GcpSecretsManagerEncryptorTest extends CategoryTest {
     EncryptedRecord actualEncryptedData = gcpSecretsManagerEncryptor.updateSecret(accountId,
         SecretText.builder().name(secretName).value(plaintext).additionalMetadata(metadata).build(),
         existingEncryptedData, gcpSecretsManagerConfig);
-    Assert.assertArrayEquals(updatedVersionName.toCharArray(), actualEncryptedData.getEncryptedValue());
-    Assert.assertEquals(existingEncryptedData.getEncryptionKey(), actualEncryptedData.getEncryptionKey());
+    assertThat(updatedVersionName.toCharArray()).isEqualTo(actualEncryptedData.getEncryptedValue());
+    assertThat(existingEncryptedData.getEncryptionKey()).isEqualTo(actualEncryptedData.getEncryptionKey());
   }
 
   @Test
@@ -164,7 +166,7 @@ public class GcpSecretsManagerEncryptorTest extends CategoryTest {
           existingEncryptedRecord, gcpSecretsManagerConfig);
       Assert.fail("Secret Name got updated");
     } catch (SecretManagementException se) {
-      Assert.assertEquals(se.getCode(), GCP_SECRET_OPERATION_ERROR);
+      assertThat(se.getCode()).isEqualTo(GCP_SECRET_OPERATION_ERROR);
     }
   }
 
@@ -174,7 +176,7 @@ public class GcpSecretsManagerEncryptorTest extends CategoryTest {
   public void test_itShouldValidateReferenceSuccessfullyForReferencedSecret() throws IOException {
     boolean validReference = gcpSecretsManagerEncryptor.validateReference(
         accountId, SecretText.builder().name(secretName).path(secretVersionName).build(), gcpSecretsManagerConfig);
-    Assert.assertTrue(validReference);
+    assertThat(validReference).isTrue();
   }
 
   @Test
@@ -186,7 +188,7 @@ public class GcpSecretsManagerEncryptorTest extends CategoryTest {
           SecretText.builder().name(secretName).value(mockVersionFullString).build(), gcpSecretsManagerConfig);
       Assert.fail("Validated reference without path");
     } catch (SecretManagementException se) {
-      Assert.assertTrue(true);
+      ignoredOnPurpose(se);
     }
   }
 
@@ -201,7 +203,7 @@ public class GcpSecretsManagerEncryptorTest extends CategoryTest {
                                                   .build();
     char[] fetchedSecretValue =
         gcpSecretsManagerEncryptor.fetchSecretValue(accountId, existingEncryptedRecord, gcpSecretsManagerConfig);
-    Assert.assertArrayEquals(plaintext.toCharArray(), fetchedSecretValue);
+    assertThat(plaintext.toCharArray()).isEqualTo(fetchedSecretValue);
   }
 
   @Test
@@ -214,7 +216,7 @@ public class GcpSecretsManagerEncryptorTest extends CategoryTest {
                                                   .build();
     char[] fetchedSecretValue =
         gcpSecretsManagerEncryptor.fetchSecretValue(accountId, existingEncryptedRecord, gcpSecretsManagerConfig);
-    Assert.assertArrayEquals(plaintext.toCharArray(), fetchedSecretValue);
+    assertThat(plaintext.toCharArray()).isEqualTo(fetchedSecretValue);
   }
 
   @Test
@@ -227,8 +229,8 @@ public class GcpSecretsManagerEncryptorTest extends CategoryTest {
       char[] fetchedSecretValue =
           gcpSecretsManagerEncryptor.fetchSecretValue(accountId, existingEncryptedRecord, gcpSecretsManagerConfig);
     } catch (SecretManagementException e) {
-      Assert.assertEquals(
-          "Secret Referencing Failed - Cannot Reference Secret in Gcp Secret Manager Without Name", e.getMessage());
+      assertThat(e.getMessage())
+          .isEqualTo("Secret Referencing Failed - Cannot Reference Secret in Gcp Secret Manager Without Name");
     }
   }
 
@@ -239,7 +241,7 @@ public class GcpSecretsManagerEncryptorTest extends CategoryTest {
     EncryptedRecord existingEncryptedRecord = EncryptedRecordData.builder().encryptionKey(secretName).build();
     boolean deleted =
         gcpSecretsManagerEncryptor.deleteSecret(accountId, existingEncryptedRecord, gcpSecretsManagerConfig);
-    Assert.assertTrue(deleted);
+    assertThat(deleted).isTrue();
   }
 
   @Test
@@ -251,7 +253,7 @@ public class GcpSecretsManagerEncryptorTest extends CategoryTest {
       boolean isDeleted =
           gcpSecretsManagerEncryptor.deleteSecret(accountId, existingEncryptedRecord, gcpSecretsManagerConfig);
     } catch (SecretManagementException e) {
-      Assert.assertEquals("Cannot delete secret for Empty ProjectId or SecretId", e.getMessage());
+      assertThat(e.getMessage()).isEqualTo("Cannot delete secret for Empty ProjectId or SecretId");
     }
   }
 }

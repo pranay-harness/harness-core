@@ -1,5 +1,6 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.SATYAM;
 
@@ -19,9 +20,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
@@ -45,6 +48,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionData;
@@ -56,6 +60,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDP)
 public class SpotInstListenerUpdateStateTest extends WingsBaseTest {
   @Mock private AppService mockAppService;
   @Mock private InfrastructureMappingService mockInfrastructureMappingService;
@@ -63,6 +68,7 @@ public class SpotInstListenerUpdateStateTest extends WingsBaseTest {
   @Mock private SettingsService mockSettingsService;
   @Mock private ActivityService mockActivityService;
   @Mock private SpotInstStateHelper mockSpotinstStateHelper;
+  @Mock private StateExecutionService stateExecutionService;
 
   @InjectMocks SpotInstListenerUpdateState state = new SpotInstListenerUpdateState("stateName");
 
@@ -116,11 +122,11 @@ public class SpotInstListenerUpdateStateTest extends WingsBaseTest {
         .createActivity(any(), any(), anyString(), anyString(), any(), anyList());
     SpotInstCommandRequestBuilder builder = SpotInstCommandRequest.builder();
     doReturn(builder).when(mockSpotinstStateHelper).generateSpotInstCommandRequest(any(), any());
-    DelegateTask task = DelegateTask.builder().build();
+    DelegateTask task = DelegateTask.builder().description("desc").build();
     doReturn(task)
         .when(mockSpotinstStateHelper)
-        .getDelegateTask(
-            anyString(), anyString(), any(), anyString(), anyString(), anyString(), any(), any(), anyString());
+        .getDelegateTask(anyString(), anyString(), any(), anyString(), anyString(), anyString(), any(), any(),
+            anyString(), eq(true));
     ExecutionResponse response = state.execute(mockContext);
     assertThat(response).isNotNull();
     assertThat(response.getExecutionStatus()).isEqualTo(SUCCESS);

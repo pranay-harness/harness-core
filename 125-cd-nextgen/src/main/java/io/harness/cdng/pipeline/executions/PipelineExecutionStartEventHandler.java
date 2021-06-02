@@ -1,5 +1,6 @@
 package io.harness.cdng.pipeline.executions;
 
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -9,14 +10,16 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandler;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
-import io.harness.steps.StepOutcomeGroup;
 
 import com.google.inject.Inject;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Deprecated
+@ToBeDeleted
 public class PipelineExecutionStartEventHandler implements SyncOrchestrationEventHandler {
   @Inject private NgPipelineExecutionService ngPipelineExecutionService;
   @Inject private PlanExecutionService planExecutionService;

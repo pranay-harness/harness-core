@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.pcf;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import lombok.Builder;
@@ -11,7 +11,7 @@ import org.cloudfoundry.reactor.DefaultConnectionContext;
 
 @Data
 @Builder
-@TargetModule(Module._970_API_SERVICES_BEANS)
+@TargetModule(HarnessModule._970_API_SERVICES_BEANS)
 class CloudFoundryOperationsWrapper implements AutoCloseable {
   private CloudFoundryOperations cloudFoundryOperations;
   private ConnectionContext connectionContext;

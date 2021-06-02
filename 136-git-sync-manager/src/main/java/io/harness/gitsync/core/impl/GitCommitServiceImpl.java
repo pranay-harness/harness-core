@@ -1,9 +1,11 @@
 package io.harness.gitsync.core.impl;
 
-import static io.harness.gitsync.core.beans.GitCommit.GIT_COMMIT_ALL_STATUS_LIST;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.gitsync.core.beans.GitCommit.GIT_COMMIT_PROCESSED_STATUS;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.core.beans.GitCommit;
+import io.harness.gitsync.core.beans.GitCommit.GitCommitProcessingStatus;
 import io.harness.gitsync.core.service.GitCommitService;
 import io.harness.repositories.gitCommit.GitCommitRepository;
 
@@ -15,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(DX)
 public class GitCommitServiceImpl implements GitCommitService {
   private GitCommitRepository gitCommitRepository;
 
@@ -24,25 +27,9 @@ public class GitCommitServiceImpl implements GitCommitService {
   }
 
   @Override
-  public GitCommit upsertWithYamlGitConfigIdAddition(GitCommit gitCommit) {
-    final Optional<GitCommit> gitCommitInDb =
-        gitCommitRepository.findByAccountIdAndCommitIdAndRepoAndBranchNameAndStatusIn(gitCommit.getAccountId(),
-            gitCommit.getCommitId(), gitCommit.getRepo(), gitCommit.getBranchName(), GIT_COMMIT_ALL_STATUS_LIST);
-    return gitCommitInDb
-        .map(commit -> {
-          if (commit.getStatus() == GitCommit.Status.COMPLETED) {
-            commit.setStatus(gitCommit.getStatus());
-          }
-          commit.setYamlGitConfigIds(gitCommit.getYamlGitConfigIds());
-          return save(commit);
-        })
-        .orElse(save(gitCommit));
-  }
-
-  @Override
   public Optional<GitCommit> findByAccountIdAndCommitIdAndRepoAndBranchNameAndStatus(
-      String accountId, String commitId, String repo, String branchName, List<GitCommit.Status> status) {
-    return gitCommitRepository.findByAccountIdAndCommitIdAndRepoAndBranchNameAndStatusIn(
+      String accountId, String commitId, String repo, String branchName, List<GitCommitProcessingStatus> status) {
+    return gitCommitRepository.findByAccountIdentifierAndCommitIdAndRepoURLAndBranchNameAndStatusIn(
         accountId, commitId, repo, branchName, status);
   }
 
@@ -60,8 +47,8 @@ public class GitCommitServiceImpl implements GitCommitService {
 
   @Override
   public Optional<GitCommit> findByAccountIdAndCommitIdAndRepoAndBranchName(
-      String accountId, String repo, String branchName, List<GitCommit.Status> status) {
-    return gitCommitRepository.findFirstByAccountIdAndRepoAndBranchNameAndStatusInOrderByCreatedAtDesc(
+      String accountId, String repo, String branchName, List<GitCommitProcessingStatus> status) {
+    return gitCommitRepository.findFirstByAccountIdentifierAndRepoURLAndBranchNameAndStatusInOrderByCreatedAtDesc(
         accountId, repo, branchName, status);
   }
 
@@ -74,5 +61,11 @@ public class GitCommitServiceImpl implements GitCommitService {
       return true;
     }
     return false;
+  }
+
+  @Override
+  public Optional<GitCommit> findLastGitCommit(String accountIdentifier, String repo, String branchName) {
+    return gitCommitRepository.findFirstByAccountIdentifierAndRepoURLAndBranchNameOrderByCreatedAtDesc(
+        accountIdentifier, repo, branchName);
   }
 }

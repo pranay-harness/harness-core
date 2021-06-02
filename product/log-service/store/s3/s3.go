@@ -25,11 +25,12 @@ var _ store.Store = (*Store)(nil)
 type Store struct {
 	bucket  string
 	prefix  string
+	acl     string
 	session *session.Session
 }
 
 // NewEnv returns a new S3 log store from the environment.
-func NewEnv(bucket, prefix, endpoint string, pathStyle bool, accessKeyID string, accessSecretKey string, region string) *Store {
+func NewEnv(bucket, prefix, endpoint string, pathStyle bool, accessKeyID, accessSecretKey, region, acl string) *Store {
 	disableSSL := false
 
 	if endpoint != "" {
@@ -39,6 +40,7 @@ func NewEnv(bucket, prefix, endpoint string, pathStyle bool, accessKeyID string,
 	return &Store{
 		bucket: bucket,
 		prefix: prefix,
+		acl:    acl,
 		session: session.Must(
 			session.NewSession(&aws.Config{
 				Region:           aws.String(region),
@@ -92,7 +94,7 @@ func (s *Store) Upload(ctx context.Context, key string, r io.Reader) error {
 	uploader := s3manager.NewUploader(s.session)
 	keyWithPrefix := path.Join("/", s.prefix, key)
 	input := &s3manager.UploadInput{
-		ACL:    aws.String("private"),
+		ACL:    aws.String(s.acl),
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(keyWithPrefix),
 		Body:   r,

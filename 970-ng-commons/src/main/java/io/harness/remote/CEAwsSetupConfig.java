@@ -11,4 +11,5 @@ public class CEAwsSetupConfig {
   String accessKey;
   String secretKey;
   String destinationBucket;
+  String templateURL;
 }

@@ -486,15 +486,22 @@ public class AzureHelperService {
                               .findFirst()
                               .get();
       AcrRestClient acrRestClient = getAcrRestClient(registry.loginServerUrl());
-      List<String> repositories =
-          acrRestClient.listRepositories(getAuthHeader(azureConfig.getClientId(), new String(azureConfig.getKey())))
-              .execute()
-              .body()
-              .getRepositories();
-      if (repositories == null) {
-        return Collections.emptyList();
-      }
-      return repositories;
+      List<String> allRepositories = new ArrayList<>();
+      String last = null;
+      List<String> repositories;
+      do {
+        repositories =
+            acrRestClient
+                .listRepositories(getAuthHeader(azureConfig.getClientId(), new String(azureConfig.getKey())), last)
+                .execute()
+                .body()
+                .getRepositories();
+        if (isNotEmpty(repositories)) {
+          allRepositories.addAll(repositories);
+          last = repositories.get(repositories.size() - 1);
+        }
+      } while (isNotEmpty(repositories));
+      return allRepositories.stream().distinct().collect(toList());
     } catch (Exception e) {
       log.error("Error occurred while getting repositories from subscriptionId/registryName :" + subscriptionId + "/"
               + registryName,

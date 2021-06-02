@@ -1,15 +1,12 @@
 package io.harness.ngpipeline.overlayinputset.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
-import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.common.beans.NGTag;
-import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity.BaseInputSetEntityKeys;
 import io.harness.persistence.PersistentEntity;
 
 import java.util.List;
@@ -28,17 +25,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
 @FieldNameConstants(innerTypeName = "BaseInputSetEntityKeys")
-@NgUniqueIndex(name = "unique_accountId_organizationIdentifier_projectIdentifier_pipelineIdentifier_inputSetIdentifier",
-    fields =
-    {
-      @Field(BaseInputSetEntityKeys.accountId)
-      , @Field(BaseInputSetEntityKeys.orgIdentifier), @Field(BaseInputSetEntityKeys.projectIdentifier),
-          @Field(BaseInputSetEntityKeys.pipelineIdentifier), @Field(BaseInputSetEntityKeys.identifier)
-    })
-@CdIndex(name = "accountIdIndex", fields = { @Field(BaseInputSetEntityKeys.accountId) })
 @Entity(value = "inputSetsNG", noClassnameStored = true)
 @Document("inputSetsNG")
 @HarnessEntity(exportable = true)
+@ToBeDeleted
+@Deprecated
 public abstract class BaseInputSetEntity implements PersistentEntity {
   @Id @org.mongodb.morphia.annotations.Id private String id;
   @Trimmed @NotEmpty String accountId;

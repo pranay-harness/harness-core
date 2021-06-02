@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.mutation.connector.input.nexus;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.utils.RequestField;
 
@@ -8,6 +8,7 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
 
@@ -15,7 +16,7 @@ import lombok.Value;
 @Builder
 @Scope(PermissionAttribute.ResourceType.SETTING)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLNexusConnectorInput {
   private RequestField<String> name;
 
@@ -23,4 +24,5 @@ public class QLNexusConnectorInput {
   private RequestField<String> URL;
   private RequestField<String> passwordSecretId;
   private RequestField<QLNexusVersion> version;
+  private RequestField<List<String>> delegateSelectors;
 }

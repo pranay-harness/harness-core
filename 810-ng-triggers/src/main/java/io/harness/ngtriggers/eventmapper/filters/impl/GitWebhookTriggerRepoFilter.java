@@ -1,16 +1,24 @@
 package io.harness.ngtriggers.eventmapper.filters.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_REPO;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.AWS_CODECOMMIT;
 import static io.harness.utils.IdentifierRefHelper.getFullyQualifiedIdentifierRefString;
 
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Repository;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitUrlType;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
@@ -20,13 +28,13 @@ import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse.
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
-import io.harness.ngtriggers.beans.scm.Repository;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.eventmapper.TriggerGitConnectorWrapper;
 import io.harness.ngtriggers.eventmapper.filters.TriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
+import io.harness.ngtriggers.utils.GitProviderDataObtainmentManager;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 import io.harness.utils.IdentifierRefHelper;
 
@@ -35,6 +43,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -46,19 +55,21 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
-
+@OwnedBy(PIPELINE)
 public class GitWebhookTriggerRepoFilter implements TriggerFilter {
-  private NGTriggerService ngTriggerService;
+  // TODO: This should come from scm parsing service
+  private static final String AWS_CODECOMMIT_URL_PATTERN = "https://git-codecommit.%s.amazonaws.com/v1/repos/%s";
+  private final NGTriggerService ngTriggerService;
+  private final GitProviderDataObtainmentManager additionalDataObtainmentManager;
 
   @Override
   public WebhookEventMappingResponse applyFilter(FilterRequestData filterRequestData) {
-    WebhookEventMappingResponseBuilder mappingResponseBuilder = WebhookEventMappingResponse.builder();
+    WebhookEventMappingResponseBuilder mappingResponseBuilder = initWebhookEventMappingResponse(filterRequestData);
 
     WebhookPayloadData webhookPayloadData = filterRequestData.getWebhookPayloadData();
     TriggerWebhookEvent originalEvent = webhookPayloadData.getOriginalEvent();
     Repository repository = webhookPayloadData.getRepository();
-    Set<String> urls = new HashSet<>(Arrays.asList(repository.getLink().toLowerCase(),
-        repository.getHttpURL().toLowerCase(), repository.getSshURL().toLowerCase()));
+    Set<String> urls = getUrls(repository, originalEvent.getSourceRepoType());
 
     // {connectorFQN, connectorConfig, List<Trigger>}
     List<TriggerGitConnectorWrapper> triggerGitConnectorWrappers =
@@ -77,34 +88,53 @@ public class GitWebhookTriggerRepoFilter implements TriggerFilter {
     }
 
     if (isEmpty(eligibleTriggers)) {
-      String msg = String.format("No trigger found for repoUrl: {} for Project {}",
-          webhookPayloadData.getRepository().getLink(), filterRequestData.getProjectFqn());
+      String msg = format("No trigger found for repoUrl: %s for Account %s",
+          webhookPayloadData.getRepository().getLink(), filterRequestData.getAccountId());
       log.info(msg);
       mappingResponseBuilder.failedToFindTrigger(true)
           .webhookEventResponse(
               WebhookEventResponseHelper.toResponse(NO_MATCHING_TRIGGER_FOR_REPO, originalEvent, null, null, msg, null))
           .build();
     } else {
+      // fetches additional information
+      additionalDataObtainmentManager.acquireProviderData(filterRequestData);
       addDetails(mappingResponseBuilder, filterRequestData, eligibleTriggers);
     }
 
     return mappingResponseBuilder.build();
   }
 
+  private HashSet<String> getUrls(Repository repository, String sourceRepoType) {
+    if (AWS_CODECOMMIT.name().equals(sourceRepoType)) {
+      String[] arnTokens = repository.getId().split(":");
+      String awsRepoUrl = format(AWS_CODECOMMIT_URL_PATTERN, arnTokens[3], arnTokens[5]);
+      return new HashSet<>(Collections.singletonList(awsRepoUrl));
+    }
+
+    return new HashSet<>(Arrays.asList(repository.getLink().toLowerCase(), repository.getHttpURL().toLowerCase(),
+        repository.getSshURL().toLowerCase()));
+  }
+
   private void evaluateWrapperForAccountLevelGitConnector(
       Set<String> urls, List<TriggerDetails> eligibleTriggers, TriggerGitConnectorWrapper wrapper) {
     String accUrl = wrapper.getUrl();
+
     for (TriggerDetails details : wrapper.getTriggers()) {
-      final String repoUrl = new StringBuilder(128)
-                                 .append(accUrl)
-                                 .append(accUrl.endsWith("/") ? EMPTY : '/')
-                                 .append(details.getNgTriggerEntity().getMetadata().getWebhook().getGit().getRepoName())
-                                 .toString();
+      try {
+        final String repoUrl =
+            new StringBuilder(128)
+                .append(accUrl)
+                .append(accUrl.endsWith("/") ? EMPTY : '/')
+                .append(details.getNgTriggerEntity().getMetadata().getWebhook().getGit().getRepoName())
+                .toString();
 
-      String finalUrl = urls.stream().filter(u -> u.equalsIgnoreCase(repoUrl)).findAny().orElse(null);
+        String finalUrl = urls.stream().filter(u -> u.equalsIgnoreCase(repoUrl)).findAny().orElse(null);
 
-      if (!isBlank(finalUrl)) {
-        eligibleTriggers.add(details);
+        if (!isBlank(finalUrl)) {
+          eligibleTriggers.add(details);
+        }
+      } catch (Exception e) {
+        log.error(getTriggerSkipMessage(details.getNgTriggerEntity()));
       }
     }
   }
@@ -129,16 +159,29 @@ public class GitWebhookTriggerRepoFilter implements TriggerFilter {
 
     if (connectorConfigDTO.getClass().isAssignableFrom(GithubConnectorDTO.class)) {
       GithubConnectorDTO githubConnectorDTO = (GithubConnectorDTO) connectorConfigDTO;
+      wrapper.setConnectorType(ConnectorType.GITHUB);
       wrapper.setUrl(githubConnectorDTO.getUrl());
       wrapper.setGitConnectionType(githubConnectorDTO.getConnectionType());
     } else if (connectorConfigDTO.getClass().isAssignableFrom(GitlabConnectorDTO.class)) {
       GitlabConnectorDTO gitlabConnectorDTO = (GitlabConnectorDTO) connectorConfigDTO;
+      wrapper.setConnectorType(ConnectorType.GITLAB);
       wrapper.setUrl(gitlabConnectorDTO.getUrl());
       wrapper.setGitConnectionType(gitlabConnectorDTO.getConnectionType());
     } else if (connectorConfigDTO.getClass().isAssignableFrom(BitbucketConnectorDTO.class)) {
       BitbucketConnectorDTO bitbucketConnectorDTO = (BitbucketConnectorDTO) connectorConfigDTO;
+      wrapper.setConnectorType(ConnectorType.BITBUCKET);
       wrapper.setUrl(bitbucketConnectorDTO.getUrl());
       wrapper.setGitConnectionType(bitbucketConnectorDTO.getConnectionType());
+    } else if (connectorConfigDTO.getClass().isAssignableFrom(AwsCodeCommitConnectorDTO.class)) {
+      AwsCodeCommitConnectorDTO awsCodeCommitConnectorDTO = (AwsCodeCommitConnectorDTO) connectorConfigDTO;
+      wrapper.setConnectorType(ConnectorType.CODECOMMIT);
+      wrapper.setUrl(awsCodeCommitConnectorDTO.getUrl());
+      AwsCodeCommitUrlType urlType = awsCodeCommitConnectorDTO.getUrlType();
+      if (urlType == AwsCodeCommitUrlType.REGION) {
+        wrapper.setGitConnectionType(GitConnectionType.ACCOUNT);
+      } else if (urlType == AwsCodeCommitUrlType.REPO) {
+        wrapper.setGitConnectionType(GitConnectionType.REPO);
+      }
     }
   }
 
@@ -177,7 +220,7 @@ public class GitWebhookTriggerRepoFilter implements TriggerFilter {
       TriggerDetails triggerDetail, Map<String, List<TriggerDetails>> triggerToConnectorMap) {
     NGTriggerEntity ngTriggerEntity = triggerDetail.getNgTriggerEntity();
     WebhookMetadata webhook = ngTriggerEntity.getMetadata().getWebhook();
-    if (webhook == null) {
+    if (webhook == null || webhook.getGit() == null) {
       return;
     }
 
@@ -185,11 +228,8 @@ public class GitWebhookTriggerRepoFilter implements TriggerFilter {
         IdentifierRefHelper.getIdentifierRef(webhook.getGit().getConnectorIdentifier(), ngTriggerEntity.getAccountId(),
             ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier()));
 
-    List<TriggerDetails> triggerDetailList = triggerToConnectorMap.get(fullyQualifiedIdentifier);
-    if (triggerDetailList == null) {
-      triggerDetailList = new ArrayList<>();
-      triggerToConnectorMap.put(fullyQualifiedIdentifier, triggerDetailList);
-    }
+    List<TriggerDetails> triggerDetailList =
+        triggerToConnectorMap.computeIfAbsent(fullyQualifiedIdentifier, k -> new ArrayList<>());
 
     triggerDetailList.add(triggerDetail);
   }

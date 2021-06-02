@@ -3,7 +3,11 @@ package io.harness.batch.processing.config.k8s.recommendation;
 import static java.util.Collections.emptyMap;
 import static java.util.Optional.ofNullable;
 
+import io.harness.batch.processing.service.intfc.InstanceInfoTimescaleDAO;
+import io.harness.beans.FeatureName;
+import io.harness.ccm.commons.beans.recommendation.ResourceId;
 import io.harness.event.grpc.PublishedMessage;
+import io.harness.ff.FeatureFlagService;
 import io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec;
 
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
@@ -21,9 +25,14 @@ import org.springframework.stereotype.Component;
 @Component
 class WorkloadSpecWriter implements ItemWriter<PublishedMessage> {
   private final WorkloadRecommendationDao workloadRecommendationDao;
+  private final InstanceInfoTimescaleDAO instanceInfoTimescaleDAO;
+  private final FeatureFlagService featureFlagService;
 
-  WorkloadSpecWriter(WorkloadRecommendationDao workloadRecommendationDao) {
+  WorkloadSpecWriter(WorkloadRecommendationDao workloadRecommendationDao,
+      InstanceInfoTimescaleDAO instanceInfoTimescaleDAO, FeatureFlagService featureFlagService) {
     this.workloadRecommendationDao = workloadRecommendationDao;
+    this.instanceInfoTimescaleDAO = instanceInfoTimescaleDAO;
+    this.featureFlagService = featureFlagService;
   }
 
   @Override
@@ -32,6 +41,7 @@ class WorkloadSpecWriter implements ItemWriter<PublishedMessage> {
     for (PublishedMessage item : items) {
       String accountId = item.getAccountId();
       K8sWorkloadSpec k8sWorkloadSpec = (K8sWorkloadSpec) item.getMessage();
+
       ResourceId workloadId = ResourceId.builder()
                                   .accountId(accountId)
                                   .clusterId(k8sWorkloadSpec.getClusterId())
@@ -40,6 +50,9 @@ class WorkloadSpecWriter implements ItemWriter<PublishedMessage> {
                                   .kind(k8sWorkloadSpec.getWorkloadKind())
                                   .build();
 
+      if (featureFlagService.isEnabled(FeatureName.NODE_RECOMMENDATION_1, accountId)) {
+        instanceInfoTimescaleDAO.insertIntoWorkloadInfo(accountId, k8sWorkloadSpec);
+      }
       List<K8sWorkloadSpec.ContainerSpec> containerSpecs = k8sWorkloadSpec.getContainerSpecsList();
       Map<String, ResourceRequirement> containerCurrentResources =
           containerSpecs.stream().collect(Collectors.toMap(K8sWorkloadSpec.ContainerSpec::getName, e -> {
@@ -67,6 +80,10 @@ class WorkloadSpecWriter implements ItemWriter<PublishedMessage> {
                                     .map(crMap -> crMap.get(currentResources.getKey()))
                                     .map(ContainerRecommendation::getBurstable)
                                     .orElse(null))
+                     .percentileBased(Optional.ofNullable(existingRecommendations)
+                                          .map(crMap -> crMap.get(currentResources.getKey()))
+                                          .map(ContainerRecommendation::getPercentileBased)
+                                          .orElse(new HashMap<>()))
                      .build()));
       recommendation.setContainerRecommendations(updatedRecommendations);
       recommendation.setDirty(true);

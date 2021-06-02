@@ -1,22 +1,20 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sources")
-load("//:macros.bzl", "sonarqube_test")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
-
-sources()
+load("//:tools/bazel/macros.bzl", "run_analysis")
 
 java_library(
-    name = "maven_deps",
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
     visibility = ["//visibility:public"],
-    exports = [
+    deps = [
+        "//:lombok",
         "//970-api-services-beans:module",
         "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_services_beans_java_proto",
         "//970-grpc:module",
         "//980-commons:module",
         "@maven//:com_amazonaws_aws_java_sdk_autoscaling",
         "@maven//:com_amazonaws_aws_java_sdk_cloudformation",
+        "@maven//:com_amazonaws_aws_java_sdk_codecommit",
         "@maven//:com_amazonaws_aws_java_sdk_codedeploy",
         "@maven//:com_amazonaws_aws_java_sdk_core",
         "@maven//:com_amazonaws_aws_java_sdk_costandusagereport",
@@ -27,6 +25,7 @@ java_library(
         "@maven//:com_amazonaws_aws_java_sdk_lambda",
         "@maven//:com_amazonaws_aws_java_sdk_s3",
         "@maven//:com_amazonaws_aws_java_sdk_servicediscovery",
+        "@maven//:com_amazonaws_aws_java_sdk_sns",
         "@maven//:com_amazonaws_aws_java_sdk_sts",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_fasterxml_jackson_core_jackson_core",
@@ -58,6 +57,7 @@ java_library(
         "@maven//:com_squareup_okhttp3_logging_interceptor",
         "@maven//:com_squareup_okhttp3_okhttp",
         "@maven//:com_squareup_okio_okio",
+        "@maven//:com_squareup_retrofit2_adapter_rxjava",
         "@maven//:com_squareup_retrofit2_converter_jackson",
         "@maven//:com_squareup_retrofit2_converter_simplexml",
         "@maven//:com_squareup_retrofit2_retrofit",
@@ -70,13 +70,13 @@ java_library(
         "@maven//:io_fabric8_kubernetes_api",
         "@maven//:io_fabric8_kubernetes_client",
         "@maven//:io_fabric8_kubernetes_model",
-        "@maven//:io_fabric8_kubernetes_server_mock",
         "@maven//:io_fabric8_openshift_client",
+        "@maven//:io_github_resilience4j_resilience4j_core",
+        "@maven//:io_github_resilience4j_resilience4j_retry",
         "@maven//:io_kubernetes_client_java",
         "@maven//:io_kubernetes_client_java_api",
         "@maven//:io_kubernetes_client_java_extended",
         "@maven//:joda_time_joda_time",
-        "@maven//:junit_junit",
         "@maven//:me_snowdrop_istio_client",
         "@maven//:me_snowdrop_istio_client_uberjar",
         "@maven//:me_snowdrop_istio_common",
@@ -86,7 +86,6 @@ java_library(
         "@maven//:org_apache_httpcomponents_fluent_hc",
         "@maven//:org_apache_httpcomponents_httpclient",
         "@maven//:org_apache_httpcomponents_httpcore",
-        "@maven//:org_assertj_assertj_core",
         "@maven//:org_eclipse_jgit_org_eclipse_jgit",
         "@maven//:org_eclipse_jgit_org_eclipse_jgit_http_apache",
         "@maven//:org_hibernate_hibernate_validator",
@@ -94,11 +93,7 @@ java_library(
         "@maven//:org_jfrog_artifactory_client_artifactory_java_client_httpClient",
         "@maven//:org_jfrog_artifactory_client_artifactory_java_client_services",
         "@maven//:org_jooq_joor",
-        "@maven//:org_mockito_mockito_core",
         "@maven//:org_mongodb_morphia_morphia",
-        "@maven//:org_powermock_powermock_api_mockito",
-        "@maven//:org_powermock_powermock_core",
-        "@maven//:org_powermock_powermock_module_junit4",
         "@maven//:org_slf4j_slf4j_api",
         "@maven//:org_sonatype_nexus_plugins_nexus_restlet1x_model",
         "@maven//:org_zeroturnaround_zt_exec",
@@ -106,42 +101,25 @@ java_library(
 )
 
 java_library(
-    name = "module",
-    srcs = glob(["src/main/**/*.java"]),
-    visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "//:lombok",
-    ],
-)
-
-java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = [
         "//960-api-services/src/test/resources:resource",
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "maven_deps",
-        "module",
+        ":module",
         "//:lombok",
         "//990-commons-test:module",
-        "@maven//:com_github_tomakehurst_wiremock",
+        "@maven//:com_github_tomakehurst_wiremock_jre8_standalone",
+        "@maven//:io_fabric8_kubernetes_server_mock",
+        "@maven//:junit_junit",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_powermock_powermock_api_mockito",
     ],
 )
 
 run_tests()
 
-checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":maven_deps",
-        ":module",
-    ],
-)
-
-pmd()
+run_analysis()

@@ -7,6 +7,7 @@ import io.harness.iterator.PersistentCronIterable;
 import io.harness.iterator.PersistentFibonacciIterable;
 import io.harness.iterator.PersistentIrregularIterable;
 import io.harness.iterator.PersistentIterable;
+import io.harness.iterator.PersistentNGCronIterable;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.migration.MigrationJobInstance;
 import io.harness.mongo.MorphiaMove;
@@ -28,6 +29,7 @@ import io.harness.persistence.UuidAccess;
 import io.harness.persistence.UuidAware;
 import io.harness.persistence.ValidUntilAccess;
 import io.harness.queue.Queuable;
+import io.harness.queue.WithMonitoring;
 
 import java.util.Set;
 
@@ -52,6 +54,7 @@ public class PersistenceMorphiaRegistrar implements MorphiaRegistrar {
     set.add(PersistentIterable.class);
     set.add(PersistentRegularIterable.class);
     set.add(Queuable.class);
+    set.add(WithMonitoring.class);
     set.add(SpringCacheEntity.class);
     set.add(UpdatedAtAccess.class);
     set.add(UpdatedAtAware.class);
@@ -60,6 +63,7 @@ public class PersistenceMorphiaRegistrar implements MorphiaRegistrar {
     set.add(UuidAccess.class);
     set.add(UuidAware.class);
     set.add(ValidUntilAccess.class);
+    set.add(PersistentNGCronIterable.class);
   }
 
   @Override

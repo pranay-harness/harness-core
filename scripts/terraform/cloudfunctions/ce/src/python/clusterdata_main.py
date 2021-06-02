@@ -2,7 +2,8 @@ import datetime
 import os
 import re
 from google.cloud import bigquery
-from util import create_dataset, if_tbl_exists, createTable
+import util
+from util import create_dataset, if_tbl_exists, createTable, print_
 
 """
 Step1) Ingest data from avro to Bigquery's clusterData table.
@@ -54,8 +55,9 @@ def main(jsonData, context):
     fileName = filePath.split("/")[-1]
     accountId = filePath.split("/")[-2]
     if accountId in os.environ.get("disable_for_accounts", "").split(","):
-        print("Execution disabled for this account :%s" % accountId)
+        print_("Execution disabled for this account :%s" % accountId)
         return
+    util.ACCOUNTID_LOG = accountId
     accountId_ds = re.sub('[^0-9a-z]', '_', accountId.lower())
     datasetName = "BillingReport_%s" % (accountId_ds)
     # cluster table name
@@ -66,7 +68,7 @@ def main(jsonData, context):
         jsonData["fileDate"] = re.search("billing_data_(.+?).avro", fileName).group(1).split("_") # ['2020', 'NOVEMBER', '1']
     except AttributeError:
         # invalid file format
-        print("Filename is invalid {}".format(fileName))
+        print_("Filename is invalid {}".format(fileName))
         jsonData["fileDate"] = None
     jsonData["accountId"] = accountId.strip()
     jsonData["datasetName"] = datasetName
@@ -78,19 +80,20 @@ def main(jsonData, context):
     clusterDataTableRef = dataset.table("clusterData")
     unifiedTableRef = dataset.table("unifiedTable")
     unifiedTableTableName = "%s.%s.%s" % (jsonData["projectName"], jsonData["datasetName"], "unifiedTable")
-    create_dataset(client, jsonData)
+    #create_dataset(client, jsonData)
+    create_dataset(client, jsonData["datasetName"], jsonData.get("accountIdOrig"))
     if not if_tbl_exists(client, clusterDataTableRef):
-        print("%s table does not exists, creating table..." % clusterDataTableRef)
+        print_("%s table does not exists, creating table..." % clusterDataTableRef)
         createTable(client, clusterDataTableName)
     else:
         alterClusterTable(client, jsonData)
-        print("%s table exists" % clusterDataTableRef)
+        print_("%s table exists" % clusterDataTableRef)
 
     if not if_tbl_exists(client, unifiedTableRef):
-        print("%s table does not exists, creating table..." % unifiedTableRef)
+        print_("%s table does not exists, creating table..." % unifiedTableRef)
         createTable(client, unifiedTableTableName)
     else:
-        print("%s table exists" % unifiedTableRef)
+        print_("%s table exists" % unifiedTableRef)
 
     ingestDataFromAvroToClusterData(client, jsonData)
     ingestDataFromClusterDataToUnified(client, jsonData)
@@ -100,7 +103,7 @@ def main(jsonData, context):
     client.close()
 
 def alterClusterTable(client, jsonData):
-    print("Altering CLuster Data Table")
+    print_("Altering CLuster Data Table")
     ds = "%s.%s" % (jsonData["projectName"], jsonData["datasetName"])
     query = "ALTER TABLE `%s.clusterData` ADD COLUMN IF NOT EXISTS storageactualidlecost FLOAT64, ADD COLUMN IF NOT EXISTS storageunallocatedcost FLOAT64, ADD COLUMN IF NOT EXISTS storageutilizationvalue FLOAT64, ADD COLUMN IF NOT EXISTS storagerequest FLOAT64, ADD COLUMN IF NOT EXISTS storagembseconds FLOAT64, ADD COLUMN IF NOT EXISTS storagecost FLOAT64;" % (ds)
 
@@ -110,9 +113,9 @@ def alterClusterTable(client, jsonData):
         results = query_job.result()
     except Exception as e:
         # Error Running Alter Query
-        print(e)
+        print_(e, "WARN")
     else:
-        print("Fnished Altering CLuster Data Table")
+        print_("Finished Altering CLuster Data Table")
 
 
 def ingestDataFromAvroToClusterData(client, jsonData):
@@ -128,8 +131,8 @@ def ingestDataFromAvroToClusterData(client, jsonData):
         write_disposition="WRITE_APPEND" # default value
     )
     uri = "gs://" + jsonData["bucket"] + "/" + jsonData["accountId"] + "/" + jsonData["fileName"] # or "*.avro"
-    print(uri)
-    print("Loading into %s table..." % jsonData["tableName"])
+    print_(uri)
+    print_("Loading into %s table..." % jsonData["tableName"])
     load_job = client.load_table_from_uri(
         uri,
         jsonData["tableName"],
@@ -138,11 +141,11 @@ def ingestDataFromAvroToClusterData(client, jsonData):
     try:
         load_job.result()  # Wait for the job to complete.
     except Exception as e:
-        print(e)
+        print_(e, "WARN")
         # Probably the file was deleted in earlier runs
 
     table = client.get_table(jsonData["tableName"])
-    print("Total: {} rows in table {}".format(table.num_rows, jsonData["tableName"]))
+    print_("Total: {} rows in table {}".format(table.num_rows, jsonData["tableName"]))
     deleteFromGcs(jsonData)
 
 def deleteFromGcs(jsonData):
@@ -156,13 +159,13 @@ def deleteFromGcs(jsonData):
     for blob in blobs:
         # kmpySmUISimoRrJL6NL73w/billing_data_2020_DECEMBER_10.avro
         if blob.name.endswith(jsonData["fileName"]): # or .endswith(".avro"):
-            print("Deleting blob... : %s" % blob.name)
+            print_("Deleting blob... : %s" % blob.name)
             blob.delete()
-            print("Deleted blob : %s" % blob.name)
+            print_("Deleted blob : %s" % blob.name)
             break
 
 def loadIntoUnifiedGCP(client, jsonData):
-    print("Loading into unifiedTable table for GCP...")
+    print_("Loading into unifiedTable table for GCP...")
     ds = "%s.%s" % (jsonData["projectName"], jsonData["datasetName"])
     query = """DELETE FROM `%s.unifiedTable` WHERE DATE(startTime) <= DATE_SUB(@run_date , INTERVAL 1 DAY) AND
                     DATE(startTime) >= DATE_SUB(@run_date , INTERVAL 6 DAY) AND cloudProvider = "GCP";
@@ -190,10 +193,10 @@ def loadIntoUnifiedGCP(client, jsonData):
         results = query_job.result()
     except Exception as e:
         # For this account table GCP billing data isnt present
-        print(e)
+        print_(e, "WARN")
     else:
         #print(query)
-        print("Loaded into unifiedTable table for GCP...")
+        print_("Loaded into unifiedTable table for GCP...")
 
 
 def loadIntoUnifiedAWS(client, jsonData):
@@ -202,12 +205,12 @@ def loadIntoUnifiedAWS(client, jsonData):
     """
     from google.cloud import bigquery
     ds = "%s.%s" % (jsonData["projectName"], jsonData["datasetName"])
-    print(ds)
+    print_(ds)
     dataset = client.get_dataset(ds)
     table_ref = dataset.table("unifiedTable")
     # In the new BigQuery dataset, create a reference to a new table for
     # storing the query results.
-    print("Loading into unifiedTable table for AWS...")
+    print_("Loading into unifiedTable table for AWS...")
     # Configure the query job.
     job_config = bigquery.QueryJobConfig()
 
@@ -240,9 +243,9 @@ def loadIntoUnifiedAWS(client, jsonData):
         results = query_job.result()
     except Exception as e:
         # For this account table AWS billing data isnt present
-        print(e)
+        print_(e, "WARN")
     else:
-        print("Loaded into unified table for AWS...")
+        print_("Loaded into unified table for AWS...")
 
 def deleteDataFromClusterData(client, jsonData):
     from google.cloud import bigquery
@@ -250,7 +253,7 @@ def deleteDataFromClusterData(client, jsonData):
         # Couldnt determine date from filename. return.
         return
     ds = "%s.%s" % (jsonData["projectName"], jsonData["datasetName"])
-    print("Deleting 1 day data from %s.clusterData..." % ds)
+    print_("Deleting 1 day data from %s.clusterData..." % ds)
     # This needs to be the date as available in the filename
     year = int(jsonData["fileDate"][0])
     month = MONTHMAP[jsonData["fileDate"][1]]
@@ -258,7 +261,7 @@ def deleteDataFromClusterData(client, jsonData):
     query = """DELETE FROM `%s.clusterData` WHERE DATE(TIMESTAMP_TRUNC(TIMESTAMP_MILLIS(starttime), DAY))
                   = DATE(%s, %s, %s);
     """ % (ds, year, month, day)
-    print(query)
+    print_(query)
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
             bigquery.ScalarQueryParameter(
@@ -270,14 +273,14 @@ def deleteDataFromClusterData(client, jsonData):
     )
     query_job = client.query(query, job_config=job_config)
     results = query_job.result()
-    print("Deleted 1 day data from %s.clusterData..." % ds)
+    print_("Deleted 1 day data from %s.clusterData..." % ds)
 
 
 def ingestDataFromClusterDataToUnified(client, jsonData):
     from google.cloud import bigquery
 
     ds = "%s.%s" % (jsonData["projectName"], jsonData["datasetName"])
-    print("Loading into %s.unifiedTable..." % ds)
+    print_("Loading into %s.unifiedTable..." % ds)
     # This needs to be the date as available in the filename
     year = int(jsonData["fileDate"][0])
     month = MONTHMAP[jsonData["fileDate"][1]]
@@ -319,7 +322,7 @@ def ingestDataFromClusterDataToUnified(client, jsonData):
     query_job = client.query(query, job_config=job_config)
     #print(query)
     results = query_job.result()
-    print("Loaded into %s.unifiedTable..." % ds)
+    print_("Loaded into %s.unifiedTable..." % ds)
 
 MONTHMAP = {
     "JANUARY" : 1,

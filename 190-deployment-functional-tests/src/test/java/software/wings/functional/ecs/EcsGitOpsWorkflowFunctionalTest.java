@@ -3,6 +3,7 @@ package software.wings.functional.ecs;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.SettingGenerator.Settings.AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.RAGHVENDRA;
 
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -16,6 +17,7 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.WorkflowType;
@@ -38,6 +40,7 @@ import io.harness.testframework.restutils.WorkflowRestUtils;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
+import software.wings.beans.AwsElbConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.GraphNode;
@@ -105,7 +108,7 @@ public class EcsGitOpsWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Owner(developers = ARVIND)
   @Category(CDFunctionalTests.class)
   public void shouldCreateLocalEcsWorkflow() throws Exception {
-    Workflow savedWorkflow = getWorkflow(StoreType.Local, false);
+    Workflow savedWorkflow = getWorkflow(StoreType.Local, false, false);
     assertExecution(savedWorkflow, application.getUuid(), environment.getUuid());
   }
 
@@ -113,7 +116,7 @@ public class EcsGitOpsWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Owner(developers = ARVIND)
   @Category(CDFunctionalTests.class)
   public void shouldCreateRemoteEcsWorkflow() throws Exception {
-    Workflow savedWorkflow = getWorkflow(StoreType.Remote, false);
+    Workflow savedWorkflow = getWorkflow(StoreType.Remote, false, false);
 
     ServiceVariablesUtils.addOrGetServiceVariable(bearerToken, createServiceVariable("containerPort", "80"));
     ServiceVariablesUtils.addOrGetServiceVariable(bearerToken, createServiceVariable("hostPort", "80"));
@@ -122,10 +125,22 @@ public class EcsGitOpsWorkflowFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(CDFunctionalTests.class)
+  public void shouldCreateRemoteEcsWorkflowMultiLbDeployment() throws Exception {
+    Workflow savedWorkflow = getWorkflow(StoreType.Remote, false, true);
+
+    ServiceVariablesUtils.addOrGetServiceVariable(bearerToken, createServiceVariable("containerPort", "80"));
+    ServiceVariablesUtils.addOrGetServiceVariable(bearerToken, createServiceVariable("hostPort", "8080"));
+
+    assertExecution(savedWorkflow, application.getUuid(), environment.getUuid());
+  }
+
+  @Test
   @Owner(developers = ARVIND)
   @Category(CDFunctionalTests.class)
   public void shouldCreateRemoteAccountConnectorEcsWorkflow() throws Exception {
-    Workflow savedWorkflow = getWorkflow(StoreType.Remote, true);
+    Workflow savedWorkflow = getWorkflow(StoreType.Remote, true, false);
 
     ServiceVariablesUtils.addServiceVariable(bearerToken, createServiceVariable("containerPort", "80"));
     ServiceVariablesUtils.addServiceVariable(bearerToken, createServiceVariable("hostPort", "80"));
@@ -134,8 +149,9 @@ public class EcsGitOpsWorkflowFunctionalTest extends AbstractFunctionalTest {
   }
 
   @NotNull
-  private Workflow getWorkflow(StoreType storeType, boolean accountConnector) {
-    service = serviceGenerator.ensureEcsRemoteTest(seed, owners, serviceName, storeType, accountConnector);
+  private Workflow getWorkflow(StoreType storeType, boolean accountConnector, boolean isMultiLb) {
+    service = serviceGenerator.ensureEcsRemoteTest(seed, owners, serviceName, storeType, accountConnector,
+        "ecsgitops/containerspec_templatized.json", "ecsgitops/servicespec.json");
     assertThat(service).isNotNull();
 
     environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
@@ -148,7 +164,7 @@ public class EcsGitOpsWorkflowFunctionalTest extends AbstractFunctionalTest {
     awsSettingAttribute =
         settingGenerator.ensurePredefined(seed, owners, AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER);
 
-    Workflow basicEcsEc2TypeWorkflow = getEcsEc2TypeWorkflow(storeType);
+    Workflow basicEcsEc2TypeWorkflow = getEcsEc2TypeWorkflow(storeType, isMultiLb);
     Workflow savedWorkflow = WorkflowRestUtils.createWorkflow(
         bearerToken, application.getAccountId(), application.getUuid(), basicEcsEc2TypeWorkflow);
     assertThat(savedWorkflow).isNotNull();
@@ -169,23 +185,66 @@ public class EcsGitOpsWorkflowFunctionalTest extends AbstractFunctionalTest {
     return variable;
   }
 
-  private Workflow getEcsEc2TypeWorkflow(StoreType storeType) {
+  private PhaseStep getEcsEc2MultiLbTypePhaseStep() {
+    return aPhaseStep(CONTAINER_SETUP, SETUP_CONTAINER_CONSTANT)
+        .addStep(
+            GraphNode.builder()
+                .id(generateUuid())
+                .type(ECS_SERVICE_SETUP.name())
+                .name(ECS_SERVICE_SETUP_CONSTANT)
+                .properties(
+                    ImmutableMap.<String, Object>builder()
+                        .put("fixedInstances", "1")
+                        .put("ecsServiceName", "${app.name}__${service.name}__BASIC")
+                        .put("desiredInstanceCount", "fixedInstances")
+                        .put("resizeStrategy", ResizeStrategy.DOWNSIZE_OLD_FIRST)
+                        .put("serviceSteadyStateTimeout", 10)
+                        .put("useLoadBalancer", true)
+                        .put("targetPort", "")
+                        .put("targetGroupArn",
+                            "arn:aws:elasticloadbalancing:us-east-1:479370281431:targetgroup/a-group/2b773ec2b7f385f0")
+                        .put("targetContainerName", "")
+                        .put("loadBalancerName", "QA-Verification-LB")
+                        .put("awsElbConfigs",
+                            asList(
+                                AwsElbConfig.builder()
+                                    .loadBalancerName("QA-Verification-LB-2")
+                                    .targetGroupArn(
+                                        "arn:aws:elasticloadbalancing:us-east-1:479370281431:targetgroup/cdp-tg-01/3af160ca962ddd62")
+                                    .targetContainerName("")
+                                    .targetPort("")
+                                    .build()))
+                        .build())
+                .build())
+        .build();
+  }
+
+  private PhaseStep getEcsEc2TypePhaseStep() {
+    return aPhaseStep(CONTAINER_SETUP, SETUP_CONTAINER_CONSTANT)
+        .addStep(GraphNode.builder()
+                     .id(generateUuid())
+                     .type(ECS_SERVICE_SETUP.name())
+                     .name(ECS_SERVICE_SETUP_CONSTANT)
+                     .properties(ImmutableMap.<String, Object>builder()
+                                     .put("fixedInstances", "1")
+                                     .put("useLoadBalancer", false)
+                                     .put("ecsServiceName", "${app.name}__${service.name}__BASIC")
+                                     .put("desiredInstanceCount", "fixedInstances")
+                                     .put("resizeStrategy", ResizeStrategy.DOWNSIZE_OLD_FIRST)
+                                     .put("serviceSteadyStateTimeout", 10)
+                                     .build())
+                     .build())
+        .build();
+  }
+
+  private Workflow getEcsEc2TypeWorkflow(StoreType storeType, boolean isMultiLb) {
     List<PhaseStep> phaseSteps = new ArrayList<>();
-    phaseSteps.add(aPhaseStep(CONTAINER_SETUP, SETUP_CONTAINER_CONSTANT)
-                       .addStep(GraphNode.builder()
-                                    .id(generateUuid())
-                                    .type(ECS_SERVICE_SETUP.name())
-                                    .name(ECS_SERVICE_SETUP_CONSTANT)
-                                    .properties(ImmutableMap.<String, Object>builder()
-                                                    .put("fixedInstances", "1")
-                                                    .put("useLoadBalancer", false)
-                                                    .put("ecsServiceName", "${app.name}__${service.name}__BASIC")
-                                                    .put("desiredInstanceCount", "fixedInstances")
-                                                    .put("resizeStrategy", ResizeStrategy.DOWNSIZE_OLD_FIRST)
-                                                    .put("serviceSteadyStateTimeout", 10)
-                                                    .build())
-                                    .build())
-                       .build());
+
+    if (isMultiLb) {
+      phaseSteps.add(getEcsEc2MultiLbTypePhaseStep());
+    } else {
+      phaseSteps.add(getEcsEc2TypePhaseStep());
+    }
 
     phaseSteps.add(aPhaseStep(CONTAINER_DEPLOY, DEPLOY_CONTAINERS_CONSTANT)
                        .addStep(GraphNode.builder()

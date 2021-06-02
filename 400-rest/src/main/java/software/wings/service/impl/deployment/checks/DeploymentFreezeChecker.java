@@ -6,7 +6,7 @@ import static io.harness.eraro.ErrorCode.DEPLOYMENT_GOVERNANCE_ERROR;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.FeatureName;
@@ -42,7 +42,7 @@ import org.apache.commons.collections4.CollectionUtils;
 
 @Slf4j
 @ParametersAreNonnullByDefault
-@TargetModule(Module._960_API_SERVICES)
+@TargetModule(HarnessModule._960_API_SERVICES)
 public class DeploymentFreezeChecker implements PreDeploymentChecker {
   private GovernanceConfigService governanceConfigService;
   private DeploymentCtx deploymentCtx;

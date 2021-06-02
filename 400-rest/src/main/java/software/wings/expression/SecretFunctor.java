@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
+import static software.wings.expression.SecretManagerFunctorInterface.obtainExpression;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
@@ -39,7 +40,7 @@ public class SecretFunctor extends LateBindingMap {
 
   public Object getValue(String secretName) {
     if (adoptDelegateDecryption && !disablePhasing) {
-      return "${secretManager.obtain(\"" + secretName + "\", " + expressionFunctorToken + ")}";
+      return obtainExpression(secretName, expressionFunctorToken);
     }
 
     EncryptedData encryptedData = null;

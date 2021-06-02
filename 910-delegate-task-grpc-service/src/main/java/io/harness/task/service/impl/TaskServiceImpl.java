@@ -1,12 +1,20 @@
 package io.harness.task.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.govern.Switch.unhandled;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
 import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
+import io.harness.delegate.task.stepstatus.artifact.ArtifactMetadata;
+import io.harness.delegate.task.stepstatus.artifact.ArtifactMetadataType;
+import io.harness.delegate.task.stepstatus.artifact.DockerArtifactDescriptor;
+import io.harness.delegate.task.stepstatus.artifact.DockerArtifactMetadata;
+import io.harness.delegate.task.stepstatus.artifact.FileArtifactDescriptor;
+import io.harness.delegate.task.stepstatus.artifact.FileArtifactMetadata;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.grpc.DelegateServiceGrpcAgentClient;
 import io.harness.serializer.KryoSerializer;
@@ -28,13 +36,17 @@ import io.harness.task.service.TaskStatusData;
 import io.harness.task.service.TaskType;
 import io.harness.tasks.ResponseData;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
 import java.time.Duration;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CI)
 public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
   private final DelegateServiceGrpcAgentClient delegateServiceGrpcAgentClient;
   private final KryoSerializer kryoSerializer;
@@ -135,17 +147,20 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
       TaskStatusData taskStatusData = request.getTaskStatusData();
       if (taskStatusData.hasStepStatus()) {
         io.harness.task.service.StepStatus stepStatus = taskStatusData.getStepStatus();
+        ArtifactMetadata artifactMetadata = buildArtifactMetadata(stepStatus);
         StepStatusTaskResponseData responseData =
             StepStatusTaskResponseData.builder()
                 .stepStatus(io.harness.delegate.task.stepstatus.StepStatus.builder()
                                 .numberOfRetries(stepStatus.getNumRetries())
-                                .totalTimeTaken(Duration.ofSeconds(stepStatus.getTotalTimeTaken().getSeconds())
-                                                    .plusNanos(stepStatus.getTotalTimeTaken().getNanos()))
+                                .totalTimeTakenInMillis(Duration.ofSeconds(stepStatus.getTotalTimeTaken().getSeconds())
+                                                            .plusNanos(stepStatus.getTotalTimeTaken().getNanos())
+                                                            .toMillis())
                                 .stepExecutionStatus(io.harness.delegate.task.stepstatus.StepExecutionStatus.valueOf(
                                     stepStatus.getStepExecutionStatus().name()))
                                 .output(io.harness.delegate.task.stepstatus.StepMapOutput.builder()
                                             .map(stepStatus.getStepOutput().getOutputMap())
                                             .build())
+                                .artifactMetadata(artifactMetadata)
                                 .error(stepStatus.getErrorMessage())
                                 .build())
                 .build();
@@ -175,6 +190,51 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
       log.error("Unexpected error occurred while processing getTaskResults request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
+  }
+
+  @VisibleForTesting
+  ArtifactMetadata buildArtifactMetadata(io.harness.task.service.StepStatus stepStatus) {
+    ArtifactMetadata artifactMetadata = null;
+    if (stepStatus.hasArtifact()) {
+      if (stepStatus.getArtifact().hasDockerArtifact()) {
+        String registry = stepStatus.getArtifact().getDockerArtifact().getRegistryType();
+        String registryUrl = stepStatus.getArtifact().getDockerArtifact().getRegistryUrl();
+        List<DockerArtifactDescriptor> dockerArtifactDescriptorList =
+            stepStatus.getArtifact()
+                .getDockerArtifact()
+                .getDockerImagesList()
+                .stream()
+                .map(
+                    img -> DockerArtifactDescriptor.builder().imageName(img.getImage()).digest(img.getDigest()).build())
+                .collect(Collectors.toList());
+        DockerArtifactMetadata dockerArtifactMetadata = DockerArtifactMetadata.builder()
+                                                            .registryType(registry)
+                                                            .registryUrl(registryUrl)
+                                                            .dockerArtifacts(dockerArtifactDescriptorList)
+                                                            .build();
+
+        artifactMetadata = ArtifactMetadata.builder()
+                               .type(ArtifactMetadataType.DOCKER_ARTIFACT_METADATA)
+                               .spec(dockerArtifactMetadata)
+                               .build();
+      }
+      if (stepStatus.getArtifact().hasFileArtifact()) {
+        List<FileArtifactDescriptor> fileArtifactDescriptors =
+            stepStatus.getArtifact()
+                .getFileArtifact()
+                .getFileArtifactsList()
+                .stream()
+                .map(file -> FileArtifactDescriptor.builder().name(file.getName()).url(file.getUrl()).build())
+                .collect(Collectors.toList());
+        FileArtifactMetadata fileArtifactMetadata =
+            FileArtifactMetadata.builder().fileArtifactDescriptors(fileArtifactDescriptors).build();
+        artifactMetadata = ArtifactMetadata.builder()
+                               .type(ArtifactMetadataType.FILE_ARTIFACT_METADATA)
+                               .spec(fileArtifactMetadata)
+                               .build();
+      }
+    }
+    return artifactMetadata;
   }
 
   @Override

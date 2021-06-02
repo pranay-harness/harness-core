@@ -3,33 +3,48 @@ package io.harness.expression;
 import static io.harness.rule.OwnerRule.GARVIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.expressions.AmbianceExpressionEvaluator;
+import io.harness.exception.CriticalExpressionEvaluationException;
+import io.harness.exception.UnresolvedExpressionsException;
 import io.harness.expression.field.dummy.DummyOrchestrationField;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
+import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.validation.InputSetValidatorFactory;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
+import org.apache.commons.lang3.tuple.Pair;
+import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
   @Mock private PlanExecutionService planExecutionService;
+  @Inject private InputSetValidatorFactory inputSetValidatorFactory;
 
   @Before
   public void setup() {
@@ -118,7 +133,7 @@ public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
                                              .put("i22", 222)
                                              .build());
 
-    validateSingleExpression(evaluator, "bVal1CVal1.strVal", "c11", false);
+    validateSingleExpression(evaluator, "bVal1CVal1.strVal", "c11", false, false);
     validateExpression(evaluator, "bVal1.cVal1.strVal", "c11");
     validateExpression(evaluator, "bVal1.cVal2.strVal", "finalC12", true);
     validateExpression(evaluator, "bVal1.strVal1", "b11");
@@ -128,7 +143,7 @@ public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
     validateExpression(evaluator, "bVal2.cVal1.strVal", "c21");
     validateExpression(evaluator, "bVal2.cVal2.strVal", "finalC22", true);
     validateExpression(evaluator, "bVal2.strVal1", "finalB21", true);
-    validateExpression(evaluator, "bVal2.strVal2", "<+b22>");
+    validateExpression(evaluator, "bVal2.strVal2", "<+b22>", false, true);
     validateExpression(evaluator, "bVal2.intVal1", 21);
     validateExpression(evaluator, "bVal2.intVal2", 222, true);
     validateExpression(evaluator, "strVal1", "a1");
@@ -140,18 +155,94 @@ public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
   }
 
   private void validateExpression(
-      EngineExpressionEvaluator evaluator, String expression, Object expected, boolean skipEvaluate) {
-    validateSingleExpression(evaluator, expression, expected, skipEvaluate);
-    validateSingleExpression(evaluator, "obj." + expression, expected, skipEvaluate);
+      EngineExpressionEvaluator evaluator, String expression, Object expected, boolean shouldThrow) {
+    validateExpression(evaluator, expression, expected, shouldThrow, false);
   }
 
-  private void validateSingleExpression(
-      EngineExpressionEvaluator evaluator, String expression, Object expected, boolean skipEvaluate) {
+  private void validateExpression(EngineExpressionEvaluator evaluator, String expression, Object expected,
+      boolean skipEvaluate, boolean shouldThrow) {
+    validateSingleExpression(evaluator, expression, expected, skipEvaluate, shouldThrow);
+    validateSingleExpression(evaluator, "obj." + expression, expected, skipEvaluate, shouldThrow);
+  }
+
+  private void validateSingleExpression(EngineExpressionEvaluator evaluator, String expression, Object expected,
+      boolean skipEvaluate, boolean shouldThrow) {
     expression = "<+" + expression + ">";
-    assertThat(evaluator.renderExpression(expression)).isEqualTo(String.valueOf(expected));
-    if (!skipEvaluate) {
+    if (shouldThrow) {
+      String finalExpression = expression;
+      assertThatThrownBy(() -> evaluator.renderExpression(finalExpression))
+          .isInstanceOfAny(UnresolvedExpressionsException.class, CriticalExpressionEvaluationException.class);
+      assertThatCode(() -> evaluator.renderExpression(finalExpression, true)).doesNotThrowAnyException();
+    } else {
+      assertThat(evaluator.renderExpression(expression)).isEqualTo(String.valueOf(expected));
+    }
+
+    if (skipEvaluate) {
+      return;
+    }
+
+    if (shouldThrow) {
+      String finalExpression = expression;
+      assertThatThrownBy(() -> evaluator.evaluateExpression(finalExpression))
+          .isInstanceOfAny(UnresolvedExpressionsException.class, CriticalExpressionEvaluationException.class);
+    } else {
       assertThat(evaluator.evaluateExpression(expression)).isEqualTo(expected);
     }
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testParameterFieldResolution() {
+    DummyD dummyD = DummyD.builder().dummyD(ParameterField.createExpressionField(true, "<+c>", null, false)).build();
+
+    EngineExpressionEvaluator evaluator = prepareEngineExpressionEvaluator(ImmutableMap.of("a", "str1", "b", 100, "c",
+        DummyD.builder()
+            .strVal("p")
+            .iVal(ParameterField.createExpressionField(true, "<+b>", null, false))
+            .strVal2(ParameterField.createExpressionField(true, "<+a>", null, true))
+            .dummyD(ParameterField.createExpressionField(true, "<+d>", null, false))
+            .build(),
+        "d",
+        DummyD.builder().strVal("q").strVal2(ParameterField.createExpressionField(true, "<+a>", null, true)).build()));
+
+    Pair<Document, Object> pair = executeResolve(evaluator, dummyD);
+    Object resp = pair.getRight();
+    assertThat(resp).isNotNull();
+    assertThat(resp).isInstanceOf(Document.class);
+
+    DummyD out = RecastOrchestrationUtils.fromDocument(pair.getLeft(), DummyD.class);
+    assertThat(out).isNotNull();
+
+    ParameterField<DummyD> innerPF = out.getDummyD();
+    assertThat(innerPF).isNotNull();
+    assertThat(innerPF.isExpression()).isFalse();
+
+    DummyD inner = innerPF.getValue();
+    assertThat(inner).isNotNull();
+    assertThat(inner.getStrVal()).isEqualTo("p");
+    assertThat(inner.getIVal().getValue()).isEqualTo(100);
+    assertThat(inner.getStrVal2().getValue()).isEqualTo("str1");
+
+    ParameterField<DummyD> inner2PF = inner.getDummyD();
+    assertThat(innerPF).isNotNull();
+    assertThat(innerPF.isExpression()).isFalse();
+
+    DummyD inner2 = inner2PF.getValue();
+    assertThat(inner2).isNotNull();
+    assertThat(inner2.getStrVal()).isEqualTo("q");
+    assertThat(inner.getStrVal2().getValue()).isEqualTo("str1");
+  }
+
+  private Pair<Document, Object> executeResolve(EngineExpressionEvaluator evaluator, Object o) {
+    Document docOriginal = RecastOrchestrationUtils.toDocument(o);
+    evaluator.resolve(docOriginal, false);
+    Document docCopy = copyDocument(docOriginal);
+    return Pair.of(docOriginal, NodeExecutionUtils.resolveObject(docCopy));
+  }
+
+  private Document copyDocument(Document doc) {
+    return Document.parse(doc.toJson());
   }
 
   @Value
@@ -180,9 +271,20 @@ public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
     String strVal;
   }
 
+  @Value
+  @Builder
+  public static class DummyD {
+    String strVal;
+    ParameterField<DummyD> dummyD;
+    ParameterField<Integer> iVal;
+    ParameterField<String> strVal2;
+    DummyD dummyD2;
+  }
+
   private EngineExpressionEvaluator prepareEngineExpressionEvaluator(Map<String, Object> contextMap) {
     SampleEngineExpressionEvaluator evaluator = new SampleEngineExpressionEvaluator();
     on(evaluator).set("planExecutionService", planExecutionService);
+    on(evaluator).set("inputSetValidatorFactory", inputSetValidatorFactory);
     if (EmptyPredicate.isEmpty(contextMap)) {
       return evaluator;
     }
@@ -207,6 +309,15 @@ public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
     @NotNull
     protected List<String> fetchPrefixes() {
       return ImmutableList.of("obj", "");
+    }
+
+    @Override
+    protected Object evaluateInternal(String expression, EngineJexlContext ctx) {
+      Object value = super.evaluateInternal(expression, ctx);
+      if (value instanceof DummyOrchestrationField) {
+        return ((DummyOrchestrationField) value).fetchFinalValue();
+      }
+      return value;
     }
   }
 }

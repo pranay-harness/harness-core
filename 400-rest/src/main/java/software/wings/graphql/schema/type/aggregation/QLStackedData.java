@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.type.aggregation;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import java.util.List;
@@ -9,7 +9,7 @@ import lombok.Data;
 
 @Data
 @Builder
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLStackedData implements QLData {
   List<QLStackedDataPoint> dataPoints;
 }

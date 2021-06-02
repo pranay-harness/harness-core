@@ -26,12 +26,12 @@ fn generate() -> Result<()> {
     let mut target = File::create(&target_file)?;
 
     writeln!(target, "load(\"//:tools/bazel/aeriform.bzl\", \"aeriform\")")?;
-    writeln!(target, "")?;
 
     let mut vec = modules.keys().collect::<Vec<&String>>();
     vec.sort();
 
     for module in vec {
+        writeln!(target, "")?;
         writeln!(target, "aeriform(\"{}\")", module)?;
     }
 

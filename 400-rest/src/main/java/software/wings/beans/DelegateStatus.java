@@ -1,7 +1,10 @@
 package software.wings.beans;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.delegate.beans.DelegateConnectionDetails;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateScope;
 
@@ -13,11 +16,12 @@ import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
 
+@OwnedBy(HarnessTeam.DEL)
 @JsonInclude(Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Value
 @Builder
-@TargetModule(Module._920_DELEGATE_SERVICE_BEANS)
+@TargetModule(HarnessModule._920_DELEGATE_SERVICE_BEANS)
 public class DelegateStatus {
   List<String> publishedVersions;
   List<DelegateInner> delegates;
@@ -49,16 +53,6 @@ public class DelegateStatus {
     private long profileExecutedAt;
     private boolean profileError;
     private boolean sampleDelegate;
-    List<DelegateConnectionInner> connections;
-
-    @JsonInclude(Include.NON_NULL)
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    @Value
-    @Builder
-    public static class DelegateConnectionInner {
-      private String uuid;
-      private String version;
-      private long lastHeartbeat;
-    }
+    List<DelegateConnectionDetails> connections;
   }
 }

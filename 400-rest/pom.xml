@@ -312,12 +312,35 @@
             <artifactId>two-factor-auth</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.jcraft</groupId>
-            <artifactId>jsch</artifactId>
+            <groupId>com.jcraft.harness</groupId>
+            <artifactId>jsch-0-1-54-harness-patch</artifactId>
         </dependency>
         <dependency>
             <groupId>com.microsoft.azure</groupId>
             <artifactId>azure</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.microsoft.azure</groupId>
+            <artifactId>msal4j</artifactId>
+            <version>1.8.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-identity</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-storage-blob</artifactId>
+            <version>12.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-storage-common</artifactId>
+            <version>12.9.0</version>
         </dependency>
         <dependency>
             <groupId>com.nimbusds</groupId>
@@ -579,7 +602,11 @@
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk16</artifactId>
+            <artifactId>bcprov-jdk15on</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpg-jdk15on</artifactId>
         </dependency>
         <dependency>
             <groupId>org.cloudfoundry</groupId>
@@ -743,11 +770,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>835-notification-senders</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>860-orchestration-steps</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -758,7 +780,17 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>870-cg-orchestration</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>870-orchestration</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>874-orchestration-delay</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -813,6 +845,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>950-cg-ng-shared-orchestration-beans</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>950-command-library-common</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -828,12 +865,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>950-events-api</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>950-events-api-proto</artifactId>
+            <artifactId>953-events-api</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -854,6 +886,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>955-setup-usage-sdk</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>959-file-service-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

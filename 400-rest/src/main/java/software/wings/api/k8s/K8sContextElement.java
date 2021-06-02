@@ -1,22 +1,33 @@
 package software.wings.api.k8s;
 
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.context.ContextElementType;
+import io.harness.k8s.model.KubernetesResourceId;
 
 import software.wings.beans.TaskType;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
+import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
+@TargetModule(_871_CG_BEANS)
+@OwnedBy(CDP)
 public class K8sContextElement implements ContextElement {
   String releaseName;
   Integer releaseNumber;
   Integer targetInstances;
   TaskType currentTaskType;
+  List<String> delegateSelectors;
+  List<KubernetesResourceId> prunedResourcesIds;
 
   @Override
   public ContextElementType getElementType() {

@@ -1,7 +1,10 @@
 package software.wings.common;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
+
 import static java.util.Collections.unmodifiableList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.model.EventConstants;
 
 import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
@@ -19,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+@OwnedBy(CV)
 public class VerificationConstants {
   public static final long ML_RECORDS_TTL_MONTHS = 6;
   public static final long CV_TASK_TTL_MONTHS = 1;
@@ -34,6 +38,7 @@ public class VerificationConstants {
   public static final String NOTIFY_LEARNING_FAILURE = "/notify-learning-failure";
   public static final String NOTIFY_VERIFICATION_STATE = "/notify-verification-state";
   public static final String NOTIFY_WORKFLOW_VERIFICATION_STATE = "/notify-workflow-verification-state";
+  public static final String NOTIFY_WORKFLOW_CVNG_STATE = "/notify-workflow-cvng-state";
   public static final String COLLECT_24_7_DATA = "/collect-24-7-data";
   public static final String COLLECT_CV_DATA = "/collect-cv-data";
   public static final String COLLECT_DATA = "/collect-data";
@@ -119,7 +124,6 @@ public class VerificationConstants {
   public static final double LOGS_MEDIUM_RISK_THRESHOLD = 25;
   public static final int DURATION_TO_ASK_MINUTES = 5;
   public static final int CANARY_DAYS_TO_COLLECT = 7;
-  public static final int PERIODIC_GAP_IN_DAYS = 7;
   public static final int TIME_DELAY_QUERY_MINS = 2;
   public static final int DEFAULT_TIMEOUT_IN_MINS = 2;
 

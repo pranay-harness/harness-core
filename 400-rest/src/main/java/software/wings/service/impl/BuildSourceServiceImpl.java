@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._420_DELEGATE_SERVICE;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
@@ -18,11 +20,14 @@ import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.service.impl.AssignDelegateServiceImpl.SCOPE_WILDCARD;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
-import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
@@ -38,23 +43,21 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.GcbTaskParams;
-import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackage;
 import software.wings.helpers.ext.azure.devops.AzureDevopsProject;
-import software.wings.helpers.ext.gcb.GcbService;
 import software.wings.helpers.ext.gcs.GcsService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.ArtifactStreamHelper;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.BuildSourceService;
+import software.wings.service.intfc.DelegateTaskServiceClassic;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
@@ -71,7 +74,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -81,12 +83,12 @@ import java.util.Set;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.springframework.util.Assert;
 
-/**
- * Created by anubhaw on 8/18/16.
- */
 @ValidateOnExecution
 @Singleton
+@TargetModule(_420_DELEGATE_SERVICE)
+@OwnedBy(CDC)
 @Slf4j
 public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private Map<Class<? extends SettingValue>, Class<? extends BuildService>> buildServiceMap;
@@ -96,17 +98,15 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceClassLocator serviceLocator;
   @Inject private SecretManager secretManager;
-  @Inject @Named("ArtifactCollectionService") private ArtifactCollectionService artifactCollectionService;
   @Inject @Named("AsyncArtifactCollectionService") private ArtifactCollectionService artifactCollectionServiceAsync;
   @Inject private FeatureFlagService featureFlagService;
-  @Inject private AppService appService;
   @Inject private GcsService gcsService;
   @Inject private CustomBuildSourceService customBuildSourceService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private ArtifactStreamHelper artifactStreamHelper;
-  @Inject private GcbService gcbService;
   @Inject private DelegateServiceImpl delegateService;
+  @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
 
   @Override
   public Set<JobDetails> getJobs(String appId, String settingId, String parentJobName) {
@@ -131,7 +131,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
 
     GcpConfig gcpConfig = (GcpConfig) settingValue;
-    if (gcpConfig.isUseDelegate()) {
+    if (gcpConfig.isUseDelegateSelectors()) {
       return getBuildService(settingAttribute, appId, GCS.name()).getProjectId(gcpConfig);
     }
     return gcsService.getProject(gcpConfig, encryptedDataDetails);
@@ -199,16 +199,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue value = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) value);
-    if (featureFlagService.isEnabled(FeatureName.USE_NEXUS3_PRIVATE_APIS, settingAttribute.getAccountId())
-        && value instanceof NexusConfig && ((NexusConfig) value).getVersion().equals("3.x")
-        && repositoryFormat.equals("maven")) {
-      return Sets.newTreeSet(
-          getBuildService(settingAttribute, appId)
-              .getArtifactPathsUsingPrivateApis(jobName, groupId, value, encryptedDataDetails, repositoryFormat));
-    } else {
-      return Sets.newTreeSet(getBuildService(settingAttribute, appId, artifactStreamType)
-                                 .getArtifactPaths(jobName, groupId, value, encryptedDataDetails, repositoryFormat));
-    }
+    return Sets.newTreeSet(getBuildService(settingAttribute, appId, artifactStreamType)
+                               .getArtifactPaths(jobName, groupId, value, encryptedDataDetails, repositoryFormat));
   }
 
   @Override
@@ -229,7 +221,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
       Service service = artifactStreamServiceBindingService.getService(appId, artifactStream.getUuid(), true);
       artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
     } else {
-      artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+      artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes(featureFlagService);
     }
     return getBuildService(settingAttribute, appId, artifactStream.getArtifactStreamType())
         .getBuild(appId, artifactStreamAttributes, settingValue, encryptedDataDetails,
@@ -274,7 +266,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
       Service service = artifactStreamServiceBindingService.getService(appId, artifactStream.getUuid(), true);
       artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
     } else {
-      artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+      artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes(featureFlagService);
     }
     if (GCS.name().equals(artifactStreamType)) {
       limit = (limit != -1) ? limit : 100;
@@ -333,7 +325,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
       Service service = artifactStreamServiceBindingService.getService(appId, artifactStream.getUuid(), true);
       artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
     } else {
-      artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+      artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes(featureFlagService);
     }
 
     return getBuildService(settingAttribute, appId)
@@ -341,7 +333,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   private ArtifactStreamAttributes getArtifactStreamAttributes(ArtifactStream artifactStream, Service service) {
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+    ArtifactStreamAttributes artifactStreamAttributes =
+        artifactStream.fetchArtifactStreamAttributes(featureFlagService);
     artifactStreamAttributes.setArtifactType(service.getArtifactType());
     return artifactStreamAttributes;
   }
@@ -377,13 +370,6 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
-    if (featureFlagService.isEnabled(FeatureName.USE_NEXUS3_PRIVATE_APIS, settingAttribute.getAccountId())
-        && settingValue instanceof NexusConfig && ((NexusConfig) settingValue).getVersion().equals("3.x")
-        && repositoryFormat.equals("maven")) {
-      return Sets.newTreeSet(
-          getBuildService(settingAttribute, appId)
-              .getGroupIdsUsingPrivateApis(repoType, repositoryFormat, settingValue, encryptedDataDetails));
-    }
     return Sets.newTreeSet(getBuildService(settingAttribute, appId)
                                .getGroupIds(repoType, repositoryFormat, settingValue, encryptedDataDetails));
   }
@@ -407,7 +393,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   public void validateAndInferArtifactSource(ArtifactStream artifactStream) {
     SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
     SettingValue settingValue = getSettingValue(settingAttribute);
-    ArtifactStreamAttributes attributes = artifactStream.fetchArtifactStreamAttributes();
+    ArtifactStreamAttributes attributes = artifactStream.fetchArtifactStreamAttributes(featureFlagService);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
     ArtifactStreamAttributes newAttributes =
         getBuildService(settingAttribute, artifactStream.fetchAppId(), attributes.getArtifactStreamType())
@@ -433,7 +419,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SyncTaskContextBuilder syncTaskContextBuilder =
         SyncTaskContext.builder()
             .accountId(settingAttribute.getAccountId())
-            .appId(appId)
+            .appId(isBlank(appId) || appId.equals(GLOBAL_APP_ID) ? SCOPE_WILDCARD : appId)
             .timeout(settingAttribute.getValue().getType().equals(SettingVariableTypes.JENKINS.name())
                         || settingAttribute.getValue().getType().equals(SettingVariableTypes.BAMBOO.name())
                     ? 120 * 1000
@@ -467,7 +453,10 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     }
     Class<? extends BuildService> buildServiceClass = serviceLocator.getBuildServiceClass(artifactStreamType);
     SyncTaskContextBuilder syncTaskContextBuilder =
-        SyncTaskContext.builder().accountId(settingAttribute.getAccountId()).appId(appId).timeout(120 * 1000);
+        SyncTaskContext.builder()
+            .accountId(settingAttribute.getAccountId())
+            .appId(isBlank(appId) || appId.equals(GLOBAL_APP_ID) ? SCOPE_WILDCARD : appId)
+            .timeout(120 * 1000);
     SyncTaskContext syncTaskContext = areDelegateSelectorsRequired(settingAttribute)
         ? appendDelegateSelector(settingAttribute, syncTaskContextBuilder)
         : syncTaskContextBuilder.build();
@@ -543,13 +532,14 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+    ArtifactStreamAttributes artifactStreamAttributes =
+        artifactStream.fetchArtifactStreamAttributes(featureFlagService);
     if (AMAZON_S3.name().equals(artifactStream.getArtifactStreamType())) {
-      return getBuildService(settingAttribute, artifactStream.getArtifactStreamType())
+      return getBuildService(settingAttribute, artifactStream.getAppId(), artifactStream.getArtifactStreamType())
           .getLastSuccessfulBuild(
               artifactStream.fetchAppId(), artifactStreamAttributes, settingValue, encryptedDataDetails);
     } else {
-      return getBuildService(settingAttribute)
+      return getBuildService(settingAttribute, artifactStream.getAppId())
           .getLastSuccessfulBuild(
               artifactStream.fetchAppId(), artifactStreamAttributes, settingValue, encryptedDataDetails);
     }
@@ -630,7 +620,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
 
     GcpConfig gcpConfig = (GcpConfig) settingValue;
-    if (gcpConfig.isUseDelegate()) {
+    if (gcpConfig.isUseDelegateSelectors()) {
       return getBuildService(settingAttribute).getProjectId(gcpConfig);
     }
     return gcsService.getProject(gcpConfig, encryptedDataDetails);
@@ -668,16 +658,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
-    if (featureFlagService.isEnabled(FeatureName.USE_NEXUS3_PRIVATE_APIS, settingAttribute.getAccountId())
-        && settingValue instanceof NexusConfig && ((NexusConfig) settingValue).getVersion().equals("3.x")
-        && (repositoryFormat.equals("npm") || repositoryFormat.equals("nuget"))) {
-      return Sets.newTreeSet(
-          getBuildService(settingAttribute, appId)
-              .getGroupIdsUsingPrivateApis(repositoryName, repositoryFormat, settingValue, encryptedDataDetails));
-    } else {
-      return Sets.newTreeSet(getBuildService(settingAttribute, appId)
-                                 .getGroupIds(repositoryName, repositoryFormat, settingValue, encryptedDataDetails));
-    }
+    return Sets.newTreeSet(getBuildService(settingAttribute, appId)
+                               .getGroupIds(repositoryName, repositoryFormat, settingValue, encryptedDataDetails));
   }
 
   @Override
@@ -729,7 +711,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   public List<String> getGcbTriggers(String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     if (settingAttribute == null) {
-      throw new InvalidRequestException("GCP Cloud provider Settings Attribute is null", USER);
+      throw new InvalidRequestException("GCP Clo∂ud provider Settings Attribute is null", USER);
     }
     SettingValue settingValue = settingAttribute.getValue();
     if (settingValue == null) {
@@ -737,31 +719,41 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     }
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
     GcpConfig gcpConfig = (GcpConfig) settingValue;
-    GcbState.GcbDelegateResponse delegateResponseData = delegateService.executeTask(
-        DelegateTask.builder()
-            .accountId(gcpConfig.getAccountId())
-            .data(TaskData.builder()
-                      .async(true)
-                      .taskType(GCB.name())
-                      .parameters(new Object[] {GcbTaskParams.builder()
-                                                    .gcpConfig(gcpConfig)
-                                                    .encryptedDataDetails(encryptedDataDetails)
-                                                    .type(GcbTaskParams.GcbTaskType.FETCH_TRIGGERS)
-                                                    .build()})
-                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                      .build())
-            .build());
+    GcbState.GcbDelegateResponse delegateResponseData = null;
+    try {
+      delegateResponseData = delegateTaskServiceClassic.executeTask(
+          DelegateTask.builder()
+              .accountId(gcpConfig.getAccountId())
+              .data(TaskData.builder()
+                        .async(true)
+                        .taskType(GCB.name())
+                        .parameters(new Object[] {GcbTaskParams.builder()
+                                                      .gcpConfig(gcpConfig)
+                                                      .encryptedDataDetails(encryptedDataDetails)
+                                                      .type(GcbTaskParams.GcbTaskType.FETCH_TRIGGERS)
+                                                      .build()})
+                        .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                        .build())
+              .build());
+    } catch (InterruptedException e) {
+      log.error("Exception on getGcbTriggers: ", e);
+    }
+    Assert.notNull(delegateResponseData, "Delegate Response data should not be null!");
     return delegateResponseData.getTriggers();
   }
 
   private boolean areDelegateSelectorsRequired(SettingAttribute settingAttribute) {
-    return settingsService.isSettingValueGcp(settingAttribute)
-        && ((GcpConfig) settingAttribute.getValue()).isUseDelegate();
+    if (settingsService.isSettingValueGcp(settingAttribute)) {
+      return ((GcpConfig) settingAttribute.getValue()).isUseDelegateSelectors();
+    }
+    return settingsService.hasDelegateSelectorProperty(settingAttribute);
   }
 
   private SyncTaskContext appendDelegateSelector(
       SettingAttribute settingAttribute, SyncTaskContextBuilder syncTaskContextBuilder) {
-    return syncTaskContextBuilder.tags(Arrays.asList(((GcpConfig) settingAttribute.getValue()).getDelegateSelector()))
-        .build();
+    List<String> tags = settingsService.getDelegateSelectors(settingAttribute);
+    log.info("[Delegate Selection] Appending delegate selectors to - {} with selectors {}", settingAttribute.getName(),
+        tags);
+    return syncTaskContextBuilder.tags(tags).build();
   }
 }

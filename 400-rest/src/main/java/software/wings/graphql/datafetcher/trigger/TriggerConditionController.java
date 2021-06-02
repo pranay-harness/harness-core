@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -13,11 +14,12 @@ import static software.wings.graphql.schema.type.trigger.QLGitHubAction.packageA
 import static software.wings.graphql.schema.type.trigger.QLGitHubAction.pullRequestActions;
 import static software.wings.graphql.schema.type.trigger.QLGitHubAction.releaseActions;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.configuration.DeployMode;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.SettingAttribute;
@@ -65,12 +67,13 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class TriggerConditionController {
   @Inject TriggerActionController triggerActionController;
   @Inject MainConfiguration mainConfiguration;
   @Inject ArtifactStreamService artifactStreamService;
   @Inject SettingsService settingsService;
+  @Inject FeatureFlagService featureFlagService;
 
   public QLTriggerCondition populateTriggerCondition(Trigger trigger, String accountId) {
     QLTriggerCondition condition = null;
@@ -130,14 +133,18 @@ public class TriggerConditionController {
           }
         }
 
+        boolean isManualTriggerAuthorized = featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, accountId);
+        String contentType = "content-type: application/json";
+
         webhookUrl +=
             "/api/webhooks/" + webHookTriggerCondition.getWebHookToken().getWebHookToken() + "?accountId=" + accountId;
-        QLWebhookDetails details = QLWebhookDetails.builder()
-                                       .webhookURL(webhookUrl)
-                                       .header("content-type: application/json")
-                                       .method(webHookTriggerCondition.getWebHookToken().getHttpMethod())
-                                       .payload(webHookTriggerCondition.getWebHookToken().getPayload())
-                                       .build();
+        QLWebhookDetails details =
+            QLWebhookDetails.builder()
+                .webhookURL(webhookUrl)
+                .header(isManualTriggerAuthorized ? contentType + ", x-api-key: x-api-key_placeholder" : contentType)
+                .method(webHookTriggerCondition.getWebHookToken().getHttpMethod())
+                .payload(webHookTriggerCondition.getWebHookToken().getPayload())
+                .build();
 
         QLWebhookEvent event = null;
         switch (webhookSource) {
@@ -169,6 +176,7 @@ public class TriggerConditionController {
                 .filePaths(webHookTriggerCondition.getFilePaths())
                 .deployOnlyIfFilesChanged(webHookTriggerCondition.isCheckFileContentChanged())
                 .triggerConditionType(QLTriggerConditionType.valueOf(webHookTriggerCondition.getConditionType().name()))
+                .webhookSecret(webHookTriggerCondition.getWebHookSecret())
                 .build();
 
         break;
@@ -362,6 +370,7 @@ public class TriggerConditionController {
     if (QLWebhookSource.CUSTOM != qlWebhookConditionInput.getWebhookSourceType()) {
       builder.webhookSource(WebhookSource.valueOf(qlWebhookConditionInput.getWebhookSourceType().name()));
     }
+    builder.webHookSecret(qlWebhookConditionInput.getWebhookSecret());
     return builder.build();
   }
 

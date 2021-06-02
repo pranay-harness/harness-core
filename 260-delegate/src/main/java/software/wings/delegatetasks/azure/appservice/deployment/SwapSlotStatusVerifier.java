@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.azure.appservice.deployment;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureMonitorClient;
 import io.harness.azure.client.AzureWebClient;
@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Set;
 import org.joda.time.DateTime;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class SwapSlotStatusVerifier extends SlotStatusVerifier {
   private final DateTime startTime;
   private final AzureMonitorClient azureMonitorClient;

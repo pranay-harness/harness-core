@@ -1,9 +1,14 @@
 package software.wings.service.impl.yaml.handler.infraprovisioner;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.ARMInfrastructureProvisioner.Yaml;
+
+import static org.apache.commons.lang3.StringUtils.trim;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.ARMInfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerType;
@@ -11,6 +16,7 @@ import software.wings.beans.yaml.ChangeContext;
 
 import java.util.List;
 
+@OwnedBy(CDP)
 public class ARMInfrastructureProvisionerYamlHandler
     extends InfrastructureProvisionerYamlHandler<Yaml, ARMInfrastructureProvisioner> {
   @Override
@@ -18,9 +24,10 @@ public class ARMInfrastructureProvisionerYamlHandler
     Yaml yaml = ARMInfrastructureProvisioner.Yaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setType(InfrastructureProvisionerType.ARM.name());
-    yaml.setSourceType(bean.getSourceType());
+    yaml.setResourceType(bean.getResourceType());
     yaml.setScopeType(bean.getScopeType());
-    yaml.setTemplateBody(bean.getTemplateBody());
+    yaml.setSourceType(bean.getSourceType());
+    yaml.setTemplateBody(trim(bean.getTemplateBody()));
     yaml.setGitFileConfig(bean.getGitFileConfig());
     return yaml;
   }
@@ -58,8 +65,9 @@ public class ARMInfrastructureProvisionerYamlHandler
     String yamlFilePath = changeContext.getChange().getFilePath();
     super.toBean(changeContext, bean, appId, yamlFilePath);
     bean.setScopeType(yaml.getScopeType());
-    bean.setTemplateBody(yaml.getTemplateBody());
+    bean.setResourceType(yaml.getResourceType());
     bean.setSourceType(yaml.getSourceType());
+    bean.setTemplateBody(trim(yaml.getTemplateBody()));
     bean.setGitFileConfig(yaml.getGitFileConfig());
   }
 

@@ -19,6 +19,7 @@ import io.harness.ccm.commons.beans.InstanceType;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
@@ -38,7 +39,6 @@ import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
@@ -67,16 +67,14 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
-    JobParameters parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
-    Long startTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE);
-    Long endTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE);
+    final CCMJobConstants jobConstants = new CCMJobConstants(chunkContext);
     int batchSize = config.getBatchQueryConfig().getQueryBatchSize();
-    String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
 
-    BillingDataReader billingDataReader = new BillingDataReader(
-        billingDataService, accountId, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime), batchSize, 0);
+    BillingDataReader billingDataReader = new BillingDataReader(billingDataService, jobConstants.getAccountId(),
+        Instant.ofEpochMilli(jobConstants.getJobStartTime()), Instant.ofEpochMilli(jobConstants.getJobEndTime()),
+        batchSize, 0);
 
-    ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.ofEpochMilli(startTime), ZoneId.of("GMT"));
+    ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.ofEpochMilli(jobConstants.getJobStartTime()), ZoneId.of("GMT"));
     String billingDataFileName =
         String.format(defaultBillingDataFileName, zdt.getYear(), zdt.getMonth(), zdt.getDayOfMonth());
 
@@ -84,19 +82,19 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
     boolean avroFileWithSchemaExists = false;
     do {
       instanceBillingDataList = billingDataReader.getNext();
-      refreshLabelCache(accountId, instanceBillingDataList);
+      refreshLabelCache(jobConstants.getAccountId(), instanceBillingDataList);
       List<ClusterBillingData> clusterBillingData = instanceBillingDataList.stream()
                                                         .map(this::convertInstanceBillingDataToAVROObjects)
                                                         .collect(Collectors.toList());
-      writeDataToAvro(accountId, clusterBillingData, billingDataFileName, avroFileWithSchemaExists);
+      writeDataToAvro(jobConstants.getAccountId(), clusterBillingData, billingDataFileName, avroFileWithSchemaExists);
       avroFileWithSchemaExists = true;
     } while (instanceBillingDataList.size() == batchSize);
 
-    final String gcsObjectName = String.format(gcsObjectNameFormat, accountId, billingDataFileName);
+    final String gcsObjectName = String.format(gcsObjectNameFormat, jobConstants.getAccountId(), billingDataFileName);
     googleCloudStorageService.uploadObject(gcsObjectName, defaultParentWorkingDirectory + gcsObjectName);
 
     // Delete file once upload is complete
-    File workingDirectory = new File(defaultParentWorkingDirectory + accountId);
+    File workingDirectory = new File(defaultParentWorkingDirectory + jobConstants.getAccountId());
     File billingDataFile = new File(workingDirectory, billingDataFileName);
     Files.delete(billingDataFile.toPath());
 
@@ -106,7 +104,9 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
   private void refreshLabelCache(String accountId, List<InstanceBillingData> instanceBillingDataList) {
     Map<String, Set<String>> clusterWorkload =
         instanceBillingDataList.stream()
-            .filter(instanceBillingData -> instanceBillingData.getInstanceType().equals(InstanceType.K8S_POD.name()))
+            .filter(instanceBillingData
+                -> ImmutableSet.of(InstanceType.K8S_POD.name(), InstanceType.K8S_POD_FARGATE.name())
+                       .contains(instanceBillingData.getInstanceType()))
             .filter(instanceBillingData
                 -> null
                     == k8SWorkloadService.getK8sWorkloadLabel(
@@ -226,7 +226,8 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
     }
 
     List<Label> labels = new ArrayList<>();
-    if (instanceBillingData.getInstanceType().equals(InstanceType.K8S_POD.name())) {
+    if (ImmutableSet.of(InstanceType.K8S_POD.name(), InstanceType.K8S_POD_FARGATE.name())
+            .contains(instanceBillingData.getInstanceType())) {
       Map<String, String> k8sWorkloadLabel = k8SWorkloadService.getK8sWorkloadLabel(
           accountId, instanceBillingData.getClusterId(), instanceBillingData.getWorkloadName());
 

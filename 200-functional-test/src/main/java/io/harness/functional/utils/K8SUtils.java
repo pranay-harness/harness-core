@@ -14,19 +14,28 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
+import io.harness.generator.OwnerManager;
+import io.harness.testframework.restutils.ArtifactStreamRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 
+import software.wings.beans.Application;
+import software.wings.beans.Environment;
+import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.RollingOrchestrationWorkflow;
+import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
+import software.wings.beans.artifact.Artifact;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,5 +108,30 @@ public class K8SUtils {
         .until(()
                    -> workflowExecutionService.getWorkflowExecution(appId, workflowExecution.getUuid()).getStatus()
                 == ExecutionStatus.SUCCESS);
+  }
+
+  public static ExecutionArgs createExecutionArgs(OwnerManager.Owners owners, Workflow workflow, String bearerToken) {
+    return createExecutionArgs(owners, workflow, bearerToken, ImmutableMap.of());
+  }
+
+  public static ExecutionArgs createExecutionArgs(
+      OwnerManager.Owners owners, Workflow workflow, String bearerToken, Map<String, String> workflowVariables) {
+    Application application = owners.obtainApplication();
+    Service service = owners.obtainService();
+    Environment environment = owners.obtainEnvironment();
+    String artifactId = ArtifactStreamRestUtils.getArtifactStreamId(
+        bearerToken, application.getUuid(), environment.getUuid(), service.getUuid());
+    Artifact artifact = new Artifact();
+    artifact.setUuid(artifactId);
+
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setWorkflowType(workflow.getWorkflowType());
+    executionArgs.setOrchestrationId(workflow.getUuid());
+    executionArgs.setServiceId(service.getUuid());
+    executionArgs.setCommandName("START");
+    executionArgs.setWorkflowVariables(workflowVariables);
+    executionArgs.setArtifacts(Collections.singletonList(artifact));
+
+    return executionArgs;
   }
 }

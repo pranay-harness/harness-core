@@ -1,76 +1,111 @@
 package io.harness.ng.core.impl;
 
-import static io.harness.exception.WingsException.USER;
+import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
+import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_IDENTIFIER;
+import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_NAME;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.ng.accesscontrol.PlatformPermissions.INVITE_PERMISSION_IDENTIFIER;
 import static io.harness.ng.core.remote.OrganizationMapper.toOrganization;
+import static io.harness.ng.core.user.UserMembershipUpdateSource.SYSTEM;
 import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
+import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
+import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
 
-import static java.util.Collections.singletonList;
+import static java.lang.Boolean.FALSE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.eventsframework.EventsFrameworkConstants;
-import io.harness.eventsframework.EventsFrameworkMetadataConstants;
-import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
-import io.harness.eventsframework.entity_crud.organization.OrganizationEntityChangeDTO;
-import io.harness.eventsframework.producer.Message;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.OrganizationFilterDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
-import io.harness.ng.core.invites.entities.Role;
-import io.harness.ng.core.invites.entities.UserProjectMap;
+import io.harness.ng.core.events.OrganizationCreateEvent;
+import io.harness.ng.core.events.OrganizationDeleteEvent;
+import io.harness.ng.core.events.OrganizationRestoreEvent;
+import io.harness.ng.core.events.OrganizationUpdateEvent;
+import io.harness.ng.core.remote.OrganizationMapper;
 import io.harness.ng.core.services.OrganizationService;
-import io.harness.ng.core.user.services.api.NgUserService;
+import io.harness.ng.core.user.service.NgUserService;
+import io.harness.outbox.api.OutboxService;
+import io.harness.remote.client.NGRestUtils;
 import io.harness.repositories.core.spring.OrganizationRepository;
-import io.harness.security.SecurityContextBuilder;
+import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
+import io.harness.resourcegroupclient.ResourceGroupResponse;
+import io.harness.resourcegroupclient.remote.ResourceGroupClient;
+import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.dto.PrincipalType;
+import io.harness.utils.ScopeUtils;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.google.protobuf.ByteString;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import java.io.IOException;
+import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.transaction.support.TransactionTemplate;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class OrganizationServiceImpl implements OrganizationService {
+  private static final String ORG_ADMIN_ROLE = "_organization_admin";
+  private static final String RESOURCE_GROUP_DESCRIPTION =
+      "All the resources in this organization are included in this resource group.";
   private final OrganizationRepository organizationRepository;
-  private final Producer eventProducer;
+  private final OutboxService outboxService;
+  private final TransactionTemplate transactionTemplate;
+  private final ResourceGroupClient resourceGroupClient;
   private final NgUserService ngUserService;
-  private static final String ORGANIZATION_ADMIN_ROLE_NAME = "Organization Admin";
+  private final AccessControlClient accessControlClient;
+  private final RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
 
   @Inject
-  public OrganizationServiceImpl(OrganizationRepository organizationRepository,
-      @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer, NgUserService ngUserService) {
+  public OrganizationServiceImpl(OrganizationRepository organizationRepository, OutboxService outboxService,
+      @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate,
+      @Named("PRIVILEGED") ResourceGroupClient resourceGroupClient, NgUserService ngUserService,
+      AccessControlClient accessControlClient) {
     this.organizationRepository = organizationRepository;
-    this.eventProducer = eventProducer;
+    this.outboxService = outboxService;
+    this.transactionTemplate = transactionTemplate;
+    this.resourceGroupClient = resourceGroupClient;
     this.ngUserService = ngUserService;
+    this.accessControlClient = accessControlClient;
   }
 
   @Override
   public Organization create(String accountIdentifier, OrganizationDTO organizationDTO) {
-    validateCreateOrganizationRequest(accountIdentifier, organizationDTO);
     Organization organization = toOrganization(organizationDTO);
     organization.setAccountIdentifier(accountIdentifier);
     try {
       validate(organization);
-      Organization savedOrganization = organizationRepository.save(organization);
-      performActionsPostOrganizationCreation(organization);
+      Organization savedOrganization = saveOrganization(organization);
+      setupOrganization(Scope.of(accountIdentifier, organizationDTO.getIdentifier(), null));
+      log.info(String.format("Organization with identifier %s was successfully created", organization.getIdentifier()));
       return savedOrganization;
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(
@@ -80,50 +115,99 @@ public class OrganizationServiceImpl implements OrganizationService {
     }
   }
 
-  private void performActionsPostOrganizationCreation(Organization organization) {
-    publishEvent(organization, EventsFrameworkMetadataConstants.CREATE_ACTION);
-    createUserProjectMap(organization);
-  }
-
-  private void publishEvent(Organization organization, String action) {
+  private void setupOrganization(Scope scope) {
+    if (DEFAULT_ORG_IDENTIFIER.equals(scope.getOrgIdentifier())) {
+      // Default org is a special case. That is handled by default org service
+      return;
+    }
+    String userId = null;
+    if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
+        && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
+      userId = SourcePrincipalContextBuilder.getSourcePrincipal().getName();
+    }
+    // in case of default org identifier userprincipal will not be set in security context and that is okay
+    if (Objects.isNull(userId)) {
+      throw new InvalidRequestException("User not found in security context");
+    }
     try {
-      eventProducer.send(
-          Message.newBuilder()
-              .putAllMetadata(ImmutableMap.of("accountId", organization.getAccountIdentifier(),
-                  EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY,
-                  EventsFrameworkMetadataConstants.ACTION, action))
-              .setData(getOrganizationPayload(organization))
-              .build());
-    } catch (ProducerShutdownException e) {
-      log.error("Failed to send event to events framework orgIdentifier: " + organization.getIdentifier(), e);
+      createDefaultResourceGroup(scope);
+      assignOrgAdmin(scope, userId);
+      busyPollUntilOrgSetupCompletes(scope, userId);
+    } catch (Exception e) {
+      log.error("Failed to complete post organization creation steps for [{}]", ScopeUtils.toString(scope));
     }
   }
 
-  private ByteString getOrganizationPayload(Organization organization) {
-    return OrganizationEntityChangeDTO.newBuilder()
-        .setIdentifier(organization.getIdentifier())
-        .setAccountIdentifier(organization.getAccountIdentifier())
-        .build()
-        .toByteString();
+  private void busyPollUntilOrgSetupCompletes(Scope scope, String userId) {
+    RetryConfig config = RetryConfig.custom()
+                             .maxAttempts(50)
+                             .waitDuration(Duration.ofMillis(200))
+                             .retryOnResult(Boolean.FALSE::equals)
+                             .retryExceptions(Exception.class)
+                             .ignoreExceptions(IOException.class)
+                             .build();
+    Retry retry = Retry.of("check user permissions", config);
+    Retry.EventPublisher publisher = retry.getEventPublisher();
+    publisher.onRetry(event -> log.info("Retrying for organization {} {}", scope.getOrgIdentifier(), event.toString()));
+    publisher.onSuccess(
+        event -> log.info("Retrying for organization {} {}", scope.getOrgIdentifier(), event.toString()));
+    Supplier<Boolean> hasAccess = Retry.decorateSupplier(retry,
+        ()
+            -> accessControlClient.hasAccess(
+                ResourceScope.of(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier()),
+                Resource.of("USER", userId), INVITE_PERMISSION_IDENTIFIER));
+    if (FALSE.equals(hasAccess.get())) {
+      log.error(
+          "Finishing organization setup without confirm role assignment creation [{}]", ScopeUtils.toString(scope));
+    }
   }
 
-  private void createUserProjectMap(Organization organization) {
-    if (SecurityContextBuilder.getPrincipal() != null
-        && SecurityContextBuilder.getPrincipal().getType() == PrincipalType.USER) {
-      String userId = SecurityContextBuilder.getPrincipal().getName();
-      Role role = Role.builder()
-                      .accountIdentifier(organization.getAccountIdentifier())
-                      .orgIdentifier(organization.getIdentifier())
-                      .name(ORGANIZATION_ADMIN_ROLE_NAME)
-                      .build();
-      UserProjectMap userProjectMap = UserProjectMap.builder()
-                                          .userId(userId)
-                                          .accountIdentifier(organization.getAccountIdentifier())
-                                          .orgIdentifier(organization.getIdentifier())
-                                          .roles(singletonList(role))
-                                          .build();
-      ngUserService.createUserProjectMap(userProjectMap);
+  private void assignOrgAdmin(Scope scope, String userId) {
+    ngUserService.addUserToScope(userId,
+        Scope.builder()
+            .accountIdentifier(scope.getAccountIdentifier())
+            .orgIdentifier(scope.getOrgIdentifier())
+            .projectIdentifier(scope.getProjectIdentifier())
+            .build(),
+        ORG_ADMIN_ROLE, SYSTEM);
+  }
+
+  private void createDefaultResourceGroup(Scope scope) {
+    try {
+      ResourceGroupResponse resourceGroupResponse =
+          NGRestUtils.getResponse(resourceGroupClient.getResourceGroup(DEFAULT_RESOURCE_GROUP_IDENTIFIER,
+              scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier()));
+      if (resourceGroupResponse != null) {
+        return;
+      }
+      ResourceGroupDTO resourceGroupDTO = getResourceGroupDTO(scope);
+      NGRestUtils.getResponse(resourceGroupClient.createManagedResourceGroup(
+          scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), resourceGroupDTO));
+    } catch (Exception e) {
+      log.error("Couldn't create default resource group for [{}]", ScopeUtils.toString(scope));
     }
+  }
+
+  private ResourceGroupDTO getResourceGroupDTO(Scope scope) {
+    return ResourceGroupDTO.builder()
+        .accountIdentifier(scope.getAccountIdentifier())
+        .orgIdentifier(scope.getOrgIdentifier())
+        .projectIdentifier(scope.getProjectIdentifier())
+        .name(DEFAULT_RESOURCE_GROUP_NAME)
+        .identifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER)
+        .description(RESOURCE_GROUP_DESCRIPTION)
+        .resourceSelectors(Collections.emptyList())
+        .fullScopeSelected(true)
+        .build();
+  }
+
+  private Organization saveOrganization(Organization organization) {
+    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      Organization savedOrganization = organizationRepository.save(organization);
+      outboxService.save(
+          new OrganizationCreateEvent(organization.getAccountIdentifier(), OrganizationMapper.writeDto(organization)));
+      return savedOrganization;
+    }));
   }
 
   @Override
@@ -134,15 +218,15 @@ public class OrganizationServiceImpl implements OrganizationService {
 
   @Override
   public Organization update(String accountIdentifier, String identifier, OrganizationDTO organizationDTO) {
-    validateUpdateOrganizationRequest(accountIdentifier, identifier, organizationDTO);
+    validateUpdateOrganizationRequest(identifier, organizationDTO);
     Optional<Organization> optionalOrganization = get(accountIdentifier, identifier);
 
     if (optionalOrganization.isPresent()) {
       Organization existingOrganization = optionalOrganization.get();
-      if (existingOrganization.getHarnessManaged()) {
+      if (Boolean.TRUE.equals(existingOrganization.getHarnessManaged())) {
         throw new InvalidRequestException(
             String.format("Update operation not supported for Default Organization (identifier: [%s])", identifier),
-            USER);
+            WingsException.USER);
       }
       Organization organization = toOrganization(organizationDTO);
       organization.setAccountIdentifier(accountIdentifier);
@@ -150,13 +234,17 @@ public class OrganizationServiceImpl implements OrganizationService {
       if (organization.getVersion() == null) {
         organization.setVersion(existingOrganization.getVersion());
       }
-
       validate(organization);
-      Organization updatedOrganization = organizationRepository.save(organization);
-      publishEvent(existingOrganization, EventsFrameworkMetadataConstants.UPDATE_ACTION);
-      return updatedOrganization;
+      return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+        Organization updatedOrganization = organizationRepository.save(organization);
+        log.info(String.format("Organization with identifier %s was successfully updated", identifier));
+        outboxService.save(new OrganizationUpdateEvent(organization.getAccountIdentifier(),
+            OrganizationMapper.writeDto(updatedOrganization), OrganizationMapper.writeDto(existingOrganization)));
+        return updatedOrganization;
+      }));
     }
-    throw new InvalidRequestException(String.format("Organisation with identifier [%s] not found", identifier), USER);
+    throw new InvalidRequestException(
+        String.format("Organisation with identifier [%s] not found", identifier), WingsException.USER);
   }
 
   @Override
@@ -167,12 +255,13 @@ public class OrganizationServiceImpl implements OrganizationService {
                                                              .and(OrganizationKeys.deleted)
                                                              .ne(Boolean.TRUE),
         organizationFilterDTO);
-    return organizationRepository.findAll(criteria, pageable);
+    return organizationRepository.findAll(
+        criteria, pageable, organizationFilterDTO != null && organizationFilterDTO.isIgnoreCase());
   }
 
   @Override
   public Page<Organization> list(Criteria criteria, Pageable pageable) {
-    return organizationRepository.findAll(criteria, pageable);
+    return organizationRepository.findAll(criteria, pageable, false);
   }
 
   @Override
@@ -192,39 +281,39 @@ public class OrganizationServiceImpl implements OrganizationService {
               .regex(organizationFilterDTO.getSearchTerm(), "i"));
     }
     if (Objects.nonNull(organizationFilterDTO.getIdentifiers()) && !organizationFilterDTO.getIdentifiers().isEmpty()) {
-      Criteria.where(OrganizationKeys.identifier).in(organizationFilterDTO.getIdentifiers());
+      criteria.and(OrganizationKeys.identifier).in(organizationFilterDTO.getIdentifiers());
     }
     return criteria;
   }
 
   @Override
   public boolean delete(String accountIdentifier, String organizationIdentifier, Long version) {
-    boolean delete = organizationRepository.delete(accountIdentifier, organizationIdentifier, version);
-    if (delete) {
-      publishEvent(
-          Organization.builder().accountIdentifier(accountIdentifier).identifier(organizationIdentifier).build(),
-          EventsFrameworkMetadataConstants.DELETE_ACTION);
-    }
-    return delete;
+    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      Organization organization = organizationRepository.delete(accountIdentifier, organizationIdentifier, version);
+      boolean delete = organization != null;
+      if (delete) {
+        log.info(String.format("Organization with identifier %s was successfully deleted", organizationIdentifier));
+        outboxService.save(new OrganizationDeleteEvent(accountIdentifier, OrganizationMapper.writeDto(organization)));
+      } else {
+        log.error(String.format("Organization with identifier %s could not be deleted", organizationIdentifier));
+      }
+      return delete;
+    }));
   }
 
   @Override
   public boolean restore(String accountIdentifier, String identifier) {
-    boolean success = organizationRepository.restore(accountIdentifier, identifier);
-    if (success) {
-      publishEvent(Organization.builder().accountIdentifier(accountIdentifier).identifier(identifier).build(),
-          EventsFrameworkMetadataConstants.RESTORE_ACTION);
-    }
-    return success;
+    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      Organization organization = organizationRepository.restore(accountIdentifier, identifier);
+      boolean success = organization != null;
+      if (success) {
+        outboxService.save(new OrganizationRestoreEvent(accountIdentifier, OrganizationMapper.writeDto(organization)));
+      }
+      return success;
+    }));
   }
 
-  private void validateCreateOrganizationRequest(String accountIdentifier, OrganizationDTO organization) {
-    verifyValuesNotChanged(Lists.newArrayList(Pair.of(accountIdentifier, organization.getAccountIdentifier())), true);
-  }
-
-  private void validateUpdateOrganizationRequest(
-      String accountIdentifier, String identifier, OrganizationDTO organization) {
-    verifyValuesNotChanged(Lists.newArrayList(Pair.of(accountIdentifier, organization.getAccountIdentifier())), true);
+  private void validateUpdateOrganizationRequest(String identifier, OrganizationDTO organization) {
     verifyValuesNotChanged(Lists.newArrayList(Pair.of(identifier, organization.getIdentifier())), false);
   }
 }

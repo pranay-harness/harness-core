@@ -45,7 +45,18 @@
           "$ref": "#/definitions/FailureStrategyActionConfig"
         },
         {
-          "type": "object"
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Abort"
+              ]
+            }
+          }
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -169,6 +180,9 @@
     },
     "ExecutionElementConfig": {
       "type": "object",
+      "required": [
+        "steps"
+      ],
       "properties": {
         "rollbackSteps": {
           "type": "array",
@@ -180,7 +194,9 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/ExecutionWrapperConfig"
-          }
+          },
+          "maxItems": 2147483647,
+          "minItems": 1
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -202,7 +218,24 @@
     },
     "FailureStrategyActionConfig": {
       "type": "object",
+      "required": [
+        "type"
+      ],
       "discriminator": "type",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Ignore",
+            "Retry",
+            "MarkAsSuccess",
+            "Abort",
+            "StageRollback",
+            "StepGroupRollback",
+            "ManualIntervention"
+          ]
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "FailureStrategyConfig": {
@@ -215,6 +248,28 @@
           "$ref": "#/definitions/OnFailureConfig"
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "IgnoreFailureActionConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/FailureStrategyActionConfig"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Ignore"
+              ]
+            }
+          }
+        }
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "Infrastructure": {
@@ -302,11 +357,48 @@
     "K8sDirectInfraYamlSpec": {
       "type": "object",
       "properties": {
+        "annotations": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
         "connectorRef": {
           "type": "string"
         },
+        "labels": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
         "namespace": {
           "type": "string"
+        },
+        "runAsUser": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "format": "int32"
+            },
+            {
+              "type": "string"
+            }
+          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -353,10 +445,20 @@
         },
         {
           "type": "object",
+          "required": [
+            "spec",
+            "type"
+          ],
           "properties": {
             "spec": {
               "readOnly": true,
               "$ref": "#/definitions/ManualFailureSpecConfig"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "ManualIntervention"
+              ]
             }
           }
         }
@@ -369,7 +471,18 @@
           "$ref": "#/definitions/FailureStrategyActionConfig"
         },
         {
-          "type": "object"
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "MarkAsSuccess"
+              ]
+            }
+          }
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -385,6 +498,9 @@
           "oneOf": [
             {
               "$ref": "#/definitions/AbortFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/IgnoreFailureActionConfig"
             },
             {
               "$ref": "#/definitions/ManualInterventionFailureActionConfig"
@@ -406,7 +522,17 @@
         "errors": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "Unknown",
+              "AllErrors",
+              "Authentication",
+              "Connectivity",
+              "Timeout",
+              "Authorization",
+              "Verification",
+              "DelegateProvisioning"
+            ]
           }
         }
       },
@@ -419,6 +545,9 @@
           "oneOf": [
             {
               "$ref": "#/definitions/AbortFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/IgnoreFailureActionConfig"
             },
             {
               "$ref": "#/definitions/ManualInterventionFailureActionConfig"
@@ -447,6 +576,9 @@
           "oneOf": [
             {
               "$ref": "#/definitions/AbortFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/IgnoreFailureActionConfig"
             },
             {
               "$ref": "#/definitions/ManualInterventionFailureActionConfig"
@@ -490,10 +622,20 @@
         },
         {
           "type": "object",
+          "required": [
+            "spec",
+            "type"
+          ],
           "properties": {
             "spec": {
               "readOnly": true,
               "$ref": "#/definitions/RetryFailureSpecConfig"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "Retry"
+              ]
             }
           }
         }
@@ -505,7 +647,7 @@
       "required": [
         "onRetryFailure",
         "retryCount",
-        "retryInterval"
+        "retryIntervals"
       ],
       "properties": {
         "onRetryFailure": {
@@ -515,7 +657,7 @@
           "type": "integer",
           "format": "int32"
         },
-        "retryInterval": {
+        "retryIntervals": {
           "type": "array",
           "items": {
             "type": "string"
@@ -530,7 +672,18 @@
           "$ref": "#/definitions/FailureStrategyActionConfig"
         },
         {
-          "type": "object"
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "StageRollback"
+              ]
+            }
+          }
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -548,13 +701,12 @@
           }
         },
         "identifier": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
         },
         "name": {
-          "type": "string"
-        },
-        "skipCondition": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
         },
         "spec": {
           "$ref": "#/definitions/StepSpecType"
@@ -564,6 +716,9 @@
         },
         "type": {
           "type": "string"
+        },
+        "when": {
+          "$ref": "#/definitions/StepWhenCondition"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -582,10 +737,12 @@
           }
         },
         "identifier": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
         },
         "rollbackSteps": {
           "type": "array",
@@ -593,14 +750,16 @@
             "$ref": "#/definitions/ExecutionWrapperConfig"
           }
         },
-        "skipCondition": {
-          "type": "string"
-        },
         "steps": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/ExecutionWrapperConfig"
-          }
+          },
+          "maxItems": 2147483647,
+          "minItems": 1
+        },
+        "when": {
+          "$ref": "#/definitions/StepWhenCondition"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -611,13 +770,44 @@
           "$ref": "#/definitions/FailureStrategyActionConfig"
         },
         {
-          "type": "object"
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "StepGroupRollback"
+              ]
+            }
+          }
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "StepSpecType": {
       "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "StepWhenCondition": {
+      "type": "object",
+      "required": [
+        "stageStatus"
+      ],
+      "properties": {
+        "condition": {
+          "type": "string"
+        },
+        "stageStatus": {
+          "type": "string",
+          "enum": [
+            "Success",
+            "Failure",
+            "All"
+          ]
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "UseFromStageInfraYaml": {

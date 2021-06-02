@@ -9,12 +9,12 @@ import static io.harness.azure.model.AzureConstants.SUCCESS_REQUEST;
 import static io.harness.azure.model.AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONFIGURATION_SETTINGS;
 import static io.harness.azure.model.AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import lombok.Getter;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public enum AppServiceDeploymentProgress {
   SAVE_CONFIGURATION(SAVE_EXISTING_CONFIGURATIONS),
   STOP_SLOT(STOP_DEPLOYMENT_SLOT),

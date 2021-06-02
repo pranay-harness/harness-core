@@ -31,8 +31,7 @@ public class TwoFactorAuthRestUtils {
                                                                      .queryParam("routingId", accountId)
                                                                      .get("/users/two-factor-auth/TOTP")
                                                                      .as(twofatype.getType());
-    TwoFactorAuthenticationSettings twofasettings = restResponse.getResource();
-    return twofasettings;
+    return restResponse.getResource();
   }
 
   /**
@@ -52,8 +51,7 @@ public class TwoFactorAuthRestUtils {
                                               .contentType(ContentType.JSON)
                                               .put("/users/enable-two-factor-auth")
                                               .as(genericType.getType());
-    User user = userRestResponse.getResource();
-    return user;
+    return userRestResponse.getResource();
   }
 
   /**
@@ -72,8 +70,7 @@ public class TwoFactorAuthRestUtils {
                                               .contentType(ContentType.JSON)
                                               .put("/users/enable-two-factor-auth")
                                               .as(genericType.getType());
-    User user = userRestResponse.getResource();
-    return user;
+    return userRestResponse.getResource();
   }
 
   /**
@@ -121,14 +118,12 @@ public class TwoFactorAuthRestUtils {
                                               .queryParam("routingId", accountId)
                                               .put("/users/disable-two-factor-auth")
                                               .as(genericType.getType());
-    User user = userRestResponse.getResource();
-    return user;
+    return userRestResponse.getResource();
   }
 
   public static User retryTwoFaLogin(String userName, String password, String accountId, String secretKey) {
     Retry retry = new Retry(5, 5000);
-    User user = (User) retry.executeWithRetry(
+    return (User) retry.executeWithRetry(
         () -> twoFaLogin(userName, password, accountId, secretKey), new LoginMatcher(), null);
-    return user;
   }
 }

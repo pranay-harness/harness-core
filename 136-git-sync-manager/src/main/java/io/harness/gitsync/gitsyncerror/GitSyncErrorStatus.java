@@ -1,3 +1,6 @@
 package io.harness.gitsync.gitsyncerror;
 
-public enum GitSyncErrorStatus { ACTIVE, DISCARDED, EXPIRED, RESOLVED, OVERRIDDEN }
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
+@OwnedBy(DX) public enum GitSyncErrorStatus { ACTIVE, DISCARDED, EXPIRED, RESOLVED, OVERRIDDEN }

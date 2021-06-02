@@ -7,26 +7,26 @@ import (
 
 // ConvertPushHook converts scm.PushHook to protobuf object
 func ConvertPushHook(p *scm.PushHook) (*pb.PushHook, error) {
-	repo, err := convertRepo(p.Repo)
+	repo, err := convertRepo(&p.Repo)
 	if err != nil {
 		return nil, err
 	}
-	commit, err := convertCommit(p.Commit)
+	commit, err := ConvertCommit(&p.Commit)
 	if err != nil {
 		return nil, err
 	}
-	sender, err := convertUser(p.Sender)
+	sender, err := convertUser(&p.Sender)
 	if err != nil {
 		return nil, err
 	}
 
 	var commits []*pb.Commit
-	for _, c := range p.Commits {
-		commit, err := convertCommit(c)
+	for i := range p.Commits {
+		convertedCommit, err := ConvertCommit(&p.Commits[i])
 		if err != nil {
 			return nil, err
 		}
-		commits = append(commits, commit)
+		commits = append(commits, convertedCommit)
 	}
 	return &pb.PushHook{
 		Ref:     p.Ref,

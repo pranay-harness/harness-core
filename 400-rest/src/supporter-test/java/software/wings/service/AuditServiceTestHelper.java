@@ -1,24 +1,15 @@
 package software.wings.service;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
-
 import static software.wings.security.UserThreadLocal.userGuard;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import software.wings.WingsBaseTest;
 import software.wings.audit.AuditHeader;
 import software.wings.beans.HttpMethod;
-import software.wings.features.AuditTrailFeature;
-import software.wings.features.api.PremiumFeature;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AuditService;
-import software.wings.service.intfc.FileService;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
-import java.io.IOException;
-import org.apache.commons.lang3.RandomStringUtils;
 
 public class AuditServiceTestHelper {
   @Inject protected AuditService auditService;

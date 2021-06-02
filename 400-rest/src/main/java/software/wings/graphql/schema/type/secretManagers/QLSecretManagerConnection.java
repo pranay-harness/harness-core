@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.type.secretManagers;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.type.QLObject;
@@ -16,7 +16,7 @@ import lombok.Value;
 @Value
 @Builder
 @Scope(ResourceType.SETTING)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLSecretManagerConnection implements QLObject {
   private QLPageInfo pageInfo;
   @Singular private List<QLSecretManager> nodes;

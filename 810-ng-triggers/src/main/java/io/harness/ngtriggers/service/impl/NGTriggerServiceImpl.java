@@ -1,5 +1,6 @@
 package io.harness.ngtriggers.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -7,26 +8,39 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.TriggerException;
 import io.harness.network.SafeHttpCall;
+import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
+import io.harness.ngtriggers.beans.source.NGTriggerSource;
+import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
+import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
-import io.harness.repositories.ng.core.spring.NGTriggerRepository;
-import io.harness.repositories.ng.core.spring.TriggerWebhookEventRepository;
+import io.harness.repositories.spring.NGTriggerRepository;
+import io.harness.repositories.spring.TriggerWebhookEventRepository;
 
+import com.cronutils.model.Cron;
+import com.cronutils.model.CronType;
+import com.cronutils.model.definition.CronDefinitionBuilder;
+import com.cronutils.model.time.ExecutionTime;
+import com.cronutils.parser.CronParser;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.client.result.UpdateResult;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +52,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(PIPELINE)
 public class NGTriggerServiceImpl implements NGTriggerService {
   private final NGTriggerRepository ngTriggerRepository;
   private final TriggerWebhookEventRepository webhookEventQueueRepository;
@@ -106,6 +121,64 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   }
 
   @Override
+  public boolean deleteAllForPipeline(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier) {
+    String pipelineRef = new StringBuilder(128)
+                             .append(accountId)
+                             .append('/')
+                             .append(orgIdentifier)
+                             .append('/')
+                             .append(projectIdentifier)
+                             .append('/')
+                             .append(pipelineIdentifier)
+                             .toString();
+
+    final AtomicBoolean exceptionOccured = new AtomicBoolean(false);
+
+    try {
+      Optional<List<NGTriggerEntity>> nonDeletedTriggerForPipeline =
+          ngTriggerRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndTargetIdentifierAndDeletedNot(
+              accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, true);
+
+      if (nonDeletedTriggerForPipeline.isPresent()) {
+        log.info("Deleting triggers for pipeline-deletion-event. PipelineRef: " + pipelineRef);
+        List<NGTriggerEntity> ngTriggerEntities = nonDeletedTriggerForPipeline.get();
+        String triggerRef = new StringBuilder(128)
+                                .append(accountId)
+                                .append('/')
+                                .append(orgIdentifier)
+                                .append('/')
+                                .append(projectIdentifier)
+                                .append('/')
+                                .append(pipelineIdentifier)
+                                .append('/')
+                                .append("{trigger}")
+                                .toString();
+
+        ngTriggerEntities.forEach(ngTriggerEntity -> {
+          try {
+            log.info("Deleting triggers for pipeline-deletion-event. TriggerRef: "
+                + triggerRef.replace("{trigger}", ngTriggerEntity.getIdentifier()));
+            delete(
+                accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, ngTriggerEntity.getIdentifier(), null);
+          } catch (Exception e) {
+            log.error("Error while deleting trigger while processing pipeline-delete-event. TriggerRef: "
+                + triggerRef.replace("{trigger}", ngTriggerEntity.getIdentifier()));
+            exceptionOccured.set(true);
+          }
+        });
+      } else {
+        log.info("No non-deleted Trigger found while processing pipeline-deletion-event. PipelineRef: " + pipelineRef);
+      }
+    } catch (Exception e) {
+      log.error("Error while deleting triggers while processing pipeline-delete-event. PipelineRef: " + pipelineRef);
+      exceptionOccured.set(true);
+    }
+
+    return !exceptionOccured.get();
+  }
+
+  @Override
   public TriggerWebhookEvent addEventToQueue(TriggerWebhookEvent webhookEventQueueRecord) {
     try {
       return webhookEventQueueRepository.save(webhookEventQueueRecord);
@@ -132,9 +205,9 @@ public class NGTriggerServiceImpl implements NGTriggerService {
 
   @Override
   public List<NGTriggerEntity> findTriggersForCustomWehbook(
-      TriggerWebhookEvent triggerWebhookEvent, String decryptedAuthToken, boolean isDeleted, boolean enabled) {
+      TriggerWebhookEvent triggerWebhookEvent, boolean isDeleted, boolean enabled) {
     Page<NGTriggerEntity> triggersPage = list(TriggerFilterHelper.createCriteriaForCustomWebhookTriggerGetList(
-                                                  triggerWebhookEvent, decryptedAuthToken, EMPTY, isDeleted, enabled),
+                                                  triggerWebhookEvent, EMPTY, isDeleted, enabled),
         Pageable.unpaged());
 
     return triggersPage.get().collect(Collectors.toList());
@@ -148,13 +221,14 @@ public class NGTriggerServiceImpl implements NGTriggerService {
     // Now kept for backward compatibility, but will be changed soon to validate for non-empty project and
     // orgIdentifier.
     if (isNotEmpty(projectIdentifier) && isNotEmpty(orgIdentifier)) {
-      enabledTriggerForProject = ngTriggerRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndEnabled(
-          accountId, orgIdentifier, projectIdentifier, true);
-    } else if (isNotEmpty(orgIdentifier)) {
       enabledTriggerForProject =
-          ngTriggerRepository.findByAccountIdAndOrgIdentifierAndEnabled(accountId, orgIdentifier, true);
+          ngTriggerRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndEnabledAndDeletedNot(
+              accountId, orgIdentifier, projectIdentifier, true, true);
+    } else if (isNotEmpty(orgIdentifier)) {
+      enabledTriggerForProject = ngTriggerRepository.findByAccountIdAndOrgIdentifierAndEnabledAndDeletedNot(
+          accountId, orgIdentifier, true, true);
     } else {
-      enabledTriggerForProject = ngTriggerRepository.findByAccountIdAndEnabled(accountId, true);
+      enabledTriggerForProject = ngTriggerRepository.findByAccountIdAndEnabledAndDeletedNot(accountId, true, true);
     }
 
     if (enabledTriggerForProject.isPresent()) {
@@ -162,6 +236,11 @@ public class NGTriggerServiceImpl implements NGTriggerService {
     }
 
     return emptyList();
+  }
+
+  @Override
+  public List<NGTriggerEntity> listEnabledTriggersForAccount(String accountId) {
+    return listEnabledTriggersForCurrentProject(accountId, null, null);
   }
 
   @Override
@@ -175,6 +254,33 @@ public class NGTriggerServiceImpl implements NGTriggerService {
     } catch (Exception e) {
       log.error("Failed while retrieving connectors", e);
       throw new TriggerException("Failed while retrieving connectors" + e.getMessage(), e, USER_SRE);
+    }
+  }
+
+  @Override
+  public void validateTriggerConfig(TriggerDetails triggerDetails) {
+    // TODO: come up with a comprehensive list of back-end checks for the trigger details for which an error
+    // will be returned if certain conditions are not met. Either use this as a gateway or spin off a specific class
+    // for the validation.
+
+    // trigger source validation
+    NGTriggerSource triggerSource = triggerDetails.getNgTriggerConfig().getSource();
+    switch (triggerSource.getType()) {
+      case WEBHOOK:
+        return; // TODO(adwait): define trigger source validation
+      case SCHEDULED:
+        ScheduledTriggerConfig scheduledTriggerConfig = (ScheduledTriggerConfig) triggerSource.getSpec();
+        CronTriggerSpec cronTriggerSpec = (CronTriggerSpec) scheduledTriggerConfig.getSpec();
+        CronParser cronParser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX));
+        Cron cron = cronParser.parse(cronTriggerSpec.getExpression());
+        ExecutionTime executionTime = ExecutionTime.forCron(cron);
+        Optional<ZonedDateTime> nextTime = executionTime.nextExecution(ZonedDateTime.now());
+        if (!nextTime.isPresent()) {
+          throw new InvalidArgumentsException("cannot find iteration time!");
+        }
+        return;
+      default:
+        return; // not implemented
     }
   }
 

@@ -1,11 +1,13 @@
 package software.wings.integration;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
@@ -34,6 +36,7 @@ import org.junit.experimental.categories.Category;
 /**
  * Created by anubhaw on 12/29/16.
  */
+@OwnedBy(CDP)
 public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
   @Inject private AwsClusterService awsClusterService;
   @Inject private EcsContainerService ecsContainerService;
@@ -99,7 +102,7 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldResizeCluster() {
     awsClusterService.resizeCluster(Regions.US_EAST_1.getName(), awsConnectorSetting, Collections.emptyList(),
-        "demo_v1", "Account_v1", 0, 3, 10, null);
+        "demo_v1", "Account_v1", 0, 3, 10, null, false);
   }
 
   @Test

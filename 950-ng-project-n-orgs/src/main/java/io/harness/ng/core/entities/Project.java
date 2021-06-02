@@ -1,20 +1,24 @@
 package io.harness.ng.core.entities;
 
-import static io.harness.mongo.CollationLocale.ENGLISH;
-import static io.harness.mongo.CollationStrength.PRIMARY;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.ModuleType;
+import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
-import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdUniqueIndexWithCollation;
-import io.harness.mongo.index.Field;
-import io.harness.ng.RsqlQueryable;
+import io.harness.mongo.CollationLocale;
+import io.harness.mongo.CollationStrength;
+import io.harness.mongo.index.Collation;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.common.beans.NGTag;
-import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.persistence.PersistentEntity;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -32,23 +36,53 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@OwnedBy(PL)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "ProjectKeys")
-@CdUniqueIndexWithCollation(name = "unique_accountIdentifier_organizationIdentifier_projectIdentifier",
-    fields =
-    { @Field(ProjectKeys.accountIdentifier)
-      , @Field(ProjectKeys.orgIdentifier), @Field(ProjectKeys.identifier) },
-    locale = ENGLISH, strength = PRIMARY)
-@CdIndex(name = "acctModulesOrgIdx",
-    fields = { @Field(ProjectKeys.accountIdentifier)
-               , @Field(ProjectKeys.modules), @Field(ProjectKeys.orgIdentifier) })
-@RsqlQueryable(fields = { @Field(ProjectKeys.modules)
-                          , @Field(ProjectKeys.orgIdentifier) })
 @Entity(value = "projects", noClassnameStored = true)
 @Document("projects")
 @TypeAlias("projects")
+@StoreIn(DbAliases.NG_MANAGER)
 public class Project implements PersistentEntity, NGAccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_accountIdentifier_organizationIdentifier_projectIdentifier")
+                 .field(ProjectKeys.accountIdentifier)
+                 .field(ProjectKeys.orgIdentifier)
+                 .field(ProjectKeys.identifier)
+                 .unique(true)
+                 .collation(
+                     Collation.builder().locale(CollationLocale.ENGLISH).strength(CollationStrength.PRIMARY).build())
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountDeletedModulesLastModifiedAtIdx")
+                 .field(ProjectKeys.accountIdentifier)
+                 .field(ProjectKeys.deleted)
+                 .field(ProjectKeys.modules)
+                 .descSortField(ProjectKeys.lastModifiedAt)
+                 .unique(false)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountDeletedLastModifiedAtIdx")
+                 .field(ProjectKeys.accountIdentifier)
+                 .field(ProjectKeys.deleted)
+                 .descSortField(ProjectKeys.lastModifiedAt)
+                 .unique(false)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountDeletedOrgIdentifierLastModifiedAtIdx")
+                 .field(ProjectKeys.accountIdentifier)
+                 .field(ProjectKeys.deleted)
+                 .field(ProjectKeys.orgIdentifier)
+                 .field(ProjectKeys.identifier)
+                 .field(ProjectKeys.lastModifiedAt)
+                 .unique(false)
+                 .build())
+        .build();
+  }
+
   @Wither @Id @org.mongodb.morphia.annotations.Id String id;
   String accountIdentifier;
   @EntityIdentifier(allowBlank = false) String identifier;

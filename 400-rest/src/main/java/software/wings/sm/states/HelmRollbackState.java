@@ -1,8 +1,13 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.sm.states.k8s.K8sStateHelper.fetchSafeTimeoutInMillis;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -12,7 +17,6 @@ import software.wings.api.HelmDeployStateExecutionData.HelmDeployStateExecutionD
 import software.wings.beans.Application;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
-import software.wings.beans.HelmCommandFlag;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
@@ -38,6 +42,7 @@ import java.util.Map;
 /**
  * Created by anubhaw on 4/3/18.
  */
+@OwnedBy(CDP)
 public class HelmRollbackState extends HelmDeployState {
   /**
    * Instantiates a new state.
@@ -82,7 +87,9 @@ public class HelmRollbackState extends HelmDeployState {
             .commandFlags(commandFlags)
             .sourceRepoConfig(manifestConfig)
             .helmVersion(helmVersion)
-            .variableOverridesYamlFiles(helmValueOverridesYamlFilesEvaluated);
+            .variableOverridesYamlFiles(helmValueOverridesYamlFilesEvaluated)
+            .isGitHostConnectivityCheck(
+                featureFlagService.isEnabled(FeatureName.HELM_MERGE_CAPABILITIES, context.getAccountId()));
 
     if (getGitFileConfig() != null) {
       requestBuilder.gitFileConfig(getGitFileConfig());

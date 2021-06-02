@@ -1,9 +1,11 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.beans.EnvironmentType.NON_PROD;
+import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -25,7 +27,6 @@ import static org.mockito.Mockito.verify;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import io.harness.rule.OwnerRule;
 import io.harness.serializer.JsonUtils;
 
 import software.wings.WingsBaseTest;
@@ -83,7 +84,7 @@ public class CustomDeploymentInstanceHandlerTest extends WingsBaseTest {
   ArgumentCaptor<Set> stringArgumentCaptor;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     doReturn(buildInfraMapping()).when(infraMappingService).get(APP_ID, INFRA_MAPPING_ID);
     captor = ArgumentCaptor.forClass(Instance.class);
     stringArgumentCaptor = ArgumentCaptor.forClass(Set.class);
@@ -105,7 +106,7 @@ public class CustomDeploymentInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.YOGESH)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void shouldAddInstancesOnFirstDeployment() {
     doReturn(emptyList()).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
@@ -117,48 +118,61 @@ public class CustomDeploymentInstanceHandlerTest extends WingsBaseTest {
 
     final List<Instance> savedInstances = captor.getAllValues();
 
-    List<Instance> expectedInstances = buildSampleInstances(1, 2, 3);
+    List<Instance> expectedInstances = buildSampleInstances(null, null, 1, 2, 3);
     savedInstances.forEach(this::nullUuid);
     expectedInstances.forEach(this::nullUuid);
     assertThat(savedInstances).containsExactlyElementsOf(expectedInstances);
   }
 
   @Test
-  @Owner(developers = OwnerRule.YOGESH)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void shouldDeleteInstancesWhenDeletedFromInfra() {
-    List<Instance> instancesInDb = buildSampleInstances(1, 2, 3, 4, 5);
-    instancesInDb.forEach(setExecutionId());
-    doReturn(buildSampleInstances(1, 2, 3, 4, 5))
-        .when(instanceService)
-        .getInstancesForAppAndInframapping(anyString(), anyString());
+  public void shouldAddInstancesOnFirstDeploymentWithArtifact() {
+    doReturn(emptyList()).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
 
-    handler.handleNewDeployment(singletonList(buildDeploymentSummary(buildSampleInstancesJson(1, 5))), false, null);
+    final String artifactName = "hello-world";
+    handler.handleNewDeployment(
+        singletonList(buildDeploymentSummary(buildSampleInstancesJson(1, 2, 3), ARTIFACT_ID, artifactName)), false,
+        null);
 
-    verify(instanceService, never()).save(any(Instance.class));
-    verify(instanceService, times(1)).delete(stringArgumentCaptor.capture());
+    verify(instanceService, times(3)).save(captor.capture());
+    verify(instanceService, never()).delete(anySet());
 
-    @SuppressWarnings("unchecked") final Set<String> instanceIdsDeleted = stringArgumentCaptor.getValue();
+    final List<Instance> savedInstances = captor.getAllValues();
 
-    assertThat(instanceIdsDeleted).contains("2", "3", "4");
+    List<Instance> expectedInstances = buildSampleInstances(ARTIFACT_ID, artifactName, 1, 2, 3);
+    savedInstances.forEach(this::nullUuid);
+    expectedInstances.forEach(this::nullUuid);
+    assertThat(savedInstances).containsExactlyElementsOf(expectedInstances);
   }
 
   @Test
-  @Owner(developers = OwnerRule.YOGESH)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void shouldDeleteAllWhenNoInstancesLeftInInfra() {
-    List<Instance> instancesInDb = buildSampleInstances(1, 2, 3, 4, 5);
+  public void shouldDeleteInstancesWhenDeletedFromInfraNewDeployment() {
+    List<Instance> instancesInDb = buildSampleInstances(null, null, 1, 2, 3, 4, 5);
     instancesInDb.forEach(setExecutionId());
-    doReturn(buildSampleInstances(1, 2, 3, 4, 5))
-        .when(instanceService)
-        .getInstancesForAppAndInframapping(anyString(), anyString());
-    DeploymentSummary deploymentSummary =
-        DeploymentSummary.builder()
-            .appId(APP_ID)
-            .accountId(ACCOUNT_ID)
-            .infraMappingId(INFRA_MAPPING_ID)
-            .deploymentInfo(CustomDeploymentTypeInfo.builder().scriptOutput(buildEmptyInstancesJson()).build())
-            .build();
+    doReturn(instancesInDb).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
+
+    handler.handleNewDeployment(singletonList(buildDeploymentSummary(buildSampleInstancesJson(1, 5))), false, null);
+
+    verify(instanceService, times(1)).delete(stringArgumentCaptor.capture());
+    verify(instanceService, times(2)).save(captor.capture());
+
+    @SuppressWarnings("unchecked") final Set<String> instanceIdsDeleted = stringArgumentCaptor.getValue();
+    final List<Instance> savedInstances = captor.getAllValues();
+
+    assertThat(instanceIdsDeleted).contains("1", "2", "3", "4", "4");
+    assertThat(getHostNames(savedInstances)).containsExactly("1", "5");
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void shouldDeleteAllWhenNoInstancesLeftInInfraNewDeployment() {
+    List<Instance> instancesInDb = buildSampleInstances(null, null, 1, 2, 3, 4, 5);
+    instancesInDb.forEach(setExecutionId());
+    doReturn(instancesInDb).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
 
     handler.handleNewDeployment(singletonList(buildDeploymentSummary(buildEmptyInstancesJson())), false, null);
 
@@ -171,24 +185,22 @@ public class CustomDeploymentInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.YOGESH)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void shouldPerformAdditionDeletion() {
-    List<Instance> instancesInDb = buildSampleInstances(1, 2, 3, 4, 5);
+  public void shouldPerformAdditionDeletionNewDeployment() {
+    List<Instance> instancesInDb = buildSampleInstances(null, null, 1, 2, 3, 4, 5);
     instancesInDb.forEach(setExecutionId());
-    doReturn(buildSampleInstances(1, 2, 3, 4, 5))
-        .when(instanceService)
-        .getInstancesForAppAndInframapping(anyString(), anyString());
+    doReturn(instancesInDb).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
 
     handler.handleNewDeployment(
         singletonList(buildDeploymentSummary(buildSampleInstancesJson(1, 5, 6, 7))), false, null);
 
-    verify(instanceService, times(2)).save(captor.capture());
+    verify(instanceService, times(4)).save(captor.capture());
     verify(instanceService, times(1)).delete(stringArgumentCaptor.capture());
 
     @SuppressWarnings("unchecked") final Set<String> instanceIdsDeleted = stringArgumentCaptor.getValue();
 
-    List<Instance> expectedInstances = buildSampleInstances(6, 7);
+    List<Instance> expectedInstances = buildSampleInstances(null, null, 1, 5, 6, 7);
     List<Instance> savedInstances = captor.getAllValues();
     savedInstances.forEach(this::nullUuid);
     expectedInstances.forEach(this::nullUuid);
@@ -197,31 +209,41 @@ public class CustomDeploymentInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.YOGESH)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void shouldBeNoopWhenInstancesRemainSame() {
-    List<Instance> instancesInDb = buildSampleInstances(1, 2, 3, 4, 5);
+  public void shouldPerformAdditionDeletionNewDeploymentNewArtifact() {
+    final String oldArtifactId = "old-artifact-id";
+    final String oldArtifactName = "hello-old";
+    final String newArtifactId = "new-artifact-id";
+    final String newArtifactName = "hello-new";
+    List<Instance> instancesInDb = buildSampleInstances(oldArtifactId, oldArtifactName, 1, 2, 3, 4, 5);
     instancesInDb.forEach(setExecutionId());
-    doReturn(buildSampleInstances(1, 2, 3, 4, 5))
-        .when(instanceService)
-        .getInstancesForAppAndInframapping(anyString(), anyString());
+    doReturn(instancesInDb).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
 
     handler.handleNewDeployment(
-        singletonList(buildDeploymentSummary(buildSampleInstancesJson(1, 2, 3, 4, 5))), false, null);
+        singletonList(buildDeploymentSummary(buildSampleInstancesJson(1, 5, 6, 7), newArtifactId, newArtifactName)),
+        false, null);
 
-    verify(instanceService, never()).save(any(Instance.class));
-    verify(instanceService, never()).delete(anySet());
+    verify(instanceService, times(4)).save(captor.capture());
+    verify(instanceService, times(1)).delete(stringArgumentCaptor.capture());
+
+    @SuppressWarnings("unchecked") final Set<String> instanceIdsDeleted = stringArgumentCaptor.getValue();
+
+    List<Instance> expectedInstances = buildSampleInstances(newArtifactId, newArtifactName, 1, 5, 6, 7);
+    List<Instance> savedInstances = captor.getAllValues();
+    savedInstances.forEach(this::nullUuid);
+    expectedInstances.forEach(this::nullUuid);
+    assertThat(savedInstances).containsExactlyElementsOf(expectedInstances);
+    assertThat(instanceIdsDeleted).contains("2", "3", "4");
   }
 
   @Test
-  @Owner(developers = OwnerRule.YOGESH)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void shouldDeleteInstancesWhenDeletedFromInfraPTask() {
-    List<Instance> instancesInDb = buildSampleInstances(1, 2, 3, 4, 5);
+  public void shouldDeleteInstancesWhenDeletedFromPTask() {
+    List<Instance> instancesInDb = buildSampleInstances("old-artifact-id", "hello-world", 1, 2, 3, 4, 5);
     instancesInDb.forEach(setExecutionId());
-    doReturn(buildSampleInstances(1, 2, 3, 4, 5))
-        .when(instanceService)
-        .getInstancesForAppAndInframapping(anyString(), anyString());
+    doReturn(instancesInDb).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
 
     handler.processInstanceSyncResponseFromPerpetualTask(
         buildInfraMapping(), buildPerpetualTaskResponse(buildSampleInstancesJson(1, 5)));
@@ -235,14 +257,12 @@ public class CustomDeploymentInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.YOGESH)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void shouldDeleteAllWhenNoInstancesLeftInInfraPTask() {
-    List<Instance> instancesInDb = buildSampleInstances(1, 2, 3, 4, 5);
+    List<Instance> instancesInDb = buildSampleInstances(null, null, 1, 2, 3, 4, 5);
     instancesInDb.forEach(setExecutionId());
-    doReturn(buildSampleInstances(1, 2, 3, 4, 5))
-        .when(instanceService)
-        .getInstancesForAppAndInframapping(anyString(), anyString());
+    doReturn(instancesInDb).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
 
     handler.processInstanceSyncResponseFromPerpetualTask(
         buildInfraMapping(), buildPerpetualTaskResponse(buildEmptyInstancesJson()));
@@ -256,10 +276,12 @@ public class CustomDeploymentInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.YOGESH)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void shouldPerformAdditionDeletionPTask() {
-    List<Instance> instancesInDb = buildSampleInstances(1, 2, 3, 4, 5);
+    final String artifactId = "artifact-id";
+    final String artifactName = "hello-world";
+    List<Instance> instancesInDb = buildSampleInstances(artifactId, artifactName, 1, 2, 3, 4, 5);
     instancesInDb.forEach(setExecutionId());
     doReturn(instancesInDb).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
 
@@ -280,14 +302,18 @@ public class CustomDeploymentInstanceHandlerTest extends WingsBaseTest {
         .containsExactlyInAnyOrder("6", "7");
     assertThat(savedInstances.stream().map(Instance::getLastDeployedByName).collect(Collectors.toSet()))
         .containsExactly(InstanceHandler.AUTO_SCALE);
+    assertThat(savedInstances.stream().map(Instance::getLastArtifactId).collect(Collectors.toSet()))
+        .containsExactly(artifactId);
+    assertThat(savedInstances.stream().map(Instance::getLastArtifactName).collect(Collectors.toSet()))
+        .containsExactly(artifactName);
     assertThat(instanceIdsDeleted).contains("2", "3", "4");
   }
 
   @Test
-  @Owner(developers = OwnerRule.YOGESH)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void shouldBeNoopWhenInstancesRemainSamePTask() {
-    doReturn(buildSampleInstances(1, 2, 3, 4, 5))
+    doReturn(buildSampleInstances(null, null, 1, 2, 3, 4, 5))
         .when(instanceService)
         .getInstancesForAppAndInframapping(anyString(), anyString());
 
@@ -298,7 +324,7 @@ public class CustomDeploymentInstanceHandlerTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.YOGESH)
+  @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void generateDeploymentKey() {
     final CustomDeploymentKey deploymentKey = (CustomDeploymentKey) handler.generateDeploymentKey(
@@ -307,7 +333,7 @@ public class CustomDeploymentInstanceHandlerTest extends WingsBaseTest {
     assertThat(deploymentKey.getTags()).containsExactly("tag1", "tag2");
   }
 
-  private List<Instance> buildSampleInstances(int... indexes) {
+  private List<Instance> buildSampleInstances(String artifactId, String artifactName, int... indexes) {
     List<Instance> instances = new ArrayList<>();
     for (int n : indexes) {
       String hostName = String.valueOf(n);
@@ -322,6 +348,8 @@ public class CustomDeploymentInstanceHandlerTest extends WingsBaseTest {
               .infraMappingType(InfrastructureMappingType.CUSTOM.name())
               .envId(ENV_ID)
               .envType(NON_PROD)
+              .lastArtifactId(artifactId)
+              .lastArtifactName(artifactName)
               .hostInstanceKey(HostInstanceKey.builder().hostName(hostName).infraMappingId(INFRA_MAPPING_ID).build())
               .instanceInfo(PhysicalHostInstanceInfo.builder()
                                 .hostName(hostName)
@@ -377,7 +405,26 @@ public class CustomDeploymentInstanceHandlerTest extends WingsBaseTest {
         .build();
   }
 
+  private DeploymentSummary buildDeploymentSummary(String scriptOutput, String artifactId, String artifactName) {
+    return DeploymentSummary.builder()
+        .appId(APP_ID)
+        .accountId(ACCOUNT_ID)
+        .infraMappingId(INFRA_MAPPING_ID)
+        .artifactId(artifactId)
+        .artifactName(artifactName)
+        .deploymentInfo(CustomDeploymentTypeInfo.builder().scriptOutput(scriptOutput).build())
+        .build();
+  }
+
   private Consumer<Instance> setExecutionId() {
     return instance -> instance.setLastWorkflowExecutionId(WORKFLOW_EXECUTION_ID);
+  }
+
+  private Set<String> getHostNames(List<Instance> instances) {
+    return instances.stream()
+        .map(Instance::getInstanceInfo)
+        .map(PhysicalHostInstanceInfo.class ::cast)
+        .map(PhysicalHostInstanceInfo::getHostName)
+        .collect(Collectors.toSet());
   }
 }

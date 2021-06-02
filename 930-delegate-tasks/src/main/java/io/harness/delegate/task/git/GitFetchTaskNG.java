@@ -1,15 +1,25 @@
 package io.harness.delegate.task.git;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.WARN;
 
+import static software.wings.beans.LogColor.White;
+import static software.wings.beans.LogHelper.color;
+import static software.wings.beans.LogWeight.Bold;
+
+import static java.lang.String.format;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
-import io.harness.delegate.beans.logstreaming.NGLogCallback;
+import io.harness.delegate.beans.logstreaming.NGDelegateLogCallback;
+import io.harness.delegate.beans.logstreaming.UnitProgressDataMapper;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.git.NGGitService;
@@ -35,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
+@OwnedBy(CDP)
 public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
   @Inject private NGGitService ngGitService;
   @Inject private SecretDecryptionService secretDecryptionService;
@@ -50,19 +61,24 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
 
   @Override
   public GitFetchResponse run(TaskParameters parameters) {
+    CommandUnitsProgress commandUnitsProgress = CommandUnitsProgress.builder().build();
     try {
       GitFetchRequest gitFetchRequest = (GitFetchRequest) parameters;
 
       log.info("Running GitFetchFilesTask for activityId {}", gitFetchRequest.getActivityId());
 
-      LogCallback executionLogCallback =
-          new NGLogCallback(getLogStreamingTaskClient(), K8sCommandUnitConstants.FetchFiles, true);
+      LogCallback executionLogCallback = new NGDelegateLogCallback(getLogStreamingTaskClient(),
+          K8sCommandUnitConstants.FetchFiles, gitFetchRequest.isShouldOpenLogStream(), commandUnitsProgress);
 
       Map<String, FetchFilesResult> filesFromMultipleRepo = new HashMap<>();
       List<GitFetchFilesConfig> gitFetchFilesConfigs = gitFetchRequest.getGitFetchFilesConfigs();
 
       for (GitFetchFilesConfig gitFetchFilesConfig : gitFetchFilesConfigs) {
         FetchFilesResult gitFetchFilesResult;
+        executionLogCallback.saveExecutionLog(
+            color(format("Fetching %s files with identifier: %s", gitFetchFilesConfig.getManifestType(),
+                      gitFetchFilesConfig.getIdentifier()),
+                White, Bold));
 
         try {
           gitFetchFilesResult =
@@ -80,7 +96,11 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
           String msg = "Exception in processing GitFetchFilesTask. " + exceptionMsg;
           log.error(msg, ex);
           executionLogCallback.saveExecutionLog(msg, ERROR, CommandExecutionStatus.FAILURE);
-          return GitFetchResponse.builder().errorMessage(exceptionMsg).taskStatus(TaskStatus.FAILURE).build();
+          return GitFetchResponse.builder()
+              .errorMessage(exceptionMsg)
+              .taskStatus(TaskStatus.FAILURE)
+              .unitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
+              .build();
         }
 
         filesFromMultipleRepo.put(gitFetchFilesConfig.getIdentifier(), gitFetchFilesResult);
@@ -89,18 +109,21 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
       return GitFetchResponse.builder()
           .taskStatus(TaskStatus.SUCCESS)
           .filesFromMultipleRepo(filesFromMultipleRepo)
+          .unitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
           .build();
     } catch (WingsException exception) {
       log.error("Exception in Git Fetch Files Task", exception);
       return GitFetchResponse.builder()
           .errorMessage(ExceptionUtils.getMessage(exception))
           .taskStatus(TaskStatus.FAILURE)
+          .unitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
           .build();
     } catch (Exception exception) {
       log.error("Exception in Git Fetch Files Task", exception);
       return GitFetchResponse.builder()
           .errorMessage("Some Error occurred in Git Fetch Files Task")
           .taskStatus(TaskStatus.FAILURE)
+          .unitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
           .build();
     }
   }
@@ -112,7 +135,6 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
     gitDecryptionHelper.decryptGitConfig(gitConfigDTO, gitStoreDelegateConfig.getEncryptedDataDetails());
     SshSessionConfig sshSessionConfig = gitDecryptionHelper.getSSHSessionConfig(
         gitStoreDelegateConfig.getSshKeySpecDTO(), gitStoreDelegateConfig.getEncryptedDataDetails());
-    secretDecryptionService.decrypt(gitConfigDTO.getGitAuth(), gitStoreDelegateConfig.getEncryptedDataDetails());
 
     executionLogCallback.saveExecutionLog("Git connector Url: " + gitConfigDTO.getUrl());
     String fetchTypeInfo = gitStoreDelegateConfig.getFetchType() == FetchType.BRANCH
@@ -129,7 +151,7 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
     }
 
     FetchFilesResult gitFetchFilesResult =
-        ngGitService.fetchFilesByPath(gitStoreDelegateConfig, accountId, sshSessionConfig);
+        ngGitService.fetchFilesByPath(gitStoreDelegateConfig, accountId, sshSessionConfig, gitConfigDTO);
 
     gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(executionLogCallback, gitFetchFilesResult.getFiles());
 

@@ -1,6 +1,6 @@
 package io.harness.perpetualtask.k8s.metrics.client;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.k8s.apiclient.GenericKubernetesApi;
 import io.harness.k8s.apiclient.NodeStatsClient;
@@ -10,7 +10,7 @@ import io.harness.perpetualtask.k8s.metrics.client.model.node.NodeMetricsList;
 import io.harness.perpetualtask.k8s.metrics.client.model.pod.PodMetrics;
 import io.harness.perpetualtask.k8s.metrics.client.model.pod.PodMetricsList;
 
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public interface K8sMetricsClient {
   String METRICS_API_GROUP = "metrics.k8s.io";
   String METRICS_API_VERSION = "v1beta1";

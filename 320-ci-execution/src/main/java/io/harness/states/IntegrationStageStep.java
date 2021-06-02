@@ -1,7 +1,9 @@
 package io.harness.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.stages.IntegrationStageStepParameters;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
@@ -22,6 +24,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CI)
 public class IntegrationStageStep implements ChildExecutable<IntegrationStageStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType("INTEGRATION_STAGE_STEP").build();
   public static final String CHILD_PLAN_START_NODE = "io/harness/beans/execution";

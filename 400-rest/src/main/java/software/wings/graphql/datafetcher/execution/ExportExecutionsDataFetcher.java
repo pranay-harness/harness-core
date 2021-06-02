@@ -2,7 +2,7 @@ package software.wings.graphql.datafetcher.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.execution.export.ExportExecutionsResourceService;
@@ -22,7 +22,7 @@ import com.google.inject.Inject;
 import org.mongodb.morphia.query.Query;
 
 @OwnedBy(CDC)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class ExportExecutionsDataFetcher
     extends BaseMutatorDataFetcher<QLExportExecutionsInput, QLExportExecutionsPayload> {
   @Inject private final ExportExecutionsResourceService exportExecutionsResourceService;

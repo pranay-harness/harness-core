@@ -16,6 +16,8 @@ import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaimVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.PodFluent;
+import io.fabric8.kubernetes.api.model.PodSecurityContext;
+import io.fabric8.kubernetes.api.model.PodSecurityContextBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import java.util.ArrayList;
@@ -61,6 +63,7 @@ public abstract class BasePodSpecBuilder {
         .withNewMetadata()
         .withName(podParams.getName())
         .withLabels(podParams.getLabels())
+        .withAnnotations(podParams.getAnnotations())
         .withNamespace(podParams.getNamespace())
         .endMetadata()
         .withNewSpec()
@@ -68,7 +71,16 @@ public abstract class BasePodSpecBuilder {
         .withInitContainers(initContainers)
         .withImagePullSecrets(imageSecrets)
         .withHostAliases(getHostAliases(podParams.getHostAliasParamsList()))
-        .withVolumes(new ArrayList<>(volumesToCreate));
+        .withVolumes(new ArrayList<>(volumesToCreate))
+        .withSecurityContext(getSecurityContext(podParams));
+  }
+
+  private PodSecurityContext getSecurityContext(PodParams<ContainerParams> podParams) {
+    PodSecurityContext podSecurityContext = null;
+    if (podParams.getRunAsUser() != null) {
+      podSecurityContext = new PodSecurityContextBuilder().withRunAsUser((long) podParams.getRunAsUser()).build();
+    }
+    return podSecurityContext;
   }
 
   private List<Container> getContainers(List<ContainerParams> containerParamsList, Set<Volume> volumesToCreate,

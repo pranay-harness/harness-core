@@ -1,7 +1,9 @@
 package io.harness.ccm.health;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.HPersistence;
 
 import software.wings.beans.ce.CECluster;
@@ -11,6 +13,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CE)
 public class CEClusterDao {
   private final HPersistence hPersistence;
 

@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import static io.harness.exception.FailureType.TIMEOUT;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.RAGHVENDRA;
 
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -60,6 +62,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -92,6 +95,7 @@ public class EcsRunTaskDeployTest extends WingsBaseTest {
   @Mock private SettingsService mockSettingsService;
   @Mock private GitConfigHelperService mockGitConfigHelperService;
   @Mock private FeatureFlagService mockFeatureFlagService;
+  @Mock private StateExecutionService stateExecutionService;
 
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceTemplateService serviceTemplateService;
@@ -149,8 +153,9 @@ public class EcsRunTaskDeployTest extends WingsBaseTest {
         .getInfrastructureMappingFromInfraMappingService(any(), any(), any());
     doReturn(emptyList()).when(mockSecretManager).getEncryptionDetails(any(), any(), any());
     when(mockEcsStateHelper.createAndQueueDelegateTaskForEcsRunTaskDeploy(
-             eq(bag), any(), any(), eq(application), eq(mockContext), any(), eq(ACTIVITY_ID), any()))
+             eq(bag), any(), any(), eq(application), eq(mockContext), any(), eq(ACTIVITY_ID), any(), eq(true)))
         .thenCallRealMethod();
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
     PhaseElement phaseElement =
         PhaseElement.builder().serviceElement(ServiceElement.builder().uuid(SERVICE_ID).build()).build();
     doReturn(phaseElement).when(mockContext).getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
@@ -166,7 +171,7 @@ public class EcsRunTaskDeployTest extends WingsBaseTest {
 
     verify(mockEcsStateHelper)
         .createAndQueueDelegateTaskForEcsRunTaskDeploy(
-            eq(bag), any(), any(), any(), any(), captor.capture(), any(), any());
+            eq(bag), any(), any(), any(), any(), captor.capture(), any(), any(), eq(true));
     EcsRunTaskDeployRequest request = captor.getValue();
     assertThat(request).isNotNull();
     assertThat(request.getRunTaskFamilyName()).isEqualTo(runTaskFamilyName);
@@ -200,6 +205,33 @@ public class EcsRunTaskDeployTest extends WingsBaseTest {
     verify(mockActivityService).updateStatus(eq(ACTIVITY_ID), eq(APP_ID), eq(ExecutionStatus.SUCCESS));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(executionResponse.getStateExecutionData()).isEqualTo(ecsRunTaskStateExecutionData);
+    assertThat(executionResponse.getFailureTypes()).isNull();
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseEcsRunTask_Timeout() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    EcsCommandExecutionResponse ecsCommandExecutionResponse =
+        EcsCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+    EcsRunTaskDeployResponse ecsRunTaskDeployResponse = EcsRunTaskDeployResponse.builder()
+                                                            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+                                                            .timeoutFailure(true)
+                                                            .build();
+    EcsRunTaskStateExecutionData ecsRunTaskStateExecutionData = new EcsRunTaskStateExecutionData();
+    ecsRunTaskStateExecutionData.setTaskType(TaskType.ECS_COMMAND_TASK);
+    ecsRunTaskStateExecutionData.setActivityId(ACTIVITY_ID);
+    ecsRunTaskStateExecutionData.setAppId(APP_ID);
+    ecsCommandExecutionResponse.setEcsCommandResponse(ecsRunTaskDeployResponse);
+    doReturn(ecsRunTaskStateExecutionData).when(mockContext).getStateExecutionData();
+    doReturn(APP_ID).when(mockContext).getAppId();
+    ExecutionResponse executionResponse =
+        state.handleAsyncResponse(mockContext, ImmutableMap.of(ACTIVITY_ID, ecsCommandExecutionResponse));
+    verify(mockActivityService).updateStatus(eq(ACTIVITY_ID), eq(APP_ID), eq(ExecutionStatus.SUCCESS));
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse.getStateExecutionData()).isEqualTo(ecsRunTaskStateExecutionData);
+    assertThat(executionResponse.getFailureTypes()).isEqualTo(TIMEOUT);
   }
 
   @Test
@@ -274,6 +306,7 @@ public class EcsRunTaskDeployTest extends WingsBaseTest {
     doReturn(true)
         .when(mockFeatureFlagService)
         .isEnabled(FeatureName.BIND_FETCH_FILES_TASK_TO_DELEGATE, application.getAccountId());
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
 
     ExecutionResponse response = state.execute(mockContext);
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);

@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -9,6 +10,7 @@ import static software.wings.service.impl.aws.model.AwsConstants.AWS_AMI_ALL_PHA
 
 import static java.util.Collections.emptyList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
@@ -43,6 +45,7 @@ import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 
+@OwnedBy(CDP)
 public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
   @Getter @Setter @Attributes(title = "Rollback all phases at once") private boolean rollbackAllPhasesAtOnce;
   @Inject private KryoSerializer kryoSerializer;
@@ -135,7 +138,7 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
             .targetGroupArns(infrastructureMapping.getTargetGroupArns())
             .context(context)
             .build();
-    createAndQueueResizeTask(amiResizeTaskRequestData);
+    createAndQueueResizeTask(amiResizeTaskRequestData, context);
 
     AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData = prepareStateExecutionData(activity.getUuid(),
         serviceSetupElement, amiServiceDeployElement.getInstanceCount(), amiServiceDeployElement.getInstanceUnitType(),

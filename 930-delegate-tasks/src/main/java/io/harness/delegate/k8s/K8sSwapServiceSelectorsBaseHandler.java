@@ -1,7 +1,9 @@
 package io.harness.delegate.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.k8s.KubernetesHelperService.toDisplayYaml;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.CommandExecutionStatus;
@@ -14,6 +16,7 @@ import io.fabric8.kubernetes.api.model.Service;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(CDP)
 @Singleton
 @Slf4j
 public class K8sSwapServiceSelectorsBaseHandler {

@@ -1,5 +1,7 @@
 package software.wings.infra;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.beans.AmiDeploymentType.AWS_ASG;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
 import static software.wings.beans.InfrastructureType.AWS_AMI;
@@ -8,6 +10,7 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 
@@ -37,6 +40,7 @@ import org.apache.commons.lang3.StringUtils;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "AwsAmiInfrastructureKeys")
+@OwnedBy(CDP)
 public class AwsAmiInfrastructure
     implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider, ProvisionerAware {
   private String cloudProviderId;

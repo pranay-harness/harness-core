@@ -1,6 +1,11 @@
 package io.harness.app;
 
+import static io.harness.AuthorizationServiceHeader.CI_MANAGER;
+
+import io.harness.AccessControlClientModule;
 import io.harness.CIExecutionServiceModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.impl.CIBuildInfoServiceImpl;
 import io.harness.app.impl.CIYamlSchemaServiceImpl;
 import io.harness.app.impl.YAMLToObjectImpl;
@@ -13,9 +18,12 @@ import io.harness.callback.MongoDatabase;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.core.ci.services.BuildNumberService;
 import io.harness.core.ci.services.BuildNumberServiceImpl;
+import io.harness.core.ci.services.CIOverviewDashboardService;
+import io.harness.core.ci.services.CIOverviewDashboardServiceImpl;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
+import io.harness.grpc.client.AbstractManagerGrpcClientModule;
 import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.logserviceclient.CILogServiceClientModule;
 import io.harness.manage.ManagedScheduledExecutorService;
@@ -23,12 +31,16 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
 import io.harness.ngpipeline.pipeline.service.NGPipelineServiceImpl;
 import io.harness.persistence.HPersistence;
-import io.harness.secretmanagerclient.SecretManagementClientModule;
+import io.harness.remote.client.ClientMode;
 import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.threading.ThreadPool;
+import io.harness.timescaledb.TimeScaleDBConfig;
+import io.harness.timescaledb.TimeScaleDBService;
+import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.tiserviceclient.TIServiceClientModule;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Suppliers;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
@@ -36,6 +48,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import io.dropwizard.jackson.Jackson;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -43,18 +56,12 @@ import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(HarnessTeam.PIPELINE)
 public class CIManagerServiceModule extends AbstractModule {
   private final CIManagerConfiguration ciManagerConfiguration;
 
   public CIManagerServiceModule(CIManagerConfiguration ciManagerConfiguration) {
     this.ciManagerConfiguration = ciManagerConfiguration;
-  }
-
-  @Provides
-  @Singleton
-  @Named("serviceSecret")
-  String serviceSecret() {
-    return ciManagerConfiguration.getManagerServiceSecret();
   }
 
   @Provides
@@ -91,8 +98,16 @@ public class CIManagerServiceModule extends AbstractModule {
     return delegateCallbackToken;
   }
 
+  @Provides
+  @Named("yaml-schema-mapper")
+  @Singleton
+  public ObjectMapper getYamlSchemaObjectMapper() {
+    return Jackson.newObjectMapper();
+  }
+
   @Override
   protected void configure() {
+    install(PrimaryVersionManagerModule.getInstance());
     bind(CIManagerConfiguration.class).toInstance(ciManagerConfiguration);
     bind(YAMLToObject.class).toInstance(new YAMLToObjectImpl());
     bind(HPersistence.class).to(MongoPersistence.class).in(Singleton.class);
@@ -100,6 +115,25 @@ public class CIManagerServiceModule extends AbstractModule {
     bind(CIBuildInfoService.class).to(CIBuildInfoServiceImpl.class);
     bind(BuildNumberService.class).to(BuildNumberServiceImpl.class);
     bind(CIYamlSchemaService.class).to(CIYamlSchemaServiceImpl.class).in(Singleton.class);
+    bind(CIOverviewDashboardService.class).to(CIOverviewDashboardServiceImpl.class);
+    try {
+      bind(TimeScaleDBService.class)
+          .toConstructor(TimeScaleDBServiceImpl.class.getConstructor(TimeScaleDBConfig.class));
+    } catch (NoSuchMethodException e) {
+      log.error("TimeScaleDbServiceImpl Initialization Failed in due to missing constructor", e);
+    }
+    if (ciManagerConfiguration.getEnableDashboardTimescale() != null
+        && ciManagerConfiguration.getEnableDashboardTimescale()) {
+      bind(TimeScaleDBConfig.class)
+          .annotatedWith(Names.named("TimeScaleDBConfig"))
+          .toInstance(ciManagerConfiguration.getTimeScaleDBConfig() != null
+                  ? ciManagerConfiguration.getTimeScaleDBConfig()
+                  : TimeScaleDBConfig.builder().build());
+    } else {
+      bind(TimeScaleDBConfig.class)
+          .annotatedWith(Names.named("TimeScaleDBConfig"))
+          .toInstance(TimeScaleDBConfig.builder().build());
+    }
 
     // Keeping it to 1 thread to start with. Assuming executor service is used only to
     // serve health checks. If it's being used for other tasks also, max pool size should be increased.
@@ -116,20 +150,31 @@ public class CIManagerServiceModule extends AbstractModule {
 
     install(new CIExecutionServiceModule(
         ciManagerConfiguration.getCiExecutionServiceConfig(), ciManagerConfiguration.getShouldConfigureWithPMS()));
-    install(DelegateServiceDriverModule.getInstance());
+    install(DelegateServiceDriverModule.getInstance(false));
     install(new DelegateServiceDriverGrpcClientModule(ciManagerConfiguration.getManagerServiceSecret(),
         ciManagerConfiguration.getManagerTarget(), ciManagerConfiguration.getManagerAuthority()));
-    install(new ManagerGrpcClientModule(ManagerGrpcClientModule.Config.builder()
-                                            .target(ciManagerConfiguration.getManagerTarget())
-                                            .authority(ciManagerConfiguration.getManagerAuthority())
-                                            .build()));
 
-    install(new SecretManagementClientModule(ciManagerConfiguration.getManagerClientConfig(),
-        ciManagerConfiguration.getNgManagerServiceSecret(), "NextGenManager"));
+    install(new AbstractManagerGrpcClientModule() {
+      @Override
+      public ManagerGrpcClientModule.Config config() {
+        return ManagerGrpcClientModule.Config.builder()
+            .target(ciManagerConfiguration.getManagerTarget())
+            .authority(ciManagerConfiguration.getManagerAuthority())
+            .build();
+      }
+
+      @Override
+      public String application() {
+        return "CIManager";
+      }
+    });
+
+    install(AccessControlClientModule.getInstance(
+        ciManagerConfiguration.getAccessControlClientConfiguration(), CI_MANAGER.getServiceId()));
     install(new EntitySetupUsageClientModule(ciManagerConfiguration.getNgManagerClientConfig(),
         ciManagerConfiguration.getNgManagerServiceSecret(), "CIManager"));
     install(new ConnectorResourceClientModule(ciManagerConfiguration.getNgManagerClientConfig(),
-        ciManagerConfiguration.getNgManagerServiceSecret(), "CIManager"));
+        ciManagerConfiguration.getNgManagerServiceSecret(), "CIManager", ClientMode.PRIVILEGED));
     install(new SecretNGManagerClientModule(ciManagerConfiguration.getNgManagerClientConfig(),
         ciManagerConfiguration.getNgManagerServiceSecret(), "CIManager"));
     install(new CILogServiceClientModule(ciManagerConfiguration.getLogServiceConfig()));

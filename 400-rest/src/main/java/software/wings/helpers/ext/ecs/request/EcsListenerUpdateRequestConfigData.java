@@ -1,6 +1,9 @@
 package software.wings.helpers.ext.ecs.request;
 
-import io.harness.annotations.dev.Module;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import lombok.Builder;
@@ -8,7 +11,8 @@ import lombok.Data;
 
 @Data
 @Builder
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
+@OwnedBy(CDP)
 public class EcsListenerUpdateRequestConfigData {
   private String prodListenerArn;
   private String stageListenerArn;
@@ -22,6 +26,7 @@ public class EcsListenerUpdateRequestConfigData {
   private int serviceCountDownsized;
   private boolean rollback;
   private boolean downsizeOldService;
+  private long downsizeOldServiceDelayInSecs;
   private String targetGroupForNewService;
   private String targetGroupForExistingService;
 }

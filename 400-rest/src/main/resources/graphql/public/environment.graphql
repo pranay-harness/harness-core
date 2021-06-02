@@ -7,6 +7,11 @@ extend type Query {
     @dataFetcher(name: environmentConnection)
 }
 
+input infraDefConnectionData {
+  InfrastructureId: String
+  EnvironmentId: String
+}
+
 input EnvironmentFilter {
   application: IdFilter
   environment: IdFilter
@@ -37,6 +42,12 @@ type Environment {
   createdBy: User
   application: Application
     @dataFetcher(name: application, useBatch: false, contextFieldArgsMap: "{ \"applicationId\": \"appId\"}")
+  infrastructureDefinitions(
+    filters: [InfrastructureDefinitionFilter]
+    limit: Int!
+    offset: Int
+  ): InfrastructureDefinitionConnection
+    @dataFetcher(name: infrastructureDefinitionConnection, contextFieldArgsMap: "{ \"Environment\": \"id\"}")
 }
 
 type EnvironmentConnection {

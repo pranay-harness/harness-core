@@ -55,6 +55,8 @@ input GitConnectorInput {
   sshSettingId: String
   generateWebhookUrl: Boolean
   customCommitDetails: CustomCommitDetailsInput
+  usageScope: UsageScopeInput
+  delegateSelectors: [String!]
 }
 
 input UpdateGitConnectorInput {
@@ -66,6 +68,8 @@ input UpdateGitConnectorInput {
   sshSettingId: String
   generateWebhookUrl: Boolean
   customCommitDetails: CustomCommitDetailsInput
+  usageScope: UsageScopeInput
+  delegateSelectors: [String!]
 }
 
 input CustomCommitDetailsInput {
@@ -79,6 +83,7 @@ input DockerConnectorInput {
   URL: String!
   userName: String
   passwordSecretId: String
+  delegateSelectors: [String]
 }
 
 input NexusConnectorInput {
@@ -86,6 +91,7 @@ input NexusConnectorInput {
   URL: String!
   userName: String
   passwordSecretId: String
+  delegateSelectors: [String]
   version: NexusVersion!
 }
 

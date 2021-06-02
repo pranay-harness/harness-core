@@ -1,7 +1,14 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.PRUNE_KUBERNETES_RESOURCES;
+
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -49,6 +56,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@TargetModule(_861_CG_ORCHESTRATION_STATES)
+@OwnedBy(CDP)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class K8sRollingDeploy extends AbstractK8sState {
   @Inject private transient ActivityService activityService;
   @Inject private transient SecretManager secretManager;
@@ -122,9 +132,10 @@ public class K8sRollingDeploy extends AbstractK8sState {
                 featureFlagService.isEnabled(FeatureName.LOCAL_DELEGATE_CONFIG_OVERRIDE, infraMapping.getAccountId()))
             .skipVersioningForAllK8sObjects(
                 appManifestMap.get(K8sValuesLocation.Service).getSkipVersioningForAllK8sObjects())
+            .isPruningEnabled(featureFlagService.isEnabled(PRUNE_KUBERNETES_RESOURCES, infraMapping.getAccountId()))
             .build();
 
-    return queueK8sDelegateTask(context, k8sTaskParameters);
+    return queueK8sDelegateTask(context, k8sTaskParameters, appManifestMap);
   }
 
   @Override
@@ -162,6 +173,7 @@ public class K8sRollingDeploy extends AbstractK8sState {
     stateExecutionData.setLoadBalancer(k8sRollingDeployResponse.getLoadBalancer());
     stateExecutionData.setNamespaces(fetchNamespacesFromK8sPodList(newPods));
     stateExecutionData.setHelmChartInfo(k8sRollingDeployResponse.getHelmChartInfo());
+    stateExecutionData.setPrunedResourcesIds(k8sRollingDeployResponse.getPrunedResourcesIds());
 
     InstanceElementListParam instanceElementListParam = fetchInstanceElementListParam(newPods);
 
@@ -193,7 +205,7 @@ public class K8sRollingDeploy extends AbstractK8sState {
   public void handleAbortEvent(ExecutionContext context) {}
 
   @Override
-  public List<CommandUnit> commandUnitList(boolean remoteStoreType) {
+  public List<CommandUnit> commandUnitList(boolean remoteStoreType, String accountId) {
     List<CommandUnit> rollingDeployCommandUnits = new ArrayList<>();
 
     if (remoteStoreType) {
@@ -205,6 +217,9 @@ public class K8sRollingDeploy extends AbstractK8sState {
     rollingDeployCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Apply));
     rollingDeployCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.WaitForSteadyState));
     rollingDeployCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.WrapUp));
+    if (featureFlagService.isEnabled(PRUNE_KUBERNETES_RESOURCES, accountId)) {
+      rollingDeployCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Prune));
+    }
 
     return rollingDeployCommandUnits;
   }

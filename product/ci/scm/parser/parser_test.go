@@ -5,8 +5,8 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/jsonpb" //nolint:staticcheck //only used in test
+	"github.com/golang/protobuf/proto"  //nolint:staticcheck //only used in test
 	"github.com/stretchr/testify/assert"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	pb "github.com/wings-software/portal/product/ci/scm/proto"
@@ -35,7 +35,7 @@ func TestParsePRWebhookPRSuccess(t *testing.T) {
 
 	want := &pb.ParseWebhookResponse{}
 	raw, _ := ioutil.ReadFile("testdata/pr.json.golden")
-	jsonpb.UnmarshalString(string(raw), want)
+	_ = jsonpb.UnmarshalString(string(raw), want)
 
 	if !proto.Equal(got, want) {
 		t.Errorf("Unexpected Results")
@@ -110,7 +110,7 @@ func TestParsePushWebhookPRSuccess(t *testing.T) {
 
 	want := &pb.ParseWebhookResponse{}
 	raw, _ := ioutil.ReadFile("testdata/push.json.golden")
-	jsonpb.UnmarshalString(string(raw), want)
+	_ = jsonpb.UnmarshalString(string(raw), want)
 	if !proto.Equal(got, want) {
 		t.Errorf("Unexpected Results")
 		t.Log(got)
@@ -141,7 +141,7 @@ func TestParseCommentWebhookSuccess(t *testing.T) {
 
 	want := &pb.ParseWebhookResponse{}
 	raw, _ := ioutil.ReadFile("testdata/comment.json.golden")
-	jsonpb.UnmarshalString(string(raw), want)
+	_ = jsonpb.UnmarshalString(string(raw), want)
 
 	if !proto.Equal(got, want) {
 		t.Errorf("Unexpected Results")

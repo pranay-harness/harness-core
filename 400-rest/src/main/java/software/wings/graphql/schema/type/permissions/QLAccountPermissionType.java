@@ -1,11 +1,15 @@
 package software.wings.graphql.schema.type.permissions;
 
-import io.harness.annotations.dev.Module;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.type.QLEnum;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@OwnedBy(PL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public enum QLAccountPermissionType implements QLEnum {
   CREATE_AND_DELETE_APPLICATION,
   READ_USERS_AND_GROUPS,
@@ -62,6 +66,11 @@ public enum QLAccountPermissionType implements QLEnum {
   MANAGE_SECRET_MANAGERS,
 
   /**
+   * Manage SSH and WinRM Connection
+   */
+  MANAGE_SSH_AND_WINRM,
+
+  /**
    * Manage Authentication Settings
    */
   MANAGE_AUTHENTICATION_SETTINGS,
@@ -103,7 +112,12 @@ public enum QLAccountPermissionType implements QLEnum {
   /**
    * Create custom dashboard
    */
-  CREATE_CUSTOM_DASHBOARDS;
+  CREATE_CUSTOM_DASHBOARDS,
+
+  /**
+   * Manage Restricted Access
+   */
+  MANAGE_RESTRICTED_ACCESS;
 
   @Override
   public String getStringValue() {

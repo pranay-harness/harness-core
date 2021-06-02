@@ -10,6 +10,7 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.Set;
@@ -71,7 +72,7 @@ public class AzureMachineImageArtifactStream extends ArtifactStream {
   }
 
   @Override
-  public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
+  public ArtifactStreamAttributes fetchArtifactStreamAttributes(FeatureFlagService featureFlagService) {
     return ArtifactStreamAttributes.builder()
         .artifactStreamType(getArtifactStreamType())
         .subscriptionId(subscriptionId)

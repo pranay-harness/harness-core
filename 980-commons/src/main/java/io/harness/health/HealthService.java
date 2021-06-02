@@ -21,12 +21,13 @@ import lombok.Value;
 
 @Singleton
 public class HealthService extends HealthCheck {
+  public static final String HEALTHY = "healthy";
   boolean initial;
   TimeLimiter timeLimiter;
   ExecutorService executorService;
 
   @Inject
-  HealthService(ExecutorService executorService) {
+  public HealthService(ExecutorService executorService) {
     initial = true;
     timeLimiter = new SimpleTimeLimiter(executorService);
     this.executorService = executorService;

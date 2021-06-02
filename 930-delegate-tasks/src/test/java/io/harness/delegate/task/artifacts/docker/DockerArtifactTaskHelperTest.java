@@ -146,7 +146,10 @@ public class DockerArtifactTaskHelperTest extends CategoryTest {
     when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
     DockerArtifactDelegateRequest dockerArtifactDelegateRequest =
         DockerArtifactDelegateRequest.builder()
-            .dockerConnectorDTO(DockerConnectorDTO.builder().auth(DockerAuthenticationDTO.builder().build()).build())
+            .dockerConnectorDTO(DockerConnectorDTO.builder()
+                                    .dockerRegistryUrl("")
+                                    .auth(DockerAuthenticationDTO.builder().build())
+                                    .build())
             .build();
     ArtifactTaskParameters artifactTaskParameters = ArtifactTaskParameters.builder()
                                                         .attributes(dockerArtifactDelegateRequest)

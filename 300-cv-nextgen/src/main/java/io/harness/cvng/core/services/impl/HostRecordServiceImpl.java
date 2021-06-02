@@ -44,7 +44,7 @@ public class HostRecordServiceImpl implements HostRecordService {
 
   @Override
   public Set<String> get(Set<String> verificationTaskIds, Instant startTime, Instant endTime) {
-    List<HostRecord> hostRecords = hPersistence.createQuery(HostRecord.class)
+    List<HostRecord> hostRecords = hPersistence.createQuery(HostRecord.class, excludeAuthority)
                                        .field(HostRecordKeys.verificationTaskId)
                                        .in(verificationTaskIds)
                                        .field(HostRecordKeys.startTime)

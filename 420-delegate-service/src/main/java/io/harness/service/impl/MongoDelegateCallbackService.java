@@ -13,11 +13,14 @@ import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.result.UpdateResult;
 import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
+@Slf4j
 public class MongoDelegateCallbackService implements DelegateCallbackService {
   private static final String SYNC_TASK_COLLECTION_NAME_SUFFIX = "delegateSyncTaskResponses";
   private static final String ASYNC_TASK_COLLECTION_NAME_SUFFIX = "delegateAsyncTaskResponses";
@@ -72,7 +75,8 @@ public class MongoDelegateCallbackService implements DelegateCallbackService {
 
     Bson update = new Document("$set", document);
 
-    asyncTaskResponseCollection.updateOne(filter, update, upsert);
+    UpdateResult updateResult = asyncTaskResponseCollection.updateOne(filter, update, upsert);
+    log.info("DB acknowledged write operation of async task response: {}.", updateResult.wasAcknowledged());
   }
 
   @Override
@@ -87,7 +91,8 @@ public class MongoDelegateCallbackService implements DelegateCallbackService {
 
     Bson update = new Document("$set", document);
 
-    taskProgressResponseCollection.updateOne(filter, update, upsert);
+    UpdateResult updateResult = taskProgressResponseCollection.updateOne(filter, update, upsert);
+    log.info("DB acknowledged write operation of task progress response: {}.", updateResult.wasAcknowledged());
   }
 
   @Override

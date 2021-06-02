@@ -55,6 +55,12 @@ public class TimeoutEngine implements Handler<TimeoutInstance> {
     return savedTimeoutInstance;
   }
 
+  public void deleteTimeouts(List<String> timeoutInstanceIds) {
+    if (EmptyPredicate.isNotEmpty(timeoutInstanceIds)) {
+      timeoutInstanceRepository.deleteByUuidIn(timeoutInstanceIds);
+    }
+  }
+
   public void onEvent(List<String> timeoutInstanceIds, TimeoutEvent event) {
     if (EmptyPredicate.isEmpty(timeoutInstanceIds)) {
       return;

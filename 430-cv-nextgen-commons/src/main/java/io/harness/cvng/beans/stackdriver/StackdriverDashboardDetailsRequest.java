@@ -1,5 +1,9 @@
 package io.harness.cvng.beans.stackdriver;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
+import static io.harness.cvng.utils.StackdriverUtils.Scope.METRIC_SCOPE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.utils.StackdriverUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -12,6 +16,7 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @NoArgsConstructor
+@OwnedBy(CV)
 public class StackdriverDashboardDetailsRequest extends StackdriverRequest {
   public static final String DSL = StackdriverDashboardRequest.readDSL(
       "stackdriver-dashboards-details.datacollection", StackdriverDashboardRequest.class);
@@ -31,7 +36,7 @@ public class StackdriverDashboardDetailsRequest extends StackdriverRequest {
   @Override
   public Map<String, Object> fetchDslEnvVariables() {
     StackdriverCredential credential = StackdriverCredential.fromGcpConnector(getConnectorConfigDTO());
-    Map<String, Object> envVariables = StackdriverUtils.getCommonEnvVariables(credential);
+    Map<String, Object> envVariables = StackdriverUtils.getCommonEnvVariables(credential, METRIC_SCOPE);
     envVariables.put("path", path);
     return envVariables;
   }

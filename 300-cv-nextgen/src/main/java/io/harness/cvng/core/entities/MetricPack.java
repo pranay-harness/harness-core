@@ -3,6 +3,7 @@ package io.harness.cvng.core.entities;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.MetricPackDTO;
@@ -11,6 +12,7 @@ import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -45,7 +47,8 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "metricPacks", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "MetricPackKeys")
 @HarnessEntity(exportable = true)
-public class MetricPack implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+@StoreIn(DbAliases.CVNG)
+public final class MetricPack implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -112,6 +115,8 @@ public class MetricPack implements PersistentEntity, UuidAware, CreatedAtAware, 
     @NotNull private TimeSeriesMetricType type;
     private String path;
     private String validationPath;
+    private String responseJsonPath;
+    private String validationResponseJsonPath;
     private boolean included;
     @Builder.Default private List<TimeSeriesThreshold> thresholds = new ArrayList<>();
     @JsonIgnore
@@ -128,6 +133,8 @@ public class MetricPack implements PersistentEntity, UuidAware, CreatedAtAware, 
       return MetricDefinitionDTO.builder()
           .name(name)
           .path(path)
+          .responseJsonPath(responseJsonPath)
+          .validationResponseJsonPath(validationResponseJsonPath)
           .type(type)
           .validationPath(validationPath)
           .included(included)

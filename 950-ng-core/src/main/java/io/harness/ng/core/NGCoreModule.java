@@ -1,5 +1,7 @@
 package io.harness.ng.core;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.activityhistory.impl.NGActivityServiceImpl;
 import io.harness.ng.core.activityhistory.impl.NGActivitySummaryServiceImpl;
 import io.harness.ng.core.activityhistory.service.NGActivityService;
@@ -12,6 +14,7 @@ import io.harness.ng.core.service.services.impl.ServiceEntityServiceImpl;
 import com.google.inject.AbstractModule;
 import java.util.concurrent.atomic.AtomicReference;
 
+@OwnedBy(HarnessTeam.PL)
 public class NGCoreModule extends AbstractModule {
   private static final AtomicReference<NGCoreModule> instanceRef = new AtomicReference<>();
 

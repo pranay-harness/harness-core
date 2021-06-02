@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.azure.taskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.azure.model.AzureConstants.HARNESS_AUTOSCALING_GROUP_TAG_NAME;
 import static io.harness.azure.model.AzureConstants.VMSS_CREATED_TIME_STAMP_TAG_NAME;
 import static io.harness.delegate.task.azure.request.AzureVMSSTaskParameters.AzureVMSSTaskType.AZURE_VMSS_SETUP;
@@ -10,7 +11,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -20,7 +20,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.AzureEnvironmentType;
 import io.harness.azure.client.AzureAutoScaleSettingsClient;
@@ -33,6 +34,7 @@ import io.harness.azure.model.AzureVMSSAutoScaleSettingsData;
 import io.harness.azure.model.AzureVMSSTagsData;
 import io.harness.azure.utility.AzureResourceUtility;
 import io.harness.category.element.UnitTests;
+import io.harness.concurent.HTimeLimiterMocker;
 import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthType;
@@ -71,7 +73,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
   @Mock private AzureComputeClient mockAzureComputeClient;
   @Mock private AzureNetworkClient mockAzureNetworkClient;
@@ -205,8 +208,7 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
 
     doReturn(azureMachineImageArtifact)
         .when(azureVMSSSetupTaskHandler)
-        .getAzureMachineImageArtifact(any(AzureConfig.class), eq("subscriptionId"), eq("resourceGroupName"),
-            any(AzureMachineImageArtifactDTO.class), any());
+        .getAzureMachineImageArtifact(any(AzureConfig.class), any(AzureMachineImageArtifactDTO.class), any());
 
     AzureVMSSTaskExecutionResponse response =
         azureVMSSSetupTaskHandler.executeTaskInternal(azureVMSSSetupTaskParameters, azureConfig);
@@ -260,8 +262,8 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
         .when(mockAzureComputeClient)
         .getGalleryImage(azureConfig, subscriptionId, resourceGroupName, "galleryName", "definitionName");
 
-    AzureMachineImageArtifact azureMachineImageArtifact = azureVMSSSetupTaskHandler.getAzureMachineImageArtifact(
-        azureConfig, subscriptionId, resourceGroupName, artifactDTO, executionLogCallback);
+    AzureMachineImageArtifact azureMachineImageArtifact =
+        azureVMSSSetupTaskHandler.getAzureMachineImageArtifact(azureConfig, artifactDTO, executionLogCallback);
 
     assertThat(azureMachineImageArtifact).isNotNull();
     assertThat(azureMachineImageArtifact)
@@ -296,9 +298,8 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
         .when(mockAzureComputeClient)
         .getGalleryImage(azureConfig, subscriptionId, resourceGroupName, "galleryName", "definitionName");
 
-    assertThatThrownBy(()
-                           -> azureVMSSSetupTaskHandler.getAzureMachineImageArtifact(
-                               azureConfig, subscriptionId, resourceGroupName, artifactDTO, executionLogCallback))
+    assertThatThrownBy(
+        () -> azureVMSSSetupTaskHandler.getAzureMachineImageArtifact(azureConfig, artifactDTO, executionLogCallback))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage(
             "Image reference cannot be found, galleryImageId: galleryName, imageDefinitionName: definitionName, "
@@ -407,6 +408,8 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
     return AzureMachineImageArtifactDTO.builder()
         .imageType(AzureMachineImageArtifactDTO.ImageType.IMAGE_GALLERY)
         .imageDefinition(GalleryImageDefinitionDTO.builder()
+                             .subscriptionId("subscriptionId")
+                             .resourceGroupName("resourceGroupName")
                              .definitionName("definitionName")
                              .galleryName("galleryName")
                              .version("version")
@@ -481,7 +484,7 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
     doNothing().when(mockCallback).saveExecutionLog(anyString(), any(), any());
-    doReturn(Boolean.TRUE).when(timeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter).thenReturn(Boolean.TRUE);
     doReturn(mockCallback).when(azureVMSSSetupTaskHandler).getLogCallBack(any(), anyString());
     return mockCallback;
   }

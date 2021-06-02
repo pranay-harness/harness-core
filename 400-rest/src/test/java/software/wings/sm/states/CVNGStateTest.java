@@ -196,8 +196,8 @@ public class CVNGStateTest extends CategoryTest {
     assertThat(deploymentActivityDTO.getOldVersionHosts()).isEqualTo(Sets.newSet("h3"));
     assertThat(deploymentActivityDTO.getProjectIdentifier()).isEqualTo(projectIdentifier);
     assertThat(deploymentActivityDTO.getOrgIdentifier()).isEqualTo(orgIdentifier);
-    assertThat(deploymentActivityDTO.getServiceIdentifier()).isEqualTo("service");
-    assertThat(deploymentActivityDTO.getEnvironmentIdentifier()).isEqualTo("env");
+    assertThat(deploymentActivityDTO.getServiceIdentifier()).isNull();
+    assertThat(deploymentActivityDTO.getEnvironmentIdentifier()).isNull();
     Map<String, String> runtimeValuesExpectations = new HashMap<>();
     runtimeValuesExpectations.put("harnessCdAppId", APP_ID);
     runtimeValuesExpectations.put("harnessCdServiceId", serviceId);

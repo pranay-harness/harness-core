@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
@@ -24,6 +25,7 @@ import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_OVERRI
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
@@ -61,11 +63,13 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.entityinterface.ApplicationAccess;
+import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.template.Template;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.infra.InfrastructureDefinitionYaml;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.setting.SettingValueYamlHandler;
 import software.wings.service.intfc.AppService;
@@ -85,6 +89,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.YamlArtifactStreamService;
@@ -93,7 +98,7 @@ import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.verification.CVConfiguration;
-import software.wings.verification.CVConfiguration.CVConfigurationYaml;
+import software.wings.verification.CVConfigurationYaml;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
 import software.wings.yaml.command.CommandYaml;
@@ -110,6 +115,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @Singleton
 @Slf4j
+@OwnedBy(DX)
 public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private AppService appService;
   @Inject private CommandService commandService;
@@ -134,6 +140,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private TemplateService templateService;
+  @Inject private GovernanceConfigService governanceConfigService;
 
   /**
    * Find by app, service and service command ids.
@@ -443,8 +450,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     String accountId = appService.getAccountIdByAppId(appId);
     InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefinitionId);
     notNullCheck("InfraDefinition not found for appId:" + appId, infrastructureDefinition);
-    InfrastructureDefinition.Yaml infraDefinitionYaml =
-        (InfrastructureDefinition.Yaml) yamlHandlerFactory.getYamlHandler(YamlType.INFRA_DEFINITION)
+    InfrastructureDefinitionYaml infraDefinitionYaml =
+        (InfrastructureDefinitionYaml) yamlHandlerFactory.getYamlHandler(YamlType.INFRA_DEFINITION)
             .toYaml(infrastructureDefinition, appId);
     return YamlHelper.getYamlRestResponse(yamlGitSyncService, infrastructureDefinition.getUuid(), accountId,
         infraDefinitionYaml, infrastructureDefinition.getName() + YAML_EXTENSION);
@@ -623,6 +630,9 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       case NEW_RELIC:
       case DYNA_TRACE:
       case PROMETHEUS:
+      case DATA_DOG:
+      case APM_VERIFICATION:
+      case BUG_SNAG:
         return yamlHandlerFactory.getYamlHandler(YamlType.VERIFICATION_PROVIDER, settingVariableType.name());
 
       case HOST_CONNECTION_ATTRIBUTES:
@@ -829,5 +839,27 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.TAG).toYaml(harnessTags, GLOBAL_APP_ID);
 
     return YamlHelper.getYamlRestResponse(yamlGitSyncService, GLOBAL_APP_ID, accountId, yaml, TAGS_YAML);
+  }
+
+  /**
+   * Get YAML for Governance Config for an account
+   *
+   * @param accountId     the account id
+   * @return Governance Config yaml
+   */
+  @Override
+  public RestResponse<YamlPayload> getGovernanceConfig(@NotEmpty String accountId) {
+    notNullCheck("No account found for Id:" + accountId, accountId);
+    GovernanceConfig governanceConfig = governanceConfigService.get(accountId);
+
+    if (governanceConfig != null) {
+      GovernanceConfig.Yaml yaml = (GovernanceConfig.Yaml) yamlHandlerFactory.getYamlHandler(YamlType.GOVERNANCE_CONFIG)
+                                       .toYaml(governanceConfig, accountId);
+      return YamlHelper.getYamlRestResponse(
+          yamlGitSyncService, accountId, accountId, yaml, YamlConstants.DEPLOYMENT_GOVERNANCE_FOLDER + YAML_EXTENSION);
+
+    } else {
+      throw new YamlException("The Governance Config with accountId: '" + accountId + "' was not found!", USER);
+    }
   }
 }

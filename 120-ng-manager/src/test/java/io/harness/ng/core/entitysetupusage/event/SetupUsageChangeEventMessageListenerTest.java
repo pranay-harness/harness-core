@@ -1,5 +1,6 @@
 package io.harness.ng.core.entitysetupusage.event;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.REFERRED_ENTITY_TYPE;
 import static io.harness.rule.OwnerRule.ABHINAV;
 
@@ -11,6 +12,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
@@ -21,7 +23,9 @@ import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.DeleteSetupUsageDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateV2DTO;
 import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
+import io.harness.ng.core.entitysetupusage.helper.SetupUsageGitInfoPopulator;
 import io.harness.ng.core.entitysetupusage.mapper.EntitySetupUsageEventDTOMapper;
+import io.harness.ng.core.entitysetupusage.mapper.SetupUsageDetailProtoToRestMapper;
 import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
 import io.harness.rule.Owner;
 
@@ -32,6 +36,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(DX)
 public class SetupUsageChangeEventMessageListenerTest extends CategoryTest {
   private final String accountId = "accountId";
   private final String orgId = "orgId";
@@ -40,11 +45,14 @@ public class SetupUsageChangeEventMessageListenerTest extends CategoryTest {
   private EntitySetupUsageEventDTOMapper entitySetupUsageEventDTOMapper;
   private SetupUsageChangeEventMessageListener setupUsageChangeEventMessageListener;
   private IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
+  private SetupUsageGitInfoPopulator setupUsageGitInfoPopulator;
 
   @Before
   public void setUp() {
     entitySetupUsageService = mock(EntitySetupUsageService.class);
-    entitySetupUsageEventDTOMapper = new EntitySetupUsageEventDTOMapper(new EntityDetailProtoToRestMapper());
+    setupUsageGitInfoPopulator = mock(SetupUsageGitInfoPopulator.class);
+    entitySetupUsageEventDTOMapper = new EntitySetupUsageEventDTOMapper(new EntityDetailProtoToRestMapper(),
+        new SetupUsageDetailProtoToRestMapper(), new SetupUsageGitInfoPopulator(null, null));
     setupUsageChangeEventMessageListener =
         new SetupUsageChangeEventMessageListener(entitySetupUsageService, entitySetupUsageEventDTOMapper);
     identifierRefProtoDTOHelper = new IdentifierRefProtoDTOHelper();

@@ -1,22 +1,30 @@
 package io.harness.ci.integrationstage;
 
 import static io.harness.beans.serializer.RunTimeInputHandler.UNRESOLVED_PARAMETER;
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveBooleanParameter;
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveIntegerParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameterWithDefaultValue;
-import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
-import static io.harness.common.CICommonPodConstants.STEP_EXEC;
-import static io.harness.common.CIExecutionConstants.IMAGE_PATH_SPLIT_REGEX;
+import static io.harness.common.CIExecutionConstants.ADDON_VOLUME;
+import static io.harness.common.CIExecutionConstants.ADDON_VOL_MOUNT_PATH;
 import static io.harness.common.CIExecutionConstants.PLUGIN_ENV_PREFIX;
 import static io.harness.common.CIExecutionConstants.PORT_STARTING_RANGE;
 import static io.harness.common.CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS;
 import static io.harness.common.CIExecutionConstants.SHARED_VOLUME_PREFIX;
+import static io.harness.common.CIExecutionConstants.STEP_MOUNT_PATH;
 import static io.harness.common.CIExecutionConstants.STEP_PREFIX;
 import static io.harness.common.CIExecutionConstants.STEP_REQUEST_MEMORY_MIB;
 import static io.harness.common.CIExecutionConstants.STEP_REQUEST_MILLI_CPU;
+import static io.harness.common.CIExecutionConstants.STEP_VOLUME;
+import static io.harness.common.CIExecutionConstants.STEP_WORK_DIR;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import static java.lang.String.format;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.environment.K8BuildJobEnvInfo.ConnectorConversionInfo;
@@ -27,26 +35,20 @@ import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.steps.CIStepInfo;
+import io.harness.beans.steps.CIStepInfoUtils;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
-import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
-import io.harness.beans.steps.stepinfo.publish.artifact.Artifact;
-import io.harness.beans.yaml.extended.container.ContainerResource;
-import io.harness.beans.yaml.extended.container.quantity.unit.DecimalQuantityUnit;
-import io.harness.beans.yaml.extended.container.quantity.unit.MemoryQuantityUnit;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure.Type;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.ci.utils.QuantityUtils;
-import io.harness.common.CICommonPodConstants;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
 import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
 import io.harness.delegate.beans.ci.pod.EnvVariableEnum;
 import io.harness.delegate.beans.ci.pod.PVCParams;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ngexception.CIStageExecutionException;
-import io.harness.k8s.model.ImageDetails;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
@@ -56,11 +58,13 @@ import io.harness.stateutils.buildstate.PluginSettingUtils;
 import io.harness.stateutils.buildstate.providers.StepContainerUtils;
 import io.harness.util.ExceptionUtility;
 import io.harness.util.PortFinder;
-import io.harness.utils.IdentifierRefHelper;
 import io.harness.yaml.core.timeout.TimeoutUtils;
 import io.harness.yaml.core.variables.NGVariableType;
 import io.harness.yaml.core.variables.SecretNGVariable;
 import io.harness.yaml.core.variables.StringNGVariable;
+import io.harness.yaml.extended.ci.container.ContainerResource;
+import io.harness.yaml.extended.ci.container.quantity.unit.DecimalQuantityUnit;
+import io.harness.yaml.extended.ci.container.quantity.unit.MemoryQuantityUnit;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -73,16 +77,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CI)
 public class BuildJobEnvInfoBuilder {
-  private static final String USERNAME_PREFIX = "USERNAME_";
-  private static final String PASSW_PREFIX = "PASSWORD_";
-  private static final String ENDPOINT_PREFIX = "ENDPOINT_";
-  private static final String ACCESS_KEY_PREFIX = "ACCESS_KEY_";
-  private static final String SECRET_KEY_PREFIX = "SECRET_KEY_";
-  private static final String SECRET_PATH_PREFIX = "SECRET_PATH_";
-
   private static final String PLUGIN_USERNAME = "PLUGIN_USERNAME";
   private static final String PLUGIN_PASSW = "PLUGIN_PASSWORD";
   private static final String PLUGIN_REGISTRY = "PLUGIN_REGISTRY";
@@ -108,8 +107,7 @@ public class BuildJobEnvInfoBuilder {
         || infrastructure.getType() == Type.USE_FROM_STAGE) {
       return K8BuildJobEnvInfo.builder()
           .podsSetupInfo(getCIPodsSetupInfo(stageElementConfig, ciExecutionArgs, steps, isFirstPod, podName))
-          .workDir(CICommonPodConstants.STEP_EXEC_WORKING_DIR)
-          .publishArtifactStepIds(getPublishArtifactStepIds(stageElementConfig))
+          .workDir(STEP_WORK_DIR)
           .stepConnectorRefs(getStepConnectorRefs(stageElementConfig))
           .build();
     } else {
@@ -123,7 +121,7 @@ public class BuildJobEnvInfoBuilder {
 
     Set<Integer> usedPorts = new HashSet<>();
     PortFinder portFinder = PortFinder.builder().startingPort(PORT_STARTING_RANGE).usedPorts(usedPorts).build();
-    String workDirPath = getWorkingDirectoryPath(CICommonPodConstants.STEP_EXEC_WORKING_DIR);
+    String workDirPath = STEP_WORK_DIR;
     List<ContainerDefinitionInfo> serviceContainerDefinitionInfos =
         CIServiceBuilder.createServicesContainerDefinition(stageElementConfig, portFinder, ciExecutionServiceConfig);
     List<ContainerDefinitionInfo> stepContainerDefinitionInfos =
@@ -165,7 +163,7 @@ public class BuildJobEnvInfoBuilder {
     List<PVCParams> pvcParamsList = new ArrayList<>();
 
     for (String volumeName : volumeToMountPath.keySet()) {
-      String claimName = String.format("%s-%s", podName, volumeName);
+      String claimName = format("%s-%s", podName, volumeName);
       pvcParamsList.add(PVCParams.builder()
                             .claimName(claimName)
                             .volumeName(volumeName)
@@ -179,7 +177,8 @@ public class BuildJobEnvInfoBuilder {
 
   private Map<String, String> getVolumeToMountPath(List<String> sharedPaths) {
     Map<String, String> volumeToMountPath = new HashMap<>();
-    volumeToMountPath.put(STEP_EXEC, MOUNT_PATH);
+    volumeToMountPath.put(STEP_VOLUME, STEP_MOUNT_PATH);
+    volumeToMountPath.put(ADDON_VOLUME, ADDON_VOL_MOUNT_PATH);
 
     if (sharedPaths != null) {
       int index = 0;
@@ -188,7 +187,10 @@ public class BuildJobEnvInfoBuilder {
           continue;
         }
 
-        String volumeName = String.format("%s%d", SHARED_VOLUME_PREFIX, index);
+        String volumeName = format("%s%d", SHARED_VOLUME_PREFIX, index);
+        if (path.equals(STEP_MOUNT_PATH) || path.equals(ADDON_VOL_MOUNT_PATH)) {
+          throw new InvalidRequestException(format("Shared path: %s is a reserved keyword ", path));
+        }
         volumeToMountPath.put(volumeName, path);
         index++;
       }
@@ -264,12 +266,13 @@ public class BuildJobEnvInfoBuilder {
       case UPLOAD_ARTIFACTORY:
       case UPLOAD_S3:
       case UPLOAD_GCS:
-        return createPluginCompatibleStepContainerDefinition((PluginCompatibleStep) ciStepInfo, ciExecutionArgs,
-            portFinder, stepIndex, stepElement.getIdentifier(), stepElement.getName(), stepElement.getType(), timeout);
+        return createPluginCompatibleStepContainerDefinition((PluginCompatibleStep) ciStepInfo, integrationStage,
+            ciExecutionArgs, portFinder, stepIndex, stepElement.getIdentifier(), stepElement.getName(),
+            stepElement.getType(), timeout);
       case PLUGIN:
-        return createPluginStepContainerDefinition((PluginStepInfo) ciStepInfo, ciExecutionArgs, portFinder, stepIndex,
-            stepElement.getIdentifier(), stepElement.getName());
-      case TEST_INTELLIGENCE:
+        return createPluginStepContainerDefinition((PluginStepInfo) ciStepInfo, integrationStage, ciExecutionArgs,
+            portFinder, stepIndex, stepElement.getIdentifier(), stepElement.getName());
+      case RUN_TESTS:
         return createRunTestsStepContainerDefinition((RunTestsStepInfo) ciStepInfo, integrationStage, ciExecutionArgs,
             portFinder, stepIndex, stepElement.getIdentifier());
       default:
@@ -278,30 +281,33 @@ public class BuildJobEnvInfoBuilder {
   }
 
   private ContainerDefinitionInfo createPluginCompatibleStepContainerDefinition(PluginCompatibleStep stepInfo,
-      CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex, String identifier, String stepName,
-      String stepType, long timeout) {
+      StageElementConfig integrationStage, CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex,
+      String identifier, String stepName, String stepType, long timeout) {
     Integer port = portFinder.getNextPort();
 
-    String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
+    String containerName = format("%s%d", STEP_PREFIX, stepIndex);
     Map<String, String> envVarMap = new HashMap<>();
+    envVarMap.putAll(getEnvVariables(integrationStage));
     envVarMap.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
     envVarMap.putAll(PluginSettingUtils.getPluginCompatibleEnvVariables(stepInfo, identifier, timeout));
+    Integer runAsUser = resolveIntegerParameter(stepInfo.getRunAsUser(), null);
 
     return ContainerDefinitionInfo.builder()
         .name(containerName)
         .commands(StepContainerUtils.getCommand())
         .args(StepContainerUtils.getArguments(port))
         .envVars(envVarMap)
-        .containerImageDetails(
-            ContainerImageDetails.builder()
-                .imageDetails(getImageInfo(resolveStringParameter("containerImage", stepInfo.getStepType().getType(),
-                    identifier, stepInfo.getContainerImage(), true)))
-                .build())
+        .secretVariables(getSecretVariables(integrationStage))
+        .containerImageDetails(ContainerImageDetails.builder()
+                                   .imageDetails(IntegrationStageUtils.getImageInfo(
+                                       CIStepInfoUtils.getPluginCustomStepImage(stepInfo, ciExecutionServiceConfig)))
+                                   .build())
         .containerResourceParams(getStepContainerResource(stepInfo.getResources(), stepType, identifier))
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.PLUGIN)
         .stepIdentifier(identifier)
         .stepName(stepName)
+        .runAsUser(runAsUser)
         .build();
   }
 
@@ -310,7 +316,7 @@ public class BuildJobEnvInfoBuilder {
       String identifier, String name) {
     Integer port = portFinder.getNextPort();
 
-    String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
+    String containerName = format("%s%d", STEP_PREFIX, stepIndex);
     Map<String, String> stepEnvVars = new HashMap<>();
     stepEnvVars.putAll(getEnvVariables(integrationStage));
     stepEnvVars.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
@@ -319,36 +325,8 @@ public class BuildJobEnvInfoBuilder {
     if (!isEmpty(envvars)) {
       stepEnvVars.putAll(envvars);
     }
-    return ContainerDefinitionInfo.builder()
-        .name(containerName)
-        .commands(StepContainerUtils.getCommand())
-        .args(StepContainerUtils.getArguments(port))
-        .envVars(stepEnvVars)
-        .stepIdentifier(identifier)
-        .secretVariables(getSecretVariables(integrationStage))
-        .containerImageDetails(
-            ContainerImageDetails.builder()
-                .imageDetails(
-                    getImageInfo(resolveStringParameter("Image", "Run", identifier, runStepInfo.getImage(), true)))
-                .connectorIdentifier(
-                    resolveStringParameter("connectorRef", "Run", identifier, runStepInfo.getConnectorRef(), true))
-                .build())
-        .containerResourceParams(getStepContainerResource(runStepInfo.getResources(), "Run", identifier))
-        .ports(Collections.singletonList(port))
-        .containerType(CIContainerType.RUN)
-        .stepName(name)
-        .build();
-  }
-
-  private ContainerDefinitionInfo createRunTestsStepContainerDefinition(RunTestsStepInfo runTestsStepInfo,
-      StageElementConfig integrationStage, CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex,
-      String identifier) {
-    Integer port = portFinder.getNextPort();
-
-    String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
-    Map<String, String> stepEnvVars = new HashMap<>();
-    stepEnvVars.putAll(getEnvVariables(integrationStage));
-    stepEnvVars.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
+    boolean privileged = resolveBooleanParameter(runStepInfo.getPrivileged(), false);
+    Integer runAsUser = resolveIntegerParameter(runStepInfo.getRunAsUser(), null);
 
     return ContainerDefinitionInfo.builder()
         .name(containerName)
@@ -358,21 +336,64 @@ public class BuildJobEnvInfoBuilder {
         .stepIdentifier(identifier)
         .secretVariables(getSecretVariables(integrationStage))
         .containerImageDetails(ContainerImageDetails.builder()
-                                   .imageDetails(getImageInfo(runTestsStepInfo.getImage()))
+                                   .imageDetails(IntegrationStageUtils.getImageInfo(resolveStringParameter(
+                                       "Image", "Run", identifier, runStepInfo.getImage(), true)))
+                                   .connectorIdentifier(resolveStringParameter(
+                                       "connectorRef", "Run", identifier, runStepInfo.getConnectorRef(), true))
+                                   .build())
+        .containerResourceParams(getStepContainerResource(runStepInfo.getResources(), "Run", identifier))
+        .ports(Collections.singletonList(port))
+        .containerType(CIContainerType.RUN)
+        .stepName(name)
+        .privileged(privileged)
+        .runAsUser(runAsUser)
+        .build();
+  }
+
+  private ContainerDefinitionInfo createRunTestsStepContainerDefinition(RunTestsStepInfo runTestsStepInfo,
+      StageElementConfig integrationStage, CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex,
+      String identifier) {
+    Integer port = portFinder.getNextPort();
+
+    String containerName = format("%s%d", STEP_PREFIX, stepIndex);
+    Map<String, String> stepEnvVars = new HashMap<>();
+    stepEnvVars.putAll(getEnvVariables(integrationStage));
+    stepEnvVars.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
+    Map<String, String> envvars =
+        resolveMapParameter("envVariables", "RunTests", identifier, runTestsStepInfo.getEnvVariables(), false);
+    if (!isEmpty(envvars)) {
+      stepEnvVars.putAll(envvars);
+    }
+    boolean privileged = resolveBooleanParameter(runTestsStepInfo.getPrivileged(), false);
+    Integer runAsUser = resolveIntegerParameter(runTestsStepInfo.getRunAsUser(), null);
+
+    return ContainerDefinitionInfo.builder()
+        .name(containerName)
+        .commands(StepContainerUtils.getCommand())
+        .args(StepContainerUtils.getArguments(port))
+        .envVars(stepEnvVars)
+        .stepIdentifier(identifier)
+        .secretVariables(getSecretVariables(integrationStage))
+        .containerImageDetails(ContainerImageDetails.builder()
+                                   .imageDetails(IntegrationStageUtils.getImageInfo(runTestsStepInfo.getImage()))
                                    .connectorIdentifier(runTestsStepInfo.getConnector())
                                    .build())
         .containerResourceParams(getStepContainerResource(runTestsStepInfo.getResources(), "RunTests", identifier))
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.TEST_INTELLIGENCE)
+        .privileged(privileged)
+        .runAsUser(runAsUser)
         .build();
   }
 
   private ContainerDefinitionInfo createPluginStepContainerDefinition(PluginStepInfo pluginStepInfo,
-      CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex, String identifier, String name) {
+      StageElementConfig integrationStage, CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex,
+      String identifier, String name) {
     Integer port = portFinder.getNextPort();
 
-    String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
+    String containerName = format("%s%d", STEP_PREFIX, stepIndex);
     Map<String, String> envVarMap = new HashMap<>();
+    envVarMap.putAll(getEnvVariables(integrationStage));
     envVarMap.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
     Map<String, String> settings =
         resolveMapParameter("settings", "Plugin", identifier, pluginStepInfo.getSettings(), false);
@@ -382,14 +403,22 @@ public class BuildJobEnvInfoBuilder {
         envVarMap.put(key, entry.getValue());
       }
     }
+    if (!isEmpty(pluginStepInfo.getEnvVariables())) {
+      envVarMap.putAll(pluginStepInfo.getEnvVariables());
+    }
+
+    boolean privileged = resolveBooleanParameter(pluginStepInfo.getPrivileged(), false);
+    Integer runAsUser = resolveIntegerParameter(pluginStepInfo.getRunAsUser(), null);
+
     return ContainerDefinitionInfo.builder()
         .name(containerName)
         .commands(StepContainerUtils.getCommand())
         .args(StepContainerUtils.getArguments(port))
         .envVars(envVarMap)
         .stepIdentifier(identifier)
+        .secretVariables(getSecretVariables(integrationStage))
         .containerImageDetails(ContainerImageDetails.builder()
-                                   .imageDetails(getImageInfo(resolveStringParameter(
+                                   .imageDetails(IntegrationStageUtils.getImageInfo(resolveStringParameter(
                                        "Image", "Plugin", identifier, pluginStepInfo.getImage(), true)))
                                    .connectorIdentifier(resolveStringParameter(
                                        "connectorRef", "Plugin", identifier, pluginStepInfo.getConnectorRef(), true))
@@ -398,6 +427,8 @@ public class BuildJobEnvInfoBuilder {
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.PLUGIN)
         .stepName(name)
+        .privileged(privileged)
+        .runAsUser(runAsUser)
         .build();
   }
 
@@ -421,38 +452,6 @@ public class BuildJobEnvInfoBuilder {
         .filter(variable -> variable.getType() == NGVariableType.SECRET)
         .map(customVariable -> (SecretNGVariable) customVariable)
         .collect(Collectors.toList());
-  }
-
-  private Set<String> getPublishArtifactStepIds(StageElementConfig stageElementConfig) {
-    IntegrationStageConfig integrationStageConfig = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
-
-    List<ExecutionWrapperConfig> executionWrappers = integrationStageConfig.getExecution().getSteps();
-    if (isEmpty(executionWrappers)) {
-      return Collections.emptySet();
-    }
-
-    Set<String> set = new HashSet<>();
-    for (ExecutionWrapperConfig executionWrapperConfig : executionWrappers) {
-      if (executionWrapperConfig.getParallel() != null && !executionWrapperConfig.getParallel().isNull()) {
-        ParallelStepElementConfig parallelStepElementConfig = getParallelStepElementConfig(executionWrapperConfig);
-
-        for (ExecutionWrapperConfig executionWrapper : parallelStepElementConfig.getSections()) {
-          if (executionWrapper.getStep() != null && !executionWrapper.getStep().isNull()) {
-            StepElementConfig stepElementConfig = getStepElementConfig(executionWrapper);
-
-            if (stepElementConfig.getStepSpecType().getStepType() == PublishStepInfo.typeInfo.getStepType()) {
-              set.add(stageElementConfig.getIdentifier());
-            }
-          }
-        }
-      } else if (executionWrapperConfig.getStep() != null && !executionWrapperConfig.getStep().isNull()) {
-        StepElementConfig stepElementConfig = getStepElementConfig(executionWrapperConfig);
-        if (stepElementConfig.getStepSpecType().getStepType() == PublishStepInfo.typeInfo.getStepType()) {
-          set.add(stageElementConfig.getIdentifier());
-        }
-      }
-    }
-    return set;
   }
 
   private ParallelStepElementConfig getParallelStepElementConfig(ExecutionWrapperConfig executionWrapperConfig) {
@@ -499,53 +498,7 @@ public class BuildJobEnvInfoBuilder {
 
   private Map<String, ConnectorConversionInfo> getStepConnectorConversionInfo(StepElementConfig stepElement) {
     Map<String, ConnectorConversionInfo> map = new HashMap<>();
-    if (stepElement.getStepSpecType() instanceof PublishStepInfo) {
-      List<Artifact> publishArtifacts = ((PublishStepInfo) stepElement.getStepSpecType()).getPublishArtifacts();
-      for (Artifact artifact : publishArtifacts) {
-        String connectorRef = resolveStringParameter("connectorRef", stepElement.getType(), stepElement.getIdentifier(),
-            artifact.getConnector().getConnectorRef(), true);
-        String connectorId = IdentifierRefHelper.getIdentifier(connectorRef);
-        String stepId = stepElement.getIdentifier();
-        switch (artifact.getConnector().getType()) {
-          case ECR:
-          case S3:
-            map.put(stepId,
-                ConnectorConversionInfo.builder()
-                    .connectorRef(connectorRef)
-                    .envToSecretEntry(EnvVariableEnum.AWS_ACCESS_KEY, ACCESS_KEY_PREFIX + connectorId)
-                    .envToSecretEntry(EnvVariableEnum.AWS_SECRET_KEY, SECRET_KEY_PREFIX + connectorId)
-                    .build());
-            break;
-          case GCR:
-            map.put(stepId,
-                ConnectorConversionInfo.builder()
-                    .connectorRef(connectorRef)
-                    .envToSecretEntry(EnvVariableEnum.GCP_KEY_AS_FILE, SECRET_PATH_PREFIX + connectorId)
-                    .build());
-            break;
-          case ARTIFACTORY:
-            map.put(stepId,
-                ConnectorConversionInfo.builder()
-                    .connectorRef(connectorRef)
-                    .envToSecretEntry(EnvVariableEnum.ARTIFACTORY_ENDPOINT, ENDPOINT_PREFIX + connectorId)
-                    .envToSecretEntry(EnvVariableEnum.ARTIFACTORY_USERNAME, USERNAME_PREFIX + connectorId)
-                    .envToSecretEntry(EnvVariableEnum.ARTIFACTORY_PASSWORD, PASSW_PREFIX + connectorId)
-                    .build());
-            break;
-          case DOCKERHUB:
-            map.put(stepId,
-                ConnectorConversionInfo.builder()
-                    .connectorRef(connectorRef)
-                    .envToSecretEntry(EnvVariableEnum.DOCKER_REGISTRY, ENDPOINT_PREFIX + connectorId)
-                    .envToSecretEntry(EnvVariableEnum.DOCKER_USERNAME, USERNAME_PREFIX + connectorId)
-                    .envToSecretEntry(EnvVariableEnum.DOCKER_PASSWORD, PASSW_PREFIX + connectorId)
-                    .build());
-            break;
-          default:
-            throw new IllegalStateException("Unexpected value: " + stepElement.getType());
-        }
-      }
-    } else if (stepElement.getStepSpecType() instanceof PluginCompatibleStep) {
+    if (stepElement.getStepSpecType() instanceof PluginCompatibleStep) {
       PluginCompatibleStep step = (PluginCompatibleStep) stepElement.getStepSpecType();
       switch (stepElement.getType()) {
         case "BuildAndPushECR":
@@ -617,24 +570,6 @@ public class BuildJobEnvInfoBuilder {
                 ngVariable.getValue(), false, ngVariable.getDefaultValue())));
   }
 
-  private ImageDetails getImageInfo(String image) {
-    String tag = "";
-    String name = image;
-
-    if (image.contains(IMAGE_PATH_SPLIT_REGEX)) {
-      String[] subTokens = image.split(IMAGE_PATH_SPLIT_REGEX);
-      if (subTokens.length > 2) {
-        throw new InvalidRequestException("Image should not contain multiple tags");
-      }
-      if (subTokens.length == 2) {
-        name = subTokens[0];
-        tag = subTokens[1];
-      }
-    }
-
-    return ImageDetails.builder().name(name).tag(tag).build();
-  }
-
   private Integer getContainerMemoryLimit(ContainerResource resource, String stepType, String stepId) {
     Integer memoryLimit = ciExecutionServiceConfig.getDefaultMemoryLimit();
     if (resource != null && resource.getLimits() != null && resource.getLimits().getMemory() != null) {
@@ -701,7 +636,7 @@ public class BuildJobEnvInfoBuilder {
       case PLUGIN:
         return getContainerMemoryLimit(
             ((PluginStepInfo) ciStepInfo).getResources(), stepElement.getType(), stepElement.getIdentifier());
-      case TEST_INTELLIGENCE:
+      case RUN_TESTS:
         return getContainerMemoryLimit(
             ((RunTestsStepInfo) ciStepInfo).getResources(), stepElement.getType(), stepElement.getIdentifier());
       case GCR:
@@ -765,7 +700,7 @@ public class BuildJobEnvInfoBuilder {
       case PLUGIN:
         return getContainerCpuLimit(
             ((PluginStepInfo) ciStepInfo).getResources(), stepElement.getType(), stepElement.getIdentifier());
-      case TEST_INTELLIGENCE:
+      case RUN_TESTS:
         return getContainerCpuLimit(
             ((RunTestsStepInfo) ciStepInfo).getResources(), stepElement.getType(), stepElement.getIdentifier());
       case GCR:
@@ -783,9 +718,5 @@ public class BuildJobEnvInfoBuilder {
       default:
         return zeroCpu;
     }
-  }
-
-  private String getWorkingDirectoryPath(String workingDirectory) {
-    return String.format("/%s/%s", STEP_EXEC, workingDirectory);
   }
 }

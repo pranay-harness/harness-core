@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.mutation.cloudProvider.aws;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.utils.RequestField;
 
@@ -16,7 +16,7 @@ import lombok.Value;
 @Builder
 @Scope(PermissionAttribute.ResourceType.SETTING)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLUpdateEc2IamCredentials {
   private RequestField<String> delegateSelector;
   private RequestField<QLUsageScope> usageScope;

@@ -46,7 +46,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import io.harness.VerificationBaseTest;
+import io.harness.VerificationBase;
 import io.harness.alert.AlertData;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
@@ -112,6 +112,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.splunk.LogAnalysisResult;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DataStoreService;
@@ -179,7 +180,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 @Slf4j
-public class ContinuousVerificationServiceTest extends VerificationBaseTest {
+public class ContinuousVerificationServiceTest extends VerificationBase {
   private String accountId;
   private String appId;
   private String envId;
@@ -213,6 +214,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Mock private AppService appService;
   @Mock private CVActivityLogService cvActivityLogService;
   @Mock private Logger activityLogger;
+  @Mock private AccountService accountService;
 
   private SumoConfig sumoConfig;
   private DatadogConfig datadogConfig;
@@ -282,6 +284,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     when(cvConfigurationService.listConfigurations(accountId))
         .thenReturn(Lists.newArrayList(logsCVConfiguration, datadogCVConfiguration));
+    when(accountService.isCertValidationRequired(anyString())).thenReturn(false);
     writeField(continuousVerificationService, "cvConfigurationService", cvConfigurationService, true);
     writeField(continuousVerificationService, "metricRegistry", metricRegistry, true);
     writeField(continuousVerificationService, "cvTaskService", cvTaskService, true);
@@ -310,6 +313,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     writeField(managerVerificationService, "cvActivityLogService", cvActivityLogService, true);
     writeField(managerVerificationService, "dataCollectionService", dataCollectionService, true);
     writeField(managerVerificationService, "dataStoreService", dataStoreService, true);
+    writeField(managerVerificationService, "accountService", accountService, true);
 
     writeField(managerVerificationService, "environmentService", environmentService, true);
     when(environmentService.get(anyString(), anyString()))
@@ -860,6 +864,43 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(customLogDataCollectionInfo.getApplicationId()).isEqualTo(appId);
     assertThat(customLogDataCollectionInfo.getAccountId()).isEqualTo(accountId);
     assertThat(customLogDataCollectionInfo.getServiceId()).isEqualTo(serviceId);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testTriggerDatadogLogsCollection_moreThan10Hosts() throws IOException {
+    Call<RestResponse<Boolean>> managerCall = mock(Call.class);
+    when(managerCall.clone()).thenReturn(managerCall);
+    when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
+    AnalysisContext context =
+        createDatadogLogAnalysisContext((int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()));
+    Map<String, String> hostNameMap = new HashMap<>();
+    for (int i = 0; i < 12; i++) {
+      hostNameMap.put("host-" + i, "default");
+    }
+    context.setTestNodes(hostNameMap);
+    wingsPersistence.save(context);
+    continuousVerificationService.triggerWorkflowDataCollection(context);
+    List<DelegateTask> delegateTasks =
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
+    assertThat(delegateTasks).hasSize(3);
+    DelegateTask delegateTask = delegateTasks.get(0);
+
+    assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
+    assertThat(TaskType.valueOf(delegateTask.getData().getTaskType())).isEqualTo(TaskType.CUSTOM_LOG_COLLECTION_TASK);
+    CustomLogDataCollectionInfo customLogDataCollectionInfo =
+        (CustomLogDataCollectionInfo) delegateTask.getData().getParameters()[0];
+    assertThat(customLogDataCollectionInfo.getApplicationId()).isEqualTo(appId);
+    assertThat(customLogDataCollectionInfo.getAccountId()).isEqualTo(accountId);
+    assertThat(customLogDataCollectionInfo.getServiceId()).isEqualTo(serviceId);
+    assertThat(customLogDataCollectionInfo.getHosts().size()).isEqualTo(5);
+
+    customLogDataCollectionInfo = (CustomLogDataCollectionInfo) delegateTasks.get(1).getData().getParameters()[0];
+    assertThat(customLogDataCollectionInfo.getHosts().size()).isEqualTo(5);
+    customLogDataCollectionInfo = (CustomLogDataCollectionInfo) delegateTasks.get(2).getData().getParameters()[0];
+    assertThat(customLogDataCollectionInfo.getHosts().size()).isEqualTo(2);
   }
 
   @Test
@@ -1451,7 +1492,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     cvConfiguration.setStateType(StateType.NEW_RELIC);
     String configId = wingsPersistence.save(cvConfiguration);
 
-    File file = new File(getClass().getClassLoader().getResource("./metric_records.json").getFile());
+    File file = new File("270-verification/src/test/resources/metric_records.json");
     final Gson gson1 = new Gson();
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();

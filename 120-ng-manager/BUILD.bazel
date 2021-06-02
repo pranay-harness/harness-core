@@ -1,67 +1,33 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sources")
-load("//:macros.bzl", "sonarqube_test")
-load("//:macros.bzl", "test_targets_list")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
-
-sources()
+load("//:tools/bazel/macros.bzl", "run_analysis")
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
+    "@maven//:io_grpc_grpc_alts",
+    "@maven//:io_grpc_grpc_api",
+    "@maven//:io_grpc_grpc_auth",
+    "@maven//:io_grpc_grpc_context",
+    "@maven//:io_grpc_grpc_core",
+    "@maven//:io_grpc_grpc_grpclb",
+    "@maven//:io_grpc_grpc_netty",
+    "@maven//:io_grpc_grpc_netty_shaded",
+    "@maven//:io_grpc_grpc_protobuf",
+    "@maven//:io_grpc_grpc_services",
+    "@maven//:io_grpc_grpc_stub",
 ] + [
     "//:lombok",
+    "//121-access-control-migration:module",
+    "//122-ng-authentication-settings:module",
+    "//123-ng-core-user:module",
     "//125-cd-nextgen:module",
-    "//130-resource-group:module",
     "//136-git-sync-manager:module",
-    "//400-rest:module",
-    "//420-delegate-service:module",
-    "//430-cv-nextgen-commons:module",
-    "//450-ce-views:module",
-    "//490-ce-commons:module",
-    "//835-notification-senders:module",
-    "//860-orchestration-steps:module",
-    "//860-orchestration-visualization:module",
-    "//870-orchestration:module",
-    "//876-orchestration-beans:module",
-    "//878-pipeline-service-utilities:module",
-    "//882-pms-sdk-core:module",
-    "//890-sm-core:module",
-    "//910-delegate-service-driver:module",
-    "//920-delegate-agent-beans:module",
-    "//920-delegate-service-beans:module",
-    "//930-delegate-tasks:module",
-    "//930-ng-core-clients:module",
-    "//955-delegate-beans:module",
-    "//940-feature-flag:module",
-    "//940-notification-client:module",
-    "//940-secret-manager-client:module",
-    "//950-command-library-common:module",
-    "//950-common-entities:module",
-    "//950-delegate-tasks-beans:module",
-    "//950-events-api:module",
-    "//950-events-api/src/main/proto:950_events_api_java_proto",
-    "//950-events-api/src/main/proto:950_events_api_proto",
-    "//950-events-framework:module",
-    "//950-ng-core:module",
-    "//950-ng-project-n-orgs:module",
-    "//950-timeout-engine:module",
-    "//950-wait-engine:module",
-    "//954-connector-beans:module",
-    "//960-api-services:module",
-    "//440-connector-nextgen:module",
-    "//955-filters-sdk:module",
-    "//960-notification-beans:module",
-    "//960-persistence:module",
-    "//960-yaml-sdk:module",
-    "//960-continuous-features:module",
-    "//960-ng-core-beans:module",
-    "//970-api-services-beans:module",
-    "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_services_beans_java_proto",
-    "//970-grpc:module",
-    "//970-ng-commons:module",
-    "//980-commons:module",
+    "//920-ng-signup:module",
+    "//930-ng-license-manager:module",
+    "//940-primary-version-manager:module",
+    "//950-telemetry:module",
+    "//958-ng-file-service-sdk:module",
+    "//product/ci/scm/proto:ciscm_java_proto",
     "@jira_client//jar",
     "@maven//:aopalliance_aopalliance",
     "@maven//:cglib_cglib_nodep",
@@ -215,7 +181,7 @@ shared_dependencies = [
     "@maven//:com_j256_two_factor_auth_two_factor_auth",
     "@maven//:com_jakewharton_retrofit_retrofit1_okhttp3_client",
     "@maven//:com_jayway_jsonpath_json_path",
-    "@maven//:com_jcraft_jsch",
+    "@maven//:com_jcraft_harness_jsch_0_1_54_harness_patch",
     "@maven//:com_jcraft_jzlib",
     "@maven//:com_lmax_disruptor",
     "@maven//:com_mashape_unirest_unirest_java",
@@ -228,7 +194,6 @@ shared_dependencies = [
     "@maven//:com_microsoft_azure_azure_client_runtime",
     "@maven//:com_microsoft_azure_azure_keyvault",
     "@maven//:com_microsoft_azure_azure_keyvault_core",
-    "@maven//:com_microsoft_azure_azure_keyvault_cryptography",
     "@maven//:com_microsoft_azure_azure_keyvault_webkey",
     "@maven//:com_microsoft_azure_azure_mgmt_appservice",
     "@maven//:com_microsoft_azure_azure_mgmt_batch",
@@ -259,7 +224,7 @@ shared_dependencies = [
     "@maven//:com_nimbusds_lang_tag",
     "@maven//:com_nimbusds_nimbus_jose_jwt",
     "@maven//:com_nimbusds_oauth2_oidc_sdk",
-    "@maven//:com_novemberain_quartz_mongodb",
+    "@maven//:com_novemberain_quartz_mongodb_harness_mongo_ssl",
     "@maven//:com_offbytwo_jenkins_jenkins_client",
     "@maven//:com_palominolabs_metrics_metrics_guice",
     "@maven//:com_segment_analytics_java_analytics",
@@ -301,7 +266,6 @@ shared_dependencies = [
     "@maven//:commons_validator_commons_validator",
     "@maven//:de_bwaldvogel_mongo_java_server",
     "@maven//:de_danielbechler_java_object_diff",
-    "@maven//:de_flapdoodle_embed_de_flapdoodle_embed_mongo",
     "@maven//:de_javakaffee_kryo_serializers",
     "@maven//:de_jkeylockmanager_jkeylockmanager",
     "@maven//:dk_brics_automaton_automaton",
@@ -349,7 +313,6 @@ shared_dependencies = [
     "@maven//:io_fabric8_kubernetes_api",
     "@maven//:io_fabric8_kubernetes_client",
     "@maven//:io_fabric8_kubernetes_model",
-    "@maven//:io_fabric8_kubernetes_server_mock",
     "@maven//:io_fabric8_openshift_client",
     "@maven//:io_fabric8_zjsonpatch",
     "@maven//:io_github_resilience4j_resilience4j_circuitbreaker",
@@ -357,19 +320,6 @@ shared_dependencies = [
     "@maven//:io_github_resilience4j_resilience4j_ratelimiter",
     "@maven//:io_github_resilience4j_resilience4j_retrofit",
     "@maven//:io_github_resilience4j_resilience4j_retry",
-    "@maven//:io_grpc_grpc_alts",
-    "@maven//:io_grpc_grpc_api",
-    "@maven//:io_grpc_grpc_auth",
-    "@maven//:io_grpc_grpc_context",
-    "@maven//:io_grpc_grpc_core",
-    "@maven//:io_grpc_grpc_grpclb",
-    "@maven//:io_grpc_grpc_netty",
-    "@maven//:io_grpc_grpc_netty_shaded",
-    "@maven//:io_grpc_grpc_protobuf",
-    "@maven//:io_grpc_grpc_protobuf_lite",
-    "@maven//:io_grpc_grpc_services",
-    "@maven//:io_grpc_grpc_stub",
-    "@maven//:io_grpc_grpc_testing",
     "@maven//:io_gsonfire_gson_fire",
     "@maven//:io_jsonwebtoken_jjwt",
     "@maven//:io_kubernetes_client_java",
@@ -676,7 +626,7 @@ shared_dependencies = [
     "@maven//:xml_apis_xml_apis",
     "@maven//:xml_resolver_xml_resolver",
     "@maven//:xpp3_xpp3",
-    "@maven_harness//:io_harness_cf_cf_client_sdk_java",
+    "@maven//:io_harness_ff_java_server_sdk",
     "@maven_harness//:io_harness_cv_data_collection_dsl",
 ]
 
@@ -701,6 +651,7 @@ java_binary(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = [
         "//120-ng-manager/src/test/resources:resource",
@@ -725,14 +676,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":module",
-    ],
-)
-
-pmd()
+run_analysis()

@@ -57,7 +57,8 @@ public class ConnectorHeartbeatServiceImplTest extends CategoryTest {
                                             .identifier(connectorIdentifier)
                                             .connectorType(ConnectorType.DOCKER)
                                             .build();
-    connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier, connectorInfoDTO);
+    connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier, connectorInfoDTO.getOrgIdentifier(),
+        connectorInfoDTO.getProjectIdentifier(), connectorInfoDTO.getIdentifier());
     ArgumentCaptor<AccountId> accountIdArgumentCaptor = ArgumentCaptor.forClass(AccountId.class);
     ArgumentCaptor<PerpetualTaskClientContextDetails> perpetualTaskClientContextDetailsCaptor =
         ArgumentCaptor.forClass(PerpetualTaskClientContextDetails.class);

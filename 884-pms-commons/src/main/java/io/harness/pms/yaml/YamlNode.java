@@ -1,5 +1,11 @@
 package io.harness.pms.yaml;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.UUIDGenerator;
+import io.harness.walktree.beans.VisitableChildren;
+import io.harness.walktree.visitor.Visitable;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -7,18 +13,22 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.Value;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Value
-public class YamlNode {
-  public static final String UUID_FIELD_NAME = "uuid";
+public class YamlNode implements Visitable {
+  public static final String UUID_FIELD_NAME = "__uuid";
   public static final String IDENTIFIER_FIELD_NAME = "identifier";
   public static final String TYPE_FIELD_NAME = "type";
   public static final String NAME_FIELD_NAME = "name";
+  public static final String KEY_FIELD_NAME = "key";
 
   YamlNode parentNode;
   @NotNull JsonNode currJsonNode;
@@ -133,8 +143,16 @@ public class YamlNode {
     return getStringValue(NAME_FIELD_NAME);
   }
 
+  public String getKey() {
+    return getStringValue(KEY_FIELD_NAME);
+  }
+
   public String getNameOrIdentifier() {
     return Optional.ofNullable(getName()).orElse(getIdentifier());
+  }
+
+  public String getArrayUniqueIdentifier() {
+    return Optional.ofNullable(getIdentifier()).orElse(Optional.ofNullable(getName()).orElse(getKey()));
   }
 
   public String getStringValue(String name) {
@@ -156,5 +174,22 @@ public class YamlNode {
       value = null;
     }
     return value;
+  }
+
+  @Override
+  public VisitableChildren getChildrenToWalk() {
+    VisitableChildren visitableChildren = VisitableChildren.builder().build();
+    if (isArray()) {
+      for (YamlNode node : asArray()) {
+        visitableChildren.add(UUIDGenerator.generateUuid(), node);
+      }
+    } else if (isObject()) {
+      Map<String, YamlNode> yamlNodeFields =
+          fields().stream().collect(Collectors.toMap(YamlField::getName, YamlField::getNode));
+      for (Map.Entry<String, YamlNode> yamlNodeEntry : yamlNodeFields.entrySet()) {
+        visitableChildren.add(yamlNodeEntry.getKey(), yamlNodeEntry.getValue());
+      }
+    }
+    return visitableChildren;
   }
 }

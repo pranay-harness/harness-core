@@ -9,7 +9,7 @@ import static io.harness.logging.LogLevel.INFO;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureAutoScaleSettingsClient;
 import io.harness.azure.client.AzureComputeClient;
@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @NoArgsConstructor
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureAutoScaleHelper {
   @Inject private AzureAutoScaleSettingsClient azureAutoScaleSettingsClient;
   @Inject private AzureComputeClient azureComputeClient;

@@ -6,9 +6,9 @@ import static io.harness.batch.processing.service.impl.BillingDataPipelineServic
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.BillingDataPipelineService;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
+import io.harness.ccm.commons.constants.CloudProvider;
 
 import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;

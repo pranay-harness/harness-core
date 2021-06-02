@@ -90,47 +90,5 @@
     "bucketName": null,
     "buildFullDisplayName": null,
     "artifactFileSize": null
-  },
-  {
-    "uuid": "FAtIyyQiQOuVlGoLTV_yLg",
-    "appId": "nCLN8c84SqWPr44sqg65JQ",
-    "createdBy": null,
-    "createdAt": 1601379796657,
-    "lastUpdatedAt": 1601379796657,
-    "artifactStreamId": "CchJMhP6Tn6nFyca5lE1zw",
-    "artifactSourceName": "deepakputhraya/python-hello",
-    "artifactStreamName": "deepakputhraya_python-hello",
-    "metadata": {
-      "image": "registry.hub.docker.com/deepakputhraya/python-hello:v3.0",
-      "tag": "v3.0",
-      "buildNo": "v3.0"
-    },
-    "labels": {},
-    "displayName": "deepakputhraya/python-hello_v3.0_1709615",
-    "revision": null,
-    "serviceIds": [
-      "NA2uRPKLTqm9VU3dPENb-g"
-    ],
-    "services": null,
-    "artifactFiles": [],
-    "artifactFileMetadata": [],
-    "status": "APPROVED",
-    "description": null,
-    "errorMessage": null,
-    "contentStatus": "METADATA_ONLY",
-    "source": null,
-    "settingId": "P9tSEq2ATOiwLK2ws8On6g",
-    "accountId": "kmpySmUISimoRrJL6NL73w",
-    "artifactStreamType": "DOCKER",
-    "uiDisplayName": "Tag# v3.0",
-    "buildIdentity": "v3.0_3mL7TVTcTsqz6PjG7njoEw",
-    "key": null,
-    "fileName": null,
-    "artifactPath": null,
-    "url": null,
-    "buildNo": "v3.0",
-    "bucketName": null,
-    "buildFullDisplayName": null,
-    "artifactFileSize": null
   }
 ]

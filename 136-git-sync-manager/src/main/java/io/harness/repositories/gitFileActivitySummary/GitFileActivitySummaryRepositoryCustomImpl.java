@@ -1,7 +1,10 @@
 package io.harness.repositories.gitFileActivitySummary;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivitySummary;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivitySummary.GitFileActivitySummaryKeys;
 
@@ -15,6 +18,7 @@ import org.springframework.data.mongodb.core.query.Query;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 
+@OwnedBy(DX)
 public class GitFileActivitySummaryRepositoryCustomImpl implements GitFileActivitySummaryRepositoryCustom {
   private final MongoTemplate mongoTemplate;
 

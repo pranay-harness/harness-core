@@ -4,10 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
 
 import static java.time.Duration.ofHours;
-import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
@@ -24,6 +23,7 @@ import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.governance.GovernanceConfig.GovernanceConfigKeys;
 import software.wings.service.impl.deployment.checks.DeploymentFreezeUtils;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.compliance.GovernanceConfigService;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
@@ -39,11 +39,12 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-@TargetModule(Module._950_EVENTS_API)
+@TargetModule(HarnessModule._953_EVENTS_API)
 public class DeploymentFreezeDeactivationHandler implements Handler<GovernanceConfig> {
   private static final int POOL_SIZE = 3;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject DeploymentFreezeUtils deploymentFreezeUtils;
+  @Inject GovernanceConfigService governanceConfigService;
   PersistenceIterator<GovernanceConfig> iterator;
   @Inject private MorphiaPersistenceRequiredProvider<GovernanceConfig> persistenceProvider;
   @Inject private AccountService accountService;
@@ -67,6 +68,7 @@ public class DeploymentFreezeDeactivationHandler implements Handler<GovernanceCo
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .persistenceProvider(persistenceProvider)
             .schedulingType(IRREGULAR_SKIP_MISSED)
+            .filterExpander(query -> query.field(GovernanceConfigKeys.enableNextCloseIterations).equal(true))
             .throttleInterval(ofSeconds(45)));
 
     executor.submit(() -> iterator.process());
@@ -104,5 +106,7 @@ public class DeploymentFreezeDeactivationHandler implements Handler<GovernanceCo
         log.error("Failed to handle deployment freeze de-activation {}", freezeWindow.getName(), e);
       }
     });
+
+    governanceConfigService.resetEnableIterators(entity);
   }
 }

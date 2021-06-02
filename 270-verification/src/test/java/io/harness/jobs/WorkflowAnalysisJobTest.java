@@ -19,7 +19,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.VerificationBaseTest;
+import io.harness.VerificationBase;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
@@ -78,7 +78,7 @@ import retrofit2.Response;
 /**
  * Created by Pranjal on 09/18/2018
  */
-public class WorkflowAnalysisJobTest extends VerificationBaseTest {
+public class WorkflowAnalysisJobTest extends VerificationBase {
   private String accountId;
   private String appId;
   private String stateExecutionId;

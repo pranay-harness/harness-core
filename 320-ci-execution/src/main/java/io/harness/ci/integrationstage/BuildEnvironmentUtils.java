@@ -18,7 +18,6 @@ import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_REF;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_SHA;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_GIT_HTTP_URL;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_GIT_SSH_URL;
-import static io.harness.common.BuildEnvironmentConstants.DRONE_REMOTE_URL;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_REPO;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_REPO_BRANCH;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_REPO_LINK;
@@ -33,8 +32,14 @@ import static io.harness.common.BuildEnvironmentConstants.DRONE_TARGET_BRANCH;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import static java.lang.String.format;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.BranchWebhookEvent;
+import io.harness.beans.execution.CustomExecutionSource;
 import io.harness.beans.execution.ExecutionSource;
+import io.harness.beans.execution.ExecutionSource.Type;
 import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.beans.execution.PRWebhookEvent;
 import io.harness.beans.execution.Repository;
@@ -46,6 +51,7 @@ import io.harness.beans.executionargs.CIExecutionArgs;
 import java.util.HashMap;
 import java.util.Map;
 
+@OwnedBy(HarnessTeam.CI)
 public class BuildEnvironmentUtils {
   private static final String REPO_SCM = "git";
 
@@ -72,6 +78,9 @@ public class BuildEnvironmentUtils {
         PRWebhookEvent prWebhookEvent = (PRWebhookEvent) webhookExecutionSource.getWebhookEvent();
         envVarMap.putAll(getBaseEnvVars(prWebhookEvent.getBaseAttributes()));
         envVarMap.putAll(getBuildRepoEnvvars(prWebhookEvent.getRepository()));
+
+        setBitbucketCloudCommitRef(prWebhookEvent, envVarMap);
+
         envVarMap.put(DRONE_BUILD_EVENT, "pull_request");
       }
     } else if (ciExecutionArgs.getExecutionSource().getType() == ExecutionSource.Type.MANUAL) {
@@ -81,6 +90,15 @@ public class BuildEnvironmentUtils {
       }
       if (!isEmpty(manualExecutionSource.getTag())) {
         envVarMap.put(DRONE_TAG, manualExecutionSource.getTag());
+        envVarMap.put(DRONE_BUILD_EVENT, "tag");
+      }
+    } else if (ciExecutionArgs.getExecutionSource().getType() == Type.CUSTOM) {
+      CustomExecutionSource customExecutionSource = (CustomExecutionSource) ciExecutionArgs.getExecutionSource();
+      if (!isEmpty(customExecutionSource.getBranch())) {
+        envVarMap.put(DRONE_COMMIT_BRANCH, customExecutionSource.getBranch());
+      }
+      if (!isEmpty(customExecutionSource.getTag())) {
+        envVarMap.put(DRONE_TAG, customExecutionSource.getTag());
         envVarMap.put(DRONE_BUILD_EVENT, "tag");
       }
     }
@@ -96,7 +114,6 @@ public class BuildEnvironmentUtils {
     setEnvironmentVariable(envVarMap, DRONE_REPO_NAME, repository.getName());
     setEnvironmentVariable(envVarMap, DRONE_REPO_LINK, repository.getLink());
     setEnvironmentVariable(envVarMap, DRONE_REPO_BRANCH, repository.getBranch());
-    setEnvironmentVariable(envVarMap, DRONE_REMOTE_URL, repository.getHttpURL());
     setEnvironmentVariable(envVarMap, DRONE_GIT_HTTP_URL, repository.getHttpURL());
     setEnvironmentVariable(envVarMap, DRONE_GIT_SSH_URL, repository.getSshURL());
     setEnvironmentVariable(envVarMap, DRONE_REPO_PRIVATE, String.valueOf(repository.isPrivate()));
@@ -124,6 +141,15 @@ public class BuildEnvironmentUtils {
       envVarMap.put(DRONE_BUILD_ACTION, baseAttributes.getAction());
     }
     return envVarMap;
+  }
+
+  private static void setBitbucketCloudCommitRef(PRWebhookEvent prWebhookEvent, Map<String, String> envVarMap) {
+    // Set this field only for bitbucket cloud.
+    String link = prWebhookEvent.getRepository().getLink();
+    if (isNotEmpty(link) && link.contains("bitbucket.org")) {
+      String commitRef = format("+refs/heads/%s", prWebhookEvent.getBaseAttributes().getSource());
+      setEnvironmentVariable(envVarMap, DRONE_COMMIT_REF, commitRef);
+    }
   }
 
   private static void setEnvironmentVariable(Map<String, String> envVarMap, String var, String value) {

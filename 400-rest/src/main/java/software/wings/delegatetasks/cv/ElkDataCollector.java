@@ -6,9 +6,12 @@ import static io.harness.network.Http.getOkHttpClientBuilderWithReadtimeOut;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.network.Http;
+import io.harness.network.NoopHostnameVerifier;
 import io.harness.serializer.JsonUtils;
 
 import software.wings.beans.ElkConfig;
@@ -49,7 +52,8 @@ import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(HarnessTeam.CV)
 public class ElkDataCollector implements LogDataCollector<ElkDataCollectionInfoV2> {
   private ElkDataCollectionInfoV2 dataCollectionInfo;
   private DataCollectionExecutionContext context;
@@ -268,7 +272,7 @@ final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
 OkHttpClient.Builder builder = getOkHttpClientBuilder();
 builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
-builder.hostnameVerifier((hostname, session) -> true);
+builder.hostnameVerifier(new NoopHostnameVerifier());
 
 return builder;
 }

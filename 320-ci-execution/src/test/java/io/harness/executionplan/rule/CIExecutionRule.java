@@ -6,6 +6,9 @@ import static org.mockito.Mockito.mock;
 
 import io.harness.CIExecutionServiceModule;
 import io.harness.CIExecutionTestModule;
+import io.harness.ModuleType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.delegate.DelegateServiceGrpc;
@@ -18,12 +21,11 @@ import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
-import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.queue.QueueController;
+import io.harness.registrars.ExecutionAdvisers;
 import io.harness.registrars.ExecutionRegistrar;
-import io.harness.registrars.OrchestrationAdviserRegistrar;
-import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.springdata.SpringPersistenceTestModule;
@@ -58,6 +60,7 @@ import org.junit.runners.model.Statement;
  */
 
 @Slf4j
+@OwnedBy(HarnessTeam.CI)
 public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   ClosingFactory closingFactory;
   @Rule public CIExecutionTestModule testRule = new CIExecutionTestModule();
@@ -107,6 +110,8 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
                                                  .defaultMemoryLimit(200)
                                                  .delegateServiceEndpointVariableValue("delegate-service:8080")
                                                  .liteEngineImageTag("v1.4-alpha")
+                                                 .addonImage("harness/ci-addon:1.0")
+                                                 .liteEngineImage("harness/ci-lite-engine:1.0")
                                                  .pvcDefaultStorageSize(25600)
                                                  .build(),
         false));
@@ -135,12 +140,11 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
 
   private PmsSdkConfiguration getPmsSdkConfiguration() {
     return PmsSdkConfiguration.builder()
-        .deploymentMode(DeployMode.LOCAL)
-        .serviceName("ci")
+        .deploymentMode(SdkDeployMode.LOCAL)
+        .moduleType(ModuleType.CI)
         .engineSteps(ExecutionRegistrar.getEngineSteps())
-        .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers())
-        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
-        .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(false))
+        .engineAdvisers(ExecutionAdvisers.getEngineAdvisers())
+        .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())
         .build();
   }
 

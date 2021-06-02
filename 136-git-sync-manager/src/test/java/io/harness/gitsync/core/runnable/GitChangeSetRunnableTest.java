@@ -1,119 +1,75 @@
 package io.harness.gitsync.core.runnable;
 
-import static io.harness.gitsync.common.beans.YamlChangeSet.Status.QUEUED;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.rule.OwnerRule.ABHINAV;
-import static io.harness.rule.OwnerRule.ADWAIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyList;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.IdentifierRef;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.git.YamlGitConfigDTO;
-import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.GitSyncTestBase;
-import io.harness.gitsync.common.TestConstants;
-import io.harness.gitsync.common.beans.YamlChangeSet;
-import io.harness.gitsync.common.service.YamlGitConfigService;
-import io.harness.gitsync.core.beans.GitSyncMetadata;
-import io.harness.gitsync.core.impl.YamlChangeSetServiceImpl;
-import io.harness.gitsync.core.service.YamlGitService;
+import io.harness.gitsync.common.beans.YamlChangeSetEventType;
+import io.harness.gitsync.core.dtos.YamlChangeSetDTO;
+import io.harness.gitsync.core.dtos.YamlChangeSetSaveDTO;
+import io.harness.gitsync.core.dtos.YamlChangeSetSaveDTO.YamlChangeSetSaveDTOBuilder;
+import io.harness.gitsync.core.service.YamlChangeSetService;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
-import java.util.Arrays;
-import java.util.List;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
+@OwnedBy(DX)
 public class GitChangeSetRunnableTest extends GitSyncTestBase {
-  @Inject YamlGitConfigService yamlGitConfigService;
-  @Inject @Spy GitChangeSetRunnableHelper gitChangeSetRunnableHelper;
-  @Inject @Spy YamlChangeSetServiceImpl yamlChangeSetService;
-  @Mock private YamlGitService yamlGitSyncService;
+  @Inject @Spy GitChangeSetRunnable gitChangeSetRunnable;
+  @Inject YamlChangeSetService yamlChangeSetService;
 
-  @InjectMocks @Inject @Spy private GitChangeSetRunnable gitChangeSetRunnable;
+  final String accountId = "accountId";
+  final String branch = "branch";
+  final String repo = "repo";
+  final IdentifierRef connectorRef = IdentifierRef.builder().accountIdentifier(accountId).build();
 
-  @Inject
-
+  @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
   }
 
   @Test
-  @Owner(developers = ABHINAV, intermittent = true)
+  @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
-  public void test_run() {
-    doReturn(2).when(gitChangeSetRunnable).getMaxRunningChangesetsForAccount();
-    final String webhookToken = "Webhook_Token";
-
-    YamlGitConfigDTO yamlGitConfig = YamlGitConfigDTO.builder()
-                                         .accountId(TestConstants.ACCOUNT_ID)
-                                         .gitConnectorId(TestConstants.SETTING_ID)
-                                         .branch("master")
-                                         .rootFolders(Arrays.asList(YamlGitConfigDTO.RootFolder.builder().build()))
-                                         .build();
-
-    yamlGitConfigService.save(yamlGitConfig);
-    GitFileChange gitFileChange = GitFileChange.builder().build();
-
-    yamlChangeSetService.save(YamlChangeSet.builder()
-                                  .fullSync(true)
-                                  .status(QUEUED)
-                                  .accountId(TestConstants.ACCOUNT_ID)
-                                  .gitToHarness(false)
-                                  .gitFileChanges(Arrays.asList(gitFileChange))
-                                  .queueKey("queuekey1")
-                                  .gitSyncMetadata(GitSyncMetadata.builder().build())
-                                  .build());
-
-    yamlChangeSetService.save(YamlChangeSet.builder()
-                                  .fullSync(true)
-                                  .status(QUEUED)
-                                  .accountId(TestConstants.ACCOUNT_ID)
-                                  .gitToHarness(false)
-                                  .gitFileChanges(Arrays.asList(gitFileChange))
-                                  .queueKey("queuekey1")
-                                  .gitSyncMetadata(GitSyncMetadata.builder().build())
-                                  .build());
-
-    doNothing().when(yamlGitSyncService).handleHarnessChangeSet(any(YamlChangeSet.class), eq(TestConstants.ACCOUNT_ID));
-
+  public void testRun() {
+    YamlChangeSetSaveDTOBuilder yamlChangeSetBuilder =
+        YamlChangeSetSaveDTO.builder().accountId(accountId).branch(branch).repoUrl(repo);
+    yamlChangeSetService.save(yamlChangeSetBuilder.eventType(YamlChangeSetEventType.BRANCH_CREATE).build());
+    ArgumentCaptor<YamlChangeSetDTO> argumentCaptor = ArgumentCaptor.forClass(YamlChangeSetDTO.class);
     gitChangeSetRunnable.run();
-
-    verify(yamlGitSyncService, times(1)).handleHarnessChangeSet(any(YamlChangeSet.class), eq(TestConstants.ACCOUNT_ID));
+    verify(gitChangeSetRunnable).processChangeSet(argumentCaptor.capture());
+    assertThat(argumentCaptor.getAllValues().size()).isEqualTo(1);
+    assertThat(argumentCaptor.getAllValues().get(0).getEventType()).isEqualTo(YamlChangeSetEventType.BRANCH_CREATE);
   }
 
   @Test
-  @Owner(developers = ADWAIT)
+  @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
-  public void testRetryAnyStuckYamlChangeSet() {
-    YamlChangeSet yamlChangeSet = YamlChangeSet.builder().accountId(TestConstants.ACCOUNT_ID).build();
-    yamlChangeSet.setUuid("12345");
-
-    doReturn(Arrays.asList(yamlChangeSet)).when(gitChangeSetRunnableHelper).getStuckYamlChangeSets(any(), anyList());
-    doReturn(true)
-        .when(yamlChangeSetService)
-        .updateStatusAndIncrementRetryCountForYamlChangeSets(anyString(), any(), anyList(), anyList());
-
-    gitChangeSetRunnable.retryAnyStuckYamlChangeSet(Arrays.asList("12345"));
-    ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
-    verify(yamlChangeSetService)
-        .updateStatusAndIncrementRetryCountForYamlChangeSets(anyString(), any(), anyList(), captor.capture());
-    List stuckChangeSetIds = captor.getValue();
-    assertThat(stuckChangeSetIds).isNotNull();
-    assertThat(stuckChangeSetIds).hasSize(1);
-    assertThat(stuckChangeSetIds.get(0)).isEqualTo("12345");
+  public void testRun_1() {
+    YamlChangeSetSaveDTOBuilder yamlChangeSetBuilder =
+        YamlChangeSetSaveDTO.builder().accountId(accountId).repoUrl(repo);
+    yamlChangeSetService.save(
+        yamlChangeSetBuilder.eventType(YamlChangeSetEventType.BRANCH_SYNC).branch(branch).build());
+    yamlChangeSetService.save(
+        yamlChangeSetBuilder.eventType(YamlChangeSetEventType.BRANCH_PUSH).branch("branch1").build());
+    ArgumentCaptor<YamlChangeSetDTO> argumentCaptor = ArgumentCaptor.forClass(YamlChangeSetDTO.class);
+    gitChangeSetRunnable.run();
+    verify(gitChangeSetRunnable, times(2)).processChangeSet(argumentCaptor.capture());
+    assertThat(argumentCaptor.getAllValues().size()).isEqualTo(2);
+    assertThat(argumentCaptor.getAllValues().get(0).getEventType()).isEqualTo(YamlChangeSetEventType.BRANCH_SYNC);
+    assertThat(argumentCaptor.getAllValues().get(1).getEventType()).isEqualTo(YamlChangeSetEventType.BRANCH_PUSH);
   }
 }

@@ -116,7 +116,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
             .build()));
 
     cvConfig = new AppDynamicsCVConfig();
-    dsConfigService.upsert(dsConfig);
+    dsConfigService.create(dsConfig);
     clock = Clock.fixed(Instant.parse("2020-04-22T10:02:06Z"), ZoneOffset.UTC);
     MockitoAnnotations.initMocks(this);
     FieldUtils.writeField(heatMapService, "cvConfigService", cvConfigService, true);
@@ -126,6 +126,9 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     when(cvConfigService.getAvailableCategories(anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE)));
     when(cvConfigService.isProductionConfig(cvConfig)).thenReturn(true);
+    when(cvConfigService.getConfigsOfProductionEnvironments(
+             anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+        .thenReturn(Arrays.asList(cvConfig));
   }
 
   @Test
@@ -593,6 +596,19 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     assertThat(categoryRiskMap.get(CVMonitoringCategory.PERFORMANCE)).isNotEqualTo(-1);
     assertThat(categoryRiskMap.get(CVMonitoringCategory.ERRORS)).isNotEqualTo(-1);
     assertThat(categoryRiskMap.get(CVMonitoringCategory.INFRASTRUCTURE)).isEqualTo(-1);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetCategoryRiskScores_noSetup() {
+    when(cvConfigService.getConfigsOfProductionEnvironments(
+             anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+        .thenReturn(null);
+    CategoryRisksDTO categoryRisk =
+        heatMapService.getCategoryRiskScores(accountId, orgIdentifier, projectIdentifier, null, null);
+    assertThat(categoryRisk).isNotNull();
+    assertThat(categoryRisk.isHasConfigsSetup()).isFalse();
   }
 
   @Test

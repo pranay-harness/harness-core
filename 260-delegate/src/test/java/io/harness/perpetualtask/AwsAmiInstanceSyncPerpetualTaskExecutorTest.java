@@ -1,5 +1,7 @@
 package io.harness.perpetualtask;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -11,7 +13,8 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import io.harness.DelegateTest;
+import io.harness.DelegateTestBase;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -46,7 +49,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 import retrofit2.Call;
 
 @RunWith(MockitoJUnitRunner.class)
-public class AwsAmiInstanceSyncPerpetualTaskExecutorTest extends DelegateTest {
+@OwnedBy(CDP)
+public class AwsAmiInstanceSyncPerpetualTaskExecutorTest extends DelegateTestBase {
   @Mock private AwsAsgHelperServiceDelegate awsAsgHelperServiceDelegate;
   @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
   @Mock private Call<RestResponse<Boolean>> call;

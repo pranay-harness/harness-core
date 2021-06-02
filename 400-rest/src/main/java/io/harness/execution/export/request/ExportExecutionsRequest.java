@@ -10,13 +10,14 @@ import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.execution.export.request.ExportExecutionsRequest.ExportExecutionsRequestKeys;
 import io.harness.iterator.PersistentRegularIterable;
-import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.UuidAware;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
@@ -31,21 +32,28 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "ExportExecutionsRequestKeys")
 @Entity(value = "exportExecutionsRequests", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-
-@CdIndex(name = "accountId_status",
-    fields = { @Field(ExportExecutionsRequestKeys.accountId)
-               , @Field(ExportExecutionsRequestKeys.status) })
-@CdIndex(name = "status_nextIteration",
-    fields = { @Field(ExportExecutionsRequestKeys.status)
-               , @Field(ExportExecutionsRequestKeys.nextIteration) })
-@CdIndex(name = "status_expiresAt_nextCleanupIteration",
-    fields =
-    {
-      @Field(ExportExecutionsRequestKeys.status)
-      , @Field(ExportExecutionsRequestKeys.expiresAt), @Field(ExportExecutionsRequestKeys.nextCleanupIteration)
-    })
 public class ExportExecutionsRequest
     implements PersistentRegularIterable, UuidAware, CreatedAtAware, CreatedByAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_status")
+                 .field(ExportExecutionsRequestKeys.accountId)
+                 .field(ExportExecutionsRequestKeys.status)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("status_nextIteration")
+                 .field(ExportExecutionsRequestKeys.status)
+                 .field(ExportExecutionsRequestKeys.nextIteration)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("status_expiresAt_nextCleanupIteration")
+                 .field(ExportExecutionsRequestKeys.status)
+                 .field(ExportExecutionsRequestKeys.expiresAt)
+                 .field(ExportExecutionsRequestKeys.nextCleanupIteration)
+                 .build())
+        .build();
+  }
   public enum OutputFormat { JSON }
   public enum Status { QUEUED, READY, FAILED, EXPIRED }
 

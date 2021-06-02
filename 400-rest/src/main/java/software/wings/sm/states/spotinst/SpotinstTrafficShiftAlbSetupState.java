@@ -1,5 +1,6 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
@@ -18,6 +19,7 @@ import static software.wings.sm.states.spotinst.SpotInstServiceSetup.SPOTINST_SE
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -64,6 +66,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CDP)
 public class SpotinstTrafficShiftAlbSetupState extends State {
   @Getter @Setter private String minInstancesExpr;
   @Getter @Setter private String maxInstancesExpr;
@@ -243,9 +246,10 @@ public class SpotinstTrafficShiftAlbSetupState extends State {
     DelegateTask delegateTask = spotinstStateHelper.getDelegateTask(dataBag.getApp().getAccountId(),
         dataBag.getApp().getUuid(), TaskType.SPOTINST_COMMAND_TASK, activity.getUuid(), dataBag.getEnv().getUuid(),
         dataBag.getInfrastructureMapping().getUuid(), commandRequest, dataBag.getEnv().getEnvironmentType(),
-        dataBag.getInfrastructureMapping().getServiceId());
+        dataBag.getInfrastructureMapping().getServiceId(), isSelectionLogsTrackingForTasksEnabled());
 
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .correlationIds(singletonList(activity.getUuid()))
@@ -280,5 +284,10 @@ public class SpotinstTrafficShiftAlbSetupState extends State {
       invalidFields.put("lbDetails", "Load balancers are required");
     }
     return invalidFields;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

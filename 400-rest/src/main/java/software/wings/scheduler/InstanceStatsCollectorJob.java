@@ -6,10 +6,10 @@ import io.harness.beans.FeatureName;
 import io.harness.event.timeseries.processor.instanceeventprocessor.instancereconservice.IInstanceReconService;
 import io.harness.ff.FeatureFlagService;
 import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.scheduler.BackgroundExecutorService;
-import io.harness.scheduler.BackgroundSchedulerLocker;
 import io.harness.scheduler.PersistentScheduler;
 
 import software.wings.beans.Account;
@@ -56,7 +56,7 @@ public class InstanceStatsCollectorJob implements Job {
   private static final String DATA_MIGRATION_CRON_LOCK_PREFIX = "INSTANCE_DATA_MIGRATION_CRON:";
 
   @Inject private BackgroundExecutorService executorService;
-  @Inject private BackgroundSchedulerLocker persistentLocker;
+  @Inject private PersistentLocker persistentLocker;
   @Inject private StatsCollector statsCollector;
   @Inject private InstanceUsageLimitExcessHandler instanceLimitHandler;
   @Inject private InstanceStatService instanceStatService;
@@ -122,7 +122,7 @@ public class InstanceStatsCollectorJob implements Job {
     }
 
     try (AcquiredLock lock =
-             persistentLocker.getLocker().tryToAcquireLock(Account.class, DATA_MIGRATION_CRON_LOCK_PREFIX + accountId,
+             persistentLocker.tryToAcquireLock(Account.class, DATA_MIGRATION_CRON_LOCK_PREFIX + accountId,
                  Duration.ofSeconds(DATA_MIGRATION_CRON_LOCK_EXPIRY_IN_SECONDS))) {
       if (lock == null) {
         log.error("Unable to fetch lock for running instance data migration for account : {}", accountId);
@@ -158,8 +158,7 @@ public class InstanceStatsCollectorJob implements Job {
   void createStats(@Nonnull final String accountId) {
     Objects.requireNonNull(accountId, "Account Id must be present");
 
-    try (AcquiredLock lock =
-             persistentLocker.getLocker().tryToAcquireLock(Account.class, accountId, Duration.ofSeconds(120))) {
+    try (AcquiredLock lock = persistentLocker.tryToAcquireLock(Account.class, accountId, Duration.ofSeconds(120))) {
       if (lock == null) {
         return;
       }

@@ -41,4 +41,40 @@ public class ShellScriptFunctor implements ExpressionFunctor {
     }
     return input;
   }
+
+  public String quote(SecretString input) {
+    return quote(input.toString());
+  }
+
+  public String quote(LateBindingValue input) {
+    return quote(input.bind().toString());
+  }
+
+  public String quote(String input) {
+    return "\'" + input + "\'";
+  }
+
+  public String doubleQuote(SecretString input) {
+    return doubleQuote(input.toString());
+  }
+
+  public String doubleQuote(LateBindingValue input) {
+    return doubleQuote(input.bind().toString());
+  }
+
+  public String doubleQuote(String input) {
+    return "\"" + input + "\"";
+  }
+
+  public String enclose(String enclosingString, SecretString input) {
+    return enclose(enclosingString, input.toString());
+  }
+
+  public String enclose(String enclosingString, LateBindingValue input) {
+    return enclose(enclosingString, input.bind().toString());
+  }
+
+  public String enclose(String enclosingString, String input) {
+    return enclosingString + input + enclosingString;
+  }
 }

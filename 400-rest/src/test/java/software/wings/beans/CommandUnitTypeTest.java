@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.rule.OwnerRule.UNKNOWN;
+import static io.harness.rule.OwnerRule.SRINIVAS;
 
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
@@ -23,7 +23,6 @@ import org.junit.runner.RunWith;
  * Created by peeyushaggarwal on 6/6/16.
  */
 @RunWith(JUnitParamsRunner.class)
-@Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
 public class CommandUnitTypeTest extends CategoryTest {
   private Object[][] getData() {
     Object[][] data = new Object[CommandUnitType.values().length][1];
@@ -41,8 +40,9 @@ public class CommandUnitTypeTest extends CategoryTest {
    * @throws Exception the exception
    */
   @Test
-  @Owner(developers = UNKNOWN)
+  @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   @Parameters(method = "getData")
   public void shouldCreateNewInstanceFor(String commandUnitTypeName) throws Exception {
     CommandUnitType commandUnitType = CommandUnitType.valueOf(UPPER_CAMEL.to(UPPER_UNDERSCORE, commandUnitTypeName));

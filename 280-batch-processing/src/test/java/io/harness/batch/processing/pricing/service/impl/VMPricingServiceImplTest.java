@@ -8,11 +8,11 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.batch.processing.pricing.client.BanzaiPricingClient;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.pricing.data.EcsFargatePricingInfo;
 import io.harness.batch.processing.pricing.data.PricingResponse;
 import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.constants.CloudProvider;
 import io.harness.rule.Owner;
 
 import java.io.IOException;

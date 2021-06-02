@@ -1,7 +1,12 @@
 package software.wings.delegatetasks;
 
-import io.harness.delegate.beans.DelegateFile;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.delegate.beans.DelegateFileManagerBase;
+import io.harness.delegate.beans.FileBucket;
 
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 
@@ -11,18 +16,10 @@ import java.util.concurrent.ExecutionException;
 import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotEmpty;
 
-/**
- * Created by rishi on 12/19/16.
- */
-public interface DelegateFileManager {
-  DelegateFile upload(DelegateFile delegateFile, InputStream contentSource);
-  String getFileIdByVersion(FileBucket fileBucket, String entityId, int version, String accountId) throws IOException;
-  InputStream downloadByFileId(@NotNull FileBucket bucket, @NotEmpty String fileId, @NotEmpty String accountId)
-      throws IOException;
-  InputStream downloadByConfigFileId(String fileId, String accountId, String appId, String activityId)
-      throws IOException;
-  DelegateFile getMetaInfo(FileBucket fileBucket, String fileId, String accountId) throws IOException;
-
+@OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
+@BreakDependencyOn("software.wings.beans.artifact.ArtifactStreamAttributes")
+public interface DelegateFileManager extends DelegateFileManagerBase {
   // TODO: this method does not seem to belong here
   InputStream downloadArtifactByFileId(@NotNull FileBucket bucket, @NotEmpty String fileId, @NotEmpty String accountId)
       throws IOException, ExecutionException;

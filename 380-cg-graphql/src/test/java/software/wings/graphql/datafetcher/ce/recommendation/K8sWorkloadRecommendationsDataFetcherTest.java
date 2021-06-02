@@ -1,9 +1,13 @@
 package software.wings.graphql.datafetcher.ce.recommendation;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.dao.ClusterRecordDao;
 import io.harness.ccm.cluster.entities.ClusterRecord;
@@ -19,6 +23,7 @@ import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8SWorkloadRec
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8sWorkloadFilter;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8sWorkloadRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8sWorkloadRecommendationPreset;
+import software.wings.graphql.datafetcher.ce.recommendation.dto.QLLastDayCost;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLResourceEntry;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLResourceRequirement;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
@@ -38,9 +43,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetcherTestBase {
   private static final QLPageQueryParameters DUMMY_PAGE_QUERY_PARAMS = new QLPageQueryParameters() {
     @Override
@@ -96,7 +104,10 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
   @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
-  public void shouldFetchRecommendation() throws Exception {
+  @Ignore(
+      "test outdated https://harness.slack.com/archives/C01JMN5P7EX/p1615213693230500?thread_ts=1615212596.227700&cid=C01JMN5P7EX")
+  public void
+  shouldFetchRecommendation() throws Exception {
     K8sWorkloadRecommendation recommendation = getK8sWorkloadRecommendationBuilder().build();
     hPersistence.save(recommendation);
     List<QLK8sWorkloadFilter> filters = getFilters();
@@ -167,9 +178,15 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
                                                                          + "  memory: 10Mi\n"
                                                                          + "  cpu: 50m\n")
                                                                      .build())
+                                                    .p50(QLResourceRequirement.builder().build())
+                                                    .p80(QLResourceRequirement.builder().build())
+                                                    .p90(QLResourceRequirement.builder().build())
+                                                    .p95(QLResourceRequirement.builder().build())
+                                                    .p99(QLResourceRequirement.builder().build())
                                                     .numDays(7)
                                                     .build())
                        .estimatedSavings(BigDecimal.valueOf(100.0))
+                       .lastDayCost(QLLastDayCost.builder().info("Not Available").build())
                        .numDays(7)
                        .build());
   }

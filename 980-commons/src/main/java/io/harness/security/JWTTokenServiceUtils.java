@@ -2,6 +2,7 @@ package io.harness.security;
 
 import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.exception.WingsException.USER;
@@ -14,15 +15,19 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.InvalidClaimException;
+import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.interfaces.Claim;
 import java.io.UnsupportedEncodingException;
 import java.security.interfaces.RSAKey;
+import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.HttpHeaders;
 import lombok.experimental.UtilityClass;
@@ -69,11 +74,16 @@ public class JWTTokenServiceUtils {
   }
 
   public String extractToken(ContainerRequestContext requestContext, String prefix) {
-    String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
-    if (authorizationHeader == null || !authorizationHeader.startsWith(prefix)) {
-      throw new InvalidRequestException("Invalid token", INVALID_TOKEN, USER_ADMIN);
+    return extractToken(HttpHeaders.AUTHORIZATION, requestContext, prefix)
+        .orElseThrow(() -> new InvalidRequestException("Invalid token", INVALID_TOKEN, USER_ADMIN));
+  }
+
+  public Optional<String> extractToken(String headerName, ContainerRequestContext requestContext, String prefix) {
+    String headerValue = requestContext.getHeaderString(headerName);
+    if (headerValue == null || !headerValue.startsWith(prefix)) {
+      return Optional.empty();
     }
-    return authorizationHeader.substring(prefix.length()).trim();
+    return Optional.of(headerValue.substring(prefix.length()).trim());
   }
 
   public String extractSecret(Map<String, String> serviceToSecretMapping, String source) {
@@ -87,15 +97,40 @@ public class JWTTokenServiceUtils {
   }
 
   public String extractSource(ContainerRequestContext requestContext) {
-    String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
-    if (authorizationHeader == null) {
-      throw new InvalidRequestException("Invalid token", INVALID_TOKEN, USER_SRE);
+    return extractSource(HttpHeaders.AUTHORIZATION, requestContext)
+        .orElseThrow(() -> new InvalidRequestException("Invalid token", INVALID_TOKEN, USER_SRE));
+  }
+
+  public Optional<String> extractSource(String headerName, ContainerRequestContext requestContext) {
+    String headerValue = requestContext.getHeaderString(headerName);
+    if (headerValue == null) {
+      return Optional.empty();
     }
 
-    String[] sourceAndToken = authorizationHeader.trim().split(SPACE, 2);
+    String[] sourceAndToken = headerValue.trim().split(SPACE, 2);
     if (sourceAndToken.length < 2) {
-      throw new InvalidRequestException("Invalid token", INVALID_TOKEN, USER_SRE);
+      return Optional.empty();
     }
-    return sourceAndToken[0].trim();
+    return Optional.of(sourceAndToken[0].trim());
+  }
+
+  public String generateJWTToken(Map<String, String> claims, Long validityDurationInMillis, String jwtPasswordSecret) {
+    if (jwtPasswordSecret == null) {
+      throw new InvalidRequestException("Could not find verification secret token");
+    }
+    try {
+      Algorithm algorithm = Algorithm.HMAC256(jwtPasswordSecret);
+      JWTCreator.Builder jwtBuilder = JWT.create().withIssuer(ISSUER).withIssuedAt(new Date());
+
+      if (validityDurationInMillis != null) {
+        jwtBuilder.withExpiresAt(new Date(System.currentTimeMillis() + validityDurationInMillis));
+      }
+      if (!isEmpty(claims)) {
+        claims.forEach(jwtBuilder::withClaim);
+      }
+      return jwtBuilder.sign(algorithm);
+    } catch (UnsupportedEncodingException | JWTCreationException exception) {
+      throw new JWTCreationException("JWTToken could not be generated", exception);
+    }
   }
 }

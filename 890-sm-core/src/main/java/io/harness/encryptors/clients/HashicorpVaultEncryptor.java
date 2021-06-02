@@ -112,7 +112,8 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
     try {
       String fullPath = getFullPath(vaultConfig.getBasePath(), existingRecord.getEncryptionKey());
       return VaultRestClientFactory.create(vaultConfig)
-          .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getSecretEngineName(), fullPath);
+          .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getNamespace(),
+              vaultConfig.getSecretEngineName(), fullPath);
     } catch (IOException e) {
       String message = "Deletion of Vault secret at " + existingRecord.getEncryptionKey() + " failed";
       throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
@@ -128,7 +129,7 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
     deleteSecret(accountId, EncryptedRecordData.builder().encryptionKey(keyUrl).build(), vaultConfig);
 
     boolean isSuccessful = VaultRestClientFactory.create(vaultConfig)
-                               .writeSecret(String.valueOf(vaultConfig.getAuthToken()),
+                               .writeSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getNamespace(),
                                    vaultConfig.getSecretEngineName(), fullPath, value);
 
     if (isSuccessful) {
@@ -188,9 +189,9 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
     long startTime = System.currentTimeMillis();
     log.info("Reading secret {} from vault {}", fullPath, vaultConfig.getVaultUrl());
 
-    String value =
-        VaultRestClientFactory.create(vaultConfig)
-            .readSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getSecretEngineName(), fullPath);
+    String value = VaultRestClientFactory.create(vaultConfig)
+                       .readSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getNamespace(),
+                           vaultConfig.getSecretEngineName(), fullPath);
 
     if (isNotEmpty(value)) {
       log.info("Done reading secret {} from vault {} in {} ms.", fullPath, vaultConfig.getVaultUrl(),

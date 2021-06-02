@@ -2,6 +2,8 @@ package io.harness.pms.sample.cd;
 
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
@@ -11,11 +13,13 @@ import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
+import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
-import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.NoopUserProvider;
+import io.harness.persistence.UserProvider;
 import io.harness.queue.QueueController;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationBeansRegistrars;
@@ -38,6 +42,7 @@ import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
 @Slf4j
+@OwnedBy(HarnessTeam.PIPELINE)
 public class CdServiceModule extends AbstractModule {
   private final CdServiceConfiguration config;
 
@@ -47,7 +52,12 @@ public class CdServiceModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    install(MongoModule.getInstance());
+    install(new AbstractMongoModule() {
+      @Override
+      public UserProvider userProvider() {
+        return new NoopUserProvider();
+      }
+    });
     install(new CdPersistenceModule());
     bind(HPersistence.class).to(MongoPersistence.class);
     install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
@@ -71,7 +81,7 @@ public class CdServiceModule extends AbstractModule {
         });
       }
     });
-    install(DelegateServiceDriverModule.getInstance());
+    install(DelegateServiceDriverModule.getInstance(false));
     install(new DelegateServiceDriverGrpcClientModule(
         config.getManagerServiceSecret(), config.getManagerTarget(), config.getManagerAuthority()));
   }

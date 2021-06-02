@@ -1,7 +1,12 @@
 package io.harness.secretmanagerclient;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.settings.SettingVariableTypes;
 
+@OwnedBy(PL)
 public enum SecretType {
   SecretFile,
   SecretText,

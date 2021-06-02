@@ -2,7 +2,9 @@ package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.state.inspection.StateInspection;
@@ -24,6 +26,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class PipelineStageExecution {
   private String pipelineStageElementId;
   private String stateUuid;
@@ -43,6 +46,7 @@ public class PipelineStageExecution {
   private EmbeddedUser triggeredBy;
   private StateInspection disableAssertionInspection;
   private String skipCondition;
+  private boolean needsInputButNotReceivedYet;
 
   public List<WorkflowExecution> getWorkflowExecutions() {
     return Objects.isNull(workflowExecutions) ? new ArrayList<>() : workflowExecutions;

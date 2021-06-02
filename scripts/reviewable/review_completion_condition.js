@@ -1,10 +1,12 @@
 // The number of approvals required to merge.
 let numApprovalsRequired = 1;
 
+if (review.pullRequest.title.startsWith("[CDP")) {
+    numApprovalsRequired = 2;
+}
+
 const approvals = review.pullRequest.approvals;
 const requestedTeams = _.pluck(review.pullRequest.requestedTeams, 'slug');
-
-const restAddReviewer = "srinivaswings";
 
 let numApprovals = _.where(approvals, 'approved').length;
 const numRejections = _.where(approvals, 'changes_requested').length;
@@ -23,22 +25,6 @@ let pendingReviewers = _(discussionBlockers)
 
 let required = _.pluck(review.pullRequest.assignees, 'username');
 
-let reviewBigModule = _.some(review.files, function(file) {
-  if (file.path.startsWith('400-rest/') && !file.path.endsWith('Test.java')) {
-    let reviewed = _.some(file.revisions, function(revision) {
-      return _.some(revision.reviewers, function(reviewer) {
-        return reviewer.username === restAddReviewer;
-      })
-    })
-
-    return !reviewed && file.revisions[0].action === 'added';
-  }
-})
-
-if (reviewBigModule) {
-  required = required.concat([restAddReviewer]);
-}
-
 _.pull(required, review.pullRequest.author.username);
 if (required.length) {
   numApprovalsRequired =
@@ -55,6 +41,10 @@ if (required.length) {
 }
 
 pendingReviewers = _.uniq(pendingReviewers, 'username');
+
+const olderCheck = Math.min(...Object.values(review.pullRequest.checks).map(check => check.timestamp))
+
+let tooOld = olderCheck < Date.now() - 86400000
 
 let numUnreviewedFiles = 0;
 let fileBlockers = [];
@@ -77,12 +67,14 @@ _.forEach(review.files, function(file) {
 });
 
 const completed =
+      !tooOld &&
       numUnreviewedFiles == 0 &&
       pendingReviewers.length == 0 &&
       numApprovals >= numApprovalsRequired &&
       Object.keys(requestedTeams).length == 0;
 
 const description = (completed ? "✓" :
+  (tooOld ? `Some of the checks are too old. ` : '') +
   (numUnreviewedFiles > 0 ? `${numUnreviewedFiles} file(s) to review. ` : '') +
   (numRejections ? `${numRejections} change requests. ` : '') +
   (discussionBlockers.length > 0 ? `${discussionBlockers.length}. unresolved discussions. ` : '') +

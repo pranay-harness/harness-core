@@ -6,7 +6,7 @@ import static io.harness.network.Localhost.getLocalHostName;
 
 import static java.util.Arrays.asList;
 
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.exception.WingsException;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.security.annotations.LearningEngineAuth;
@@ -62,10 +62,12 @@ public class AuditRequestFilter implements ContainerRequestFilter {
    */
   @Override
   public void filter(ContainerRequestContext requestContext) throws IOException {
-    if ((isAuditExemptedHttpMethod(requestContext) && isAllowWhitelistedIP(requestContext))
+    if ((isAuditExemptedHttpMethod(requestContext) && isAllowWhitelistedIP(requestContext)
+            && isAllowApiUsingKey(requestContext))
         || isAuditExemptedResource()) {
       // do not audit idempotent HttpMethod until we have finer control auditing.
       // audit non-whitelisted IP login
+      // audit external APIs using API_Key
       return;
     }
 
@@ -122,6 +124,9 @@ public class AuditRequestFilter implements ContainerRequestFilter {
         || resourceInfo.getResourceClass().getAnnotation(AuditSkip.class) != null;
   }
 
+  private boolean isAllowApiUsingKey(ContainerRequestContext requestContext) {
+    return isEmpty(requestContext.getHeaderString("X-Api-Key"));
+  }
   private boolean isAllowWhitelistedIP(ContainerRequestContext requestContext) {
     return !requestContext.getUriInfo().getPath().contains("whitelist/isEnabled");
   }

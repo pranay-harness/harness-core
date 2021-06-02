@@ -1,11 +1,16 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessModule._890_SM_CORE;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.security.encryption.EncryptionType.AZURE_VAULT;
 import static io.harness.security.encryption.EncryptionType.GCP_KMS;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 import static io.harness.security.encryption.EncryptionType.VAULT;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
@@ -28,15 +33,21 @@ import io.harness.secretmanagerclient.dto.VaultAuthTokenCredentialDTO;
 import io.harness.secretmanagerclient.dto.VaultMetadataRequestSpecDTO;
 import io.harness.secretmanagerclient.dto.VaultMetadataSpecDTO;
 import io.harness.secretmanagerclient.dto.VaultSecretEngineDTO;
+import io.harness.secretmanagerclient.dto.azurekeyvault.AzureKeyVaultMetadataRequestSpecDTO;
+import io.harness.secretmanagerclient.dto.azurekeyvault.AzureKeyVaultMetadataSpecDTO;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.encryption.AccessType;
 import io.harness.security.encryption.EncryptionType;
 
+import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.GcpKmsConfig;
+import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.security.AzureSecretsManagerService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalSecretManagerService;
 import software.wings.service.intfc.security.NGSecretManagerService;
 import software.wings.service.intfc.security.VaultService;
@@ -50,12 +61,16 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
+@OwnedBy(PL)
+@TargetModule(_890_SM_CORE)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   private final VaultService vaultService;
+  private final AzureSecretsManagerService azureSecretsManagerService;
   private final LocalSecretManagerService localSecretManagerService;
   private final GcpSecretsManagerService gcpSecretsManagerService;
+  private final KmsService kmsService;
   private final SecretManagerConfigService secretManagerConfigService;
   private final WingsPersistence wingsPersistence;
 
@@ -90,9 +105,16 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
           vaultService.saveOrUpdateVaultConfig(
               secretManagerConfig.getAccountId(), (VaultConfig) secretManagerConfig, false);
           return secretManagerConfig;
+        case AZURE_VAULT:
+          azureSecretsManagerService.saveAzureSecretsManagerConfig(
+              secretManagerConfig.getAccountId(), (AzureVaultConfig) secretManagerConfig);
+          return secretManagerConfig;
         case GCP_KMS:
           gcpSecretsManagerService.saveGcpKmsConfig(
               secretManagerConfig.getAccountId(), (GcpKmsConfig) secretManagerConfig, false);
+          return secretManagerConfig;
+        case KMS:
+          kmsService.saveKmsConfig(secretManagerConfig.getAccountId(), (KmsConfig) secretManagerConfig);
           return secretManagerConfig;
         case LOCAL:
           localSecretManagerService.saveLocalEncryptionConfig(
@@ -118,10 +140,18 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
           case VAULT:
             vaultService.validateVaultConfig(accountIdentifier, (VaultConfig) secretManagerConfigOptional.get());
             return ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build();
+          case AZURE_VAULT:
+            azureSecretsManagerService.validateAzureSecretsManagerConfig(
+                accountIdentifier, (AzureVaultConfig) secretManagerConfigOptional.get());
+            return ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build();
           case GCP_KMS:
             gcpSecretsManagerService.validateSecretsManagerConfig(
                 accountIdentifier, (GcpKmsConfig) secretManagerConfigOptional.get());
             return ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build();
+          case KMS:
+            kmsService.validateSecretsManagerConfig(accountIdentifier, (KmsConfig) secretManagerConfigOptional.get());
+            return ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build();
+
           case LOCAL:
             localSecretManagerService.validateLocalEncryptionConfig(
                 accountIdentifier, (LocalEncryptionConfig) secretManagerConfigOptional.get());
@@ -220,16 +250,6 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
         .count();
   }
 
-  private boolean secretManagerUpdateAllowed(SecretManagerConfig secretManagerConfig) {
-    if (Optional.ofNullable(secretManagerConfig.getNgMetadata()).isPresent()) {
-      NGSecretManagerMetadata metadata = secretManagerConfig.getNgMetadata();
-      long countOfSecrets = getCountOfSecretsCreatedUsingSecretManager(metadata.getAccountIdentifier(),
-          metadata.getOrgIdentifier(), metadata.getProjectIdentifier(), metadata.getIdentifier());
-      return countOfSecrets <= 0;
-    }
-    return true;
-  }
-
   @Override
   public SecretManagerConfig update(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String identifier, SecretManagerConfigUpdateDTO updateDTO) throws InvalidRequestException {
@@ -259,9 +279,16 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
           vaultService.saveOrUpdateVaultConfig(
               secretManagerConfig.getAccountId(), (VaultConfig) secretManagerConfig, false);
           return secretManagerConfig;
+        case AZURE_VAULT:
+          azureSecretsManagerService.saveAzureSecretsManagerConfig(
+              secretManagerConfig.getAccountId(), (AzureVaultConfig) secretManagerConfig);
+          return secretManagerConfig;
         case GCP_KMS:
           gcpSecretsManagerService.updateGcpKmsConfig(
               secretManagerConfig.getAccountId(), (GcpKmsConfig) secretManagerConfig, false);
+          return secretManagerConfig;
+        case KMS:
+          kmsService.saveKmsConfig(secretManagerConfig.getAccountId(), (KmsConfig) secretManagerConfig);
           return secretManagerConfig;
         default:
           throw new UnsupportedOperationException("Secret Manager not supported.");
@@ -300,9 +327,15 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
         case VAULT:
           VaultConfig vaultConfig = (VaultConfig) secretManagerConfig;
           return vaultService.deleteVaultConfig(vaultConfig.getAccountId(), vaultConfig.getUuid());
+        case AZURE_VAULT:
+          AzureVaultConfig azureVaultConfig = (AzureVaultConfig) secretManagerConfig;
+          return azureSecretsManagerService.deleteConfig(azureVaultConfig.getAccountId(), azureVaultConfig.getUuid());
         case GCP_KMS:
           GcpKmsConfig gcpKmsConfig = (GcpKmsConfig) secretManagerConfig;
           return gcpSecretsManagerService.deleteGcpKmsConfig(gcpKmsConfig.getAccountId(), gcpKmsConfig.getUuid());
+        case KMS:
+          KmsConfig kmsConfig = (KmsConfig) secretManagerConfig;
+          return kmsService.deleteKmsConfig(kmsConfig.getAccountId(), kmsConfig.getUuid());
         case LOCAL:
           LocalEncryptionConfig localEncryptionConfig = (LocalEncryptionConfig) secretManagerConfig;
           return localSecretManagerService.deleteLocalEncryptionConfig(
@@ -353,6 +386,10 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
       } else {
         vaultConfig = VaultConfig.builder().build();
         vaultConfig.setAccountId(accountIdentifier);
+        vaultConfig.setNgMetadata(NGSecretManagerMetadata.builder()
+                                      .orgIdentifier(requestDTO.getOrgIdentifier())
+                                      .projectIdentifier(requestDTO.getProjectIdentifier())
+                                      .build());
       }
       urlFromRequest.ifPresent(vaultConfig::setVaultUrl);
       tokenFromRequest.ifPresent(x -> {
@@ -378,6 +415,33 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
                   .secretEngines(
                       secretEngineSummaryList.stream().map(this::fromSecretEngineSummary).collect(Collectors.toList()))
                   .build())
+          .build();
+    } else if (requestDTO.getEncryptionType() == EncryptionType.AZURE_VAULT) {
+      AzureKeyVaultMetadataRequestSpecDTO specDTO = (AzureKeyVaultMetadataRequestSpecDTO) requestDTO.getSpec();
+      Optional<SecretManagerConfig> secretManagerConfigOptional = get(accountIdentifier, requestDTO.getOrgIdentifier(),
+          requestDTO.getProjectIdentifier(), requestDTO.getIdentifier(), true);
+      AzureVaultConfig azureVaultConfig;
+      if (secretManagerConfigOptional.isPresent()) {
+        azureVaultConfig = (AzureVaultConfig) secretManagerConfigOptional.get();
+        secretManagerConfigService.decryptEncryptionConfigSecrets(
+            azureVaultConfig.getAccountId(), azureVaultConfig, false);
+      } else {
+        azureVaultConfig = AzureVaultConfig.builder().build();
+        azureVaultConfig.setAccountId(accountIdentifier);
+        azureVaultConfig.setNgMetadata(NGSecretManagerMetadata.builder()
+                                           .orgIdentifier(requestDTO.getOrgIdentifier())
+                                           .projectIdentifier(requestDTO.getProjectIdentifier())
+                                           .build());
+      }
+      Optional.ofNullable(specDTO.getClientId()).ifPresent(azureVaultConfig::setClientId);
+      Optional.ofNullable(specDTO.getTenantId()).ifPresent(azureVaultConfig::setTenantId);
+      Optional.ofNullable(specDTO.getSubscription()).ifPresent(azureVaultConfig::setSubscription);
+      Optional.ofNullable(specDTO.getSecretKey()).ifPresent(azureVaultConfig::setSecretKey);
+      Optional.ofNullable(specDTO.getAzureEnvironmentType()).ifPresent(azureVaultConfig::setAzureEnvironmentType);
+      List<String> vaultNames = azureSecretsManagerService.listAzureVaults(accountIdentifier, azureVaultConfig);
+      return SecretManagerMetadataDTO.builder()
+          .encryptionType(AZURE_VAULT)
+          .spec(AzureKeyVaultMetadataSpecDTO.builder().vaultNames(vaultNames).build())
           .build();
     }
     throw new UnsupportedOperationException(

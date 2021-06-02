@@ -1,8 +1,12 @@
 package software.wings.helpers.ext.helm.response;
 
-import io.harness.annotations.dev.Module;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
+import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.logging.CommandExecutionStatus;
 
 import java.util.List;
@@ -15,10 +19,11 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
+@OwnedBy(CDP)
 public class HelmInstallCommandResponse extends HelmCommandResponse {
   private List<ContainerInfo> containerInfoList;
-  private HelmChartInfo helmChartInfo;
+  private io.harness.delegate.task.helm.HelmChartInfo helmChartInfo;
 
   @Builder
   public HelmInstallCommandResponse(CommandExecutionStatus commandExecutionStatus, String output,

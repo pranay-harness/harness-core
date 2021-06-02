@@ -1,6 +1,7 @@
 package io.harness.serializer.kryo;
 
 import io.harness.ngpipeline.artifact.bean.DockerArtifactOutcome;
+import io.harness.ngpipeline.artifact.bean.EcrArtifactOutcome;
 import io.harness.ngpipeline.artifact.bean.GcrArtifactOutcome;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.status.BuildChecksUpdateParameter;
@@ -19,5 +20,6 @@ public class NGPipelineKryoRegistrar implements KryoRegistrar {
     kryo.register(BuildStatusUpdateParameter.class, 390004);
     kryo.register(BuildChecksUpdateParameter.class, 390005);
     kryo.register(GcrArtifactOutcome.class, 390006);
+    kryo.register(EcrArtifactOutcome.class, 390007);
   }
 }

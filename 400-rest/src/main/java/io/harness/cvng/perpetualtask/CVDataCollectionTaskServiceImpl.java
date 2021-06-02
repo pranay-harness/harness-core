@@ -1,17 +1,25 @@
 package io.harness.cvng.perpetualtask;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.CVDataCollectionInfo;
+import io.harness.cvng.beans.CVNGPerpetualTaskDTO;
+import io.harness.cvng.beans.CVNGPerpetualTaskState;
+import io.harness.cvng.beans.CVNGPerpetualTaskUnassignedReason;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.delegate.Capability;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
+import io.harness.exception.UnknownEnumTypeException;
 import io.harness.govern.Switch;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
@@ -19,9 +27,13 @@ import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.PerpetualTaskType;
+import io.harness.perpetualtask.PerpetualTaskUnassignedReason;
 import io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskParams;
 import io.harness.perpetualtask.datacollection.K8ActivityCollectionPerpetualTaskParams;
+import io.harness.perpetualtask.internal.PerpetualTaskRecord;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 
@@ -29,7 +41,6 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.delegatetasks.cvng.K8InfoDataService;
 import software.wings.service.intfc.cvng.CVNGDataCollectionDelegateService;
-import software.wings.service.intfc.security.NGSecretService;
 
 import com.google.inject.Inject;
 import com.google.protobuf.Any;
@@ -39,10 +50,11 @@ import java.util.ArrayList;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 
+@OwnedBy(CV)
 public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskService {
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private KryoSerializer kryoSerializer;
-  @Inject private NGSecretService ngSecretService;
+  @Inject private SecretManagerClientService ngSecretService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
 
   @Override
@@ -112,10 +124,11 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
       default:
         throw new IllegalStateException("Invalid type " + bundle.getDataCollectionType());
     }
-
-    PerpetualTaskExecutionBundle perpetualTaskExecutionBundle =
-        createPerpetualTaskExecutionBundle(perpetualTaskPack, bundle.fetchRequiredExecutionCapabilities(null));
-    return perpetualTaskExecutionBundle;
+    List<ExecutionCapability> executionCapabilities =
+        EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
+            encryptedDataDetailList, null);
+    executionCapabilities.addAll(bundle.fetchRequiredExecutionCapabilities(null));
+    return createPerpetualTaskExecutionBundle(perpetualTaskPack, executionCapabilities);
   }
 
   @NotNull
@@ -148,10 +161,12 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
       case KUBERNETES:
         KubernetesClusterConfigDTO kubernetesClusterConfigDTO =
             (KubernetesClusterConfigDTO) bundle.getConnectorDTO().getConnectorConfig();
-        return ngSecretService.getEncryptionDetails(basicNGAccessObject,
-            ((KubernetesClusterDetailsDTO) kubernetesClusterConfigDTO.getCredential().getConfig())
-                .getAuth()
-                .getCredentials());
+        KubernetesCredentialDTO credential = kubernetesClusterConfigDTO.getCredential();
+        if (!credential.getKubernetesCredentialType().isDecryptable()) {
+          return new ArrayList<>();
+        }
+        return ngSecretService.getEncryptionDetails(
+            basicNGAccessObject, ((KubernetesClusterDetailsDTO) credential.getConfig()).getAuth().getCredentials());
       default:
         Switch.unhandled(bundle.getDataCollectionType());
         throw new IllegalStateException("invalid type " + bundle.getDataCollectionType());
@@ -161,6 +176,53 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
   @Override
   public void delete(String accountId, String taskId) {
     perpetualTaskService.deleteTask(accountId, taskId);
+  }
+
+  @Override
+  public CVNGPerpetualTaskDTO getCVNGPerpetualTaskDTO(String taskId) {
+    PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(taskId);
+    return CVNGPerpetualTaskDTO.builder()
+        .delegateId(perpetualTaskRecord.getDelegateId())
+        .accountId(perpetualTaskRecord.getAccountId())
+        .cvngPerpetualTaskUnassignedReason(
+            mapUnassignedReasonFromPerpetualTaskToCVNG(perpetualTaskRecord.getUnassignedReason()))
+        .cvngPerpetualTaskState(mapStateFromPerpetualTaskToCVNG(perpetualTaskRecord.getState()))
+        .build();
+  }
+
+  private CVNGPerpetualTaskUnassignedReason mapUnassignedReasonFromPerpetualTaskToCVNG(
+      PerpetualTaskUnassignedReason perpetualTaskUnassignedReason) {
+    switch (perpetualTaskUnassignedReason) {
+      case NO_DELEGATE_AVAILABLE:
+        return CVNGPerpetualTaskUnassignedReason.NO_DELEGATE_AVAILABLE;
+      case NO_DELEGATE_INSTALLED:
+        return CVNGPerpetualTaskUnassignedReason.NO_DELEGATE_INSTALLED;
+      case NO_ELIGIBLE_DELEGATES:
+        return CVNGPerpetualTaskUnassignedReason.NO_ELIGIBLE_DELEGATES;
+      default:
+        throw new UnknownEnumTypeException("Task Unassigned Reason", String.valueOf(perpetualTaskUnassignedReason));
+    }
+  }
+
+  private CVNGPerpetualTaskState mapStateFromPerpetualTaskToCVNG(PerpetualTaskState perpetualTaskState) {
+    switch (perpetualTaskState) {
+      case TASK_ASSIGNED:
+        return CVNGPerpetualTaskState.TASK_ASSIGNED;
+      case TASK_UNASSIGNED:
+        return CVNGPerpetualTaskState.TASK_UNASSIGNED;
+      case TASK_PAUSED:
+        return CVNGPerpetualTaskState.TASK_PAUSED;
+      case TASK_TO_REBALANCE:
+        return CVNGPerpetualTaskState.TASK_TO_REBALANCE;
+      case NO_DELEGATE_INSTALLED:
+      case NO_DELEGATE_AVAILABLE:
+      case NO_ELIGIBLE_DELEGATES:
+      case TASK_RUN_SUCCEEDED:
+      case TASK_RUN_FAILED:
+        return null;
+      default:
+        throw new UnknownEnumTypeException("Perpetual task state", String.valueOf(perpetualTaskState));
+    }
   }
 
   @Override
@@ -208,5 +270,16 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
         SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
     return delegateProxyFactory.get(K8InfoDataService.class, syncTaskContext)
         .getWorkloads(namespace, bundle, encryptedDataDetails, filter);
+  }
+
+  @Override
+  public List<String> checkCapabilityToGetEvents(
+      String accountId, String orgIdentifier, String projectIdentifier, DataCollectionConnectorBundle bundle) {
+    List<EncryptedDataDetail> encryptedDataDetails =
+        getEncryptedDataDetail(accountId, orgIdentifier, projectIdentifier, bundle);
+    SyncTaskContext syncTaskContext =
+        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    return delegateProxyFactory.get(K8InfoDataService.class, syncTaskContext)
+        .checkCapabilityToGetEvents(bundle, encryptedDataDetails);
   }
 }

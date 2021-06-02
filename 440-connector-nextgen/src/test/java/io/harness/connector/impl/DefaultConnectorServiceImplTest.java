@@ -1,5 +1,6 @@
 package io.harness.connector.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.connector.ConnectivityStatus.SUCCESS;
 import static io.harness.delegate.beans.connector.ConnectorType.KUBERNETES_CLUSTER;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
@@ -10,12 +11,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
@@ -35,6 +38,7 @@ import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.exception.InvalidRequestException;
+import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.rule.Owner;
@@ -60,6 +64,7 @@ import org.springframework.data.domain.Page;
 import retrofit2.Call;
 import retrofit2.Response;
 
+@OwnedBy(DX)
 @Slf4j
 public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   @Mock KubernetesConnectionValidator kubernetesConnectionValidator;
@@ -67,6 +72,8 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   @Mock private Map<String, ConnectionValidator> connectionValidatorMap;
   @Mock EntitySetupUsageClient entitySetupUsageClient;
   @Mock SecretRefInputValidationHelper secretRefInputValidationHelper;
+  @Mock ConnectorEntityReferenceHelper connectorEntityReferenceHelper;
+  @Mock GitSyncSdkService gitSyncSdkService;
   @Inject @InjectMocks DefaultConnectorServiceImpl connectorService;
 
   String userName = "userName";
@@ -91,6 +98,7 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
     secretRefDataCACert = SecretRefData.builder().identifier(cacertIdentifier).scope(Scope.ACCOUNT).build();
     passwordSecretRef = SecretRefData.builder().identifier(passwordIdentifier).scope(Scope.ACCOUNT).build();
     doNothing().when(secretRefInputValidationHelper).validateTheSecretInput(any(), any());
+    doReturn(false).when(gitSyncSdkService).isGitSyncEnabled(anyString(), anyString(), anyString());
   }
 
   private ConnectorDTO createKubernetesConnectorRequestDTO(String connectorIdentifier, String name) {
@@ -215,7 +223,7 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
     createConnector(connectorIdentifier3, name + "3");
     ArgumentCaptor<Page> connectorsListArgumentCaptor = ArgumentCaptor.forClass(Page.class);
     Page<ConnectorResponseDTO> connectorSummaryDTOSList =
-        connectorService.list(0, 100, accountIdentifier, null, null, null, "", "", false);
+        connectorService.list(0, 100, accountIdentifier, null, null, null, "", "", false, false);
     assertThat(connectorSummaryDTOSList.getTotalElements()).isEqualTo(3);
     List<String> connectorIdentifierList =
         connectorSummaryDTOSList.stream()
@@ -351,5 +359,34 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
     boolean isIdentifierUnique =
         connectorService.validateTheIdentifierIsUnique(accountIdentifier, null, null, identifier);
     assertThat(isIdentifierUnique).isFalse();
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.ABHINAV)
+  @Category({UnitTests.class})
+  public void testListWithBranchesFlag() {
+    String connectorIdentifier1 = "connectorIdentifier1";
+    String connectorIdentifier2 = "connectorIdentifier2";
+    String connectorIdentifier3 = "connectorIdentifier3";
+    createConnector(connectorIdentifier1, name + "1");
+    createConnector(connectorIdentifier2, name + "2");
+    createConnector(connectorIdentifier3, name + "3");
+    doReturn(true).when(gitSyncSdkService).isGitSyncEnabled(anyString(), anyString(), anyString());
+    Page<ConnectorResponseDTO> connectorSummaryDTOSList =
+        connectorService.list(0, 100, accountIdentifier, null, null, null, "", "", false, true);
+    assertThat(connectorSummaryDTOSList.getTotalElements()).isEqualTo(3);
+    List<String> connectorIdentifierList =
+        connectorSummaryDTOSList.stream()
+            .map(connectorSummaryDTO -> connectorSummaryDTO.getConnector().getIdentifier())
+            .collect(Collectors.toList());
+    assertThat(connectorIdentifierList).contains(connectorIdentifier1);
+    assertThat(connectorIdentifierList).contains(connectorIdentifier2);
+    assertThat(connectorIdentifierList).contains(connectorIdentifier3);
+    Page<ConnectorResponseDTO> connectorSummaryDTOSList_1 =
+        connectorService.list(0, 2, accountIdentifier, null, null, null, "", "", false, true);
+    assertThat(connectorSummaryDTOSList_1.get().count()).isEqualTo(2L);
+    Page<ConnectorResponseDTO> connectorSummaryDTOSList_2 =
+        connectorService.list(1, 2, accountIdentifier, null, null, null, "", "", false, true);
+    assertThat(connectorSummaryDTOSList_2.get().count()).isEqualTo(1L);
   }
 }

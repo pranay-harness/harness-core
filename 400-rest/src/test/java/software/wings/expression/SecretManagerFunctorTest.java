@@ -8,6 +8,7 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -35,7 +36,6 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
 public class SecretManagerFunctorTest extends WingsBaseTest {
@@ -71,13 +71,12 @@ public class SecretManagerFunctorTest extends WingsBaseTest {
     when(secretManager.getEncryptionDetails(serviceVariable, APP_ID, WORKFLOW_EXECUTION_ID))
         .thenReturn(localEncryptedDetails);
 
-    Mockito
-        .doAnswer((Answer<Void>) invocation -> {
-          Object[] args = invocation.getArguments();
-          ServiceVariable serviceVariable1 = (ServiceVariable) args[0];
-          serviceVariable1.setValue("DecryptedValue".toCharArray());
-          return null;
-        })
+    doAnswer((Answer<Void>) invocation -> {
+      Object[] args = invocation.getArguments();
+      ServiceVariable serviceVariable1 = (ServiceVariable) args[0];
+      serviceVariable1.setValue("DecryptedValue".toCharArray());
+      return null;
+    })
         .when(managerDecryptionService)
         .decrypt(serviceVariable, localEncryptedDetails);
 

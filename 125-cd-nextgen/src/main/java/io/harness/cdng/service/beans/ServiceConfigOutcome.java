@@ -1,5 +1,9 @@
 package io.harness.cdng.service.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.pms.sdk.core.data.Outcome;
 
@@ -14,6 +18,8 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("serviceConfigOutcome")
 @JsonTypeName("serviceConfigOutcome")
+@OwnedBy(CDC)
+@ToBeDeleted
 public class ServiceConfigOutcome implements Outcome {
   ServiceOutcome service;
 
@@ -31,9 +37,4 @@ public class ServiceConfigOutcome implements Outcome {
   @Singular Map<String, ServiceOutcome.ManifestsWrapperOutcome> manifestOverrideSets;
 
   ServiceOutcome.StageOverridesOutcome stageOverrides;
-
-  @Override
-  public String getType() {
-    return "serviceConfigOutcome";
-  }
 }

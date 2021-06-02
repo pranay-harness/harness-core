@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.execution.utils.AmbianceUtils;
 
 import lombok.Builder;
 import lombok.Value;
@@ -19,6 +20,6 @@ public class ExecutionEngineDispatcher implements Runnable {
 
   @Override
   public void run() {
-    orchestrationEngine.startNodeExecution(ambiance);
+    orchestrationEngine.startNodeExecution(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
   }
 }

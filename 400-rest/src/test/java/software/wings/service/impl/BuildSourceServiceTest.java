@@ -1,7 +1,10 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.AGORODETKI;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.MILOS;
 
@@ -29,9 +32,10 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -42,6 +46,7 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.DockerConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Service;
@@ -59,6 +64,7 @@ import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.command.GcbTaskParams;
+import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.beans.template.artifactsource.CustomRepositoryMapping;
@@ -104,10 +110,13 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 
+@TargetModule(_930_DELEGATE_TASKS)
+@OwnedBy(CDC)
 public class BuildSourceServiceTest extends WingsBaseTest {
   public static final String DELEGATE_SELECTOR = "delegateSelector";
-  @Mock private SettingsService settingsService;
+  private final SettingsService settingsService = Mockito.mock(SettingsServiceImpl.class);
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock BambooBuildService bambooBuildService;
@@ -124,6 +133,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Mock AzureArtifactsBuildService azureArtifactsBuildService;
   @Mock ServiceResourceService serviceResourceService;
   @Mock DelegateServiceImpl delegateService;
+  @Mock DelegateTaskServiceClassicImpl delegateTaskServiceClassic;
   @Inject @InjectMocks private BuildSourceServiceImpl buildSourceService;
   @Mock DelegateProxyFactory delegateProxyFactory;
   @Mock ExpressionEvaluator evaluator;
@@ -1183,7 +1193,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
         SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).withValue(gcpConfig).build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(gcbService.getAllTriggers(any(), any())).thenReturn(triggers);
-    when(delegateService.executeTask(any(DelegateTask.class))).thenReturn(delegateResponse);
+    when(delegateTaskServiceClassic.executeTask(any(DelegateTask.class))).thenReturn(delegateResponse);
 
     List<String> actualTriggerNames = buildSourceService.getGcbTriggers(SETTING_ID);
     assertThat(actualTriggerNames).hasSize(1);
@@ -1207,78 +1217,19 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void testGetGroupIdsForMavenUsingPrivateApis() {
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(ACCOUNT_ID)
-                                            .withValue(NexusConfig.builder().version("3.x").build())
-                                            .build();
-    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
-    when(delegateProxyFactory.get(any(), any(SyncTaskContext.class))).thenReturn(nexusBuildService);
-    List<String> groupIds = new ArrayList<>();
-    groupIds.add("group1");
-    groupIds.add("group2");
-    when(featureFlagService.isEnabled(FeatureName.USE_NEXUS3_PRIVATE_APIS, ACCOUNT_ID)).thenReturn(true);
-    when(nexusBuildService.getGroupIdsUsingPrivateApis(anyString(), anyString(), any(), any())).thenReturn(groupIds);
-    Set<String> ids =
-        buildSourceService.getGroupIds(APP_ID, "harness-maven", SETTING_ID, RepositoryFormat.maven.name());
-    assertThat(ids).isNotEmpty();
-    assertThat(ids.size()).isEqualTo(2);
-    assertThat(ids).contains("group1", "group2");
-  }
-
-  @Test
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void testGetArtifactPathsUsingPrivateApis() {
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(ACCOUNT_ID)
-                                            .withValue(NexusConfig.builder().version("3.x").build())
-                                            .build();
-    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
-    when(featureFlagService.isEnabled(FeatureName.USE_NEXUS3_PRIVATE_APIS, ACCOUNT_ID)).thenReturn(true);
-    when(delegateProxyFactory.get(any(), any(SyncTaskContext.class))).thenReturn(nexusBuildService);
-    when(nexusBuildService.getArtifactPathsUsingPrivateApis(anyString(), anyString(), any(), anyList(), anyString()))
-        .thenReturn(asList("myartifact"));
-    Set<String> artifactPaths = buildSourceService.getArtifactPaths(APP_ID, "maven-releases", SETTING_ID, "mygroup",
-        ArtifactStreamType.NEXUS.name(), RepositoryFormat.maven.name());
-    assertThat(artifactPaths).isNotEmpty();
-    assertThat(artifactPaths.size()).isEqualTo(1);
-    assertThat(artifactPaths).contains("myartifact");
-  }
-
-  @Test
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void testFetchNexusPackageNamesUsingPrivateApis() {
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(ACCOUNT_ID)
-                                            .withValue(NexusConfig.builder().version("3.x").build())
-                                            .build();
-    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
-    when(delegateProxyFactory.get(any(), any(SyncTaskContext.class))).thenReturn(nexusBuildService);
-    List<String> groupIds = new ArrayList<>();
-    groupIds.add("group1");
-    groupIds.add("group2");
-    when(featureFlagService.isEnabled(FeatureName.USE_NEXUS3_PRIVATE_APIS, ACCOUNT_ID)).thenReturn(true);
-    when(nexusBuildService.getGroupIdsUsingPrivateApis(anyString(), anyString(), any(), any())).thenReturn(groupIds);
-    Set<String> packageNames =
-        buildSourceService.fetchNexusPackageNames(APP_ID, REPO_NAME, RepositoryFormat.npm.name(), SETTING_ID);
-    assertThat(packageNames).isNotEmpty();
-    assertThat(packageNames.size()).isEqualTo(2);
-    assertThat(packageNames).contains("group1", "group2");
-  }
-
-  @Test
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldAppendDelegateSelectorToSyncTaskContextWhenGcpConfigIsUseDelegate() {
-    when(settingsService.isSettingValueGcp(any())).thenReturn(true);
+    when(settingsService.isSettingValueGcp(any())).thenCallRealMethod();
+    when(settingsService.getDelegateSelectors(any())).thenCallRealMethod();
+    when(settingsService.hasDelegateSelectorProperty(any())).thenCallRealMethod();
     ArgumentCaptor<SyncTaskContext> syncTaskContextArgumentCaptor = ArgumentCaptor.forClass(SyncTaskContext.class);
     buildSourceService.getBuildService(
         SettingAttribute.Builder.aSettingAttribute()
-            .withValue(GcpConfig.builder().useDelegate(true).delegateSelector(DELEGATE_SELECTOR).build())
+            .withValue(GcpConfig.builder()
+                           .useDelegateSelectors(true)
+                           .delegateSelectors(Collections.singletonList(DELEGATE_SELECTOR))
+                           .build())
             .build());
     verify(delegateProxyFactory).get(any(), syncTaskContextArgumentCaptor.capture());
     assertThat(syncTaskContextArgumentCaptor.getValue().getTags()).contains(DELEGATE_SELECTOR);
@@ -1288,14 +1239,81 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldNotAppendDelegateSelectorToSyncTaskContextWhenGcpConfigIsNotUseDelegate() {
-    when(settingsService.isSettingValueGcp(any())).thenReturn(true);
+    when(settingsService.isSettingValueGcp(any())).thenCallRealMethod();
+    when(settingsService.getDelegateSelectors(any())).thenCallRealMethod();
     ArgumentCaptor<SyncTaskContext> syncTaskContextArgumentCaptor = ArgumentCaptor.forClass(SyncTaskContext.class);
     buildSourceService.getBuildService(
         SettingAttribute.Builder.aSettingAttribute()
-            .withValue(GcpConfig.builder().useDelegate(false).delegateSelector(DELEGATE_SELECTOR).build())
+            .withValue(GcpConfig.builder()
+                           .useDelegateSelectors(false)
+                           .delegateSelectors(Collections.singletonList(DELEGATE_SELECTOR))
+                           .build())
             .build());
     verify(delegateProxyFactory).get(any(), syncTaskContextArgumentCaptor.capture());
     assertThat(syncTaskContextArgumentCaptor.getValue().getTags()).isNull();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testDelegateSelectorForDockerConfig() {
+    when(settingsService.isSettingValueGcp(any())).thenCallRealMethod();
+    when(settingsService.hasDelegateSelectorProperty(any())).thenCallRealMethod();
+    when(settingsService.getDelegateSelectors(any())).thenCallRealMethod();
+    ArgumentCaptor<SyncTaskContext> syncTaskContextArgumentCaptor = ArgumentCaptor.forClass(SyncTaskContext.class);
+    buildSourceService.getBuildService(
+        SettingAttribute.Builder.aSettingAttribute()
+            .withValue(DockerConfig.builder()
+                           .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
+                           .delegateSelectors(Collections.singletonList(DELEGATE_SELECTOR))
+                           .build())
+            .build());
+    verify(delegateProxyFactory).get(any(), syncTaskContextArgumentCaptor.capture());
+    assertThat(syncTaskContextArgumentCaptor.getValue().getTags()).isNotEmpty();
+    assertThat(syncTaskContextArgumentCaptor.getValue().getTags())
+        .isEqualTo(Collections.singletonList(DELEGATE_SELECTOR));
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testDelegateSelectorForNexusConfig() {
+    when(settingsService.isSettingValueGcp(any())).thenCallRealMethod();
+    when(settingsService.hasDelegateSelectorProperty(any())).thenCallRealMethod();
+    when(settingsService.getDelegateSelectors(any())).thenCallRealMethod();
+    ArgumentCaptor<SyncTaskContext> syncTaskContextArgumentCaptor = ArgumentCaptor.forClass(SyncTaskContext.class);
+    buildSourceService.getBuildService(
+        SettingAttribute.Builder.aSettingAttribute()
+            .withValue(NexusConfig.builder()
+                           .nexusUrl("https://harness.nexus.com/")
+                           .delegateSelectors(Collections.singletonList(DELEGATE_SELECTOR))
+                           .build())
+            .build());
+    verify(delegateProxyFactory).get(any(), syncTaskContextArgumentCaptor.capture());
+    assertThat(syncTaskContextArgumentCaptor.getValue().getTags()).isNotEmpty();
+    assertThat(syncTaskContextArgumentCaptor.getValue().getTags())
+        .isEqualTo(Collections.singletonList(DELEGATE_SELECTOR));
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testDelegateSelectorForArtifactoryConfig() {
+    when(settingsService.isSettingValueGcp(any())).thenCallRealMethod();
+    when(settingsService.hasDelegateSelectorProperty(any())).thenCallRealMethod();
+    when(settingsService.getDelegateSelectors(any())).thenCallRealMethod();
+    ArgumentCaptor<SyncTaskContext> syncTaskContextArgumentCaptor = ArgumentCaptor.forClass(SyncTaskContext.class);
+    buildSourceService.getBuildService(
+        SettingAttribute.Builder.aSettingAttribute()
+            .withValue(ArtifactoryConfig.builder()
+                           .artifactoryUrl("https://harness.jfrog.com/")
+                           .delegateSelectors(Collections.singletonList(DELEGATE_SELECTOR))
+                           .build())
+            .build());
+    verify(delegateProxyFactory).get(any(), syncTaskContextArgumentCaptor.capture());
+    assertThat(syncTaskContextArgumentCaptor.getValue().getTags()).isNotEmpty();
+    assertThat(syncTaskContextArgumentCaptor.getValue().getTags())
+        .isEqualTo(Collections.singletonList(DELEGATE_SELECTOR));
   }
 
   @Test

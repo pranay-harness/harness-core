@@ -1,6 +1,9 @@
 package io.harness.ccm.billing.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -22,6 +25,7 @@ import org.mongodb.morphia.annotations.Id;
 @StoreIn("events")
 @Entity(value = "billingDataPipelineRecord", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "BillingDataPipelineRecordKeys")
+@OwnedBy(CE)
 public final class BillingDataPipelineRecord implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
   @Id private String uuid;
   long createdAt;
@@ -46,6 +50,7 @@ public final class BillingDataPipelineRecord implements PersistentEntity, UuidAw
   private String preAggregatedScheduledQueryStatus;
   private String awsFallbackTableScheduledQueryStatus;
   private Instant lastSuccessfulS3Sync;
+  private Instant lastSuccessfulStorageSync;
 
   private List<String> awsLinkedAccountsToExclude;
   private List<String> awsLinkedAccountsToInclude;

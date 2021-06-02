@@ -1,8 +1,10 @@
 package software.wings.graphql.datafetcher.pipeline;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -30,7 +32,8 @@ import org.mongodb.morphia.query.Query;
  */
 @Singleton
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class PipelineQueryHelper {
   @Inject protected DataFetcherUtils utils;
   @Inject protected TagHelper tagHelper;
@@ -64,6 +67,9 @@ public class PipelineQueryHelper {
           case APPLICATION:
             query.field("appId").in(entityIds);
             break;
+          case PIPELINE:
+            query.field("_id").in(entityIds);
+            break;
           default:
             log.error("EntityType {} not supported in query", pipelineTagFilter.getEntityType());
             throw new InvalidRequestException("Error while compiling query", WingsException.USER);
@@ -76,6 +82,8 @@ public class PipelineQueryHelper {
     switch (entityType) {
       case APPLICATION:
         return EntityType.APPLICATION;
+      case PIPELINE:
+        return EntityType.PIPELINE;
       default:
         log.error("Unsupported entity type {} for tag ", entityType);
         throw new InvalidRequestException("Unsupported entity type " + entityType);

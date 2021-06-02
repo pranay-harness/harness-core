@@ -5,7 +5,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.EmailSendingFailedAlert;
@@ -17,7 +17,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class EmailNotificationCallBack implements NotifyCallback {
+public class EmailNotificationCallBack implements OldNotifyCallback {
   @Inject private AlertService alertService;
 
   @Override

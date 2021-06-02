@@ -1,9 +1,12 @@
 package software.wings.cloudprovider.aws;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.PRAKHAR;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -21,21 +24,26 @@ import static com.amazonaws.regions.Regions.US_EAST_1;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.concurent.HTimeLimiterMocker;
 import io.harness.container.ContainerInfo;
 import io.harness.ecs.EcsContainerDetails;
 import io.harness.eraro.ErrorCode;
@@ -43,6 +51,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.TimeoutException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
 
 import software.wings.WingsBaseTest;
@@ -77,11 +86,13 @@ import com.amazonaws.services.ecs.model.DescribeTasksResult;
 import com.amazonaws.services.ecs.model.LaunchType;
 import com.amazonaws.services.ecs.model.ListServicesRequest;
 import com.amazonaws.services.ecs.model.ListServicesResult;
+import com.amazonaws.services.ecs.model.ListTasksResult;
 import com.amazonaws.services.ecs.model.NetworkInterface;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.ecs.model.Task;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
+import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
@@ -102,6 +113,8 @@ import org.mockito.Mock;
 /**
  * Created by anubhaw on 1/3/17.
  */
+@OwnedBy(CDP)
+@TargetModule(_930_DELEGATE_TASKS)
 public class EcsContainerServiceImplTest extends WingsBaseTest {
   @Mock private AwsHelperService awsHelperService;
   @Mock private TimeLimiter timeLimiter;
@@ -209,7 +222,7 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
     when(awsHelperService.describeTasks(anyString(), any(AwsConfig.class), any(), any(), anyBoolean()))
         .thenReturn(new DescribeTasksResult());
     ecsContainerService.provisionTasks(US_EAST_1.getName(), connectorConfig, Collections.emptyList(), CLUSTER_NAME,
-        SERVICE_NAME, 0, DESIRED_COUNT, 10, new ExecutionLogCallback());
+        SERVICE_NAME, 0, DESIRED_COUNT, 10, new ExecutionLogCallback(), false);
     verify(awsHelperService)
         .updateService(US_EAST_1.getName(), awsConfig, Collections.emptyList(),
             new UpdateServiceRequest()
@@ -260,32 +273,113 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
   @Owner(developers = ARVIND)
   @Category(UnitTests.class)
   public void testWaitForTasksToBeInRunningStateButDontThrowException() throws Exception {
-    doReturn(null).when(timeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter).thenReturn(null);
     UpdateServiceCountRequestData requestData = mock(UpdateServiceCountRequestData.class);
-    ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData);
+    ecsContainerService.waitForTasksToBeInRunningStateWithHandledExceptions(requestData);
 
-    doThrow(new TimeoutException(null, "timeout", null))
-        .when(timeLimiter)
-        .callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter).thenThrow(new TimeoutException(null, "timeout", null));
     assertThatExceptionOfType(TimeoutException.class)
-        .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData));
+        .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateWithHandledExceptions(requestData));
 
-    doThrow(new InvalidRequestException("timeout"))
-        .when(timeLimiter)
-        .callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter).thenThrow(new InvalidRequestException("timeout"));
     assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData));
+        .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateWithHandledExceptions(requestData));
 
-    doThrow(new WingsException(ErrorCode.DEFAULT_ERROR_CODE))
-        .when(timeLimiter)
-        .callWithTimeout(any(), anyLong(), any(), anyBoolean());
-    ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData);
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter).thenThrow(new WingsException(ErrorCode.DEFAULT_ERROR_CODE));
 
-    doThrow(new WingsException(ErrorCode.INIT_TIMEOUT))
-        .when(timeLimiter)
-        .callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    ecsContainerService.waitForTasksToBeInRunningStateWithHandledExceptions(requestData);
+
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter).thenThrow(new WingsException(ErrorCode.INIT_TIMEOUT));
     assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData));
+        .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateWithHandledExceptions(requestData));
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testProvisionTasks() throws Exception {
+    ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
+    String region = "REGION";
+    ArrayList<EncryptedDataDetail> encryptionDetails = new ArrayList<>();
+
+    doReturn(new ListTasksResult().withTaskArns("T1", "T2", "T3", "T4", "T5"))
+        .when(awsHelperService)
+        .listTasks(eq(region), eq(awsConfig), any(), any(), anyBoolean());
+    Service service = new Service().withServiceName(SERVICE_NAME).withDesiredCount(5).withRunningCount(5);
+    Service updatedService = new Service().withServiceName(SERVICE_NAME).withDesiredCount(15).withRunningCount(6);
+
+    doReturn(new DescribeServicesResult().withServices(Lists.newArrayList(service)))
+        .when(awsHelperService)
+        .describeServices(region, awsConfig, encryptionDetails,
+            new DescribeServicesRequest().withCluster(CLUSTER_NAME).withServices(SERVICE_NAME));
+
+    doReturn(new UpdateServiceResult().withService(updatedService))
+        .when(awsHelperService)
+        .updateService(eq(region), eq(awsConfig), eq(encryptionDetails), any());
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter).thenReturn(null);
+    when(awsHelperService.describeTasks(anyString(), any(AwsConfig.class), any(), any(), anyBoolean()))
+        .thenReturn(new DescribeTasksResult());
+    ecsContainerService.provisionTasks(
+        region, connectorConfig, encryptionDetails, CLUSTER_NAME, SERVICE_NAME, 5, 15, 10 * 1000, logCallback, false);
+
+    verify(awsHelperService).describeTasks(anyString(), any(AwsConfig.class), any(), any(), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter).thenThrow(TimeoutException.class);
+    assertThatThrownBy(()
+                           -> ecsContainerService.provisionTasks(region, connectorConfig, encryptionDetails,
+                               CLUSTER_NAME, SERVICE_NAME, 5, 15, 10 * 1000, logCallback, false))
+        .isInstanceOf(TimeoutException.class);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testProvisionTasks_Retry() throws Exception {
+    ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
+    String region = "REGION";
+    ArrayList<EncryptedDataDetail> encryptionDetails = new ArrayList<>();
+
+    doReturn(new ListTasksResult().withTaskArns("T1", "T2", "T3", "T4", "T5"))
+        .when(awsHelperService)
+        .listTasks(eq(region), eq(awsConfig), any(), any(), anyBoolean());
+    Service service = new Service().withServiceName(SERVICE_NAME).withDesiredCount(5).withRunningCount(4);
+    Service updatedService = new Service().withServiceName(SERVICE_NAME).withDesiredCount(5).withRunningCount(4);
+
+    doReturn(new DescribeServicesResult().withServices(Lists.newArrayList(service)))
+        .when(awsHelperService)
+        .describeServices(region, awsConfig, encryptionDetails,
+            new DescribeServicesRequest().withCluster(CLUSTER_NAME).withServices(SERVICE_NAME));
+
+    doReturn(new UpdateServiceResult().withService(updatedService))
+        .when(awsHelperService)
+        .updateService(eq(region), eq(awsConfig), eq(encryptionDetails), any());
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter).thenReturn(null);
+    when(awsHelperService.describeTasks(anyString(), any(AwsConfig.class), any(), any(), anyBoolean()))
+        .thenReturn(new DescribeTasksResult());
+    ecsContainerService.provisionTasks(
+        region, connectorConfig, encryptionDetails, CLUSTER_NAME, SERVICE_NAME, 5, 5, 10 * 1000, logCallback, true);
+
+    // logic to check if exception is being thrown
+    verify(awsHelperService).describeTasks(anyString(), any(AwsConfig.class), any(), any(), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter).thenThrow(TimeoutException.class);
+    assertThatThrownBy(()
+                           -> ecsContainerService.provisionTasks(region, connectorConfig, encryptionDetails,
+                               CLUSTER_NAME, SERVICE_NAME, 5, 5, 10 * 1000, logCallback, true))
+        .isInstanceOf(TimeoutException.class);
+    verify(awsHelperService, times(1)).describeTasks(anyString(), any(AwsConfig.class), any(), any(), anyBoolean());
+    verify(awsHelperService, times(2)).updateService(eq(region), eq(awsConfig), eq(encryptionDetails), any());
+
+    // logic to check desired == running == 5 and deployment.size() = 1, shouldn't retry
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter).thenReturn(null);
+    service.withDeployments(new Deployment()).setRunningCount(5);
+    ecsContainerService.provisionTasks(
+        region, connectorConfig, encryptionDetails, CLUSTER_NAME, SERVICE_NAME, 5, 5, 10 * 1000, logCallback, true);
+    verify(awsHelperService, times(2)).updateService(eq(region), eq(awsConfig), eq(encryptionDetails), any());
+
+    // logic to check desired == running == 5 and deployment.size() = 0, should retry
+    service.setDeployments(null);
+    ecsContainerService.provisionTasks(
+        region, connectorConfig, encryptionDetails, CLUSTER_NAME, SERVICE_NAME, 5, 5, 10 * 1000, logCallback, true);
+    verify(awsHelperService, times(3)).updateService(eq(region), eq(awsConfig), eq(encryptionDetails), any());
   }
 
   @Test
@@ -637,6 +731,29 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
     assertThat(containerInfo.getIp()).isEqualTo("1.0.0.1");
     assertThat(containerInfo.getContainerId()).isEqualTo("123456789abc");
     assertThat(containerInfo.getEc2Instance()).isEqualTo(ec2Instance);
+  }
+
+  @Test
+  @Owner(developers = PRAKHAR)
+  @Category(UnitTests.class)
+  public void testWaitForServiceToReachStableState() {
+    ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
+    String region = "REGION";
+    int serviceSteadyStateTimeout = 10;
+    ArrayList<EncryptedDataDetail> encryptionDetails = new ArrayList<>();
+
+    doNothing().when(logCallback).saveExecutionLog(anyString(), any());
+    doNothing().when(logCallback).saveExecutionLog(anyString(), any());
+    doNothing()
+        .when(awsHelperService)
+        .waitTillECSServiceIsStable(anyString(), anyObject(), anyList(), anyObject(), anyInt(), anyObject());
+
+    ecsContainerService.waitForServiceToReachStableState(
+        region, awsConfig, encryptionDetails, CLUSTER_NAME, SERVICE_NAME, logCallback, serviceSteadyStateTimeout);
+
+    verify(awsHelperService, times(1))
+        .waitTillECSServiceIsStable(eq(region), eq(awsConfig), eq(encryptionDetails),
+            any(DescribeServicesRequest.class), eq(serviceSteadyStateTimeout), eq(logCallback));
   }
 
   private Task generateTask(Container container, Container containerSideCar, String containerInstanceArn) {

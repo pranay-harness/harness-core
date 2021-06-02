@@ -1,92 +1,94 @@
 package io.harness.pms.yaml;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.expression.EngineExpressionEvaluator;
-import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.expression.OrchestrationFieldProcessor;
-import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.expression.ProcessorResult;
 import io.harness.pms.yaml.validation.InputSetValidator;
 import io.harness.pms.yaml.validation.InputSetValidatorFactory;
 import io.harness.pms.yaml.validation.RuntimeValidator;
 import io.harness.pms.yaml.validation.RuntimeValidatorResponse;
 
-import com.google.inject.Inject;
+import org.bson.Document;
 
-public class ParameterFieldProcessor implements OrchestrationFieldProcessor<ParameterField<?>> {
-  private final PmsEngineExpressionService pmsEngineExpressionService;
+@OwnedBy(HarnessTeam.PIPELINE)
+public class ParameterFieldProcessor {
+  private final EngineExpressionEvaluator engineExpressionEvaluator;
+  private final boolean skipUnresolvedExpressionsCheck;
   private final InputSetValidatorFactory inputSetValidatorFactory;
 
-  @Inject
-  public ParameterFieldProcessor(
-      PmsEngineExpressionService pmsEngineExpressionService, InputSetValidatorFactory inputSetValidatorFactory) {
-    this.pmsEngineExpressionService = pmsEngineExpressionService;
+  public ParameterFieldProcessor(EngineExpressionEvaluator engineExpressionEvaluator,
+      boolean skipUnresolvedExpressionsCheck, InputSetValidatorFactory inputSetValidatorFactory) {
+    this.engineExpressionEvaluator = engineExpressionEvaluator;
+    this.skipUnresolvedExpressionsCheck = skipUnresolvedExpressionsCheck;
     this.inputSetValidatorFactory = inputSetValidatorFactory;
   }
 
-  @Override
-  public ProcessorResult process(Ambiance ambiance, ParameterField<?> field) {
+  public ProcessorResult process(ParameterDocumentField field) {
+    if (field == null || field.isSkipAutoEvaluation()) {
+      return ProcessorResult.builder().build();
+    }
+
     Object newValue;
-    boolean updated = true;
     InputSetValidator inputSetValidator = field.getInputSetValidator();
     if (field.isExpression()) {
       if (field.isTypeString()) {
-        newValue = pmsEngineExpressionService.renderExpression(ambiance, field.getExpressionValue());
+        newValue =
+            engineExpressionEvaluator.renderExpression(field.getExpressionValue(), skipUnresolvedExpressionsCheck);
       } else {
-        newValue = pmsEngineExpressionService.evaluateExpression(ambiance, field.getExpressionValue());
+        newValue = engineExpressionEvaluator.evaluateExpression(field.getExpressionValue());
       }
 
       if (newValue instanceof String && EngineExpressionEvaluator.hasVariables((String) newValue)) {
         String newExpression = (String) newValue;
-
-        if (field.isTypeString()) {
-          field.updateWithValue(newValue);
-          return validateUsingValidator(newValue, inputSetValidator, ambiance);
-        }
-
         if (newExpression.equals(field.getExpressionValue())) {
-          return ProcessorResult.builder().status(ProcessorResult.Status.UNCHANGED).build();
+          return ProcessorResult.builder().build();
         }
 
         field.updateWithExpression(newExpression);
-        return validateUsingValidator(newValue, inputSetValidator, ambiance);
+        return validateUsingValidator(newValue, inputSetValidator);
       }
 
       field.updateWithValue(newValue);
-    } else {
-      updated = false;
-      newValue = field.getValue();
     }
 
-    if (newValue != null) {
-      Object finalValue = pmsEngineExpressionService.resolve(ambiance, newValue);
+    if (field.getValueDoc() == null) {
+      return ProcessorResult.builder().build();
+    }
+
+    Document doc = field.getValueDoc();
+    Object valueField = doc.get(ParameterFieldValueWrapper.VALUE_FIELD);
+    if (valueField != null) {
+      Object finalValue = engineExpressionEvaluator.resolve(valueField, skipUnresolvedExpressionsCheck);
       if (finalValue != null) {
         field.updateWithValue(finalValue);
-        ProcessorResult processorResult = validateUsingValidator(newValue, inputSetValidator, ambiance);
-        if (processorResult.getStatus() == ProcessorResult.Status.ERROR) {
+        ProcessorResult processorResult = validateUsingValidator(finalValue, inputSetValidator);
+        if (processorResult.isError()) {
           return processorResult;
         }
-        updated = true;
       }
     }
 
-    return ProcessorResult.builder()
-        .status(updated ? ProcessorResult.Status.CHANGED : ProcessorResult.Status.UNCHANGED)
-        .build();
+    return ProcessorResult.builder().build();
   }
 
-  private ProcessorResult validateUsingValidator(Object value, InputSetValidator inputSetValidator, Ambiance ambiance) {
-    if (inputSetValidator != null) {
-      RuntimeValidator runtimeValidator =
-          inputSetValidatorFactory.obtainValidator(inputSetValidator, pmsEngineExpressionService, ambiance);
-      RuntimeValidatorResponse validatorResponse =
-          runtimeValidator.isValidValue(value, inputSetValidator.getParameters());
-      if (!validatorResponse.isValid()) {
-        return ProcessorResult.builder()
-            .status(ProcessorResult.Status.ERROR)
-            .message(validatorResponse.getErrorMessage())
-            .build();
-      }
+  private ProcessorResult validateUsingValidator(Object value, InputSetValidator inputSetValidator) {
+    if (inputSetValidator == null) {
+      return ProcessorResult.builder().build();
     }
-    return ProcessorResult.builder().status(ProcessorResult.Status.CHANGED).build();
+
+    RuntimeValidator runtimeValidator = inputSetValidatorFactory.obtainValidator(
+        inputSetValidator, engineExpressionEvaluator, skipUnresolvedExpressionsCheck);
+    RuntimeValidatorResponse validatorResponse =
+        runtimeValidator.isValidValue(value, inputSetValidator.getParameters());
+    if (!validatorResponse.isValid()) {
+      return ProcessorResult.builder()
+          .error(true)
+          .expression(String.format(
+              "<+input>.%s(%s)", inputSetValidator.getValidatorType().getYamlName(), inputSetValidator.getParameters()))
+          .message(validatorResponse.getErrorMessage())
+          .build();
+    }
+    return ProcessorResult.builder().build();
   }
 }

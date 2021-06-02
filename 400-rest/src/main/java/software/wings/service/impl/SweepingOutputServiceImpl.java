@@ -1,17 +1,19 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static java.lang.String.format;
 
+import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceKeys;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.sdk.core.data.SweepingOutput;
+import io.harness.serializer.KryoSerializer;
 
 import software.wings.api.InstanceElement;
 import software.wings.api.instancedetails.InstanceInfoVariables;
@@ -43,10 +45,14 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Slf4j
 public class SweepingOutputServiceImpl implements SweepingOutputService {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Override
   public SweepingOutputInstance save(SweepingOutputInstance sweepingOutputInstance) {
     try {
+      if (sweepingOutputInstance.getValue() != null && isEmpty(sweepingOutputInstance.getValueOutput())) {
+        sweepingOutputInstance.setValueOutput(kryoSerializer.asBytes(sweepingOutputInstance.getValue()));
+      }
       wingsPersistence.save(sweepingOutputInstance);
       return sweepingOutputInstance;
     } catch (DuplicateKeyException exception) {
@@ -120,6 +126,9 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
     if (sweepingOutputInstance == null) {
       return null;
     }
+    if (!isEmpty(sweepingOutputInstance.getValueOutput())) {
+      return (T) kryoSerializer.asObject(sweepingOutputInstance.getValueOutput());
+    }
     return (T) sweepingOutputInstance.getValue();
   }
 
@@ -130,8 +139,13 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
     if (sweepingOutputInstances == null) {
       return null;
     }
-    return (List<T>) sweepingOutputInstances.stream()
-        .map(SweepingOutputInstance::getValue)
+    return sweepingOutputInstances.stream()
+        .map(soi -> {
+          if (!isEmpty(soi.getValueOutput())) {
+            return (T) kryoSerializer.asObject(soi.getValueOutput());
+          }
+          return (T) soi.getValue();
+        })
         .collect(Collectors.toList());
   }
 
@@ -208,7 +222,12 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
             .filter(SweepingOutputInstanceKeys.name, sweepingOutputInquiry.getName());
 
     addFilters(sweepingOutputInquiry, query);
-    return query.get();
+    SweepingOutputInstance instance = query.get();
+    if (instance != null && !isEmpty(instance.getValueOutput())) {
+      instance.setValue((SweepingOutput) kryoSerializer.asObject(instance.getValueOutput()));
+      return instance;
+    }
+    return instance;
   }
 
   @Override

@@ -2,6 +2,7 @@ package io.harness.delegate.task.shell;
 
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.shell.ExecuteCommandResponse;
 
@@ -17,4 +18,5 @@ public class ShellScriptTaskResponseNG implements DelegateTaskNotifyResponseData
   ExecuteCommandResponse executeCommandResponse;
   CommandExecutionStatus status;
   String errorMessage;
+  UnitProgressData unitProgressData;
 }

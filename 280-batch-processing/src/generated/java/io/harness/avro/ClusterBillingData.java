@@ -23,11 +23,9 @@ public class ClusterBillingData
 
   private static SpecificData MODEL$ = new SpecificData();
 
-  private static final BinaryMessageEncoder<ClusterBillingData> ENCODER =
-      new BinaryMessageEncoder<ClusterBillingData>(MODEL$, SCHEMA$);
+  private static final BinaryMessageEncoder<ClusterBillingData> ENCODER = new BinaryMessageEncoder<>(MODEL$, SCHEMA$);
 
-  private static final BinaryMessageDecoder<ClusterBillingData> DECODER =
-      new BinaryMessageDecoder<ClusterBillingData>(MODEL$, SCHEMA$);
+  private static final BinaryMessageDecoder<ClusterBillingData> DECODER = new BinaryMessageDecoder<>(MODEL$, SCHEMA$);
 
   /**
    * Return the BinaryMessageEncoder instance used by this class.

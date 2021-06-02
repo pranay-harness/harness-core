@@ -3,7 +3,9 @@ package software.wings.beans.config;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
@@ -28,8 +30,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.annotations.Transient;
 
 /**
  * Created by srinivas on 3/30/17.
@@ -40,6 +42,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Builder
 @ToString(exclude = {"password"})
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class NexusConfig extends SettingValue implements EncryptableSetting, ArtifactSourceable {
   @Attributes(title = "Nexus URL", required = true) @NotEmpty private String nexusUrl;
 
@@ -50,11 +53,10 @@ public class NexusConfig extends SettingValue implements EncryptableSetting, Art
   @Attributes(title = "Username") private String username;
 
   @Attributes(title = "Password") @Encrypted(fieldName = "password") private char[] password;
+  private List<String> delegateSelectors;
   @SchemaIgnore @NotEmpty private String accountId;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
-
-  @SchemaIgnore @Transient private boolean useCredentialsWithAuth;
   /**
    * Instantiates a new Nexus config.
    */
@@ -66,8 +68,8 @@ public class NexusConfig extends SettingValue implements EncryptableSetting, Art
     return isNotEmpty(username);
   }
 
-  public NexusConfig(String nexusUrl, String version, String username, char[] password, String accountId,
-      String encryptedPassword, boolean useCredentialsWithAuth) {
+  public NexusConfig(String nexusUrl, String version, String username, char[] password, List<String> delegateSelectors,
+      String accountId, String encryptedPassword) {
     this();
     this.nexusUrl = nexusUrl;
     this.username = username;
@@ -75,7 +77,7 @@ public class NexusConfig extends SettingValue implements EncryptableSetting, Art
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
     this.version = version;
-    this.useCredentialsWithAuth = useCredentialsWithAuth;
+    this.delegateSelectors = delegateSelectors;
   }
 
   @Override
@@ -99,16 +101,29 @@ public class NexusConfig extends SettingValue implements EncryptableSetting, Art
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(nexusUrl, maskingEvaluator));
   }
 
+  @Override
+  public boolean shouldDeleteArtifact(SettingValue prev) {
+    if (!(prev instanceof NexusConfig)) {
+      return true;
+    }
+    NexusConfig prevConfig = (NexusConfig) prev;
+    return !StringUtils.equals(prevConfig.getVersion(), version)
+        || !StringUtils.equals(prevConfig.getNexusUrl(), nexusUrl);
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends ArtifactServerYaml {
     private String version;
+    private List<String> delegateSelectors;
+
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String username, String password, String version,
-        UsageRestrictions.Yaml usageRestrictions) {
+        UsageRestrictions.Yaml usageRestrictions, List<String> delegateSelectors) {
       super(type, harnessApiVersion, url, username, password, usageRestrictions);
       this.version = version;
+      this.delegateSelectors = delegateSelectors;
     }
   }
 }

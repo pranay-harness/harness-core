@@ -37,7 +37,9 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -47,7 +49,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.globalcontex.EntityOperationIdentifier;
-import io.harness.globalcontex.EntityOperationIdentifier.entityOperation;
+import io.harness.globalcontex.EntityOperationIdentifier.EntityOperation;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.queue.QueuePublisher;
@@ -131,13 +133,11 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
-/**
- * Created by anubhaw on 4/1/16.
- */
 @OwnedBy(CDC)
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class EnvironmentServiceImpl implements EnvironmentService, DataProvider {
   @Inject private WingsPersistence wingsPersistence;
   // DO NOT DELETE THIS, PRUNE logic needs it
@@ -311,7 +311,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         .entityId(savedEnvironment.getUuid())
         .entityName(savedEnvironment.getName())
         .entityType(EntityType.ENVIRONMENT.name())
-        .operation(entityOperation.CREATE)
+        .operation(EntityOperation.CREATE)
         .build();
   }
 

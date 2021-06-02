@@ -15,10 +15,16 @@ import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.dto.converter.OrchestrationGraphDTOConverter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.event.GraphStatusUpdateHelper;
+import io.harness.event.PlanExecutionStatusUpdateEventHandler;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.generator.OrchestrationAdjacencyListGenerator;
+import io.harness.iterator.PersistenceIteratorFactory;
+import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.sdk.core.events.OrchestrationEventLog;
+import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
 import io.harness.service.GraphGenerationService;
 import io.harness.skip.service.VertexSkipperService;
 
@@ -29,15 +35,61 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
-@OwnedBy(HarnessTeam.CDC)
+@OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
+@Slf4j
 public class GraphGenerationServiceImpl implements GraphGenerationService {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private SpringMongoStore mongoStore;
   @Inject private OrchestrationAdjacencyListGenerator orchestrationAdjacencyListGenerator;
   @Inject private VertexSkipperService vertexSkipperService;
+  @Inject private OrchestrationEventLogRepository orchestrationEventLogRepository;
+  @Inject private MongoTemplate mongoTemplate;
+  @Inject private GraphStatusUpdateHelper graphStatusUpdateHelper;
+  @Inject private PlanExecutionStatusUpdateEventHandler planExecutionStatusUpdateEventHandler;
+  @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
+
+  @Override
+  public void updateGraph(String planExecutionId) {
+    long startTs = System.currentTimeMillis();
+    OrchestrationGraph orchestrationGraph = getCachedOrchestrationGraph(planExecutionId);
+    if (orchestrationGraph == null) {
+      log.warn("Orchestration Graph not yet generated. Passing on to next iteration");
+      return;
+    }
+
+    long lastUpdatedAt = orchestrationGraph.getLastUpdatedAt();
+    List<OrchestrationEventLog> unprocessedEventLogs =
+        orchestrationEventLogRepository.findUnprocessedEvents(planExecutionId, lastUpdatedAt);
+    if (!unprocessedEventLogs.isEmpty()) {
+      log.info("Found [{}] unprocessed events", unprocessedEventLogs.size());
+      for (OrchestrationEventLog orchestrationEventLog : unprocessedEventLogs) {
+        // Todo: Remove the event in next release
+        OrchestrationEventType orchestrationEventType = orchestrationEventLog.getEvent() != null
+            ? orchestrationEventLog.getEvent().getEventType()
+            : orchestrationEventLog.getOrchestrationEventType();
+        if (orchestrationEventType == OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE) {
+          orchestrationGraph = planExecutionStatusUpdateEventHandler.handleEvent(planExecutionId, orchestrationGraph);
+        } else {
+          String nodeExecutionId = orchestrationEventLog.getEvent() != null
+              ? orchestrationEventLog.getEvent().getNodeExecutionProto().getUuid()
+              : orchestrationEventLog.getNodeExecutionId();
+          orchestrationGraph = graphStatusUpdateHelper.handleEvent(
+              planExecutionId, nodeExecutionId, orchestrationEventType, orchestrationGraph);
+        }
+        lastUpdatedAt = orchestrationEventLog.getCreatedAt();
+      }
+    }
+    orchestrationEventLogRepository.updateTtlForProcessedEvents(unprocessedEventLogs);
+    orchestrationGraph.setLastUpdatedAt(lastUpdatedAt);
+    cacheOrchestrationGraph(orchestrationGraph);
+    log.info("Processing of [{}] orchestration event logs completed in [{}ms]", unprocessedEventLogs.size(),
+        System.currentTimeMillis() - startTs);
+  }
 
   @Override
   public OrchestrationGraph getCachedOrchestrationGraph(String planExecutionId) {
@@ -118,9 +170,10 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
     if (orchestrationGraph == null) {
       orchestrationGraph = buildOrchestrationGraph(planExecutionId);
     }
-    return generatePartialGraph(
-        obtainStartingIdFromSetupNodeId(orchestrationGraph.getAdjacencyList().getGraphVertexMap(), startingSetupNodeId),
-        orchestrationGraph);
+
+    String startingNodeId =
+        obtainStartingIdFromSetupNodeId(orchestrationGraph.getAdjacencyList().getGraphVertexMap(), startingSetupNodeId);
+    return generatePartialGraph(startingNodeId, orchestrationGraph);
   }
 
   @Override
@@ -130,9 +183,12 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
     if (orchestrationGraph == null) {
       orchestrationGraph = buildOrchestrationGraph(planExecutionId);
     }
-    return generatePartialGraph(
-        obtainStartingIdFromIdentifier(orchestrationGraph.getAdjacencyList().getGraphVertexMap(), identifier),
-        orchestrationGraph);
+    String startingId =
+        obtainStartingIdFromIdentifier(orchestrationGraph.getAdjacencyList().getGraphVertexMap(), identifier);
+    if (startingId == null) {
+      return null;
+    }
+    return generatePartialGraph(startingId, orchestrationGraph);
   }
 
   public OrchestrationGraph buildOrchestrationGraph(String planExecutionId) {
@@ -179,22 +235,19 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   }
 
   private String obtainStartingIdFromSetupNodeId(Map<String, GraphVertex> graphVertexMap, String startingSetupNodeId) {
-    return graphVertexMap.values()
-        .stream()
-        .filter(vertex -> vertex.getPlanNodeId().equals(startingSetupNodeId))
-        .collect(Collectors.collectingAndThen(Collectors.toList(),
-            list -> {
-              if (list.isEmpty()) {
-                throw new InvalidRequestException("No nodes found for setupNodeId [" + startingSetupNodeId + "]");
-              }
-              if (list.size() > 1) {
-                throw new InvalidRequestException("Repeated setupNodeIds are not supported. Check the plan for ["
-                    + startingSetupNodeId + "] planNodeId");
-              }
+    List<GraphVertex> vertexList = graphVertexMap.values()
+                                       .stream()
+                                       .filter(vertex -> vertex.getPlanNodeId().equals(startingSetupNodeId))
+                                       .collect(Collectors.toList());
 
-              return list.get(0);
-            }))
-        .getUuid();
+    if (vertexList.size() == 0) {
+      return null;
+    } else if (vertexList.size() == 1) {
+      return vertexList.get(0).getUuid();
+    } else {
+      throw new InvalidRequestException(
+          "Repeated setupNodeIds are not supported. Check the plan for [" + startingSetupNodeId + "] planNodeId");
+    }
   }
 
   private String obtainStartingIdFromIdentifier(Map<String, GraphVertex> graphVertexMap, String identifier) {

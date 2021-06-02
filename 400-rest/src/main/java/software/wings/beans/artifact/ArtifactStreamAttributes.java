@@ -2,7 +2,9 @@ package software.wings.beans.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -22,11 +24,14 @@ import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @Data
 @Builder(toBuilder = true)
-@ToString(exclude = {"serverSetting", "artifactServerEncryptedDataDetails"})
+@ToString(exclude = {"serverSetting", "artifactServerEncryptedDataDetails", "enhancedGcrConnectivityCheckEnabled"})
+@Slf4j
 public class ArtifactStreamAttributes implements ExecutionCapabilityDemander {
   private String jobName;
   private String imageName;
@@ -77,20 +82,31 @@ public class ArtifactStreamAttributes implements ExecutionCapabilityDemander {
   private String azureResourceGroup;
   private String azureImageDefinition;
   private boolean dockerBasedDeployment;
-  private boolean supportForNexusGroupReposEnabled;
   // These fields are used only during artifact collection and cleanup.
   private boolean isCollection;
   private Set<String> savedBuildDetailsKeys;
+  private boolean enhancedGcrConnectivityCheckEnabled;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
     if (registryHostName != null) {
+      String urlToValidate = getUrlToValidate();
       executionCapabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-          "https://" + registryHostName + (registryHostName.endsWith("/") ? "" : "/"), maskingEvaluator));
+          urlToValidate, maskingEvaluator));
+      log.info(
+          "ARTIFACT_STREAM_HTTP_CAPABILITY - Http connectivity for {} registry host is going to be validated against URL: {}",
+          registryHostName, urlToValidate);
     }
     executionCapabilities.addAll(EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
         artifactServerEncryptedDataDetails, maskingEvaluator));
     return executionCapabilities;
+  }
+
+  private String getUrlToValidate() {
+    if (enhancedGcrConnectivityCheckEnabled && registryHostName.endsWith("gcr.io")) {
+      return String.format("https://%s/v2/%s/tags/list", registryHostName, imageName);
+    }
+    return "https://" + registryHostName + (registryHostName.endsWith("/") ? "" : "/");
   }
 }

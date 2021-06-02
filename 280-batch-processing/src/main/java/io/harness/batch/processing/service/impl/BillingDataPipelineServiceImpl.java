@@ -68,6 +68,8 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
   private static final String DEST_TABLE_NAME_CONST = "destination_table_name_template";
   private static final String QUERY_CONST = "query";
   private static final String WRITE_DISPOSITION_CONST = "write_disposition";
+  private static final String PARTITIONING_CONST = "partitioning_field";
+  private static final String PARTITIONING_VALUE = "usage_start_time";
   private static final String TEMP_DEST_TABLE_NAME_VALUE = "awsCurTable_{run_time|\"%Y_%m\"}";
   private static final String PREV_MONTH_TEMP_DEST_TABLE_NAME_VALUE = "awsCurTable_{run_time-480h|\"%Y_%m\"}";
   private static final String DEST_TABLE_NAME_VALUE = "awscur_{run_time|\"%Y_%m\"}";
@@ -262,6 +264,7 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
                 Struct.newBuilder()
                     .putFields(QUERY_CONST, Value.newBuilder().setStringValue(query).build())
                     .putFields(WRITE_DISPOSITION_CONST, Value.newBuilder().setStringValue(WRITE_TRUNCATE_VALUE).build())
+                    .putFields(PARTITIONING_CONST, Value.newBuilder().setStringValue(PARTITIONING_VALUE).build())
                     .putFields(
                         DEST_TABLE_NAME_CONST, Value.newBuilder().setStringValue(GCP_DEST_TABLE_NAME_VALUE).build())
                     .build())
@@ -282,8 +285,7 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
   public String createScheduledQueriesForGCP(String scheduledQueryName, String dstDataSetId) throws IOException {
     if (mainConfig.getBillingDataPipelineConfig().isGcpUseNewPipeline()) {
       log.info("Using new pipeline. Not creating preaggregated scheduled query for GCP");
-      final String s = "";
-      return s;
+      return "";
     }
     log.info("Using old pipeline. creating preaggregated scheduled query for GCP");
     String gcpProjectId = mainConfig.getBillingDataPipelineConfig().getGcpProjectId();

@@ -152,7 +152,7 @@ public class TestUtils {
     try {
       TimeUnit.SECONDS.sleep(sleepTimeInSeconds);
     } catch (InterruptedException e) {
-      e.printStackTrace();
+      log.error("", e);
     }
   }
 }

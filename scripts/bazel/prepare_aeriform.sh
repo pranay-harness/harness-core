@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
-bazel build //... `bazel query 'attr(tags, "aeriform", //...:*)'`
+set -e
 
-bazel build //tools/rust/aeriform
+scripts/bazel/aeriform.sh prepare
+bazel build `bazel query 'attr(tags, "aeriform", //...:*)'`

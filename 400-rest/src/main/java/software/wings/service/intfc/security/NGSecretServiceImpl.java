@@ -1,9 +1,8 @@
 package software.wings.service.intfc.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
+import static io.harness.delegate.beans.FileBucket.CONFIGS;
 import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
@@ -17,7 +16,8 @@ import static io.harness.security.encryption.EncryptionType.VAULT;
 
 import static software.wings.service.intfc.security.NGSecretManagerService.isReadOnlySecretManager;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.EncryptedData;
@@ -47,6 +47,7 @@ import io.harness.security.encryption.EncryptionType;
 
 import software.wings.dl.WingsPersistence;
 import software.wings.resources.secretsmanagement.EncryptedDataMapper;
+import software.wings.service.impl.security.GlobalEncryptDecryptClient;
 import software.wings.service.intfc.FileService;
 import software.wings.settings.SettingVariableTypes;
 
@@ -63,12 +64,15 @@ import java.util.Optional;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 
+@OwnedBy(PL)
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
-@TargetModule(Module._950_NG_CORE)
+@Slf4j
+@TargetModule(HarnessModule._950_NG_CORE)
 public class NGSecretServiceImpl implements NGSecretService {
   static final Set<EncryptionType> ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD = EnumSet.of(LOCAL, GCP_KMS, KMS);
   private static final String ACCOUNT_IDENTIFIER_KEY =
@@ -86,17 +90,21 @@ public class NGSecretServiceImpl implements NGSecretService {
   private final WingsPersistence wingsPersistence;
   private final FileService fileService;
   private final SecretManagerConfigService secretManagerConfigService;
+  private final GlobalEncryptDecryptClient globalEncryptDecryptClient;
+  private final LocalSecretManagerService localSecretManagerService;
 
   private EncryptedData encrypt(
       @NotNull EncryptedData encryptedData, String secretValue, SecretManagerConfig secretManagerConfig) {
     EncryptedRecord encryptedRecord;
     switch (encryptedData.getEncryptionType()) {
       case VAULT:
+      case AZURE_VAULT:
         VaultEncryptor vaultEncryptor = vaultRegistry.getVaultEncryptor(secretManagerConfig.getEncryptionType());
         encryptedRecord = vaultEncryptor.createSecret(
             encryptedData.getAccountId(), encryptedData.getName(), secretValue, secretManagerConfig);
         break;
       case GCP_KMS:
+      case KMS:
       case LOCAL:
         encryptedRecord = kmsRegistry.getKmsEncryptor(secretManagerConfig)
                               .encryptSecret(encryptedData.getAccountId(), secretValue, secretManagerConfig);
@@ -186,14 +194,11 @@ public class NGSecretServiceImpl implements NGSecretService {
 
   @Override
   public PageResponse<EncryptedData> listSecrets(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, List<String> identifiers, SettingVariableTypes type, String page, String size) {
+      String projectIdentifier, SettingVariableTypes type, String page, String size) {
     PageRequest<EncryptedData> pageRequest = new PageRequest<>();
     pageRequest.addFilter(ACCOUNT_IDENTIFIER_KEY, EQ, accountIdentifier);
     pageRequest.addFilter(ORG_IDENTIFIER_KEY, EQ, orgIdentifier);
     pageRequest.addFilter(PROJECT_IDENTIFIER_KEY, EQ, projectIdentifier);
-    if (isNotEmpty(identifiers)) {
-      pageRequest.addFilter(IDENTIFIER_KEY, IN, identifiers);
-    }
     if (Optional.ofNullable(type).isPresent()) {
       pageRequest.addFilter(EncryptedDataKeys.type, EQ, type);
     }
@@ -309,6 +314,7 @@ public class NGSecretServiceImpl implements NGSecretService {
           switch (secretManagerConfigOptional.get().getEncryptionType()) {
             case LOCAL:
             case GCP_KMS:
+            case KMS:
               fileService.deleteFile(String.valueOf(encryptedData.getEncryptedValue()), CONFIGS);
               break;
             default:
@@ -325,11 +331,13 @@ public class NGSecretServiceImpl implements NGSecretService {
       String accountIdentifier, EncryptedData encryptedData, SecretManagerConfig secretManagerConfig) {
     switch (secretManagerConfig.getEncryptionType()) {
       case VAULT:
+      case AZURE_VAULT:
         vaultRegistry.getVaultEncryptor(secretManagerConfig.getEncryptionType())
             .deleteSecret(accountIdentifier, encryptedData, secretManagerConfig);
         return;
       case LOCAL:
       case GCP_KMS:
+      case KMS:
         return;
       default:
         throw new UnsupportedOperationException(
@@ -406,7 +414,20 @@ public class NGSecretServiceImpl implements NGSecretService {
 
               // decrypt secret fields of secret manager
               secretManagerConfigService.decryptEncryptionConfigSecrets(accountIdentifier, encryptionConfig, false);
-              EncryptedRecordData encryptedRecordData = SecretManager.buildRecordData(encryptedData);
+              EncryptedRecordData encryptedRecordData;
+              if (encryptionConfig.isGlobalKms()) {
+                encryptedRecordData = globalEncryptDecryptClient.convertEncryptedRecordToLocallyEncrypted(
+                    encryptedData, accountIdentifier, encryptionConfig);
+                if (LOCAL.equals(encryptedRecordData.getEncryptionType())) {
+                  encryptionConfig = localSecretManagerService.getEncryptionConfig(accountIdentifier);
+                } else {
+                  log.error("Failed to decrypt secret {} with global {} secret manager", encryptedData.getUuid(),
+                      encryptionConfig.getEncryptionType());
+                  continue;
+                }
+              } else {
+                encryptedRecordData = SecretManager.buildRecordData(encryptedData);
+              }
               encryptedDataDetails.add(EncryptedDataDetail.builder()
                                            .encryptedData(encryptedRecordData)
                                            .encryptionConfig(encryptionConfig)

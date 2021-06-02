@@ -27,7 +27,7 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureContainerRegistryClient;
 import io.harness.azure.client.AzureMonitorClient;
@@ -70,7 +70,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import rx.Completable;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureAppServiceDeploymentServiceTest extends WingsBaseTest {
   private static final String SLOT_NAME = "slotName";
   private static final String TARGET_SLOT_NAME = "targetSlotName";

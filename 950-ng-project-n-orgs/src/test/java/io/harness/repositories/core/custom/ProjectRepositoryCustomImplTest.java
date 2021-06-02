@@ -77,8 +77,8 @@ public class ProjectRepositoryCustomImplTest extends CategoryTest {
 
     when(mongoTemplate.findAndModify(any(), any(), eq(Project.class))).thenReturn(null);
 
-    Boolean deleted = projectRepository.delete(accountIdentifier, orgIdentifier, identifier, version);
-
+    Project deletedProject = projectRepository.delete(accountIdentifier, orgIdentifier, identifier, version);
+    Boolean deleted = deletedProject != null;
     verify(mongoTemplate, times(1))
         .findAndModify(queryArgumentCaptor.capture(), updateArgumentCaptor.capture(), eq(Project.class));
     Query query = queryArgumentCaptor.getValue();
@@ -109,8 +109,9 @@ public class ProjectRepositoryCustomImplTest extends CategoryTest {
 
     when(mongoTemplate.findAndModify(any(), any(), eq(Project.class))).thenReturn(null);
 
-    boolean deleted = projectRepository.restore(accountIdentifier, orgIdentifier, identifier);
+    Project restoredProject = projectRepository.restore(accountIdentifier, orgIdentifier, identifier);
 
+    boolean deleted = restoredProject != null;
     verify(mongoTemplate, times(1))
         .findAndModify(queryArgumentCaptor.capture(), updateArgumentCaptor.capture(), eq(Project.class));
     Query query = queryArgumentCaptor.getValue();

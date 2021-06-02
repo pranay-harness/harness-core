@@ -17,7 +17,7 @@ public final class CIConstants {
   public static final long POD_MAX_TTL_SECS = 86400L; // 1 day
   public static final String POD_PENDING_PHASE = "Pending";
   public static final String POD_RUNNING_PHASE = "Running";
-  public static final int POD_MAX_WAIT_UNTIL_READY_SECS = 5 * 60; // 5 minutes
+  public static final int POD_MAX_WAIT_UNTIL_READY_SECS = 8 * 60; // 8 minutes
   public static final int POD_WAIT_UNTIL_READY_SLEEP_SECS = 2; // Time to sleep in between pod status checks
 
   public static final String SECRET_VOLUME_NAME = "secrets";
@@ -25,6 +25,11 @@ public final class CIConstants {
   public static final String DEFAULT_SECRET_MOUNT_PATH = "/etc/secrets/";
 
   public static final String PLUGIN_DOCKER_IMAGE_NAME = "plugins/docker";
+  public static final String PLUGIN_ECR_IMAGE_NAME = "plugins/ecr";
+  public static final String PLUGIN_ACR_IMAGE_NAME = "plugins/acr";
+  public static final String PLUGIN_GCR_IMAGE_NAME = "plugins/gcr";
+  public static final String PLUGIN_HEROKU_IMAGE_NAME = "plugins/heroku";
+
   public static final String DOCKER_IMAGE_NAME = "docker";
   public static final String DIND_TAG_REGEX = "(.*)dind(.*)";
 }

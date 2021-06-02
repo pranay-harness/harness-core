@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.anomaly.AnomalyDataStub;
 import io.harness.ccm.anomaly.dao.AnomalyEntityDao;
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
 import io.harness.ccm.anomaly.service.impl.AnomalyServiceImpl;

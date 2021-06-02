@@ -1,5 +1,8 @@
 package io.harness.serializer;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.NGPipelineKryoRegistrar;
 import io.harness.serializer.morphia.NGPipelineMorphiaRegistrar;
@@ -10,6 +13,7 @@ import lombok.experimental.UtilityClass;
 import org.springframework.core.convert.converter.Converter;
 
 @UtilityClass
+@OwnedBy(PL)
 public class NGPipelineRegistrars {
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
@@ -17,12 +21,13 @@ public class NGPipelineRegistrars {
           .addAll(ConnectorBeansRegistrars.kryoRegistrars)
           .addAll(ProjectAndOrgRegistrars.kryoRegistrars)
           .addAll(NGCoreClientRegistrars.kryoRegistrars)
-          .addAll(OrchestrationVisualizationModuleRegistrars.kryoRegistrars)
+          .addAll(RbacCoreRegistrars.kryoRegistrars)
           .addAll(YamlBeansModuleRegistrars.kryoRegistrars)
-          .addAll(OrchestrationStepsModuleRegistrars.kryoRegistrars)
           .addAll(CommonEntitiesRegistrars.kryoRegistrars)
           .addAll(DelegateServiceBeansRegistrars.kryoRegistrars)
           .add(NGPipelineKryoRegistrar.class)
+          .addAll(WaitEngineRegistrars.kryoRegistrars)
+          .addAll(PmsCommonsModuleRegistrars.kryoRegistrars)
           .build();
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -30,15 +35,16 @@ public class NGPipelineRegistrars {
           .addAll(DelegateTasksBeansRegistrars.morphiaRegistrars)
           .addAll(ProjectAndOrgRegistrars.morphiaRegistrars)
           .addAll(NGCoreClientRegistrars.morphiaRegistrars)
-          .addAll(OrchestrationVisualizationModuleRegistrars.morphiaRegistrars)
+          .addAll(RbacCoreRegistrars.morphiaRegistrars)
+          .addAll(DelegateServiceBeansRegistrars.morphiaRegistrars)
           .addAll(YamlBeansModuleRegistrars.morphiaRegistrars)
-          .addAll(OrchestrationStepsModuleRegistrars.morphiaRegistrars)
+          .addAll(WaitEngineRegistrars.morphiaRegistrars)
+          .addAll(PmsCommonsModuleRegistrars.morphiaRegistrars)
           .add(NGPipelineMorphiaRegistrar.class)
+          .add(PmsSdkCoreMorphiaRegistrar.class)
+          .addAll(FeatureFlagBeansRegistrars.morphiaRegistrars)
           .build();
 
   public static ImmutableList<? extends Class<? extends Converter<?, ?>>> springConverters =
-      ImmutableList.<Class<? extends Converter<?, ?>>>builder()
-          .addAll(OrchestrationRegistrars.springConverters)
-          .addAll(OrchestrationStepsModuleRegistrars.springConverters)
-          .build();
+      ImmutableList.<Class<? extends Converter<?, ?>>>builder().build();
 }

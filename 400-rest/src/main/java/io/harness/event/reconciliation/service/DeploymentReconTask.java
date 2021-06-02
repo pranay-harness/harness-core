@@ -5,7 +5,7 @@ import io.harness.event.reconciliation.deployment.ReconciliationStatus;
 import io.harness.event.timeseries.processor.DeploymentEventProcessor;
 import io.harness.ff.FeatureFlagService;
 import io.harness.lock.AcquiredLock;
-import io.harness.scheduler.BackgroundSchedulerLocker;
+import io.harness.lock.PersistentLocker;
 
 import software.wings.beans.Account;
 import software.wings.service.intfc.AccountService;
@@ -24,7 +24,7 @@ public class DeploymentReconTask implements Runnable {
   @Inject AccountService accountService;
   @Inject DeploymentEventProcessor deploymentEventProcessor;
   @Inject private FeatureFlagService featureFlagService;
-  @Inject private BackgroundSchedulerLocker persistentLocker;
+  @Inject private PersistentLocker persistentLocker;
 
   private static final Integer DATA_MIGRATION_INTERVAL_IN_HOURS = 24;
   // On safe side, cron cycle is around 15 minutes, so lock expiry set to 16 min
@@ -58,9 +58,9 @@ public class DeploymentReconTask implements Runnable {
                 account.getUuid(), account.getAccountName(), new Date(durationStartTs), new Date(durationEndTs), e);
           }
 
-          try (AcquiredLock lock = persistentLocker.getLocker().tryToAcquireLock(Account.class,
-                   DATA_MIGRATION_CRON_LOCK_PREFIX + account.getUuid(),
-                   Duration.ofSeconds(DATA_MIGRATION_CRON_LOCK_EXPIRY_IN_SECONDS))) {
+          try (AcquiredLock lock =
+                   persistentLocker.tryToAcquireLock(Account.class, DATA_MIGRATION_CRON_LOCK_PREFIX + account.getUuid(),
+                       Duration.ofSeconds(DATA_MIGRATION_CRON_LOCK_EXPIRY_IN_SECONDS))) {
             if (lock == null) {
               log.error(
                   "Unable to fetch lock for running deployment data migration for account : {}", account.getUuid());

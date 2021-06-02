@@ -1,7 +1,9 @@
 package io.harness.limits.checker.rate;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.limits.Action;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.lib.RateLimitChecker;
@@ -26,6 +28,7 @@ import org.mongodb.morphia.query.UpdateOperations;
  *
  * See <pre>MongoRateLimitCheckerIntegrationTest</pre> for expected behaviour.
  */
+@OwnedBy(PL)
 public class MongoSlidingWindowRateLimitChecker implements RateLimitChecker, RateLimitVicinityChecker {
   @Getter private final RateLimit limit;
   private final WingsPersistence persistence;

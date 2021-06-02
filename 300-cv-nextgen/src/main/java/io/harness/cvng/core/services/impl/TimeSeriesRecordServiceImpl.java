@@ -9,6 +9,8 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static java.util.Comparator.comparingLong;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO.MetricData;
@@ -54,6 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
 
+@OwnedBy(HarnessTeam.CV)
 @Slf4j
 public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
   @Inject private HPersistence hPersistence;
@@ -210,7 +213,7 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
         if (throughput == null) {
           metricValue.getTimeSeriesValues().forEach(
               errorMetricValue -> errorMetricValue.setPercent(errorMetricValue.getValue()));
-          return;
+          continue;
         }
 
         for (TimeSeriesDataRecordGroupValue throughputValue : throughput.getTimeSeriesValues()) {

@@ -1,5 +1,6 @@
 package io.harness.delegate.event.handler;
 
+import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.beans.FeatureName.TRIGGER_PROFILE_SCRIPT_EXECUTION_WF;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.event.handler.DelegateProfileEventHandler.MUST_EXECUTE_ON_DELEGATE_VAR_NAME;
@@ -20,6 +21,7 @@ import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateProfile;
+import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -27,11 +29,16 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Workflow;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.WorkflowExecutionService;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -42,6 +49,7 @@ import org.mockito.Mock;
 public class DelegateProfileEventHandlerTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private DelegateService delegateService;
   @InjectMocks @Inject private DelegateProfileEventHandler delegateProfileEventHandler;
   @Inject private HPersistence persistence;
 
@@ -70,7 +78,7 @@ public class DelegateProfileEventHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
-  public void testOnProfileAppliedShouldNotExecuteTheLogic() {
+  public void testOnProfileAppliedShouldNotExecuteScriptLogic() {
     String accountId = generateUuid();
     createWorkflow(accountId);
 
@@ -79,6 +87,111 @@ public class DelegateProfileEventHandlerTest extends WingsBaseTest {
     delegateProfileEventHandler.onProfileApplied("accountId", "delegateId", "profileId");
 
     verify(workflowExecutionService, never()).triggerOrchestrationExecution(any(), any(), any(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testOnProfileAppliedShouldNotExecuteCapabilitiesLogic() {
+    String accountId = generateUuid();
+
+    when(featureFlagService.isEnabled(TRIGGER_PROFILE_SCRIPT_EXECUTION_WF, accountId)).thenReturn(false);
+    when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)).thenReturn(false);
+
+    delegateProfileEventHandler.onProfileApplied("accountId", "delegateId", "profileId");
+
+    verify(workflowExecutionService, never()).triggerOrchestrationExecution(any(), any(), any(), any(), any());
+    verify(delegateService, never()).regenerateCapabilityPermissions(any(), any());
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testOnProfileAppliedShouldExecuteCapabilitiesLogic() {
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+
+    when(featureFlagService.isEnabled(TRIGGER_PROFILE_SCRIPT_EXECUTION_WF, accountId)).thenReturn(false);
+    when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)).thenReturn(true);
+
+    delegateProfileEventHandler.onProfileApplied(accountId, delegateId, "profileId");
+
+    verify(workflowExecutionService, never()).triggerOrchestrationExecution(any(), any(), any(), any(), any());
+    verify(delegateService).regenerateCapabilityPermissions(eq(accountId), eq(delegateId));
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testOnProfileSelectorsUpdatedShouldNotExecuteCapabilitiesLogic() {
+    String accountId = generateUuid();
+    String profileId = generateUuid();
+
+    when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)).thenReturn(false);
+
+    delegateProfileEventHandler.onProfileSelectorsUpdated(accountId, profileId);
+
+    verify(delegateService, never()).regenerateCapabilityPermissions(any(), any());
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testOnProfileSelectorsUpdatedShouldExecuteCapabilitiesLogic() {
+    String accountId = generateUuid();
+    String profileId = generateUuid();
+
+    Delegate delegate1 =
+        Delegate.builder().uuid(generateUuid()).accountId(accountId).delegateProfileId(profileId).build();
+    Delegate delegate2 =
+        Delegate.builder().uuid(generateUuid()).accountId(accountId).delegateProfileId(profileId).build();
+
+    persistence.save(delegate1);
+    persistence.save(delegate2);
+
+    when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)).thenReturn(true);
+
+    delegateProfileEventHandler.onProfileSelectorsUpdated(accountId, profileId);
+
+    verify(delegateService).regenerateCapabilityPermissions(eq(accountId), eq(delegate1.getUuid()));
+    verify(delegateService).regenerateCapabilityPermissions(eq(accountId), eq(delegate2.getUuid()));
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testOnProfileScopesUpdatedShouldNotExecuteCapabilitiesLogic() {
+    String accountId = generateUuid();
+    String profileId = generateUuid();
+
+    when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)).thenReturn(false);
+
+    delegateProfileEventHandler.onProfileScopesUpdated(accountId, profileId);
+
+    verify(delegateService, never()).regenerateCapabilityPermissions(any(), any());
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testOonProfileScopesUpdatedShouldExecuteCapabilitiesLogic() {
+    String accountId = generateUuid();
+    String profileId = generateUuid();
+
+    Delegate delegate1 =
+        Delegate.builder().uuid(generateUuid()).accountId(accountId).delegateProfileId(profileId).build();
+    Delegate delegate2 =
+        Delegate.builder().uuid(generateUuid()).accountId(accountId).delegateProfileId(profileId).build();
+
+    persistence.save(delegate1);
+    persistence.save(delegate2);
+
+    when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)).thenReturn(true);
+
+    delegateProfileEventHandler.onProfileScopesUpdated(accountId, profileId);
+
+    verify(delegateService).regenerateCapabilityPermissions(eq(accountId), eq(delegate1.getUuid()));
+    verify(delegateService).regenerateCapabilityPermissions(eq(accountId), eq(delegate2.getUuid()));
   }
 
   @Test
@@ -204,6 +317,7 @@ public class DelegateProfileEventHandlerTest extends WingsBaseTest {
     Workflow workflow = createWorkflow(accountId);
 
     when(featureFlagService.isEnabled(TRIGGER_PROFILE_SCRIPT_EXECUTION_WF, accountId)).thenReturn(true);
+    when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)).thenReturn(false);
 
     Delegate delegate1 =
         Delegate.builder().uuid(generateUuid()).accountId(accountId).delegateProfileId(updatedProfileId).build();
@@ -242,5 +356,154 @@ public class DelegateProfileEventHandlerTest extends WingsBaseTest {
             .build();
 
     assertThat(delegateIds).containsExactlyInAnyOrder(delegate1.getUuid(), delegate2.getUuid());
+
+    verify(delegateService, never()).regenerateCapabilityPermissions(any(), any());
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testOnProfileUpdatedShouldNotTriggerCapabilitiesLogic() {
+    String accountId = generateUuid();
+
+    when(featureFlagService.isEnabled(TRIGGER_PROFILE_SCRIPT_EXECUTION_WF, accountId)).thenReturn(false);
+    when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)).thenReturn(true);
+
+    // Test empty selectors
+    DelegateProfile originalProfile = DelegateProfile.builder().accountId(accountId).build();
+    DelegateProfile updatedProfile = DelegateProfile.builder().accountId(accountId).build();
+    delegateProfileEventHandler.onProfileUpdated(originalProfile, updatedProfile);
+
+    // Test selectors present but not changed. Test empty scopes
+    originalProfile = DelegateProfile.builder().accountId(accountId).selectors(Arrays.asList("foo")).build();
+    updatedProfile = DelegateProfile.builder().accountId(accountId).selectors(Arrays.asList("foo")).build();
+    delegateProfileEventHandler.onProfileUpdated(originalProfile, updatedProfile);
+
+    Map<String, Set<String>> scopingEntities = new HashMap<>();
+    scopingEntities.put("key", Collections.singleton("value"));
+
+    // Test scopes present, but not changed
+    originalProfile =
+        DelegateProfile.builder()
+            .accountId(accountId)
+            .selectors(Arrays.asList("foo"))
+            .scopingRules(Arrays.asList(
+                DelegateProfileScopingRule.builder().description("rule1").scopingEntities(scopingEntities).build()))
+            .build();
+    updatedProfile =
+        DelegateProfile.builder()
+            .accountId(accountId)
+            .selectors(Arrays.asList("foo"))
+            .scopingRules(Arrays.asList(
+                DelegateProfileScopingRule.builder().description("rule1").scopingEntities(scopingEntities).build()))
+            .build();
+    delegateProfileEventHandler.onProfileUpdated(originalProfile, updatedProfile);
+
+    verify(delegateService, never()).regenerateCapabilityPermissions(any(), any());
+    verify(workflowExecutionService, never()).triggerOrchestrationExecution(any(), any(), any(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testOnProfileUpdatedShouldTriggerCapabilitiesLogic() {
+    String accountId = generateUuid();
+    String profileId = generateUuid();
+
+    Delegate delegate1 =
+        Delegate.builder().uuid(generateUuid()).accountId(accountId).delegateProfileId(profileId).build();
+    Delegate delegate2 =
+        Delegate.builder().uuid(generateUuid()).accountId(accountId).delegateProfileId(profileId).build();
+
+    persistence.save(delegate1);
+    persistence.save(delegate2);
+
+    when(featureFlagService.isEnabled(TRIGGER_PROFILE_SCRIPT_EXECUTION_WF, accountId)).thenReturn(false);
+    when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)).thenReturn(true);
+
+    // Test original selectors empty
+    DelegateProfile originalProfile = DelegateProfile.builder().uuid(profileId).accountId(accountId).build();
+    DelegateProfile updatedProfile =
+        DelegateProfile.builder().uuid(profileId).accountId(accountId).selectors(Arrays.asList("foo")).build();
+    delegateProfileEventHandler.onProfileUpdated(originalProfile, updatedProfile);
+    verify(delegateService).regenerateCapabilityPermissions(eq(accountId), eq(delegate1.getUuid()));
+    verify(delegateService).regenerateCapabilityPermissions(eq(accountId), eq(delegate2.getUuid()));
+
+    // Test updated selectors empty
+    originalProfile =
+        DelegateProfile.builder().uuid(profileId).accountId(accountId).selectors(Arrays.asList("foo")).build();
+    updatedProfile = DelegateProfile.builder().uuid(profileId).accountId(accountId).build();
+    delegateProfileEventHandler.onProfileUpdated(originalProfile, updatedProfile);
+    verify(delegateService, times(2)).regenerateCapabilityPermissions(eq(accountId), eq(delegate1.getUuid()));
+    verify(delegateService, times(2)).regenerateCapabilityPermissions(eq(accountId), eq(delegate2.getUuid()));
+
+    // Test selectors present and changed
+    originalProfile =
+        DelegateProfile.builder().uuid(profileId).accountId(accountId).selectors(Arrays.asList("foo")).build();
+    updatedProfile =
+        DelegateProfile.builder().uuid(profileId).accountId(accountId).selectors(Arrays.asList("foo", "bar")).build();
+    delegateProfileEventHandler.onProfileUpdated(originalProfile, updatedProfile);
+    verify(delegateService, times(3)).regenerateCapabilityPermissions(eq(accountId), eq(delegate1.getUuid()));
+    verify(delegateService, times(3)).regenerateCapabilityPermissions(eq(accountId), eq(delegate2.getUuid()));
+
+    Map<String, Set<String>> scopingEntities = new HashMap<>();
+    scopingEntities.put("key", Collections.singleton("value"));
+
+    Map<String, Set<String>> updatedScopingEntities = new HashMap<>();
+    updatedScopingEntities.put("key2", Collections.singleton("value2"));
+
+    // Test original scopes empty
+    originalProfile =
+        DelegateProfile.builder().uuid(profileId).accountId(accountId).selectors(Arrays.asList("foo")).build();
+    updatedProfile =
+        DelegateProfile.builder()
+            .uuid(profileId)
+            .accountId(accountId)
+            .selectors(Arrays.asList("foo"))
+            .scopingRules(Arrays.asList(
+                DelegateProfileScopingRule.builder().description("rule1").scopingEntities(scopingEntities).build()))
+            .build();
+    delegateProfileEventHandler.onProfileUpdated(originalProfile, updatedProfile);
+    verify(delegateService, times(4)).regenerateCapabilityPermissions(eq(accountId), eq(delegate1.getUuid()));
+    verify(delegateService, times(4)).regenerateCapabilityPermissions(eq(accountId), eq(delegate2.getUuid()));
+
+    // Test updated scopes empty
+    originalProfile =
+        DelegateProfile.builder()
+            .uuid(profileId)
+            .accountId(accountId)
+            .selectors(Arrays.asList("foo"))
+            .scopingRules(Arrays.asList(
+                DelegateProfileScopingRule.builder().description("rule1").scopingEntities(scopingEntities).build()))
+            .build();
+    updatedProfile =
+        DelegateProfile.builder().uuid(profileId).accountId(accountId).selectors(Arrays.asList("foo")).build();
+    delegateProfileEventHandler.onProfileUpdated(originalProfile, updatedProfile);
+    verify(delegateService, times(5)).regenerateCapabilityPermissions(eq(accountId), eq(delegate1.getUuid()));
+    verify(delegateService, times(5)).regenerateCapabilityPermissions(eq(accountId), eq(delegate2.getUuid()));
+
+    // Test scopes present and changed
+    originalProfile =
+        DelegateProfile.builder()
+            .uuid(profileId)
+            .accountId(accountId)
+            .selectors(Arrays.asList("foo"))
+            .scopingRules(Arrays.asList(
+                DelegateProfileScopingRule.builder().description("rule1").scopingEntities(scopingEntities).build()))
+            .build();
+    updatedProfile = DelegateProfile.builder()
+                         .uuid(profileId)
+                         .accountId(accountId)
+                         .selectors(Arrays.asList("foo"))
+                         .scopingRules(Arrays.asList(DelegateProfileScopingRule.builder()
+                                                         .description("rule2")
+                                                         .scopingEntities(updatedScopingEntities)
+                                                         .build()))
+                         .build();
+    delegateProfileEventHandler.onProfileUpdated(originalProfile, updatedProfile);
+    verify(delegateService, times(6)).regenerateCapabilityPermissions(eq(accountId), eq(delegate1.getUuid()));
+    verify(delegateService, times(6)).regenerateCapabilityPermissions(eq(accountId), eq(delegate2.getUuid()));
+
+    verify(workflowExecutionService, never()).triggerOrchestrationExecution(any(), any(), any(), any(), any());
   }
 }

@@ -1,11 +1,13 @@
 package io.harness.connector.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.encryption.Scope.ACCOUNT;
 import static io.harness.encryption.Scope.ORG;
 import static io.harness.encryption.Scope.PROJECT;
 import static io.harness.filter.FilterType.CONNECTOR;
+import static io.harness.springdata.SpringDataMongoUtils.populateAllFilter;
 import static io.harness.springdata.SpringDataMongoUtils.populateInFilter;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -14,10 +16,14 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorCategory;
 import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.entities.Connector.ConnectorKeys;
+import io.harness.connector.entities.embedded.ceawsconnector.CEAwsConfig.CEAwsConfigKeys;
+import io.harness.connector.entities.embedded.ceazure.CEAzureConfig.CEAzureConfigKeys;
 import io.harness.connector.services.ConnectorFilterService;
+import io.harness.delegate.beans.connector.CcmConnectorFilter;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.encryption.ScopeHelper;
 import io.harness.exception.InvalidRequestException;
@@ -26,11 +32,10 @@ import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.filter.service.FilterService;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.mapper.TagMapper;
+import io.harness.ng.core.utils.URLDecoderUtility;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.util.StringUtils;
 
+@OwnedBy(DX)
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
@@ -57,7 +63,7 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
     if (isNotBlank(filterIdentifier) && filterProperties != null) {
       throw new InvalidRequestException("Can not apply both filter properties and saved filter together");
     }
-    String searchTerm = getDecodedSearchTerm(encodedSearchTerm);
+    String searchTerm = URLDecoderUtility.getDecodedString(encodedSearchTerm);
     Criteria criteria = new Criteria();
     criteria.and(ConnectorKeys.accountIdentifier).is(accountIdentifier);
     if (includeAllConnectorsAccessibleAtScope != null && includeAllConnectorsAccessibleAtScope) {
@@ -80,18 +86,6 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
       populateConnectorFiltersInTheCriteria(criteria, (ConnectorFilterPropertiesDTO) filterProperties, searchTerm);
     }
     return criteria;
-  }
-
-  private String getDecodedSearchTerm(String encodedSearchTerm) {
-    String decodedString = null;
-    if (isNotBlank(encodedSearchTerm)) {
-      try {
-        decodedString = java.net.URLDecoder.decode(encodedSearchTerm, StandardCharsets.UTF_8.name());
-      } catch (UnsupportedEncodingException e) {
-        log.info("Encountered exception while decoding {}", encodedSearchTerm);
-      }
-    }
-    return decodedString;
   }
 
   private void applySearchFilter(Criteria criteria, String searchTerm) {
@@ -142,6 +136,10 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
         connectorFilter.getDescription(), searchTerm, connectorFilter.getInheritingCredentialsFromDelegate());
     populateInFilter(criteria, ConnectorKeys.identifier, connectorFilter.getConnectorIdentifiers());
     populateInFilter(criteria, ConnectorKeys.connectionStatus, connectorFilter.getConnectivityStatuses());
+    CcmConnectorFilter ccmConnectorFilter = connectorFilter.getCcmConnectorFilter();
+    if (ccmConnectorFilter != null) {
+      populateCcmFilters(criteria, ccmConnectorFilter);
+    }
     populateTagsFilter(criteria, connectorFilter.getTags());
   }
 
@@ -179,8 +177,7 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
             .map(
                 name -> where(ConnectorKeys.name).regex(name, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS))
             .collect(Collectors.toList());
-    Criteria searchCriteriaForNames = new Criteria().orOperator(criteriaForNames.toArray(new Criteria[0]));
-    return searchCriteriaForNames;
+    return new Criteria().orOperator(criteriaForNames.toArray(new Criteria[0]));
   }
 
   private void populateTagsFilter(Criteria criteria, Map<String, String> tags) {
@@ -203,9 +200,8 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
   }
 
   private Criteria addCriteriaForNotInheritingFromDelegate(Criteria criteria) {
-    Criteria criteriaForInheritingFromDelegate = new Criteria().orOperator(
+    return new Criteria().orOperator(
         where(CREDENTIAL_TYPE_KEY).exists(false), where(CREDENTIAL_TYPE_KEY).ne(INHERIT_FROM_DELEGATE_STRING));
-    return criteriaForInheritingFromDelegate;
   }
 
   private Criteria addCriteriaForInheritingFromDelegate(Criteria criteria) {
@@ -231,12 +227,11 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
   private Criteria getSearchTermFilter(Criteria criteria, String searchTerm) {
     if (isNotBlank(searchTerm)) {
       Criteria tagCriteria = createCriteriaForSearchingTag(searchTerm);
-      Criteria searchCriteria = new Criteria().orOperator(
+      return new Criteria().orOperator(
           where(ConnectorKeys.name).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
           where(ConnectorKeys.identifier).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
           where(ConnectorKeys.description).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
           tagCriteria);
-      return searchCriteria;
     }
     return null;
   }
@@ -274,5 +269,27 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
       criteria.andOperator(seachCriteria);
     }
     return criteria;
+  }
+
+  private void populateCcmFilters(Criteria criteria, CcmConnectorFilter ccmConnectorFilter) {
+    populateAwsFilters(criteria, ccmConnectorFilter);
+    populateAzureFilters(criteria, ccmConnectorFilter);
+    populateAllFilter(criteria, CEAzureConfigKeys.featuresEnabled, ccmConnectorFilter.getFeaturesEnabled());
+  }
+
+  private void populateAwsFilters(Criteria criteria, CcmConnectorFilter ccmConnectorFilter) {
+    if (ccmConnectorFilter.getAwsAccountId() != null) {
+      populateInFilter(criteria, CEAwsConfigKeys.awsAccountId, Arrays.asList(ccmConnectorFilter.getAwsAccountId()));
+    }
+  }
+
+  private void populateAzureFilters(Criteria criteria, CcmConnectorFilter ccmConnectorFilter) {
+    if (ccmConnectorFilter.getAzureSubscriptionId() != null) {
+      populateInFilter(
+          criteria, CEAzureConfigKeys.subscriptionId, Arrays.asList(ccmConnectorFilter.getAzureSubscriptionId()));
+    }
+    if (ccmConnectorFilter.getAzureTenantId() != null) {
+      populateInFilter(criteria, CEAzureConfigKeys.tenantId, Arrays.asList(ccmConnectorFilter.getAzureTenantId()));
+    }
   }
 }

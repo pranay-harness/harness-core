@@ -3,6 +3,7 @@ package grpc
 import (
 	"github.com/wings-software/portal/commons/go/lib/images"
 	"github.com/wings-software/portal/product/ci/engine/jexl"
+	"github.com/wings-software/portal/product/ci/engine/new/executor"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"github.com/wings-software/portal/product/ci/engine/state"
@@ -10,22 +11,25 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"io"
 )
 
 var (
 	getPublicImgMetadata  = images.PublicMetadata
 	getPrivateImgMetadata = images.PrivateMetadata
 	evaluateJEXL          = jexl.EvaluateJEXL
+	executeStepInAsync    = executor.ExecuteStepInAsync
 )
 
 // handler is used to implement EngineServer
 type engineHandler struct {
-	log *zap.SugaredLogger
+	log        *zap.SugaredLogger
+	procWriter io.Writer
 }
 
 // NewEngineHandler returns a GRPC handler that implements pb.EngineServer
-func NewEngineHandler(log *zap.SugaredLogger) pb.LiteEngineServer {
-	return &engineHandler{log}
+func NewEngineHandler(log *zap.SugaredLogger, procWriter io.Writer) pb.LiteEngineServer {
+	return &engineHandler{log, procWriter}
 }
 
 // UpdateState updates the execution state.
@@ -96,4 +100,17 @@ func (h *engineHandler) EvaluateJEXL(ctx context.Context, in *pb.EvaluateJEXLReq
 		EvaluatedExpressions: result,
 	}
 	return response, nil
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Synchronous RPC to check health of lite-engine service.
+func (h *engineHandler) Ping(ctx context.Context, in *pb.PingRequest) (*pb.PingResponse, error) {
+	return &pb.PingResponse{}, nil
+}
+
+// Asynchronous RPC that starts execution of a step.
+func (h *engineHandler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*pb.ExecuteStepResponse, error) {
+	executeStepInAsync(ctx, in, h.log, h.procWriter)
+	return &pb.ExecuteStepResponse{}, nil
 }

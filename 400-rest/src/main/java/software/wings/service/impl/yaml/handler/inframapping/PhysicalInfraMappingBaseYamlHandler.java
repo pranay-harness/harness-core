@@ -1,6 +1,12 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_YAML;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.PhysicalInfrastructureMappingBase;
 import software.wings.beans.PhysicalInfrastructureMappingBase.Yaml;
@@ -9,6 +15,8 @@ import software.wings.beans.yaml.ChangeContext;
 import com.google.inject.Singleton;
 
 @Singleton
+@OwnedBy(CDP)
+@TargetModule(_870_CG_YAML)
 public abstract class PhysicalInfraMappingBaseYamlHandler<Y extends PhysicalInfrastructureMappingBase.Yaml, B
                                                               extends PhysicalInfrastructureMappingBase>
     extends InfraMappingYamlWithComputeProviderHandler<Y, B> {

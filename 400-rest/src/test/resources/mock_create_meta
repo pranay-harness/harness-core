@@ -54,13 +54,37 @@
         },
         "customfield_option_2" : {
           "key" : "customfield_option_2",
-          "name" : "Option Name",
+          "name" : "Option Name2",
           "required" : "false",
           "schema" :
               {"type" : "option", "custom" : "customSchema", "customId" : 1},
           "allowedValues" : [
             {"value" : "OptionValue1", "id" : "option_id_1"},
             {"value" : "OptionValue2", "id" : "option_id_2"}
+          ],
+          "custom" : "true"
+        },
+        "customfield_option_3" : {
+          "key" : "customfield_option_3",
+          "name" : "Option Name3",
+          "required" : "false",
+          "schema" :
+          {"type" : "option", "custom" : "customSchema", "customId" : 1},
+          "allowedValues" : [
+            {"value" : "OptionValue3", "id" : "option_id_1"},
+            {"value" : "OptionValue3", "id" : "option_id_2"}
+          ],
+          "custom" : "true"
+        },
+        "customfield_option_4" : {
+          "key" : "customfield_option_4",
+          "name" : "Option Name3",
+          "required" : "false",
+          "schema" :
+          {"type" : "option", "custom" : "customSchema", "customId" : 1},
+          "allowedValues" : [
+            {"value" : "OptionValue4", "id" : "option_id_1"},
+            {"value" : "OptionValue5", "id" : "option_id_2"}
           ],
           "custom" : "true"
         },

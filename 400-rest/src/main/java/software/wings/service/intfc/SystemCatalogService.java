@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import io.harness.beans.PageRequest;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.validation.Create;
 
 import software.wings.beans.SystemCatalog;
@@ -23,8 +24,8 @@ public interface SystemCatalogService {
    * @return
    */
   @ValidationGroups(Create.class)
-  SystemCatalog save(@Valid SystemCatalog systemCatalog, @NotNull String url, @NotNull FileService.FileBucket bucket,
-      @NotNull long size);
+  SystemCatalog save(
+      @Valid SystemCatalog systemCatalog, @NotNull String url, @NotNull FileBucket bucket, @NotNull long size);
 
   /**
    * List.
@@ -42,8 +43,8 @@ public interface SystemCatalogService {
    * @param size
    * @return SystemCatalog
    */
-  SystemCatalog update(@Valid SystemCatalog systemCatalog, @NotNull String url, @NotNull FileService.FileBucket bucket,
-      @NotNull long size);
+  SystemCatalog update(
+      @Valid SystemCatalog systemCatalog, @NotNull String url, @NotNull FileBucket bucket, @NotNull long size);
 
   /**
    * Get.

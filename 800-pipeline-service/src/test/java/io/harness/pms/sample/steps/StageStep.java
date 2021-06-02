@@ -1,5 +1,8 @@
 package io.harness.pms.sample.steps;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildrenExecutableResponse;
 import io.harness.pms.contracts.execution.ChildrenExecutableResponse.Child;
@@ -18,6 +21,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(PIPELINE)
 public class StageStep implements ChildrenExecutable<MapStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType("stage").build();
 

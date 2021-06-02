@@ -1,12 +1,16 @@
 package software.wings.service.impl.newrelic;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
-import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.version.ServiceApiVersion;
 
@@ -20,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
@@ -35,36 +40,6 @@ import org.mongodb.morphia.annotations.Entity;
 /**
  * Created by rsingh on 1/8/18.
  */
-
-@CdIndex(name = "task_fetch_idx",
-    fields =
-    {
-      @Field("state_execution_id")
-      , @Field(value = "analysis_minute", type = IndexType.DESC), @Field("executionStatus"), @Field("ml_analysis_type"),
-          @Field("cluster_level"), @Field("group_name"), @Field("version"),
-          @Field(value = "createdAt", type = IndexType.DESC)
-    })
-@CdIndex(name = "task_fetch_priority_idx",
-    fields =
-    {
-      @Field("state_execution_id")
-      , @Field(value = "priority", type = IndexType.DESC), @Field("executionStatus"), @Field("ml_analysis_type"),
-          @Field("cluster_level"), @Field("group_name"), @Field("version"),
-          @Field(value = "createdAt", type = IndexType.DESC)
-    })
-@CdIndex(name = "cvConfigStatusIdx",
-    fields =
-    { @Field("cvConfigId")
-      , @Field(value = "analysis_minute", type = IndexType.DESC), @Field("executionStatus") })
-@CdIndex(name = "usageMetricsIndex",
-    fields =
-    {
-      @Field("executionStatus")
-      , @Field("ml_analysis_type"), @Field(value = "is24x7Task"), @Field(value = "createdAt", type = IndexType.DESC)
-    })
-@CdIndex(
-    name = "nextLETaskIndex", fields = { @Field("priority")
-                                         , @Field("createdAt"), @Field(value = "executionStatus") })
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "LearningEngineAnalysisTaskKeys")
@@ -72,7 +47,48 @@ import org.mongodb.morphia.annotations.Entity;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "learningEngineAnalysisTask", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@OwnedBy(CV)
+@TargetModule(HarnessModule._270_VERIFICATION)
 public class LearningEngineAnalysisTask extends Base implements AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(SortCompoundMongoIndex.builder()
+                 .name("task_fetch_idx")
+                 .field(LearningEngineAnalysisTaskKeys.state_execution_id)
+                 .field(LearningEngineAnalysisTaskKeys.analysis_minute)
+                 .field(LearningEngineAnalysisTaskKeys.executionStatus)
+                 .field(LearningEngineAnalysisTaskKeys.ml_analysis_type)
+                 .field(LearningEngineAnalysisTaskKeys.cluster_level)
+                 .field(LearningEngineAnalysisTaskKeys.group_name)
+                 .field(LearningEngineAnalysisTaskKeys.version)
+                 .descSortField(CREATED_AT_KEY)
+                 .build(),
+            SortCompoundMongoIndex.builder()
+                .name("taskFetchPriorityIdx")
+                .field(LearningEngineAnalysisTaskKeys.state_execution_id)
+                .field(LearningEngineAnalysisTaskKeys.priority)
+                .field(LearningEngineAnalysisTaskKeys.executionStatus)
+                .field(LearningEngineAnalysisTaskKeys.ml_analysis_type)
+                .field(LearningEngineAnalysisTaskKeys.cluster_level)
+                .field(LearningEngineAnalysisTaskKeys.group_name)
+                .field(LearningEngineAnalysisTaskKeys.version)
+                .descSortField(CREATED_AT_KEY)
+                .build(),
+            SortCompoundMongoIndex.builder()
+                .name("cv_config_status_index")
+                .field(LearningEngineAnalysisTaskKeys.cvConfigId)
+                .descSortField(LearningEngineAnalysisTaskKeys.analysis_minute)
+                .field(LearningEngineAnalysisTaskKeys.executionStatus)
+                .build(),
+            SortCompoundMongoIndex.builder()
+                .name("usageMetricsIndex")
+                .field(LearningEngineAnalysisTaskKeys.executionStatus)
+                .field(LearningEngineAnalysisTaskKeys.ml_analysis_type)
+                .field(LearningEngineAnalysisTaskKeys.is24x7Task)
+                .descSortField(CREATED_AT_KEY)
+                .build())
+        .build();
+  }
   public static long TIME_SERIES_ANALYSIS_TASK_TIME_OUT = TimeUnit.MINUTES.toMillis(12);
   public static final int RETRIES = 3;
 

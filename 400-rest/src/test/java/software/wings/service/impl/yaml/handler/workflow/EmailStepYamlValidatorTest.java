@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.MILOS;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -23,7 +23,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
-@TargetModule(Module._870_YAML_BEANS)
+@TargetModule(HarnessModule._870_YAML_BEANS)
 public class EmailStepYamlValidatorTest extends WingsBaseTest {
   private static final String TO_ADDRESS = "toAddress";
   private static final String CC_ADDRESS = "ccAddress";

@@ -5,9 +5,11 @@ import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.walktree.beans.VisitElementResult;
 import io.harness.walktree.visitor.DummyVisitableElement;
 import io.harness.walktree.visitor.SimpleVisitor;
+import io.harness.walktree.visitor.utilities.VisitorParentPathUtils;
 
 import com.google.inject.Injector;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.apache.commons.lang3.NotImplementedException;
 
@@ -21,13 +23,16 @@ public class EntityReferenceExtractorVisitor extends SimpleVisitor<DummyVisitabl
     return entityReferenceSet;
   }
 
-  public EntityReferenceExtractorVisitor(
-      Injector injector, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+  public EntityReferenceExtractorVisitor(Injector injector, String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, List<String> fqnList) {
     super(injector);
     entityReferenceSet = new HashSet<>();
     this.accountIdentifier = accountIdentifier;
     this.orgIdentifier = orgIdentifier;
     this.projectIdentifier = projectIdentifier;
+    if (fqnList != null) {
+      fqnList.forEach(levelNode -> VisitorParentPathUtils.addToParentList(this.getContextMap(), levelNode));
+    }
   }
 
   @Override
@@ -38,8 +43,8 @@ public class EntityReferenceExtractorVisitor extends SimpleVisitor<DummyVisitabl
     }
     if (helperClassInstance instanceof EntityReferenceExtractor) {
       EntityReferenceExtractor entityReferenceExtractor = (EntityReferenceExtractor) helperClassInstance;
-      Set<EntityDetailProtoDTO> newReferences =
-          entityReferenceExtractor.addReference(currentElement, accountIdentifier, orgIdentifier, projectIdentifier);
+      Set<EntityDetailProtoDTO> newReferences = entityReferenceExtractor.addReference(
+          currentElement, accountIdentifier, orgIdentifier, projectIdentifier, this.getContextMap());
       if (EmptyPredicate.isNotEmpty(newReferences)) {
         entityReferenceSet.addAll(newReferences);
       }

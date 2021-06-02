@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/drone/go-scm-codecommit/codecommit"
 	"github.com/drone/go-scm/scm"
 	"github.com/drone/go-scm/scm/driver/bitbucket"
 	"github.com/drone/go-scm/scm/driver/gitea"
@@ -18,6 +19,7 @@ import (
 	"github.com/wings-software/portal/product/ci/scm/converter"
 	pb "github.com/wings-software/portal/product/ci/scm/proto"
 	"go.uber.org/zap"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -33,7 +35,7 @@ const (
 func ParseWebhook(ctx context.Context, in *pb.ParseWebhookRequest,
 	log *zap.SugaredLogger) (*pb.ParseWebhookResponse, error) {
 	start := time.Now()
-	webhook, err := parseRequest(in)
+	webhook, err := parseWebhookRequest(in)
 	if err != nil {
 		log.Errorw(
 			"Failed to parse input webhook payload",
@@ -46,9 +48,9 @@ func ParseWebhook(ctx context.Context, in *pb.ParseWebhookRequest,
 
 	switch event := webhook.(type) {
 	case *scm.PullRequestHook:
-		pr, err := converter.ConvertPRHook(event)
-		if err != nil {
-			return nil, err
+		pr, prHookErr := converter.ConvertPRHook(event)
+		if prHookErr != nil {
+			return nil, prHookErr
 		}
 		log.Infow("Successfully parsed pr webhook", "elapsed_time_ms", utils.TimeSince(start))
 		return &pb.ParseWebhookResponse{
@@ -57,9 +59,9 @@ func ParseWebhook(ctx context.Context, in *pb.ParseWebhookRequest,
 			},
 		}, nil
 	case *scm.PushHook:
-		push, err := converter.ConvertPushHook(event)
-		if err != nil {
-			return nil, err
+		push, pushHookErr := converter.ConvertPushHook(event)
+		if pushHookErr != nil {
+			return nil, pushHookErr
 		}
 		log.Infow("Successfully parsed push webhook", "elapsed_time_ms", utils.TimeSince(start))
 		return &pb.ParseWebhookResponse{
@@ -68,9 +70,9 @@ func ParseWebhook(ctx context.Context, in *pb.ParseWebhookRequest,
 			},
 		}, nil
 	case *scm.IssueCommentHook:
-		comment, err := converter.ConvertIssueCommentHook(event)
-		if err != nil {
-			return nil, err
+		comment, issueCommentHookErr := converter.ConvertIssueCommentHook(event)
+		if issueCommentHookErr != nil {
+			return nil, issueCommentHookErr
 		}
 		log.Infow("Successfully parsed issue comment", "elapsed_time_ms", utils.TimeSince(start))
 		return &pb.ParseWebhookResponse{
@@ -83,6 +85,9 @@ func ParseWebhook(ctx context.Context, in *pb.ParseWebhookRequest,
 			"Unsupported webhook event",
 			"event", event,
 			"elapsed_time_ms", utils.TimeSince(start),
+			"body", in.GetBody(),
+			"header", in.GetHeader(),
+			"provider", in.GetProvider(),
 			zap.Error(err),
 		)
 		return nil, status.Errorf(codes.InvalidArgument,
@@ -90,10 +95,10 @@ func ParseWebhook(ctx context.Context, in *pb.ParseWebhookRequest,
 	}
 }
 
-// parseRequest parses incoming request and convert it to scm.Webhook
-func parseRequest(in *pb.ParseWebhookRequest) (scm.Webhook, error) {
+// parseWebhookRequest parses incoming request and convert it to scm.Webhook
+func parseWebhookRequest(in *pb.ParseWebhookRequest) (scm.Webhook, error) {
 	body := strings.NewReader(in.GetBody())
-	r, err := http.NewRequest(defaultMethod, defaultPath, body)
+	r, err := http.NewRequestWithContext(context.Background(), defaultMethod, defaultPath, body)
 	if err != nil {
 		return nil, err
 	}
@@ -132,6 +137,8 @@ func getClient(p pb.GitProvider) (*scm.Client, error) {
 		return gogs.New(gogsURI)
 	case pb.GitProvider_STASH:
 		return stash.NewDefault(), nil
+	case pb.GitProvider_CODECOMMIT:
+		return codecommit.NewDefault(), nil
 	default:
 		return nil, status.Errorf(codes.InvalidArgument,
 			fmt.Sprintf("Unsupported git provider %s", p.String()))

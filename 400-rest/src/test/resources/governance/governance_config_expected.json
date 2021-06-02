@@ -1,6 +1,7 @@
 {
   "uuid":"GOVERNANCE_CONFIG_ID",
   "accountId":"kmpySmUISimoRrJL6NL73w",
+  "appId":"__GLOBAL_APP_ID__",
   "deploymentFreeze":true,
   "timeRangeBasedFreezeConfigs":[
     {
@@ -48,5 +49,7 @@
       ],
       "uuid":"FREEZE_ID"
     }
-  ]
+  ],
+  "enableNextIterations":false,
+  "enableNextCloseIterations":false
 }

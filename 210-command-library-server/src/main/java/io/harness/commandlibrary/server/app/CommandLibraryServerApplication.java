@@ -5,30 +5,37 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import static com.google.inject.matcher.Matchers.not;
 
+import io.harness.cf.AbstractCfModule;
+import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.server.resources.CommandStoreResource;
 import io.harness.commandlibrary.server.security.CommandLibraryServerAuthenticationFilter;
+import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
-import io.harness.mongo.MongoModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.UserProvider;
+import io.harness.resource.VersionInfoResource;
 import io.harness.serializer.CommandLibraryServer;
 import io.harness.serializer.CommonsRegistrars;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
+import io.harness.serializer.morphia.PrimaryVersionManagerMorphiaRegistrar;
 
 import software.wings.app.CharsetResponseFilter;
 import software.wings.app.CommandLibrarySharedModule;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.ConstraintViolationExceptionMapper;
 import software.wings.exception.GenericExceptionMapper;
 import software.wings.exception.JsonProcessingExceptionMapper;
 import software.wings.exception.WingsExceptionMapper;
@@ -80,6 +87,10 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
   private HarnessMetricRegistry harnessMetricRegistry;
 
   public static void main(String[] args) throws Exception {
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      log.info("Shutdown hook, entering maintenance...");
+      MaintenanceController.forceMaintenance(true);
+    }));
     if (args.length == 1) {
       new CommandLibraryServerApplication().run("server", args[0]);
     } else {
@@ -148,7 +159,12 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
         return configuration.getMongoConnectionFactory();
       }
     });
-    modules.add(MongoModule.getInstance());
+    modules.add(new AbstractMongoModule() {
+      @Override
+      public UserProvider userProvider() {
+        return new ThreadLocalUserProvider();
+      }
+    });
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -165,6 +181,17 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
     modules.add(new CommandLibraryServerModule(configuration));
     modules.add(new CommandLibrarySharedModule(false));
     modules.add(new MetricRegistryModule(metricRegistry));
+    modules.add(new AbstractCfModule() {
+      @Override
+      public CfClientConfig cfClientConfig() {
+        return CfClientConfig.builder().build();
+      }
+
+      @Override
+      public CfMigrationConfig cfMigrationConfig() {
+        return CfMigrationConfig.builder().build();
+      }
+    });
 
     modules.add(new ProviderModule() {
       @Provides
@@ -178,6 +205,7 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(CommandLibraryServer.morphiaRegistrars)
+            .add(PrimaryVersionManagerMorphiaRegistrar.class)
             .build();
       }
 
@@ -198,8 +226,6 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
 
     initMetrics();
 
-    registerStores(configuration, injector);
-
     registerResources(environment, injector);
 
     registerManagedBeans(environment, injector);
@@ -212,6 +238,8 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
     registerAuthFilters(environment, injector);
 
     registerHealthChecks(environment, injector);
+
+    injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
 
     log.info("Leaving startup maintenance mode");
     MaintenanceController.resetForceMaintenance();
@@ -234,11 +262,6 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
     }
   }
 
-  private void registerStores(CommandLibraryServerConfig configuration, Injector injector) {
-    final HPersistence persistence = injector.getInstance(HPersistence.class);
-    persistence.registerUserProvider(new ThreadLocalUserProvider());
-  }
-
   private void registerResources(Environment environment, Injector injector) {
     Reflections reflections = new Reflections(CommandStoreResource.class.getPackage().getName());
 
@@ -248,6 +271,7 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
   }
   private void registerJerseyProviders(Environment environment) {
     environment.jersey().register(EarlyEofExceptionMapper.class);

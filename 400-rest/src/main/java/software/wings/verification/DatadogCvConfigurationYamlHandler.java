@@ -13,9 +13,9 @@ import software.wings.service.intfc.datadog.DatadogService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.DatadogState.Metric;
+import software.wings.verification.datadog.DatadogCVConfigurationYaml;
+import software.wings.verification.datadog.DatadogCVConfigurationYaml.YamlMetric;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
-import software.wings.verification.datadog.DatadogCVServiceConfiguration.DatadogCVConfigurationYaml;
-import software.wings.verification.datadog.DatadogCVServiceConfiguration.DatadogCVConfigurationYaml.YamlMetric;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;

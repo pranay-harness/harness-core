@@ -1,15 +1,24 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -21,7 +30,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.serializer.KryoSerializer;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.ScriptStateExecutionData;
@@ -70,7 +78,10 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 
+@OwnedBy(CDP)
 @Slf4j
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class ShellScriptProvisionState extends State implements SweepingOutputStateMixin {
   private static final int TIMEOUT_IN_MINUTES = 20;
   private static final String COMMAND_UNIT = "Shell Script Provision";
@@ -83,6 +94,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
   @Getter @Setter private List<NameValuePair> variables;
   @Getter @Setter private String sweepingOutputName;
   @Getter @Setter private SweepingOutputInstance.Scope sweepingOutputScope;
+  @Getter @Setter private List<String> delegateSelectors;
 
   @Transient @Inject KryoSerializer kryoSerializer;
 
@@ -100,8 +112,8 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
         ShellScriptProvisionParameters.builder()
             .scriptBody(shellScriptProvisioner.getScriptBody())
             .textVariables(infrastructureProvisionerService.extractTextVariables(variables, context))
-            .encryptedVariables(
-                infrastructureProvisionerService.extractEncryptedTextVariables(variables, context.getAppId()))
+            .encryptedVariables(infrastructureProvisionerService.extractEncryptedTextVariables(
+                variables, context.getAppId(), context.getWorkflowExecutionId()))
             .timeoutInMillis(TimeUnit.MINUTES.toMillis(TIMEOUT_IN_MINUTES))
             .accountId(context.getAccountId())
             .appId(context.getAppId())
@@ -111,6 +123,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
                 provisionerId, Objects.requireNonNull(((ExecutionContextImpl) context).getEnv()).getUuid()))
             .workflowExecutionId(context.getWorkflowExecutionId())
             .outputPathKey(PROVISIONER_OUTPUT_PATH_KEY)
+            .delegateSelectors(getRenderedAndTrimmedSelectors(context))
             .build();
 
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
@@ -120,6 +133,8 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
                                     .accountId(context.getAccountId())
                                     .waitId(activityId)
                                     .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
+                                    .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+                                    .description("Shell script provision task")
                                     .data(TaskData.builder()
                                               .async(true)
                                               .taskType(TaskType.SHELL_SCRIPT_PROVISION_TASK.toString())
@@ -130,6 +145,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
                                     .build();
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Collections.singletonList(activityId))
@@ -251,5 +267,17 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
                     .adoptDelegateDecryption(true)
                     .expressionFunctorToken(expressionFunctorToken)
                     .build()));
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
+  }
+
+  private List<String> getRenderedAndTrimmedSelectors(ExecutionContext context) {
+    if (isEmpty(delegateSelectors)) {
+      return emptyList();
+    }
+    return trimStrings(delegateSelectors.stream().map(context::renderExpression).collect(toList()));
   }
 }

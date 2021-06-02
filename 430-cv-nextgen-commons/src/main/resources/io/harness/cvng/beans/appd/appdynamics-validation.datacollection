@@ -1,4 +1,0 @@
-Var getAppApplicationUrl = concat(Env:baseUrl, "rest/applications?output=json")
-Var applications = sync-call(url=Var:getAppApplicationUrl, header=Env:commonHeaders)
-Var t = "true"
-return Var:t

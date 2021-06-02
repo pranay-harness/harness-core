@@ -12,6 +12,7 @@ import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskKe
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
 import io.harness.cvng.analysis.exceptions.ServiceGuardAnalysisException;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
+import io.harness.metrics.service.api.MetricService;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.base.Preconditions;
@@ -34,6 +35,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Slf4j
 public class LearningEngineTaskServiceImpl implements LearningEngineTaskService {
   @Inject private HPersistence hPersistence;
+  @Inject private MetricService metricService;
 
   @Override
   public LearningEngineTask getNextAnalysisTask() {
@@ -46,6 +48,7 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
         hPersistence.createQuery(LearningEngineTask.class)
             .filter(LearningEngineTaskKeys.taskStatus, ExecutionStatus.QUEUED)
             .order(Sort.ascending(LearningEngineTaskKeys.taskPriority));
+    // TODO: add ordering based on createdAt.
 
     if (isNotEmpty(taskType)) {
       learningEngineTaskQuery.field(LearningEngineTaskKeys.analysisType).in(taskType);

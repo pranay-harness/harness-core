@@ -9,17 +9,23 @@ import static io.harness.eraro.ErrorCode.INACTIVE_ACCOUNT;
 import static io.harness.eraro.ErrorCode.NOT_WHITELISTED_IP;
 import static io.harness.exception.WingsException.USER;
 
+import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
+
 import static java.util.Arrays.asList;
 import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHORIZATION;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.security.annotations.HarnessApiKeyAuth;
 import io.harness.security.annotations.LearningEngineAuth;
@@ -29,6 +35,7 @@ import io.harness.security.annotations.PublicApiWithWhitelist;
 
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
+import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Event;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.User;
@@ -38,6 +45,7 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserRequestContext.UserRequestContextBuilder;
 import software.wings.security.annotations.AdminPortalAuth;
+import software.wings.security.annotations.ApiKeyAuthorized;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.IdentityServiceAuth;
@@ -47,6 +55,7 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -81,6 +90,7 @@ import org.apache.commons.lang3.StringUtils;
  * Created by anubhaw on 3/11/16.
  */
 @OwnedBy(PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 @Singleton
 @Priority(AUTHORIZATION)
 @Slf4j
@@ -105,10 +115,12 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private static final String[] EXEMPTED_URI_SUFFIXES = new String[] {"sales-contacts", "addSubdomainUrl"};
   private static final String USER_NOT_AUTHORIZED = "User not authorized";
   private static final String X_FORWARDED_FOR = "X-Forwarded-For";
+  private static final String DELIMITER = "::";
 
   @Context private ResourceInfo resourceInfo;
   @Context private HttpServletRequest servletRequest;
   @Inject AuditServiceHelper auditServiceHelper;
+  @Inject FeatureFlagService featureFlagService;
 
   private AuthService authService;
   private AuthHandler authHandler;
@@ -118,6 +130,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private WhitelistService whitelistService;
   private HarnessUserGroupService harnessUserGroupService;
   private GraphQLUtils graphQLUtils;
+  private ApiKeyService apiKeyService;
 
   /**
    * Instantiates a new Auth rule filter.
@@ -130,7 +143,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   @Inject
   public AuthRuleFilter(AuthService authService, AuthHandler authHandler, AppService appService,
       UserService userService, AccountService accountService, WhitelistService whitelistService,
-      HarnessUserGroupService harnessUserGroupService, GraphQLUtils graphQLUtils) {
+      HarnessUserGroupService harnessUserGroupService, GraphQLUtils graphQLUtils, ApiKeyService apiKeyService,
+      FeatureFlagService featureFlagService) {
     this.authService = authService;
     this.authHandler = authHandler;
     this.appService = appService;
@@ -139,6 +153,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     this.whitelistService = whitelistService;
     this.harnessUserGroupService = harnessUserGroupService;
     this.graphQLUtils = graphQLUtils;
+    this.apiKeyService = apiKeyService;
+    this.featureFlagService = featureFlagService;
   }
 
   private boolean isAuthFilteringExempted(String uri) {
@@ -189,6 +205,19 @@ public class AuthRuleFilter implements ContainerRequestFilter {
    */
   @Override
   public void filter(ContainerRequestContext requestContext) {
+    MultivaluedMap<String, String> pathParameters = requestContext.getUriInfo().getPathParameters();
+    MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
+
+    String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
+    if (isNotEmpty(requestContext.getHeaderString("X-Api-Key"))) {
+      if (isEmpty(accountId)) {
+        accountId = apiKeyService.getAccountIdFromApiKey(requestContext.getHeaderString("X-Api-Key"));
+      }
+      if (isNotEmpty(accountId) && featureFlagService.isEnabled(FeatureName.AUDIT_TRAIL_ENHANCEMENT, accountId)) {
+        ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(requestContext.getHeaderString("X-Api-Key"), accountId, true);
+        auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, apiKeyEntry, Event.Type.INVOKED);
+      }
+    }
     if (authorizationExemptedRequest(requestContext)) {
       return; // do nothing
     }
@@ -204,10 +233,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       return;
     }
 
-    MultivaluedMap<String, String> pathParameters = requestContext.getUriInfo().getPathParameters();
-    MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
-
-    String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
     boolean isExternalApi = externalAPI();
 
     List<String> appIdsFromRequest = getRequestParamsFromContext("appId", pathParameters, queryParameters);
@@ -224,6 +249,36 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     if (isPublicApiWithWhitelist()) {
       checkForWhitelisting(accountId, FeatureName.WHITELIST_PUBLIC_API, requestContext, user);
       return;
+    }
+
+    boolean isApiKeyAuthorized = apiKeyAuthorizationAPI();
+    boolean isApiKeyAuthorizedWithBearerToken = false;
+    if (isApiKeyAuthorized) {
+      checkForWhitelisting(accountId, FeatureName.WHITELIST_PUBLIC_API, requestContext, user);
+      if (user != null) {
+        isApiKeyAuthorizedWithBearerToken = true;
+      } else {
+        String apiKey = requestContext.getHeaderString(API_KEY_HEADER);
+        // This is only possible when allowEmptyApiKey is true.
+        if (isEmpty(apiKey)) {
+          return;
+        }
+
+        List<PermissionAttribute> requiredPermissionAttributes =
+            getApiKeyAuthorizedPermissionAttributes(requestContext);
+        boolean skipAuth = skipAuth(requiredPermissionAttributes);
+        user = setUserAndUserRequestContextUsingApiKey(
+            accountId, requestContext, emptyAppIdsInReq, appIdsFromRequest, requiredPermissionAttributes, skipAuth);
+
+        if (isEmpty(requiredPermissionAttributes) || allLoggedInScope(requiredPermissionAttributes)) {
+          return;
+        }
+
+        boolean accountLevelPermissions = isAccountLevelPermissions(requiredPermissionAttributes);
+        authorizeUser(user, requestContext, accountId, appIdsFromRequest, requiredPermissionAttributes, skipAuth,
+            accountLevelPermissions);
+        return;
+      }
     }
 
     String uriPath = requestContext.getUriInfo().getPath();
@@ -268,10 +323,17 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         }
       }
 
-      if (!harnessUserGroupService.isHarnessSupportUser(user.getUuid())
-          || !harnessUserGroupService.isHarnessSupportEnabledForAccount(accountId)) {
-        throw new AccessDeniedException(USER_NOT_AUTHORIZED, USER);
+      if (featureFlagService.isEnabled(FeatureName.LIMITED_ACCESS_FOR_HARNESS_USER_GROUP, accountId)) {
+        if (!harnessUserGroupService.isHarnessSupportEnabled(accountId, user.getUuid())) {
+          throw new AccessDeniedException(USER_NOT_AUTHORIZED, USER);
+        }
+      } else {
+        if (!harnessUserGroupService.isHarnessSupportUser(user.getUuid())
+            || !harnessUserGroupService.isHarnessSupportEnabled(accountId, user.getUuid())) {
+          throw new AccessDeniedException(USER_NOT_AUTHORIZED, USER);
+        }
       }
+
       harnessSupportUser = true;
     }
 
@@ -279,8 +341,11 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     if (servletRequest != null && !graphQLRequest) {
       checkForWhitelisting(accountId, null, requestContext, user);
     }
-    requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
-
+    if (isApiKeyAuthorizedWithBearerToken) {
+      requiredPermissionAttributes = getApiKeyAuthorizedPermissionAttributes(requestContext);
+    } else {
+      requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
+    }
     if (isEmpty(requiredPermissionAttributes) || allLoggedInScope(requiredPermissionAttributes)) {
       UserRequestContext userRequestContext =
           buildUserRequestContext(accountId, user, emptyAppIdsInReq, harnessSupportUser);
@@ -301,6 +366,19 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     UserRequestContext userRequestContext = buildUserRequestContext(requiredPermissionAttributes, user, accountId,
         emptyAppIdsInReq, httpMethod, appIdsFromRequest, skipAuth, accountLevelPermissions, harnessSupportUser);
     user.setUserRequestContext(userRequestContext);
+
+    authorizeUser(user, requestContext, accountId, appIdsFromRequest, requiredPermissionAttributes, skipAuth,
+        accountLevelPermissions);
+  }
+
+  private void authorizeUser(User user, ContainerRequestContext requestContext, String accountId,
+      List<String> appIdsFromRequest, List<PermissionAttribute> requiredPermissionAttributes, boolean skipAuth,
+      boolean accountLevelPermissions) {
+    MultivaluedMap<String, String> pathParameters = requestContext.getUriInfo().getPathParameters();
+    MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
+    String httpMethod = requestContext.getMethod();
+
+    UserRequestContext userRequestContext = user.getUserRequestContext();
 
     if (!skipAuth) {
       if (accountLevelPermissions) {
@@ -339,12 +417,15 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     } else {
       isWhitelisted = whitelistService.checkIfFeatureIsEnabledAndWhitelisting(accountId, remoteHost, featureName);
     }
+
     if (!isWhitelisted) {
       String msg = "Current IP Address (" + remoteHost + ") is not whitelisted.";
       log.warn(msg);
-      if (requestContext.getUriInfo().getPath().contains("whitelist/isEnabled") && user != null) {
+      if (featureFlagService.isEnabled(FeatureName.AUDIT_TRAIL_ENHANCEMENT, accountId)
+          && requestContext.getUriInfo().getPath().contains("whitelist/isEnabled") && user != null) {
         auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, user, Event.Type.NON_WHITELISTED);
       }
+
       throw new WingsException(NOT_WHITELISTED_IP, USER).addParam("args", msg);
     }
   }
@@ -599,6 +680,14 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         || resourceClass.getAnnotation(ExternalFacingApiAuth.class) != null;
   }
 
+  protected boolean apiKeyAuthorizationAPI() {
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    Method resourceMethod = resourceInfo.getResourceMethod();
+
+    return resourceMethod.getAnnotation(ApiKeyAuthorized.class) != null
+        || resourceClass.getAnnotation(ApiKeyAuthorized.class) != null;
+  }
+
   private boolean delegateAPI() {
     Class<?> resourceClass = resourceInfo.getResourceClass();
     Method resourceMethod = resourceInfo.getResourceMethod();
@@ -625,6 +714,38 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   public PermissionAttribute buildPermissionAttribute(AuthRule authRule, String httpMethod, ResourceType resourceType) {
     return new PermissionAttribute(resourceType, authRule.permissionType(), getAction(authRule, httpMethod), httpMethod,
         authRule.parameterName(), authRule.dbFieldName(), authRule.dbCollectionName(), authRule.skipAuth());
+  }
+
+  private List<PermissionAttribute> getApiKeyAuthorizedPermissionAttributes(ContainerRequestContext requestContext) {
+    List<PermissionAttribute> methodPermissionAttributes = new ArrayList<>();
+    List<PermissionAttribute> classPermissionAttributes = new ArrayList<>();
+    String httpMethod = requestContext.getMethod();
+
+    Method resourceMethod = resourceInfo.getResourceMethod();
+    ApiKeyAuthorized[] methodAnnotations = resourceMethod.getAnnotationsByType(ApiKeyAuthorized.class);
+    if (isNotEmpty(methodAnnotations)) {
+      for (ApiKeyAuthorized methodAnnotation : methodAnnotations) {
+        methodPermissionAttributes.add(new PermissionAttribute(null, methodAnnotation.permissionType(),
+            getAction(methodAnnotation, requestContext.getMethod()), httpMethod, null, null, null,
+            methodAnnotation.skipAuth()));
+      }
+    }
+
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    ApiKeyAuthorized[] classAnnotations = resourceClass.getAnnotationsByType(ApiKeyAuthorized.class);
+    if (isNotEmpty(classAnnotations)) {
+      for (ApiKeyAuthorized classAnnotation : classAnnotations) {
+        classPermissionAttributes.add(new PermissionAttribute(null, classAnnotation.permissionType(),
+            getAction(classAnnotation, requestContext.getMethod()), httpMethod, null, null, null,
+            classAnnotation.skipAuth()));
+      }
+    }
+
+    if (methodPermissionAttributes.isEmpty()) {
+      return classPermissionAttributes;
+    } else {
+      return methodPermissionAttributes;
+    }
   }
 
   private List<PermissionAttribute> getAllRequiredPermissionAttributes(ContainerRequestContext requestContext) {
@@ -663,6 +784,16 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       action = getDefaultAction(method);
     } else {
       action = authRule.action();
+    }
+    return action;
+  }
+
+  private Action getAction(ApiKeyAuthorized apiKeyAuthorized, String method) {
+    Action action;
+    if (apiKeyAuthorized.action() == Action.DEFAULT) {
+      action = getDefaultAction(method);
+    } else {
+      action = apiKeyAuthorized.action();
     }
     return action;
   }
@@ -709,5 +840,81 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     Method resourceMethod = resourceInfo.getResourceMethod();
 
     return resourceMethod.getAnnotation(ScimAPI.class) != null || resourceClass.getAnnotation(ScimAPI.class) != null;
+  }
+
+  private User setUserAndUserRequestContextUsingApiKey(String accountId, ContainerRequestContext requestContext,
+      boolean emptyAppIdsInReq, List<String> appIdsFromRequest, List<PermissionAttribute> requiredPermissionAttributes,
+      boolean skipAuth) {
+    if (accountId == null) {
+      throw new InvalidRequestException("accountId not specified", USER);
+    }
+
+    String apiKey = requestContext.getHeaderString(API_KEY_HEADER);
+    User user = new User();
+    ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
+    if (apiKeyEntry == null) {
+      throw new InvalidRequestException("Invalid Api Key provided", USER);
+    }
+
+    UserPermissionInfo apiKeyPermissions = apiKeyService.getApiKeyPermissions(apiKeyEntry, accountId);
+    UserRestrictionInfo apiKeyRestrictions =
+        apiKeyService.getApiKeyRestrictions(apiKeyEntry, apiKeyPermissions, accountId);
+    String httpMethod = requestContext.getMethod();
+    List<ResourceType> requiredResourceTypes = getAllResourceTypes();
+    boolean isScopedToApp = isPresent(requiredResourceTypes, ResourceType.APPLICATION);
+
+    if (isEmpty(requiredPermissionAttributes) || allLoggedInScope(requiredPermissionAttributes)) {
+      UserRequestContext userRequestContext = buildUserRequestContext(
+          apiKeyPermissions, apiKeyRestrictions, accountId, emptyAppIdsInReq, isScopedToApp, appIdsFromRequest);
+      user.setUserRequestContext(userRequestContext);
+      UserThreadLocal.set(user);
+      return user;
+    }
+
+    boolean isAccountLevelPermissions = isAccountLevelPermissions(requiredPermissionAttributes);
+    UserRequestContext userRequestContext =
+        buildUserRequestContext(apiKeyPermissions, apiKeyRestrictions, requiredPermissionAttributes, accountId,
+            emptyAppIdsInReq, httpMethod, appIdsFromRequest, skipAuth, isAccountLevelPermissions, isScopedToApp);
+    user.setUserRequestContext(userRequestContext);
+    UserThreadLocal.set(user);
+    return user;
+  }
+
+  public UserRequestContext buildUserRequestContext(UserPermissionInfo userPermissionInfo,
+      UserRestrictionInfo userRestrictionInfo, List<PermissionAttribute> requiredPermissionAttributes, String accountId,
+      boolean emptyAppIdsInReq, String httpMethod, List<String> appIdsFromRequest, boolean skipAuth,
+      boolean accountLevelPermissions, boolean isScopeToApp) {
+    UserRequestContext userRequestContext = buildUserRequestContext(
+        userPermissionInfo, userRestrictionInfo, accountId, emptyAppIdsInReq, isScopeToApp, appIdsFromRequest);
+
+    if (!accountLevelPermissions) {
+      authHandler.setEntityIdFilterIfGet(httpMethod, skipAuth, requiredPermissionAttributes, userRequestContext,
+          userRequestContext.isAppIdFilterRequired(), userRequestContext.getAppIds(), appIdsFromRequest);
+    }
+    return userRequestContext;
+  }
+
+  public UserRequestContext buildUserRequestContext(UserPermissionInfo userPermissionInfo,
+      UserRestrictionInfo userRestrictionInfo, String accountId, boolean emptyAppIdsInReq, boolean isScopedToApp,
+      List<String> appIdsFromRequest) {
+    UserRequestContextBuilder userRequestContextBuilder =
+        UserRequestContext.builder().accountId(accountId).entityInfoMap(new HashMap<>());
+
+    userRequestContextBuilder.userPermissionInfo(userPermissionInfo);
+    userRequestContextBuilder.userRestrictionInfo(userRestrictionInfo);
+
+    if (isScopedToApp) {
+      Set<String> allowedAppIds = getAllowedAppIds(userPermissionInfo);
+      if (emptyAppIdsInReq) {
+        userRequestContextBuilder.appIdFilterRequired(true);
+        userRequestContextBuilder.appIds(allowedAppIds);
+      } else {
+        if (isEmpty(allowedAppIds) || !allowedAppIds.containsAll(appIdsFromRequest)) {
+          throw new WingsException(ErrorCode.ACCESS_DENIED);
+        }
+      }
+    }
+
+    return userRequestContextBuilder.build();
   }
 }

@@ -1,17 +1,17 @@
 package io.harness.walktree.visitor.utilities;
 
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.walktree.beans.LevelNode;
 
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class VisitorParentPathUtils {
-  private final String PARENT_PATH_KEY = "PARENT_PATH_KEY";
+  public final String PARENT_PATH_KEY = "PARENT_PATH_KEY";
   public final String PATH_CONNECTOR = ".";
 
   private <T> void setConfig(String key, T config, Map<String, Object> contextMap) {
@@ -26,23 +26,23 @@ public class VisitorParentPathUtils {
     return Optional.ofNullable((T) contextMap.get(key));
   }
 
-  public void addToParentList(Map<String, Object> contextMap, LevelNode levelNode) {
-    Optional<LinkedList<LevelNode>> parentPath = getConfig(PARENT_PATH_KEY, contextMap);
-    LinkedList<LevelNode> levelNodes = parentPath.orElse(new LinkedList<>());
-    levelNodes.addLast(levelNode);
-    setConfig(PARENT_PATH_KEY, levelNodes, contextMap);
+  public void addToParentList(Map<String, Object> contextMap, String qualifiedName) {
+    Optional<LinkedList<String>> parentPath = getConfig(PARENT_PATH_KEY, contextMap);
+    LinkedList<String> qualifiedNameLists = parentPath.orElse(new LinkedList<>());
+    qualifiedNameLists.addLast(qualifiedName);
+    setConfig(PARENT_PATH_KEY, qualifiedNameLists, contextMap);
   }
 
   public void removeFromParentList(Map<String, Object> contextMap) {
-    Optional<LinkedList<LevelNode>> parentPath = getConfig(PARENT_PATH_KEY, contextMap);
-    LinkedList<LevelNode> levelNodes =
+    Optional<LinkedList<String>> parentPath = getConfig(PARENT_PATH_KEY, contextMap);
+    LinkedList<String> qualifiedNameLists =
         parentPath.orElseThrow(() -> new InvalidArgumentsException("Parent Path has not been initialised."));
-    levelNodes.removeLast();
+    qualifiedNameLists.removeLast();
   }
 
   public String getFullQualifiedDomainName(Map<String, Object> contextMap) {
-    Optional<LinkedList<LevelNode>> parentPath = getConfig(PARENT_PATH_KEY, contextMap);
-    LinkedList<LevelNode> levelNodes = parentPath.orElse(new LinkedList<>());
-    return levelNodes.stream().map(LevelNode::getQualifierName).collect(Collectors.joining(PATH_CONNECTOR));
+    Optional<LinkedList<String>> parentPath = getConfig(PARENT_PATH_KEY, contextMap);
+    LinkedList<String> qualifiedNameLists = parentPath.orElse(new LinkedList<>());
+    return qualifiedNameLists.stream().filter(Objects::nonNull).collect(Collectors.joining(PATH_CONNECTOR));
   }
 }

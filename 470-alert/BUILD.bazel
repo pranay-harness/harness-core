@@ -1,15 +1,12 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_package_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
+load("//:tools/bazel/macros.bzl", "run_analysis")
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
 ] + [
+    "//955-alert-beans:module",
+    "//960-persistence:module",
     "@maven//:com_google_inject_guice",
     "//:lombok",
 ]
@@ -25,4 +22,9 @@ java_library(
     ],
     visibility = ["//visibility:public"],
     deps = shared_dependencies,
+)
+
+run_analysis(
+    run_checkstyle = False,
+    run_pmd = False,
 )

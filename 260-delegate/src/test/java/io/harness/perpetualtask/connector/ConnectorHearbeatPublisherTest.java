@@ -4,6 +4,7 @@ import static io.harness.ng.core.activityhistory.NGActivityStatus.SUCCESS;
 import static io.harness.ng.core.activityhistory.NGActivityType.CONNECTIVITY_CHECK;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -43,6 +44,9 @@ public class ConnectorHearbeatPublisherTest extends CategoryTest {
   public void setUp() throws IOException {
     MockitoAnnotations.initMocks(this);
     when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(anyString(), anyString(), anyString(), anyString()))
+        .thenCallRealMethod();
+    when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(
+             anyString(), anyString(), anyString(), anyString(), any()))
         .thenCallRealMethod();
   }
 

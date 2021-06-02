@@ -1,8 +1,10 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.TMACARI;
 
@@ -55,11 +57,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
@@ -104,6 +109,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -130,6 +136,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mongodb.morphia.Key;
 
+@OwnedBy(CDP)
 public class PcfDeployStateTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock private DelegateService delegateService;
@@ -149,6 +156,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private WorkflowExecutionService workflowExecutionService;
+  @Mock private StateExecutionService stateExecutionService;
   private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();
   public static final String ORG = "ORG";
   public static final String SPACE = "SPACE";
@@ -261,6 +269,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
                                                       .name(SetupSweepingOutputPcf.SWEEPING_OUTPUT_NAME + PHASE_NAME)
                                                       .build()))
         .thenReturn(setupSweepingOutputPcf);
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   @Test
@@ -298,6 +307,32 @@ public class PcfDeployStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExecuteExceptionThrownWhenRetrievingSweepingOutput() throws IllegalAccessException {
+    on(context).set("serviceTemplateService", serviceTemplateService);
+    on(context).set("variableProcessor", variableProcessor);
+    on(context).set("sweepingOutputService", sweepingOutputService);
+    on(context).set("evaluator", evaluator);
+    pcfDeployState.setRollback(true);
+
+    PcfStateHelper mockPcfStateHelper = mock(PcfStateHelper.class);
+    FieldUtils.writeField(pcfDeployState, "pcfStateHelper", mockPcfStateHelper, true);
+    when(mockPcfStateHelper.handleRollbackSkipped(any(), any(), any(), any()))
+        .thenReturn(ExecutionResponse.builder().executionStatus(ExecutionStatus.SKIPPED).build());
+    when(mockPcfStateHelper.isRollBackNotNeeded(any())).thenReturn(true);
+    when(mockPcfStateHelper.getActivityBuilder(any())).thenReturn(Activity.builder());
+    when(mockPcfStateHelper.findSetupSweepingOutputPcf(context, true))
+        .thenThrow(new InvalidArgumentsException("message"));
+
+    pcfDeployState.setInstanceCount(50);
+    pcfDeployState.setInstanceUnitType(PERCENTAGE);
+
+    ExecutionResponse response = pcfDeployState.execute(context);
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SKIPPED);
+  }
+
+  @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetDownsizeUpdateCount() {
@@ -309,40 +344,98 @@ public class PcfDeployStateTest extends WingsBaseTest {
                                                         .maxInstanceCount(10)
                                                         .desiredActualFinalCount(10)
                                                         .build();
+    PcfConfig pcfConfig = PcfConfig.builder().accountId("accountId").build();
+    doReturn(false).when(featureFlagService).isEnabled(eq(FeatureName.PCF_OLD_APP_RESIZE), eq("accountId"));
 
-    Integer answer = pcfDeployState.getDownsizeUpdateCount(setupSweepingOutputPcf);
+    Integer answer = pcfDeployState.getDownsizeUpdateCount(setupSweepingOutputPcf, pcfConfig);
     assertThat(answer.intValue()).isEqualTo(6);
 
     pcfDeployState.setDownsizeInstanceUnitType(COUNT);
     pcfDeployState.setDownsizeInstanceCount(4);
-    answer = pcfDeployState.getDownsizeUpdateCount(setupSweepingOutputPcf);
+    answer = pcfDeployState.getDownsizeUpdateCount(setupSweepingOutputPcf, pcfConfig);
     assertThat(answer.intValue()).isEqualTo(6);
 
     pcfDeployState.setDownsizeInstanceCount(null);
     pcfDeployState.setDownsizeInstanceUnitType(COUNT);
     pcfDeployState.setInstanceCount(6);
-    answer = pcfDeployState.getDownsizeUpdateCount(setupSweepingOutputPcf);
+    answer = pcfDeployState.getDownsizeUpdateCount(setupSweepingOutputPcf, pcfConfig);
     assertThat(answer.intValue()).isEqualTo(4);
 
     pcfDeployState.setDownsizeInstanceCount(null);
     pcfDeployState.setDownsizeInstanceUnitType(null);
     pcfDeployState.setInstanceUnitType(COUNT);
     pcfDeployState.setInstanceCount(6);
-    answer = pcfDeployState.getDownsizeUpdateCount(setupSweepingOutputPcf);
+    answer = pcfDeployState.getDownsizeUpdateCount(setupSweepingOutputPcf, pcfConfig);
     assertThat(answer.intValue()).isEqualTo(4);
 
     pcfDeployState.setDownsizeInstanceCount(null);
     pcfDeployState.setDownsizeInstanceUnitType(PERCENTAGE);
     pcfDeployState.setInstanceCount(60);
-    answer = pcfDeployState.getDownsizeUpdateCount(setupSweepingOutputPcf);
+    answer = pcfDeployState.getDownsizeUpdateCount(setupSweepingOutputPcf, pcfConfig);
     assertThat(answer.intValue()).isEqualTo(4);
 
     pcfDeployState.setDownsizeInstanceCount(null);
     pcfDeployState.setDownsizeInstanceUnitType(null);
     pcfDeployState.setInstanceUnitType(PERCENTAGE);
     pcfDeployState.setInstanceCount(40);
-    answer = pcfDeployState.getDownsizeUpdateCount(setupSweepingOutputPcf);
+    answer = pcfDeployState.getDownsizeUpdateCount(setupSweepingOutputPcf, pcfConfig);
     assertThat(answer.intValue()).isEqualTo(6);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testGetDownsizeUpdateCountWithOldAppResizeFF() {
+    pcfDeployState.setUseAppResizeV2(true);
+    pcfDeployState.setDownsizeInstanceUnitType(PERCENTAGE);
+    pcfDeployState.setDownsizeInstanceCount(40);
+    SetupSweepingOutputPcf outputPcf = SetupSweepingOutputPcf.builder()
+                                           .useCurrentRunningInstanceCount(false)
+                                           .maxInstanceCount(10)
+                                           .desiredActualFinalCount(10)
+                                           .build();
+    PcfConfig pcfConfig = PcfConfig.builder().accountId("accountId").build();
+    doReturn(true).when(featureFlagService).isEnabled(eq(FeatureName.PCF_OLD_APP_RESIZE), eq("accountId"));
+
+    int answer = pcfDeployState.getDownsizeUpdateCount(outputPcf, pcfConfig);
+    assertThat(answer).isEqualTo(4);
+
+    pcfDeployState.setDownsizeInstanceUnitType(COUNT);
+    pcfDeployState.setDownsizeInstanceCount(4);
+    answer = pcfDeployState.getDownsizeUpdateCount(outputPcf, pcfConfig);
+    assertThat(answer).isEqualTo(4);
+
+    pcfDeployState.setDownsizeInstanceCount(null);
+    pcfDeployState.setDownsizeInstanceUnitType(COUNT);
+    pcfDeployState.setInstanceCount(6);
+    answer = pcfDeployState.getDownsizeUpdateCount(outputPcf, pcfConfig);
+    assertThat(answer).isEqualTo(4);
+
+    pcfDeployState.setDownsizeInstanceCount(null);
+    pcfDeployState.setDownsizeInstanceUnitType(null);
+    pcfDeployState.setInstanceUnitType(COUNT);
+    pcfDeployState.setInstanceCount(6);
+    answer = pcfDeployState.getDownsizeUpdateCount(outputPcf, pcfConfig);
+    assertThat(answer).isEqualTo(4);
+
+    pcfDeployState.setDownsizeInstanceCount(null);
+    pcfDeployState.setDownsizeInstanceUnitType(PERCENTAGE);
+    pcfDeployState.setInstanceCount(60);
+    answer = pcfDeployState.getDownsizeUpdateCount(outputPcf, pcfConfig);
+    assertThat(answer).isEqualTo(4);
+
+    pcfDeployState.setDownsizeInstanceCount(null);
+    pcfDeployState.setDownsizeInstanceUnitType(null);
+    pcfDeployState.setInstanceUnitType(PERCENTAGE);
+    pcfDeployState.setInstanceCount(40);
+    answer = pcfDeployState.getDownsizeUpdateCount(outputPcf, pcfConfig);
+    assertThat(answer).isEqualTo(6);
+
+    pcfDeployState.setUseAppResizeV2(false);
+    pcfDeployState.setDownsizeInstanceUnitType(COUNT);
+    pcfDeployState.setDownsizeInstanceCount(4);
+    answer = pcfDeployState.getDownsizeUpdateCount(outputPcf, pcfConfig);
+    assertThat(answer).isEqualTo(6);
   }
 
   @Test

@@ -1,6 +1,7 @@
 package io.harness.encryptors.managerproxy;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.beans.shared.tasks.NgSetupFields.OWNER;
 import static io.harness.delegatetasks.UpsertSecretTaskType.CREATE;
 import static io.harness.delegatetasks.UpsertSecretTaskType.RENAME;
 import static io.harness.delegatetasks.UpsertSecretTaskType.UPDATE;
@@ -19,6 +20,7 @@ import io.harness.delegatetasks.DeleteSecretTaskParameters;
 import io.harness.delegatetasks.DeleteSecretTaskResponse;
 import io.harness.delegatetasks.UpsertSecretTaskParameters;
 import io.harness.delegatetasks.UpsertSecretTaskResponse;
+import io.harness.delegatetasks.ValidateSecretManagerConfigurationTaskParameters;
 import io.harness.delegatetasks.ValidateSecretReferenceTaskParameters;
 import io.harness.encryptors.DelegateTaskUtils;
 import io.harness.encryptors.VaultEncryptor;
@@ -55,6 +57,7 @@ public class ManagerVaultEncryptor implements VaultEncryptor {
                                                 .encryptionConfig(encryptionConfig)
                                                 .taskType(CREATE)
                                                 .build();
+
     return upsertSecret(accountId, parameters);
   }
 
@@ -84,15 +87,18 @@ public class ManagerVaultEncryptor implements VaultEncryptor {
   }
 
   private EncryptedRecord upsertSecret(String accountId, UpsertSecretTaskParameters parameters) {
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .data(TaskData.builder()
-                                              .async(false)
-                                              .taskType(UPSERT_SECRET.name())
-                                              .parameters(new Object[] {parameters})
-                                              .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
-                                              .build())
-                                    .accountId(accountId)
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .data(TaskData.builder()
+                      .async(false)
+                      .taskType(UPSERT_SECRET.name())
+                      .parameters(new Object[] {parameters})
+                      .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
+                      .build())
+            .accountId(accountId)
+            .setupAbstraction(OWNER, managerEncryptorHelper.getOwner(parameters.getEncryptionConfig()))
+            .build();
+
     try {
       DelegateResponseData delegateResponseData = delegateService.executeTask(delegateTask);
       DelegateTaskUtils.validateDelegateTaskResponse(delegateResponseData);
@@ -122,6 +128,7 @@ public class ManagerVaultEncryptor implements VaultEncryptor {
                                               .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
                                               .build())
                                     .accountId(accountId)
+                                    .setupAbstraction(OWNER, managerEncryptorHelper.getOwner(encryptionConfig))
                                     .build();
     try {
       DelegateResponseData delegateResponseData = delegateService.executeTask(delegateTask);
@@ -160,6 +167,13 @@ public class ManagerVaultEncryptor implements VaultEncryptor {
             .build();
 
     return managerEncryptorHelper.validateReference(accountId, parameters);
+  }
+
+  @Override
+  public boolean validateSecretManagerConfiguration(String accountId, EncryptionConfig encryptionConfig) {
+    ValidateSecretManagerConfigurationTaskParameters parameters =
+        ValidateSecretManagerConfigurationTaskParameters.builder().encryptionConfig(encryptionConfig).build();
+    return managerEncryptorHelper.validateConfiguration(accountId, parameters);
   }
 
   @Override

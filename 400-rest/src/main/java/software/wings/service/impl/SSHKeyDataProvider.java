@@ -1,11 +1,13 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.shell.AccessType.KERBEROS;
 import static io.harness.shell.AccessType.KEY;
 import static io.harness.shell.AccessType.USER_PASSWORD;
 
 import static java.util.stream.Collectors.groupingBy;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.shell.AccessType;
 
 import software.wings.beans.HostConnectionAttributes;
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Singleton
+@OwnedBy(CDP)
 public class SSHKeyDataProvider implements DataProvider {
   @Inject private SettingsService settingsService;
   @Inject private AppService appService;

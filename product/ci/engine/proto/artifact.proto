@@ -5,50 +5,28 @@ package io.harness.product.ci.engine.proto;
 option java_multiple_files = true;
 option go_package = "cienginepb";
 
-enum LocationType {
-  UNKNOWN = 0;  // Default value of enum is 0
-  // Artifactories
-  S3 = 1;
-  GCS = 2;
-  JFROG = 3;
-  // Registries
-  GCR = 4;
-  ECR = 5;
-  DOCKERHUB = 6;
+message Artifact {
+  oneof metadata {
+    DockerArtifactMetadata docker_artifact = 1;
+    FileArtifactMetadata file_artifact = 2;
+  }
 }
 
-enum AuthType {
-  BASIC_AUTH = 0;   // Assumes USERNAME_id and PASSWORD_id to be present
-  SECRET_FILE = 1;  // Assumes SECRET_PATH_id to be present
-  ACCESS_KEY = 2;   // Assumes ACCESS_KEY_id and/or SECRET_KEY_id to be present
+message DockerArtifactMetadata {
+  string registry_type = 1;
+  string registry_url = 2;
+  repeated DockerImageMetadata docker_images = 3;
+}
+message DockerImageMetadata {
+  string image = 1;
+  string digest = 3;
 }
 
-// Task global unique identifier
-message TaskId {
-  string id = 1;
+message FileArtifactMetadata {
+  repeated FileArtifact file_artifacts = 1;
 }
 
-// Details of connector
-message Connector {
-  string id = 1;
-  AuthType auth = 2;
-}
-
-message BuildPublishImage {
-  string docker_file = 1;
-  string context = 2;
-  Destination destination = 3;
-}
-
-message UploadFile {
-  string file_pattern = 1;
-  Destination destination = 2;  // location to copy the file
-}
-
-// Destination to upload to
-message Destination {
-  string destination_url = 1;
-  Connector connector = 2;
-  LocationType location_type = 3;
-  string region = 4;  // Valid only for S3 connector
+message FileArtifact {
+  string name = 1;
+  string url = 2;
 }

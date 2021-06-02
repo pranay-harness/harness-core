@@ -1,6 +1,9 @@
 package software.wings.delegatetasks.validation.capabilities;
 
-import io.harness.annotations.dev.Module;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -14,7 +17,8 @@ import lombok.Value;
 
 @Value
 @Builder
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class HelmCommandCapability implements ExecutionCapability {
   @NotNull HelmCommandRequest commandRequest;
   CapabilityType capabilityType = CapabilityType.HELM_COMMAND;

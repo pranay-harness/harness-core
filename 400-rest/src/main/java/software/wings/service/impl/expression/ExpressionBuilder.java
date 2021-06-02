@@ -75,32 +75,19 @@ public abstract class ExpressionBuilder {
   protected static final String APP_DESCRIPTION = "app.description";
 
   protected static final String ARTIFACT_PREFIX = "artifact.";
-  protected static final String ARTIFACT_DISPLAY_NAME = "artifact.displayName";
-  protected static final String ARTIFACT_DESCRIPTION = "artifact.description";
-  protected static final String ARTIFACT_BUILDNO = "artifact.buildNo";
-  protected static final String ARTIFACT_REVISION = "artifact.revision";
+  protected static final String ARTIFACT = "artifact";
   protected static final String ARTIFACT_FILE_NAME = "ARTIFACT_FILE_NAME";
-  protected static final String ARTIFACT_ARTIFACT_FILE_NAME = "artifact.fileName";
-  protected static final String ARTIFACT_BUCKET_NAME = "artifact.bucketName";
-  protected static final String ARTIFACT_BUCKET_KEY = "artifact.key";
-  protected static final String ARTIFACT_LABEL = "artifact.label";
-  protected static final String ARTIFACT_URL = "artifact.url";
-  protected static final String ARTIFACT_BUILD_FULL_DISPLAYNAME = "artifact.buildFullDisplayName";
-  protected static final String ARTIFACT_METADATA_IMAGE = ARTIFACT_PREFIX + ArtifactKeys.metadata_image;
-  protected static final String ARTIFACT_METADATA_TAG = ARTIFACT_PREFIX + ArtifactKeys.metadata_tag;
   protected static final String ARTIFACT_PATH = "artifact.artifactPath";
   protected static final String ARTIFACT_SOURCE = "artifact.source.";
-  protected static final String ARTIFACT_SOURCE_USER_NAME = ARTIFACT_SOURCE + ARTIFACT_SOURCE_USER_NAME_KEY;
-  protected static final String ARTIFACT_SOURCE_REGISTRY_URL = ARTIFACT_SOURCE + ARTIFACT_SOURCE_REGISTRY_URL_KEY;
-  protected static final String ARTIFACT_SOURCE_REPOSITORY_NAME = ARTIFACT_SOURCE + ARTIFACT_SOURCE_REPOSITORY_NAME_KEY;
 
   protected static final String ARTIFACT_DISPLAY_NAME_SUFFIX = ".displayName";
   protected static final String ARTIFACT_DESCRIPTION_SUFFIX = ".description";
   protected static final String ARTIFACT_BUILDNO_SUFFIX = ".buildNo";
   protected static final String ARTIFACT_REVISION_SUFFIX = ".revision";
-  protected static final String ARTIFACT_ARTIFACT_FILE_NAME_SUFFIX = ".fileName";
+  protected static final String ARTIFACT_FILE_NAME_SUFFIX = ".fileName";
   protected static final String ARTIFACT_BUCKET_NAME_SUFFIX = ".bucketName";
   protected static final String ARTIFACT_BUCKET_KEY_SUFFIX = ".key";
+  protected static final String ARTIFACT_LABEL_SUFFIX = ".label";
   protected static final String ARTIFACT_URL_SUFFIX = ".url";
   protected static final String ARTIFACT_BUILD_FULL_DISPLAYNAME_SUFFIX = ".buildFullDisplayName";
   protected static final String ARTIFACT_METADATA_IMAGE_SUFFIX = "." + ArtifactKeys.metadata_image;
@@ -110,6 +97,9 @@ public abstract class ExpressionBuilder {
   protected static final String ARTIFACT_SOURCE_REGISTRY_URL_SUFFIX = ".source." + ARTIFACT_SOURCE_REGISTRY_URL_KEY;
   protected static final String ARTIFACT_SOURCE_REPOSITORY_NAME_SUFFIX =
       ".source." + ARTIFACT_SOURCE_REPOSITORY_NAME_KEY;
+
+  protected static final String ROLLBACK_ARTIFACT_PREFIX = "rollbackArtifact";
+  protected static final String ROLLBACK_ARTIFACT_FILE_NAME = "ROLLBACK_ARTIFACT_FILE_NAME";
 
   protected static final String ENV_PREFIX = "env.";
   protected static final String ENV_NAME = "env.name";
@@ -212,10 +202,11 @@ public abstract class ExpressionBuilder {
     Set<String> expressions = new TreeSet<>();
     expressions.addAll(asList(APP_NAME, APP_DESCRIPTION));
     if (!multiArtifact) {
-      expressions.addAll(asList(ARTIFACT_DISPLAY_NAME, ARTIFACT_BUILDNO, ARTIFACT_REVISION, ARTIFACT_DESCRIPTION,
-          ARTIFACT_FILE_NAME, ARTIFACT_ARTIFACT_FILE_NAME, ARTIFACT_BUILD_FULL_DISPLAYNAME, ARTIFACT_BUCKET_NAME,
-          ARTIFACT_BUCKET_KEY, ARTIFACT_PATH, ARTIFACT_URL, ARTIFACT_SOURCE_USER_NAME, ARTIFACT_SOURCE_REGISTRY_URL,
-          ARTIFACT_SOURCE_REPOSITORY_NAME, ARTIFACT_METADATA_IMAGE, ARTIFACT_METADATA_TAG, ARTIFACT_LABEL));
+      expressions.addAll(getArtifactExpressionSuffixes().stream().map(ARTIFACT::concat).collect(Collectors.toSet()));
+      expressions.add(ARTIFACT_FILE_NAME);
+      expressions.addAll(
+          getArtifactExpressionSuffixes().stream().map(ROLLBACK_ARTIFACT_PREFIX::concat).collect(Collectors.toSet()));
+      expressions.add(ROLLBACK_ARTIFACT_FILE_NAME);
     }
     expressions.addAll(asList(ENV_NAME, ENV_DESCRIPTION));
     expressions.addAll(asList(SERVICE_NAME, SERVICE_DESCRIPTION));
@@ -258,7 +249,8 @@ public abstract class ExpressionBuilder {
         expressions.addAll(asList(WINGS_RUNTIME_PATH, WINGS_STAGING_PATH, WINGS_BACKUP_PATH));
         break;
       case AWS_CODEDEPLOY_STATE:
-        expressions.addAll(asList(ARTIFACT_BUCKET_NAME, ARTIFACT_BUCKET_KEY, ARTIFACT_URL));
+        expressions.addAll(asList(ARTIFACT + ARTIFACT_BUCKET_NAME_SUFFIX, ARTIFACT + ARTIFACT_BUCKET_KEY_SUFFIX,
+            ARTIFACT + ARTIFACT_URL_SUFFIX));
         break;
       case AWS_LAMBDA_STATE:
       case ECS_SERVICE_SETUP:
@@ -383,13 +375,13 @@ public abstract class ExpressionBuilder {
     return serviceVariables;
   }
 
-  public Set<String> getArtifactExpressionSuffixes() {
+  public static Set<String> getArtifactExpressionSuffixes() {
     Set<String> expressions = new TreeSet<>();
     expressions.addAll(asList(ARTIFACT_DISPLAY_NAME_SUFFIX, ARTIFACT_BUILDNO_SUFFIX, ARTIFACT_REVISION_SUFFIX,
-        ARTIFACT_DESCRIPTION_SUFFIX, ARTIFACT_ARTIFACT_FILE_NAME_SUFFIX, ARTIFACT_BUILD_FULL_DISPLAYNAME_SUFFIX,
+        ARTIFACT_DESCRIPTION_SUFFIX, ARTIFACT_FILE_NAME_SUFFIX, ARTIFACT_BUILD_FULL_DISPLAYNAME_SUFFIX,
         ARTIFACT_BUCKET_NAME_SUFFIX, ARTIFACT_BUCKET_KEY_SUFFIX, ARTIFACT_PATH_SUFFIX, ARTIFACT_URL_SUFFIX,
         ARTIFACT_SOURCE_USER_NAME_SUFFIX, ARTIFACT_SOURCE_REGISTRY_URL_SUFFIX, ARTIFACT_SOURCE_REPOSITORY_NAME_SUFFIX,
-        ARTIFACT_METADATA_IMAGE_SUFFIX, ARTIFACT_METADATA_TAG_SUFFIX));
+        ARTIFACT_METADATA_IMAGE_SUFFIX, ARTIFACT_METADATA_TAG_SUFFIX, ARTIFACT_LABEL_SUFFIX));
     return expressions;
   }
 }

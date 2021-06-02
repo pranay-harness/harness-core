@@ -1,21 +1,31 @@
 package software.wings.helpers.ext.k8s.request;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.expression.Expression;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.HelmVersion;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
+@OwnedBy(CDP)
 public class K8sRollingDeployTaskParameters extends K8sTaskParameters implements ManifestAwareTaskParams {
   @Expression(ALLOW_SECRETS) private K8sDelegateManifestConfig k8sDelegateManifestConfig;
   @Expression(ALLOW_SECRETS) private List<String> valuesYamlList;
@@ -23,20 +33,36 @@ public class K8sRollingDeployTaskParameters extends K8sTaskParameters implements
   private boolean skipDryRun;
   private boolean localOverrideFeatureFlag;
   private Boolean skipVersioningForAllK8sObjects;
+  private boolean isPruningEnabled;
 
   @Builder
   public K8sRollingDeployTaskParameters(String accountId, String appId, String commandName, String activityId,
       K8sTaskType k8sTaskType, K8sClusterConfig k8sClusterConfig, String workflowExecutionId, String releaseName,
       Integer timeoutIntervalInMin, K8sDelegateManifestConfig k8sDelegateManifestConfig, List<String> valuesYamlList,
       boolean isInCanaryWorkflow, boolean skipDryRun, HelmVersion helmVersion, boolean localOverrideFeatureFlag,
-      Boolean skipVersioningForAllK8sObjects) {
+      Boolean skipVersioningForAllK8sObjects, Set<String> delegateSelectors, boolean isPruningEnabled) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
-        timeoutIntervalInMin, k8sTaskType, helmVersion);
+        timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors);
     this.k8sDelegateManifestConfig = k8sDelegateManifestConfig;
     this.valuesYamlList = valuesYamlList;
     this.isInCanaryWorkflow = isInCanaryWorkflow;
     this.skipDryRun = skipDryRun;
     this.localOverrideFeatureFlag = localOverrideFeatureFlag;
     this.skipVersioningForAllK8sObjects = skipVersioningForAllK8sObjects;
+    this.isPruningEnabled = isPruningEnabled;
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    List<ExecutionCapability> capabilities =
+        new ArrayList<>(super.fetchRequiredExecutionCapabilities(maskingEvaluator));
+    if (k8sDelegateManifestConfig == null || k8sDelegateManifestConfig.getGitConfig() == null
+        || isEmpty(k8sDelegateManifestConfig.getGitConfig().getDelegateSelectors())) {
+      return capabilities;
+    }
+    capabilities.add(SelectorCapability.builder()
+                         .selectors(new HashSet<>(k8sDelegateManifestConfig.getGitConfig().getDelegateSelectors()))
+                         .build());
+    return capabilities;
   }
 }

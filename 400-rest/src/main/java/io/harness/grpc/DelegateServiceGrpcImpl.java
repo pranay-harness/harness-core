@@ -3,9 +3,10 @@ package io.harness.grpc;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.annotations.dev.BreakDependencyOn;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
+import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.delegate.CancelTaskRequest;
@@ -52,6 +53,7 @@ import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateTaskService;
 
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DelegateTaskServiceClassic;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -69,7 +71,7 @@ import org.apache.commons.lang3.NotImplementedException;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @BreakDependencyOn("io.harness.delegate.beans.DelegateTaskResponse")
 public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
   private DelegateCallbackRegistry delegateCallbackRegistry;
@@ -77,16 +79,19 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
   private DelegateService delegateService;
   private KryoSerializer kryoSerializer;
   private DelegateTaskService delegateTaskService;
+  private DelegateTaskServiceClassic delegateTaskServiceClassic;
 
   @Inject
   public DelegateServiceGrpcImpl(DelegateCallbackRegistry delegateCallbackRegistry,
       PerpetualTaskService perpetualTaskService, DelegateService delegateService,
-      DelegateTaskService delegateTaskService, KryoSerializer kryoSerializer) {
+      DelegateTaskService delegateTaskService, KryoSerializer kryoSerializer,
+      DelegateTaskServiceClassic delegateTaskServiceClassic) {
     this.delegateCallbackRegistry = delegateCallbackRegistry;
     this.perpetualTaskService = perpetualTaskService;
     this.delegateService = delegateService;
     this.kryoSerializer = kryoSerializer;
     this.delegateTaskService = delegateTaskService;
+    this.delegateTaskServiceClassic = delegateTaskServiceClassic;
   }
 
   @Override
@@ -108,27 +113,35 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
       List<String> taskSelectors =
           request.getSelectorsList().stream().map(TaskSelector::getSelector).collect(Collectors.toList());
 
-      DelegateTask task = DelegateTask.builder()
-                              .uuid(taskId)
-                              .driverId(request.hasCallbackToken() ? request.getCallbackToken().getToken() : null)
-                              .waitId(taskId)
-                              .accountId(request.getAccountId().getId())
-                              .setupAbstractions(setupAbstractions)
-                              .logStreamingAbstractions(logAbstractions)
-                              .workflowExecutionId(setupAbstractions.get(DelegateTaskKeys.workflowExecutionId))
-                              .executionCapabilities(capabilities)
-                              .tags(taskSelectors)
-                              .data(TaskData.builder()
-                                        .parked(taskDetails.getParked())
-                                        .async(taskDetails.getMode() == TaskMode.ASYNC)
-                                        .taskType(taskDetails.getType().getType())
-                                        .parameters(new Object[] {kryoSerializer.asInflatedObject(
-                                            taskDetails.getKryoParameters().toByteArray())})
-                                        .timeout(Durations.toMillis(taskDetails.getExecutionTimeout()))
-                                        .expressionFunctorToken((int) taskDetails.getExpressionFunctorToken())
-                                        .expressions(taskDetails.getExpressionsMap())
-                                        .build())
-                              .build();
+      DelegateTaskBuilder taskBuilder =
+          DelegateTask.builder()
+              .uuid(taskId)
+              .driverId(request.hasCallbackToken() ? request.getCallbackToken().getToken() : null)
+              .waitId(taskId)
+              .accountId(request.getAccountId().getId())
+              .setupAbstractions(setupAbstractions)
+              .logStreamingAbstractions(logAbstractions)
+              .workflowExecutionId(setupAbstractions.get(DelegateTaskKeys.workflowExecutionId))
+              .executionCapabilities(capabilities)
+              .tags(taskSelectors)
+              .selectionLogsTrackingEnabled(request.getSelectionTrackingLogEnabled())
+              .forceExecute(request.getForceExecute())
+              .data(TaskData.builder()
+                        .parked(taskDetails.getParked())
+                        .async(taskDetails.getMode() == TaskMode.ASYNC)
+                        .taskType(taskDetails.getType().getType())
+                        .parameters(new Object[] {
+                            kryoSerializer.asInflatedObject(taskDetails.getKryoParameters().toByteArray())})
+                        .timeout(Durations.toMillis(taskDetails.getExecutionTimeout()))
+                        .expressionFunctorToken((int) taskDetails.getExpressionFunctorToken())
+                        .expressions(taskDetails.getExpressionsMap())
+                        .build());
+
+      if (request.hasQueueTimeout()) {
+        taskBuilder.expiry(System.currentTimeMillis() + Durations.toMillis(request.getQueueTimeout()));
+      }
+
+      DelegateTask task = taskBuilder.build();
 
       if (task.getData().isParked()) {
         delegateService.saveDelegateTask(task, DelegateTask.Status.PARKED);
@@ -155,7 +168,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
   public void executeParkedTask(
       ExecuteParkedTaskRequest request, StreamObserver<ExecuteParkedTaskResponse> responseObserver) {
     try {
-      delegateService.queueParkedTask(request.getAccountId().getId(), request.getTaskId().getId());
+      delegateTaskServiceClassic.queueParkedTask(request.getAccountId().getId(), request.getTaskId().getId());
 
       responseObserver.onNext(ExecuteParkedTaskResponse.newBuilder()
                                   .setTaskId(TaskId.newBuilder().setId(request.getTaskId().getId()).build())
@@ -171,7 +184,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
   public void fetchParkedTaskStatus(
       FetchParkedTaskStatusRequest request, StreamObserver<FetchParkedTaskStatusResponse> responseObserver) {
     try {
-      byte[] delegateTaskResults = delegateService.getParkedTaskResults(
+      byte[] delegateTaskResults = delegateTaskServiceClassic.getParkedTaskResults(
           request.getAccountId().getId(), request.getTaskId().getId(), request.getCallbackToken().getToken());
       if (delegateTaskResults.length > 0) {
         responseObserver.onNext(FetchParkedTaskStatusResponse.newBuilder()
@@ -212,8 +225,8 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
   public void sendTaskProgress(
       SendTaskProgressRequest request, StreamObserver<SendTaskProgressResponse> responseObserver) {
     try {
-      delegateService.publishTaskProgressResponse(request.getAccountId().getId(), request.getCallbackToken().getToken(),
-          request.getTaskId().getId(),
+      delegateTaskServiceClassic.publishTaskProgressResponse(request.getAccountId().getId(),
+          request.getCallbackToken().getToken(), request.getTaskId().getId(),
           (DelegateProgressData) kryoSerializer.asInflatedObject(
               request.getTaskResponseData().getKryoResultsData().toByteArray()));
       responseObserver.onNext(SendTaskProgressResponse.newBuilder().setSuccess(true).build());
@@ -228,7 +241,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
   public void cancelTask(CancelTaskRequest request, StreamObserver<CancelTaskResponse> responseObserver) {
     try {
       DelegateTask preAbortedTask =
-          delegateService.abortTask(request.getAccountId().getId(), request.getTaskId().getId());
+          delegateTaskServiceClassic.abortTask(request.getAccountId().getId(), request.getTaskId().getId());
       if (preAbortedTask != null) {
         responseObserver.onNext(
             CancelTaskResponse.newBuilder()
@@ -251,7 +264,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
   public void taskProgress(TaskProgressRequest request, StreamObserver<TaskProgressResponse> responseObserver) {
     try {
       Optional<DelegateTask> delegateTaskOptional =
-          delegateService.fetchDelegateTask(request.getAccountId().getId(), request.getTaskId().getId());
+          delegateTaskServiceClassic.fetchDelegateTask(request.getAccountId().getId(), request.getTaskId().getId());
 
       if (delegateTaskOptional.isPresent()) {
         responseObserver.onNext(TaskProgressResponse.newBuilder()

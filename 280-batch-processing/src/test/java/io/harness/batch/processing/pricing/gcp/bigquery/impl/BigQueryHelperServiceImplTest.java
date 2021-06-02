@@ -7,6 +7,7 @@ import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.productFamily;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.resourceId;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.serviceCode;
+import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.usageType;
 import static io.harness.rule.OwnerRule.HITESH;
 
 import static com.google.cloud.bigquery.FieldValue.Attribute.PRIMITIVE;
@@ -61,6 +62,10 @@ public class BigQueryHelperServiceImplTest extends CategoryTest {
   private final String GCP_PROJECTID = "gcpProjectId";
   private final String networkCost = "10.0";
   private final String computeCost = "20.0";
+  private final String cpuCost = "12.0";
+  private final String memoryCost = "14.0";
+  private final String cpuCostDecimal = "3.5";
+  private final String memoryCostDecimal = "4.5";
   private final String effCost = "30.0";
   private final Instant NOW = Instant.now();
   private final Instant START_TIME = NOW.minus(1, ChronoUnit.HOURS);
@@ -154,5 +159,90 @@ public class BigQueryHelperServiceImplTest extends CategoryTest {
     Map<String, VMInstanceBillingData> awsEC2BillingData =
         bigQueryHelperService.getAwsEC2BillingData(resourceIds, START_TIME, END_TIME, DATA_SET_ID);
     assertThat(awsEC2BillingData).isEqualTo(resourceBillingData);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetAwsEKSBilligData() throws InterruptedException {
+    BillingDataPipelineConfig billingDataPipelineConfig =
+        BillingDataPipelineConfig.builder().gcpProjectId(GCP_PROJECTID).build();
+
+    when(mainConfig.getBillingDataPipelineConfig()).thenReturn(billingDataPipelineConfig);
+    doReturn(bigQuery).when(bigQueryHelperService).getBigQueryService();
+
+    FieldList fieldList = FieldList.of(Field.newBuilder(resourceId, StandardSQLTypeName.STRING).build(),
+        Field.newBuilder(cost, StandardSQLTypeName.FLOAT64).build(),
+        Field.newBuilder(usageType, StandardSQLTypeName.STRING).build());
+    List<FieldValue> fieldValueCPU = new ArrayList<>();
+    fieldValueCPU.add(FieldValue.of(PRIMITIVE, RESOURCE_ID));
+    fieldValueCPU.add(FieldValue.of(PRIMITIVE, cpuCost));
+    fieldValueCPU.add(FieldValue.of(PRIMITIVE, "USW2-Fargate-vCPU-Hours:perCPU"));
+    FieldValueList valueList = FieldValueList.of(fieldValueCPU, fieldList);
+    FieldValueList fieldValueList = FieldValueList.of(valueList, fieldList);
+    List<FieldValue> fieldValueMemory = new ArrayList<>();
+    fieldValueMemory.add(FieldValue.of(PRIMITIVE, RESOURCE_ID));
+    fieldValueMemory.add(FieldValue.of(PRIMITIVE, memoryCost));
+    fieldValueMemory.add(FieldValue.of(PRIMITIVE, "USW2-Fargate-GB-Hours"));
+    FieldValueList valueListCompute = FieldValueList.of(fieldValueMemory, fieldList);
+    FieldValueList fieldValueListCompute = FieldValueList.of(valueListCompute, fieldList);
+    Iterable<FieldValueList> fieldValueListIterator = Arrays.asList(fieldValueList, fieldValueListCompute);
+    doReturn(fieldList).when(bigQueryHelperService).getFieldList(any());
+    doReturn(fieldValueListIterator).when(bigQueryHelperService).getFieldValueLists(any());
+    when(tableResult.getSchema()).thenReturn(Schema.of(fieldList));
+
+    List<String> resourceIds = Collections.singletonList(RESOURCE_ID);
+    Map<String, VMInstanceBillingData> resourceBillingData = new HashMap<>();
+    resourceBillingData.put(RESOURCE_ID,
+        VMInstanceBillingData.builder()
+            .resourceId(RESOURCE_ID)
+            .cpuCost(12.0)
+            .memoryCost(14.0)
+            .computeCost(26.0)
+            .build());
+    Map<String, VMInstanceBillingData> awsEKSFargateBillingData =
+        bigQueryHelperService.getEKSFargateBillingData(resourceIds, START_TIME, END_TIME, DATA_SET_ID);
+    assertThat(awsEKSFargateBillingData).isEqualTo(resourceBillingData);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetAwsEKSBilligData2() throws InterruptedException {
+    BillingDataPipelineConfig billingDataPipelineConfig =
+        BillingDataPipelineConfig.builder().gcpProjectId(GCP_PROJECTID).build();
+
+    when(mainConfig.getBillingDataPipelineConfig()).thenReturn(billingDataPipelineConfig);
+    doReturn(bigQuery).when(bigQueryHelperService).getBigQueryService();
+
+    FieldList fieldList = FieldList.of(Field.newBuilder(resourceId, StandardSQLTypeName.STRING).build(),
+        Field.newBuilder(cost, StandardSQLTypeName.FLOAT64).build(),
+        Field.newBuilder(usageType, StandardSQLTypeName.STRING).build());
+    List<FieldValue> fieldValueMemory = new ArrayList<>();
+    fieldValueMemory.add(FieldValue.of(PRIMITIVE, RESOURCE_ID));
+    fieldValueMemory.add(FieldValue.of(PRIMITIVE, memoryCostDecimal));
+    fieldValueMemory.add(FieldValue.of(PRIMITIVE, "USW2-Fargate-GB-Hours"));
+    FieldValueList valueListCompute = FieldValueList.of(fieldValueMemory, fieldList);
+    FieldValueList fieldValueListCompute = FieldValueList.of(valueListCompute, fieldList);
+
+    List<FieldValue> fieldValueCPU = new ArrayList<>();
+    fieldValueCPU.add(FieldValue.of(PRIMITIVE, RESOURCE_ID));
+    fieldValueCPU.add(FieldValue.of(PRIMITIVE, cpuCostDecimal));
+    fieldValueCPU.add(FieldValue.of(PRIMITIVE, "USW2-Fargate-vCPU-Hours:perCPU"));
+    FieldValueList valueList = FieldValueList.of(fieldValueCPU, fieldList);
+    FieldValueList fieldValueList = FieldValueList.of(valueList, fieldList);
+
+    Iterable<FieldValueList> fieldValueListIterator = Arrays.asList(fieldValueListCompute, fieldValueList);
+    doReturn(fieldList).when(bigQueryHelperService).getFieldList(any());
+    doReturn(fieldValueListIterator).when(bigQueryHelperService).getFieldValueLists(any());
+    when(tableResult.getSchema()).thenReturn(Schema.of(fieldList));
+
+    List<String> resourceIds = Collections.singletonList(RESOURCE_ID);
+    Map<String, VMInstanceBillingData> resourceBillingData = new HashMap<>();
+    resourceBillingData.put(RESOURCE_ID,
+        VMInstanceBillingData.builder().resourceId(RESOURCE_ID).cpuCost(3.5).memoryCost(4.5).computeCost(8.0).build());
+    Map<String, VMInstanceBillingData> awsEKSFargateBillingData =
+        bigQueryHelperService.getEKSFargateBillingData(resourceIds, START_TIME, END_TIME, DATA_SET_ID);
+    assertThat(awsEKSFargateBillingData).isEqualTo(resourceBillingData);
   }
 }

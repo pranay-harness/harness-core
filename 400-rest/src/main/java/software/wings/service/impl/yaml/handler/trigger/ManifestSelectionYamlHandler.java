@@ -77,6 +77,7 @@ public class ManifestSelectionYamlHandler extends BaseYamlHandler<Yaml, Manifest
     return manifestSelectionBuilder.build();
   }
 
+  @SuppressWarnings("PMD")
   private ManifestSelectionType getType(String type) {
     try {
       return ManifestSelectionType.valueOf(type);

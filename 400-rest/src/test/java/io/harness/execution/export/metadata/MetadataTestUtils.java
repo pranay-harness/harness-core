@@ -44,9 +44,7 @@ import software.wings.sm.StateType;
 import com.google.common.collect.ImmutableMap;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 
@@ -176,21 +174,5 @@ public class MetadataTestUtils {
 
   public NameValuePair prepareNameValuePair(int idx) {
     return NameValuePair.builder().name("n" + idx).value("v" + idx).valueType("TEXT").build();
-  }
-
-  public class SimpleVisitor implements GraphNodeVisitor {
-    private final List<String> visited = new ArrayList<>();
-
-    public void visitGraphNode(GraphNodeMetadata nodeMetadata) {
-      if (nodeMetadata.getId() == null) {
-        throw new RuntimeException("invalid id");
-      }
-
-      visited.add(nodeMetadata.getId());
-    }
-
-    public List<String> getVisited() {
-      return visited;
-    }
   }
 }

@@ -1,8 +1,7 @@
 package io.harness.delegate.app;
 
-import static io.harness.annotations.dev.Module._420_DELEGATE_AGENT;
+import static io.harness.annotations.dev.HarnessModule._420_DELEGATE_AGENT;
 import static io.harness.configuration.DeployMode.DEPLOY_MODE;
-import static io.harness.configuration.DeployMode.isOnPrem;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
 import static io.harness.delegate.message.MessageConstants.NEW_DELEGATE;
 import static io.harness.delegate.message.MessageConstants.WATCHER_DATA;
@@ -12,30 +11,35 @@ import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
 import static io.harness.delegate.service.DelegateAgentServiceImpl.getDelegateId;
 import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractAuthority;
+import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractScheme;
 import static io.harness.grpc.utils.DelegateGrpcConfigExtractor.extractTarget;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.service.DelegateAgentService;
 import io.harness.delegate.task.citasks.CITaskFactoryModule;
+import io.harness.delegate.task.citasks.cik8handler.helper.DelegateServiceTokenHelper;
 import io.harness.delegate.task.k8s.apiclient.KubernetesApiClientFactoryModule;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.client.impl.EventPublisherConstants;
 import io.harness.event.client.impl.appender.AppenderModule;
 import io.harness.event.client.impl.appender.AppenderModule.Config;
 import io.harness.govern.ProviderModule;
+import io.harness.grpc.client.AbstractManagerGrpcClientModule;
 import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.grpc.delegateservice.DelegateServiceGrpcAgentClientModule;
 import io.harness.grpc.pingpong.PingPongClient;
 import io.harness.grpc.pingpong.PingPongModule;
 import io.harness.logstreaming.LogStreamingModule;
-import io.harness.managerclient.ManagerClientModule;
+import io.harness.managerclient.DelegateManagerClientModule;
 import io.harness.perpetualtask.PerpetualTaskWorkerModule;
+import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
@@ -78,6 +82,8 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 @Slf4j
 @TargetModule(_420_DELEGATE_AGENT)
+@BreakDependencyOn("io.harness.serializer.ManagerRegistrars")
+@BreakDependencyOn("io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar")
 public class DelegateApplication {
   private static String processId = String.valueOf(ProcessControl.myProcessId());
   private static DelegateConfiguration configuration;
@@ -156,21 +162,35 @@ public class DelegateApplication {
         bind(DelegateConfiguration.class).toInstance(configuration);
       }
     });
-    modules.add(new ManagerClientModule(configuration.getManagerUrl(), configuration.getVerificationServiceUrl(),
-        configuration.getCvNextGenUrl(), configuration.getAccountId(), configuration.getAccountSecret()));
+    modules.add(
+        new DelegateManagerClientModule(configuration.getManagerUrl(), configuration.getVerificationServiceUrl(),
+            configuration.getCvNextGenUrl(), configuration.getAccountId(), configuration.getAccountSecret()));
     modules.add(new LogStreamingModule(configuration.getLogStreamingServiceBaseUrl()));
-    String managerHostAndPort = System.getenv("MANAGER_HOST_AND_PORT");
-    modules.add(new ManagerGrpcClientModule(
-        ManagerGrpcClientModule.Config.builder()
+    modules.add(new AbstractManagerGrpcClientModule() {
+      @Override
+      public ManagerGrpcClientModule.Config config() {
+        return ManagerGrpcClientModule.Config.builder()
             .target(Optional.ofNullable(configuration.getManagerTarget())
-                        .orElseGet(() -> extractTarget(managerHostAndPort)))
+                        .orElseGet(() -> extractTarget(configuration.getManagerUrl())))
             .authority(Optional.ofNullable(configuration.getManagerAuthority())
-                           .orElseGet(() -> extractAuthority(managerHostAndPort, "manager")))
+                           .orElseGet(() -> extractAuthority(configuration.getManagerUrl(), "manager")))
+            .scheme(extractScheme(configuration.getManagerUrl()))
             .accountId(configuration.getAccountId())
             .accountSecret(configuration.getAccountSecret())
-            .build()));
-    if (!isOnPrem(System.getenv().get(DEPLOY_MODE))) {
+            .build();
+      }
+
+      @Override
+      public String application() {
+        return "Delegate";
+      }
+    });
+
+    if (!ImmutableSet.of("ONPREM", "KUBERNETES_ONPREM").contains(System.getenv().get(DEPLOY_MODE))) {
       modules.add(new PingPongModule());
+    }
+
+    if (!"ONPREM".equals(System.getenv().get(DEPLOY_MODE))) {
       modules.add(new PerpetualTaskWorkerModule());
       modules.add(DelegateServiceGrpcAgentClientModule.getInstance());
     }
@@ -185,9 +205,20 @@ public class DelegateApplication {
     modules.add(DelegateModule.getInstance());
 
     if (configuration.isGrpcServiceEnabled()) {
-      modules.add(new DelegateGrpcServiceModule(
-          configuration.getGrpcServiceConnectorPort(), configuration.getManagerServiceSecret()));
+      modules.add(
+          new DelegateGrpcServiceModule(configuration.getGrpcServiceConnectorPort(), configuration.getAccountSecret()));
     }
+
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(DelegateServiceTokenHelper.class)
+            .toInstance(DelegateServiceTokenHelper.builder()
+                            .serviceTokenGenerator(new ServiceTokenGenerator())
+                            .accountSecret(configuration.getAccountSecret())
+                            .build());
+      }
+    });
 
     Injector injector = Guice.createInjector(modules);
     MessageService messageService = injector.getInstance(MessageService.class);
@@ -204,7 +235,7 @@ public class DelegateApplication {
       watcherData.put(WATCHER_PROCESS, watcherProcess);
       messageService.putAllData(WATCHER_DATA, watcherData);
     }
-    if (!isOnPrem(System.getenv().get(DEPLOY_MODE))) {
+    if (!ImmutableSet.of("ONPREM", "KUBERNETES_ONPREM").contains(System.getenv().get(DEPLOY_MODE))) {
       injector.getInstance(PingPongClient.class).startAsync();
     }
     Runtime.getRuntime().addShutdownHook(new Thread(() -> injector.getInstance(PingPongClient.class).stopAsync()));

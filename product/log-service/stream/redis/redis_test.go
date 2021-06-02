@@ -409,3 +409,30 @@ func TestInfo(t *testing.T) {
 	assert.Equal(t, info.Streams[key].Size, 1)
 	assert.Equal(t, info.Streams[key].Subs, -1) // No subs information for Redis
 }
+
+func TestExists(t *testing.T) {
+	ctx := context.Background()
+	key := "key"
+
+	mr, err := miniredis.Run()
+	if err != nil {
+		log.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mr.Close()
+
+	client = redis.NewClient(&redis.Options{
+		Addr: mr.Addr(),
+	})
+
+	rdb := &Redis{
+		Client: client,
+	}
+
+	mr.XAdd(key, "*", []string{"k1", "v1"})
+	assert.Equal(t, mr.Exists(key), true)
+	assert.Nil(t, rdb.Exists(ctx, key))
+	err = rdb.Delete(ctx, key)
+
+	assert.Equal(t, mr.Exists(key), false)
+	assert.NotNil(t, rdb.Exists(ctx, key))
+}

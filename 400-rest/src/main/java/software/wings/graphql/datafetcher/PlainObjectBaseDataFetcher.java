@@ -8,7 +8,7 @@ import static software.wings.graphql.datafetcher.DataFetcherUtils.GENERIC_EXCEPT
 import static software.wings.graphql.datafetcher.DataFetcherUtils.NEGATIVE_LIMIT_ARG_MSG;
 import static software.wings.graphql.datafetcher.DataFetcherUtils.NEGATIVE_OFFSET_ARG_MSG;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidRequestException;
@@ -42,7 +42,7 @@ import org.modelmapper.internal.objenesis.ObjenesisStd;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public abstract class PlainObjectBaseDataFetcher<T, P> extends BaseDataFetcher {
   public static final String SELECTION_SET_FIELD_NAME = "selectionSet";
 

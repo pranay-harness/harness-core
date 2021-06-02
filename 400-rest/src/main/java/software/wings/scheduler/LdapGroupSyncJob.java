@@ -1,14 +1,18 @@
 package software.wings.scheduler;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.mongo.MongoUtils.setUnset;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
@@ -22,12 +26,14 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.security.UserGroup;
+import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapTestResponse;
 import software.wings.beans.sso.LdapTestResponse.Status;
 import software.wings.beans.sso.LdapUserResponse;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.dl.WingsPersistence;
 import software.wings.features.LdapFeature;
 import software.wings.features.api.PremiumFeature;
 import software.wings.helpers.ext.ldap.LdapConstants;
@@ -60,6 +66,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.FindAndModifyOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -72,6 +81,9 @@ import org.quartz.TriggerBuilder;
  *
  * @author Swapnil
  */
+
+@OwnedBy(PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 @Slf4j
 public class LdapGroupSyncJob implements Job {
   private static final SecureRandom random = new SecureRandom();
@@ -79,6 +91,9 @@ public class LdapGroupSyncJob implements Job {
 
   public static final String GROUP = "LDAP_GROUP_SYNC_CRON_JOB";
   private static final int POLL_INTERVAL = 900; // Seconds
+
+  public static final long MIN_LDAP_SYNC_TIMEOUT = 60 * 1000L; // 1 minute
+  public static final long MAX_LDAP_SYNC_TIMEOUT = 3 * 60 * 1000L; // 3 minute
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private PersistentLocker persistentLocker;
@@ -90,6 +105,7 @@ public class LdapGroupSyncJob implements Job {
   @Inject private UserService userService;
   @Inject private UserGroupService userGroupService;
   @Inject private AccountService accountService;
+  @Inject private WingsPersistence wingsPersistence;
   @Inject @Named(LdapFeature.FEATURE_NAME) private PremiumFeature ldapFeature;
 
   public static void addWithDelay(PersistentScheduler jobScheduler, String accountId, String ssoId) {
@@ -195,8 +211,13 @@ public class LdapGroupSyncJob implements Job {
 
   @VisibleForTesting
   UserGroup syncUserGroupMetadata(UserGroup userGroup, LdapGroupResponse groupResponse) {
-    userGroup.setSsoGroupName(groupResponse.getName());
-    return userGroupService.save(userGroup);
+    UpdateOperations<UserGroup> updateOperations = wingsPersistence.createUpdateOperations(UserGroup.class);
+    setUnset(updateOperations, UserGroupKeys.ssoGroupName, groupResponse.getName());
+    Query<UserGroup> query = wingsPersistence.createQuery(UserGroup.class)
+                                 .filter("_id", userGroup.getUuid())
+                                 .field(UserGroupKeys.accountId)
+                                 .equal(userGroup.getAccountId());
+    return wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
   }
 
   private void syncUserGroupMembers(String accountId, Map<UserGroup, Set<User>> removedGroupMembers,
@@ -253,12 +274,15 @@ public class LdapGroupSyncJob implements Job {
   @VisibleForTesting
   LdapGroupResponse fetchGroupDetails(
       LdapSettings ldapSettings, EncryptedDataDetail encryptedDataDetail, UserGroup userGroup) {
+    long userProvidedTimeout = ldapSettings.getConnectionSettings().getResponseTimeout();
+    // if user specified time
+    long ldapSyncTimeout = getLdapSyncTimeout(userProvidedTimeout);
+    log.info("Fetching LDAP group details for {} with timeout {}", ldapSettings.getAccountId(), ldapSyncTimeout);
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(ldapSettings.getAccountId())
                                           .appId(GLOBAL_APP_ID)
-                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .timeout(ldapSyncTimeout)
                                           .build();
-
     LdapGroupResponse groupResponse = delegateProxyFactory.get(LdapDelegateService.class, syncTaskContext)
                                           .fetchGroupByDn(ldapSettings, encryptedDataDetail, userGroup.getSsoGroupId());
     if (null == groupResponse) {
@@ -268,6 +292,15 @@ public class LdapGroupSyncJob implements Job {
     }
     log.info("LDAP : Group Response from delegate {}", groupResponse);
     return groupResponse;
+  }
+
+  @VisibleForTesting
+  public long getLdapSyncTimeout(long userProvidedTimeout) {
+    if (userProvidedTimeout < MIN_LDAP_SYNC_TIMEOUT) {
+      return MIN_LDAP_SYNC_TIMEOUT;
+    } else {
+      return Math.min(userProvidedTimeout, MAX_LDAP_SYNC_TIMEOUT);
+    }
   }
 
   @VisibleForTesting
@@ -301,7 +334,6 @@ public class LdapGroupSyncJob implements Job {
               LdapConstants.USER_GROUP_SYNC_NOT_ELIGIBLE, userGroup.getName(), groupResponse.getMessage());
           throw new UnsupportedOperationException(message);
         }
-
         userGroup = syncUserGroupMetadata(userGroup, groupResponse);
 
         updateRemovedGroupMembers(userGroup, groupResponse.getUsers(), removedGroupMembers);

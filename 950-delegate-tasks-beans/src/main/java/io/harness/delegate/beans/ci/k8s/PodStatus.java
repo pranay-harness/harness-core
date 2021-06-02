@@ -14,5 +14,6 @@ public class PodStatus {
   }
   Status status;
   String errorMessage;
+  String ip;
   List<CIContainerStatus> ciContainerStatusList;
 }

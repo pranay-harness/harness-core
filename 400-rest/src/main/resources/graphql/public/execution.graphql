@@ -17,6 +17,7 @@ input ExecutionFilter {
   service: IdFilter
   cloudProvider: IdFilter
   environment: IdFilter
+  environmentType: EnvironmentTypeFilter
   status: IdFilter
   endTime: TimeFilter
   startTime: TimeFilter
@@ -92,6 +93,7 @@ interface Execution {
   cause: Cause
   notes: String
   tags: [DeploymentTag]
+  failureDetails: String
 }
 
 type DeploymentTag {
@@ -140,6 +142,8 @@ type WorkflowExecution implements Execution {
   notes: String
 
   tags: [DeploymentTag]
+
+  failureDetails: String
 }
 
 # Type for pipeline execution
@@ -176,6 +180,8 @@ type PipelineExecution implements Execution {
 
   memberExecutions: ExecutionConnection
     @dataFetcher(name: executionConnection, contextFieldArgsMap: "{ \"PipelineExecution\": \"id\"}")
+
+  failureDetails: String
 }
 
 interface PipelineStageExecution {

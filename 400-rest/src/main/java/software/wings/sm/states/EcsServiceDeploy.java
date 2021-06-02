@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.FeatureName.ECS_AUTOSCALAR_REDESIGN;
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.exception.ExceptionUtils.getMessage;
 
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
@@ -13,6 +14,7 @@ import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.beans.DelegateTask;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
@@ -143,18 +145,21 @@ public class EcsServiceDeploy extends State {
                                           .cluster(deployDataBag.getEcsInfrastructureMapping().getClusterName())
                                           .awsConfig(deployDataBag.getAwsConfig())
                                           .ecsResizeParams(resizeParams)
+                                          .timeoutErrorSupported(featureFlagService.isEnabled(
+                                              TIMEOUT_FAILURE_SUPPORT, deployDataBag.getApp().getAccountId()))
                                           .build();
 
     ecsStateHelper.createSweepingOutputForRollback(deployDataBag, activity, delegateService, resizeParams, context);
 
-    String delegateTaskId =
-        ecsStateHelper.createAndQueueDelegateTaskForEcsServiceDeploy(deployDataBag, request, activity, delegateService);
+    DelegateTask delegateTask = ecsStateHelper.createAndQueueDelegateTaskForEcsServiceDeploy(
+        deployDataBag, request, activity, delegateService, isSelectionLogsTrackingForTasksEnabled());
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(activity.getUuid()))
         .stateExecutionData(executionData)
-        .delegateTaskId(delegateTaskId)
+        .delegateTaskId(delegateTask.getUuid())
         .build();
   }
 
@@ -183,5 +188,10 @@ public class EcsServiceDeploy extends State {
       invalidFields.put("instanceCount", "Instance count must not be blank");
     }
     return invalidFields;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

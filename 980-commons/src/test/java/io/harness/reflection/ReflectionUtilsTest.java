@@ -58,8 +58,8 @@ public class ReflectionUtilsTest extends CategoryTest {
     @DummyAnnotation private Map<String, String> annotatedMapField;
   }
 
-  @EqualsAndHashCode
   @Builder
+  @EqualsAndHashCode
   public static class NestedAnnotationClass implements ExpressionReflectionUtils.NestedAnnotationResolver {
     private String field;
     @DummyAnnotation private String annotatedField;

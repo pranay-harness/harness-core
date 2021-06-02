@@ -1,0 +1,43 @@
+harnessApiVersion: '1.0'
+type: PIPELINE
+pipelineStages:
+- type: ENV_STATE
+  name: K8s-roll
+  parallel: false
+  runtimeInputs:
+    runtimeInputVariables:
+    - Environment
+    - Service
+    - InfraDefinition_KUBERNETES
+    timeout: 86400000
+    timeoutAction: END_EXECUTION
+    userGroupNames:
+    - test
+  skipCondition:
+    type: DO_NOT_SKIP
+  stageName: STAGE 1
+  workflowName: K8s-roll
+  workflowVariables:
+  - entityType: ENVIRONMENT
+    name: Environment
+    value: ${env}
+  - entityType: SERVICE
+    name: Service
+    value: ${ser}
+  - entityType: INFRASTRUCTURE_DEFINITION
+    name: InfraDefinition_KUBERNETES
+    value: ${inf}
+- type: APPROVAL
+  name: Approval 2
+  parallel: false
+  properties:
+    approvalStateParams:
+      shellScriptApprovalParams:
+        scriptString: test script
+        retryInterval: 30000
+    stageName: STAGE 1
+    timeoutMillis: 86400000
+    approvalStateType: SHELL_SCRIPT
+  skipCondition:
+    type: ALWAYS_SKIP
+  stageName: STAGE 1

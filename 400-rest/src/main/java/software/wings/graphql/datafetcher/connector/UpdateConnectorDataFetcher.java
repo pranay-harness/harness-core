@@ -7,16 +7,17 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
+import io.harness.utils.ConstraintViolationHandlerUtils;
 
-import software.wings.beans.Application;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.datafetcher.connector.types.Connector;
 import software.wings.graphql.datafetcher.connector.types.ConnectorFactory;
+import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.connector.input.QLUpdateConnectorInput;
 import software.wings.graphql.schema.mutation.connector.payload.QLUpdateConnectorPayload;
 import software.wings.graphql.schema.mutation.connector.payload.QLUpdateConnectorPayload.QLUpdateConnectorPayloadBuilder;
@@ -26,20 +27,20 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.utils.ConstraintViolationHandlerUtils;
 
 import com.google.inject.Inject;
 import javax.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class UpdateConnectorDataFetcher
     extends BaseMutatorDataFetcher<QLUpdateConnectorInput, QLUpdateConnectorPayload> {
   @Inject private SettingsService settingsService;
   @Inject private SettingServiceHelper settingServiceHelper;
   @Inject private ConnectorsController connectorsController;
   @Inject private SecretManager secretManager;
+  @Inject private UsageScopeController usageScopeController;
 
   public UpdateConnectorDataFetcher() {
     super(QLUpdateConnectorInput.class, QLUpdateConnectorPayload.class);
@@ -69,21 +70,20 @@ public class UpdateConnectorDataFetcher
     QLUpdateConnectorPayloadBuilder builder =
         QLUpdateConnectorPayload.builder().clientMutationId(input.getClientMutationId());
 
-    Connector connector =
-        ConnectorFactory.getConnector(input.getConnectorType(), connectorsController, secretManager, settingsService);
+    Connector connector = ConnectorFactory.getConnector(
+        input.getConnectorType(), connectorsController, secretManager, settingsService, usageScopeController);
     connector.checkInputExists(input);
     connector.checkSecrets(input, settingAttribute);
     connector.updateSettingAttribute(settingAttribute, input);
 
     try {
-      settingsService.saveWithPruning(settingAttribute, Application.GLOBAL_APP_ID, mutationContext.getAccountId());
+      settingAttribute =
+          settingsService.updateWithSettingFields(settingAttribute, settingAttribute.getUuid(), GLOBAL_APP_ID);
     } catch (ConstraintViolationException exception) {
       String errorMessages = String.join(", ", ConstraintViolationHandlerUtils.getErrorMessages(exception));
       throw new InvalidRequestException(errorMessages, exception);
     }
 
-    settingAttribute =
-        settingsService.updateWithSettingFields(settingAttribute, settingAttribute.getUuid(), GLOBAL_APP_ID);
     settingServiceHelper.updateSettingAttributeBeforeResponse(settingAttribute, false);
 
     QLConnectorBuilder qlConnectorBuilder = connectorsController.getConnectorBuilder(settingAttribute);

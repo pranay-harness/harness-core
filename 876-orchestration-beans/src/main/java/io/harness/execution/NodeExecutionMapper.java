@@ -4,11 +4,14 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.CollectionUtils;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
+import io.harness.pms.contracts.interrupts.InterruptEffectProto;
 import io.harness.serializer.ProtoUtils;
 
 import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 
 @OwnedBy(CDC)
@@ -22,6 +25,7 @@ public class NodeExecutionMapper {
         .mode(proto.getMode())
         .startTs(ProtoUtils.timestampToUnixMillis(proto.getStartTs()))
         .endTs(ProtoUtils.timestampToUnixMillis(proto.getEndTs()))
+        .resolvedStepInputs(proto.getResolvedStepInputs())
         .initialWaitDuration(ProtoUtils.durationToJavaDuration(proto.getInitialWaitDuration()))
         .resolvedStepParameters(proto.getResolvedStepParameters())
         .notifyId(proto.getNotifyId())
@@ -37,9 +41,30 @@ public class NodeExecutionMapper {
         .timeoutInstanceIds(Collections.emptyList())
         .timeoutDetails(null)
         .outcomeRefs(CollectionUtils.emptyIfNull(proto.getOutcomeRefsList()))
-        .progressDataMap(new LinkedHashMap<>())
         .retryIds(proto.getRetryIdsList())
         .oldRetry(proto.getOldRetry())
+        .interruptHistories(proto.getInterruptHistoriesList()
+                                .stream()
+                                .map(NodeExecutionMapper::fromInterruptEffectProto)
+                                .collect(Collectors.toList()))
+        .build();
+  }
+
+  private InterruptEffect fromInterruptEffectProto(InterruptEffectProto interruptEffectProto) {
+    return InterruptEffect.builder()
+        .interruptId(interruptEffectProto.getInterruptId())
+        .interruptType(interruptEffectProto.getInterruptType())
+        .interruptConfig(interruptEffectProto.getInterruptConfig())
+        .tookEffectAt(ProtoUtils.timestampToUnixMillis(interruptEffectProto.getTookEffectAt()))
+        .build();
+  }
+
+  private InterruptEffectProto toInterruptEffect(InterruptEffect interruptEffect) {
+    return InterruptEffectProto.newBuilder()
+        .setTookEffectAt(ProtoUtils.unixMillisToTimestamp(interruptEffect.getTookEffectAt()))
+        .setInterruptConfig(interruptEffect.getInterruptConfig())
+        .setInterruptId(interruptEffect.getInterruptId())
+        .setInterruptType(interruptEffect.getInterruptType())
         .build();
   }
 
@@ -67,6 +92,9 @@ public class NodeExecutionMapper {
     if (nodeExecution.getResolvedStepParameters() != null) {
       builder.setResolvedStepParameters(nodeExecution.getResolvedStepParameters().toJson());
     }
+    if (nodeExecution.getResolvedStepInputs() != null) {
+      builder.setResolvedStepInputs(nodeExecution.getResolvedStepInputs().toJson());
+    }
     if (nodeExecution.getNotifyId() != null) {
       builder.setNotifyId(nodeExecution.getNotifyId());
     }
@@ -87,6 +115,12 @@ public class NodeExecutionMapper {
     }
     if (nodeExecution.getFailureInfo() != null) {
       builder.setFailureInfo(nodeExecution.getFailureInfo());
+    }
+    if (EmptyPredicate.isNotEmpty(nodeExecution.getInterruptHistories())) {
+      builder.addAllInterruptHistories(nodeExecution.getInterruptHistories()
+                                           .stream()
+                                           .map(NodeExecutionMapper::toInterruptEffect)
+                                           .collect(Collectors.toList()));
     }
 
     return builder.build();

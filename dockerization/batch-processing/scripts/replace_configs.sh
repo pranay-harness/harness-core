@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 
+
 CONFIG_FILE=/opt/harness/batch-processing-config.yml
+
+replace_key_value () {
+  CONFIG_KEY="$1";
+  CONFIG_VALUE="$2";
+  if [[ "" != "$CONFIG_VALUE" ]]; then
+    yq write -i "$CONFIG_FILE" "$CONFIG_KEY" "$CONFIG_VALUE"
+  fi
+}
 
 if [[ "" != "$MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE harness-mongo.uri "$MONGO_URI"
@@ -124,6 +133,14 @@ if [[ "" != "$SEGMENT_APIKEY" ]]; then
   yq write -i $CONFIG_FILE segmentConfig.apiKey "$SEGMENT_APIKEY"
 fi
 
+if [[ "" != "$CF_API_KEY" ]]; then
+  yq write -i $CONFIG_FILE cfConfig.apiKey "$CF_API_KEY"
+fi
+
+if [[ "" != "$CF_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE cfConfig.baseUrl "$CF_BASE_URL"
+fi
+
 if [[ "" != "$POD_NAME" ]]; then
   yq write -i $CONFIG_FILE podInfo.name "$POD_NAME"
 fi
@@ -143,3 +160,57 @@ fi
 if [[ "" != "$WEEKLY_REPORT_JOB_CRON" ]]; then
   yq write -i $CONFIG_FILE scheduler-jobs-config.weeklyReportsJobCron "$WEEKLY_REPORT_JOB_CRON"
 fi
+
+if [[ "" != "$HARNESS_CE_AZURE_CLIENTID" ]]; then
+  yq write -i $CONFIG_FILE azureStorageSyncConfig.azureAppClientId "$HARNESS_CE_AZURE_CLIENTID"
+fi
+
+if [[ "" != "$HARNESS_CE_AZURE_CLIENTSECRET" ]]; then
+  yq write -i $CONFIG_FILE azureStorageSyncConfig.azureAppClientSecret "$HARNESS_CE_AZURE_CLIENTSECRET"
+fi
+
+if [[ "" != "$HARNESS_CE_AZURE_TENANTID" ]]; then
+  yq write -i $CONFIG_FILE azureStorageSyncConfig.azureTenantId "$HARNESS_CE_AZURE_TENANTID"
+fi
+
+if [[ "" != "$HARNESS_CE_AZURE_CONTAINER_NAME" ]]; then
+  yq write -i $CONFIG_FILE azureStorageSyncConfig.azureStorageContainerName "$HARNESS_CE_AZURE_CONTAINER_NAME"
+fi
+
+if [[ "" != "$HARNESS_CE_AZURE_STORAGE_NAME" ]]; then
+  yq write -i $CONFIG_FILE azureStorageSyncConfig.azureStorageAccountName "$HARNESS_CE_AZURE_STORAGE_NAME"
+fi
+
+if [[ "" != "$HARNESS_CE_AZURE_SAS" ]]; then
+  yq write -i $CONFIG_FILE azureStorageSyncConfig.azureSasToken "$HARNESS_CE_AZURE_SAS"
+fi
+
+if [[ "" != "$HARNESS_CE_AZURE_IS_SYNC_JOB_DISABLED" ]]; then
+  yq write -i $CONFIG_FILE azureStorageSyncConfig.syncJobDisabled "$HARNESS_CE_AZURE_IS_SYNC_JOB_DISABLED"
+fi
+
+if [[ "" != "$ANOMALY_DETECTION_PYTHON_SERVICE_URL" ]]; then
+  yq write -i $CONFIG_FILE cePythonService.pythonServiceUrl "$ANOMALY_DETECTION_PYTHON_SERVICE_URL"
+fi
+
+if [[ "" != "$ANOMALY_DETECTION_USE_PROPHET" ]]; then
+  yq write -i $CONFIG_FILE cePythonService.useProphet "$ANOMALY_DETECTION_USE_PROPHET"
+fi
+
+if [[ "" != "$BANZAI_CONFIG_HOST" ]]; then
+  yq write -i $CONFIG_FILE banzaiConfig.host "$BANZAI_CONFIG_HOST"
+fi
+
+if [[ "" != "$BANZAI_CONFIG_PORT" ]]; then
+  yq write -i $CONFIG_FILE banzaiConfig.port "$BANZAI_CONFIG_PORT"
+fi
+
+if [[ "" != "$NG_MANAGER_SERVICE_HTTP_CLIENT_CONFIG_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE ngManagerServiceHttpClientConfig.baseUrl "$NG_MANAGER_SERVICE_HTTP_CLIENT_CONFIG_BASE_URL"
+fi
+
+if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
+  yq write -i $CONFIG_FILE ngManagerServiceSecret "$NEXT_GEN_MANAGER_SECRET"
+fi
+
+replace_key_value banzaiRecommenderConfig.baseUrl "$BANZAI_RECOMMENDER_BASEURL"

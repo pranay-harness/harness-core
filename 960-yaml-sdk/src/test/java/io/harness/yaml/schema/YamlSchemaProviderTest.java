@@ -8,44 +8,39 @@ import static io.harness.yaml.schema.beans.SchemaConstants.ENUM_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.REQUIRED_NODE;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.powermock.api.mockito.PowerMockito.doReturn;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.EntityType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.encryption.Scope;
 import io.harness.rule.Owner;
 import io.harness.yaml.TestClass;
-import io.harness.yaml.YamlSdkInitConstants;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
-import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.dropwizard.jackson.Jackson;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+
 //
 //@RunWith(PowerMockRunner.class)
 //@PrepareForTest({YamlSchemaUtils.class, IOUtils.class})
+@OwnedBy(HarnessTeam.DX)
 public class YamlSchemaProviderTest extends CategoryTest {
   YamlSchemaProvider yamlSchemaProvider;
   String schema;
@@ -66,8 +61,8 @@ public class YamlSchemaProviderTest extends CategoryTest {
     YamlSchemaHelper yamlSchemaHelper = Mockito.spy(new YamlSchemaHelper(yamlSchemaRootClasses));
     yamlSchemaProvider = new YamlSchemaProvider(yamlSchemaHelper);
     schema = getResource("testSchema/sampleSchema.json");
-    YamlSchemaGenerator yamlSchemaGenerator =
-        new YamlSchemaGenerator(new JacksonClassHelper(), new SwaggerGenerator(), yamlSchemaRootClasses);
+    YamlSchemaGenerator yamlSchemaGenerator = new YamlSchemaGenerator(
+        new JacksonClassHelper(objectMapper), new SwaggerGenerator(Jackson.newObjectMapper()), yamlSchemaRootClasses);
     Map<EntityType, JsonNode> entityTypeJsonNodeMap = yamlSchemaGenerator.generateYamlSchema();
     yamlSchemaHelper.initializeSchemaMaps(entityTypeJsonNodeMap);
     doReturn(YamlSchemaWithDetails.builder()

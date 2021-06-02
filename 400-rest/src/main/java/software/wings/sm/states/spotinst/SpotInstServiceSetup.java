@@ -1,5 +1,6 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
@@ -10,6 +11,9 @@ import static io.harness.spotinst.model.SpotInstConstants.SPOTINST_SERVICE_SETUP
 
 import static software.wings.sm.StateType.SPOTINST_SETUP;
 
+import static java.util.Collections.emptyMap;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -47,6 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Slf4j
+@OwnedBy(CDP)
 public class SpotInstServiceSetup extends State {
   public static final String SPOTINST_SERVICE_SETUP_COMMAND = "Spotinst Service Setup";
   public static final int DEFAULT_CURRENT_RUNNING_INSTANCE_COUNT = 2;
@@ -109,9 +114,11 @@ public class SpotInstServiceSetup extends State {
         spotInstTaskParameters.getAppId(), TaskType.SPOTINST_COMMAND_TASK, spotInstTaskParameters.getActivityId(),
         spotinstSetupStateExecutionData.getEnvId(), spotinstSetupStateExecutionData.getInfraMappingId(),
         spotinstSetupStateExecutionData.getSpotinstCommandRequest(),
-        spotinstSetupStateExecutionData.getEnvironmentType(), spotinstSetupStateExecutionData.getServiceId());
+        spotinstSetupStateExecutionData.getEnvironmentType(), spotinstSetupStateExecutionData.getServiceId(),
+        isSelectionLogsTrackingForTasksEnabled());
 
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .correlationIds(Arrays.asList(spotInstTaskParameters.getActivityId()))
@@ -254,6 +261,9 @@ public class SpotInstServiceSetup extends State {
 
   @Override
   public Map<String, String> validateFields() {
+    if (useCurrentRunningCount) {
+      return emptyMap();
+    }
     Map<String, String> invalidFields = new HashMap<>();
     if (isEmpty(minInstances)) {
       invalidFields.put("minInstances", "Min Instances is needed");
@@ -265,5 +275,10 @@ public class SpotInstServiceSetup extends State {
       invalidFields.put("targetInstances", "Target Instances is needed");
     }
     return invalidFields;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

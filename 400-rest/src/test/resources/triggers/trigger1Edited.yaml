@@ -1,0 +1,8 @@
+harnessApiVersion: '1.0'
+type: TRIGGER
+continueWithDefaultValues: false
+executionName: tp_1
+executionType: Pipeline
+triggerCondition:
+- type: PIPELINE_COMPLETION
+  pipelineName: tp_2

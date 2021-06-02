@@ -1,34 +1,43 @@
 package io.harness.event;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
-import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.service.GraphGenerationService;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class PlanExecutionStatusUpdateEventHandler implements AsyncOrchestrationEventHandler {
+@Singleton
+@OwnedBy(HarnessTeam.PIPELINE)
+public class PlanExecutionStatusUpdateEventHandler {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private GraphGenerationService graphGenerationService;
 
-  @Override
-  public void handleEvent(OrchestrationEvent event) {
-    Ambiance ambiance = event.getAmbiance();
+  public OrchestrationGraph handleEvent(String planExecutionId, OrchestrationGraph orchestrationGraph) {
     try {
-      PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
+      PlanExecution planExecution = planExecutionService.get(planExecutionId);
+      if (planExecution.getStatus() == Status.ERRORED) {
+        // If plan Execution is ERRORED force generate the graph
+        // TODO: Here we need to regenrate Plan Execution Summary too. Till we do not have that at least regenerate the
+        // graph. So that pipeline is failed
+        log.info("Got Errored execution regenerating the graph final time");
+        return graphGenerationService.buildOrchestrationGraph(planExecutionId);
+      }
       log.info("Updating Plan Execution with uuid [{}] with status [{}].", planExecution.getUuid(),
           planExecution.getStatus());
-
-      OrchestrationGraph cachedGraph = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
-
-      graphGenerationService.cacheOrchestrationGraph(cachedGraph.withStatus(planExecution.getStatus()));
+      if (planExecution.getEndTs() != null) {
+        orchestrationGraph = orchestrationGraph.withEndTs(planExecution.getEndTs());
+      }
+      return orchestrationGraph.withStatus(planExecution.getStatus());
     } catch (Exception e) {
-      log.error("[{}] event failed for plan [{}]", event.getEventType(), ambiance.getPlanExecutionId(), e);
+      log.error("Graph update for PLAN_EXECUTION_UPDATE event failed for plan [{}]", planExecutionId, e);
+      throw e;
     }
   }
 }

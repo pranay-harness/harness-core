@@ -1,6 +1,7 @@
 package io.harness.grpc;
 
 import io.harness.delegate.DelegateServiceGrpc;
+import io.harness.delegate.authenticator.DelegateTokenAuthenticatorImpl;
 import io.harness.delegateprofile.DelegateProfileServiceGrpc;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.auth.ServiceInfo;
@@ -11,9 +12,7 @@ import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.grpc.server.GrpcServerExceptionHandler;
 import io.harness.grpc.server.GrpcServerModule;
 import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpc;
-import io.harness.security.KeySource;
-
-import software.wings.security.AccountKeySource;
+import io.harness.security.DelegateTokenAuthenticator;
 
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
@@ -40,7 +39,7 @@ public class GrpcServiceConfigurationModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(KeySource.class).to(AccountKeySource.class).in(Singleton.class);
+    bind(DelegateTokenAuthenticator.class).to(DelegateTokenAuthenticatorImpl.class).in(Singleton.class);
     Multibinder<BindableService> bindableServiceMultibinder = Multibinder.newSetBinder(binder(), BindableService.class);
     bindableServiceMultibinder.addBinding().to(DelegateServiceGrpcImpl.class);
     bindableServiceMultibinder.addBinding().to(DelegateProfileServiceGrpcImpl.class);

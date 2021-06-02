@@ -3,6 +3,7 @@ package io.harness.serializer.morphia;
 import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.capability.CapabilityRequirement;
 import io.harness.capability.CapabilitySubjectPermission;
+import io.harness.capability.CapabilityTaskSelectionDetails;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.executioncapability.AlwaysFalseValidationCapability;
 import io.harness.delegate.beans.executioncapability.AwsRegionCapability;
@@ -13,6 +14,7 @@ import io.harness.delegate.beans.executioncapability.GitInstallationCapability;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
+import io.harness.delegate.beans.executioncapability.LiteEngineConnectionCapability;
 import io.harness.delegate.beans.executioncapability.PcfAutoScalarCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
@@ -46,6 +48,7 @@ public class DelegateTasksBeansMorphiaRegistrar implements MorphiaRegistrar {
   public void registerClasses(Set<Class> set) {
     set.add(CapabilityRequirement.class);
     set.add(CapabilitySubjectPermission.class);
+    set.add(CapabilityTaskSelectionDetails.class);
     set.add(HDelegateTask.class);
     set.add(ExecutionCapabilityDemander.class);
     set.add(ExecutionCapability.class);
@@ -62,6 +65,7 @@ public class DelegateTasksBeansMorphiaRegistrar implements MorphiaRegistrar {
     h.put("delegate.beans.executioncapability.HelmInstallationCapability", HelmInstallationCapability.class);
     h.put("delegate.beans.executioncapability.HttpConnectionExecutionCapability",
         HttpConnectionExecutionCapability.class);
+    h.put("delegate.beans.executioncapability.LiteEngineConnectionCapability", LiteEngineConnectionCapability.class);
     h.put("delegate.beans.executioncapability.KustomizeCapability", KustomizeCapability.class);
     h.put("delegate.beans.executioncapability.PcfAutoScalarCapability", PcfAutoScalarCapability.class);
     h.put("delegate.beans.executioncapability.ProcessExecutorCapability", ProcessExecutorCapability.class);

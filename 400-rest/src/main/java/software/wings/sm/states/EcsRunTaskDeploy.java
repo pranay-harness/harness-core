@@ -3,8 +3,11 @@ package software.wings.sm.states;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.FeatureName.ECS_REGISTER_TASK_DEFINITION_TAGS;
+import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.ExceptionUtils.getMessage;
+import static io.harness.exception.FailureType.TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -15,6 +18,7 @@ import static software.wings.sm.StateType.ECS_RUN_TASK;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
@@ -27,7 +31,6 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.GitFile;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.PhaseElement;
@@ -67,6 +70,7 @@ import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.WorkflowStandardParams;
@@ -173,9 +177,9 @@ public class EcsRunTaskDeploy extends State {
     EcsRunTaskDeployRequest ecsRunTaskDeployRequest = createEcsRunTaskRequest(context, activityId, ecsRunTaskDataBag);
 
     Application application = ecsStateHelper.getApplicationFromExecutionContext(context);
-    DelegateTask delegateTask =
-        ecsStateHelper.createAndQueueDelegateTaskForEcsRunTaskDeploy(ecsRunTaskDataBag, infrastructureMappingService,
-            secretManager, application, context, ecsRunTaskDeployRequest, activityId, delegateService);
+    DelegateTask delegateTask = ecsStateHelper.createAndQueueDelegateTaskForEcsRunTaskDeploy(ecsRunTaskDataBag,
+        infrastructureMappingService, secretManager, application, context, ecsRunTaskDeployRequest, activityId,
+        delegateService, isSelectionLogsTrackingForTasksEnabled());
     appendDelegateTaskDetails(context, delegateTask);
 
     EcsRunTaskStateExecutionData stateExecutionData =
@@ -289,6 +293,8 @@ public class EcsRunTaskDeploy extends State {
         .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMapping.getUuid())
         .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infraMapping.getServiceId())
+        .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+        .description("Fetch remote git files")
         .waitId(waitId)
         .data(TaskData.builder()
                   .async(true)
@@ -327,6 +333,7 @@ public class EcsRunTaskDeploy extends State {
         .skipSteadyStateCheck(skipSteadyStateCheck)
         .ecsRegisterTaskDefinitionTagsEnabled(
             featureFlagService.isEnabled(ECS_REGISTER_TASK_DEFINITION_TAGS, application.getAccountId()))
+        .timeoutErrorSupported(featureFlagService.isEnabled(TIMEOUT_FAILURE_SUPPORT, application.getAccountId()))
         .build();
   }
 
@@ -380,6 +387,7 @@ public class EcsRunTaskDeploy extends State {
         .containerServiceParams(containerServiceParams)
         .isBindTaskFeatureSet(isBindTaskFeatureSet)
         .executionLogName(GIT_FETCH_FILES_TASK_NAME)
+        .isGitHostConnectivityCheck(featureFlagService.isEnabled(GIT_HOST_CONNECTIVITY, context.getAccountId()))
         .build();
   }
 
@@ -451,7 +459,16 @@ public class EcsRunTaskDeploy extends State {
     activityService.updateStatus(activityId, context.getAppId(), executionStatus);
 
     executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
-    return ExecutionResponse.builder().stateExecutionData(executionData).executionStatus(executionStatus).build();
+
+    ExecutionResponseBuilder builder =
+        ExecutionResponse.builder().stateExecutionData(executionData).executionStatus(executionStatus);
+
+    if (null != executionResponse.getEcsCommandResponse()
+        && executionResponse.getEcsCommandResponse().isTimeoutFailure()) {
+      builder.failureTypes(TIMEOUT);
+    }
+
+    return builder.build();
   }
 
   public void restoreStateDataAfterGitFetch(EcsRunTaskStateExecutionData ecsRunTaskStateExecutionData) {
@@ -465,4 +482,9 @@ public class EcsRunTaskDeploy extends State {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
+  }
 }

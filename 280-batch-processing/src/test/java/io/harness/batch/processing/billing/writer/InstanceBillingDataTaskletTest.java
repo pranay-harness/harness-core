@@ -27,15 +27,15 @@ import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.PricingSource;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
+import io.harness.ccm.commons.constants.CloudProvider;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.rule.Owner;
 
@@ -266,12 +266,13 @@ public class InstanceBillingDataTaskletTest extends CategoryTest {
             .clusterId(CLUSTER_ID)
             .clusterName(CLUSTER_NAME)
             .usageStartTime(Instant.ofEpochMilli(START_TIME_MILLIS - ChronoUnit.DAYS.getDuration().toMillis()))
+            .activeInstanceIterator(Instant.ofEpochMilli(START_TIME_MILLIS + ChronoUnit.DAYS.getDuration().toMillis()))
             .totalResource(Resource.builder().cpuUnits(CPU_UNIT_REQUEST).memoryMb(MEMORY_MB_REQUEST).build())
             .limitResource(Resource.builder().cpuUnits(CPU_UNIT_LIMIT).memoryMb(MEMORY_MB_LIMIT).build())
             .harnessServiceInfo(getHarnessServiceInfo())
             .build();
 
-    when(instanceDataDao.getInstanceDataLists(any(), anyInt(), any(), any(), any()))
+    when(instanceDataDao.getInstanceDataListsOfTypes(any(), anyInt(), any(), any(), any()))
         .thenReturn(Arrays.asList(instanceData));
 
     RepeatStatus repeatStatus = instanceBillingDataTasklet.execute(null, chunkContext);
@@ -307,7 +308,7 @@ public class InstanceBillingDataTaskletTest extends CategoryTest {
     when(customBillingMetaDataService.getAwsDataSetId(ACCOUNT_ID)).thenReturn("AWS_DATA_SETID");
     when(utilizationDataService.getUtilizationDataForInstances(any(), any(), any(), any(), any(), any()))
         .thenReturn(utilizationDataForInstances);
-    when(billingCalculationService.getInstanceBillingAmount(any(), any(), any(), any()))
+    when(billingCalculationService.getInstanceBillingAmount(any(), any(), any(), any(), any()))
         .thenReturn(new BillingData(BillingAmountBreakup.builder().billingAmount(BigDecimal.ONE).build(),
             new IdleCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO),
             new SystemCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO), USAGE_DURATION_SECONDS,

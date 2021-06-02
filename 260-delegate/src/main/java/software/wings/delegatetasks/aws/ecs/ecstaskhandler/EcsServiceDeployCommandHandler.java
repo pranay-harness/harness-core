@@ -7,8 +7,9 @@ import static io.harness.logging.LogLevel.ERROR;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.exception.TimeoutException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -30,7 +31,7 @@ import java.util.List;
 
 @Deprecated
 @Singleton
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsServiceDeployCommandHandler extends EcsCommandTaskHandler {
   @Inject private Injector injector;
 
@@ -72,6 +73,20 @@ public class EcsServiceDeployCommandHandler extends EcsCommandTaskHandler {
                                               .newInstanceData(commandExecutionData.getNewInstanceData())
                                               .build();
       return EcsCommandExecutionResponse.builder().commandExecutionStatus(status).ecsCommandResponse(response).build();
+    } catch (TimeoutException ex) {
+      String errorMessage = getMessage(ex);
+      executionLogCallback.saveExecutionLog(errorMessage, ERROR);
+      EcsServiceDeployResponse response = EcsServiceDeployResponse.builder().commandExecutionStatus(FAILURE).build();
+      if (ecsCommandRequest.isTimeoutErrorSupported()) {
+        response.setTimeoutFailure(true);
+      }
+
+      return EcsCommandExecutionResponse.builder()
+          .commandExecutionStatus(FAILURE)
+          .errorMessage(errorMessage)
+          .ecsCommandResponse(response)
+          .build();
+
     } catch (Exception ex) {
       String errorMessage = getMessage(ex);
       executionLogCallback.saveExecutionLog(errorMessage, ERROR);

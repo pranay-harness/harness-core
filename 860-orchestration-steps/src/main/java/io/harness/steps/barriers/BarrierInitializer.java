@@ -2,70 +2,63 @@ package io.harness.steps.barriers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.barrier.Barrier;
-import io.harness.engine.executions.plan.PlanExecutionService;
-import io.harness.execution.PlanExecution;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
-import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandler;
-import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
-import io.harness.serializer.KryoSerializer;
+import io.harness.engine.observers.OrchestrationStartObserver;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
+import io.harness.steps.barriers.beans.BarrierPositionInfo;
+import io.harness.steps.barriers.beans.BarrierSetupInfo;
 import io.harness.steps.barriers.service.BarrierService;
-import io.harness.timeout.TimeoutParameters;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
-public class BarrierInitializer implements SyncOrchestrationEventHandler {
-  @Inject private PlanExecutionService planExecutionService;
+@Slf4j
+@OwnedBy(HarnessTeam.PIPELINE)
+public class BarrierInitializer implements OrchestrationStartObserver {
   @Inject private BarrierService barrierService;
-  @Inject private KryoSerializer kryoSerializer;
 
   @Override
-  public void handleEvent(OrchestrationEvent event) {
-    String planExecutionId = event.getAmbiance().getPlanExecutionId();
-    PlanExecution planExecution = Preconditions.checkNotNull(planExecutionService.get(planExecutionId));
-    Map<String, List<BarrierExecutionInstance>> barrierIdentifierMap =
-        planExecution.getPlan()
-            .getNodes()
-            .stream()
-            .filter(planNode -> planNode.getStepType().equals(BarrierStep.STEP_TYPE))
-            .map(planNode -> {
-              BarrierStepParameters stepParameters = Objects.requireNonNull(
-                  RecastOrchestrationUtils.fromDocumentJson(planNode.getStepParameters(), BarrierStepParameters.class));
-              long expiredIn = planNode.getTimeoutObtainmentsList()
-                                   .stream()
-                                   .map(t
-                                       -> ((TimeoutParameters) kryoSerializer.asObject(t.getParameters().toByteArray()))
-                                              .getTimeoutMillis())
-                                   .max(Long::compareTo)
-                                   .orElse(TimeoutParameters.DEFAULT_TIMEOUT_IN_MILLIS);
-              return BarrierExecutionInstance.builder()
-                  .uuid(generateUuid())
-                  .name(planNode.getName())
-                  .planNodeId(planNode.getUuid())
-                  .identifier(stepParameters.getIdentifier())
-                  .planExecutionId(planExecution.getUuid())
-                  .barrierState(Barrier.State.STANDING)
-                  .expiredIn(expiredIn)
-                  .build();
-            })
-            .collect(Collectors.groupingBy(BarrierExecutionInstance::getIdentifier));
+  public void onStart(Ambiance ambiance) {
+    String planExecutionId = ambiance.getPlanExecutionId();
+    try {
+      Map<String, BarrierSetupInfo> barrierIdentifierSetupInfoMap =
+          barrierService.getBarrierSetupInfoList(ambiance.getMetadata().getProcessedYaml())
+              .stream()
+              .collect(Collectors.toMap(BarrierSetupInfo::getIdentifier, Function.identity()));
 
-    // for each instance with the same identifier we set the barrierGroupId, which will be used with Wait Notify Engine
-    barrierIdentifierMap.forEach((key, value) -> {
-      String barrierGroupId = generateUuid();
-      value.forEach(barrierExecutionInstance -> barrierExecutionInstance.setBarrierGroupId(barrierGroupId));
-    });
+      Map<String, List<BarrierPositionInfo.BarrierPosition>> barrierPositionInfoMap =
+          barrierService.getBarrierPositionInfoList(ambiance.getMetadata().getProcessedYaml());
 
-    List<BarrierExecutionInstance> barrierExecutionInstances =
-        barrierIdentifierMap.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
+      List<BarrierExecutionInstance> barriers =
+          barrierPositionInfoMap.entrySet()
+              .stream()
+              .filter(entry -> !entry.getValue().isEmpty())
+              .map(entry
+                  -> BarrierExecutionInstance.builder()
+                         .uuid(generateUuid())
+                         .setupInfo(barrierIdentifierSetupInfoMap.get(entry.getKey()))
+                         .positionInfo(BarrierPositionInfo.builder()
+                                           .planExecutionId(ambiance.getPlanExecutionId())
+                                           .barrierPositionList(entry.getValue())
+                                           .build())
+                         .name(barrierIdentifierSetupInfoMap.get(entry.getKey()).getName())
+                         .barrierState(Barrier.State.STANDING)
+                         .identifier(entry.getKey())
+                         .planExecutionId(ambiance.getPlanExecutionId())
+                         .build())
+              .collect(Collectors.toList());
 
-    barrierService.saveAll(barrierExecutionInstances);
+      barrierService.saveAll(barriers);
+    } catch (Exception e) {
+      log.error("Barrier initialization failed for planExecutionId: [{}]", planExecutionId);
+      throw e;
+    }
   }
 }

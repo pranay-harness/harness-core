@@ -15,12 +15,14 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Data
 @NoArgsConstructor
 @FieldNameConstants(innerTypeName = "LogCVConfigKeys")
 @EqualsAndHashCode(callSuper = true)
 public abstract class LogCVConfig extends CVConfig {
+  private String queryName;
   private String query;
   @Override
   public TimeRange getFirstTimeDataCollectionTimeRange() {
@@ -50,5 +52,13 @@ public abstract class LogCVConfig extends CVConfig {
   @Override
   public boolean queueAnalysisForPreDeploymentTask() {
     return true;
+  }
+
+  public abstract static class LogCVConfigUpdatableEntity<T extends LogCVConfig, D extends LogCVConfig>
+      extends CVConfigUpdatableEntity<T, D> {
+    protected void setCommonOperations(UpdateOperations<T> updateOperations, D logCVConfig) {
+      super.setCommonOperations(updateOperations, logCVConfig);
+      updateOperations.set(LogCVConfigKeys.query, logCVConfig.getQuery());
+    }
   }
 }

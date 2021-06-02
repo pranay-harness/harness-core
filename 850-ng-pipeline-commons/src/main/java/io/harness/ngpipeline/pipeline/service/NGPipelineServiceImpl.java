@@ -201,8 +201,9 @@ public class NGPipelineServiceImpl implements NGPipelineService {
 
   private Set<EntityDetail> getReferences(NgPipelineEntity ngPipelineEntity) {
     NgPipeline ngPipeline = ngPipelineEntity.getNgPipeline();
-    EntityReferenceExtractorVisitor visitor = simpleVisitorFactory.obtainEntityReferenceExtractorVisitor(
-        ngPipelineEntity.getAccountId(), ngPipelineEntity.getOrgIdentifier(), ngPipelineEntity.getProjectIdentifier());
+    EntityReferenceExtractorVisitor visitor =
+        simpleVisitorFactory.obtainEntityReferenceExtractorVisitor(ngPipelineEntity.getAccountId(),
+            ngPipelineEntity.getOrgIdentifier(), ngPipelineEntity.getProjectIdentifier(), null);
     visitor.walkElementTree(ngPipeline);
     return new HashSet<>();
   }

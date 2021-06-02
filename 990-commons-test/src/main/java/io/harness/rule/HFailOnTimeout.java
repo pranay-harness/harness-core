@@ -38,10 +38,12 @@ public class HFailOnTimeout extends Statement {
     }
   }
 
+  @SuppressWarnings("PMD")
   private Throwable getResult(FutureTask<Throwable> task, Thread thread) {
     try {
       return this.timeoutMs > 0L ? task.get(this.timeoutMs, TimeUnit.MILLISECONDS) : task.get();
     } catch (InterruptedException exception) {
+      Thread.currentThread().interrupt();
       return exception;
     } catch (ExecutionException exception) {
       return exception.getCause();

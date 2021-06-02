@@ -1,5 +1,8 @@
 package io.harness.gitsync.gitsyncerror.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.git.model.ChangeType;
 
 import java.util.List;
@@ -13,8 +16,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "GitToHarnessErrorDetailsKeys")
-@Document("gitToHarnessErrorDetails")
+@Document("gitToHarnessErrorDetailsNG")
 @TypeAlias("io.harness.gitsync.gitsyncerror.beans.gitToHarnessErrorDetails")
+@OwnedBy(DX)
 public class GitToHarnessErrorDetails implements GitSyncErrorDetails {
   private String gitCommitId;
   private Long commitTime;

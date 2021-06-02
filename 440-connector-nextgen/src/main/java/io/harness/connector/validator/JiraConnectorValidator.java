@@ -1,5 +1,7 @@
 package io.harness.connector.validator;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
@@ -11,6 +13,7 @@ import io.harness.delegate.task.TaskParameters;
 import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.CDC)
 @Slf4j
 @Singleton
 public class JiraConnectorValidator extends AbstractConnectorValidator {
@@ -37,7 +40,11 @@ public class JiraConnectorValidator extends AbstractConnectorValidator {
     JiraTestConnectionTaskNGResponse delegateResponseData = (JiraTestConnectionTaskNGResponse) super.validateConnector(
         jiraConnectorDTO, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return ConnectorValidationResult.builder()
+        .delegateId(delegateResponseData.getDelegateMetaInfo() == null
+                ? null
+                : delegateResponseData.getDelegateMetaInfo().getId())
         .status(delegateResponseData.getCanConnect() ? ConnectivityStatus.SUCCESS : ConnectivityStatus.FAILURE)
+        .errorSummary(delegateResponseData.getErrorMessage())
         .build();
   }
 }

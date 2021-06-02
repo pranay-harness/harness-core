@@ -116,16 +116,19 @@ public class LogClusterServiceImpl implements LogClusterService {
     // test data for test verification will be different
     Optional<TimeRange> preDeploymentTimeRange =
         verificationJobInstanceService.getPreDeploymentTimeRange(verificationJobInstance.getUuid());
-    String testDataUrl;
+    String testDataUrl = null;
     if (preDeploymentTimeRange.isPresent()) {
       Instant startTime = preDeploymentTimeRange.get().getStartTime();
       Instant endTime = input.getEndTime();
       testDataUrl =
           buildTestDataUrlForLogClustering(input.getVerificationTaskId(), LogClusterLevel.L2, startTime, endTime);
     } else {
-      testDataUrl = buildTestDataUrlForLogClustering(verificationTaskService.findBaselineVerificationTaskId(
-                                                         input.getVerificationTaskId(), verificationJobInstance),
-          input.getVerificationTaskId(), verificationJobInstance.getStartTime(), input.getEndTime());
+      Optional<String> baselineVerificationTaskId = verificationTaskService.findBaselineVerificationTaskId(
+          input.getVerificationTaskId(), verificationJobInstance);
+      if (baselineVerificationTaskId.isPresent()) {
+        testDataUrl = buildTestDataUrlForLogClustering(baselineVerificationTaskId.get(), input.getVerificationTaskId(),
+            verificationJobInstance.getStartTime(), input.getEndTime());
+      }
     }
     return Optional.of(createLogClusterLearningEngineTask(
         input.getVerificationTaskId(), timeForL2Task, LogClusterLevel.L2, testDataUrl));
@@ -146,7 +149,7 @@ public class LogClusterServiceImpl implements LogClusterService {
     return null;
   }
   private LogClusterLearningEngineTask createLogClusterLearningEngineTask(
-      String verificationTaskId, Instant timestamp, LogClusterLevel clusterLevel, String testDataUrl) {
+      String verificationTaskId, Instant timestamp, LogClusterLevel clusterLevel, @Nullable String testDataUrl) {
     String taskId = generateUuid();
     LogClusterLearningEngineTask task =
         LogClusterLearningEngineTask.builder().clusterLevel(clusterLevel).testDataUrl(testDataUrl).build();

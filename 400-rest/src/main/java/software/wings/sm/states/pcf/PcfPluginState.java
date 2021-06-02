@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static io.harness.beans.FeatureName.LIMIT_PCF_THREADS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -14,6 +15,10 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FileData;
@@ -103,6 +108,9 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class PcfPluginState extends State {
   @Inject private transient DelegateService delegateService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
@@ -247,8 +255,8 @@ public class PcfPluginState extends State {
       String activityId, List<String> pathsFromScript, String rawScriptString, String repoRoot) {
     final Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
         prepareManifestForGitFetchTask(serviceManifest, pathsFromScript);
-    final DelegateTask gitFetchFileTask =
-        pcfStateHelper.createGitFetchFileAsyncTask(context, appManifestMap, activityId);
+    final DelegateTask gitFetchFileTask = pcfStateHelper.createGitFetchFileAsyncTask(
+        context, appManifestMap, activityId, isSelectionLogsTrackingForTasksEnabled());
     gitFetchFileTask.setTags(resolveTags(getTags(), null));
 
     PcfPluginStateExecutionData stateExecutionData =
@@ -268,6 +276,8 @@ public class PcfPluginState extends State {
     stateExecutionData.setTemplateVariable(templateUtils.processTemplateVariables(context, getTemplateVariables()));
 
     final String delegateTaskId = delegateService.queueTask(gitFetchFileTask);
+    appendDelegateTaskDetails(context, gitFetchFileTask);
+
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Collections.singletonList(gitFetchFileTask.getWaitId()))
@@ -391,6 +401,8 @@ public class PcfPluginState extends State {
                                            .timeout(timeoutIntervalInMin)
                                            .tagList(renderedTags)
                                            .serviceTemplateId(getServiceTemplateId(pcfInfrastructureMapping))
+                                           .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+                                           .taskDescription("PCF Plugin task execution")
                                            .build());
     delegateTask.getData().setExpressionFunctorToken(expressionFunctorToken);
     StateExecutionContext stateExecutionContext = StateExecutionContext.builder()
@@ -401,6 +413,7 @@ public class PcfPluginState extends State {
     renderDelegateTask(context, delegateTask, stateExecutionContext);
 
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .correlationIds(Collections.singletonList(activityId))
@@ -626,5 +639,10 @@ public class PcfPluginState extends State {
 
   private String getActivityId(ExecutionContext context) {
     return ((PcfPluginStateExecutionData) context.getStateExecutionData()).getActivityId();
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

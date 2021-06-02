@@ -13,8 +13,8 @@ public class GitlabConnectorValidator extends AbstractGitConnectorValidator {
   }
 
   @Override
-  public ConnectorValidationResult validate(ConnectorConfigDTO connectorConfigDTO, String accountIdentifier,
+  public ConnectorValidationResult validate(ConnectorConfigDTO connectorDTO, String accountIdentifier,
       String orgIdentifier, String projectIdentifier, String identifier) {
-    return super.validate(connectorConfigDTO, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    return super.validate(connectorDTO, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
   }
 }

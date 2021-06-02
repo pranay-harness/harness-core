@@ -17,7 +17,7 @@ import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class AccountMigrationToCommunityTest extends AbstractAccountMigrationTest {
+public class AccountMigrationToCommunityTest extends AbstractAccountMigrationTestBase {
   @Owner(developers = ANKIT)
   @Category(FunctionalTests.class)
   public void testMigrateAlreadyCompliantTrialAccountToCommunity() {

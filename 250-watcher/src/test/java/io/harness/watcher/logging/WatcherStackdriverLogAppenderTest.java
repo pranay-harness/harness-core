@@ -12,6 +12,8 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.AccessTokenBean;
 import io.harness.managerclient.ManagerClientV2;
@@ -42,6 +44,7 @@ import org.mockito.junit.MockitoRule;
 import retrofit2.Call;
 import retrofit2.Response;
 
+@OwnedBy(HarnessTeam.DEL)
 public class WatcherStackdriverLogAppenderTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -61,6 +64,7 @@ public class WatcherStackdriverLogAppenderTest extends CategoryTest {
   private final okhttp3.Response rawResponse = new Builder()
                                                    .protocol(Protocol.HTTP_2)
                                                    .code(200)
+                                                   .message("")
                                                    .request(new Request.Builder().url("http://test.harness.io").build())
                                                    .build();
 

@@ -2,10 +2,15 @@ package io.harness.scheduler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.WingsException;
 import io.harness.maintenance.MaintenanceListener;
+import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
+import io.harness.mongo.MongoSSLConfig;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Injector;
 import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
@@ -33,6 +38,7 @@ import org.quartz.TriggerKey;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.GroupMatcher;
 
+@OwnedBy(HarnessTeam.DEL)
 @Slf4j
 public class HQuartzScheduler implements PersistentScheduler, MaintenanceListener {
   protected Injector injector;
@@ -55,16 +61,16 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
   }
 
   protected Scheduler createScheduler(Properties properties) throws SchedulerException {
+    MongoConfig mongoConfig = injector.getInstance(MongoConfig.class);
+    populateMongoSSLProperties(properties, mongoConfig);
     StdSchedulerFactory factory = new StdSchedulerFactory(properties);
     Scheduler newScheduler = factory.getScheduler();
-
     // by default newScheduler does not create all needed mongo indexes.
     // it is a bit hack but we are going to add them from here
-
     if (schedulerConfig.getJobStoreClass().equals(
             com.novemberain.quartz.mongodb.DynamicMongoDBJobStore.class.getCanonicalName())) {
-      MongoClientURI uri =
-          new MongoClientURI(getMongoUri(), MongoClientOptions.builder(MongoModule.defaultMongoClientOptions));
+      MongoClientURI uri = new MongoClientURI(
+          getMongoUri(), MongoClientOptions.builder(MongoModule.getDefaultMongoClientOptions(mongoConfig)));
       try (MongoClient mongoClient = new MongoClient(uri)) {
         final String databaseName = uri.getDatabase();
         if (databaseName == null) {
@@ -116,6 +122,8 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
         throw new WingsException("The mongo db uri does not specify database name");
       }
 
+      MongoConfig mongoConfig = injector.getInstance(MongoConfig.class);
+      populateMongoSSLProperties(props, mongoConfig);
       props.setProperty("org.quartz.jobStore.class", schedulerConfig.getJobStoreClass());
       props.setProperty("org.quartz.jobStore.mongoUri", uri.getURI());
       props.setProperty("org.quartz.jobStore.dbName", databaseName);
@@ -145,6 +153,25 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
     props.setProperty("org.quartz.scheduler.instanceName", schedulerConfig.getSchedulerName());
 
     return props;
+  }
+
+  private void populateMongoSSLProperties(Properties properties, MongoConfig mongoConfig) {
+    if (mongoConfig != null) {
+      MongoSSLConfig mongoSSLConfig = mongoConfig.getMongoSSLConfig();
+      if (mongoSSLConfig != null && mongoSSLConfig.isMongoSSLEnabled()) {
+        properties.setProperty(
+            "org.quartz.jobStore.mongoOptionEnableSSL", String.valueOf(mongoSSLConfig.isMongoSSLEnabled()));
+        Preconditions.checkArgument(StringUtils.isNotBlank(mongoSSLConfig.getMongoTrustStorePath()),
+            "mongoTrustStorePath must be set if mongoSSLEnabled is set to true");
+        properties.setProperty(
+            "org.quartz.jobStore.mongoOptionTrustStorePath", mongoSSLConfig.getMongoTrustStorePath());
+        properties.setProperty(
+            "org.quartz.jobStore.mongoOptionTrustStorePassword", mongoSSLConfig.getMongoTrustStorePassword());
+        properties.setProperty(
+            "org.quartz.jobStore.mongoOptionTrustStorePassword", mongoSSLConfig.getMongoTrustStorePassword());
+        properties.setProperty("org.quartz.jobStore.mongoOptionSslInvalidHostNameAllowed", String.valueOf(true));
+      }
+    }
   }
 
   /**

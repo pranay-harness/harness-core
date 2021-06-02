@@ -1,5 +1,9 @@
 package software.wings.api.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.api.DeploymentInfo;
 import software.wings.api.PcfDeploymentInfo;
 import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
@@ -19,6 +23,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
+@OwnedBy(CDP)
 public class PcfRouteSwapExecutionSummary extends StepExecutionSummary implements DeploymentInfoExtractor {
   private String organization;
   private String space;

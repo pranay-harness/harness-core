@@ -7,16 +7,19 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.VerificationConstants.SERVICE_GUAARD_LIMIT;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.encryption.Encrypted;
 import io.harness.iterator.PersistentRegularIterable;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdUniqueIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.core.account.DefaultExperience;
 import io.harness.security.EncryptionInterface;
 import io.harness.security.SimpleEncryption;
 import io.harness.validation.Create;
@@ -26,6 +29,7 @@ import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -47,14 +51,22 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(PL)
+@TargetModule(HarnessModule._955_ACCOUNT_MGMT)
 @FieldNameConstants(innerTypeName = "AccountKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "accounts", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-@CdIndex(name = "next_iteration_license_info2",
-    fields = { @Field("licenseExpiryCheckIteration")
-               , @Field("encryptedLicenseInfo") })
 public class Account extends Base implements PersistentRegularIterable {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("next_iteration_license_info2")
+                 .field(AccountKeys.licenseExpiryCheckIteration)
+                 .field(AccountKeys.encryptedLicenseInfo)
+                 .build())
+        .build();
+  }
+
   public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
 
   @NotNull private String companyName;
@@ -102,6 +114,10 @@ public class Account extends Base implements PersistentRegularIterable {
 
   @Getter @Setter private String migratedToClusterUrl;
 
+  @Getter @Setter DefaultExperience defaultExperience;
+
+  @Getter @Setter boolean createdFromNG;
+
   /**
    * If this flag is set, all encryption/decryption activities will go through LOCAL security manager.
    * No VAULT/KMS secret manager can be configured. This helps for accounts whose delegate can't access
@@ -131,6 +147,7 @@ public class Account extends Base implements PersistentRegularIterable {
   @FdIndex private Long gitSyncExpiryCheckIteration;
   @FdIndex private Long secretManagerValidationIterator;
   @FdIndex private Long ceLicenseExpiryIteration;
+  @FdIndex private Long resourceLookupSyncIteration;
 
   @Getter private boolean cloudCostEnabled;
   @Getter @Setter private boolean ceAutoCollectK8sEvents;
@@ -329,10 +346,6 @@ public class Account extends Base implements PersistentRegularIterable {
     this.oauthEnabled = oauthEnabled;
   }
 
-  public boolean isCloudCostEnabled() {
-    return this.cloudCostEnabled;
-  }
-
   public void setCloudCostEnabled(boolean cloudCostEnabled) {
     this.cloudCostEnabled = cloudCostEnabled;
   }
@@ -422,6 +435,11 @@ public class Account extends Base implements PersistentRegularIterable {
       return;
     }
 
+    else if (AccountKeys.resourceLookupSyncIteration.equals(fieldName)) {
+      this.resourceLookupSyncIteration = nextIteration;
+      return;
+    }
+
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
@@ -463,6 +481,10 @@ public class Account extends Base implements PersistentRegularIterable {
       return this.ceLicenseExpiryIteration;
     }
 
+    else if (AccountKeys.resourceLookupSyncIteration.equals(fieldName)) {
+      return this.resourceLookupSyncIteration;
+    }
+
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
@@ -497,6 +519,8 @@ public class Account extends Base implements PersistentRegularIterable {
     private boolean backgroundJobsDisabled;
     private boolean isHarnessSupportAccessAllowed = true;
     private AccountPreferences accountPreferences;
+    private DefaultExperience defaultExperience;
+    private boolean createdFromNG;
 
     private Builder() {}
 
@@ -511,6 +535,16 @@ public class Account extends Base implements PersistentRegularIterable {
 
     public Builder withAccountName(String accountName) {
       this.accountName = accountName;
+      return this;
+    }
+
+    public Builder withDefaultExperience(DefaultExperience defaultExperience) {
+      this.defaultExperience = defaultExperience;
+      return this;
+    }
+
+    public Builder withCreatedFromNG(boolean createdFromNG) {
+      this.createdFromNG = createdFromNG;
       return this;
     }
 
@@ -658,6 +692,8 @@ public class Account extends Base implements PersistentRegularIterable {
           .withOauthEnabled(oauthEnabled)
           .withSubdomainUrl(subdomainUrl)
           .withBackgroundJobsDisabled(backgroundJobsDisabled)
+          .withDefaultExperience(defaultExperience)
+          .withCreatedFromNG(createdFromNG)
           .withAccountPreferences(accountPreferences);
     }
 
@@ -688,6 +724,8 @@ public class Account extends Base implements PersistentRegularIterable {
       account.setSubdomainUrl(subdomainUrl);
       account.setHarnessSupportAccessAllowed(isHarnessSupportAccessAllowed);
       account.setBackgroundJobsDisabled(backgroundJobsDisabled);
+      account.setDefaultExperience(defaultExperience);
+      account.setCreatedFromNG(createdFromNG);
       account.setAccountPreferences(accountPreferences);
       return account;
     }
@@ -723,6 +761,7 @@ public class Account extends Base implements PersistentRegularIterable {
     public static final String ceLicenseExpiryIteration = "ceLicenseExpiryIteration";
     public static final String ceLicenseInfo = "ceLicenseInfo";
     public static final String isHarnessSupportAccessAllowed = "isHarnessSupportAccessAllowed";
+    public static final String resourceLookupSyncIteration = "resourceLookupSyncIteration";
     public static final String DELEGATE_CONFIGURATION_DELEGATE_VERSIONS =
         delegateConfiguration + "." + DelegateConfigurationKeys.delegateVersions;
   }

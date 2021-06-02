@@ -1,6 +1,10 @@
 package io.harness.cdng.k8s;
 
-import io.harness.common.SwaggerConstants;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
+import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -10,6 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.Data;
 
+@OwnedBy(CDP)
 @Data
 @JsonTypeName("ManifestPath")
 public class DeleteManifestPathSpec implements DeleteResourcesBaseSpec {
@@ -22,25 +27,18 @@ public class DeleteManifestPathSpec implements DeleteResourcesBaseSpec {
   }
 
   @Override
-  public String getManifestPaths() {
+  public String getManifestPathsValue() {
     List<String> filePathsList = manifestPaths != null ? manifestPaths.getValue() : Collections.emptyList();
-    String filePaths = filePathsList.stream().collect(Collectors.joining(","));
-
-    return filePaths;
+    return filePathsList.stream().collect(Collectors.joining(","));
   }
 
   @Override
-  public String getResourceNames() {
+  public String getResourceNamesValue() {
     return "";
   }
 
   @Override
-  public Boolean getDeleteNamespace() {
-    return Boolean.FALSE;
-  }
-
-  @Override
-  public Boolean getAllManifestPaths() {
+  public Boolean getAllManifestPathsValue() {
     return allManifestPaths != null && allManifestPaths.getValue() != null && allManifestPaths.getValue();
   }
 }

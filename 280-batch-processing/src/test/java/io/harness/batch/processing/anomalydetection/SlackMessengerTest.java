@@ -106,7 +106,7 @@ public class SlackMessengerTest extends CategoryTest {
   @Test
   @Owner(developers = SANDESH)
   @Category(UnitTests.class)
-  @Ignore("To be fixed")
+  @Ignore("To be fixed ... add more details what is wrong")
   public void shouldSendAlerts() throws IOException {
     List<AnomalyEntity> anomalyList = new ArrayList<>();
     anomalyList.add(clusterAnomaly);

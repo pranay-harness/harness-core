@@ -16,7 +16,7 @@ import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.ERROR;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.REQUSET_PER_MINUTE;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -28,6 +28,7 @@ import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
 
 import software.wings.beans.TaskType;
+import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
@@ -69,7 +70,7 @@ import org.slf4j.Logger;
  * Created by rsingh on 5/18/17.
  */
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private static final String ALL_WEB_TXN_NAME = "WebTransaction/all";
   private static final String ALL_ERRORS_TXN_NAME = "Errors/all";
@@ -162,6 +163,10 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       log.debug("Fetching done for host {} for stateExecutionId {} for metrics {}", node,
           dataCollectionInfo.getStateExecutionId(), metricNames);
 
+      if (TimeSeriesDataRecord.shouldLogForBuildDotCom(
+              dataCollectionInfo.getNewRelicConfig().getAccountId(), dataCollectionInfo.getServiceId())) {
+        log.info("for {} retrieved records {} ", dataCollectionInfo.getStateExecutionId(), records);
+      }
       log.debug(records.toString());
       return records;
     }
@@ -214,50 +219,16 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             for (NewRelicMetricTimeSlice timeSlice : metric.getTimeslices()) {
               // set from time to the timestamp
               long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeSlice.getFrom()).toEpochSecond());
-
-              String hostname = isPredictiveAnalysis() ? DEFAULT_GROUP_NAME : node.getHost();
-              String groupName = isEmpty(dataCollectionInfo.getHosts().get(node.getHost()))
-                  ? DEFAULT_GROUP_NAME
-                  : dataCollectionInfo.getHosts().get(node.getHost());
-              final NewRelicMetricDataRecord metricDataRecord =
-                  NewRelicMetricDataRecord.builder()
-                      .name(metric.getName())
-                      .appId(dataCollectionInfo.getApplicationId())
-                      .workflowId(dataCollectionInfo.getWorkflowId())
-                      .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
-                      .serviceId(dataCollectionInfo.getServiceId())
-                      .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                      .stateType(getStateType())
-                      .timeStamp(timeStamp)
-                      .cvConfigId(dataCollectionInfo.getCvConfigId())
-                      .host(hostname)
-                      .values(new HashMap<>())
-                      .groupName(groupName)
-                      .build();
-
-              int dataCollectionMinForRecord = getCollectionMinute(timeStamp);
-              if (is247Task && dataCollectionMinForRecord > maxDataCollectionMin24x7) {
-                maxDataCollectionMin24x7 = dataCollectionMinForRecord;
-              }
-              metricDataRecord.setDataCollectionMinute(dataCollectionMinForRecord);
-
-              if (metricDataRecord.getDataCollectionMinute() < 0
-                  || (is247Task
-                      && metricDataRecord.getDataCollectionMinute()
-                          < TimeUnit.MILLISECONDS.toMinutes(Timestamp.minuteBoundary(windowStartTimeManager)))) {
-                log.info("New relic sending us data in the past. request start time {}, received time {}",
-                    managerAnalysisStartTime, timeStamp);
-                continue;
-              }
-
-              final String webTxnJson = JsonUtils.asJson(timeSlice.getValues());
-              NewRelicWebTransactions webTransactions = JsonUtils.asObject(webTxnJson, NewRelicWebTransactions.class);
-              if (webTransactions.getCall_count() > 0) {
+              Optional<NewRelicMetricDataRecord> optionalNewRelicMetricDataRecord =
+                  createNewDataRecord(node, metric.getName(), timeStamp);
+              optionalNewRelicMetricDataRecord.ifPresent(metricDataRecord -> {
+                final String webTxnJson = JsonUtils.asJson(timeSlice.getValues());
+                NewRelicWebTransactions webTransactions = JsonUtils.asObject(webTxnJson, NewRelicWebTransactions.class);
                 metricDataRecord.getValues().put(AVERAGE_RESPONSE_TIME, webTransactions.getAverage_response_time());
                 metricDataRecord.getValues().put(CALL_COUNT, (double) webTransactions.getCall_count());
                 metricDataRecord.getValues().put(REQUSET_PER_MINUTE, (double) webTransactions.getRequests_per_minute());
                 records.put(metric.getName(), timeStamp, metricDataRecord);
-              }
+              });
             }
           }
           break;
@@ -274,6 +245,45 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           }
         }
       }
+    }
+
+    private Optional<NewRelicMetricDataRecord> createNewDataRecord(
+        NewRelicApplicationInstance node, String metricName, long timeStamp) {
+      String hostname = isPredictiveAnalysis() ? DEFAULT_GROUP_NAME : node.getHost();
+      String groupName = isEmpty(dataCollectionInfo.getHosts().get(node.getHost()))
+          ? DEFAULT_GROUP_NAME
+          : dataCollectionInfo.getHosts().get(node.getHost());
+      final NewRelicMetricDataRecord metricDataRecord =
+          NewRelicMetricDataRecord.builder()
+              .name(metricName)
+              .appId(dataCollectionInfo.getApplicationId())
+              .workflowId(dataCollectionInfo.getWorkflowId())
+              .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
+              .serviceId(dataCollectionInfo.getServiceId())
+              .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+              .stateType(getStateType())
+              .timeStamp(timeStamp)
+              .cvConfigId(dataCollectionInfo.getCvConfigId())
+              .host(hostname)
+              .values(new HashMap<>())
+              .groupName(groupName)
+              .build();
+
+      int dataCollectionMinForRecord = getCollectionMinute(timeStamp);
+      if (is247Task && dataCollectionMinForRecord > maxDataCollectionMin24x7) {
+        maxDataCollectionMin24x7 = dataCollectionMinForRecord;
+      }
+      metricDataRecord.setDataCollectionMinute(dataCollectionMinForRecord);
+
+      if (metricDataRecord.getDataCollectionMinute() < 0
+          || (is247Task
+              && metricDataRecord.getDataCollectionMinute()
+                  < TimeUnit.MILLISECONDS.toMinutes(Timestamp.minuteBoundary(windowStartTimeManager)))) {
+        log.info("New relic sending us data in the past. request start time {}, received time {}",
+            managerAnalysisStartTime, timeStamp);
+        return Optional.empty();
+      }
+      return Optional.of(metricDataRecord);
     }
 
     private void getErrorMetrics(NewRelicApplicationInstance node, Set<String> metricNames, long endTime,
@@ -293,10 +303,17 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                   : metric.getName().replace("Errors/", "");
 
               NewRelicMetricDataRecord metricDataRecord = records.get(metricName, timeStamp);
+              if (metricDataRecord == null) {
+                Optional<NewRelicMetricDataRecord> optionalRecord = createNewDataRecord(node, metricName, timeStamp);
+                if (optionalRecord.isPresent()) {
+                  metricDataRecord = optionalRecord.get();
+                }
+              }
               if (metricDataRecord != null) {
                 final String errorsJson = JsonUtils.asJson(timeslice.getValues());
                 NewRelicErrors errors = JsonUtils.asObject(errorsJson, NewRelicErrors.class);
                 metricDataRecord.getValues().put(ERROR, (double) errors.getError_count());
+                records.put(metricName, timeStamp, metricDataRecord);
               }
             }
           }
@@ -336,10 +353,17 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                   : metric.getName().replace("Apdex", "WebTransaction");
 
               NewRelicMetricDataRecord metricDataRecord = records.get(metricName, timeStamp);
+              if (metricDataRecord == null) {
+                Optional<NewRelicMetricDataRecord> optionalRecord = createNewDataRecord(node, metricName, timeStamp);
+                if (optionalRecord.isPresent()) {
+                  metricDataRecord = optionalRecord.get();
+                }
+              }
               if (metricDataRecord != null) {
                 final String apdexJson = JsonUtils.asJson(timeslice.getValues());
                 NewRelicApdex apdex = JsonUtils.asObject(apdexJson, NewRelicApdex.class);
                 metricDataRecord.getValues().put(APDEX_SCORE, apdex.getScore());
+                records.put(metricName, timeStamp, metricDataRecord);
               }
             }
           }

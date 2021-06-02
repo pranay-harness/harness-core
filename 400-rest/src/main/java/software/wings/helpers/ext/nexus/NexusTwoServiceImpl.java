@@ -3,6 +3,7 @@ package software.wings.helpers.ext.nexus;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.quietSleep;
 
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -18,7 +19,9 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.exception.ArtifactServerException;
@@ -87,6 +90,7 @@ import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._960_API_SERVICES)
 public class NexusTwoServiceImpl {
   @Inject private EncryptionService encryptionService;
   @Inject private ExecutorService executorService;
@@ -106,6 +110,9 @@ public class NexusTwoServiceImpl {
     }
 
     final Response<RepositoryListResourceResponse> response = request.execute();
+    if (response.code() == 404) {
+      throw new InvalidArtifactServerException("Invalid Artifact server", USER);
+    }
     if (isSuccessful(response)) {
       log.info("Retrieving repositories success");
       if (RepositoryFormat.maven.name().equals(repositoryFormat)) {
@@ -334,8 +341,7 @@ public class NexusTwoServiceImpl {
                 }
               }
             }
-            throw new ArtifactServerException(
-                "No versions found with specified extension/ classifier", null, WingsException.USER);
+            throw new ArtifactServerException("No versions found with specified extension/ classifier", null, USER);
           }
         }
       }
@@ -388,7 +394,7 @@ public class NexusTwoServiceImpl {
       case "npm":
         return getVersionsForNPM(nexusConfig, encryptionDetails, repositoryId, packageName);
       default:
-        throw new WingsException("Unsupported format for Nexus 3.x", WingsException.USER);
+        throw new WingsException("Unsupported format for Nexus 3.x", USER);
     }
   }
 
@@ -932,13 +938,7 @@ public class NexusTwoServiceImpl {
       if (nexusConfig.hasCredentials()) {
         encryptionService.decrypt(nexusConfig, encryptionDetails, false);
         log.info("Artifact: {}, ArtifactUrl: {}, Username: {}", artifactName, artifactUrl, nexusConfig.getUsername());
-        if (nexusConfig.isUseCredentialsWithAuth()) {
-          log.info("Using Nexus auth with credentials instead of authenticator");
-          credentials = Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword()));
-        } else {
-          Authenticator.setDefault(new NexusThreeServiceImpl.MyAuthenticator(
-              nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
-        }
+        credentials = Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword()));
       }
 
       URL url = new URL(artifactUrl);

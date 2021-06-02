@@ -136,4 +136,6 @@ public interface YamlResourceService {
   @Nonnull YamlType getYamlTypeFromAppManifest(@Nonnull ApplicationManifest applicationManifest);
 
   RestResponse<YamlPayload> getHarnessTags(String accountId);
+
+  RestResponse<YamlPayload> getGovernanceConfig(@NotEmpty String accountId);
 }

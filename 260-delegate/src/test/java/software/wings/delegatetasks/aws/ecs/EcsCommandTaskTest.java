@@ -13,7 +13,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -38,7 +38,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsCommandTaskTest extends WingsBaseTest {
   private final EcsCommandTask task = new EcsCommandTask(
       DelegateTaskPackage.builder().data(TaskData.builder().parameters(new Object[2]).build()).build(), null, null,
@@ -69,7 +69,7 @@ public class EcsCommandTaskTest extends WingsBaseTest {
     doReturn(null).when(mockEcsCommandTaskHandler).executeTask(any(), any());
 
     Object[] inputParams = new Object[2];
-    inputParams[0] = new EcsCommandRequest(null, null, null, null, null, null, null, BG_SERVICE_SETUP);
+    inputParams[0] = new EcsCommandRequest(null, null, null, null, null, null, null, BG_SERVICE_SETUP, false);
     inputParams[1] = new ArrayList<>();
 
     assertThat(task.run(inputParams)).isNull();
@@ -86,7 +86,7 @@ public class EcsCommandTaskTest extends WingsBaseTest {
     doThrow(new InvalidRequestException("exeception")).when(mockEcsCommandTaskHandler).executeTask(any(), any());
 
     Object[] inputParams = new Object[2];
-    inputParams[0] = new EcsCommandRequest(null, null, null, null, null, null, null, BG_SERVICE_SETUP);
+    inputParams[0] = new EcsCommandRequest(null, null, null, null, null, null, null, BG_SERVICE_SETUP, false);
     inputParams[1] = new ArrayList<>();
 
     EcsCommandExecutionResponse response = task.run(inputParams);

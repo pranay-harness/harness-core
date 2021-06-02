@@ -13,14 +13,19 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(PL)
 @Getter
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("API_KEY")
+@TypeAlias("ApiKeyPrincipal")
 public class ApiKeyPrincipal extends Principal {
-  public ApiKeyPrincipal(String principal) {
-    super(API_KEY, principal);
+  public ApiKeyPrincipal(String name) {
+    this.type = API_KEY;
+    this.name = name;
   }
 
   @Override

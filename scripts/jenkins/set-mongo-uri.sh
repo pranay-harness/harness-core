@@ -26,28 +26,12 @@ set -x
 echo $TEST_MONGO_URIS
 IFS=', ' read -r -a array <<< "$TEST_MONGO_URIS"
 
-#Create yum repo file to install mongo
-cat > /etc/yum.repos.d/mongodb-org-4.4.repo << EOF
-[mongodb-org-4.4]
-name=MongoDB Repository
-baseurl=https://repo.mongodb.org/yum/redhat/\$releasever/mongodb-org/4.4/x86_64/
-gpgcheck=1
-enabled=1
-gpgkey=https://www.mongodb.org/static/pgp/server-4.4.asc
-EOF
-
-#Install mongo shell
-yum -y install mongodb-org-shell
-
 for index in "${!array[@]}"
 do
   if [ "$mongo_working" = false ] ; then
      check_mongo_status "${array[index]}"
   fi
 done
-
-#Clean up mongo shell
-yum -y erase $(rpm -qa | grep mongodb-org-shell)
 
 #If none of mongo instances are running, mark the build failed
 if [ "$mongo_working" = false ] ; then

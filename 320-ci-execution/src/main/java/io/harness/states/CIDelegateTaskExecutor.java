@@ -1,5 +1,9 @@
 package io.harness.states;
 
+import static java.lang.String.format;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.data.structure.EmptyPredicate;
@@ -13,11 +17,17 @@ import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.Map;
 import java.util.function.Supplier;
+import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 
+@Slf4j
+@OwnedBy(HarnessTeam.CI)
 public class CIDelegateTaskExecutor {
   private final DelegateServiceGrpcClient delegateServiceGrpcClient;
   private final Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
-
+  private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
+  private final int MAX_ATTEMPTS = 3;
   @Inject
   public CIDelegateTaskExecutor(DelegateServiceGrpcClient delegateServiceGrpcClient,
       Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier) {
@@ -36,7 +46,15 @@ public class CIDelegateTaskExecutor {
                                                         .executionTimeout(Duration.ofHours(12))
                                                         .taskSetupAbstractions(setupAbstractions)
                                                         .build();
-    return delegateServiceGrpcClient.submitAsyncTask(delegateTaskRequest, delegateCallbackTokenSupplier.get());
+    RetryPolicy<Object> retryPolicy =
+        getRetryPolicy(format("[Retrying failed call to submit delegate task attempt: {}"),
+            format("Failed to submit delegate task  after retrying {} times"));
+    // Make a call to the log service and get back the token
+
+    return Failsafe.with(retryPolicy).get(() -> {
+      return delegateServiceGrpcClient.submitAsyncTask(
+          delegateTaskRequest, delegateCallbackTokenSupplier.get(), Duration.ofMinutes(5));
+    });
   }
 
   public void expireTask(Map<String, String> setupAbstractions, String taskId) {
@@ -56,5 +74,14 @@ public class CIDelegateTaskExecutor {
       return (TaskParameters) taskData.getParameters()[0];
     }
     throw new InvalidRequestException("Task Execution not supported for type");
+  }
+
+  private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {
+    return new RetryPolicy<>()
+        .handle(Exception.class)
+        .withDelay(RETRY_SLEEP_DURATION)
+        .withMaxAttempts(MAX_ATTEMPTS)
+        .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
+        .onFailure(event -> log.error(failureMessage, event.getAttemptCount(), event.getFailure()));
   }
 }

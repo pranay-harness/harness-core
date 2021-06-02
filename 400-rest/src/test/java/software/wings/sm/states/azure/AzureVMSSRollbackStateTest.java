@@ -11,6 +11,7 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -48,6 +49,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.service.impl.azure.manager.AzureVMSSAllPhaseRollbackData;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry.SweepingOutputInquiryBuilder;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -72,6 +74,7 @@ public class AzureVMSSRollbackStateTest extends WingsBaseTest {
   @Mock private AzureVMSSStateHelper azureVMSSStateHelper;
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private StateExecutionService stateExecutionService;
 
   @Spy @InjectMocks AzureVMSSRollbackState rollbackState = new AzureVMSSRollbackState("Azure VMSS Rollback State");
 
@@ -82,6 +85,7 @@ public class AzureVMSSRollbackStateTest extends WingsBaseTest {
     ExecutionContextImpl context = mockSetup();
     rollbackState.setInstanceCount(2);
     rollbackState.setInstanceUnitType(InstanceUnitType.COUNT);
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
 
     ExecutionResponse executionResponse = rollbackState.execute(context);
 
@@ -96,6 +100,7 @@ public class AzureVMSSRollbackStateTest extends WingsBaseTest {
     assertThat(executionResponse.getStateExecutionData()).isInstanceOf(AzureVMSSDeployStateExecutionData.class);
     assertThat(((AzureVMSSDeployStateExecutionData) executionResponse.getStateExecutionData()).getActivityId())
         .isEqualTo("activityId");
+    verify(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   @Test

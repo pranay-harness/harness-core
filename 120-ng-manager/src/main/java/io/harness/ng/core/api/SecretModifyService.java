@@ -1,8 +1,12 @@
 package io.harness.ng.core.api;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 
+@OwnedBy(PL)
 public interface SecretModifyService {
   EncryptedDataDTO create(String accountIdentifier, SecretDTOV2 dto);
 

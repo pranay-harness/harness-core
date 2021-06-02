@@ -71,7 +71,7 @@ fn apply_target_to_class(class_file: &str, target_module: &str) -> Result<()> {
                 imported = true;
             }
 
-            writeln!(target, "@TargetModule(Module._{})", target_module)?;
+            writeln!(target, "@TargetModule(HarnessModule._{})", target_module)?;
             class = true;
         }
 

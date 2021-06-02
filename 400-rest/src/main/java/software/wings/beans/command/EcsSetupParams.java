@@ -1,5 +1,8 @@
 package software.wings.beans.command;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.k8s.model.ImageDetails;
 
 import software.wings.beans.AwsElbConfig;
@@ -11,6 +14,7 @@ import java.util.List;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+@OwnedBy(CDP)
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class EcsSetupParams extends ContainerSetupParams {

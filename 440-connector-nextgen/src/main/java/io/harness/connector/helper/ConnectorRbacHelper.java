@@ -1,0 +1,76 @@
+package io.harness.connector.helper;
+
+import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.secrets.SecretPermissions.SECRET_ACCESS_PERMISSION;
+import static io.harness.secrets.SecretPermissions.SECRET_RESOURCE_TYPE;
+
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DecryptableEntity;
+import io.harness.beans.IdentifierRef;
+import io.harness.connector.ConnectorInfoDTO;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.encryption.SecretRefData;
+import io.harness.exception.UnexpectedException;
+import io.harness.ng.core.BaseNGAccess;
+import io.harness.ng.core.NGAccess;
+import io.harness.utils.IdentifierRefHelper;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import java.lang.reflect.Field;
+import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+
+@Singleton
+@Slf4j
+@OwnedBy(DX)
+public class ConnectorRbacHelper {
+  @Inject private AccessControlClient accessControlClient;
+
+  public boolean checkSecretRuntimeAccessWithConnectorDTO(ConnectorInfoDTO connectorInfoDTO, String accountIdentifier) {
+    List<DecryptableEntity> decryptableEntities = null;
+    ConnectorConfigDTO connectorConfigDTO = connectorInfoDTO.getConnectorConfig();
+    decryptableEntities = connectorConfigDTO.getDecryptableEntities();
+    checkForSecretRuntimeAccess(decryptableEntities, accountIdentifier, connectorInfoDTO.getOrgIdentifier(),
+        connectorInfoDTO.getProjectIdentifier());
+    return true;
+  }
+
+  public void checkForSecretRuntimeAccess(List<DecryptableEntity> decryptableEntityList, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier) {
+    if (isEmpty(decryptableEntityList)) {
+      return;
+    }
+    NGAccess ngAccess = BaseNGAccess.builder()
+                            .accountIdentifier(accountIdentifier)
+                            .orgIdentifier(orgIdentifier)
+                            .projectIdentifier(projectIdentifier)
+                            .build();
+
+    for (DecryptableEntity decryptableEntity : decryptableEntityList) {
+      List<Field> secretFields = decryptableEntity.getSecretReferenceFields();
+      for (Field field : secretFields) {
+        SecretRefData secretRefData = null;
+        try {
+          field.setAccessible(true);
+          secretRefData = (SecretRefData) field.get(decryptableEntity);
+        } catch (IllegalAccessException ex) {
+          log.error("Error reading the secret data", ex);
+          throw new UnexpectedException("Error processing the data");
+        }
+        if (secretRefData != null && !secretRefData.isNull()) {
+          IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(secretRefData.toSecretRefStringValue(),
+              ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
+          accessControlClient.checkForAccessOrThrow(
+              ResourceScope.of(identifierRef.getAccountIdentifier(), identifierRef.getOrgIdentifier(),
+                  identifierRef.getProjectIdentifier()),
+              Resource.of(SECRET_RESOURCE_TYPE, secretRefData.getIdentifier()), SECRET_ACCESS_PERMISSION);
+        }
+      }
+    }
+  }
+}

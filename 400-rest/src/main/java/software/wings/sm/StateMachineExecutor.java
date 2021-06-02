@@ -1,6 +1,11 @@
 package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.ExecutionInterruptType.CONTINUE_PIPELINE_STAGE;
+import static io.harness.beans.ExecutionInterruptType.PAUSE_ALL;
+import static io.harness.beans.ExecutionInterruptType.PAUSE_FOR_INPUTS;
+import static io.harness.beans.ExecutionInterruptType.RESUME_ALL;
+import static io.harness.beans.ExecutionInterruptType.RETRY;
 import static io.harness.beans.ExecutionStatus.ABORTED;
 import static io.harness.beans.ExecutionStatus.DISCONTINUING;
 import static io.harness.beans.ExecutionStatus.ERROR;
@@ -28,11 +33,6 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.STATE_NOT_FOR_TYPE;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.govern.Switch.unhandled;
-import static io.harness.interrupts.ExecutionInterruptType.CONTINUE_PIPELINE_STAGE;
-import static io.harness.interrupts.ExecutionInterruptType.PAUSE_ALL;
-import static io.harness.interrupts.ExecutionInterruptType.PAUSE_FOR_INPUTS;
-import static io.harness.interrupts.ExecutionInterruptType.RESUME_ALL;
-import static io.harness.interrupts.ExecutionInterruptType.RETRY;
 import static io.harness.threading.Morpheus.quietSleep;
 import static io.harness.validation.Validator.notNullCheck;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
@@ -58,7 +58,11 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.alert.AlertData;
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageResponse;
@@ -74,7 +78,6 @@ import io.harness.exception.FailureType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
-import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.observer.Subject;
@@ -84,7 +87,7 @@ import io.harness.state.inspection.ExpressionVariableUsage;
 import io.harness.state.inspection.StateInspectionListener;
 import io.harness.state.inspection.StateInspectionService;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.api.ContinuePipelineResponseData;
@@ -111,6 +114,7 @@ import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DelegateTaskServiceClassic;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.StateExecutionService;
@@ -167,8 +171,10 @@ import org.mongodb.morphia.query.UpdateResults;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class StateMachineExecutor implements StateInspectionListener {
-  private static final int DEFAULT_STATE_TIMEOUT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
+  public static final int DEFAULT_STATE_TIMEOUT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
   private static final int ABORT_EXPIRY_BUFFER_MILLIS = 10 * 60 * 1000; // 5 min
   public static final String PIPELINE_STEP_NAME = "PIPELINE_STEP_NAME";
   public static final String PIPELINE_STEP = "PIPELINE_STEP";
@@ -187,6 +193,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   @Inject private AppService appService;
   @Inject private DelayEventHelper delayEventHelper;
   @Inject private DelegateService delegateService;
+  @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
   @Inject private ExecutionInterruptManager executionInterruptManager;
   @Inject @Named("stateMachineExecutor-handler") private ExecutorService stateMachineExecutor;
   @Inject private ExecutorService executorService;
@@ -720,6 +727,7 @@ public class StateMachineExecutor implements StateInspectionListener {
    * @param executionResponse the execution response
    * @return the state execution instance
    */
+  @SuppressWarnings("PMD")
   StateExecutionInstance handleExecuteResponse(ExecutionContextImpl context, ExecutionResponse executionResponse) {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     StateMachine sm = context.getStateMachine();
@@ -742,7 +750,7 @@ public class StateMachineExecutor implements StateInspectionListener {
           } else if (StateType.APPROVAL.name().equals(stateExecutionInstance.getStateType())) {
             expiryTs = evaluateExpiryTs(currentState, context);
           }
-          NotifyCallback callback = new StateMachineResumeCallback(stateExecutionInstance.getAppId(),
+          OldNotifyCallback callback = new StateMachineResumeCallback(stateExecutionInstance.getAppId(),
               stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid());
           waitNotifyEngine.waitForAllOn(
               ORCHESTRATION, callback, executionResponse.getCorrelationIds().toArray(new String[0]));
@@ -938,7 +946,7 @@ public class StateMachineExecutor implements StateInspectionListener {
             stateExecutionInstance.getUuid(), stateExecutionInstance.getDisplayName());
         // update expiry and status to paused/waiting
         updateStateExecutionInstanceForRuntimeInputs(stateExecutionInstance, status, executionEventAdvice);
-        NotifyCallback callback = new PipelineContinueWithInputsCallback(stateExecutionInstance.getAppId(),
+        OldNotifyCallback callback = new PipelineContinueWithInputsCallback(stateExecutionInstance.getAppId(),
             stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid(),
             stateExecutionInstance.getPipelineStageElementId());
         waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback,
@@ -1084,7 +1092,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   private Map<String, String> getManualInterventionPlaceholderValues(ExecutionContextImpl context) {
     notNullCheck("context.getApp()", context.getApp());
     WorkflowExecution workflowExecution = workflowExecutionService.getExecutionDetails(
-        context.getApp().getUuid(), context.getWorkflowExecutionId(), false);
+        context.getApp().getUuid(), context.getWorkflowExecutionId(), false, false);
     String artifactsMessage =
         workflowNotificationHelper.getArtifactsDetails(context, workflowExecution, WORKFLOW, null).getMessage();
 
@@ -1185,7 +1193,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     notNullCheck("context.getApp()", context.getApp());
 
     WorkflowExecution pipelineExecution = workflowExecutionService.getExecutionDetails(
-        context.getApp().getUuid(), context.getWorkflowExecutionId(), false);
+        context.getApp().getUuid(), context.getWorkflowExecutionId(), false, false);
 
     WorkflowNotificationDetails pipelineDetails = workflowNotificationHelper.calculatePipelineDetailsPipelineExecution(
         context.getApp(), pipelineExecution, context);
@@ -1215,7 +1223,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     notNullCheck("context.getApp()", context.getApp());
 
     WorkflowExecution pipelineExecution = workflowExecutionService.getExecutionDetails(
-        context.getApp().getUuid(), context.getWorkflowExecutionId(), false);
+        context.getApp().getUuid(), context.getWorkflowExecutionId(), false, false);
 
     WorkflowNotificationDetails pipelineDetails = workflowNotificationHelper.calculatePipelineDetailsPipelineExecution(
         context.getApp(), pipelineExecution, context);
@@ -1245,7 +1253,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     notNullCheck("context.getApp()", context.getApp());
 
     WorkflowExecution pipelineExecution = workflowExecutionService.getExecutionDetails(
-        context.getApp().getUuid(), context.getWorkflowExecutionId(), false);
+        context.getApp().getUuid(), context.getWorkflowExecutionId(), false, false);
 
     WorkflowNotificationDetails pipelineDetails = workflowNotificationHelper.calculatePipelineDetailsPipelineExecution(
         context.getApp(), pipelineExecution, context);
@@ -1499,7 +1507,7 @@ public class StateMachineExecutor implements StateInspectionListener {
         notNullCheck("context.getApp()", context.getApp());
         if (finalStatus == ABORTED) {
           try {
-            delegateService.abortTask(context.getApp().getAccountId(), delegateTaskId);
+            delegateTaskServiceClassic.abortTask(context.getApp().getAccountId(), delegateTaskId);
           } catch (Exception e) {
             log.error(
                 "[AbortInstance] Error in ABORTING WorkflowExecution {}. Error in aborting delegate task : {}. Reason : {}",
@@ -1507,7 +1515,7 @@ public class StateMachineExecutor implements StateInspectionListener {
           }
         } else {
           try {
-            String errorMsg = delegateService.expireTask(context.getApp().getAccountId(), delegateTaskId);
+            String errorMsg = delegateTaskServiceClassic.expireTask(context.getApp().getAccountId(), delegateTaskId);
             if (isNotBlank(errorMsg)) {
               errorMsgBuilder.append(errorMsg);
             }
@@ -2299,6 +2307,7 @@ public class StateMachineExecutor implements StateInspectionListener {
      * @see java.lang.Runnable#run()
      */
     @Override
+    @SuppressWarnings("PMD")
     public void run() {
       try (AutoLogContext ignore = context.autoLogContext()) {
         log.info(DEBUG_LINE + "inside run of SmExecutionDispatcher");
@@ -2336,6 +2345,7 @@ public class StateMachineExecutor implements StateInspectionListener {
      * @see java.lang.Runnable#run()
      */
     @Override
+    @SuppressWarnings("PMD")
     public void run() {
       try (AutoLogContext ignore = context.autoLogContext()) {
         stateMachineExecutor.handleExecuteResponse(

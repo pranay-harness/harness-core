@@ -1,5 +1,8 @@
 package software.wings.beans.container;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.yaml.BaseYaml;
 
 import software.wings.beans.NameValuePair;
@@ -11,6 +14,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+@OwnedBy(PL)
 @Data
 @Builder
 public class LogConfiguration {

@@ -1,5 +1,8 @@
 package io.harness.gitsync.common.helper;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.dtos.YamlGitConfigGitFileChangeMap;
@@ -15,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
 @Slf4j
+@OwnedBy(DX)
 public class YamlGitConfigHelper {
   public static List<YamlGitConfigGitFileChangeMap> batchGitFileChangeByRootFolder(
       List<GitFileChange> gitFileChanges, List<YamlGitConfigDTO> yamlGitConfigDTOs) {

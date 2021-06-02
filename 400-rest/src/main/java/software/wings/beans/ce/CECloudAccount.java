@@ -1,8 +1,12 @@
 package software.wings.beans.ce;
 
 import io.harness.annotation.StoreIn;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.annotations.ChangeDataCapture;
+import io.harness.annotations.ChangeDataCaptureSink;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -10,8 +14,9 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
 import software.wings.beans.AwsCrossAccountAttributes;
-import software.wings.beans.ce.CECloudAccount.CECloudAccountKeys;
 
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -24,16 +29,26 @@ import org.mongodb.morphia.annotations.Id;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "ceCloudAccount", noClassnameStored = true)
-@NgUniqueIndex(name = "no_dup_account",
-    fields =
-    {
-      @Field(CECloudAccountKeys.accountId)
-      , @Field(CECloudAccountKeys.infraAccountId), @Field(CECloudAccountKeys.infraMasterAccountId),
-          @Field(CECloudAccountKeys.masterAccountSettingId)
-    })
 @FieldNameConstants(innerTypeName = "CECloudAccountKeys")
 @StoreIn("events")
+@ChangeDataCapture(table = "awsTruthTable", dataStore = "events",
+    fields = {"accountId", "infraAccountId", "accountName"}, handler = "TimeScaleDBChangeHandler")
+@ChangeDataCapture(table = "awsTruthTable", dataStore = "events", sink = ChangeDataCaptureSink.BQ,
+    fields = {"accountId", "infraAccountId", "accountName"}, handler = "CECloudAccountBigQueryChangeHandler")
+@OwnedBy(HarnessTeam.CE)
 public class CECloudAccount implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("no_dup_account")
+                 .unique(true)
+                 .field(CECloudAccountKeys.accountId)
+                 .field(CECloudAccountKeys.infraAccountId)
+                 .field(CECloudAccountKeys.infraMasterAccountId)
+                 .field(CECloudAccountKeys.masterAccountSettingId)
+                 .build())
+        .build();
+  }
   @Id String uuid;
   String accountId;
   String accountArn;

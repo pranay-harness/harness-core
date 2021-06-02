@@ -4,15 +4,19 @@ import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.intfc.CIYamlSchemaService;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.encryption.Scope;
 import io.harness.jackson.JsonNodeUtils;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
+import io.harness.yaml.schema.beans.FieldEnumData;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.schema.beans.SchemaConstants;
@@ -24,6 +28,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.inject.Inject;
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -31,8 +37,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 
+@OwnedBy(HarnessTeam.CI)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
   private static final String INTEGRATION_STAGE_CONFIG = YamlSchemaUtils.getSwaggerName(IntegrationStageConfig.class);
@@ -50,21 +58,22 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
         yamlSchemaProvider.getYamlSchema(EntityType.INTEGRATION_STEPS, orgIdentifier, projectIdentifier, scope);
 
     JsonNode definitions = integrationStageSchema.get(DEFINITIONS_NODE);
-    JsonNode stepDefinitions = integrationStageSteps.get(DEFINITIONS_NODE);
-    JsonNode mergedDefinitions = JsonNodeUtils.merge(definitions, stepDefinitions);
+    JsonNode integrationStepDefinitions = integrationStageSteps.get(DEFINITIONS_NODE);
 
-    JsonNode jsonNode = mergedDefinitions.get(StepElementConfig.class.getSimpleName());
+    JsonNodeUtils.merge(definitions, integrationStepDefinitions);
+
+    JsonNode jsonNode = definitions.get(StepElementConfig.class.getSimpleName());
     modifyStepElementSchema((ObjectNode) jsonNode);
 
-    jsonNode = mergedDefinitions.get(ParallelStepElementConfig.class.getSimpleName());
+    jsonNode = definitions.get(ParallelStepElementConfig.class.getSimpleName());
     if (jsonNode.isObject()) {
       flattenParallelStepElementConfig((ObjectNode) jsonNode);
     }
-    removeUnwantedNodes(mergedDefinitions);
+    removeUnwantedNodes(definitions);
 
     yamlSchemaGenerator.modifyRefsNamespace(integrationStageSchema, CI_NAMESPACE);
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
-    JsonNode node = mapper.createObjectNode().set(CI_NAMESPACE, mergedDefinitions);
+    JsonNode node = mapper.createObjectNode().set(CI_NAMESPACE, definitions);
 
     JsonNode partialCiSchema = ((ObjectNode) integrationStageSchema).set(DEFINITIONS_NODE, node);
 
@@ -72,7 +81,7 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
         .namespace(CI_NAMESPACE)
         .nodeName(INTEGRATION_STAGE_CONFIG)
         .schema(partialCiSchema)
-        .nodeType("CI")
+        .nodeType(getIntegrationStageTypeName())
         .build();
   }
 
@@ -83,10 +92,25 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
     Set<SubtypeClassMap> mapOfSubtypes = YamlSchemaUtils.getMapOfSubtypesUsingReflection(typedField);
     Set<FieldSubtypeData> classFieldSubtypeData = new HashSet<>();
     classFieldSubtypeData.add(YamlSchemaUtils.getFieldSubtypeData(typedField, mapOfSubtypes));
-    swaggerDefinitionsMetaInfoMap.put(
-        STEP_ELEMENT_CONFIG, SwaggerDefinitionsMetaInfo.builder().subtypeClassMap(classFieldSubtypeData).build());
+    Set<FieldEnumData> fieldEnumData = getFieldEnumData(typedField, mapOfSubtypes);
+    swaggerDefinitionsMetaInfoMap.put(STEP_ELEMENT_CONFIG,
+        SwaggerDefinitionsMetaInfo.builder()
+            .fieldEnumData(fieldEnumData)
+            .subtypeClassMap(classFieldSubtypeData)
+            .build());
     yamlSchemaGenerator.convertSwaggerToJsonSchema(
         swaggerDefinitionsMetaInfoMap, mapper, STEP_ELEMENT_CONFIG, jsonNode);
+  }
+
+  private Set<FieldEnumData> getFieldEnumData(Field typedField, Set<SubtypeClassMap> mapOfSubtypes) {
+    String fieldName = YamlSchemaUtils.getJsonTypeInfo(typedField).property();
+
+    return ImmutableSet.of(
+        FieldEnumData.builder()
+            .fieldName(fieldName)
+            .enumValues(ImmutableSortedSet.copyOf(
+                mapOfSubtypes.stream().map(SubtypeClassMap::getSubtypeEnum).collect(Collectors.toList())))
+            .build());
   }
 
   private void flattenParallelStepElementConfig(ObjectNode objectNode) {
@@ -103,9 +127,9 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
       Iterator<JsonNode> elements = definitions.elements();
       while (elements.hasNext()) {
         JsonNode jsonNode = elements.next();
-        yamlSchemaGenerator.removeUnwantedNodes(jsonNode, "rollbackSteps");
-        yamlSchemaGenerator.removeUnwantedNodes(jsonNode, "failureStrategies");
-        yamlSchemaGenerator.removeUnwantedNodes(jsonNode, "stepGroup");
+        yamlSchemaGenerator.removeUnwantedNodes(jsonNode, YAMLFieldNameConstants.ROLLBACK_STEPS);
+        yamlSchemaGenerator.removeUnwantedNodes(jsonNode, YAMLFieldNameConstants.FAILURE_STRATEGIES);
+        yamlSchemaGenerator.removeUnwantedNodes(jsonNode, YAMLFieldNameConstants.STEP_GROUP);
       }
     }
   }

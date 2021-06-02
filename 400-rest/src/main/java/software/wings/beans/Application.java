@@ -1,25 +1,27 @@
 package software.wings.beans;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static java.util.Arrays.asList;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.LogKeyUtils;
 import io.harness.persistence.NameAccess;
 
-import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.yaml.BaseEntityYaml;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,13 +44,23 @@ import org.mongodb.morphia.annotations.Transient;
  *
  * @author Rishi
  */
-@OwnedBy(PL)
+@OwnedBy(CDC)
+@TargetModule(_871_CG_BEANS)
 @Entity(value = "applications", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ApplicationKeys")
-@NgUniqueIndex(name = "yaml", fields = { @Field(ApplicationKeys.accountId)
-                                         , @Field(ApplicationKeys.name) })
 public class Application extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .unique(true)
+                 .name("yaml")
+                 .field(ApplicationKeys.accountId)
+                 .field(ApplicationKeys.name)
+                 .build())
+        .build();
+  }
+
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
   public static final String LOG_KEY_FOR_ID = LogKeyUtils.calculateLogKeyForId(Application.class);
 
@@ -75,6 +87,8 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
 
   private transient Map<String, String> defaults = new HashMap<>();
   private boolean sample;
+
+  @Getter @Setter private Boolean isManualTriggerAuthorized;
 
   public boolean isSample() {
     return sample;
@@ -331,6 +345,7 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
     private Map<String, String> defaults;
     private YamlGitConfig yamlGitConfig;
     private boolean sample;
+    private Boolean isManualTriggerAuthorized;
 
     private Builder() {}
 
@@ -428,6 +443,11 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
       return this;
     }
 
+    public Builder isManualTriggerAuthorized(Boolean isManualTriggerAuthorized) {
+      this.isManualTriggerAuthorized = isManualTriggerAuthorized;
+      return this;
+    }
+
     public Builder but() {
       return anApplication()
           .name(name)
@@ -446,7 +466,8 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
           .lastUpdatedBy(lastUpdatedBy)
           .lastUpdatedAt(lastUpdatedAt)
           .yamlGitConfig(yamlGitConfig)
-          .sample(sample);
+          .sample(sample)
+          .isManualTriggerAuthorized(isManualTriggerAuthorized);
     }
 
     public Application build() {
@@ -469,6 +490,7 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
       application.setDefaults(defaults);
       application.setYamlGitConfig(yamlGitConfig);
       application.setSample(sample);
+      application.setIsManualTriggerAuthorized(isManualTriggerAuthorized);
       return application;
     }
   }
@@ -485,6 +507,7 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseEntityYaml {
     private String description;
+    private Boolean isManualTriggerAuthorized;
 
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String description) {

@@ -3,12 +3,14 @@ package io.harness.execution;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.logging.UnitProgress;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.pms.contracts.advisers.AdviserResponse;
@@ -18,17 +20,16 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
-import io.harness.tasks.ProgressData;
 import io.harness.timeout.TimeoutDetails;
 
 import com.google.common.collect.ImmutableList;
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -48,9 +49,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "NodeExecutionKeys")
-@Entity(value = "nodeExecutions")
+@Entity(value = "nodeExecutions", noClassnameStored = true)
 @Document("nodeExecutions")
 @TypeAlias("nodeExecution")
+@StoreIn(DbAliases.PMS)
 public final class NodeExecution implements PersistentEntity, UuidAware {
   // Immutable
   @Id @org.mongodb.morphia.annotations.Id String uuid;
@@ -64,6 +66,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   // Resolved StepParameters stored just before invoking step.
   org.bson.Document resolvedStepParameters;
+  org.bson.Document resolvedStepInputs;
 
   // For Wait Notify
   String notifyId;
@@ -71,7 +74,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   // Relationships
   String parentId;
   String nextId;
-  String previousId;
+  @FdIndex String previousId;
 
   // Mutable
   @Wither @LastModifiedDate Long lastUpdatedAt;
@@ -82,6 +85,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   @Singular private List<InterruptEffect> interruptHistories;
   FailureInfo failureInfo;
   SkipInfo skipInfo;
+  NodeRunInfo nodeRunInfo;
 
   // Retries
   @Singular List<String> retryIds;
@@ -93,11 +97,14 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   List<StepOutcomeRef> outcomeRefs;
 
-  Map<String, List<ProgressData>> progressDataMap;
-
   @Singular List<UnitProgress> unitProgresses;
 
+  org.bson.Document progressData;
+
   AdviserResponse adviserResponse;
+  // Timeouts for advisers
+  List<String> adviserTimeoutInstanceIds;
+  TimeoutDetails adviserTimeoutDetails;
 
   public boolean isChildSpawningMode() {
     return mode == ExecutionMode.CHILD || mode == ExecutionMode.CHILDREN || mode == ExecutionMode.CHILD_CHAIN;
@@ -116,6 +123,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   @UtilityClass
   public static class NodeExecutionKeys {
+    public static final String id = "_id";
     public static final String planExecutionId = NodeExecutionKeys.ambiance + "."
         + "planExecutionId";
 
@@ -135,11 +143,15 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
       this.resolvedStepParameters = RecastOrchestrationUtils.toDocumentFromJson(jsonString);
       return this;
     }
+
+    public NodeExecutionBuilder resolvedStepInputs(String jsonString) {
+      this.resolvedStepInputs = RecastOrchestrationUtils.toDocumentFromJson(jsonString);
+      return this;
+    }
   }
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
-        .add(CompoundMongoIndex.builder().name("planExecutionId_idx").field(NodeExecutionKeys.planExecutionId).build())
         .add(CompoundMongoIndex.builder()
                  .name("planExecutionId_planNodeId_idx")
                  .field(NodeExecutionKeys.planExecutionId)
@@ -154,11 +166,6 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
                  .name("planExecutionId_oldRetry_idx")
                  .field(NodeExecutionKeys.planExecutionId)
                  .field(NodeExecutionKeys.oldRetry)
-                 .build())
-        .add(CompoundMongoIndex.builder()
-                 .name("planExecutionId_parentId_idx")
-                 .field(NodeExecutionKeys.planExecutionId)
-                 .field(NodeExecutionKeys.parentId)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("planExecutionId_notifyId_idx")
@@ -180,6 +187,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
                  .name("parentId_status_idx")
                  .field(NodeExecutionKeys.parentId)
                  .field(NodeExecutionKeys.status)
+                 .field(NodeExecutionKeys.oldRetry)
                  .build())
         .build();
   }

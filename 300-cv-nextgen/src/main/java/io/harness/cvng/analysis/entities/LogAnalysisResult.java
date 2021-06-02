@@ -1,9 +1,11 @@
 package io.harness.cvng.analysis.entities;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -29,7 +31,8 @@ import org.mongodb.morphia.annotations.Id;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "logAnalysisResults", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class LogAnalysisResult implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+@StoreIn(DbAliases.CVNG)
+public final class LogAnalysisResult implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -43,7 +46,7 @@ public class LogAnalysisResult implements PersistentEntity, UuidAware, CreatedAt
   @Id private String uuid;
   @FdIndex private long createdAt;
   @FdIndex private long lastUpdatedAt;
-  @FdIndex private String verificationTaskId;
+  private String verificationTaskId;
   private Instant analysisStartTime;
   private Instant analysisEndTime;
   @FdIndex private String accountId;

@@ -1,39 +1,29 @@
-def pmd(
-        name = "pmd",
-        rulesets = None,
-        srcs = None,
-        visibility = ["//visibility:public"]):
-    if srcs == None:
-        srcs = native.glob(["src/main/**"])
-    if rulesets == None:
-        rulesets = "//tools/config/src/main/resources:harness_pmd_ruleset.xml"
+rulesets = "//tools/config/src/main/resources:harness_pmd_ruleset.xml"
+pmd_tool = "//tools/bazel/pmd:pmd"
 
-    _pmd(name = name, srcs = srcs, rulesets = rulesets, visibility = visibility)
-
-def _pmd(
-        srcs = [],
-        language = "java",
-        rulesets = "//tools/config/src/main/resources:harness_pmd_ruleset.xml",
-        report_format = "xml",
-        **kwargs):
+def pmd():
     module_name = native.package_name()
     native.genrule(
         name = "pmd",
         outs = ["pmd_report.xml"],
-        srcs = srcs,
+        srcs = native.glob(["src/main/**"]),
         tags = ["manual", "no-ide", "analysis", "pmd"],
         visibility = ["//visibility:public"],
         cmd = " ".join([
-            "$(location //tools/bazel/pmd:pmd)",
-            "-d  " + module_name,
-            "-f " + report_format,
+            "$(location " + pmd_tool + ")",
+            "-d " + module_name,
+            "-f xml",
             "-failOnViolation False",
             "-R $(location " + rulesets + ")",
-            "-language " + language,
-            "| tee \"$@\"",
+            "-language java",
+            "-cache pmd_report.cache",
+            "> \"$@\"",
+            "&& sed -Ei.bak 's|/private/(.*)/harness_monorepo/||g'  \"$@\"",
+            "&& sed -Ei.bak 's|/tmp/(.*)/harness_monorepo/||g'  \"$@\"",
+            "&& if grep -B 1 \"<violation \" \"$@\"; then exit 1; fi",
         ]),
         tools = [
-            "//tools/bazel/pmd:pmd",
-            "//tools/config/src/main/resources:harness_pmd_ruleset.xml",
+            pmd_tool,
+            rulesets,
         ],
     )

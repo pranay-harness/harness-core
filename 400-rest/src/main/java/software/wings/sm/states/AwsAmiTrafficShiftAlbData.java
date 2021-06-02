@@ -1,5 +1,8 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -16,6 +19,7 @@ import lombok.Data;
 
 @Data
 @Builder
+@OwnedBy(CDP)
 public class AwsAmiTrafficShiftAlbData {
   private Artifact artifact;
   private Application app;

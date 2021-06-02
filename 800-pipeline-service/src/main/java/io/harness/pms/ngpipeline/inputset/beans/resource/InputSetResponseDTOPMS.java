@@ -1,5 +1,11 @@
 package io.harness.pms.ngpipeline.inputset.beans.resource;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.sdk.EntityGitDetails;
+import io.harness.pms.inputset.InputSetErrorWrapperDTOPMS;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -11,6 +17,7 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
 
+@OwnedBy(PIPELINE)
 @Value
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -32,4 +39,6 @@ public class InputSetResponseDTOPMS {
   InputSetErrorWrapperDTOPMS inputSetErrorWrapper;
 
   @JsonIgnore Long version;
+
+  EntityGitDetails gitDetails;
 }

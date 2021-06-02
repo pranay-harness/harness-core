@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.type.user;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.mutation.QLMutationPayload;
@@ -16,7 +16,7 @@ import lombok.Data;
 @Data
 @Builder
 @Scope(PermissionAttribute.ResourceType.USER)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLUpdateUserPayload implements QLMutationPayload {
   private QLUser user;
   private String clientMutationId;

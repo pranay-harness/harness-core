@@ -1,5 +1,8 @@
 package software.wings.beans.settings.helm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
@@ -15,6 +18,7 @@ import lombok.Data;
 
 @Data
 @Builder
+@OwnedBy(CDP)
 public class HelmRepoConfigValidationTaskParams implements TaskParameters, ExecutionCapabilityDemander {
   private String accountId;
   private String appId;

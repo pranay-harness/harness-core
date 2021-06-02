@@ -1,14 +1,17 @@
 package io.harness.rule;
 
 import static io.harness.cache.CacheBackend.NOOP;
-import static io.harness.mongo.MongoModule.defaultMongoClientOptions;
-import static io.harness.pms.sdk.PmsSdkConfiguration.DeployMode.LOCAL;
 
 import static org.mockito.Mockito.mock;
 
-import io.harness.OrchestrationStepsModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheModule;
+import io.harness.capability.CapabilityModule;
+import io.harness.cf.AbstractCfModule;
+import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.ConfigurationType;
 import io.harness.cvng.client.CVNGServiceClient;
@@ -24,27 +27,20 @@ import io.harness.functional.AbstractFunctionalTest;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.grpc.GrpcServiceConfigurationModule;
+import io.harness.grpc.client.AbstractManagerGrpcClientModule;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.grpc.server.Connector;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.logstreaming.LogStreamingServiceConfig;
 import io.harness.mongo.MongoConfig;
+import io.harness.mongo.MongoModule;
 import io.harness.mongo.ObjectFactoryModule;
 import io.harness.mongo.QueryFactory;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.persistence.HPersistence;
-import io.harness.pms.contracts.execution.events.OrchestrationEventType;
-import io.harness.pms.sdk.PmsSdkConfiguration;
-import io.harness.pms.sdk.PmsSdkModule;
-import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
+import io.harness.persistence.NoopUserProvider;
+import io.harness.persistence.UserProvider;
 import io.harness.redis.RedisConfig;
-import io.harness.registrars.OrchestrationModuleRegistrarHelper;
-import io.harness.registrars.OrchestrationStepsModuleEventHandlerRegistrar;
-import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
-import io.harness.registrars.OrchestrationVisualizationModuleEventHandlerRegistrar;
-import io.harness.registrars.WingsAdviserRegistrar;
-import io.harness.registrars.WingsStepRegistrar;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rest.RestResponse;
 import io.harness.scm.ScmSecret;
@@ -63,11 +59,11 @@ import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.timescaledb.TimeScaleDBConfig;
 
+import software.wings.DataStorageMode;
 import software.wings.app.AuthModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.GraphQLModule;
 import software.wings.app.IndexMigratorModule;
-import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
 import software.wings.app.ManagerQueueModule;
@@ -79,7 +75,6 @@ import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
 import software.wings.graphql.provider.QueryLanguageProvider;
 import software.wings.search.framework.ElasticsearchConfig;
-import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.EventEmitter;
 
 import com.codahale.metrics.MetricRegistry;
@@ -103,12 +98,12 @@ import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import javax.annotation.Nullable;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.ws.rs.core.GenericType;
@@ -126,6 +121,7 @@ import org.springframework.core.convert.converter.Converter;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   private ClosingFactory closingFactory;
 
@@ -134,14 +130,11 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
   }
 
   private ExecutorService executorService = new CurrentThreadExecutor();
-  public static final String alpnJar =
-      "org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar";
-  public static final String alpn = "/home/jenkins/maven-repositories/0/";
   @Getter private GraphQL graphQL;
 
   @Override
   public List<Module> modules(List<Annotation> annotations) throws Exception {
-    ManagerExecutor.ensureManager(AbstractFunctionalTest.class, alpn, alpnJar);
+    ManagerExecutor.ensureManager(AbstractFunctionalTest.class);
 
     RestResponse<MongoConfig> mongoConfigRestResponse =
         Setup.portal()
@@ -152,7 +145,9 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     String mongoUri =
         new AsymmetricDecryptor(new ScmSecret()).decryptText(mongoConfigRestResponse.getResource().getEncryptedUri());
 
-    MongoClientURI clientUri = new MongoClientURI(mongoUri, MongoClientOptions.builder(defaultMongoClientOptions));
+    MongoConfig mongoConfig = MongoConfig.builder().build();
+    MongoClientURI clientUri =
+        new MongoClientURI(mongoUri, MongoClientOptions.builder(MongoModule.getDefaultMongoClientOptions(mongoConfig)));
     String dbName = clientUri.getDatabase();
 
     MongoClient mongoClient = new MongoClient(clientUri);
@@ -268,6 +263,13 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
         datastore.setQueryFactory(new QueryFactory());
         return datastore;
       }
+
+      @Provides
+      @Singleton
+      @Nullable
+      UserProvider userProvider() {
+        return new NoopUserProvider();
+      }
     });
 
     CacheModule cacheModule = new CacheModule(CacheConfig.builder()
@@ -288,10 +290,9 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
         bind(CVNGServiceClient.class).toInstance(mockCVNGServiceClient);
       }
     });
-    modules.add(new LicenseModule());
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
-    modules.add(OrchestrationStepsModule.getInstance());
+    modules.add(new CapabilityModule());
     modules.add(new WingsModule((MainConfiguration) configuration));
     modules.add(new IndexMigratorModule());
     modules.add(new YamlModule());
@@ -305,12 +306,31 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     modules.add(new GcpMarketplaceIntegrationModule());
     modules.add(new AuthModule());
     modules.add(new ManagerQueueModule());
-    modules.add(new ManagerGrpcClientModule(
-        ManagerGrpcClientModule.Config.builder().target("localhost:9880").authority("localhost").build()));
+    modules.add(new AbstractManagerGrpcClientModule() {
+      @Override
+      public ManagerGrpcClientModule.Config config() {
+        return ManagerGrpcClientModule.Config.builder().target("localhost:9880").authority("localhost").build();
+      }
 
+      @Override
+      public String application() {
+        return "Manager";
+      }
+    });
     modules.add(new GrpcServiceConfigurationModule(((MainConfiguration) configuration).getGrpcServerConfig(),
         ((MainConfiguration) configuration).getPortal().getJwtNextGenManagerSecret()));
-    modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration()));
+    modules.add(new AbstractCfModule() {
+      @Override
+      public CfClientConfig cfClientConfig() {
+        return CfClientConfig.builder().build();
+      }
+
+      @Override
+      public CfMigrationConfig cfMigrationConfig() {
+        return CfMigrationConfig.builder().build();
+      }
+    });
+
     return modules;
   }
 
@@ -345,25 +365,18 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
         EventsFrameworkConfiguration.builder()
             .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
             .build());
+    configuration.setFileStorageMode(DataStorageMode.MONGO);
+    configuration.setClusterName("");
     configuration.setTimeScaleDBConfig(TimeScaleDBConfig.builder().build());
+    configuration.setCfClientConfig(CfClientConfig.builder().build());
+    configuration.setCfMigrationConfig(CfMigrationConfig.builder()
+                                           .account("testAccount")
+                                           .enabled(false)
+                                           .environment("testEnv")
+                                           .org("testOrg")
+                                           .project("testProject")
+                                           .build());
     return configuration;
-  }
-
-  private PmsSdkConfiguration getPmsSdkConfiguration() {
-    Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap =
-        new HashMap<>();
-    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
-        engineEventHandlersMap, OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers());
-    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
-        engineEventHandlersMap, OrchestrationStepsModuleEventHandlerRegistrar.getEngineEventHandlers());
-    return PmsSdkConfiguration.builder()
-        .deploymentMode(LOCAL)
-        .serviceName("functionaltests")
-        .engineSteps(WingsStepRegistrar.getEngineSteps())
-        .engineAdvisers(WingsAdviserRegistrar.getEngineAdvisers())
-        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
-        .engineEventHandlersMap(engineEventHandlersMap)
-        .build();
   }
 
   @Override
@@ -380,9 +393,6 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     final QueryLanguageProvider<GraphQL> instance =
         injector.getInstance(Key.get(new TypeLiteral<QueryLanguageProvider<GraphQL>>() {}));
     graphQL = instance.getPrivateGraphQL();
-
-    final HPersistence persistence = injector.getInstance(HPersistence.class);
-    persistence.registerUserProvider(new ThreadLocalUserProvider());
   }
 
   @Override

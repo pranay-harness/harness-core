@@ -7,27 +7,37 @@ public enum CommandExecutionStatus {
   /**
    * Success execution status.
    */
-  SUCCESS,
+  SUCCESS(UnitStatus.SUCCESS),
   /**
    * Failure execution status.
    */
-  FAILURE,
+  FAILURE(UnitStatus.FAILURE),
   /**
    * Running execution status.
    */
-  RUNNING,
+  RUNNING(UnitStatus.RUNNING),
 
   /**
    * Queued execution status.
    */
-  QUEUED,
+  QUEUED(UnitStatus.QUEUED),
 
   /*
    *  Skipped execution status
    * */
-  SKIPPED;
+  SKIPPED(UnitStatus.SKIPPED);
+
+  private UnitStatus unitStatus;
+
+  CommandExecutionStatus(UnitStatus unitStatus) {
+    this.unitStatus = unitStatus;
+  }
 
   public static boolean isTerminalStatus(CommandExecutionStatus commandExecutionStatus) {
     return commandExecutionStatus == SUCCESS || commandExecutionStatus == FAILURE;
+  }
+
+  public UnitStatus getUnitStatus() {
+    return unitStatus;
   }
 }

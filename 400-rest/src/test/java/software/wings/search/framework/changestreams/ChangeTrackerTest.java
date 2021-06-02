@@ -5,6 +5,8 @@ import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.mongo.changestreams.ChangeTracker;
+import io.harness.mongo.changestreams.ChangeTrackingInfo;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -30,7 +32,7 @@ public class ChangeTrackerTest extends WingsBaseTest {
   public void changeStreamTrackerTest() {
     Set<ChangeTrackingInfo<?>> changeTrackingInfos = new HashSet<>();
     ChangeTrackingInfo<?> changeTrackingInfo =
-        new ChangeTrackingInfo<>(Application.class, changeEvent -> log.info(changeEvent.toString()), null);
+        new ChangeTrackingInfo<>(Application.class, changeEvent -> log.info(changeEvent.toString()), null, null);
     changeTrackingInfos.add(changeTrackingInfo);
 
     changeTracker.start(changeTrackingInfos);

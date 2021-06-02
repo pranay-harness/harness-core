@@ -1,5 +1,6 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.validation.Validator.notNullCheck;
@@ -10,9 +11,10 @@ import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.cloudformation.CloudFormationElement;
@@ -30,6 +32,7 @@ import java.util.Collections;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
+@OwnedBy(CDP)
 public class CloudFormationDeleteStackState extends CloudFormationState {
   private static final String COMMAND_UNIT = "Delete Stack";
 
@@ -73,6 +76,8 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
             .waitId(activityId)
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, executionContext.getApp().getUuid())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("CloudFormation delete stack task execution")
             .data(TaskData.builder()
                       .async(true)
                       .taskType(CLOUD_FORMATION_TASK.name())
@@ -83,6 +88,7 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
                       .build())
             .build();
     String delegateTaskId = delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(executionContext, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Collections.singletonList(activityId))
@@ -96,5 +102,10 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
       CloudFormationCommandResponse commandResponse, ExecutionContext context) {
     clearRollbackConfig((ExecutionContextImpl) context);
     return emptyList();
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

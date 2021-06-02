@@ -1,6 +1,6 @@
 package io.harness.batch.processing.config.k8s.recommendation;
 
-import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.newCpuHistogramV2;
+import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.newCpuHistogramV2;
 
 import io.harness.histogram.Histogram;
 

@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -10,7 +11,8 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.eraro.ErrorCode;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -31,12 +33,15 @@ import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by srinivas on 3/31/17.
  */
+@TargetModule(_930_DELEGATE_TASKS)
 @OwnedBy(CDC)
 @Singleton
+@Slf4j
 public class NexusBuildServiceImpl implements NexusBuildService {
   @Inject private NexusService nexusService;
 
@@ -93,13 +98,11 @@ public class NexusBuildServiceImpl implements NexusBuildService {
     } else if (artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.nuget.name())
         || artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.npm.name())) {
       return nexusService.getVersions(artifactStreamAttributes.getRepositoryFormat(), config, encryptionDetails,
-          artifactStreamAttributes.getJobName(), artifactStreamAttributes.getNexusPackageName(),
-          artifactStreamAttributes.isSupportForNexusGroupReposEnabled());
+          artifactStreamAttributes.getJobName(), artifactStreamAttributes.getNexusPackageName());
     } else {
       return nexusService.getVersions(config, encryptionDetails, artifactStreamAttributes.getJobName(),
           artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName(),
-          artifactStreamAttributes.getExtension(), artifactStreamAttributes.getClassifier(),
-          artifactStreamAttributes.isSupportForNexusGroupReposEnabled());
+          artifactStreamAttributes.getExtension(), artifactStreamAttributes.getClassifier());
     }
   }
 
@@ -143,12 +146,6 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   }
 
   @Override
-  public List<String> getArtifactPathsUsingPrivateApis(String repoId, String groupId, NexusConfig config,
-      List<EncryptedDataDetail> encryptionDetails, String repositoryFormat) {
-    return nexusService.getArtifactNamesUsingPrivateApis(config, encryptionDetails, repoId, groupId, repositoryFormat);
-  }
-
-  @Override
   public List<String> getGroupIds(
       String repositoryName, NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
     return nexusService.getGroupIdPaths(config, encryptionDetails, repositoryName, null);
@@ -158,12 +155,6 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   public List<String> getGroupIds(
       String repositoryName, String repositoryFormat, NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
     return nexusService.getGroupIdPaths(config, encryptionDetails, repositoryName, repositoryFormat);
-  }
-
-  @Override
-  public List<String> getGroupIdsUsingPrivateApis(
-      String repositoryName, String repositoryFormat, NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    return nexusService.getGroupIdPathsUsingPrivateApis(config, encryptionDetails, repositoryName, repositoryFormat);
   }
 
   @Override
@@ -179,8 +170,7 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   @Override
   public boolean validateArtifactServer(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     if (!connectableHttpUrl(nexusConfig.getNexusUrl())) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Could not reach Nexus Server at : " + nexusConfig.getNexusUrl());
+      throw new InvalidArtifactServerException("Could not reach Nexus Server at : " + nexusConfig.getNexusUrl(), USER);
     }
     return nexusService.isRunning(nexusConfig, encryptedDataDetails);
   }

@@ -1,6 +1,9 @@
 package software.wings.helpers.ext.ecs.request;
 
-import io.harness.annotations.dev.Module;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.AwsConfig;
@@ -11,7 +14,8 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
+@OwnedBy(CDP)
 public class EcsBGListenerUpdateRequest extends EcsCommandRequest {
   private String prodListenerArn;
   private String stageListenerArn;
@@ -25,6 +29,8 @@ public class EcsBGListenerUpdateRequest extends EcsCommandRequest {
   private int serviceCountDownsized;
   private boolean rollback;
   private boolean downsizeOldService;
+  private long downsizeOldServiceDelayInSecs;
+  private boolean ecsBgDownsizeDelayEnabled;
   private String targetGroupForNewService;
   private String targetGroupForExistingService;
   private int serviceSteadyStateTimeout;
@@ -34,9 +40,11 @@ public class EcsBGListenerUpdateRequest extends EcsCommandRequest {
       String prodListenerArn, String stageListenerArn, String prodListenerRuleArn, String stageListenerRuleArn,
       String targetGroupArn1, String targetGroupArn2, String serviceName, String clusterName, String region,
       String serviceNameDownsized, int serviceCountDownsized, AwsConfig awsConfig, boolean rollback,
-      boolean downsizeOldService, boolean isUseSpecificListenerRuleArn, String targetGroupForNewService,
-      String targetGroupForExistingService, int serviceSteadyStateTimeout) {
-    super(accountId, appId, commandName, activityId, region, clusterName, awsConfig, EcsCommandType.LISTENER_UPDATE_BG);
+      boolean downsizeOldService, long downsizeOldServiceDelayInSecs, boolean ecsBgDownsizeDelayEnabled,
+      boolean isUseSpecificListenerRuleArn, String targetGroupForNewService, String targetGroupForExistingService,
+      int serviceSteadyStateTimeout, boolean timeoutErrorSupported) {
+    super(accountId, appId, commandName, activityId, region, clusterName, awsConfig, EcsCommandType.LISTENER_UPDATE_BG,
+        timeoutErrorSupported);
     this.prodListenerArn = prodListenerArn;
     this.stageListenerArn = stageListenerArn;
     this.prodListenerRuleArn = prodListenerRuleArn;
@@ -50,6 +58,8 @@ public class EcsBGListenerUpdateRequest extends EcsCommandRequest {
     this.targetGroupForNewService = targetGroupForNewService;
     this.targetGroupForExistingService = targetGroupForExistingService;
     this.downsizeOldService = downsizeOldService;
+    this.downsizeOldServiceDelayInSecs = downsizeOldServiceDelayInSecs;
+    this.ecsBgDownsizeDelayEnabled = ecsBgDownsizeDelayEnabled;
     this.isUseSpecificListenerRuleArn = isUseSpecificListenerRuleArn;
     this.serviceSteadyStateTimeout = serviceSteadyStateTimeout;
   }

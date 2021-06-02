@@ -26,7 +26,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.fail;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -35,11 +34,13 @@ import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.SweepingOutputInstance;
@@ -50,7 +51,6 @@ import io.harness.delegate.beans.TaskData.TaskDataKeys;
 import io.harness.deployment.InstanceDetails;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.rule.Owner;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.WingsBaseTest;
@@ -78,6 +78,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
@@ -88,7 +89,6 @@ import software.wings.sm.WorkflowStandardParams;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -116,6 +116,7 @@ public class InstanceFetchStateTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock private ServiceTemplateService mockServiceTemplateService;
   @Mock private ServiceTemplateHelper serviceTemplateHelper;
+  @Mock private StateExecutionService stateExecutionService;
 
   @InjectMocks private InstanceFetchState state = new InstanceFetchState("Fetch Instances");
 
@@ -176,6 +177,7 @@ public class InstanceFetchStateTest extends WingsBaseTest {
     doAnswer(invocation -> invocation.getArgumentAt(0, String.class))
         .when(expressionEvaluator)
         .substitute(anyString(), anyMap());
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   @Test
@@ -209,6 +211,7 @@ public class InstanceFetchStateTest extends WingsBaseTest {
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, PROD.name())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, SERVICE_ID)
+            .selectionLogsTrackingEnabled(true)
             .tags(Arrays.asList("tag1", "tag2"))
             .data(TaskData.builder()
                       .async(true)
@@ -221,7 +224,8 @@ public class InstanceFetchStateTest extends WingsBaseTest {
     verify(expressionEvaluator, times(1)).substitute(anyString(), anyMap());
 
     final DelegateTask task = captor.getValue();
-    assertThat(task).isEqualToIgnoringGivenFields(expected, DelegateTaskKeys.data, DelegateTaskKeys.validUntil);
+    assertThat(task).isEqualToIgnoringGivenFields(
+        expected, DelegateTaskKeys.uuid, DelegateTaskKeys.data, DelegateTaskKeys.validUntil);
     assertThat(task.getData()).isEqualToIgnoringGivenFields(expected.getData(), TaskDataKeys.expressionFunctorToken);
     assertThat(task.getData().getExpressionFunctorToken()).isNotEqualTo(0);
   }

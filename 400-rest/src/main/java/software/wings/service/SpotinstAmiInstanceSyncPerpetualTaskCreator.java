@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
@@ -7,9 +8,9 @@ import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPIN
 import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
 import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
-import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTaskClientParams;
@@ -20,11 +21,9 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.info.SpotinstAmiInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDeploymentKey;
-import software.wings.service.intfc.instance.InstanceService;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
-import com.google.inject.Inject;
 import com.google.protobuf.util.Durations;
 import java.util.List;
 import java.util.Map;
@@ -35,11 +34,9 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class SpotinstAmiInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetualTaskCreator {
+@OwnedBy(CDP)
+public class SpotinstAmiInstanceSyncPerpetualTaskCreator extends AbstractInstanceSyncPerpetualTaskCreator {
   public static final String ELASTIGROUP_ID = "elastigroupId";
-
-  @Inject InstanceService instanceService;
-  @Inject PerpetualTaskService perpetualTaskService;
 
   @Override
   public List<String> createPerpetualTasks(InfrastructureMapping infrastructureMapping) {
@@ -47,17 +44,12 @@ public class SpotinstAmiInstanceSyncPerpetualTaskCreator implements InstanceSync
         getElastigroupIds(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
     final String accountId = infrastructureMapping.getAccountId();
 
-    return createPerpetualTasksForElastigroupIds(
-        elastigroupIds, accountId, infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
+    return createPerpetualTasksForElastigroupIds(elastigroupIds, infrastructureMapping);
   }
 
   @Override
   public List<String> createPerpetualTasksForNewDeployment(List<DeploymentSummary> deploymentSummaries,
       List<PerpetualTaskRecord> existingPerpetualTasks, InfrastructureMapping infrastructureMapping) {
-    final String accountId = deploymentSummaries.iterator().next().getAccountId();
-    final String appId = deploymentSummaries.iterator().next().getAppId();
-    final String infraMappingId = deploymentSummaries.iterator().next().getInfraMappingId();
-
     final Set<String> existingElastigroupIds =
         existingPerpetualTasks.stream()
             .map(task -> task.getClientContext().getClientParams())
@@ -69,19 +61,19 @@ public class SpotinstAmiInstanceSyncPerpetualTaskCreator implements InstanceSync
                                                         .collect(Collectors.toSet());
     final Set<String> newElastigroupIds = Sets.difference(newDeploymentElastigroupIds, existingElastigroupIds);
 
-    return createPerpetualTasksForElastigroupIds(newElastigroupIds, accountId, appId, infraMappingId);
+    return createPerpetualTasksForElastigroupIds(newElastigroupIds, infrastructureMapping);
   }
 
   private List<String> createPerpetualTasksForElastigroupIds(
-      Set<String> elastigroupIds, String accountId, String appId, String infraMappingId) {
+      Set<String> elastigroupIds, InfrastructureMapping infrastructureMapping) {
     return elastigroupIds.stream()
         .map(elastigroupId
             -> SpotinstAmiInstanceSyncPerpetualTaskClientParams.builder()
-                   .appId(appId)
-                   .inframappingId(infraMappingId)
+                   .appId(infrastructureMapping.getAppId())
+                   .inframappingId(infrastructureMapping.getUuid())
                    .elastigroupId(elastigroupId)
                    .build())
-        .map(clientParams -> create(accountId, clientParams))
+        .map(clientParams -> create(clientParams, infrastructureMapping))
         .collect(Collectors.toList());
   }
 
@@ -97,7 +89,8 @@ public class SpotinstAmiInstanceSyncPerpetualTaskCreator implements InstanceSync
         .collect(Collectors.toSet());
   }
 
-  private String create(String accountId, SpotinstAmiInstanceSyncPerpetualTaskClientParams clientParams) {
+  private String create(
+      SpotinstAmiInstanceSyncPerpetualTaskClientParams clientParams, InfrastructureMapping infraMapping) {
     Map<String, String> paramMap = ImmutableMap.of(HARNESS_APPLICATION_ID, clientParams.getAppId(),
         INFRASTRUCTURE_MAPPING_ID, clientParams.getInframappingId(), ELASTIGROUP_ID, clientParams.getElastigroupId());
 
@@ -108,7 +101,7 @@ public class SpotinstAmiInstanceSyncPerpetualTaskCreator implements InstanceSync
                                          .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))
                                          .build();
 
-    return perpetualTaskService.createTask(
-        PerpetualTaskType.SPOT_INST_AMI_INSTANCE_SYNC, accountId, clientContext, schedule, false, "");
+    return perpetualTaskService.createTask(PerpetualTaskType.SPOT_INST_AMI_INSTANCE_SYNC, infraMapping.getAccountId(),
+        clientContext, schedule, false, getTaskDescription(infraMapping));
   }
 }

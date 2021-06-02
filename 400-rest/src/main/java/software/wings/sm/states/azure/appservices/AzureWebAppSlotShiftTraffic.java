@@ -51,6 +51,11 @@ public class AzureWebAppSlotShiftTraffic extends AbstractAzureAppServiceState {
   }
 
   @Override
+  protected boolean supportRemoteManifest() {
+    return false;
+  }
+
+  @Override
   public String skipMessage() {
     return String.format("Invalid traffic percent - [%s] specified. Skipping traffic shift step", trafficWeightExpr);
   }
@@ -98,7 +103,7 @@ public class AzureWebAppSlotShiftTraffic extends AbstractAzureAppServiceState {
   }
 
   @Override
-  protected List<CommandUnit> commandUnits() {
+  protected List<CommandUnit> commandUnits(boolean isGitFetch) {
     return ImmutableList.of(new AzureWebAppCommandUnit(AzureConstants.SLOT_TRAFFIC_PERCENTAGE),
         new AzureWebAppCommandUnit(AzureConstants.DEPLOYMENT_STATUS));
   }

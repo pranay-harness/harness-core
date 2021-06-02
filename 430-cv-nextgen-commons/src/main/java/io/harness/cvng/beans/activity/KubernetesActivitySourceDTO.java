@@ -1,5 +1,8 @@
 package io.harness.cvng.beans.activity;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
@@ -14,6 +17,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @SuperBuilder
 @NoArgsConstructor
 @JsonTypeName("KUBERNETES")
+@OwnedBy(HarnessTeam.CV)
 public class KubernetesActivitySourceDTO extends ActivitySourceDTO {
   @NotNull String connectorIdentifier;
   @NotNull @NotEmpty Set<KubernetesActivitySourceConfig> activitySourceConfigs;
@@ -21,6 +25,11 @@ public class KubernetesActivitySourceDTO extends ActivitySourceDTO {
   @Override
   public ActivitySourceType getType() {
     return ActivitySourceType.KUBERNETES;
+  }
+
+  @Override
+  public boolean isEditable() {
+    return true;
   }
 
   @Data

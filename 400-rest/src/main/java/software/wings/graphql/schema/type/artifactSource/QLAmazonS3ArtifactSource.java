@@ -2,7 +2,7 @@ package software.wings.graphql.schema.type.artifactSource;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
@@ -19,7 +19,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLAmazonS3ArtifactSourceKeys")
 @Scope(PermissionAttribute.ResourceType.SERVICE)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLAmazonS3ArtifactSource implements QLArtifactSource {
   String name;
   String id;

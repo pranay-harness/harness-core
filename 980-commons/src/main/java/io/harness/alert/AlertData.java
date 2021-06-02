@@ -1,9 +1,9 @@
 package io.harness.alert;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
-@TargetModule(Module._480_ALERT_BEANS)
+@TargetModule(HarnessModule._955_ALERT_BEANS)
 public interface AlertData {
   boolean matches(AlertData alertData);
 

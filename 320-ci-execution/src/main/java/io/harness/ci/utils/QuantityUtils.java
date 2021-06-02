@@ -1,13 +1,16 @@
 package io.harness.ci.utils;
 
-import io.harness.beans.yaml.extended.container.quantity.CpuQuantity;
-import io.harness.beans.yaml.extended.container.quantity.MemoryQuantity;
-import io.harness.beans.yaml.extended.container.quantity.unit.DecimalQuantityUnit;
-import io.harness.beans.yaml.extended.container.quantity.unit.MemoryQuantityUnit;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.yaml.extended.ci.container.quantity.CpuQuantity;
+import io.harness.yaml.extended.ci.container.quantity.MemoryQuantity;
+import io.harness.yaml.extended.ci.container.quantity.unit.DecimalQuantityUnit;
+import io.harness.yaml.extended.ci.container.quantity.unit.MemoryQuantityUnit;
 
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(HarnessTeam.CI)
 public class QuantityUtils {
   public Integer getMemoryQuantityValueInUnit(String memoryQuantityString, MemoryQuantityUnit targetUnit) {
     MemoryQuantity memoryQuantity = MemoryQuantity.fromString(memoryQuantityString);

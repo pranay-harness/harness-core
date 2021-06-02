@@ -8,11 +8,13 @@ import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.govern.ProviderModule;
+import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
-import io.harness.mongo.MongoModule;
 import io.harness.morphia.MorphiaModule;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.Store;
+import io.harness.persistence.UserProvider;
 import io.harness.serializer.PersistenceRegistrars;
 import io.harness.serializer.YamlUtils;
 
@@ -66,7 +68,10 @@ public class EventServiceApplication {
 
     log.info("Starting event service application...");
 
-    File configFile = new File(args[1]);
+    File configFile = new File(args[0]);
+    if (args.length == 2) {
+      configFile = new File(args[1]);
+    }
     EventServiceConfig config =
         new YamlUtils().read(FileUtils.readFileToString(configFile, UTF_8), EventServiceConfig.class);
     new EventServiceApplication(config).run();
@@ -89,7 +94,12 @@ public class EventServiceApplication {
       }
     });
 
-    modules.add(MongoModule.getInstance());
+    modules.add(new AbstractMongoModule() {
+      @Override
+      public UserProvider userProvider() {
+        return new NoopUserProvider();
+      }
+    });
 
     modules.add(new ProviderModule() {
       @Provides

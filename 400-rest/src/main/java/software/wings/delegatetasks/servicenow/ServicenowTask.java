@@ -9,7 +9,7 @@ import static software.wings.service.impl.servicenow.ServiceNowDelegateServiceIm
 import static software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl.handleResponse;
 import static software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType.CHANGE_TASK;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
@@ -55,7 +55,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @OwnedBy(CDC)
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class ServicenowTask extends AbstractDelegateRunnableTask {
   @Inject private EncryptionService encryptionService;
 
@@ -398,7 +398,7 @@ public class ServicenowTask extends AbstractDelegateRunnableTask {
     }
   }
 
-  private ServiceNowRestClient getRestClient(ServiceNowTaskParameters taskParameters) {
+  protected ServiceNowRestClient getRestClient(ServiceNowTaskParameters taskParameters) {
     ServiceNowConfig config = taskParameters.getServiceNowConfig();
     encryptionService.decrypt(config, taskParameters.getEncryptionDetails(), false);
     return getRetrofit(config, JacksonConverterFactory.create()).create(ServiceNowRestClient.class);

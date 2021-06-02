@@ -1,0 +1,17 @@
+harnessApiVersion: '1.0'
+type: PIPELINE
+pipelineStages:
+- type: APPROVAL
+  name: Approval 1
+  parallel: false
+  userGroups:
+  - test
+  properties:
+    workflowVariables: null
+    stageName: STAGE 1
+    timeoutMillis: 20m
+    approvalStateType: USER_GROUP
+    sweepingOutputName: ''
+  skipCondition:
+    type: ALWAYS_SKIP
+  stageName: STAGE 1

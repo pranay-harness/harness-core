@@ -1,5 +1,6 @@
 package io.harness.cvng.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 import java.util.Set;
 import lombok.Builder;
@@ -7,6 +8,7 @@ import lombok.Value;
 
 @Value
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MetricPackDTO {
   String uuid;
   String accountId;
@@ -25,6 +27,8 @@ public class MetricPackDTO {
     TimeSeriesMetricType type;
     String path;
     String validationPath;
+    String responseJsonPath;
+    String validationResponseJsonPath;
     List<TimeSeriesThresholdDTO> thresholds;
     boolean included;
   }

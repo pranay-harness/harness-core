@@ -8,6 +8,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.artifact.ArtifactStream;
@@ -37,6 +38,7 @@ public class CustomBuildSourceServiceImpl implements CustomBuildSourceService {
   @Inject private ServiceClassLocator serviceLocator;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public List<BuildDetails> getBuilds(String artifactStreamId) {
@@ -76,7 +78,7 @@ public class CustomBuildSourceServiceImpl implements CustomBuildSourceService {
   @Override
   public boolean validateArtifactSource(ArtifactStream artifactStream) {
     log.info("Validating artifact source for Custom Repository artifactStreamId {}",
-        artifactStream.fetchArtifactStreamAttributes().getArtifactStreamId());
+        artifactStream.fetchArtifactStreamAttributes(featureFlagService).getArtifactStreamId());
     notNullCheck("Artifact source does not exist", artifactStream, USER);
 
     CustomArtifactStream customArtifactStream = (CustomArtifactStream) artifactStream;

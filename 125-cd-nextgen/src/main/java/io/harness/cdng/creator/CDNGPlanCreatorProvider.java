@@ -1,20 +1,21 @@
 package io.harness.cdng.creator;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.cdng.creator.filters.DeploymentStageFilterJsonCreator;
-import io.harness.cdng.creator.plan.execution.CDExecutionPMSPlanCreator;
 import io.harness.cdng.creator.plan.stage.DeploymentStagePMSPlanCreator;
+import io.harness.cdng.creator.plan.steps.CDPMSStepFilterJsonCreator;
 import io.harness.cdng.creator.plan.steps.CDPMSStepPlanCreator;
 import io.harness.cdng.creator.variables.DeploymentStageVariableCreator;
-import io.harness.cdng.creator.variables.HTTPStepVariableCreator;
 import io.harness.cdng.creator.variables.K8sStepVariableCreator;
 import io.harness.cdng.creator.variables.ShellScriptStepVariableCreator;
+import io.harness.cdng.provision.terraform.variablecreator.TerraformStepsVariableCreator;
 import io.harness.executions.steps.StepSpecTypeConstants;
-import io.harness.plancreator.steps.StepGroupPMSPlanCreator;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
 import io.harness.pms.sdk.core.pipeline.variables.ExecutionVariableCreator;
-import io.harness.pms.sdk.core.pipeline.variables.StepGroupVariableCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.variables.VariableCreator;
@@ -26,15 +27,16 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+@OwnedBy(HarnessTeam.CDC)
 @Singleton
 public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
+  private static final String TERRAFORM_STEP_METADATA = "Terraform";
+
   @Inject InjectorUtils injectorUtils;
   @Override
   public List<PartialPlanCreator<?>> getPlanCreators() {
     List<PartialPlanCreator<?>> planCreators = new LinkedList<>();
     planCreators.add(new DeploymentStagePMSPlanCreator());
-    planCreators.add(new CDExecutionPMSPlanCreator());
-    planCreators.add(new StepGroupPMSPlanCreator());
     planCreators.add(new CDPMSStepPlanCreator());
     injectorUtils.injectMembers(planCreators);
     return planCreators;
@@ -44,6 +46,7 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
   public List<FilterJsonCreator> getFilterJsonCreators() {
     List<FilterJsonCreator> filterJsonCreators = new ArrayList<>();
     filterJsonCreators.add(new DeploymentStageFilterJsonCreator());
+    filterJsonCreators.add(new CDPMSStepFilterJsonCreator());
     injectorUtils.injectMembers(filterJsonCreators);
 
     return filterJsonCreators;
@@ -54,9 +57,8 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
     List<VariableCreator> variableCreators = new ArrayList<>();
     variableCreators.add(new DeploymentStageVariableCreator());
     variableCreators.add(new ExecutionVariableCreator());
-    variableCreators.add(new StepGroupVariableCreator());
     variableCreators.add(new K8sStepVariableCreator());
-    variableCreators.add(new HTTPStepVariableCreator());
+    variableCreators.add(new TerraformStepsVariableCreator());
     variableCreators.add(new ShellScriptStepVariableCreator());
     return variableCreators;
   }
@@ -121,6 +123,36 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
             .setType(StepSpecTypeConstants.K8S_ROLLING_ROLLBACK)
             .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").setFolderPath("Kubernetes").build())
             .build();
+
+    StepInfo terraformApply =
+        StepInfo.newBuilder()
+            .setName("Terraform Apply")
+            .setType(StepSpecTypeConstants.TERRAFORM_APPLY)
+            .setStepMetaData(StepMetaData.newBuilder().setFolderPath(TERRAFORM_STEP_METADATA).build())
+            .setFeatureFlag(FeatureName.NG_PROVISIONERS.name())
+            .build();
+    StepInfo terraformPlan =
+        StepInfo.newBuilder()
+            .setName("Terraform Plan")
+            .setType(StepSpecTypeConstants.TERRAFORM_PLAN)
+            .setStepMetaData(StepMetaData.newBuilder().setFolderPath(TERRAFORM_STEP_METADATA).build())
+            .setFeatureFlag(FeatureName.NG_PROVISIONERS.name())
+            .build();
+    StepInfo terraformDestroy =
+        StepInfo.newBuilder()
+            .setName("Terraform Destroy")
+            .setType(StepSpecTypeConstants.TERRAFORM_DESTROY)
+            .setStepMetaData(StepMetaData.newBuilder().setFolderPath(TERRAFORM_STEP_METADATA).build())
+            .setFeatureFlag(FeatureName.NG_PROVISIONERS.name())
+            .build();
+    StepInfo terraformRollback =
+        StepInfo.newBuilder()
+            .setName("Terraform Rollback")
+            .setType(StepSpecTypeConstants.TERRAFORM_ROLLBACK)
+            .setStepMetaData(StepMetaData.newBuilder().setFolderPath(TERRAFORM_STEP_METADATA).build())
+            .setFeatureFlag(FeatureName.NG_PROVISIONERS.name())
+            .build();
+
     List<StepInfo> stepInfos = new ArrayList<>();
 
     stepInfos.add(k8sRolling);
@@ -132,6 +164,10 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
     stepInfos.add(apply);
     stepInfos.add(scale);
     stepInfos.add(k8sRollingRollback);
+    stepInfos.add(terraformApply);
+    stepInfos.add(terraformPlan);
+    stepInfos.add(terraformRollback);
+    stepInfos.add(terraformDestroy);
     return stepInfos;
   }
 }

@@ -55,6 +55,10 @@ public class SshSessionConfig implements EncryptableSetting, ScriptExecutionCont
   @SchemaIgnore private String encryptedSshPassword;
   private AccessType accessType;
 
+  private boolean isVaultSSH;
+  private String publicKey;
+  private String signedPublicKey;
+
   @Override
   public SettingVariableTypes getSettingType() {
     return SettingVariableTypes.SSH_SESSION_CONFIG;
@@ -99,6 +103,9 @@ public class SshSessionConfig implements EncryptableSetting, ScriptExecutionCont
     private KerberosConfig kerberosConfig;
     private char[] sshPassword;
     private AccessType accessType;
+    private boolean isVaultSSH;
+    private String publicKey;
+    private String signedPublicKey;
 
     private Builder() {}
 
@@ -108,6 +115,21 @@ public class SshSessionConfig implements EncryptableSetting, ScriptExecutionCont
 
     public Builder withAccountId(String accountId) {
       this.accountId = accountId;
+      return this;
+    }
+
+    public Builder withPublicKey(String publicKey) {
+      this.publicKey = publicKey;
+      return this;
+    }
+
+    public Builder withSignedPublicKey(String signedPublicKey) {
+      this.signedPublicKey = signedPublicKey;
+      return this;
+    }
+
+    public Builder withVaultSSH(boolean isVaultSSH) {
+      this.isVaultSSH = isVaultSSH;
       return this;
     }
 
@@ -263,7 +285,10 @@ public class SshSessionConfig implements EncryptableSetting, ScriptExecutionCont
           .withAuthenticationScheme(authenticationScheme)
           .withKerberosConfig(kerberosConfig)
           .withSshPassword(sshPassword)
-          .withAccessType(accessType);
+          .withAccessType(accessType)
+          .withPublicKey(publicKey)
+          .withSignedPublicKey(signedPublicKey)
+          .withVaultSSH(isVaultSSH);
     }
 
     public SshSessionConfig build() {
@@ -294,6 +319,9 @@ public class SshSessionConfig implements EncryptableSetting, ScriptExecutionCont
       sshSessionConfig.setKerberosConfig(kerberosConfig);
       sshSessionConfig.setSshPassword(sshPassword);
       sshSessionConfig.setAccessType(accessType);
+      sshSessionConfig.setVaultSSH(isVaultSSH);
+      sshSessionConfig.setSignedPublicKey(signedPublicKey);
+      sshSessionConfig.setPublicKey(publicKey);
       return sshSessionConfig;
     }
   }

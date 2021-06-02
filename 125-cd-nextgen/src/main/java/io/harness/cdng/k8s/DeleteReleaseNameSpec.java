@@ -1,38 +1,47 @@
 package io.harness.cdng.k8s;
 
-import io.harness.common.SwaggerConstants;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.bool;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.experimental.FieldNameConstants;
 
+@OwnedBy(CDP)
 @Data
 @JsonTypeName("ReleaseName")
+@FieldNameConstants(innerTypeName = "DeleteReleaseNameSpecKeys")
 public class DeleteReleaseNameSpec implements DeleteResourcesBaseSpec {
-  @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> deleteNamespace;
+  @YamlSchemaTypes({string, bool}) ParameterField<Boolean> deleteNamespace;
+
   @Override
   public DeleteResourcesType getType() {
     return DeleteResourcesType.ReleaseName;
   }
 
   @Override
-  public String getResourceNames() {
+  public String getResourceNamesValue() {
     return "";
   }
 
   @Override
-  public String getManifestPaths() {
+  public String getManifestPathsValue() {
     return "";
   }
 
   @Override
-  public Boolean getDeleteNamespace() {
-    return deleteNamespace != null && deleteNamespace.getValue() != null && deleteNamespace.getValue();
-  }
-
-  @Override
-  public Boolean getAllManifestPaths() {
+  public Boolean getAllManifestPathsValue() {
     return Boolean.FALSE;
+  }
+
+  @Override
+  public ParameterField<Boolean> getDeleteNamespaceParameterField() {
+    return deleteNamespace;
   }
 }

@@ -41,6 +41,12 @@ public interface VaultEncryptor {
     return validateReference(accountId, secretText.getPath(), encryptionConfig);
   }
 
+  default boolean validateSecretManagerConfiguration(
+      @NotEmpty String accountId, @NotNull EncryptionConfig encryptionConfig) {
+    throw new UnsupportedOperationException(
+        "Validating SecretManager Configuration on Delegate in not available yet for:" + encryptionConfig);
+  }
+
   boolean deleteSecret(
       @NotEmpty String accountId, @NotNull EncryptedRecord existingRecord, @NotNull EncryptionConfig encryptionConfig);
 

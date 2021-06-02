@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
 import static io.harness.beans.FeatureName.CV_SUCCEED_FOR_ANOMALY;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -19,6 +20,10 @@ import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.context.ContextElementType;
@@ -95,7 +100,10 @@ import org.slf4j.Logger;
 /**
  * Created by rsingh on 7/6/17.
  */
+@OwnedBy(CV)
 @FieldNameConstants(innerTypeName = "AbstractAnalysisStateKeys")
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public abstract class AbstractAnalysisState extends State {
   private static final SecureRandom random = new SecureRandom();
   // only use it in the new instance API.
@@ -134,7 +142,7 @@ public abstract class AbstractAnalysisState extends State {
   @Inject protected StateExecutionService stateExecutionService;
   @Inject @SchemaIgnore protected ServiceResourceService serviceResourceService;
   @Inject private transient ExpressionEvaluator evaluator;
-  @Inject private AccountService accountService;
+  @Inject protected AccountService accountService;
   @Inject protected CVActivityLogService cvActivityLogService;
 
   protected String hostnameField;
@@ -234,7 +242,7 @@ public abstract class AbstractAnalysisState extends State {
 
       if (workflowExecution.getPipelineExecutionId() != null) {
         WorkflowExecution pipelineExecutionDetails = workflowExecutionService.getExecutionDetails(
-            executionContext.getAppId(), workflowExecution.getPipelineExecutionId(), false);
+            executionContext.getAppId(), workflowExecution.getPipelineExecutionId(), false, false);
         cvExecutionMetaDataBuilder.pipelineName(pipelineExecutionDetails.normalizedName())
             .pipelineStartTs(pipelineExecutionDetails.getStartTs())
             .pipelineExecutionId(workflowExecution.getPipelineExecutionId())

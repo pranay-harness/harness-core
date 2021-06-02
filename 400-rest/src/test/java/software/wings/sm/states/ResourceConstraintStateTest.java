@@ -14,13 +14,13 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.shared.ResourceConstraint;
+import io.harness.beans.shared.RestraintService;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
-import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
-import io.harness.steps.resourcerestraint.service.RestraintService;
 
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;

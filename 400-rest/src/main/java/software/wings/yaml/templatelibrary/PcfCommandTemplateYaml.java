@@ -1,6 +1,10 @@
 package software.wings.yaml.templatelibrary;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.common.TemplateConstants.PCF_PLUGIN;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -15,6 +19,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName(PCF_PLUGIN)
 @JsonPropertyOrder({"harnessApiVersion"})
+@OwnedBy(CDP)
 public class PcfCommandTemplateYaml extends TemplateLibraryYaml {
   private String scriptString;
   private Integer timeoutIntervalInMinutes = 5;

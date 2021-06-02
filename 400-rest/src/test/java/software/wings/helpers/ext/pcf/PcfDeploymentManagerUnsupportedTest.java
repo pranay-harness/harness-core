@@ -1,10 +1,12 @@
 package software.wings.helpers.ext.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ANIL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pcf.PivotalClientApiException;
 import io.harness.rule.Owner;
@@ -20,6 +22,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
+@OwnedBy(CDP)
 public class PcfDeploymentManagerUnsupportedTest extends WingsBaseTest {
   private final PcfDeploymentManagerUnsupported deploymentManager = new PcfDeploymentManagerUnsupported();
   private final PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder().build();

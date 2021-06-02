@@ -10,17 +10,20 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.TimeoutException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 
@@ -45,7 +48,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsDeployCommandHandlerTest extends WingsBaseTest {
   @Mock private EcsDeployCommandTaskHelper mockEcsDeployCommandTaskHelper;
   @Mock private AwsClusterService mockAwsClusterService;
@@ -67,7 +70,7 @@ public class EcsDeployCommandHandlerTest extends WingsBaseTest {
                                                             .build();
     doReturn(ecsServiceDeployResponse).when(mockEcsDeployCommandTaskHelper).getEmptyEcsServiceDeployResponse();
 
-    EcsCommandRequest ecsCommandRequest = new EcsCommandRequest(null, null, null, null, null, null, null, null);
+    EcsCommandRequest ecsCommandRequest = new EcsCommandRequest(null, null, null, null, null, null, null, null, false);
     EcsCommandExecutionResponse response = handler.executeTaskInternal(ecsCommandRequest, null, mockCallback);
     assertThat(response).isNotNull();
     assertThat(response.getErrorMessage()).isEqualTo("Invalid request Type, expected EcsServiceDeployRequest");
@@ -118,7 +121,8 @@ public class EcsDeployCommandHandlerTest extends WingsBaseTest {
     EcsCommandExecutionResponse response = handler.executeTaskInternal(ecsCommandRequest, null, mockCallback);
 
     verify(mockAwsClusterService, times(2))
-        .resizeCluster(anyString(), any(), any(), anyString(), anyString(), anyInt(), anyInt(), anyInt(), any());
+        .resizeCluster(
+            anyString(), any(), any(), anyString(), anyString(), anyInt(), anyInt(), anyInt(), any(), anyBoolean());
     verify(mockEcsDeployCommandTaskHelper, times(2)).restoreAutoScalarConfigs(any(), any(), any());
     verify(mockEcsDeployCommandTaskHelper, times(2)).createAutoScalarConfigIfServiceReachedMaxSize(any(), any(), any());
   }
@@ -152,10 +156,53 @@ public class EcsDeployCommandHandlerTest extends WingsBaseTest {
         .getOldInstanceData(any(), any());
 
     EcsCommandExecutionResponse response = handler.executeTaskInternal(ecsCommandRequest, null, mockCallback);
-
+    assertThat(response.getEcsCommandResponse().isTimeoutFailure()).isFalse();
     verify(mockAwsClusterService, times(2))
-        .resizeCluster(anyString(), any(), any(), anyString(), anyString(), anyInt(), anyInt(), anyInt(), any());
+        .resizeCluster(
+            anyString(), any(), any(), anyString(), anyString(), anyInt(), anyInt(), anyInt(), any(), anyBoolean());
     verify(mockEcsDeployCommandTaskHelper, times(2)).deregisterAutoScalarsIfExists(any(), any());
     verify(mockEcsDeployCommandTaskHelper, times(2)).createAutoScalarConfigIfServiceReachedMaxSize(any(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testExecuteTask_NoRollback_TimeoutFailure() {
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+
+    EcsServiceDeployResponse ecsServiceDeployResponse = EcsServiceDeployResponse.builder()
+                                                            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+                                                            .output(StringUtils.EMPTY)
+                                                            .build();
+    doReturn(ecsServiceDeployResponse).when(mockEcsDeployCommandTaskHelper).getEmptyEcsServiceDeployResponse();
+
+    EcsCommandRequest ecsCommandRequest = EcsServiceDeployRequest.builder()
+                                              .accountId(ACCOUNT_ID)
+                                              .appId(APP_ID)
+                                              .cluster(CLUSTER_NAME)
+                                              .ecsResizeParams(anEcsResizeParams().withRollback(false).build())
+                                              .timeoutErrorSupported(true)
+                                              .build();
+
+    doReturn(true).when(mockEcsDeployCommandTaskHelper).getDeployingToHundredPercent(any());
+    doReturn(ContainerServiceData.builder().build())
+        .when(mockEcsDeployCommandTaskHelper)
+        .getNewInstanceData(any(), any());
+    doReturn(Collections.singletonList(ContainerServiceData.builder().build()))
+        .when(mockEcsDeployCommandTaskHelper)
+        .getOldInstanceData(any(), any());
+    doThrow(new TimeoutException("", "", null))
+        .when(mockAwsClusterService)
+        .resizeCluster(
+            anyString(), any(), any(), anyString(), anyString(), anyInt(), anyInt(), anyInt(), any(), anyBoolean());
+
+    EcsCommandExecutionResponse response = handler.executeTaskInternal(ecsCommandRequest, null, mockCallback);
+    assertThat(response.getEcsCommandResponse().isTimeoutFailure()).isTrue();
+
+    verify(mockAwsClusterService)
+        .resizeCluster(
+            anyString(), any(), any(), anyString(), anyString(), anyInt(), anyInt(), anyInt(), any(), anyBoolean());
+    verify(mockEcsDeployCommandTaskHelper, times(1)).deregisterAutoScalarsIfExists(any(), any());
   }
 }

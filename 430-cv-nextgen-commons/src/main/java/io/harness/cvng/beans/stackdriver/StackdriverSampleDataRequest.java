@@ -1,7 +1,10 @@
 package io.harness.cvng.beans.stackdriver;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
+import static io.harness.cvng.utils.StackdriverUtils.Scope.METRIC_SCOPE;
 import static io.harness.cvng.utils.StackdriverUtils.checkForNullAndReturnValue;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.stackdriver.StackDriverMetricDefinition.Aggregation.AggregationKeys;
 import io.harness.cvng.beans.stackdriver.StackDriverMetricDefinition.StackDriverMetricDefinitionKeys;
 import io.harness.cvng.utils.StackdriverUtils;
@@ -21,6 +24,7 @@ import lombok.experimental.SuperBuilder;
 @Data
 @NoArgsConstructor
 @FieldNameConstants(innerTypeName = "StackdriverSampleDataRequestKeys")
+@OwnedBy(CV)
 public class StackdriverSampleDataRequest extends StackdriverRequest {
   private static final String timestampFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'";
   private static final String timestampFormatKey = "timestampFormat";
@@ -43,7 +47,7 @@ public class StackdriverSampleDataRequest extends StackdriverRequest {
   public Map<String, Object> fetchDslEnvVariables() {
     StackDriverMetricDefinition.Aggregation aggregation = metricDefinition.getAggregation();
     StackdriverCredential credential = StackdriverCredential.fromGcpConnector(getConnectorConfigDTO());
-    Map<String, Object> dslEnvVariables = StackdriverUtils.getCommonEnvVariables(credential);
+    Map<String, Object> dslEnvVariables = StackdriverUtils.getCommonEnvVariables(credential, METRIC_SCOPE);
     dslEnvVariables.put(
         AggregationKeys.alignmentPeriod, checkForNullAndReturnValue(aggregation.getAlignmentPeriod(), "60s"));
     dslEnvVariables.put(

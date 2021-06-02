@@ -3,9 +3,8 @@ package software.wings.beans;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Create;
 
@@ -16,6 +15,7 @@ import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,15 +39,6 @@ import org.mongodb.morphia.annotations.Transient;
  * Created by anubhaw on 4/12/16.
  */
 
-@NgUniqueIndex(name = "entityId_1_templateId_1_relativeFilePath_1_OType_1_instances_1_OExpression_1",
-    fields =
-    {
-      @Field("entityId")
-      , @Field("templateId"), @Field("relativeFilePath"), @Field("configOverrideType"), @Field("instances"),
-          @Field("configOverrideExpression")
-    })
-@CdIndex(name = "app_template_entityId", fields = { @Field("appId")
-                                                    , @Field("templateId"), @Field("entityId") })
 @Data
 @Builder
 @NoArgsConstructor
@@ -58,6 +49,27 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessEntity(exportable = true)
 public class ConfigFile extends BaseFile implements EncryptableSetting {
   public static final String DEFAULT_TEMPLATE_ID = "__TEMPLATE_ID";
+
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("entityId_1_templateId_1_relativeFilePath_1_OType_1_instances_1_OExpression_1")
+                 .unique(true)
+                 .field(ConfigFileKeys.entityId)
+                 .field(ConfigFileKeys.templateId)
+                 .field(ConfigFileKeys.relativeFilePath)
+                 .field(ConfigFileKeys.configOverrideType)
+                 .field(ConfigFileKeys.instances)
+                 .field(ConfigFileKeys.configOverrideExpression)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("app_template_entityId")
+                 .field(BaseKeys.appId)
+                 .field(ConfigFileKeys.templateId)
+                 .field(ConfigFileKeys.entityId)
+                 .build())
+        .build();
+  }
 
   @FormDataParam("templateId") @DefaultValue(DEFAULT_TEMPLATE_ID) private String templateId;
 

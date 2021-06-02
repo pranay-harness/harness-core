@@ -480,7 +480,7 @@ public class BuildSourceServiceIntegrationTest extends IntegrationTestBase {
         break;
       case DOCKER:
         assertThat(buildSourceService.validateArtifactSource(
-                       appId, settingAttribute.getUuid(), artifactStream.fetchArtifactStreamAttributes()))
+                       appId, settingAttribute.getUuid(), artifactStream.fetchArtifactStreamAttributes(null)))
             .isTrue();
         break;
       case ECR:

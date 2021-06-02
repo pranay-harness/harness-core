@@ -27,7 +27,7 @@ public class FQNUtils {
     Map<FQN, Object> res = new LinkedHashMap<>();
     fullMap.keySet().forEach(key -> {
       if (key.contains(baseFQN)) {
-        res.put(key, fullMap.get(key));
+        validateUniqueFqn(key, fullMap.get(key), res);
       }
     });
     return res;
@@ -47,6 +47,15 @@ public class FQNUtils {
     return res;
   }
 
+  private void validateUniqueFqn(FQN fqn, Object value, Map<FQN, Object> res) {
+    if (res.containsKey(fqn)) {
+      String fqnDisplay = fqn.display();
+      throw new InvalidRequestException(String.format(" This element is coming twice in yaml %s",
+          fqn.display().substring(0, fqnDisplay.lastIndexOf('.', fqnDisplay.length() - 2))));
+    }
+    res.put(fqn, value);
+  }
+
   private void generateFQNMap(JsonNode map, FQN baseFQN, Map<FQN, Object> res) {
     Set<String> fieldNames = new LinkedHashSet<>();
     map.fieldNames().forEachRemaining(fieldNames::add);
@@ -55,31 +64,31 @@ public class FQNUtils {
       FQN currFQN = FQN.duplicateAndAddNode(baseFQN, FQNNode.builder().nodeType(FQNNode.NodeType.KEY).key(key).build());
       if (value.getNodeType() == JsonNodeType.ARRAY) {
         if (value.size() == 0) {
-          res.put(currFQN, value);
+          validateUniqueFqn(currFQN, value, res);
           continue;
         }
         ArrayNode arrayNode = (ArrayNode) value;
         generateFQNMapFromList(arrayNode, currFQN, res);
       } else if (value.getNodeType() == JsonNodeType.OBJECT) {
         if (value.size() == 0) {
-          res.put(currFQN, value);
+          validateUniqueFqn(currFQN, value, res);
           continue;
         }
         generateFQNMap(value, currFQN, res);
       } else {
-        res.put(currFQN, value);
+        validateUniqueFqn(currFQN, value, res);
       }
     }
   }
 
   private void generateFQNMapFromList(ArrayNode list, FQN baseFQN, Map<FQN, Object> res) {
     if (list == null || list.get(0) == null) {
-      res.put(baseFQN, list);
+      validateUniqueFqn(baseFQN, list, res);
       return;
     }
     JsonNode firstNode = list.get(0);
     if (firstNode.getNodeType() != JsonNodeType.OBJECT) {
-      res.put(baseFQN, list);
+      validateUniqueFqn(baseFQN, list, res);
       return;
     }
 
@@ -93,7 +102,7 @@ public class FQNUtils {
 
   private void generateFQNMapFromListOfSingleKeyMaps(ArrayNode list, FQN baseFQN, Map<FQN, Object> res) {
     if (checkIfListHasNoIdentifier(list)) {
-      res.put(baseFQN, list);
+      validateUniqueFqn(baseFQN, list, res);
       return;
     }
     list.forEach(element -> {
@@ -134,7 +143,7 @@ public class FQNUtils {
   private void generateFQNMapFromListOfMultipleKeyMaps(ArrayNode list, FQN baseFQN, Map<FQN, Object> res) {
     String uuidKey = getUuidKey(list);
     if (EmptyPredicate.isEmpty(uuidKey)) {
-      res.put(baseFQN, list);
+      validateUniqueFqn(baseFQN, list, res);
       return;
     }
     list.forEach(element -> {
@@ -152,7 +161,7 @@ public class FQNUtils {
         for (String key : fieldNames) {
           FQN finalFQN =
               FQN.duplicateAndAddNode(currFQN, FQNNode.builder().nodeType(FQNNode.NodeType.KEY).key(key).build());
-          res.put(finalFQN, element.get(key));
+          validateUniqueFqn(finalFQN, element.get(key), res);
         }
       }
     });

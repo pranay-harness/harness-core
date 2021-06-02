@@ -186,6 +186,7 @@ public class CVConfigResourceTest extends CvNextGenTestBase {
     assertThat(saveResponse.getStatus()).isEqualTo(500);
     assertThat(
         saveResponse.readEntity(new GenericType<RestResponse<CVConfig>>() {}).getResponseMessages().get(0).getMessage())
+
         .contains("monitoringSourceName should not be null");
   }
 

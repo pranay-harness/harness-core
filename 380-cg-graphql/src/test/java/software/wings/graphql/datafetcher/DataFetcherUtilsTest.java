@@ -15,6 +15,8 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.dao.CEMetadataRecordDao;
+import io.harness.ccm.commons.entities.CEMetadataRecord;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
@@ -49,6 +51,7 @@ public class DataFetcherUtilsTest extends CategoryTest {
   @Mock Connection connection;
   @Mock Statement statement;
   @Mock ResultSet resultSet;
+  @Mock CEMetadataRecordDao metadataRecordDao;
 
   @InjectMocks private DataFetcherUtils dataFetcherUtils;
 
@@ -118,7 +121,8 @@ public class DataFetcherUtilsTest extends CategoryTest {
     when(featureFlagService.isEnabledReloadCache(eq(FeatureName.CE_SAMPLE_DATA_GENERATION), eq(ACCOUNT_ID)))
         .thenReturn(true);
     when(resultSet.next()).thenReturn(true).thenReturn(false);
-
+    CEMetadataRecord ceMetadataRecord = CEMetadataRecord.builder().clusterDataConfigured(true).build();
+    when(metadataRecordDao.getByAccountId(ACCOUNT_ID)).thenReturn(ceMetadataRecord);
     assertThat(dataFetcherUtils.fetchSampleAccountIdIfNoClusterData(ACCOUNT_ID)).isEqualTo(ACCOUNT_ID);
   }
 
@@ -147,7 +151,8 @@ public class DataFetcherUtilsTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldCheckForPSQLDataPresence() throws SQLException {
     when(resultSet.next()).thenReturn(true).thenReturn(false);
-
+    CEMetadataRecord ceMetadataRecord = CEMetadataRecord.builder().clusterDataConfigured(true).build();
+    when(metadataRecordDao.getByAccountId(ACCOUNT_ID)).thenReturn(ceMetadataRecord);
     assertThat(dataFetcherUtils.isAnyClusterDataPresent(ACCOUNT_ID)).isEqualTo(true);
   }
 }

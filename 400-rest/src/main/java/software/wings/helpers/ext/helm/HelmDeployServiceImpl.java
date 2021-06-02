@@ -1,13 +1,14 @@
 package software.wings.helpers.ext.helm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.task.helm.HelmTaskHelperBase.getChartDirectory;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.validation.Validator.notNullCheck;
 
-import static software.wings.delegatetasks.helm.HelmTaskHelper.getChartDirectory;
 import static software.wings.helpers.ext.helm.HelmHelper.filterWorkloads;
 
 import static java.lang.String.format;
@@ -15,10 +16,13 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.replace;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.container.ContainerInfo;
+import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.ExceptionUtils;
@@ -64,7 +68,6 @@ import software.wings.helpers.ext.helm.request.HelmCommandRequest.HelmCommandTyp
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmListReleasesCommandResponse;
@@ -89,6 +92,7 @@ import com.google.inject.Singleton;
 import io.fabric8.kubernetes.api.model.Pod;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -96,7 +100,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -110,7 +113,8 @@ import org.apache.commons.lang3.StringUtils;
  */
 @Singleton
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class HelmDeployServiceImpl implements HelmDeployService {
   public static final String MANIFEST_FILE_NAME = "manifest.yaml";
   @Inject private transient K8sTaskHelper k8sTaskHelper;
@@ -239,10 +243,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       HelmCommandRequest commandRequest, LogCallback executionLogCallback, long timeoutInMillis) throws Exception {
     List<ContainerInfo> containerInfos = new ArrayList<>();
     LogCallback finalExecutionLogCallback = executionLogCallback;
-    timeLimiter.callWithTimeout(
-        ()
-            -> containerInfos.addAll(fetchContainerInfo(commandRequest, finalExecutionLogCallback, new ArrayList<>())),
-        timeoutInMillis, TimeUnit.MILLISECONDS, true);
+    HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMillis(timeoutInMillis),
+        () -> containerInfos.addAll(fetchContainerInfo(commandRequest, finalExecutionLogCallback, new ArrayList<>())));
     return containerInfos;
   }
 
@@ -286,7 +288,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       throws Exception {
     String workingDirPath = Paths.get(commandRequest.getWorkingDir()).normalize().toAbsolutePath().toString();
 
-    List<FileData> manifestFiles = k8sTaskHelper.renderTemplateForHelm(
+    List<FileData> manifestFiles = k8sTaskHelperBase.renderTemplateForHelm(
         helmClient.getHelmPath(commandRequest.getHelmVersion()), workingDirPath, variableOverridesYamlFiles,
         commandRequest.getReleaseName(), commandRequest.getContainerServiceParams().getNamespace(),
         executionLogCallback, commandRequest.getHelmVersion(), timeoutInMillis, commandRequest.getHelmCommandFlag());
@@ -588,17 +590,18 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   @Override
   public HelmCommandResponse ensureHelmCliAndTillerInstalled(HelmCommandRequest helmCommandRequest) {
     try {
-      return timeLimiter.callWithTimeout(() -> {
-        HelmCliResponse cliResponse = helmClient.getClientAndServerVersion(helmCommandRequest);
-        if (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
-          throw new InvalidRequestException(cliResponse.getOutput());
-        }
+      return HTimeLimiter.callInterruptible(
+          timeLimiter, Duration.ofMillis(DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS), () -> {
+            HelmCliResponse cliResponse = helmClient.getClientAndServerVersion(helmCommandRequest);
+            if (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
+              throw new InvalidRequestException(cliResponse.getOutput());
+            }
 
-        boolean helm3 = isHelm3(cliResponse.getOutput());
-        CommandExecutionStatus commandExecutionStatus =
-            helm3 ? CommandExecutionStatus.FAILURE : CommandExecutionStatus.SUCCESS;
-        return new HelmCommandResponse(commandExecutionStatus, cliResponse.getOutput());
-      }, DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS, true);
+            boolean helm3 = isHelm3(cliResponse.getOutput());
+            CommandExecutionStatus commandExecutionStatus =
+                helm3 ? CommandExecutionStatus.FAILURE : CommandExecutionStatus.SUCCESS;
+            return new HelmCommandResponse(commandExecutionStatus, cliResponse.getOutput());
+          });
     } catch (UncheckedTimeoutException e) {
       String msg = "Timed out while finding helm client and server version";
       log.error(msg, e);

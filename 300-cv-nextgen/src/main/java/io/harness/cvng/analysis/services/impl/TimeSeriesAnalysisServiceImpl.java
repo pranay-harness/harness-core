@@ -135,7 +135,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     }
     TimeSeriesLoadTestLearningEngineTask timeSeriesLearningEngineTask =
         TimeSeriesLoadTestLearningEngineTask.builder()
-            .controlDataUrl(baseline == null ? null : baselineDataUrl(input, verificationJobInstance, baseline))
+            .controlDataUrl(
+                baseline == null ? null : baselineDataUrl(input, verificationJobInstance, baseline).orElse(null))
             .testDataUrl(postDeploymentDataUrl(input, verificationJobInstance))
             .dataLength(
                 (int) Duration.between(verificationJobInstance.getStartTime(), input.getStartTime()).toMinutes() + 1)
@@ -253,16 +254,19 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     return getUriString(uriBuilder);
   }
 
-  private String baselineDataUrl(AnalysisInput input, VerificationJobInstance verificationJobInstance,
+  private Optional<String> baselineDataUrl(AnalysisInput input, VerificationJobInstance verificationJobInstance,
       VerificationJobInstance baselineVerificationJobInstance) {
-    URIBuilder uriBuilder = new URIBuilder();
-    uriBuilder.setPath(SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/time-series-data");
-    String baselineVerificationTaskId =
+    Optional<String> maybeBaselineVerificationTaskId =
         verificationTaskService.findBaselineVerificationTaskId(input.getVerificationTaskId(), verificationJobInstance);
-    uriBuilder.addParameter("verificationTaskId", baselineVerificationTaskId);
-    uriBuilder.addParameter("startTime", Long.toString(baselineVerificationJobInstance.getStartTime().toEpochMilli()));
-    uriBuilder.addParameter("endTime", Long.toString(baselineVerificationJobInstance.getEndTime().toEpochMilli()));
-    return getUriString(uriBuilder);
+    return maybeBaselineVerificationTaskId.map(baselineVerificationTaskId -> {
+      URIBuilder uriBuilder = new URIBuilder();
+      uriBuilder.setPath(SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/time-series-data");
+      uriBuilder.addParameter("verificationTaskId", baselineVerificationTaskId);
+      uriBuilder.addParameter(
+          "startTime", Long.toString(baselineVerificationJobInstance.getStartTime().toEpochMilli()));
+      uriBuilder.addParameter("endTime", Long.toString(baselineVerificationJobInstance.getEndTime().toEpochMilli()));
+      return getUriString(uriBuilder);
+    });
   }
   private String postDeploymentDataUrl(AnalysisInput input, VerificationJobInstance verificationJobInstance) {
     URIBuilder uriBuilder = new URIBuilder();

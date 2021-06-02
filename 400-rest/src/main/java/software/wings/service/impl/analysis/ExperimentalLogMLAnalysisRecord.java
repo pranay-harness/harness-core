@@ -4,11 +4,10 @@ import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.IgnoreUnusedIndex;
-import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 
 import software.wings.beans.Base;
 import software.wings.service.impl.splunk.LogMLClusterScores;
@@ -19,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
@@ -29,9 +29,6 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
-@CdIndex(name = "stateExecutionIdx",
-    fields = { @Field("stateExecutionId")
-               , @Field(value = "logCollectionMinute", type = IndexType.DESC) })
 @Data
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -40,6 +37,15 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "experimentalLogAnalysisRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class ExperimentalLogMLAnalysisRecord extends Base {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(SortCompoundMongoIndex.builder()
+                 .name("stateExecutionIdx")
+                 .field(ExperimentalLogMLAnalysisRecordKeys.stateExecutionId)
+                 .descSortField(ExperimentalLogMLAnalysisRecordKeys.logCollectionMinute)
+                 .build())
+        .build();
+  }
   @NotEmpty @FdIndex private String stateExecutionId;
 
   @NotEmpty private StateType stateType;

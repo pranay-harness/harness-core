@@ -1,21 +1,22 @@
 package io.harness.yaml.core;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
-import io.harness.common.SwaggerConstants;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.WithIdentifier;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.visitor.helpers.executionelement.StepElementVisitorHelper;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
-import io.harness.yaml.core.intfc.WithIdentifier;
-import io.harness.yaml.core.intfc.WithSkipCondition;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -32,7 +33,8 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("step")
 @SimpleVisitorHelper(helperClass = StepElementVisitorHelper.class)
 @TypeAlias("io.harness.yaml.core.stepElement")
-public class StepElement implements ExecutionWrapper, WithIdentifier, WithSkipCondition, Visitable {
+@OwnedBy(PIPELINE)
+public class StepElement implements ExecutionWrapper, WithIdentifier, Visitable {
   @EntityIdentifier String identifier;
   @EntityName String name;
   List<FailureStrategyConfig> failureStrategies;
@@ -55,14 +57,6 @@ public class StepElement implements ExecutionWrapper, WithIdentifier, WithSkipCo
     this.name = name;
   }
 
-  public void setStepSpecType(StepSpecType stepSpecType) {
-    this.stepSpecType = stepSpecType;
-    if (this.stepSpecType != null) {
-      this.stepSpecType.setIdentifier(identifier);
-      this.stepSpecType.setName(name);
-    }
-  }
-
   @Builder
   public StepElement(String identifier, String name, String type, StepSpecType stepSpecType) {
     this.identifier = identifier;
@@ -76,10 +70,5 @@ public class StepElement implements ExecutionWrapper, WithIdentifier, WithSkipCo
     VisitableChildren children = VisitableChildren.builder().build();
     children.add("stepSpecType", stepSpecType);
     return children;
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.STEP_ELEMENT).build();
   }
 }

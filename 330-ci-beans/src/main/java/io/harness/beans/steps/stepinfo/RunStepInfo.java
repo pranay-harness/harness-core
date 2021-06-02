@@ -1,25 +1,32 @@
 package io.harness.beans.steps.stepinfo;
 
-import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
-import static io.harness.common.SwaggerConstants.STRING_LIST_CLASSPATH;
-import static io.harness.common.SwaggerConstants.STRING_MAP_CLASSPATH;
+import static io.harness.annotations.dev.HarnessTeam.CI;
+import static io.harness.beans.common.SwaggerConstants.BOOLEAN_CLASSPATH;
+import static io.harness.beans.common.SwaggerConstants.INTEGER_CLASSPATH;
+import static io.harness.beans.common.SwaggerConstants.STRING_CLASSPATH;
+import static io.harness.beans.common.SwaggerConstants.STRING_LIST_CLASSPATH;
+import static io.harness.beans.common.SwaggerConstants.STRING_MAP_CLASSPATH;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
-import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.beans.yaml.extended.reports.UnitTestReport;
+import io.harness.filters.WithConnectorRef;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.yaml.YamlSchemaTypes;
+import io.harness.yaml.extended.ci.container.ContainerResource;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import java.beans.ConstructorProperties;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,7 +42,8 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("Run")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("runStepInfo")
-public class RunStepInfo implements CIStepInfo {
+@OwnedBy(CI)
+public class RunStepInfo implements CIStepInfo, WithConnectorRef {
   public static final int DEFAULT_RETRY = 1;
 
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.RUN).build();
@@ -57,18 +65,20 @@ public class RunStepInfo implements CIStepInfo {
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> image;
   @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
   private ContainerResource resources;
+  @YamlSchemaTypes({string}) @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> privileged;
+  @YamlSchemaTypes({string}) @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "command", "outputVariables", "reports", "envVariables",
-      "image", "connectorRef", "resources"})
+      "image", "connectorRef", "resources", "privileged", "runAsUser"})
   public RunStepInfo(String identifier, String name, Integer retry, ParameterField<String> command,
       ParameterField<List<String>> outputVariables, UnitTestReport reports,
       ParameterField<Map<String, String>> envVariables, ParameterField<String> image,
-      ParameterField<String> connectorRef, ContainerResource resources) {
+      ParameterField<String> connectorRef, ContainerResource resources, ParameterField<Boolean> privileged,
+      ParameterField<Integer> runAsUser) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
-
     this.command = command;
     this.envVariables = envVariables;
     this.reports = reports;
@@ -76,6 +86,8 @@ public class RunStepInfo implements CIStepInfo {
     this.image = image;
     this.connectorRef = connectorRef;
     this.resources = resources;
+    this.privileged = privileged;
+    this.runAsUser = runAsUser;
   }
 
   @Override
@@ -84,17 +96,23 @@ public class RunStepInfo implements CIStepInfo {
   }
 
   @Override
-  public String getDisplayName() {
-    return name;
-  }
-
-  @Override
   public StepType getStepType() {
     return STEP_TYPE;
   }
 
-  @Override
   public String getFacilitatorType() {
     return OrchestrationFacilitatorType.ASYNC;
+  }
+
+  @Override
+  public Map<String, ParameterField<String>> extractConnectorRefs() {
+    Map<String, ParameterField<String>> connectorRefMap = new HashMap<>();
+    connectorRefMap.put(YAMLFieldNameConstants.CONNECTOR_REF, connectorRef);
+    return connectorRefMap;
+  }
+
+  @Override
+  public boolean skipUnresolvedExpressionsCheck() {
+    return true;
   }
 }

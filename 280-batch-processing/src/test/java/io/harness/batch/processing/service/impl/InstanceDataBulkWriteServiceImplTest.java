@@ -9,7 +9,7 @@ import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mock;
 
-import io.harness.batch.processing.BatchProcessingBaseTest;
+import io.harness.batch.processing.BatchProcessingTestBase;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.config.BatchMainConfig;
@@ -36,7 +36,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class InstanceDataBulkWriteServiceImplTest extends BatchProcessingBaseTest {
+public class InstanceDataBulkWriteServiceImplTest extends BatchProcessingTestBase {
   private static final String ACCOUNT_ID = "account_id";
   private static final String INSTANCE_ID = "instance_id";
   private static final String INSTANCE_NAME = "instance_name";

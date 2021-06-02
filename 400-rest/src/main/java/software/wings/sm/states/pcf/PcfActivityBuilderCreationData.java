@@ -1,5 +1,9 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Environment;
 import software.wings.beans.command.CommandUnit;
@@ -12,6 +16,7 @@ import lombok.Data;
 
 @Data
 @Builder
+@OwnedBy(CDP)
 public class PcfActivityBuilderCreationData {
   private String appName;
   private String appId;

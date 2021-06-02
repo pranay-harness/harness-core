@@ -1,8 +1,8 @@
 package software.wings.sm.states.azure.appservices;
 
+import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
-import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;

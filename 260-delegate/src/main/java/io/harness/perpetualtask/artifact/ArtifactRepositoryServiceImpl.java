@@ -5,7 +5,7 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
 import static software.wings.delegatetasks.buildsource.BuildSourceParameters.BuildSourceRequestType.GET_BUILDS;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidCredentialsException;
@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class ArtifactRepositoryServiceImpl {
   private ServiceClassLocator serviceLocator;
   private Injector injector;

@@ -79,7 +79,7 @@ public class StackDriverMetricDefinition {
     String[] filters = filter.split(" ");
     for (String innerFilter : filters) {
       if (innerFilter.contains(metricTypeField)) {
-        return innerFilter.substring(innerFilter.indexOf("=") + 1).replaceAll("\"", "");
+        return innerFilter.substring(innerFilter.indexOf('=') + 1).replaceAll("\"", "");
       }
     }
     return null;

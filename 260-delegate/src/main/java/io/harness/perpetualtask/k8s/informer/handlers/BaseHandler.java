@@ -1,6 +1,6 @@
 package io.harness.perpetualtask.k8s.informer.handlers;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.health.HealthStatusService;
 import io.harness.event.client.EventPublisher;
@@ -14,6 +14,8 @@ import io.harness.reflection.ReflectionUtils;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.Timestamp;
+import io.kubernetes.client.common.KubernetesObject;
+import io.kubernetes.client.common.KubernetesType;
 import io.kubernetes.client.informer.ResourceEventHandler;
 import io.kubernetes.client.openapi.models.V1DaemonSet;
 import io.kubernetes.client.openapi.models.V1Deployment;
@@ -40,9 +42,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.joor.Reflect;
 
 @Slf4j
-@TargetModule(Module._420_DELEGATE_AGENT)
-public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiType> {
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
+public abstract class BaseHandler<ApiType extends KubernetesObject> implements ResourceEventHandler<ApiType> {
   private static final String METADATA = "metadata";
+  public static final Integer VERSION = 1;
 
   static {
     initModelMap();

@@ -8,11 +8,12 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.graphql.datafetcher.DataFetcherUtils.GENERIC_EXCEPTION_MSG;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.AutoLogContext;
@@ -80,7 +81,7 @@ import org.apache.commons.lang3.StringUtils;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class WorkflowExecutionController {
   @Inject private HPersistence persistence;
   @Inject AuthHandler authHandler;
@@ -158,6 +159,12 @@ public class WorkflowExecutionController {
                               .collect(Collectors.toList());
     }
 
+    String failureDetails = null;
+    if (workflowExecution.getStatus() == ExecutionStatus.FAILED) {
+      failureDetails =
+          workflowExecutionService.fetchFailureDetails(workflowExecution.getAppId(), workflowExecution.getUuid());
+    }
+
     builder.id(workflowExecution.getUuid())
         .workflowId(workflowExecution.getWorkflowId())
         .appId(workflowExecution.getAppId())
@@ -168,6 +175,7 @@ public class WorkflowExecutionController {
         .cause(cause)
         .notes(workflowExecution.getExecutionArgs() == null ? null : workflowExecution.getExecutionArgs().getNotes())
         .tags(tags)
+        .failureDetails(failureDetails)
         .artifacts(artifacts)
         .rollbackArtifacts(rollbackArtifacts);
   }

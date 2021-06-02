@@ -64,6 +64,6 @@ pipeline:
                 type: RunTests
                 spec:
                   retry: 2
-                  goals: echo "Running test"
+                  args: echo "Running test"
                   buildTool: maven
                   language: java

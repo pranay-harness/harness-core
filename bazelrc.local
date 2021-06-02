@@ -1,12 +1,9 @@
 import bazelrc.common
+try-import bazelrc.cache
 
-# Add properties that are shared between developers but are specific to local bazel build
-build --javabase=@bazel_tools//tools/jdk:absolute_javabase
-build --host_javabase=@bazel_tools//tools/jdk:absolute_javabase
-build --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla
-build --java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla
+# Add properties that are specific to local bazel  build
 
-build --remote_upload_local_results=false
+build --disk_cache=~/.bazel-dirs/cache
 
 build --symlink_prefix=/
 build --experimental_convenience_symlinks=ignore

@@ -1,87 +1,166 @@
 package software.wings.resources;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.security.dto.PrincipalType.USER;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.FeatureFlag;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.exception.InvalidRequestException;
+import io.harness.mappers.AccountMapper;
+import io.harness.ng.core.user.PasswordChangeDTO;
+import io.harness.ng.core.user.PasswordChangeResponse;
+import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
+import io.harness.ng.core.user.UserInfo;
+import io.harness.ng.core.user.UserRequestDTO;
 import io.harness.rest.RestResponse;
+import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.annotations.NextGenManagerAuth;
+import io.harness.security.dto.UserPrincipal;
+import io.harness.user.remote.UserFilterNG;
 
 import software.wings.beans.User;
+import software.wings.security.authentication.TwoFactorAuthenticationManager;
+import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
+import software.wings.security.authentication.TwoFactorAuthenticationSettings;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
+import retrofit2.http.Body;
 
-@Api(value = "/ng/users", hidden = true)
-@Path("/ng/users")
+@Api(value = "/ng/user", hidden = true)
+@Path("/ng/user")
 @Produces("application/json")
 @Consumes("application/json")
 @NextGenManagerAuth
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class UserResourceNG {
   private final UserService userService;
+  private final TwoFactorAuthenticationManager twoFactorAuthenticationManager;
+  private final AccountService accountService;
+  private static final String ACCOUNT_ADMINISTRATOR_USER_GROUP = "Account Administrator";
+  private static final String CONFIRM_URL = "confirm";
+  private static final String VERIFY_URL = "verify";
+
+  @POST
+  public RestResponse<UserInfo> createNewUserAndSignIn(UserRequestDTO userRequest) {
+    User user = convertUserRequesttoUser(userRequest);
+    String accountId = user.getDefaultAccountId();
+
+    User createdUser = userService.createNewUserAndSignIn(user, accountId);
+
+    return new RestResponse<>(convertUserToNgUser(createdUser));
+  }
+
+  @POST
+  @Path("/oauth")
+  public RestResponse<UserInfo> createNewOAuthUserAndSignIn(UserRequestDTO userRequest) {
+    User user = convertUserRequesttoUser(userRequest);
+    String accountId = user.getDefaultAccountId();
+
+    User createdUser = userService.createNewOAuthUser(user, accountId);
+
+    return new RestResponse<>(convertUserToNgUser(createdUser));
+  }
 
   @GET
   @Path("/search")
-  public RestResponse<PageResponse<User>> list(@BeanParam PageRequest<User> pageRequest,
+  public RestResponse<PageResponse<UserInfo>> list(@BeanParam PageRequest<User> pageRequest,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("searchTerm") String searchTerm) {
     Integer offset = Integer.valueOf(pageRequest.getOffset());
     Integer pageSize = pageRequest.getPageSize();
 
-    List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, false);
+    List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, true, false);
 
-    PageResponse<User> pageResponse = aPageResponse()
-                                          .withOffset(offset.toString())
-                                          .withLimit(pageSize.toString())
-                                          .withResponse(userList)
-                                          .withTotal(userService.getTotalUserCount(accountId, true))
-                                          .build();
+    PageResponse<UserInfo> pageResponse = aPageResponse()
+                                              .withOffset(offset.toString())
+                                              .withLimit(pageSize.toString())
+                                              .withResponse(convertUserToNgUser(userList))
+                                              .withTotal(userService.getTotalUserCount(accountId, true))
+                                              .build();
 
     return new RestResponse<>(pageResponse);
   }
 
+  @GET
+  @Path("/{userId}")
+  public RestResponse<Optional<UserInfo>> getUser(@PathParam("userId") String userId) {
+    User user = userService.get(userId);
+    return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(user)));
+  }
+
+  @GET
+  @Path("email/{emailId}")
+  public RestResponse<Optional<UserInfo>> getUserByEmailId(@PathParam("emailId") String emailId) {
+    User user = userService.getUserByEmail(emailId);
+    return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(user)));
+  }
+
+  @GET
+  @Path("user-password-present")
+  public RestResponse<Boolean> getUserByEmailId(
+      @QueryParam("accountId") String accountId, @QueryParam("emailId") String emailId) {
+    return new RestResponse<>(userService.isUserPasswordPresent(accountId, emailId));
+  }
+
+  @PUT
+  @Path("password")
+  public RestResponse<PasswordChangeResponse> changeUserPassword(
+      @QueryParam("userId") String userId, PasswordChangeDTO passwordChangeDTO) {
+    return new RestResponse<>(userService.changePassword(userId, passwordChangeDTO));
+  }
+
   @POST
   @Path("/batch")
-  public RestResponse<List<User>> listUsersByIds(List<String> userIds) {
-    return new RestResponse<>(userService.getUsers(userIds));
-  }
-
-  @GET
-  @Path("/usernames")
-  public RestResponse<List<String>> getUsernameFromEmail(
-      @QueryParam("accountId") String accountId, @QueryParam("emailList") List<String> emailList) {
-    List<String> usernames = new ArrayList<>();
-    for (String email : emailList) {
-      Optional<User> user = Optional.ofNullable(userService.getUserByEmail(email, accountId));
-      if (user.isPresent()) {
-        usernames.add(user.get().getName());
-      } else {
-        usernames.add(null);
-      }
+  public RestResponse<List<UserInfo>> listUsers(@QueryParam("accountId") String accountId, UserFilterNG userFilterNG) {
+    Set<User> userSet = new HashSet<>();
+    if (!isEmpty(userFilterNG.getUserIds())) {
+      userSet.addAll(userService.getUsers(userFilterNG.getUserIds(), accountId));
     }
-    return new RestResponse<>(usernames);
+    if (!isEmpty(userFilterNG.getEmailIds())) {
+      userSet.addAll(userService.getUsersByEmail(userFilterNG.getEmailIds(), accountId));
+    }
+    return new RestResponse<>(convertUserToNgUser(new ArrayList<>(userSet)));
   }
 
-  @GET
-  public RestResponse<Optional<User>> getUserFromEmail(
-      @QueryParam("accountId") String accountId, @QueryParam("emailId") String emailId) {
-    return new RestResponse<>(Optional.ofNullable(userService.getUserByEmail(emailId, accountId)));
+  @PUT
+  @Path("/user")
+  public RestResponse<Optional<UserInfo>> updateUser(@Body UserInfo userInfo) {
+    User user = convertNgUserToUserWithNameUpdated(userInfo);
+    user = userService.update(user);
+    return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(user)));
   }
 
   @GET
@@ -105,5 +184,166 @@ public class UserResourceNG {
       log.error(String.format("User %s does not belong to account %s", userId, accountId), ex);
       return new RestResponse<>(false);
     }
+  }
+
+  @POST
+  @Path("/user-account")
+  public RestResponse<Boolean> addUserToAccount(
+      @QueryParam("userId") String userId, @QueryParam("accountId") String accountId) {
+    userService.addUserToAccount(userId, accountId);
+    return new RestResponse<>(true);
+  }
+
+  @DELETE
+  @Path("/safeDelete/{userId}")
+  public RestResponse<Boolean> safeDeleteUser(
+      @PathParam("userId") String userId, @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(userService.safeDeleteUser(userId, accountId));
+  }
+
+  @GET
+  @Path("/two-factor-auth/{auth-mechanism}")
+  public RestResponse<Optional<TwoFactorAuthenticationSettings>> getTwoFactorAuthSettings(
+      @PathParam("auth-mechanism") TwoFactorAuthenticationMechanism authMechanism,
+      @QueryParam("emailId") String emailId) {
+    return new RestResponse<>(Optional.ofNullable(twoFactorAuthenticationManager.createTwoFactorAuthenticationSettings(
+        userService.getUserByEmail(emailId), authMechanism)));
+  }
+
+  @PUT
+  @Path("/enable-two-factor-auth")
+  public RestResponse<Optional<UserInfo>> enableTwoFactorAuth(
+      @QueryParam("emailId") String emailId, @Body TwoFactorAuthenticationSettings settings) {
+    return new RestResponse<>(
+        Optional.ofNullable(convertUserToNgUser(twoFactorAuthenticationManager.enableTwoFactorAuthenticationSettings(
+            userService.getUserByEmail(emailId), settings))));
+  }
+
+  @PUT
+  @Path("/disable-two-factor-auth")
+  public RestResponse<Optional<UserInfo>> disableTwoFactorAuth(@QueryParam("emailId") String emailId) {
+    return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(
+        twoFactorAuthenticationManager.disableTwoFactorAuthentication(userService.getUserByEmail(emailId)))));
+  }
+
+  @POST
+  @Path("/{urlType}/url")
+  public RestResponse<Optional<String>> generateSignupNotificationUrl(
+      @PathParam("urlType") String urlType, @Body UserInfo userInfo) {
+    String url = null;
+    try {
+      if (VERIFY_URL.equals(urlType)) {
+        url = userService.generateVerificationUrl(userInfo.getUuid(), userInfo.getDefaultAccountId());
+      } else if (CONFIRM_URL.equals(urlType)) {
+        url = userService.generateLoginUrl(userInfo.getDefaultAccountId());
+      }
+    } catch (URISyntaxException e) {
+      throw new InvalidRequestException(String.format("URL type [%s] failed to be generated", urlType), e);
+    }
+    return new RestResponse<>(Optional.ofNullable(url));
+  }
+
+  private List<UserInfo> convertUserToNgUser(List<User> userList) {
+    return userList.stream()
+        .map(user
+            -> UserInfo.builder()
+                   .email(user.getEmail())
+                   .name(user.getName())
+                   .uuid(user.getUuid())
+                   .admin(Optional.ofNullable(user.getUserGroups())
+                              .map(x
+                                  -> x.stream().anyMatch(
+                                      y -> ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(y.getName()) && y.isDefault()))
+                              .orElse(false))
+                   .twoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled())
+                   .emailVerified(user.isEmailVerified())
+                   .build())
+        .collect(Collectors.toList());
+  }
+
+  private UserInfo convertUserToNgUser(User user) {
+    if (user == null) {
+      return null;
+    }
+    return UserInfo.builder()
+        .email(user.getEmail())
+        .name(user.getName())
+        .uuid(user.getUuid())
+        .defaultAccountId(user.getDefaultAccountId())
+        .twoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled())
+        .emailVerified(user.isEmailVerified())
+        .accounts(user.getAccounts()
+                      .stream()
+                      .map(account -> AccountMapper.toGatewayAccountRequest(account))
+                      .collect(Collectors.toList()))
+        .token(user.getToken())
+        .admin(
+            Optional.ofNullable(user.getUserGroups())
+                .map(x
+                    -> x.stream().anyMatch(y -> ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(y.getName()) && y.isDefault()))
+                .orElse(false))
+        .build();
+  }
+
+  private User convertUserRequesttoUser(UserRequestDTO userRequest) {
+    if (userRequest == null) {
+      return null;
+    }
+
+    return User.Builder.anUser()
+        .email(userRequest.getEmail())
+        .name(userRequest.getName())
+        .twoFactorAuthenticationEnabled(userRequest.isTwoFactorAuthenticationEnabled())
+        .passwordHash(userRequest.getPasswordHash())
+        .accountName(userRequest.getAccountName())
+        .companyName(userRequest.getCompanyName())
+        .accounts(userRequest.getAccounts()
+                      .stream()
+                      .map(account -> AccountMapper.fromAccountDTO(account))
+                      .collect(Collectors.toList()))
+        .emailVerified(userRequest.isEmailVerified())
+        .defaultAccountId(userRequest.getDefaultAccountId())
+        .build();
+  }
+
+  private User convertNgUserToUserWithNameUpdated(UserInfo userInfo) {
+    if (userInfo == null) {
+      return null;
+    }
+    User user = userService.getUserByEmail(userInfo.getEmail());
+    user.setName(userInfo.getName());
+    return user;
+  }
+
+  @PUT
+  @Path("two-factor-admin-override-settings")
+  public RestResponse<Boolean> setTwoFactorAuthAtAccountLevel(
+      @QueryParam("accountId") @NotEmpty String accountId, @NotNull TwoFactorAdminOverrideSettings settings) {
+    // Trying Override = true
+    if (settings.isAdminOverrideTwoFactorEnabled()) {
+      if (SourcePrincipalContextBuilder.getSourcePrincipal() == null
+          || !USER.equals(SourcePrincipalContextBuilder.getSourcePrincipal().getType())) {
+        throw new InvalidRequestException("Unable to fetch current user");
+      }
+
+      UserPrincipal userPrincipal = (UserPrincipal) SourcePrincipalContextBuilder.getSourcePrincipal();
+      User user = userService.getUserByEmail(userPrincipal.getEmail());
+
+      if (twoFactorAuthenticationManager.isTwoFactorEnabled(accountId, user)) {
+        return new RestResponse(twoFactorAuthenticationManager.overrideTwoFactorAuthentication(accountId, settings));
+      } else {
+        throw new InvalidRequestException("Admin has 2FA disabled. Please enable to enforce 2FA on users.");
+      }
+    }
+    // Trying Override = false
+    else {
+      return new RestResponse(twoFactorAuthenticationManager.overrideTwoFactorAuthentication(accountId, settings));
+    }
+  }
+
+  @GET
+  @Path("feature-flags/{accountId}")
+  public RestResponse<Collection<FeatureFlag>> getFeatureFlags(@PathParam("accountId") String accountId) {
+    return new RestResponse<>(accountService.getFeatureFlags(accountId));
   }
 }

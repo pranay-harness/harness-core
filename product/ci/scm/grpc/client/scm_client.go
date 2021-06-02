@@ -20,7 +20,7 @@ const (
 	SCMPort = 8091
 )
 
-//SCMClient implements a GRPC client to communicate with CI scm
+// SCMClient implements a GRPC client to communicate with CI scm
 type SCMClient interface {
 	CloseConn() error
 	Client() pb.SCMClient

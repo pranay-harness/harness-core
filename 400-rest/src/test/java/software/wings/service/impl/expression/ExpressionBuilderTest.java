@@ -11,23 +11,7 @@ import static io.harness.pcf.model.PcfConstants.CONTEXT_OLD_APP_ROUTES_EXPR;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.PRABU;
 
-import static software.wings.service.impl.expression.ExpressionBuilder.ARTIFACT_ARTIFACT_FILE_NAME;
-import static software.wings.service.impl.expression.ExpressionBuilder.ARTIFACT_BUCKET_KEY;
-import static software.wings.service.impl.expression.ExpressionBuilder.ARTIFACT_BUCKET_NAME;
-import static software.wings.service.impl.expression.ExpressionBuilder.ARTIFACT_BUILDNO;
-import static software.wings.service.impl.expression.ExpressionBuilder.ARTIFACT_BUILD_FULL_DISPLAYNAME;
-import static software.wings.service.impl.expression.ExpressionBuilder.ARTIFACT_DESCRIPTION;
-import static software.wings.service.impl.expression.ExpressionBuilder.ARTIFACT_DISPLAY_NAME;
-import static software.wings.service.impl.expression.ExpressionBuilder.ARTIFACT_FILE_NAME;
-import static software.wings.service.impl.expression.ExpressionBuilder.ARTIFACT_LABEL;
-import static software.wings.service.impl.expression.ExpressionBuilder.ARTIFACT_METADATA_IMAGE;
-import static software.wings.service.impl.expression.ExpressionBuilder.ARTIFACT_METADATA_TAG;
-import static software.wings.service.impl.expression.ExpressionBuilder.ARTIFACT_PATH;
-import static software.wings.service.impl.expression.ExpressionBuilder.ARTIFACT_REVISION;
-import static software.wings.service.impl.expression.ExpressionBuilder.ARTIFACT_SOURCE_REGISTRY_URL;
-import static software.wings.service.impl.expression.ExpressionBuilder.ARTIFACT_SOURCE_REPOSITORY_NAME;
-import static software.wings.service.impl.expression.ExpressionBuilder.ARTIFACT_SOURCE_USER_NAME;
-import static software.wings.service.impl.expression.ExpressionBuilder.ARTIFACT_URL;
+import static software.wings.service.impl.expression.ExpressionBuilder.ARTIFACT;
 import static software.wings.service.impl.expression.ExpressionBuilder.HELM_CHART_BASE_PATH;
 import static software.wings.service.impl.expression.ExpressionBuilder.HELM_CHART_BUCKET_NAME;
 import static software.wings.service.impl.expression.ExpressionBuilder.HELM_CHART_DESCRIPTION;
@@ -44,6 +28,7 @@ import static software.wings.service.impl.expression.ExpressionBuilder.PCF_PLUGI
 import static software.wings.service.impl.expression.ExpressionBuilder.PIPELINE_DESCRIPTION;
 import static software.wings.service.impl.expression.ExpressionBuilder.PIPELINE_NAME;
 import static software.wings.service.impl.expression.ExpressionBuilder.PIPELINE_START_TS;
+import static software.wings.service.impl.expression.ExpressionBuilder.ROLLBACK_ARTIFACT_PREFIX;
 import static software.wings.service.impl.expression.ExpressionBuilder.SERVICE_DESCRIPTION;
 import static software.wings.service.impl.expression.ExpressionBuilder.SERVICE_NAME;
 import static software.wings.service.impl.expression.ExpressionBuilder.WORKFLOW_DESCRIPTION;
@@ -69,6 +54,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -113,10 +99,15 @@ public class ExpressionBuilderTest extends WingsBaseTest {
         .containsAll(asList(HELM_CHART_BASE_PATH, HELM_CHART_DESCRIPTION, HELM_CHART_NAME, HELM_CHART_REPO_NAME,
             HELM_CHART_URL, HELM_CHART_VERSION, HELM_CHART_BUCKET_NAME, HELM_CHART_DISPLAY_NAME));
     assertThat(staticExpressionSuggestions)
-        .containsAll(asList(ARTIFACT_DISPLAY_NAME, ARTIFACT_BUILDNO, ARTIFACT_REVISION, ARTIFACT_DESCRIPTION,
-            ARTIFACT_FILE_NAME, ARTIFACT_ARTIFACT_FILE_NAME, ARTIFACT_BUILD_FULL_DISPLAYNAME, ARTIFACT_BUCKET_NAME,
-            ARTIFACT_BUCKET_KEY, ARTIFACT_PATH, ARTIFACT_URL, ARTIFACT_SOURCE_USER_NAME, ARTIFACT_SOURCE_REGISTRY_URL,
-            ARTIFACT_SOURCE_REPOSITORY_NAME, ARTIFACT_METADATA_IMAGE, ARTIFACT_METADATA_TAG, ARTIFACT_LABEL));
+        .containsAll(ExpressionBuilder.getArtifactExpressionSuffixes()
+                         .stream()
+                         .map(ARTIFACT::concat)
+                         .collect(Collectors.toSet()));
+    assertThat(staticExpressionSuggestions)
+        .containsAll(ExpressionBuilder.getArtifactExpressionSuffixes()
+                         .stream()
+                         .map(ROLLBACK_ARTIFACT_PREFIX::concat)
+                         .collect(Collectors.toSet()));
     assertThat(staticExpressionSuggestions)
         .containsAll(asList(WORKFLOW_NAME, WORKFLOW_DESCRIPTION, WORKFLOW_DISPLAY_NAME, WORKFLOW_RELEASE_NO,
             WORKFLOW_LAST_GOOD_DEPLOYMENT_DISPLAY_NAME, WORKFLOW_LAST_GOOD_RELEASE_NO,

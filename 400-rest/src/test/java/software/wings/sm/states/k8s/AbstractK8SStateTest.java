@@ -1,5 +1,7 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
@@ -8,6 +10,8 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BOJANA;
+import static io.harness.rule.OwnerRule.PARDHA;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -16,6 +20,8 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
+import static software.wings.beans.appmanifest.StoreType.CUSTOM;
+import static software.wings.beans.appmanifest.StoreType.CUSTOM_OPENSHIFT_TEMPLATE;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
@@ -23,6 +29,7 @@ import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.beans.appmanifest.StoreType.Remote;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.settings.SettingVariableTypes.GCP;
+import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.StepType.K8S_SCALE;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
@@ -69,11 +76,19 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
+import io.harness.context.ContextElementType;
+import io.harness.delegate.task.helm.HelmChartInfo;
+import io.harness.delegate.task.manifests.request.CustomManifestValuesFetchParams;
+import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -84,10 +99,10 @@ import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.K8sPod;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.manifest.CustomSourceConfig;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.WingsBaseTest;
@@ -104,6 +119,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
+import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
@@ -118,6 +134,7 @@ import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.beans.infrastructure.instance.Instance;
@@ -128,17 +145,19 @@ import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
+import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters;
+import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.k8s.response.K8sInstanceSyncResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.kustomize.KustomizeHelper;
 import software.wings.helpers.ext.openshift.OpenShiftManagerService;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
+import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.GitFileConfigHelperService;
@@ -168,11 +187,13 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.ApplicationManifestUtils;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -189,6 +210,8 @@ import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+@TargetModule(_861_CG_ORCHESTRATION_STATES)
+@OwnedBy(CDP)
 public class AbstractK8SStateTest extends WingsBaseTest {
   @Mock private ActivityService activityService;
   @Mock private AppService appService;
@@ -531,23 +554,27 @@ public class AbstractK8SStateTest extends WingsBaseTest {
     when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SETTING_ID);
     when(evaluator.substitute(anyString(), any(), any(), anyString())).thenReturn("default");
     when(serviceResourceService.getHelmVersionWithDefault(anyString(), anyString())).thenReturn(HelmVersion.V2);
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().skipVersioningForAllK8sObjects(true).storeType(Local).build();
+    Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap = new HashMap<>();
+    applicationManifestMap.put(K8sValuesLocation.Service, applicationManifest);
 
     K8sRollingDeployTaskParameters taskParameters = K8sRollingDeployTaskParameters.builder().build();
-    abstractK8SState.queueK8sDelegateTask(context, taskParameters);
+    abstractK8SState.queueK8sDelegateTask(context, taskParameters, applicationManifestMap);
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
     assertThat(delegateTask.getData().getTimeout()).isEqualTo(10 * 60 * 1000);
 
     taskParameters.setTimeoutIntervalInMin(300);
-    abstractK8SState.queueK8sDelegateTask(context, taskParameters);
+    abstractK8SState.queueK8sDelegateTask(context, taskParameters, applicationManifestMap);
     captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService, times(2)).queueTask(captor.capture());
     delegateTask = captor.getValue();
     assertThat(delegateTask.getData().getTimeout()).isEqualTo(300 * 60 * 1000);
 
     taskParameters.setTimeoutIntervalInMin(0);
-    abstractK8SState.queueK8sDelegateTask(context, taskParameters);
+    abstractK8SState.queueK8sDelegateTask(context, taskParameters, applicationManifestMap);
     captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService, times(3)).queueTask(captor.capture());
     delegateTask = captor.getValue();
@@ -574,6 +601,10 @@ public class AbstractK8SStateTest extends WingsBaseTest {
     doReturn(K8sClusterConfig.builder().build())
         .when(containerDeploymentManagerHelper)
         .getK8sClusterConfig(any(ContainerInfrastructureMapping.class), eq(context));
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().skipVersioningForAllK8sObjects(true).storeType(Local).build();
+    Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap = new HashMap<>();
+    applicationManifestMap.put(K8sValuesLocation.Service, applicationManifest);
 
     SettingAttribute settingAttribute = aSettingAttribute()
                                             .withUuid(SETTING_ID)
@@ -582,7 +613,8 @@ public class AbstractK8SStateTest extends WingsBaseTest {
                                             .build();
     persistence.save(settingAttribute);
 
-    abstractK8SState.queueK8sDelegateTask(context, K8sRollingDeployTaskParameters.builder().build());
+    abstractK8SState.queueK8sDelegateTask(
+        context, K8sRollingDeployTaskParameters.builder().build(), applicationManifestMap);
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
@@ -592,7 +624,8 @@ public class AbstractK8SStateTest extends WingsBaseTest {
     settingAttribute.setValue(
         KubernetesClusterConfig.builder().useKubernetesDelegate(true).delegateName("delegateName").build());
     persistence.save(settingAttribute);
-    abstractK8SState.queueK8sDelegateTask(context, K8sRollingDeployTaskParameters.builder().build());
+    abstractK8SState.queueK8sDelegateTask(
+        context, K8sRollingDeployTaskParameters.builder().build(), applicationManifestMap);
     captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService, times(2)).queueTask(captor.capture());
     delegateTask = captor.getValue();
@@ -607,7 +640,8 @@ public class AbstractK8SStateTest extends WingsBaseTest {
         .when(containerDeploymentManagerHelper)
         .getK8sClusterConfig(any(ContainerInfrastructureMapping.class), eq(context));
     persistence.save(settingAttribute);
-    abstractK8SState.queueK8sDelegateTask(context, K8sRollingDeployTaskParameters.builder().build());
+    abstractK8SState.queueK8sDelegateTask(
+        context, K8sRollingDeployTaskParameters.builder().build(), applicationManifestMap);
     captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService, times(3)).queueTask(captor.capture());
     delegateTask = captor.getValue();
@@ -700,6 +734,7 @@ public class AbstractK8SStateTest extends WingsBaseTest {
         .containsExactlyInAnyOrder("pod-1", "pod-2");
     assertThat(instanceElements.stream().filter(InstanceElement::isNewInstance).count()).isEqualTo(2);
   }
+
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
@@ -798,6 +833,46 @@ public class AbstractK8SStateTest extends WingsBaseTest {
     } catch (Exception ex) {
       assertThat(ex).isInstanceOf(InvalidRequestException.class);
     }
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseForCustomFetchValuesTaskWrapper() {
+    CustomManifestValuesFetchResponse failedValuesFetchResponse =
+        CustomManifestValuesFetchResponse.builder().commandExecutionStatus(FAILURE).build();
+    Map<String, ResponseData> response = new HashMap<>();
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+    response.put(ACTIVITY_ID, failedValuesFetchResponse);
+
+    K8sStateExecutor k8sStateExecutor = mock(K8sStateExecutor.class);
+    K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
+    k8sStateExecutionData.setCurrentTaskType(TaskType.CUSTOM_MANIFEST_VALUES_FETCH_TASK);
+    k8sStateExecutionData.setActivityId(ACTIVITY_ID);
+    k8sStateExecutionData.setValuesFiles(new HashMap<>());
+    k8sStateExecutionData.setApplicationManifestMap(appManifestMap);
+
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.CUSTOM_MANIFEST, ACCOUNT_ID);
+
+    ExecutionResponse executionResponse =
+        abstractK8SState.handleAsyncResponseWrapper(k8sStateExecutor, context, response);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    verify(activityService, times(1)).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
+
+    CustomManifestValuesFetchResponse successfulFetchResponse =
+        CustomManifestValuesFetchResponse.builder().commandExecutionStatus(SUCCESS).build();
+    response.put(ACTIVITY_ID, successfulFetchResponse);
+
+    Map<K8sValuesLocation, Collection<String>> valuesMap = new HashMap<>();
+    valuesMap.put(K8sValuesLocation.ServiceOverride, singletonList("values"));
+    when(applicationManifestUtils.getValuesFilesFromCustomFetchValuesResponse(
+             context, appManifestMap, successfulFetchResponse))
+        .thenReturn(valuesMap);
+    abstractK8SState.handleAsyncResponseWrapper(k8sStateExecutor, context, response);
+    k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
+    assertThat(k8sStateExecutionData.getValuesFiles().get(K8sValuesLocation.ServiceOverride)).containsExactly("values");
+    verify(applicationManifestUtils, times(1))
+        .getValuesFilesFromCustomFetchValuesResponse(context, appManifestMap, successfulFetchResponse);
   }
 
   @Test
@@ -1009,6 +1084,75 @@ public class AbstractK8SStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testHelmValueFetchParamInExecuteHelmValuesFetchTask() {
+    ApplicationManifest appManifest = ApplicationManifest.builder().storeType(Remote).build();
+    appManifest.setStoreType(HelmChartRepo);
+    HelmChartConfigParams helmChartConfigParams = HelmChartConfigParams.builder().build();
+    DirectKubernetesInfrastructureMapping infrastructureMapping =
+        DirectKubernetesInfrastructureMapping.builder().build();
+    infrastructureMapping.setUuid(INFRA_MAPPING_ID);
+
+    when(infrastructureMappingService.get(APP_ID, null)).thenReturn(infrastructureMapping);
+    when(applicationManifestUtils.getAppManifestByApplyingHelmChartOverride(context)).thenReturn(appManifest);
+    when(helmChartConfigHelperService.getHelmChartConfigTaskParams(context, appManifest))
+        .thenReturn(helmChartConfigParams);
+    when(containerDeploymentManagerHelper.getContainerServiceParams(any(), any(), any()))
+        .thenReturn(ContainerServiceParams.builder().clusterName("us-east-1").build());
+    when(featureFlagService.isEnabled(FeatureName.BIND_FETCH_FILES_TASK_TO_DELEGATE, ACCOUNT_ID)).thenReturn(true);
+
+    abstractK8SState.executeHelmValuesFetchTask(context, ACTIVITY_ID, "commandName", 10 * 60 * 1000L);
+
+    verify(applicationManifestUtils, times(1)).getAppManifestByApplyingHelmChartOverride(context);
+    verify(helmChartConfigHelperService, times(1)).getHelmChartConfigTaskParams(context, appManifest);
+    verify(containerDeploymentManagerHelper, times(1)).getContainerServiceParams(infrastructureMapping, "", context);
+
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+    HelmValuesFetchTaskParameters helmValuesFetchTaskParameters =
+        (HelmValuesFetchTaskParameters) delegateTask.getData().getParameters()[0];
+
+    assertThat(helmValuesFetchTaskParameters.isBindTaskFeatureSet()).isTrue();
+    assertThat(helmValuesFetchTaskParameters.getContainerServiceParams().getClusterName()).isEqualTo("us-east-1");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testExecuteCustomManifestFetchValuesTask() {
+    CustomManifestValuesFetchParams mockParams = CustomManifestValuesFetchParams.builder().build();
+    CustomSourceConfig customSourceConfig = CustomSourceConfig.builder().build();
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = ImmutableMap.of(K8sValuesLocation.Service,
+        ApplicationManifest.builder().customSourceConfig(customSourceConfig).storeType(CUSTOM).build());
+    K8sStateExecutor k8sStateExecutor = mock(K8sStateExecutor.class);
+    DirectKubernetesInfrastructureMapping infrastructureMapping =
+        DirectKubernetesInfrastructureMapping.builder().build();
+    infrastructureMapping.setUuid(INFRA_MAPPING_ID);
+    String serviceTemplateId = "serviceTemplateId";
+
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.CUSTOM_MANIFEST, ACCOUNT_ID);
+    doReturn(infrastructureMapping).when(infrastructureMappingService).get(APP_ID, null);
+    doReturn(Activity.builder().uuid(ACTIVITY_ID).build()).when(activityService).save(any(Activity.class));
+    doReturn(appManifestMap).when(applicationManifestUtils).getApplicationManifests(context, AppManifestKind.VALUES);
+    doReturn(mockParams).when(applicationManifestUtils).createCustomManifestValuesFetchParams(context, appManifestMap);
+    doReturn(serviceTemplateId).when(serviceTemplateHelper).fetchServiceTemplateId(infrastructureMapping);
+    abstractK8SState.executeWrapperWithManifest(k8sStateExecutor, context, 90000);
+
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(1)).queueTask(captor.capture());
+    DelegateTask queuedTask = captor.getValue();
+    assertThat(queuedTask.isSelectionLogsTrackingEnabled())
+        .isEqualTo(abstractK8SState.isSelectionLogsTrackingForTasksEnabled());
+    assertThat(queuedTask.getData()).isNotNull();
+    assertThat(queuedTask.getData().getParameters()).isNotEmpty();
+    assertThat(queuedTask.getData().getParameters()[0]).isSameAs(mockParams);
+    assertThat(queuedTask.getSetupAbstractions().get(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD))
+        .isEqualTo(serviceTemplateId);
+  }
+
+  @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testGetNamespacesFromK8sPodList() {
@@ -1070,6 +1214,51 @@ public class AbstractK8SStateTest extends WingsBaseTest {
         abstractK8SState.createDelegateManifestConfig(context, appManifest);
     assertThat(delegateManifestConfig.getManifestFiles().get(0).getFileName()).isEqualTo("fileName");
     assertThat(delegateManifestConfig.getManifestFiles().get(0).getFileContent()).isEqualTo("fileContent");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testCreateDelegateManifestConfig_Custom() {
+    testCreateDelegateManifestConfig_CustomSource(CUSTOM);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testCreateDelegateManifestConfig_CustomOpenshiftTemplate() {
+    testCreateDelegateManifestConfig_CustomSource(CUSTOM_OPENSHIFT_TEMPLATE);
+  }
+
+  private void testCreateDelegateManifestConfig_CustomSource(StoreType storeType) {
+    String customScript = "echo manifest/template.yaml";
+    String manifestPath = "manifest/template.yaml";
+    ApplicationManifest appManifest =
+        ApplicationManifest.builder()
+            .storeType(storeType)
+            .kind(K8S_MANIFEST)
+            .customSourceConfig(CustomSourceConfig.builder().script(customScript).path(manifestPath).build())
+            .build();
+
+    doReturn(false).when(featureFlagService).isEnabled(FeatureName.CUSTOM_MANIFEST, ACCOUNT_ID);
+    K8sDelegateManifestConfig delegateManifestConfig =
+        abstractK8SState.createDelegateManifestConfig(context, appManifest);
+    assertCustomManifestSource(delegateManifestConfig, false, customScript, manifestPath);
+
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.CUSTOM_MANIFEST, ACCOUNT_ID);
+    delegateManifestConfig = abstractK8SState.createDelegateManifestConfig(context, appManifest);
+    assertCustomManifestSource(delegateManifestConfig, true, customScript, manifestPath);
+  }
+
+  private void assertCustomManifestSource(
+      K8sDelegateManifestConfig delegateManifestConfig, boolean customManifestEnabled, String script, String path) {
+    assertThat(delegateManifestConfig.isCustomManifestEnabled()).isEqualTo(customManifestEnabled);
+    if (customManifestEnabled) {
+      assertThat(delegateManifestConfig.getCustomManifestSource().getScript()).isEqualTo(script);
+      assertThat(delegateManifestConfig.getCustomManifestSource().getFilePaths()).containsExactly(path);
+    } else {
+      assertThat(delegateManifestConfig.getCustomManifestSource()).isNull();
+    }
   }
 
   @Test
@@ -1337,5 +1526,43 @@ public class AbstractK8SStateTest extends WingsBaseTest {
 
     InstanceInfoVariables instanceInfoVariables = (InstanceInfoVariables) argumentCaptor.getValue().getValue();
     assertThat(instanceInfoVariables.isSkipVerification()).isEqualTo(true);
+  }
+
+  @Test
+  @Owner(developers = PARDHA)
+  @Category(UnitTests.class)
+  public void testRenderedDelegateSelectorsQueueK8sDelegateTask() {
+    ExecutionContext executionContext = mock(DeploymentExecutionContext.class);
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withUuid(SETTING_ID)
+                                            .withAccountId(ACCOUNT_ID)
+                                            .withValue(KubernetesClusterConfig.builder().build())
+                                            .build();
+    persistence.save(settingAttribute);
+    abstractK8SState.setDelegateSelectors(Collections.singletonList("delegate"));
+    DirectKubernetesInfrastructureMapping infrastructureMapping =
+        DirectKubernetesInfrastructureMapping.builder().namespace("env").accountId(ACCOUNT_ID).build();
+    infrastructureMapping.setComputeProviderSettingId(SETTING_ID);
+    when(executionContext.renderExpression("delegate")).thenReturn("renderedDelegate");
+    when(executionContext.renderExpression("default")).thenReturn("default");
+    when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
+    when(executionContext.getContextElement(ContextElementType.PARAM, PHASE_PARAM)).thenReturn(phaseElement);
+    when(((DeploymentExecutionContext) executionContext).getArtifactForService(any())).thenReturn(new Artifact());
+    when(infrastructureMappingService.get(anyString(), anyString())).thenReturn(infrastructureMapping);
+    when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SETTING_ID);
+    when(evaluator.substitute(anyString(), any(), any(), anyString())).thenReturn("default");
+    when(serviceResourceService.getHelmVersionWithDefault(anyString(), anyString())).thenReturn(HelmVersion.V2);
+    doReturn(K8sClusterConfig.builder().namespace("default").build())
+        .when(containerDeploymentManagerHelper)
+        .getK8sClusterConfig(any(ContainerInfrastructureMapping.class), eq(executionContext));
+
+    abstractK8SState.queueK8sDelegateTask(executionContext, K8sRollingDeployTaskParameters.builder().build(), null);
+
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(1)).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+    K8sTaskParameters taskParams = (K8sTaskParameters) delegateTask.getData().getParameters()[0];
+
+    assertThat(taskParams.getDelegateSelectors()).isEqualTo(Collections.singleton("renderedDelegate"));
   }
 }

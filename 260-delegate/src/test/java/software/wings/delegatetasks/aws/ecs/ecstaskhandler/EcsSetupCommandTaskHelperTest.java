@@ -1,8 +1,10 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.container.ContainerInfo.Status.FAILURE;
 import static io.harness.container.ContainerInfo.Status.SUCCESS;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SAINATH;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -20,6 +22,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Optional.of;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -29,16 +32,19 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static wiremock.com.google.common.collect.Lists.newArrayList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
+import io.harness.exception.TimeoutException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.rule.Owner;
@@ -104,8 +110,9 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.slf4j.Logger;
 
+@OwnedBy(CDP)
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   public static final String SECURITY_GROUP_ID_1 = "sg-id";
   public static final String CLUSTER_NAME = "clusterName";
@@ -126,7 +133,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
 
   private SettingAttribute computeProvider = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
 
-  private String ecsSErviceSpecJsonString = "{\n"
+  private String ecsSErviceSpecJsonString = "{\n\"capacityProviderStrategy\":[],\n"
       + "\"placementConstraints\":[],\n"
       + "\"placementStrategy\":[],\n"
       + "\"healthCheckGracePeriodSeconds\":null,\n"
@@ -535,6 +542,102 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertThat(awsVpcConfiguration.getSubnets()).hasSize(1);
     assertThat(awsVpcConfiguration.getSubnets().get(0)).isEqualTo("subnet1");
     assertThat(awsVpcConfiguration.getAssignPublicIp()).isEqualTo(AssignPublicIp.DISABLED.name());
+  }
+
+  @Test
+  @Owner(developers = SAINATH)
+  @Category(UnitTests.class)
+  public void testGetCreateServiceRequestCapacityProviderStrategy() {
+    EcsSetupParams setupParams = anEcsSetupParams()
+                                     .withClusterName(CLUSTER_NAME)
+                                     .withTargetGroupArn(TARGET_GROUP_ARN)
+                                     .withRoleArn(ROLE_ARN)
+                                     .withRegion(Regions.US_EAST_1.getName())
+                                     .withAssignPublicIps(true)
+                                     .withVpcId(VPC_ID)
+                                     .withSecurityGroupIds(new String[] {SECURITY_GROUP_ID_1})
+                                     .withSubnetIds(new String[] {SUBNET_ID})
+                                     .withExecutionRoleArn("arn")
+                                     .withUseLoadBalancer(true)
+                                     .withLaunchType(LaunchType.FARGATE.name())
+                                     .withImageDetails(ImageDetails.builder().build())
+                                     .build();
+    // empty capacityProviderStrategy
+    String serviceSpecJson = "{\n\"capacityProviderStrategy\":[],\n"
+        + "\"placementConstraints\":[ ],\n"
+        + "\"placementStrategy\":[ ],\n"
+        + "\"healthCheckGracePeriodSeconds\":null,\n"
+        + "\"tags\":[ ],\n"
+        + "\"schedulingStrategy\":\"REPLICA\"\n}";
+
+    EcsServiceSpecification ecsServiceSpecification =
+        EcsServiceSpecification.builder().serviceSpecJson(serviceSpecJson).build();
+    setupParams.setEcsServiceSpecification(ecsServiceSpecification);
+
+    TaskDefinition taskDefinition =
+        new TaskDefinition()
+            .withRequiresCompatibilities(LaunchType.FARGATE.name())
+            .withExecutionRoleArn("arn")
+            .withFamily("family")
+            .withRevision(1)
+            .withContainerDefinitions(
+                new ContainerDefinition()
+                    .withPortMappings(new PortMapping().withContainerPort(80).withProtocol("http"))
+                    .withName(CONTAINER_NAME));
+
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
+
+    TargetGroup targetGroup = getTargetGroup();
+
+    when(awsClusterService.getTargetGroup(Regions.US_EAST_1.getName(), computeProvider, emptyList(), TARGET_GROUP_ARN))
+        .thenReturn(targetGroup);
+
+    CreateServiceRequest createServiceRequest = ecsSetupCommandTaskHelper.getCreateServiceRequest(computeProvider,
+        encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, log,
+        ContainerSetupCommandUnitExecutionData.builder(), false);
+
+    assertThat(createServiceRequest.getCapacityProviderStrategy().size()).isEqualTo(0);
+    assertThat(createServiceRequest.getLaunchType()).isEqualTo("FARGATE");
+
+    // null capacityProviderStrategy
+    serviceSpecJson = "{\n\"capacityProviderStrategy\": null,\n"
+        + "\"placementConstraints\":[ ],\n"
+        + "\"placementStrategy\":[ ],\n"
+        + "\"healthCheckGracePeriodSeconds\":null,\n"
+        + "\"tags\":[ ],\n"
+        + "\"schedulingStrategy\":\"REPLICA\"\n}";
+
+    ecsServiceSpecification = EcsServiceSpecification.builder().serviceSpecJson(serviceSpecJson).build();
+    setupParams.setEcsServiceSpecification(ecsServiceSpecification);
+
+    createServiceRequest = ecsSetupCommandTaskHelper.getCreateServiceRequest(computeProvider, encryptedDataDetails,
+        setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, log,
+        ContainerSetupCommandUnitExecutionData.builder(), false);
+
+    assertThat(createServiceRequest.getCapacityProviderStrategy().size()).isEqualTo(0);
+    assertThat(createServiceRequest.getLaunchType()).isEqualTo("FARGATE");
+
+    // non null capacityProviderStrategy
+    serviceSpecJson = "{\n\"capacityProviderStrategy\": [{ \"capacityProvider\": \"FARGATE\", \"weight\": 100}],\n"
+        + "\"placementConstraints\":[ ],\n"
+        + "\"placementStrategy\":[ ],\n"
+        + "\"healthCheckGracePeriodSeconds\":null,\n"
+        + "\"tags\":[ ],\n"
+        + "\"schedulingStrategy\":\"REPLICA\"\n}";
+
+    ecsServiceSpecification = EcsServiceSpecification.builder().serviceSpecJson(serviceSpecJson).build();
+    setupParams.setEcsServiceSpecification(ecsServiceSpecification);
+
+    createServiceRequest = ecsSetupCommandTaskHelper.getCreateServiceRequest(computeProvider, encryptedDataDetails,
+        setupParams, taskDefinition, CONTAINER_SERVICE_NAME, executionLogCallback, log,
+        ContainerSetupCommandUnitExecutionData.builder(), false);
+
+    assertThat(createServiceRequest.getCapacityProviderStrategy().size()).isEqualTo(1);
+    assertThat(createServiceRequest.getCapacityProviderStrategy().get(0).getCapacityProvider()).isEqualTo("FARGATE");
+    assertThat(createServiceRequest.getCapacityProviderStrategy().get(0).getWeight()).isEqualTo(100);
+    assertThat(createServiceRequest.getLaunchType()).isEqualTo(null);
   }
 
   @Test
@@ -1107,7 +1210,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertThat(data.getEcsServiceArn()).isEqualTo("svcArn");
     assertThat(data.getContainerServiceName()).isEqualTo("foo__1");
     verify(mockAwsHelperService).updateService(anyString(), any(), anyList(), any());
-    verify(mockEcsContainerService).waitForTasksToBeInRunningStateButDontThrowException(any());
+    verify(mockEcsContainerService).waitForTasksToBeInRunningStateWithHandledExceptions(any());
     verify(mockEcsContainerService).waitForServiceToReachSteadyState(anyInt(), any());
   }
 
@@ -1127,6 +1230,41 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     ContainerSetupCommandUnitExecutionDataBuilder builder = ContainerSetupCommandUnitExecutionData.builder();
     ecsSetupCommandTaskHelper.handleRollback(params, attribute, builder, emptyList(), mockCallback);
     verify(mockAwsHelperService).deleteService(anyString(), any(), anyList(), any());
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testHandleRollback_ThrowTimeoutException() {
+    EcsSetupParams params = anEcsSetupParams()
+                                .withRegion("us-east-1")
+                                .withClusterName("cluster")
+                                .withIsDaemonSchedulingStrategy(true)
+                                .withPreviousEcsServiceSnapshotJson("PrevJson")
+                                .withServiceSteadyStateTimeout(10)
+                                .build();
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    SettingAttribute attribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
+    ContainerSetupCommandUnitExecutionDataBuilder builder = ContainerSetupCommandUnitExecutionData.builder();
+    doReturn(new Service().withServiceName("foo__1").withServiceArn("svcArn"))
+        .when(ecsSetupCommandTaskHelper)
+        .getAwsServiceFromJson(anyString(), any());
+    doReturn(AwsConfig.builder().build())
+        .when(mockAwsHelperService)
+        .validateAndGetAwsConfig(any(), anyList(), anyBoolean());
+    doReturn(new DescribeServicesResult().withServices(
+                 new Service().withDesiredCount(2).withEvents(new ServiceEvent().withId("evId"))))
+        .when(mockAwsHelperService)
+        .describeServices(anyString(), any(), anyList(), any());
+    doThrow(TimeoutException.class)
+        .when(mockEcsContainerService)
+        .waitForTasksToBeInRunningStateWithHandledExceptions(any());
+
+    assertThatExceptionOfType(TimeoutException.class)
+        .isThrownBy(
+            () -> ecsSetupCommandTaskHelper.handleRollback(params, attribute, builder, emptyList(), mockCallback));
+    verify(mockAwsHelperService).updateService(anyString(), any(), anyList(), any());
   }
 
   @Test
@@ -1176,9 +1314,10 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
         .doReturn(singletonList(ContainerInfo.builder().status(SUCCESS).build()))
         .when(mockEcsContainerService)
         .getContainerInfosAfterEcsWait(anyString(), any(), anyList(), anyString(), anyString(), anyList(), any());
-    ecsSetupCommandTaskHelper.downsizeOldOrUnhealthy(attribute, params, "foo__3", emptyList(), mockCallback);
+    ecsSetupCommandTaskHelper.downsizeOldOrUnhealthy(attribute, params, "foo__3", emptyList(), mockCallback, false);
     verify(awsClusterService)
-        .resizeCluster(anyString(), any(), anyList(), anyString(), eq("foo__1"), anyInt(), eq(0), anyInt(), any());
+        .resizeCluster(
+            anyString(), any(), anyList(), anyString(), eq("foo__1"), anyInt(), eq(0), anyInt(), any(), anyBoolean());
   }
 
   @Test

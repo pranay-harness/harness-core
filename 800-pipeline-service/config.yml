@@ -33,6 +33,8 @@ mongo:
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
   indexManagerMode: AUTO
+  transactionsEnabled: false
+  aliasDBName:  pms-harness
 
 grpcServerConfig:
   connectors:
@@ -46,8 +48,8 @@ grpcClientConfigs:
   cd:
     target: localhost:12101
     authority: localhost
-  cv:
-    target: localhost:12201
+  cvng:
+    target: localhost:12401
     authority: localhost
   ci:
     target: localhost:12301
@@ -85,6 +87,12 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    userName: ""
+    password: ""
+    sslConfig:
+      enabled: false
+      CATrustStorePath: "/tmp/ca_trust_store"
+      CATrustStorePassword: ""
 
 managerClientConfig:
   baseUrl: http://localhost:3457/api/
@@ -118,9 +126,58 @@ jwtIdentityServiceSecret: HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0
 allowedOrigins:
   - "*"
 
-pipelineServiceBaseUrl: https://localhost:8181/#
+accessControlClient:
+  enableAccessControl: false
+  accessControlServiceConfig:
+    baseUrl: http://localhost:9006/api/
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
-scmConnectionConfig:
-  url: localhost:8091
+pipelineServiceBaseUrl: https://localhost:8181/#
+pmsApiBaseUrl: http://localhost:12001/api/
+
+logStreamingServiceConfig:
+  baseUrl: http://localhost:8079
+  serviceToken: token
+
+iteratorsConfig:
+  approvalInstanceIteratorConfig:
+    enabled: true
+    targetIntervalInSeconds: 60
 
 enableAuth: false
+
+orchestrationStepConfig:
+  ffServerBaseUrl: http://127.0.0.1:3000/api/1.0
+
+shouldDeployWithGitSync: false
+
+gitSdkConfiguration:
+  gitSdkGrpcServerConfig:
+    connectors:
+      - port: 14001
+        secure: true
+        keyFilePath: key.pem
+        certFilePath: cert.pem
+      - port: 14002
+  gitManagerGrpcClientConfig:
+    target: localhost:13001
+    authority: localhost
+  scmConnectionConfig:
+    url: localhost:8091
+
+enableDashboardTimescale: false
+
+timescaledb:
+  timescaledbUrl: "jdbc:postgresql://34.83.25.129:5432/harnessdev"
+  timescaledbUsername: "harnessappdev"
+  timescaledbPassword: "harnessappdev"
+  connectTimeout: 10
+  socketTimeout: 30
+  logUnclosedConnections: false
+  loggerLevel: OFF
+
+useRedisForInterrupts: false
+useRedisForOrchestrationEvents: false
+useRedisForSdkResponseEvents: false

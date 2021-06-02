@@ -3,6 +3,7 @@ package io.harness.delegate.beans.logstreaming;
 import io.harness.delegate.beans.taskprogress.ITaskProgressClient;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
+import io.harness.logstreaming.LogLine;
 
 import java.io.OutputStream;
 

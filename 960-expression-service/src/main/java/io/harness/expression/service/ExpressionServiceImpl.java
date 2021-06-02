@@ -4,6 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.expression.EngineExpressionEvaluator;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -15,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.CI)
 @Slf4j
 public class ExpressionServiceImpl extends ExpressionEvaulatorServiceGrpc.ExpressionEvaulatorServiceImplBase {
   private final EngineExpressionEvaluator expressionEvaluator;
@@ -43,11 +46,11 @@ public class ExpressionServiceImpl extends ExpressionEvaulatorServiceGrpc.Expres
       try {
         String originalExpr = expressionQuery.getJexl();
         Map<String, Object> context = getContextMap(expressionQuery.getJsonContext());
-        String evaluatedExpr =
-            expressionEvaluator.renderExpression(wrapWithExpressionString(originalExpr), context).toString();
-
-        if (!evaluatedExpr.equals(originalExpr)) {
-          evaluatedExpr = unWrapExpressionString(evaluatedExpr);
+        String evaluatedExpr = null;
+        if (expressionQuery.getIsSkipCondition()) {
+          evaluatedExpr = expressionEvaluator.evaluateExpression(originalExpr, context).toString();
+        } else {
+          evaluatedExpr = expressionEvaluator.renderExpression(originalExpr, context, true);
         }
 
         responseBuilder.addValues(ExpressionValue.newBuilder()
@@ -66,17 +69,6 @@ public class ExpressionServiceImpl extends ExpressionEvaulatorServiceGrpc.Expres
     }
     responseObserver.onNext(responseBuilder.build());
     responseObserver.onCompleted();
-  }
-
-  public static String wrapWithExpressionString(String expr) {
-    return expr == null ? null : "<+" + expr + ">";
-  }
-
-  public static String unWrapExpressionString(String expr) {
-    if (expr.startsWith("<+") && expr.endsWith(">")) {
-      return expr.substring(2, expr.length() - 1);
-    }
-    return expr;
   }
 
   private Map<String, Object> getContextMap(String jsonContext) throws IOException {

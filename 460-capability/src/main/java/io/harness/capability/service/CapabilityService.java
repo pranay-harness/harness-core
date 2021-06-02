@@ -1,42 +1,81 @@
 package io.harness.capability.service;
 
+import io.harness.capability.CapabilityRequirement;
+import io.harness.capability.CapabilitySubjectPermission;
+import io.harness.capability.CapabilitySubjectPermission.PermissionResult;
+import io.harness.capability.CapabilityTaskSelectionDetails;
+import io.harness.delegate.beans.TaskGroup;
+import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import org.apache.commons.lang3.tuple.Pair;
 
 public interface CapabilityService {
-  // returns all the valid delegates that can execute all the required capabilities according to
-  // the indexed capability results
-  Set<String> fetchValidDelegates(String accountId, Set<ExecutionCapability> requiredCapabilities);
+  /**
+   * Does the processing of {@link CapabilityRequirement} instance, by inserting or updating records in {@link
+   * CapabilityRequirement}, {@link CapabilityTaskSelectionDetails} and {@link CapabilitySubjectPermission} collections
+   *
+   * @return list of ids of newly inserted {@link CapabilitySubjectPermission} records, requiring immediate capability
+   *     check
+   */
+  List<String> processTaskCapabilityRequirement(CapabilityRequirement capabilityRequirement,
+      CapabilityTaskSelectionDetails taskSelectionDetails, List<String> assignableDelegateIds);
 
-  // returns the list of all capabilities under this account
-  Set<ExecutionCapability> fetchCapabilitySet(String accountId);
+  /**
+   * Creates {@link CapabilityRequirement} instance based on provided delegate task related capability, scoping and
+   * selector information
+   */
+  CapabilityRequirement buildCapabilityRequirement(String accountId, ExecutionCapability agentCapability);
 
-  // returns the list of all valid capabilities for a given delegate
-  Set<ExecutionCapability> fetchCapabilitiesForDelegate(String accountId, String delegateId);
+  /**
+   * Creates {@link CapabilityTaskSelectionDetails} instance based on provided capability and delegate task related
+   * scoping and selector information.
+   */
+  CapabilityTaskSelectionDetails buildCapabilityTaskSelectionDetails(CapabilityRequirement capabilityRequirement,
+      TaskGroup taskGroup, Map<String, String> taskSetupAbstractions, List<SelectorCapability> selectorCapabilities,
+      List<String> assignableDelegateIds);
 
-  // add capabilities to the account's registry, and then broadcast to all the delegates to evaluate
-  // and return the capability
-  void addCapabilities(String accountId, Set<ExecutionCapability> capabilities);
+  /**
+   * Generates task selection details identifier based on provided capability identifier and delegate task related
+   * scoping and selector information. Generated identifier will represent unique combination of the all provided
+   * information.
+   */
+  String generateCapabilityTaskSelectionId(String accountId, String capabilityId, TaskGroup taskGroup,
+      Map<String, Set<String>> taskSelectors, Map<String, String> taskSetupAbstractions);
 
-  // remove capabilities from the account's registry, and remove the evaluation result from the
-  // database. If the capability is to be used again, it will need to be added.
-  void removeCapabilities(String accountId, Set<ExecutionCapability> capabilities);
+  /**
+   * Generates capability identifier based on provided capability details. Generated identifier will represent unique
+   * combination of the all provided information.
+   */
+  String generateCapabilityId(String accountId, CapabilityType capabilityType, String capabilityDescription);
 
-  // invalidate delegate-capability pairs due to failure of capability usage. If requested, we can
-  // mark the capability as invalid, and revalidate them after they have had the time to cool off.
-  void invalidateCapabilities(String accountId, Set<Pair<String /* delegateId */, ExecutionCapability>> capabilityPairs,
-      boolean shouldReevaluate);
+  List<CapabilitySubjectPermission> getAllDelegatePermissions(
+      String accountId, String delegateId, PermissionResult permissionResultFilter);
 
-  // update valid capabilities as valid, due to success in capability usage. Do not use with
-  // delegate-capability pairs that are not currently valid.
-  void confirmCapabilities(String accountId, Set<Pair<String /* delegateId */, ExecutionCapability>> capabilityPairs);
+  List<CapabilityTaskSelectionDetails> getAllCapabilityTaskSelectionDetails(String accountId, String capabilityId);
 
-  // take all capabilities that need to be re-evaluated as of now and broadcast revalidation to
-  // the appropriate delegates.
-  void reevaluateStaleCapabilities(String accountId);
+  boolean deleteCapabilitySubjectPermission(String uuid);
 
-  // returns the time at which there are capabilities that should be re-evaluated.
-  long fetchRefreshTime(String accountId);
+  boolean deleteCapabilitySubjectPermission(String accountId, String delegateId, String capabilityId);
+
+  Set<String> getCapableDelegateIds(String accountId, List<CapabilityRequirement> capabilityRequirements);
+
+  List<CapabilitySubjectPermission> getPermissionsByIds(String accountId, Set<String> permissionIds);
+
+  List<String> addCapabilityPermissions(CapabilityRequirement capabilityRequirement, List<String> allDelegateIds,
+      PermissionResult result, boolean isCapabilityBlocked);
+
+  List<CapabilityRequirement> getAllCapabilityRequirements(String accountId);
+
+  List<CapabilitySubjectPermission> getAllCapabilityPermissions(
+      String accountId, String capabilityId, PermissionResult permissionResultFilter);
+
+  void resetDelegatePermissionCheckIterations(String accountId, String delegateId);
+
+  List<CapabilityTaskSelectionDetails> getBlockedTaskSelectionDetails(String accountId);
+
+  List<CapabilitySubjectPermission> getNotDeniedCapabilityPermissions(String accountId, String capabilityId);
 }

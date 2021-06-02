@@ -16,6 +16,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @JsonTypeName("SPLUNK")
 @Data
@@ -57,5 +58,13 @@ public class SplunkCVConfig extends LogCVConfig {
   @Override
   public String getHostCollectionDSL() {
     return HOST_COLLECTION_DSL;
+  }
+
+  public static class SplunkCVConfigUpdatableEntity extends LogCVConfigUpdatableEntity<SplunkCVConfig, SplunkCVConfig> {
+    @Override
+    public void setUpdateOperations(UpdateOperations<SplunkCVConfig> updateOperations, SplunkCVConfig splunkCVConfig) {
+      setCommonOperations(updateOperations, splunkCVConfig);
+      updateOperations.set(SplunkCVConfigKeys.serviceInstanceIdentifier, splunkCVConfig.getServiceInstanceIdentifier());
+    }
   }
 }

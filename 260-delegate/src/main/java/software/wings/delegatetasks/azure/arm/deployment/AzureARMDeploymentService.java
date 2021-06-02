@@ -1,11 +1,15 @@
 package software.wings.delegatetasks.azure.arm.deployment;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.azure.model.AzureConstants.ARM_DEPLOYMENT_STATUS_CHECK_INTERVAL;
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_VALIDATION_FAILED_MSG_PATTERN;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureManagementClient;
 import io.harness.azure.context.ARMDeploymentSteadyStateContext;
@@ -15,11 +19,11 @@ import io.harness.azure.model.AzureARMRGTemplateExportOptions;
 import io.harness.azure.model.AzureARMTemplate;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureConstants;
-import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
+import io.harness.serializer.JsonUtils;
 
 import software.wings.delegatetasks.azure.arm.deployment.context.DeploymentContext;
 import software.wings.delegatetasks.azure.arm.deployment.context.DeploymentManagementGroupContext;
@@ -37,7 +41,8 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @NoArgsConstructor
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class AzureARMDeploymentService {
   @Inject private AzureManagementClient azureManagementClient;
   @Inject private ARMDeploymentSteadyStateChecker deploymentSteadyStateChecker;
@@ -52,12 +57,14 @@ public class AzureARMDeploymentService {
                                             .build();
 
     LogCallback logCallback = getARMDeploymentLogCallback(context);
-    logCallback.saveExecutionLog(
-        String.format("Starting ARM Deployment for Resource Group - [%s], Mode - [%s], Deployment Name - [%s]",
-            azureClientContext.getResourceGroupName(), azureARMTemplate.getDeploymentMode().name(),
-            azureARMTemplate.getDeploymentName()));
+    logCallback.saveExecutionLog(String.format(
+        "Starting ARM %s at Resource Group scope ... %nResource Group - [%s]%nMode - [%s]%nDeployment Name - [%s]",
+        context.isRollback() ? "Rollback" : "Deployment", azureClientContext.getResourceGroupName(),
+        azureARMTemplate.getDeploymentMode().name(), azureARMTemplate.getDeploymentName()));
     azureManagementClient.deployAtResourceGroupScope(azureClientContext, azureARMTemplate);
-    logCallback.saveExecutionLog("ARM Deployment request send successfully", LogLevel.INFO, SUCCESS);
+    logCallback.saveExecutionLog(
+        String.format("ARM %s request send successfully", context.isRollback() ? "Rollback" : "Deployment"),
+        LogLevel.INFO, SUCCESS);
 
     return performSteadyStateCheckResourceGroupScope(context);
   }
@@ -107,7 +114,7 @@ public class AzureARMDeploymentService {
     deploymentSteadyStateChecker.waitUntilCompleteWithTimeout(
         steadyStateContext, azureManagementClient, getARMDeploymentSteadyStateLogCallback(context));
 
-    return getARMDeploymentOutputs(context.getLogStreamingTaskClient(), steadyStateContext);
+    return getARMDeploymentOutputs(context, steadyStateContext);
   }
 
   public String deployAtSubscriptionScope(DeploymentSubscriptionContext context) {
@@ -133,11 +140,10 @@ public class AzureARMDeploymentService {
               getValidationErrorMsg(errorResponse)));
     }
 
-    logCallback.saveExecutionLog(
-        String.format("Starting ARM Deployment at Subscription scope, Mode - [%s], Deployment Name - [%s]",
-            azureARMTemplate.getDeploymentMode().name(), azureARMTemplate.getDeploymentName()));
+    logCallback.saveExecutionLog(String.format(
+        "Starting ARM Deployment at Subscription scope. Deployment Name - [%s]", azureARMTemplate.getDeploymentName()));
     azureManagementClient.deployAtSubscriptionScope(azureConfig, subscriptionId, azureARMTemplate);
-    logCallback.saveExecutionLog("ARM Deployment request send successfully");
+    logCallback.saveExecutionLog("ARM Deployment request send successfully", LogLevel.INFO, SUCCESS);
     return performSteadyStateCheckSubscriptionScope(context);
   }
 
@@ -155,7 +161,7 @@ public class AzureARMDeploymentService {
     deploymentSteadyStateChecker.waitUntilCompleteWithTimeout(
         steadyStateContext, azureManagementClient, getARMDeploymentSteadyStateLogCallback(context));
 
-    return getARMDeploymentOutputs(context.getLogStreamingTaskClient(), steadyStateContext);
+    return getARMDeploymentOutputs(context, steadyStateContext);
   }
 
   public String deployAtManagementGroupScope(DeploymentManagementGroupContext context) {
@@ -182,11 +188,10 @@ public class AzureARMDeploymentService {
               getValidationErrorMsg(errorResponse)));
     }
 
-    logCallback.saveExecutionLog(
-        String.format("Starting ARM Deployment at Management scope, Mode - [%s], Deployment Name - [%s]",
-            azureARMTemplate.getDeploymentMode().name(), azureARMTemplate.getDeploymentName()));
+    logCallback.saveExecutionLog(String.format(
+        "Starting ARM Deployment at Management scope. Deployment Name - [%s]", azureARMTemplate.getDeploymentName()));
     azureManagementClient.deployAtManagementGroupScope(azureConfig, managementGroupId, azureARMTemplate);
-    logCallback.saveExecutionLog("ARM Deployment request send successfully");
+    logCallback.saveExecutionLog("ARM Deployment request send successfully", LogLevel.INFO, SUCCESS);
     return performSteadyStateCheckManagementGroupScope(context);
   }
 
@@ -203,7 +208,7 @@ public class AzureARMDeploymentService {
 
     deploymentSteadyStateChecker.waitUntilCompleteWithTimeout(
         steadyStateContext, azureManagementClient, getARMDeploymentSteadyStateLogCallback(context));
-    return getARMDeploymentOutputs(context.getLogStreamingTaskClient(), steadyStateContext);
+    return getARMDeploymentOutputs(context, steadyStateContext);
   }
 
   public String deployAtTenantScope(DeploymentTenantContext context) {
@@ -227,11 +232,10 @@ public class AzureARMDeploymentService {
           "Unable to deploy at tenant scope, deployment validation failed: %s", getValidationErrorMsg(errorResponse)));
     }
 
-    logCallback.saveExecutionLog(
-        String.format("Starting ARM Deployment at Tenant scope, Mode - [%s], Deployment Name - [%s]",
-            azureARMTemplate.getDeploymentMode().name(), azureARMTemplate.getDeploymentName()));
+    logCallback.saveExecutionLog(String.format(
+        "Starting ARM Deployment at Tenant scope. Deployment Name - [%s]", azureARMTemplate.getDeploymentName()));
     azureManagementClient.deployAtTenantScope(azureConfig, azureARMTemplate);
-    logCallback.saveExecutionLog("ARM Deployment request send successfully");
+    logCallback.saveExecutionLog("ARM Deployment request send successfully", LogLevel.INFO, SUCCESS);
     return performSteadyStateCheckTenantScope(context);
   }
 
@@ -248,27 +252,52 @@ public class AzureARMDeploymentService {
 
     deploymentSteadyStateChecker.waitUntilCompleteWithTimeout(
         steadyStateContext, azureManagementClient, getARMDeploymentSteadyStateLogCallback(context));
-    return getARMDeploymentOutputs(context.getLogStreamingTaskClient(), steadyStateContext);
+    return getARMDeploymentOutputs(context, steadyStateContext);
   }
 
-  private String getValidationErrorMsg(ErrorResponse error) {
-    return format(
-        AzureConstants.DEPLOYMENT_VALIDATION_FAILED_MSG_PATTERN, error.code(), error.message(), error.target());
+  private String getValidationErrorMsg(ErrorResponse errorResponse) {
+    StringBuilder errorMessageBuilder = new StringBuilder("");
+    buildErrorMessage(errorResponse, errorMessageBuilder);
+    return errorMessageBuilder.toString();
+  }
+
+  private void buildErrorMessage(ErrorResponse errorResponse, StringBuilder parentErrorBuilder) {
+    if (errorResponse == null) {
+      return;
+    }
+    String errorMessage = format(DEPLOYMENT_VALIDATION_FAILED_MSG_PATTERN, errorResponse.code(),
+        errorResponse.message(), errorResponse.target());
+    parentErrorBuilder.append(errorMessage).append("\n");
+
+    if (isNotEmpty(errorResponse.details())) {
+      for (ErrorResponse error : errorResponse.details()) {
+        buildErrorMessage(error, parentErrorBuilder);
+      }
+    }
   }
 
   private String getARMDeploymentOutputs(
-      ILogStreamingTaskClient logStreamingTaskClient, ARMDeploymentSteadyStateContext steadyStateContext) {
+      DeploymentContext context, ARMDeploymentSteadyStateContext steadyStateContext) {
+    LogCallback outPutLogCallback = getARMDeploymentOutputsLogCallback(context);
     String armDeploymentOutputs = azureManagementClient.getARMDeploymentOutputs(steadyStateContext);
-    LogCallback outPutLogCallback = logStreamingTaskClient.obtainLogCallback(AzureConstants.ARM_DEPLOYMENT_OUTPUTS);
-    outPutLogCallback.saveExecutionLog(armDeploymentOutputs, LogLevel.INFO, SUCCESS);
+    String prettifyJson = JsonUtils.prettifyJsonString(armDeploymentOutputs);
+    outPutLogCallback.saveExecutionLog(
+        prettifyJson.equalsIgnoreCase("null") ? "{}" : prettifyJson, LogLevel.INFO, SUCCESS);
     return armDeploymentOutputs;
   }
 
+  private LogCallback getARMDeploymentOutputsLogCallback(DeploymentContext context) {
+    context.setRunningCommandUnit(AzureConstants.ARM_DEPLOYMENT_OUTPUTS);
+    return context.getLogStreamingTaskClient().obtainLogCallback(AzureConstants.ARM_DEPLOYMENT_OUTPUTS);
+  }
+
   private LogCallback getARMDeploymentLogCallback(DeploymentContext context) {
+    context.setRunningCommandUnit(AzureConstants.EXECUTE_ARM_DEPLOYMENT);
     return context.getLogStreamingTaskClient().obtainLogCallback(AzureConstants.EXECUTE_ARM_DEPLOYMENT);
   }
 
   private LogCallback getARMDeploymentSteadyStateLogCallback(DeploymentContext context) {
+    context.setRunningCommandUnit(AzureConstants.ARM_DEPLOYMENT_STEADY_STATE);
     return context.getLogStreamingTaskClient().obtainLogCallback(AzureConstants.ARM_DEPLOYMENT_STEADY_STATE);
   }
 }

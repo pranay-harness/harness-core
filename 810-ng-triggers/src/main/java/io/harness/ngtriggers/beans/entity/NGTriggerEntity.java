@@ -1,22 +1,30 @@
 package io.harness.ngtriggers.beans.entity;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
+import io.harness.iterator.PersistentNGCronIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
 import io.harness.ngtriggers.beans.target.TargetType;
+import io.harness.persistence.PersistentEntity;
 
 import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
@@ -33,7 +41,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("triggersNG")
 @TypeAlias("triggersNG")
 @HarnessEntity(exportable = true)
-public class NGTriggerEntity {
+@Slf4j
+@OwnedBy(PIPELINE)
+public class NGTriggerEntity implements PersistentEntity, PersistentNGCronIterable {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(
@@ -87,4 +97,28 @@ public class NGTriggerEntity {
   @Builder.Default Boolean deleted = Boolean.FALSE;
   @Singular @Size(max = 128) List<NGTag> tags;
   @Builder.Default Boolean enabled = Boolean.TRUE;
+  @FdIndex private List<Long> nextIterations; // List of activation times for cron triggers
+
+  @Override
+  public List<Long> recalculateNextIterations(String fieldName, boolean skipMissed, long throttled) {
+    if (metadata.getCron() == null || nextIterations == null) {
+      return new ArrayList<>();
+    }
+    try {
+      String cronExpr = metadata.getCron().getExpression();
+      expandNextIterations(skipMissed, throttled, cronExpr, nextIterations);
+    } catch (Exception e) {
+      log.error("Failed to schedule executions for trigger {}", uuid, e);
+      throw e;
+    }
+    return nextIterations;
+  }
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    if (metadata.getCron() == null || nextIterations == null) {
+      return null;
+    }
+    return nextIterations.get(0);
+  }
 }

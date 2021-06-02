@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+import static io.harness.beans.FeatureName.CE_BILLING_DATA_HOURLY_PRE_AGGREGATION;
 import static io.harness.beans.FeatureName.CE_BILLING_DATA_PRE_AGGREGATION;
 import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.ROHIT;
@@ -17,9 +19,13 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.dao.K8sWorkloadDao;
 import io.harness.ccm.cluster.entities.K8sWorkload;
+import io.harness.ccm.commons.dao.CEMetadataRecordDao;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
@@ -72,6 +78,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class BillingEntityDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock private DataFetcherUtils utils;
@@ -79,6 +87,7 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock BillingDataHelper billingDataHelper;
   @Mock FeatureFlagService featureFlagService;
   @Mock CeAccountExpirationChecker accountChecker;
+  @Mock CEMetadataRecordDao ceMetadataRecordDao;
   @InjectMocks BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject @InjectMocks BillingStatsEntityDataFetcher billingStatsEntityDataFetcher;
   @Inject private K8sWorkloadDao k8sWorkloadDao;
@@ -154,6 +163,7 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTestBase {
     doCallRealMethod().when(billingDataHelper).calculateTrendPercentage(anyDouble(), anyDouble());
     doCallRealMethod().when(billingDataHelper).calculateTrendPercentage((BigDecimal) anyObject(), anyObject());
     when(featureFlagService.isEnabled(CE_BILLING_DATA_PRE_AGGREGATION, ACCOUNT1_ID)).thenReturn(false);
+    when(featureFlagService.isEnabled(CE_BILLING_DATA_HOURLY_PRE_AGGREGATION, ACCOUNT1_ID)).thenReturn(false);
     doNothing().when(accountChecker).checkIsCeEnabled(anyString());
   }
 
@@ -418,6 +428,7 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTestBase {
         .thenReturn(serviceValues);
     when(tagHelper.getEntityIdsFromTags(ACCOUNT1_ID, filters.get(2).getTag().getTags(), EntityType.ENVIRONMENT))
         .thenReturn(environmentValues);
+    when(ceMetadataRecordDao.getByAccountId(anyString())).thenReturn(null);
     List<QLCCMGroupBy> groupBy = Collections.emptyList();
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
 

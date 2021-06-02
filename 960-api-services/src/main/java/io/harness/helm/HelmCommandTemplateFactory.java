@@ -8,28 +8,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.HelmVersion;
 
 public final class HelmCommandTemplateFactory {
-  public enum HelmCliCommandType {
-    INSTALL,
-    UPGRADE,
-    ROLLBACK,
-    RELEASE_HISTORY,
-    DELETE_RELEASE,
-    LIST_RELEASE,
-    REPO_ADD,
-    REPO_UPDATE,
-    REPO_LIST,
-    SEARCH_REPO,
-    VERSION,
-    REPO_ADD_CHART_MEUSEUM,
-    REPO_ADD_HTTP,
-    FETCH,
-    REPO_REMOVE,
-    INIT,
-    RENDER_CHART,
-    RENDER_SPECIFIC_CHART_FILE,
-    FETCH_ALL_VERSIONS;
-  }
-
   /*
   default to v2 if version not set
    */

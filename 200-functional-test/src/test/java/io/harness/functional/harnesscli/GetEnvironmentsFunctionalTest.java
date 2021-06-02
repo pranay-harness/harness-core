@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -52,6 +53,7 @@ public class GetEnvironmentsFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = SHUBHANSHU)
   @Category(CliFunctionalTests.class)
+  @Ignore("This test is skipping through maven command. Skipping for bazel")
   public void getEnvironmentsTest() {
     // Running harness get environments before creating a new environment
     String appId = application.getAppId();
@@ -103,6 +105,7 @@ public class GetEnvironmentsFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = SHUBHANSHU)
   @Category(CliFunctionalTests.class)
+  @Ignore("This test is skipping through maven command. Skipping for bazel")
   public void getEnvironmentsWithInvalidArgumentsTest() {
     // Running harness get environment with invalid appId
     String command = String.format("harness get environments -a %s", "INVALID_ID");

@@ -1,42 +1,41 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
 import software.wings.beans.DatadogConfig;
-import software.wings.beans.DatadogConfig.DatadogYaml;
-import software.wings.beans.PrometheusConfig;
+import software.wings.beans.DatadogYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
 import java.util.List;
 
-public class DatadogConfigYamlHandler
-    extends VerificationProviderYamlHandler<DatadogConfig.DatadogYaml, DatadogConfig> {
+public class DatadogConfigYamlHandler extends VerificationProviderYamlHandler<DatadogYaml, DatadogConfig> {
   @Override
-  public DatadogConfig.DatadogYaml toYaml(SettingAttribute settingAttribute, String appId) {
+  public DatadogYaml toYaml(SettingAttribute settingAttribute, String appId) {
     DatadogConfig config = (DatadogConfig) settingAttribute.getValue();
 
-    DatadogYaml yaml = DatadogYaml.builder()
-                           .harnessApiVersion(getHarnessApiVersion())
-                           .type(config.getType())
-                           .url(config.getUrl())
-                           .apiKey(new String(config.getApiKey()))
-                           .applicationKey(new String(config.getApplicationKey()))
-                           .build();
+    DatadogYaml yaml =
+        DatadogYaml.builder()
+            .harnessApiVersion(getHarnessApiVersion())
+            .type(config.getType())
+            .url(config.getUrl())
+            .apiKey(getSecretNameFromId(config.getAccountId(), config.getEncryptedApiKey()))
+            .applicationKey(getSecretNameFromId(config.getAccountId(), config.getEncryptedApplicationKey()))
+            .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
   }
 
   @Override
-  protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<DatadogConfig.DatadogYaml> changeContext,
-      List<ChangeContext> changeSetContext) {
+  protected SettingAttribute toBean(
+      SettingAttribute previous, ChangeContext<DatadogYaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
-    DatadogConfig.DatadogYaml yaml = changeContext.getYaml();
+    DatadogYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
     DatadogConfig datadogConfig = DatadogConfig.builder()
                                       .accountId(accountId)
                                       .url(yaml.getUrl())
-                                      .encryptedApiKey(yaml.getApiKey())
-                                      .encryptedApplicationKey(yaml.getApplicationKey())
+                                      .encryptedApiKey(getSecretIdFromName(accountId, yaml.getApiKey()))
+                                      .encryptedApplicationKey(getSecretIdFromName(accountId, yaml.getApplicationKey()))
                                       .build();
 
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, datadogConfig);
@@ -44,6 +43,6 @@ public class DatadogConfigYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return PrometheusConfig.PrometheusYaml.class;
+    return DatadogYaml.class;
   }
 }

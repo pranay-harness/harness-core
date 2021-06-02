@@ -1,23 +1,19 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
+load("//:tools/bazel/macros.bzl", "run_analysis")
 
 java_library(
-    name = "maven_deps",
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
     visibility = ["//visibility:public"],
-    exports = [
-        "//860-orchestration-steps:module",
-        "//860-orchestration-visualization:module",
+    deps = [
+        "//:lombok",
         "//870-yaml-beans:module",
         "//884-pms-commons:module",
         "//930-ng-core-clients:module",
         "//950-delegate-tasks-beans:module",
         "//950-ng-project-n-orgs:module",
+        "//970-rbac-core:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_fasterxml_jackson_core_jackson_core",
@@ -32,6 +28,7 @@ java_library(
         "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
         "@maven//:com_intellij_annotations",
+        "@maven//:cz_jirutka_rsql_rsql_parser",
         "@maven//:io_swagger_swagger_annotations",
         "@maven//:javax_validation_validation_api",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
@@ -50,18 +47,14 @@ java_library(
 )
 
 java_library(
-    name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    resources = ["//850-ng-pipeline-commons/src/test/resources:resource"],
     visibility = ["//visibility:public"],
     deps = [
-        "maven_deps",
+        ":module",
         "//:lombok",
-    ],
-)
-
-java_library(
-    name = "test_deps",
-    exports = [
         "//950-timeout-engine:module",
         "//960-persistence:supporter-test",
         "//990-commons-test:module",
@@ -74,30 +67,6 @@ java_library(
     ],
 )
 
-java_library(
-    name = "tests",
-    srcs = glob(["src/test/**/*.java"]),
-    resources = ["//850-ng-pipeline-commons/src/test/resources:resource"],
-    visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "module",
-        "test_deps",
-        "//:lombok",
-    ],
-)
-
 run_tests()
 
-checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":maven_deps",
-        ":module",
-    ],
-)
-
-pmd()
+run_analysis()

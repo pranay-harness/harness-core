@@ -1,11 +1,11 @@
 package software.wings.service.impl.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.RepairActionCode.isPipelineRuntimeTimeoutAction;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
-import static io.harness.interrupts.RepairActionCode.isPipelineRuntimeTimeoutAction;
 import static io.harness.validation.Validator.nullCheckForInvalidRequest;
 
 import static software.wings.sm.StateType.APPROVAL;
@@ -73,6 +73,7 @@ public class PipelineServiceValidator {
       PipelineStageElement pipelineStageElement, List<Variable> workflowVariables) {
     Map<String, String> pseVariableValues = pipelineStageElement.getWorkflowVariables();
     List<String> runtimeVariables = pipelineStageElement.getRuntimeInputsConfig().getRuntimeInputVariables();
+    runtimeVariables.removeIf(variable -> !pseVariableValues.containsKey(variable));
     String missing =
         runtimeVariables.stream().filter(variable -> !pseVariableValues.containsKey(variable)).findAny().orElse(null);
     if (missing != null) {

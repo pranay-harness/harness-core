@@ -1,5 +1,8 @@
 package io.harness.limits.counter.service;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.Counter;
@@ -27,6 +30,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * A "resource" here refers to Harness entity like service / pipeline / workflow.
  */
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 public class CounterSyncer {

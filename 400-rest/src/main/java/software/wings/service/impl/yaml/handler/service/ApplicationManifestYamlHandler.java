@@ -5,9 +5,13 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.beans.FeatureName;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
+import io.harness.manifest.CustomSourceConfig;
 
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
@@ -41,6 +45,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
   @Inject YamlResourceService yamlResourceService;
   @Inject ServiceResourceService serviceResourceService;
   @Inject private HelmChartConfigHelperService helmChartConfigHelperService;
+  @Inject FeatureFlagService featureFlagService;
 
   @Override
   public Yaml toYaml(ApplicationManifest applicationManifest, String appId) {
@@ -51,6 +56,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
         .gitFileConfig(getGitFileConfigForToYaml(applicationManifest))
         .helmChartConfig(getHelmChartConfigForToYaml(applicationManifest))
         .kustomizeConfig(applicationManifest.getKustomizeConfig())
+        .customSourceConfig(applicationManifest.getCustomSourceConfig())
         .pollForChanges(applicationManifest.getPollForChanges())
         .skipVersioningForAllK8sObjects(applicationManifest.getSkipVersioningForAllK8sObjects())
         .helmCommandFlag(applicationManifest.getHelmCommandFlag())
@@ -101,6 +107,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
     GitFileConfig gitFileConfig = getGitFileConfigFromYaml(accountId, appId, yaml, storeType);
     HelmChartConfig helmChartConfig = getHelmChartConfigFromYaml(accountId, appId, yaml, storeType);
     KustomizeConfig kustomizeConfig = getKustomizeConfigFromYaml(yaml, storeType);
+    CustomSourceConfig customSourceConfig = getCustomSourceConfigFromYaml(accountId, yaml, storeType);
 
     boolean isNotK8sServiceManifest =
         serviceId == null || envId != null || !serviceResourceService.isK8sV2Service(appId, serviceId);
@@ -116,6 +123,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
                                        .helmChartConfig(helmChartConfig)
                                        .kind(kind)
                                        .kustomizeConfig(kustomizeConfig)
+                                       .customSourceConfig(customSourceConfig)
                                        .pollForChanges(yaml.getPollForChanges())
                                        .skipVersioningForAllK8sObjects(yaml.getSkipVersioningForAllK8sObjects())
                                        .helmCommandFlag(yaml.getHelmCommandFlag())
@@ -223,5 +231,22 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
     } catch (WingsException ex) {
       return null;
     }
+  }
+
+  private CustomSourceConfig getCustomSourceConfigFromYaml(String accountId, Yaml yaml, StoreType storeType) {
+    if (isCustomSource(storeType) && !featureFlagService.isEnabled(FeatureName.CUSTOM_MANIFEST, accountId)) {
+      throw new InvalidRequestException("Custom Manifest feature is not enabled. Please contact Harness support");
+    }
+
+    CustomSourceConfig customSourceConfig = yaml.getCustomSourceConfig();
+    if (customSourceConfig != null && !isCustomSource(storeType)) {
+      throw new InvalidArgumentsException("CustomSourceConfig should only be used with Custom store type", USER);
+    }
+
+    return customSourceConfig;
+  }
+
+  private static boolean isCustomSource(StoreType storeType) {
+    return StoreType.CUSTOM == storeType || StoreType.CUSTOM_OPENSHIFT_TEMPLATE == storeType;
   }
 }

@@ -1,10 +1,15 @@
 package io.harness.yaml.schema;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.yaml.schema.beans.SchemaConstants.ALL_OF_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.ARRAY_TYPE_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.BOOL_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NAMESPACE_STRING_PATTERN;
+import static io.harness.yaml.schema.beans.SchemaConstants.ENUM_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.INTEGER_TYPE_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.ITEMS_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.NUMBER_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.OBJECT_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.ONE_OF_NODE;
@@ -14,8 +19,10 @@ import static io.harness.yaml.schema.beans.SchemaConstants.STRING_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.TYPE_NODE;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.reflection.CodeUtils;
+import io.harness.yaml.schema.beans.FieldEnumData;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.OneOfMapping;
 import io.harness.yaml.schema.beans.SchemaConstants;
@@ -64,6 +71,7 @@ import org.apache.commons.io.FileUtils;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(DX)
 public class YamlSchemaGenerator {
   JacksonClassHelper jacksonSubtypeHelper;
   SwaggerGenerator swaggerGenerator;
@@ -228,6 +236,10 @@ public class YamlSchemaGenerator {
       if (!isEmpty(swaggerDefinitionsMetaInfo.getFieldPossibleTypes())) {
         addPossibleValuesInFields(mapper, value, swaggerDefinitionsMetaInfo);
       }
+      // enum property
+      if (isNotEmpty(swaggerDefinitionsMetaInfo.getFieldEnumData())) {
+        addEnumProperty(value, swaggerDefinitionsMetaInfo.getFieldEnumData());
+      }
 
       if (isNotEmpty(allOfNodeContents)) {
         if (value.has(SchemaConstants.ALL_OF_NODE)) {
@@ -240,6 +252,18 @@ public class YamlSchemaGenerator {
     }
 
     removeUnwantedNodes(value, "originalRef");
+  }
+
+  private void addEnumProperty(ObjectNode value, Set<FieldEnumData> fieldEnumData) {
+    ObjectNode properties = (ObjectNode) value.get(PROPERTIES_NODE);
+    for (FieldEnumData enumData : fieldEnumData) {
+      ObjectNode type = (ObjectNode) properties.get(enumData.getFieldName());
+      if (type.get(ENUM_NODE) == null) {
+        type.putArray(ENUM_NODE);
+      }
+      ArrayNode enumNode = (ArrayNode) type.get(ENUM_NODE);
+      enumData.getEnumValues().forEach(enumNode::add);
+    }
   }
 
   private void addPossibleValuesInFields(
@@ -300,6 +324,12 @@ public class YamlSchemaGenerator {
       case number:
         objectNode.put(TYPE_NODE, NUMBER_TYPE_NODE);
         return objectNode;
+      case integer:
+        objectNode.put(TYPE_NODE, INTEGER_TYPE_NODE);
+        return objectNode;
+      case bool:
+        objectNode.put(TYPE_NODE, BOOL_TYPE_NODE);
+        return objectNode;
       case map:
         objectNode.put(TYPE_NODE, OBJECT_TYPE_NODE);
         objectNode.putObject(SchemaConstants.ADDITIONAL_PROPERTIES_NODE).put(TYPE_NODE, STRING_TYPE_NODE);
@@ -330,9 +360,7 @@ public class YamlSchemaGenerator {
                       })
                       .collect(Collectors.toList());
 
-              if (mapping.isNullable()) {
-                // not handled.
-              }
+              //  mapping isNullable not handled.
               return requiredNodes;
             })
             .map(oneOfMapContent -> {
@@ -364,6 +392,10 @@ public class YamlSchemaGenerator {
     ObjectNode propertiesNodeFromDefinitionNode = getPropertiesNodeFromDefinitionNode(value);
     final String fieldName = fieldSubtypeData.getFieldName();
     final ObjectNode fieldNode = (ObjectNode) propertiesNodeFromDefinitionNode.get(fieldName);
+    if (fieldNode == null) {
+      log.error("We can have some error in schema of node {} with {}.", fieldName, fieldSubtypeData);
+      return;
+    }
     if (fieldNode.get(ONE_OF_NODE) != null) {
       throw new InvalidRequestException("Both Subtype and one of not handled for a single field");
     }
@@ -375,8 +407,16 @@ public class YamlSchemaGenerator {
                 -> mapper.createObjectNode().put(
                     REF_NODE, SchemaConstants.DEFINITIONS_STRING_PREFIX + fieldData.getSubTypeDefinitionKey()))
             .collect(Collectors.toList());
-    fieldNode.removeAll();
-    fieldNode.putArray(ONE_OF_NODE).addAll(possibleNodes);
+    final JsonNode refNode = fieldNode.get(REF_NODE);
+    // In Case of non list variables case 1 will happen else case 2 will happen
+    if (refNode != null) {
+      fieldNode.remove(REF_NODE);
+      fieldNode.putArray(ONE_OF_NODE).addAll(possibleNodes);
+    } else {
+      final ObjectNode itemsNode = (ObjectNode) fieldNode.get(ITEMS_NODE);
+      itemsNode.remove(REF_NODE);
+      itemsNode.putArray(ONE_OF_NODE).addAll(possibleNodes);
+    }
   }
 
   private void removeFieldWithRefFromSchema(ObjectNode value, FieldSubtypeData fieldSubtypeData) {
@@ -451,7 +491,9 @@ public class YamlSchemaGenerator {
    */
   public void addConditionalBlock(
       ObjectMapper mapper, List<ObjectNode> allOfNodeContents, FieldSubtypeData fieldSubtypeData) {
-    final List<SubtypeClassMap> fieldSubtypeDataList = new ArrayList<>(fieldSubtypeData.getSubtypesMapping());
+    final List<SubtypeClassMap> fieldSubtypeDataList = fieldSubtypeData.getSubtypesMapping() == null
+        ? new ArrayList<>()
+        : new ArrayList<>(fieldSubtypeData.getSubtypesMapping());
     fieldSubtypeDataList.sort(new SubtypeClassMapComparator());
     for (SubtypeClassMap subtypeClassMap : fieldSubtypeDataList) {
       ObjectNode ifElseBlock = mapper.createObjectNode();

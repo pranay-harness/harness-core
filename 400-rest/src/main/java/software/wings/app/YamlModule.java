@@ -1,5 +1,6 @@
 package software.wings.app;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
@@ -49,6 +50,10 @@ import static software.wings.beans.trigger.TriggerConditionType.NEW_MANIFEST;
 import static software.wings.beans.trigger.TriggerConditionType.PIPELINE_COMPLETION;
 import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.governance.BlackoutWindowFilterType;
+import io.harness.governance.EnvironmentFilter.EnvironmentFilterType;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureProvisionerType;
@@ -104,6 +109,16 @@ import software.wings.service.impl.yaml.handler.deploymentspec.container.Kuberne
 import software.wings.service.impl.yaml.handler.deploymentspec.container.PcfServiceSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.lambda.LambdaSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.userdata.UserDataSpecificationYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.AllAppFilterYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.AllEnvFilterYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.AllNonProdEnvFilterYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.AllProdEnvFilterYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.ApplicationFilterYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.CustomAppFilterYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.CustomEnvFilterYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.EnvironmentFilterYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.GovernanceFreezeConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.TimeRangeBasedFreezeConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.AwsAmiInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.AwsInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.AwsLambdaInfraMappingYamlHandler;
@@ -122,6 +137,7 @@ import software.wings.service.impl.yaml.handler.infraprovisioner.CloudFormationI
 import software.wings.service.impl.yaml.handler.infraprovisioner.InfrastructureProvisionerYamlHandler;
 import software.wings.service.impl.yaml.handler.infraprovisioner.ShellScriptProvisionerYamlHandler;
 import software.wings.service.impl.yaml.handler.infraprovisioner.TerraformInfrastructureProvisionerYamlHandler;
+import software.wings.service.impl.yaml.handler.infraprovisioner.TerragruntInfrastructureProvisionerYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.AmazonS3HelmRepoConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactServerYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactoryConfigYamlHandler;
@@ -151,7 +167,10 @@ import software.wings.service.impl.yaml.handler.setting.collaborationprovider.Sm
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.SpotInstConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.sourcerepoprovider.GitConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.sourcerepoprovider.SourceRepoProviderYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.verificationprovider.APMConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.AppDynamicsConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.verificationprovider.BugsnagConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.verificationprovider.DatadogConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.DynaTraceConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.ElkConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.InstanaConfigYamlHandler;
@@ -224,6 +243,7 @@ import com.google.inject.multibindings.MapBinder;
  *
  * @author rktummala on 10/17/17
  */
+@OwnedBy(DX)
 public class YamlModule extends CommandLibrarySharedModule {
   public YamlModule() {
     super(true);
@@ -382,6 +402,12 @@ public class YamlModule extends CommandLibrarySharedModule {
         .to(InstanaConfigYamlHandler.class);
     verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.SCALYR.name())
         .to(ScalyrConfigYamlHandler.class);
+    verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.DATA_DOG.name())
+        .to(DatadogConfigYamlHandler.class);
+    verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.APM_VERIFICATION.name())
+        .to(APMConfigYamlHandler.class);
+    verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.BUG_SNAG.name())
+        .to(BugsnagConfigYamlHandler.class);
 
     MapBinder<String, CVConfigurationYamlHandler> cvConfigYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CVConfigurationYamlHandler.class);
@@ -468,6 +494,8 @@ public class YamlModule extends CommandLibrarySharedModule {
         .to(ShellScriptProvisionerYamlHandler.class);
     infrastructureProvisionerYamlHandlerMapBinder.addBinding(InfrastructureProvisionerType.ARM.name())
         .to(ARMInfrastructureProvisionerYamlHandler.class);
+    infrastructureProvisionerYamlHandlerMapBinder.addBinding(InfrastructureProvisionerType.TERRAGRUNT.name())
+        .to(TerragruntInfrastructureProvisionerYamlHandler.class);
 
     MapBinder<String, TemplateLibraryYamlHandler> templateLibraryYamlHandlerMapBinder =
         MapBinder.newMapBinder(binder(), String.class, TemplateLibraryYamlHandler.class);
@@ -481,5 +509,28 @@ public class YamlModule extends CommandLibrarySharedModule {
         .to(PcfCommandTemplateYamlHandler.class);
     templateLibraryYamlHandlerMapBinder.addBinding(TemplateConstants.CUSTOM_DEPLOYMENT_TYPE)
         .to(CustomDeploymentTypeTemplateYamlHandler.class);
+
+    MapBinder<String, GovernanceFreezeConfigYamlHandler> governanceFreezeConfigYamlHandlerMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, GovernanceFreezeConfigYamlHandler.class);
+    governanceFreezeConfigYamlHandlerMapBinder.addBinding("TIME_RANGE_BASED_FREEZE_CONFIG")
+        .to(TimeRangeBasedFreezeConfigYamlHandler.class);
+
+    MapBinder<String, ApplicationFilterYamlHandler> applicationFilterYamlHandlerMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, ApplicationFilterYamlHandler.class);
+    applicationFilterYamlHandlerMapBinder.addBinding(BlackoutWindowFilterType.ALL.name())
+        .to(AllAppFilterYamlHandler.class);
+    applicationFilterYamlHandlerMapBinder.addBinding(BlackoutWindowFilterType.CUSTOM.name())
+        .to(CustomAppFilterYamlHandler.class);
+
+    MapBinder<String, EnvironmentFilterYamlHandler> environmentFilterYamlHandlerMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, EnvironmentFilterYamlHandler.class);
+    environmentFilterYamlHandlerMapBinder.addBinding(EnvironmentFilterType.ALL.name())
+        .to(AllEnvFilterYamlHandler.class);
+    environmentFilterYamlHandlerMapBinder.addBinding(EnvironmentFilterType.CUSTOM.name())
+        .to(CustomEnvFilterYamlHandler.class);
+    environmentFilterYamlHandlerMapBinder.addBinding(EnvironmentFilterType.ALL_PROD.name())
+        .to(AllProdEnvFilterYamlHandler.class);
+    environmentFilterYamlHandlerMapBinder.addBinding(EnvironmentFilterType.ALL_NON_PROD.name())
+        .to(AllNonProdEnvFilterYamlHandler.class);
   }
 }

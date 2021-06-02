@@ -1,11 +1,15 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.ACASIAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
@@ -13,6 +17,7 @@ import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDP)
 public class K8sStepParametersCommandUnitsTest extends CategoryTest {
   private static final String[] DEFAULT_COMMAND_UNITS_NAME =
       new String[] {K8sCommandUnitConstants.FetchFiles, K8sCommandUnitConstants.Init, K8sCommandUnitConstants.Prepare,
@@ -53,6 +58,18 @@ public class K8sStepParametersCommandUnitsTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testK8sDeleteParametersFilePaths() {
+    K8sDeleteStepParameters stepParameters =
+        K8sDeleteStepParameters.infoBuilder()
+            .deleteResources(DeleteResourcesWrapper.builder().type(DeleteResourcesType.ManifestPath).build())
+            .build();
+    assertCommandUnitsName(stepParameters, K8sCommandUnitConstants.FetchFiles, K8sCommandUnitConstants.Init,
+        K8sCommandUnitConstants.Delete);
+  }
+
+  @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testK8sCanaryDeleteParameters() {
@@ -73,10 +90,10 @@ public class K8sStepParametersCommandUnitsTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testK8sScaleParameters() {
     assertCommandUnitsName(new K8sScaleStepParameter(), K8sCommandUnitConstants.Init, K8sCommandUnitConstants.Scale,
-        K8sCommandUnitConstants.WaitForSteadyState);
+        K8sCommandUnitConstants.WaitForSteadyState, K8sCommandUnitConstants.WrapUp);
   }
 
-  private void assertCommandUnitsName(K8sStepParameters stepParameters, String... expectedCommandUnits) {
+  private void assertCommandUnitsName(K8sSpecParameters stepParameters, String... expectedCommandUnits) {
     assertThat(stepParameters.getCommandUnits()).containsExactly(expectedCommandUnits);
   }
 }

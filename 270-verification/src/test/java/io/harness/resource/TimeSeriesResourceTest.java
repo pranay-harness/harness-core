@@ -10,7 +10,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.VerificationBaseTest;
+import io.harness.VerificationBase;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationManagerClient;
@@ -52,7 +52,7 @@ import org.mockito.MockitoAnnotations;
  * @author Vaibhav Tulsyan
  * 24/Sep/2018
  */
-public class TimeSeriesResourceTest extends VerificationBaseTest {
+public class TimeSeriesResourceTest extends VerificationBase {
   private String accountId;
   private String applicationId;
   private String stateExecutionId;

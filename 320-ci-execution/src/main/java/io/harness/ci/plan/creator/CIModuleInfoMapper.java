@@ -1,5 +1,9 @@
 package io.harness.ci.plan.creator;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.BranchWebhookEvent;
 import io.harness.beans.execution.CommitDetails;
 import io.harness.beans.execution.ExecutionSource;
@@ -18,6 +22,7 @@ import java.util.List;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(HarnessTeam.CI)
 public class CIModuleInfoMapper {
   private static final String PR_OPEN = "open";
   private static final String PR_CLOSED = "closed";
@@ -53,6 +58,10 @@ public class CIModuleInfoMapper {
     } else if (pr.isMerged()) {
       state = PR_MERGED;
     }
+    List<CIBuildCommit> commitList = new ArrayList<>();
+    if (isNotEmpty(pr.getCommitDetailsList())) {
+      pr.getCommitDetailsList().forEach(commit -> commitList.add(convertCommit(commit)));
+    }
     return CIBuildPRHook.builder()
         .id(pr.getPullRequestId())
         .link(pr.getPullRequestLink())
@@ -61,6 +70,7 @@ public class CIModuleInfoMapper {
         .sourceBranch(pr.getSourceBranch())
         .targetBranch(pr.getTargetBranch())
         .state(state)
+        .commits(commitList)
         .build();
   }
 

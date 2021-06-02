@@ -1,9 +1,9 @@
 package io.harness.ngtriggers.beans.entity;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.beans.HeaderConfig;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.ngtriggers.beans.config.HeaderConfig;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 
@@ -13,7 +13,9 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
+import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.NonFinal;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -36,14 +38,15 @@ public class TriggerWebhookEvent implements PersistentEntity, UuidAccess, Persis
   String orgIdentifier;
   String projectIdentifier;
   String sourceRepoType;
+  @Builder.Default boolean isSubscriptionConfirmation = Boolean.FALSE;
 
-  @Builder.Default boolean processing = Boolean.FALSE;
+  @Setter @NonFinal @Builder.Default boolean processing = Boolean.FALSE;
 
-  @Builder.Default Integer attemptCount = 0;
+  @Setter @NonFinal @Builder.Default Integer attemptCount = 0;
 
-  @FdTtlIndex @Default private Date validUntil = Date.from(OffsetDateTime.now().plusDays(7).toInstant());
+  @FdTtlIndex @Default Date validUntil = Date.from(OffsetDateTime.now().plusDays(7).toInstant());
   @CreatedDate Long createdAt;
-  @Builder.Default private Long nextIteration = 0L;
+  @NonFinal @Builder.Default Long nextIteration = 0L;
 
   @Override
   public Long obtainNextIteration(String fieldName) {

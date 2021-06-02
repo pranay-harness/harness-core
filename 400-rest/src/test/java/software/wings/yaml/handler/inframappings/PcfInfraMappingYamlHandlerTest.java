@@ -1,5 +1,6 @@
 package software.wings.yaml.handler.inframappings;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ADWAIT;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -18,6 +19,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.scheduler.PersistentScheduler;
@@ -60,6 +62,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mongodb.morphia.Key;
 
+@OwnedBy(CDP)
 public class PcfInfraMappingYamlHandlerTest extends YamlHandlerTestBase {
   @Mock private SettingsService settingsService;
   @Mock private ServiceResourceService serviceResourceService;

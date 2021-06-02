@@ -1,5 +1,8 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.Application;
@@ -14,6 +17,7 @@ import lombok.Data;
 
 @Data
 @Builder
+@OwnedBy(CDP)
 class SpotinstTrafficShiftDataBag {
   private Application app;
   private Environment env;

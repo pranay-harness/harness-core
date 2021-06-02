@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"testing"
@@ -20,7 +21,7 @@ func TestUpdateUnknownStatus(t *testing.T) {
 	arg := &pb.UpdateStateRequest{}
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	h := NewEngineHandler(log.Sugar())
+	h := NewEngineHandler(log.Sugar(), new(bytes.Buffer))
 	_, err := h.UpdateState(ctx, arg)
 	assert.NotNil(t, err)
 }
@@ -34,7 +35,7 @@ func TestUpdateToPause(t *testing.T) {
 	}
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	h := NewEngineHandler(log.Sugar())
+	h := NewEngineHandler(log.Sugar(), new(bytes.Buffer))
 	_, err := h.UpdateState(ctx, arg)
 	assert.Nil(t, err)
 }
@@ -48,7 +49,7 @@ func TestUpdateToResume(t *testing.T) {
 	}
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	h := NewEngineHandler(log.Sugar())
+	h := NewEngineHandler(log.Sugar(), new(bytes.Buffer))
 	_, err := h.UpdateState(ctx, arg)
 	assert.Nil(t, err)
 }
@@ -60,7 +61,7 @@ func TestGetImageEntrypointWithNoImage(t *testing.T) {
 	arg := &pb.GetImageEntrypointRequest{}
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	h := NewEngineHandler(log.Sugar())
+	h := NewEngineHandler(log.Sugar(), new(bytes.Buffer))
 	_, err := h.GetImageEntrypoint(ctx, arg)
 	assert.NotNil(t, err)
 }
@@ -82,7 +83,7 @@ func TestGetImageEntrypointWithNoSecretSuccess(t *testing.T) {
 	defer func() { getPublicImgMetadata = oldImgMetadata }()
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	h := NewEngineHandler(log.Sugar())
+	h := NewEngineHandler(log.Sugar(), new(bytes.Buffer))
 	_, err := h.GetImageEntrypoint(ctx, arg)
 	assert.Nil(t, err)
 }
@@ -105,7 +106,7 @@ func TestGetImageEntrypointWithSecretSuccess(t *testing.T) {
 	defer func() { getPrivateImgMetadata = oldImgMetadata }()
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	h := NewEngineHandler(log.Sugar())
+	h := NewEngineHandler(log.Sugar(), new(bytes.Buffer))
 	_, err := h.GetImageEntrypoint(ctx, arg)
 	assert.Nil(t, err)
 }
@@ -127,7 +128,7 @@ func TestGetImageEntrypointWithSecretErr(t *testing.T) {
 	defer func() { getPrivateImgMetadata = oldImgMetadata }()
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	h := NewEngineHandler(log.Sugar())
+	h := NewEngineHandler(log.Sugar(), new(bytes.Buffer))
 	_, err := h.GetImageEntrypoint(ctx, arg)
 	assert.NotNil(t, err)
 }
@@ -142,14 +143,14 @@ func TestEvaluateJEXLErr(t *testing.T) {
 	}
 
 	oldEvaluateJEXL := evaluateJEXL
-	evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput, force bool, log *zap.SugaredLogger) (
+	evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput, isSkipCondition bool, log *zap.SugaredLogger) (
 		map[string]string, error) {
 		return nil, fmt.Errorf("invalid expression")
 	}
 	defer func() { evaluateJEXL = oldEvaluateJEXL }()
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	h := NewEngineHandler(log.Sugar())
+	h := NewEngineHandler(log.Sugar(), new(bytes.Buffer))
 	_, err := h.EvaluateJEXL(ctx, arg)
 	assert.NotNil(t, err)
 }
@@ -164,14 +165,25 @@ func TestEvaluateJEXLSuccess(t *testing.T) {
 	}
 
 	oldEvaluateJEXL := evaluateJEXL
-	evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput, force bool, log *zap.SugaredLogger) (
+	evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput, isSkipCondition bool, log *zap.SugaredLogger) (
 		map[string]string, error) {
 		return nil, nil
 	}
 	defer func() { evaluateJEXL = oldEvaluateJEXL }()
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	h := NewEngineHandler(log.Sugar())
+	h := NewEngineHandler(log.Sugar(), new(bytes.Buffer))
 	_, err := h.EvaluateJEXL(ctx, arg)
+	assert.Nil(t, err)
+}
+
+func TestPing(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	arg := &pb.PingRequest{}
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	h := NewEngineHandler(log.Sugar(), new(bytes.Buffer))
+	_, err := h.Ping(ctx, arg)
 	assert.Nil(t, err)
 }

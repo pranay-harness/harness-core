@@ -134,7 +134,7 @@ public class AzureMachineImageStreamTest {
             .azureImageGalleryName("galleryName")
             .azureResourceGroup("resourceGroup")
             .build(),
-        stream.fetchArtifactStreamAttributes());
+        stream.fetchArtifactStreamAttributes(null));
   }
 
   @Test

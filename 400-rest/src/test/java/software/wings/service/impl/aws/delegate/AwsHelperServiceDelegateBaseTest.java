@@ -1,40 +1,76 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.SATYAM;
 
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.joor.Reflect.on;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.aws.beans.AwsInternalConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
+import software.wings.service.impl.delegate.AwsEcrApiHelperServiceDelegateBase;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.SDKGlobalConfiguration;
+import com.amazonaws.auth.WebIdentityTokenCredentialsProvider;
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.codedeploy.model.AmazonCodeDeployException;
+import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
 import com.amazonaws.services.ecs.model.AmazonECSException;
 import com.amazonaws.services.ecs.model.ClusterNotFoundException;
 import com.amazonaws.services.ecs.model.ServiceNotFoundException;
 import com.amazonaws.services.lambda.model.AWSLambdaException;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({WebIdentityTokenCredentialsProvider.class})
+@PowerMockIgnore({"javax.security.*", "javax.net.*", "javax.management.*", "javax.crypto.*"})
+@OwnedBy(CDP)
 public class AwsHelperServiceDelegateBaseTest extends WingsBaseTest {
+  @Mock private AwsEcrApiHelperServiceDelegateBase awsEcrApiHelperServiceDelegateBase;
+
+  @Before
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+  }
+
   @Test
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testHandleAmazonClientException() {
     AwsHelperServiceDelegateBase delegateBase = spy(AwsHelperServiceDelegateBase.class);
     AmazonClientException exception = new AmazonClientException("Error Message");
+    on(delegateBase).set("awsEcrApiHelperServiceDelegateBase", awsEcrApiHelperServiceDelegateBase);
+    doCallRealMethod().when(awsEcrApiHelperServiceDelegateBase).handleAmazonClientException(any());
     assertThatThrownBy(() -> delegateBase.handleAmazonClientException(exception))
         .isInstanceOf(InvalidRequestException.class);
   }
@@ -44,6 +80,8 @@ public class AwsHelperServiceDelegateBaseTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testHandleAmazonServiceException() {
     AwsHelperServiceDelegateBase delegateBase = spy(AwsHelperServiceDelegateBase.class);
+    on(delegateBase).set("awsEcrApiHelperServiceDelegateBase", awsEcrApiHelperServiceDelegateBase);
+    doCallRealMethod().when(awsEcrApiHelperServiceDelegateBase).handleAmazonServiceException(any());
     AmazonServiceException exception1 = new AmazonCodeDeployException("Error Message");
     assertThatThrownBy(() -> delegateBase.handleAmazonServiceException(exception1))
         .isInstanceOf(InvalidRequestException.class);
@@ -73,5 +111,27 @@ public class AwsHelperServiceDelegateBaseTest extends WingsBaseTest {
     assertThat(delegateBase.getRegion(config)).isEqualTo(AWS_DEFAULT_REGION);
     config.setDefaultRegion(Regions.US_GOV_EAST_1.getName());
     assertThat(delegateBase.getRegion(config)).isEqualTo(Regions.US_GOV_EAST_1.getName());
+  }
+
+  @Test(expected = com.amazonaws.SdkClientException.class)
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testAttachCredentialsAndBackoffPolicyWithIRSA() {
+    PowerMockito.mockStatic(System.class);
+    PowerMockito.when(System.getenv(SDKGlobalConfiguration.AWS_ROLE_ARN_ENV_VAR)).thenReturn("abcd");
+    PowerMockito.when(System.getenv(SDKGlobalConfiguration.AWS_WEB_IDENTITY_ENV_VAR)).thenReturn("/jkj");
+    AwsInternalConfig awsInternalConfig = mock(AwsInternalConfig.class);
+    when(awsInternalConfig.isUseEc2IamCredentials()).thenReturn(false);
+    when(awsInternalConfig.isUseIRSA()).thenReturn(true);
+    when(awsInternalConfig.isAssumeCrossAccountRole()).thenReturn(false);
+    AwsClientBuilder awsClientBuilder = AmazonEC2ClientBuilder.standard().withRegion("us-east-1");
+    doCallRealMethod()
+        .when(awsEcrApiHelperServiceDelegateBase)
+        .attachCredentialsAndBackoffPolicy(eq(awsClientBuilder), eq(awsInternalConfig));
+
+    awsEcrApiHelperServiceDelegateBase.attachCredentialsAndBackoffPolicy(awsClientBuilder, awsInternalConfig);
+
+    assertThat(awsClientBuilder.getCredentials()).isInstanceOf(WebIdentityTokenCredentialsProvider.class);
+    awsClientBuilder.getCredentials().getCredentials().getAWSSecretKey();
   }
 }

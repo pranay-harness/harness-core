@@ -182,7 +182,7 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
     @NotEmpty List<TriggerConditionYaml> triggerCondition = new ArrayList<>();
     private String executionType;
     private String executionName;
-    private boolean continueWithDefaultValues = false;
+    private boolean continueWithDefaultValues;
     private List<ArtifactSelection.Yaml> artifactSelections = new ArrayList<>();
     private List<ManifestSelection.Yaml> manifestSelections = new ArrayList<>();
     private List<TriggerVariable> workflowVariables = new ArrayList<>();

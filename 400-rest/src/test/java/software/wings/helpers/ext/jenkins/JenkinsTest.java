@@ -39,6 +39,7 @@ import software.wings.helpers.ext.jenkins.model.JobWithExtendedDetails;
 import software.wings.helpers.ext.jenkins.model.ParametersDefinitionProperty;
 import software.wings.utils.JsonUtils;
 
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FakeTimeLimiter;
@@ -60,7 +61,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.HttpResponseException;
 import org.joor.Reflect;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -68,7 +68,6 @@ import org.junit.experimental.categories.Category;
 /**
  * The Class JenkinsTest.
  */
-@Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
 public class JenkinsTest extends CategoryTest {
   private static final String JENKINS_URL = "http://localhost:8089/";
   private static final String USERNAME = "wingsbuild";
@@ -77,7 +76,9 @@ public class JenkinsTest extends CategoryTest {
   /**
    * The Wire mock rule.
    */
-  @Rule public WireMockRule wireMockRule = new WireMockRule(8089);
+  @Rule
+  public WireMockRule wireMockRule = new WireMockRule(
+      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(8089));
   private Jenkins jenkins = new JenkinsImpl(JENKINS_URL, USERNAME, PASSWORD.toCharArray());
 
   public JenkinsTest() throws URISyntaxException {}

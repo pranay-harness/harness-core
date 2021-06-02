@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.HITESH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.batch.processing.BatchProcessingBaseTest;
+import io.harness.batch.processing.BatchProcessingTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -15,7 +15,7 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class CEClusterDaoTest extends BatchProcessingBaseTest {
+public class CEClusterDaoTest extends BatchProcessingTestBase {
   private String accountId = "ACCOUNT_ID";
   private String infraAccountId = "123123112";
   private String infraMasterAccountId = "3243223122";

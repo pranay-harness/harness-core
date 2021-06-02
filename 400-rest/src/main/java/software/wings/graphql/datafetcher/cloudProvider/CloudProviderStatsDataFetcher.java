@@ -1,8 +1,10 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 
@@ -21,20 +23,22 @@ import software.wings.graphql.schema.type.aggregation.cloudprovider.QLCloudProvi
 import software.wings.graphql.utils.nameservice.NameService;
 
 import com.google.inject.Inject;
+import graphql.schema.DataFetchingEnvironment;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import org.mongodb.morphia.query.Query;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class CloudProviderStatsDataFetcher extends SettingsAttributeStatsDataFetcher<QLNoOpAggregateFunction,
     QLCloudProviderFilter, QLCloudProviderAggregation, QLNoOpSortCriteria> {
   @Inject CloudProviderQueryHelper cloudProviderQueryHelper;
   @Override
   protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction,
       List<QLCloudProviderFilter> filters, List<QLCloudProviderAggregation> groupBy,
-      List<QLNoOpSortCriteria> sortCriteria) {
+      List<QLNoOpSortCriteria> sortCriteria, DataFetchingEnvironment dataFetchingEnvironment) {
     final Class entityClass = SettingAttribute.class;
     List<String> groupByList = new ArrayList<>();
     if (isNotEmpty(groupBy)) {

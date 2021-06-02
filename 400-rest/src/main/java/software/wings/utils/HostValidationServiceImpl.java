@@ -1,5 +1,6 @@
 package software.wings.utils;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.govern.Switch.noop;
 import static io.harness.shell.SshHelperUtils.normalizeError;
 import static io.harness.winrm.WinRmHelperUtils.buildErrorDetailsFromWinRmClientException;
@@ -8,7 +9,9 @@ import static software.wings.beans.command.CommandExecutionContext.Builder.aComm
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 import static software.wings.utils.SshHelperUtils.createSshSessionConfig;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.logging.NoopExecutionCallback;
@@ -18,7 +21,9 @@ import io.harness.shell.SshSessionFactory;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.ExecutionCredential;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostValidationResponse;
+import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.command.CommandExecutionContext;
@@ -26,6 +31,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.core.winrm.executors.WinRmSession;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
@@ -33,27 +39,35 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @Slf4j
+@OwnedBy(CDP)
 public class HostValidationServiceImpl implements HostValidationService {
   @Inject private EncryptionService encryptionService;
   @Inject private TimeLimiter timeLimiter;
+  @Inject private SecretManagementDelegateService secretManagementDelegateService;
 
   @Override
   public List<HostValidationResponse> validateHost(List<String> hostNames, SettingAttribute connectionSetting,
-      List<EncryptedDataDetail> encryptionDetails, ExecutionCredential executionCredential) {
+      List<EncryptedDataDetail> encryptionDetails, ExecutionCredential executionCredential,
+      SSHVaultConfig sshVaultConfig) {
     List<HostValidationResponse> hostValidationResponses = new ArrayList<>();
 
     encryptionService.decrypt((EncryptableSetting) connectionSetting.getValue(), encryptionDetails, false);
+    if (connectionSetting.getValue() instanceof HostConnectionAttributes
+        && ((HostConnectionAttributes) connectionSetting.getValue()).isVaultSSH()) {
+      secretManagementDelegateService.signPublicKey(
+          (HostConnectionAttributes) connectionSetting.getValue(), sshVaultConfig);
+    }
     try {
-      timeLimiter.callWithTimeout(() -> {
+      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(1), () -> {
         hostNames.forEach(hostName -> {
           HostValidationResponse response;
           if (connectionSetting.getValue() instanceof WinRmConnectionAttributes) {
@@ -64,7 +78,7 @@ public class HostValidationServiceImpl implements HostValidationService {
           hostValidationResponses.add(response);
         });
         return true;
-      }, 1, TimeUnit.MINUTES, true);
+      });
     } catch (UncheckedTimeoutException ex) {
       log.warn("Host validation timed out", ex);
       // populate timeout error for rest of the hosts

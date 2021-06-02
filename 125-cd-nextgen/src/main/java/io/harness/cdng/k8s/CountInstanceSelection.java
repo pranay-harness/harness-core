@@ -1,16 +1,23 @@
 package io.harness.cdng.k8s;
 
-import io.harness.common.SwaggerConstants;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.integer;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.swagger.annotations.ApiModelProperty;
+import java.math.BigDecimal;
 import lombok.Data;
 
+@OwnedBy(CDP)
 @Data
 @JsonTypeName("Count")
 public class CountInstanceSelection implements InstanceSelectionBase {
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<Integer> count;
+  @YamlSchemaTypes({string, integer}) ParameterField<String> count;
   @Override
   public K8sInstanceUnitType getType() {
     return K8sInstanceUnitType.Count;
@@ -21,7 +28,11 @@ public class CountInstanceSelection implements InstanceSelectionBase {
     if (ParameterField.isNull(this.count)) {
       return null;
     }
-
-    return count.getValue();
+    try {
+      return new BigDecimal(count.getValue()).intValueExact();
+    } catch (Exception exception) {
+      throw new InvalidRequestException(
+          String.format("Count value: [%s] is not an integer", count.getValue()), exception);
+    }
   }
 }

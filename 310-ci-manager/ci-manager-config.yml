@@ -33,6 +33,19 @@ logging:
       threshold: TRACE
       target: STDOUT
       logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
+    - type: gke-console
+      threshold: TRACE
+      target: STDOUT
+      stackdriverLogEnabled: false
+
+accessControlClient:
+  enableAccessControl: false
+  accessControlServiceConfig:
+    baseUrl: http://localhost:9006/api/
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
 
 harness-mongo:
   uri: mongodb://localhost:27017/harness
@@ -46,6 +59,8 @@ cimanager-mongo:
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
+  indexManagerMode: AUTO
+  aliasDBName: ci-manager
 pmsMongo:
   uri: mongodb://localhost:27017/pms-harness
   connectTimeout: 30000
@@ -60,7 +75,7 @@ scmConnectionConfig:
   url: localhost:8091
 
 logServiceConfig:
-  baseUrl: https://qb.harness.io/log-service/
+  baseUrl: https://qa.harness.io/log-service/
   globalToken: "c76e567a-b341-404d-a8dd-d9738714eb82"
 
 tiServiceConfig:
@@ -84,13 +99,53 @@ managerClientConfig:
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 ciExecutionServiceConfig:
-  addonImageTag: v1.84-alpha
-  liteEngineImageTag: v1.84.1-alpha
+  addonImageTag: releaseBuild-30
+  liteEngineImageTag: releaseBuild-29
   defaultMemoryLimit: 500
   defaultCPULimit: 400
-  defaultInternalImageConnector: account.harnessimage
+  defaultInternalImageConnector: ''
   pvcDefaultStorageSize: 25600
   delegateServiceEndpointVariableValue: "delegate-service:8080"
+  addonImage: harness/ci-addon:releaseBuild-71
+  liteEngineImage: harness/ci-lite-engine:releaseBuild-53
+  isLocal: false
+  stepConfig:
+    gitCloneConfig:
+      image: harness/drone-git:v1.0.0
+      entrypoint:
+        - /usr/local/bin/clone
+    buildAndPushDockerRegistryConfig:
+      image: plugins/kaniko:1.2.0
+      entrypoint:
+        - /kaniko/kaniko-docker
+    buildAndPushECRConfig:
+      image: plugins/kaniko-ecr:1.2.0
+      entrypoint:
+        - /kaniko/kaniko-ecr
+    buildAndPushGCRConfig:
+      image: plugins/kaniko-gcr:1.2.0
+      entrypoint:
+        - /kaniko/kaniko-gcr
+    gcsUploadConfig:
+      image: plugins/gcs:1.1.0-linux-amd64
+      entrypoint:
+        - /bin/drone-gcs
+    s3UploadConfig:
+      image: plugins/s3:1.0.0-linux-amd64
+      entrypoint:
+        - /bin/drone-s3
+    artifactoryUploadConfig:
+      image: plugins/artifactory:1.0.0
+      entrypoint:
+        - /bin/plugin
+    cacheGCSConfig:
+      image: plugins/cache:1.2.0
+      entrypoint:
+        - /bin/drone-cache
+    cacheS3Config:
+      image: plugins/cache:1.2.0
+      entrypoint:
+        - /bin/drone-cache
 
 pmsSdkGrpcServerConfig:
   connectors:
@@ -107,3 +162,36 @@ pmsGrpcClientConfig:
 apiUrl: https://localhost:8181/#/
 
 shouldConfigureWithPMS: false
+
+enableDashboardTimescale: false
+
+timescaledb:
+  timescaledbUrl: "jdbc:postgresql://34.83.25.129:5432/harness"
+  timescaledbUsername: "harnessappdev"
+  timescaledbPassword: "harnessappdev"
+  connectTimeout: 10
+  socketTimeout: 30
+  logUnclosedConnections: false
+  loggerLevel: OFF
+
+eventsFramework:
+  redis:
+    sentinel: false
+    masterName: "test"
+    redisUrl: "redis://localhost:6379"
+    sentinelUrls:
+      - "redis://redis1:26379"
+      - "redis://redis2:26379"
+      - "redis://redis3:26379"
+    envNamespace: ""
+    readMode: MASTER
+    nettyThreads: 16
+    useScriptCache: true
+    userName: ""
+    password: ""
+    sslConfig:
+      enabled: false
+      CATrustStorePath: "/tmp/ca_trust_store"
+      CATrustStorePassword: ""
+
+useRedisForSdkResponseEvents: false

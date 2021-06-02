@@ -1,7 +1,7 @@
 package software.wings.integration.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.AUDITS;
+import static io.harness.delegate.beans.FileBucket.AUDITS;
 import static io.harness.rule.OwnerRule.ADWAIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,7 +25,7 @@ import org.junit.experimental.categories.Category;
 
 // this test fails intermittently
 public class AuditServiceIntegrationTest extends WingsBaseTest {
-  private @Inject AuditServiceTestHelper auditServiceTestHelper;
+  @Inject private AuditServiceTestHelper auditServiceTestHelper;
   @Inject protected AuditService auditService;
   @Inject protected FileService fileService;
 

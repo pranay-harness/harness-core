@@ -1,5 +1,9 @@
 package software.wings.service.intfc;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 
 import software.wings.beans.AuthToken;
@@ -20,6 +24,8 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by peeyushaggarwal on 8/18/16.
  */
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public interface AuthService {
   /**
    * Validate token auth token.
@@ -90,6 +96,11 @@ public interface AuthService {
   UserRestrictionInfo getUserRestrictionInfo(
       String accountId, User user, UserPermissionInfo userPermissionInfo, boolean cacheOnly);
 
+  void updateUserPermissionCacheInfo(String accountId, User user, boolean cacheOnly);
+
+  void updateUserRestrictionCacheInfo(
+      String accountId, User user, UserPermissionInfo userPermissionInfo, boolean cacheOnly);
+
   void evictPermissionAndRestrictionCacheForUserGroup(UserGroup userGroup);
 
   void evictUserPermissionAndRestrictionCacheForAccount(String accountId, List<String> memberIds);
@@ -128,4 +139,8 @@ public interface AuthService {
   void authorizeAppAccess(String accountId, String appId, User user, Action action);
 
   void auditLogin(List<String> accountIds, User loggedInUser);
+
+  void auditLogin2FA(List<String> accountIds, User loggedInUser);
+
+  void auditUnsuccessfulLogin(String accountIds, User user);
 }

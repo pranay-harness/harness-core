@@ -4,6 +4,8 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
@@ -13,7 +15,6 @@ import io.harness.pms.contracts.plan.PlanCreationBlobRequest;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.plan.PlanCreationResponse;
-import io.harness.pms.contracts.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.exception.PmsExceptionUtils;
 import io.harness.pms.sdk.PmsSdkHelper;
@@ -37,34 +38,37 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PlanCreatorMergeService {
   private static final int MAX_DEPTH = 10;
 
   private final Executor executor = Executors.newFixedThreadPool(5);
 
-  private final Map<String, PlanCreationServiceBlockingStub> planCreatorServices;
   private final PmsSdkHelper pmsSdkHelper;
 
   @Inject
-  public PlanCreatorMergeService(
-      Map<String, PlanCreationServiceBlockingStub> planCreatorServices, PmsSdkHelper pmsSdkHelper) {
-    this.planCreatorServices = planCreatorServices;
+  public PlanCreatorMergeService(PmsSdkHelper pmsSdkHelper) {
     this.pmsSdkHelper = pmsSdkHelper;
   }
 
   public PlanCreationBlobResponse createPlan(@NotNull String content) throws IOException {
-    return createPlan(content, ExecutionMetadata.newBuilder().setExecutionUuid(generateUuid()).build());
+    return createPlan(content, ExecutionMetadata.newBuilder().setExecutionUuid(generateUuid()));
   }
 
-  public PlanCreationBlobResponse createPlan(@NotNull String content, ExecutionMetadata metadata) throws IOException {
+  public PlanCreationBlobResponse createPlan(@NotNull String content, ExecutionMetadata.Builder metadataBuilder)
+      throws IOException {
     log.info("Starting plan creation");
     Map<String, PlanCreatorServiceInfo> services = pmsSdkHelper.getServices();
 
     String processedYaml = YamlUtils.injectUuid(content);
+
+    metadataBuilder.setProcessedYaml(processedYaml);
+
     YamlField pipelineField = YamlUtils.extractPipelineField(processedYaml);
     Map<String, YamlFieldBlob> dependencies = new HashMap<>();
     dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
-    PlanCreationBlobResponse finalResponse = createPlanForDependenciesRecursive(services, dependencies, metadata);
+    PlanCreationBlobResponse finalResponse =
+        createPlanForDependenciesRecursive(services, dependencies, metadataBuilder.build());
     validatePlanCreationBlobResponse(finalResponse);
     log.info("Done with plan creation");
     return finalResponse;
@@ -149,7 +153,7 @@ public class PlanCreatorMergeService {
       throw new UnexpectedException("Error fetching plan creation response from service", ex);
     }
 
-    PmsExceptionUtils.checkAndThrowErrorResponseException("Error creating plan", errorResponses);
+    PmsExceptionUtils.checkAndThrowPlanCreatorException(errorResponses);
     return currIterationResponseBuilder.build();
   }
 

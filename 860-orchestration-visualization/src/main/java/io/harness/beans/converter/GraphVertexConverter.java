@@ -6,7 +6,7 @@ import io.harness.beans.GraphVertex;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.execution.NodeExecution;
 
-import java.util.List;
+import java.util.Map;
 import lombok.experimental.UtilityClass;
 import org.bson.Document;
 
@@ -28,18 +28,19 @@ public class GraphVertexConverter {
         .status(nodeExecution.getStatus())
         .failureInfo(nodeExecution.getFailureInfo())
         .skipInfo(nodeExecution.getSkipInfo())
-        .stepParameters(nodeExecution.getResolvedStepParameters())
+        .nodeRunInfo(nodeExecution.getNodeRunInfo())
+        .stepParameters(nodeExecution.getResolvedStepInputs())
         .mode(nodeExecution.getMode())
         .executableResponses(CollectionUtils.emptyIfNull(nodeExecution.getExecutableResponses()))
         .interruptHistories(nodeExecution.getInterruptHistories())
         .retryIds(nodeExecution.getRetryIds())
         .skipType(nodeExecution.getNode().getSkipType())
-        .progressDataMap(nodeExecution.getProgressDataMap())
         .unitProgresses(nodeExecution.getUnitProgresses())
+        .progressData(nodeExecution.getProgressData())
         .build();
   }
 
-  public GraphVertex convertFrom(NodeExecution nodeExecution, List<Document> outcomes) {
+  public GraphVertex convertFrom(NodeExecution nodeExecution, Map<String, Document> outcomes) {
     return GraphVertex.builder()
         .uuid(nodeExecution.getUuid())
         .ambiance(nodeExecution.getAmbiance())
@@ -53,15 +54,17 @@ public class GraphVertexConverter {
         .stepType(nodeExecution.getNode().getStepType().getType())
         .status(nodeExecution.getStatus())
         .failureInfo(nodeExecution.getFailureInfo())
-        .stepParameters(nodeExecution.getResolvedStepParameters())
+        .stepParameters(nodeExecution.getResolvedStepInputs())
+        .skipInfo(nodeExecution.getSkipInfo())
+        .nodeRunInfo(nodeExecution.getNodeRunInfo())
         .mode(nodeExecution.getMode())
         .executableResponses(CollectionUtils.emptyIfNull(nodeExecution.getExecutableResponses()))
         .interruptHistories(nodeExecution.getInterruptHistories())
         .retryIds(nodeExecution.getRetryIds())
         .skipType(nodeExecution.getNode().getSkipType())
         .outcomeDocuments(outcomes)
-        .progressDataMap(nodeExecution.getProgressDataMap())
         .unitProgresses(nodeExecution.getUnitProgresses())
+        .progressData(nodeExecution.getProgressData())
         .build();
   }
 }

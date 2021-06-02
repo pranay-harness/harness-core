@@ -1,8 +1,11 @@
 package software.wings.delegatetasks;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.container.ContainerInfo;
@@ -12,6 +15,7 @@ import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.TimeoutException;
 import io.harness.logging.LogLevel;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -35,7 +39,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class EcsSteadyStateCheckTask extends AbstractDelegateRunnableTask {
   @Inject private AwsHelperService awsHelperService;
   @Inject private DelegateLogService delegateLogService;
@@ -99,7 +104,7 @@ public class EcsSteadyStateCheckTask extends AbstractDelegateRunnableTask {
               .awsConfig(params.getAwsConfig())
               .timeOut(timeoutInterval)
               .build();
-      ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(updateCountRequestData);
+      ecsContainerService.waitForTasksToBeInRunningStateWithHandledExceptions(updateCountRequestData);
 
       // Now poll for events API to notify of steady state
       executionLogCallback.saveExecutionLog(
@@ -119,6 +124,20 @@ public class EcsSteadyStateCheckTask extends AbstractDelegateRunnableTask {
           .executionStatus(ExecutionStatus.SUCCESS)
           .containerInfoList(containerInfos)
           .build();
+    } catch (TimeoutException ex) {
+      String errorMessage = String.format("Timeout Exception: %s while waiting for ECS steady state for activity: %s",
+          ex.getMessage(), params.getActivityId());
+      executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
+      log.error(errorMessage, ex);
+      EcsSteadyStateCheckResponse response = EcsSteadyStateCheckResponse.builder()
+                                                 .executionStatus(ExecutionStatus.FAILED)
+                                                 .errorMessage(errorMessage)
+                                                 .build();
+      if (params.isTimeoutErrorSupported()) {
+        response.setTimeoutFailure(true);
+      }
+
+      return response;
     } catch (Exception ex) {
       String errorMessage = String.format(
           "Exception: %s while waiting for ECS steady state for activity: %s", ex.getMessage(), params.getActivityId());

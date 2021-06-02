@@ -12,6 +12,7 @@ message StepInfo {
   string name = 1;
   string type = 2;
   StepMetaData stepMetaData = 3;
+  string featureFlag = 4;
 }
 
 message StepMetaData {

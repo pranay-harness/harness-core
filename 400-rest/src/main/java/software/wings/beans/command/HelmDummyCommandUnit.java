@@ -1,7 +1,11 @@
 package software.wings.beans.command;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.CommandExecutionStatus;
 
+@OwnedBy(CDP)
 public class HelmDummyCommandUnit extends AbstractCommandUnit {
   public static final String FetchFiles = "Fetch Files";
   public static final String Init = "Initialize";

@@ -1,29 +1,35 @@
 package software.wings.helpers.ext.helm.request;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
 
-import software.wings.beans.HelmCommandFlag;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
 import software.wings.service.impl.ContainerServiceParams;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
+@OwnedBy(CDP)
 public class HelmValuesFetchTaskParameters implements TaskParameters, ActivityAccess, ExecutionCapabilityDemander {
   private String accountId;
   private String appId;
@@ -33,6 +39,7 @@ public class HelmValuesFetchTaskParameters implements TaskParameters, ActivityAc
   private long timeoutInMillis;
   @Expression(ALLOW_SECRETS) private HelmCommandFlag helmCommandFlag;
   private boolean mergeCapabilities; // HELM_MERGE_CAPABILITIES
+  private Set<String> delegateSelectors;
 
   // This is to support helm v1
   private ContainerServiceParams containerServiceParams;
@@ -68,6 +75,10 @@ public class HelmValuesFetchTaskParameters implements TaskParameters, ActivityAc
 
       if (containerServiceParams != null) {
         capabilities.addAll(containerServiceParams.fetchRequiredExecutionCapabilities(maskingEvaluator));
+      }
+
+      if (isNotEmpty(delegateSelectors)) {
+        capabilities.add(SelectorCapability.builder().selectors(delegateSelectors).build());
       }
     }
 

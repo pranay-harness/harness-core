@@ -1,22 +1,26 @@
 package io.harness.pms.expressions.functors;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.FunctorException;
+import io.harness.exception.EngineFunctorException;
 import io.harness.expression.LateBindingValue;
 import io.harness.network.SafeHttpCall;
 import io.harness.ng.core.dto.OrganizationResponse;
 import io.harness.ngpipeline.common.AmbianceHelper;
-import io.harness.organizationmanagerclient.remote.OrganizationManagerClient;
+import io.harness.organization.remote.OrganizationClient;
 import io.harness.pms.contracts.ambiance.Ambiance;
 
 import java.util.Optional;
 
+@OwnedBy(PIPELINE)
 public class OrgFunctor implements LateBindingValue {
-  private final OrganizationManagerClient organizationManagerClient;
+  private final OrganizationClient organizationClient;
   private final Ambiance ambiance;
 
-  public OrgFunctor(OrganizationManagerClient organizationManagerClient, Ambiance ambiance) {
-    this.organizationManagerClient = organizationManagerClient;
+  public OrgFunctor(OrganizationClient organizationClient, Ambiance ambiance) {
+    this.organizationClient = organizationClient;
     this.ambiance = ambiance;
   }
 
@@ -30,10 +34,10 @@ public class OrgFunctor implements LateBindingValue {
 
     try {
       Optional<OrganizationResponse> resp =
-          SafeHttpCall.execute(organizationManagerClient.getOrganization(orgIdentifier, accountId)).getData();
+          SafeHttpCall.execute(organizationClient.getOrganization(orgIdentifier, accountId)).getData();
       return resp.map(OrganizationResponse::getOrganization).orElse(null);
     } catch (Exception ex) {
-      throw new FunctorException(String.format("Invalid organization: %s", orgIdentifier), ex);
+      throw new EngineFunctorException(String.format("Invalid organization: %s", orgIdentifier), ex);
     }
   }
 }

@@ -222,6 +222,6 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
                  .build();
     when(delegateService.checkDelegateConnected(accountId, delegateId)).thenReturn(true);
     perpetualTaskRecordHandler.rebalance(record);
-    verify(perpetualTaskRecordDao, times(1)).appointDelegate(eq(taskId), eq(delegateId), anyLong());
+    verify(perpetualTaskService).appointDelegate(eq(accountId), eq(taskId), eq(delegateId), anyLong());
   }
 }

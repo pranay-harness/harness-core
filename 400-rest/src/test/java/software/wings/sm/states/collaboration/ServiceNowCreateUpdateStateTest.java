@@ -3,6 +3,7 @@ package software.wings.sm.states.collaboration;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.DESCRIPTION_VALUE;
 
+import static software.wings.beans.TaskType.SERVICENOW_ASYNC;
 import static software.wings.delegatetasks.servicenow.ServiceNowAction.CREATE;
 import static software.wings.delegatetasks.servicenow.ServiceNowAction.IMPORT_SET;
 import static software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType.INCIDENT;
@@ -20,11 +21,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ServiceNowException;
 import io.harness.rule.Owner;
@@ -41,6 +45,7 @@ import software.wings.delegatetasks.servicenow.ServiceNowAction;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContextImpl;
@@ -51,6 +56,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -63,6 +69,7 @@ public class ServiceNowCreateUpdateStateTest {
   @Mock SecretManager secretManager;
   @Mock DelegateService delegateService;
   @Mock SweepingOutputService sweepingOutputService;
+  @Mock StateExecutionService stateExecutionService;
   @InjectMocks ServiceNowCreateUpdateState serviceNowCreateUpdateState = new ServiceNowCreateUpdateState(STATE_NAME);
 
   @Before
@@ -94,6 +101,13 @@ public class ServiceNowCreateUpdateStateTest {
     serviceNowCreateUpdateState.setServiceNowCreateUpdateParams(getParamsForAction(CREATE));
     ExecutionResponse executionResponse = serviceNowCreateUpdateState.execute(context);
 
+    ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
+    assertThat(delegateTaskArgumentCaptor.getValue())
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("data.taskType", SERVICENOW_ASYNC.name());
+    assertThat(delegateTaskArgumentCaptor.getValue().isSelectionLogsTrackingEnabled()).isTrue();
+    verify(stateExecutionService).appendDelegateTaskDetails(eq(null), any(DelegateTaskDetails.class));
     assertExecutionResponseOnExecute(executionResponse);
   }
 

@@ -19,8 +19,7 @@ import (
 //go:generate mockgen -source run.go -package=steps -destination mocks/run_mock.go RunStep
 
 const (
-	outputEnvSuffix string = "output"
-	maxAddonRetries        = 2000 // max retry time of 200 seconds
+	maxAddonRetries = 2000 // max retry time of 200 seconds
 )
 
 var (
@@ -35,13 +34,10 @@ type RunStep interface {
 
 type runStep struct {
 	id            string
-	displayName   string
-	tmpFilePath   string
 	command       string
-	envVarOutputs []string
+	step          *pb.UnitStep
+	tmpFilePath   string
 	containerPort uint32
-	stepContext   *pb.StepContext
-	reports       []*pb.Report
 	stageOutput   output.StageOutput
 	log           *zap.SugaredLogger
 }
@@ -52,12 +48,9 @@ func NewRunStep(step *pb.UnitStep, tmpFilePath string, so output.StageOutput,
 	r := step.GetRun()
 	return &runStep{
 		id:            step.GetId(),
-		displayName:   step.GetDisplayName(),
 		command:       r.GetCommand(),
+		step:          step,
 		containerPort: r.GetContainerPort(),
-		stepContext:   r.GetContext(),
-		envVarOutputs: r.GetEnvVarOutputs(),
-		reports:       r.GetReports(),
 		tmpFilePath:   tmpFilePath,
 		stageOutput:   so,
 		log:           log,
@@ -68,9 +61,6 @@ func NewRunStep(step *pb.UnitStep, tmpFilePath string, so output.StageOutput,
 func (e *runStep) Run(ctx context.Context) (*output.StepOutput, int32, error) {
 	if err := e.validate(); err != nil {
 		e.log.Errorw("failed to validate run step", "step_id", e.id, zap.Error(err))
-		return nil, int32(1), err
-	}
-	if err := e.resolveJEXL(ctx); err != nil {
 		return nil, int32(1), err
 	}
 	return e.execute(ctx)
@@ -85,24 +75,6 @@ func (e *runStep) validate() error {
 		err := fmt.Errorf("run step container port is not set")
 		return err
 	}
-	return nil
-}
-
-// resolveJEXL resolves JEXL expressions present in run step input
-func (e *runStep) resolveJEXL(ctx context.Context) error {
-	// JEXL expressions are only present in run step command
-	cmd := e.command
-	resolvedExprs, err := evaluateJEXL(ctx, e.id, []string{cmd}, e.stageOutput, false, e.log)
-	if err != nil {
-		return err
-	}
-
-	// Updating step command with the resolved value of JEXL expressions
-	resolvedCmd := cmd
-	if val, ok := resolvedExprs[cmd]; ok {
-		resolvedCmd = val
-	}
-	e.command = resolvedCmd
 	return nil
 }
 
@@ -130,19 +102,16 @@ func (e *runStep) execute(ctx context.Context) (*output.StepOutput, int32, error
 }
 
 func (e *runStep) getExecuteStepArg() *addonpb.ExecuteStepRequest {
+	prevStepOutputs := make(map[string]*pb.StepOutput)
+	for stepID, stepOutput := range e.stageOutput {
+		if stepOutput != nil {
+			prevStepOutputs[stepID] = &pb.StepOutput{Output: stepOutput.Output.Variables}
+		}
+	}
+
 	return &addonpb.ExecuteStepRequest{
-		Step: &pb.UnitStep{
-			Id:          e.id,
-			DisplayName: e.displayName,
-			Step: &pb.UnitStep_Run{
-				Run: &pb.RunStep{
-					Command:       e.command,
-					Context:       e.stepContext,
-					Reports:       e.reports,
-					EnvVarOutputs: e.envVarOutputs,
-				},
-			},
-		},
-		TmpFilePath: e.tmpFilePath,
+		Step:            e.step,
+		TmpFilePath:     e.tmpFilePath,
+		PrevStepOutputs: prevStepOutputs,
 	}
 }

@@ -1,5 +1,6 @@
 package io.harness.git;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.eraro.ErrorCode.FAILED_TO_ACQUIRE_NON_PERSISTENT_LOCK;
 import static io.harness.eraro.ErrorCode.GIT_CONNECTION_ERROR;
 import static io.harness.exception.WingsException.ADMIN_SRE;
@@ -10,6 +11,7 @@ import static io.harness.git.Constants.GIT_DEFAULT_LOG_PREFIX;
 import static io.harness.git.Constants.GIT_HELM_LOG_PREFIX;
 import static io.harness.git.Constants.GIT_REPO_BASE_DIR;
 import static io.harness.git.Constants.GIT_TERRAFORM_LOG_PREFIX;
+import static io.harness.git.Constants.GIT_TERRAGRUNT_LOG_PREFIX;
 import static io.harness.git.Constants.GIT_TRIGGER_LOG_PREFIX;
 import static io.harness.git.Constants.GIT_YAML_LOG_PREFIX;
 import static io.harness.git.Constants.REPOSITORY;
@@ -27,6 +29,7 @@ import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static org.apache.commons.codec.binary.Hex.encodeHexString;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.GitClientException;
 import io.harness.exception.GitConnectionDelegateException;
 import io.harness.exception.NonPersistentLockException;
@@ -54,19 +57,22 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.errors.TransportException;
 
+@OwnedBy(CDP)
 @Singleton
 @Slf4j
 public class GitClientHelper {
-  private static final String GIT_URL_REGEX = "(https|git)(:\\/\\/|@)([^\\/:]+)[\\/:]([^\\/:]+)\\/(.+)(.git)";
+  private static final String GIT_URL_REGEX =
+      "(http|https|git)(:\\/\\/|@)([^\\/:]+(:\\d+)?)[\\/:]([^\\/:]+)\\/(.+)?(.git)?";
   private static final Pattern GIT_URL = Pattern.compile(GIT_URL_REGEX);
-  private static final Integer OWNER_GROUP = 4;
-  private static final Integer REPO_GROUP = 5;
+  private static final Integer OWNER_GROUP = 5;
+  private static final Integer REPO_GROUP = 6;
   private static final Integer SCM_GROUP = 3;
 
   private static final LoadingCache<String, Object> cache = CacheBuilder.newBuilder()
@@ -83,7 +89,10 @@ public class GitClientHelper {
     Matcher m = GIT_URL.matcher(url);
     try {
       if (m.find()) {
-        return m.toMatchResult().group(REPO_GROUP);
+        String repoName = m.toMatchResult().group(REPO_GROUP);
+        repoName = StringUtils.removeEnd(repoName, "/");
+        repoName = StringUtils.removeEnd(repoName, ".git");
+        return StringUtils.removeStart(repoName, "/");
       } else {
         throw new GitClientException(format("Invalid git repo url  %s", url), SRE);
       }
@@ -97,21 +106,57 @@ public class GitClientHelper {
     Matcher m = GIT_URL.matcher(url);
     try {
       if (m.find()) {
-        return m.toMatchResult().group(OWNER_GROUP);
+        String ownerName = m.toMatchResult().group(OWNER_GROUP);
+        ownerName = StringUtils.removeEnd(ownerName, "/");
+        ownerName = StringUtils.removeEnd(ownerName, ".git");
+        return StringUtils.removeStart(ownerName, "/");
       } else {
         throw new GitClientException(format("Invalid git repo url  %s", url), SRE);
       }
 
     } catch (Exception e) {
-      throw new GitClientException(format("Failed to parse repo from git url  %s", url), SRE);
+      throw new GitClientException(format("Failed to parse owner from git url  %s", url), SRE);
     }
   }
 
   public static boolean isGithubSAAS(String url) {
     return getGitSCM(url).equals("github.com");
   }
+  public static boolean isGitlabSAAS(String url) {
+    return getGitSCM(url).contains("gitlab.com");
+  }
 
-  public static String getGitSCM(String url) {
+  public static boolean isBitBucketSAAS(String url) {
+    return getGitSCM(url).contains("bitbucket.org");
+  }
+
+  public static String getGithubApiURL(String url) {
+    if (GitClientHelper.isGithubSAAS(url)) {
+      return "https://api.github.com/";
+    } else {
+      String domain = GitClientHelper.getGitSCM(url);
+      return "https://" + domain + "/api/v3/";
+    }
+  }
+  public static String getGitlabApiURL(String url) {
+    if (GitClientHelper.isGitlabSAAS(url)) {
+      return "https://gitlab.com/";
+    } else {
+      String domain = GitClientHelper.getGitSCM(url);
+      return "https://" + domain + "/";
+    }
+  }
+
+  public static String getBitBucketApiURL(String url) {
+    if (isBitBucketSAAS(url)) {
+      return "https://api.bitbucket.org/";
+    } else {
+      String domain = GitClientHelper.getGitSCM(url);
+      return "https://" + domain + "/";
+    }
+  }
+
+  private static String getGitSCMHost(String url) {
     Matcher m = GIT_URL.matcher(url);
     try {
       if (m.find()) {
@@ -122,6 +167,22 @@ public class GitClientHelper {
 
     } catch (Exception e) {
       throw new GitClientException(format("Failed to parse repo from git url  %s", url), SRE);
+    }
+  }
+
+  public static String getGitSCM(String url) {
+    String host = getGitSCMHost(url);
+    return host.split(":")[0];
+  }
+
+  // Returns port on which git SCM is running. Returns null if port is not present in the url.
+  public static String getGitSCMPort(String url) {
+    String host = getGitSCMHost(url);
+    String[] hostParts = host.split(":");
+    if (hostParts.length == 2) {
+      return host.split(":")[1];
+    } else {
+      return null;
     }
   }
 
@@ -136,6 +197,9 @@ public class GitClientHelper {
 
       case TERRAFORM:
         return GIT_TERRAFORM_LOG_PREFIX;
+
+      case TERRAGRUNT:
+        return GIT_TERRAGRUNT_LOG_PREFIX;
 
       case TRIGGER:
         return GIT_TRIGGER_LOG_PREFIX;
@@ -158,7 +222,7 @@ public class GitClientHelper {
     }
   }
 
-  String getRepoDirectory(GitBaseRequest request) {
+  public String getRepoDirectory(GitBaseRequest request) {
     String repoName = getRepoName(request.getRepoUrl());
     String repoUrlHash = getRepoUrlHash(request.getRepoUrl());
     return buildGitRepoBaseDir(

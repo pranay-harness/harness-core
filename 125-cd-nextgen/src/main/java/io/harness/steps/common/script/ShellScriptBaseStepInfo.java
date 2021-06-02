@@ -1,17 +1,20 @@
 package io.harness.steps.common.script;
 
-import io.harness.common.SwaggerConstants;
-import io.harness.pms.yaml.ParameterField;
-import io.harness.yaml.core.variables.NGVariable;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.bool;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
-import io.swagger.annotations.ApiModelProperty;
-import java.util.List;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.yaml.ParameterField;
+import io.harness.yaml.YamlSchemaTypes;
+
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.TypeAlias;
 
+@OwnedBy(HarnessTeam.CDC)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,8 +22,6 @@ import org.springframework.data.annotation.TypeAlias;
 public class ShellScriptBaseStepInfo {
   @NotNull ShellType shell;
   @NotNull ShellScriptSourceWrapper source;
-  List<NGVariable> environmentVariables;
-  List<NGVariable> outputVariables;
   ExecutionTarget executionTarget;
-  @NotNull @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> onDelegate;
+  @NotNull @YamlSchemaTypes({string, bool}) ParameterField<Boolean> onDelegate;
 }

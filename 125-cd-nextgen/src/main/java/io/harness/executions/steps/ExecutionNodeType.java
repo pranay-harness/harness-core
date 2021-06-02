@@ -1,10 +1,21 @@
 package io.harness.executions.steps;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.visitor.YamlTypes;
 
+@OwnedBy(HarnessTeam.CDP)
 public enum ExecutionNodeType {
-  SERVICE("SERVICE", YamlTypes.SERVICE_CONFIG),
+  SERVICE("SERVICE", YamlTypes.SERVICE_ENTITY),
+  SERVICE_CONFIG("SERVICE_CONFIG", YamlTypes.SERVICE_CONFIG),
+  SERVICE_DEFINITION("SERVICE_DEFINITION", YamlTypes.SERVICE_DEFINITION),
+  SERVICE_SPEC("SERVICE_SPEC", YamlTypes.SERVICE_SPEC),
+  ARTIFACTS("ARTIFACTS", "artifacts"),
+  ARTIFACT("ARTIFACT", "artifact"),
+  SIDECARS("SIDECARS", "sidecars"),
+  MANIFESTS("MANIFESTS", "manifests"),
   MANIFEST_FETCH("MANIFEST_FETCH", YamlTypes.MANIFEST_LIST_CONFIG),
+  MANIFEST("MANIFEST", YamlTypes.MANIFEST_CONFIG),
   PIPELINE_SETUP("PIPELINE_SETUP", "pipeline"),
   INFRASTRUCTURE_SECTION("INFRASTRUCTURE_SECTION", YamlTypes.PIPELINE_INFRASTRUCTURE),
   INFRASTRUCTURE("INFRASTRUCTURE", YamlTypes.INFRASTRUCTURE_DEF),
@@ -21,8 +32,11 @@ public enum ExecutionNodeType {
 
   ROLLBACK_SECTION("ROLLBACK_SECTION", "rollbackSection"),
   GENERIC_SECTION("GENERIC_SECTION", "genericSection"),
-  HTTP("HTTP", YamlTypes.HTTP_STEP),
-  SHELL_SCRIPT("SHELL_SCRIPT", YamlTypes.SHELL_SCRIPT_STEP);
+  SHELL_SCRIPT("SHELL_SCRIPT", YamlTypes.SHELL_SCRIPT_STEP),
+  TERRAFORM_APPLY("TERRAFORM_APPLY", StepSpecTypeConstants.TERRAFORM_APPLY),
+  TERRAFORM_PLAN("TERRAFORM_PLAN", StepSpecTypeConstants.TERRAFORM_PLAN),
+  TERRAFORM_DESTROY("TERRAFORM_DESTROY", StepSpecTypeConstants.TERRAFORM_DESTROY),
+  TERRAFORM_ROLLBACK("TERRAFORM_ROLLBACK", StepSpecTypeConstants.TERRAFORM_ROLLBACK);
 
   private final String name;
   private final String yamlType;

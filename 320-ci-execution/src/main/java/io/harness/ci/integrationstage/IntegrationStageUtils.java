@@ -1,11 +1,17 @@
 package io.harness.ci.integrationstage;
 
+import static io.harness.common.CIExecutionConstants.IMAGE_PATH_SPLIT_REGEX;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.execution.CustomExecutionSource;
 import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ngexception.CIStageExecutionException;
+import io.harness.k8s.model.ImageDetails;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
@@ -25,9 +31,11 @@ import io.harness.yaml.extended.ci.codebase.impl.BranchBuildSpec;
 import io.harness.yaml.extended.ci.codebase.impl.TagBuildSpec;
 
 import java.io.IOException;
+import java.util.Arrays;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(HarnessTeam.CI)
 public class IntegrationStageUtils {
   public IntegrationStageConfig getIntegrationStageConfig(StageElementConfig stageElementConfig) {
     if (stageElementConfig.getType().equals("CI")) {
@@ -64,7 +72,8 @@ public class IntegrationStageUtils {
       ExecutionMetadata executionMetadata, String identifier, ParameterField<Build> parameterFieldBuild) {
     ExecutionTriggerInfo executionTriggerInfo = executionMetadata.getTriggerInfo();
 
-    if (executionTriggerInfo.getTriggerType() == TriggerType.MANUAL) {
+    if (executionTriggerInfo.getTriggerType() == TriggerType.MANUAL
+        || executionTriggerInfo.getTriggerType() == TriggerType.SCHEDULER_CRON) {
       if (parameterFieldBuild == null) {
         return ManualExecutionSource.builder().build();
       }
@@ -88,8 +97,47 @@ public class IntegrationStageUtils {
       } else {
         throw new CIStageExecutionException("Parsed payload is empty for webhook execution");
       }
+    } else if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK_CUSTOM) {
+      return buildCustomExecutionSource(identifier, parameterFieldBuild);
     }
 
+    return null;
+  }
+
+  public ImageDetails getImageInfo(String image) {
+    String tag = "";
+    String name = image;
+
+    if (image.contains(IMAGE_PATH_SPLIT_REGEX)) {
+      String[] subTokens = image.split(IMAGE_PATH_SPLIT_REGEX);
+      if (subTokens.length > 1) {
+        tag = subTokens[subTokens.length - 1];
+        String[] nameparts = Arrays.copyOf(subTokens, subTokens.length - 1);
+        name = String.join(IMAGE_PATH_SPLIT_REGEX, nameparts);
+      }
+    }
+
+    return ImageDetails.builder().name(name).tag(tag).build();
+  }
+
+  private CustomExecutionSource buildCustomExecutionSource(
+      String identifier, ParameterField<Build> parameterFieldBuild) {
+    if (parameterFieldBuild == null) {
+      return CustomExecutionSource.builder().build();
+    }
+    Build build = RunTimeInputHandler.resolveBuild(parameterFieldBuild);
+    if (build != null) {
+      if (build.getType().equals(BuildType.TAG)) {
+        ParameterField<String> tag = ((TagBuildSpec) build.getSpec()).getTag();
+        String buildString = RunTimeInputHandler.resolveStringParameter("tag", "Git Clone", identifier, tag, false);
+        return CustomExecutionSource.builder().tag(buildString).build();
+      } else if (build.getType().equals(BuildType.BRANCH)) {
+        ParameterField<String> branch = ((BranchBuildSpec) build.getSpec()).getBranch();
+        String branchString =
+            RunTimeInputHandler.resolveStringParameter("branch", "Git Clone", identifier, branch, false);
+        return CustomExecutionSource.builder().branch(branchString).build();
+      }
+    }
     return null;
   }
 }

@@ -9,7 +9,6 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_ID;
 
-import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -17,6 +16,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.EnvironmentType;
@@ -26,7 +26,6 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
@@ -187,7 +186,6 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
                 .waitId("12345")
                 .build(),
             DelegateTaskKeys.expiry, DelegateTaskKeys.validUntil);
-    assertThat(validationTask.getExpiry() - System.currentTimeMillis()).isGreaterThan(ofSeconds(5).toMillis());
   }
 
   @Test
@@ -227,7 +225,6 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
                 .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, SERVICE_ID)
                 .build(),
             DelegateTaskKeys.expiry, DelegateTaskKeys.validUntil);
-    assertThat(validationTask.getExpiry() - System.currentTimeMillis()).isGreaterThan(ofSeconds(5).toMillis());
   }
 
   @Test
@@ -267,8 +264,6 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
                 .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, SERVICE_ID)
                 .build(),
             DelegateTaskKeys.expiry, DelegateTaskKeys.validUntil);
-
-    assertThat(validationTask.getExpiry() - System.currentTimeMillis()).isGreaterThan(ofSeconds(5).toMillis());
   }
 
   private void prepareAwsTaskData(AwsConfig awsConfig) {

@@ -1,5 +1,6 @@
 package io.harness.ngpipeline.inputset.helpers;
 
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ngpipeline.inputset.beans.entities.InputSetEntity;
@@ -23,6 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@ToBeDeleted
+@Deprecated
 public class InputSetEntityValidationHelper {
   private final InputSetMergeHelper inputSetMergeHelper;
   private final InputSetEntityService inputSetEntityService;

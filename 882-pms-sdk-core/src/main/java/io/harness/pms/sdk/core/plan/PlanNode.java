@@ -1,5 +1,7 @@
 package io.harness.pms.sdk.core.plan;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.refobjects.RefObject;
@@ -14,6 +16,7 @@ import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Value
 @Builder
 public class PlanNode {
@@ -26,6 +29,7 @@ public class PlanNode {
 
   // Input/Outputs
   StepParameters stepParameters;
+  String stepInputs;
   @Singular List<RefObject> refObjects;
 
   // Hooks
@@ -34,7 +38,11 @@ public class PlanNode {
   @Singular List<TimeoutObtainment> timeoutObtainments;
 
   // Skip
+  String skipCondition;
+  String whenCondition;
+
+  // Config
   boolean skipExpressionChain;
   @Builder.Default SkipType skipGraphType = SkipType.NOOP;
-  String skipCondition;
+  boolean skipUnresolvedExpressionsCheck;
 }

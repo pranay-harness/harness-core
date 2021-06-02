@@ -1,7 +1,10 @@
 package io.harness.managerclient;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.network.FibonacciBackOff;
 import io.harness.network.Http;
+import io.harness.network.NoopHostnameVerifier;
 import io.harness.security.TokenGenerator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,6 +23,7 @@ import okhttp3.Request.Builder;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
+@OwnedBy(HarnessTeam.DEL)
 class ManagerClientV2X509TrustManager implements X509TrustManager {
   @Override
   public java.security.cert.X509Certificate[] getAcceptedIssuers() {
@@ -70,7 +74,7 @@ public class ManagerClientV2Factory implements Provider<ManagerClientV2> {
       return Http.getOkHttpClientWithProxyAuthSetup()
           .connectionPool(new ConnectionPool())
           .retryOnConnectionFailure(true)
-          .addInterceptor(new DelegateAuthInterceptor(tokenGenerator))
+          .addInterceptor(new WatcherAuthInterceptor(tokenGenerator))
           .sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTS.get(0))
           .addInterceptor(chain -> {
             Builder request = chain.request().newBuilder().addHeader("User-Agent", "watcher");
@@ -80,7 +84,7 @@ public class ManagerClientV2Factory implements Provider<ManagerClientV2> {
             return chain.proceed(request.build());
           })
           .addInterceptor(chain -> FibonacciBackOff.executeForEver(() -> chain.proceed(chain.request())))
-          .hostnameVerifier((hostname, session) -> true)
+          .hostnameVerifier(new NoopHostnameVerifier())
           .build();
     } catch (Exception e) {
       throw new RuntimeException(e);

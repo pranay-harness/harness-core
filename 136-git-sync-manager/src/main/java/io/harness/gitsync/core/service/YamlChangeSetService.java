@@ -1,48 +1,58 @@
 package io.harness.gitsync.core.service;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.common.beans.YamlChangeSet;
-import io.harness.gitsync.common.beans.YamlChangeSet.Status;
+import io.harness.gitsync.common.beans.YamlChangeSetStatus;
+import io.harness.gitsync.core.dtos.YamlChangeSetDTO;
+import io.harness.gitsync.core.dtos.YamlChangeSetSaveDTO;
+import io.harness.gitsync.core.runnable.ChangeSetGroupingKey;
 import io.harness.validation.Create;
-import io.harness.validation.Update;
 
 import com.mongodb.client.result.UpdateResult;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import javax.validation.constraints.Size;
+import org.springframework.data.mongodb.core.query.Criteria;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
+@OwnedBy(DX)
 public interface YamlChangeSetService {
-  @ValidationGroups(Create.class) YamlChangeSet save(@Valid YamlChangeSet yamlChangeSet);
+  @ValidationGroups(Create.class) YamlChangeSetDTO save(@Valid YamlChangeSetSaveDTO yamlChangeSet);
 
-  @ValidationGroups(Update.class) YamlChangeSet update(@Valid YamlChangeSet yamlChangeSet);
+  Optional<YamlChangeSetDTO> get(@NotNull String accountId, @NotNull String changeSetId);
 
-  void populateGitSyncMetadata(YamlChangeSet yamlChangeSet);
+  Optional<YamlChangeSetDTO> peekQueueHead(
+      @NotNull String accountId, @NotNull String queueKey, @NotNull YamlChangeSetStatus yamlChangeSetStatus);
 
-  Optional<YamlChangeSet> get(@NotEmpty String accountId, @NotEmpty String changeSetId);
+  boolean changeSetExistsFoQueueKey(@NotNull String accountId, @NotNull String queueKey,
+      @Size(min = 1) List<YamlChangeSetStatus> yamlChangeSetStatuses);
 
-  boolean updateStatus(@NotEmpty String accountId, @NotEmpty String changeSetId, @NotNull Status newStatus);
+  int countByAccountIdAndStatus(@NotNull String accountId, List<YamlChangeSetStatus> yamlChangeSetStatuses);
 
-  boolean updateStatusForGivenYamlChangeSets(
-      String accountId, Status newStatus, List<Status> currentStatuses, List<String> yamlChangeSetIds);
+  boolean updateStatus(@NotNull String accountId, @NotNull String changeSetId, @NotNull YamlChangeSetStatus newStatus);
 
-  void markQueuedYamlChangeSetsWithMaxRetriesAsSkipped(String accountId);
+  boolean updateStatusForGivenYamlChangeSets(@NotNull String accountId, @NotNull YamlChangeSetStatus newStatus,
+      List<YamlChangeSetStatus> currentStatuses, List<String> yamlChangeSetIds);
 
-  boolean updateStatusAndIncrementRetryCountForYamlChangeSets(
-      String accountId, Status newStatus, List<Status> currentStatus, List<String> yamlChangeSetIds);
+  void markQueuedYamlChangeSetsWithMaxRetriesAsSkipped(@NotNull String accountId, int maxRetryCount);
 
-  YamlChangeSet getQueuedChangeSetForWaitingQueueKey(
-      String accountId, String queueKey, int maxRunningChangesetsForAccount);
+  boolean updateStatusAndIncrementRetryCountForYamlChangeSets(@NotNull String accountId,
+      @NotNull YamlChangeSetStatus newStatus, List<YamlChangeSetStatus> currentStatus, List<String> yamlChangeSetIds);
 
-  List<YamlChangeSet> findByAccountIdsStatusLastUpdatedAtLessThan(List<String> runningAccountIdList, long timeout);
+  List<YamlChangeSetDTO> findByAccountIdsStatusLastUpdatedAtLessThan(
+      List<String> runningAccountIdList, @Size(min = 1) List<YamlChangeSetStatus> yamlChangeSetStatuses, long timeout);
 
-  List<String> findDistinctAccountIdsByStatus(Status status);
+  List<String> findDistinctAccountIdsByStatus(List<YamlChangeSetStatus> status);
 
   UpdateResult updateYamlChangeSetsToNewStatusWithMessageCodeAndCreatedAtLessThan(
-      Status oldStatus, Status newStatus, long timeout, String messageCode);
+      @NotNull YamlChangeSetStatus oldStatus, @NotNull YamlChangeSetStatus newStatus, long timeout, String messageCode);
 
-  <C> AggregationResults aggregate(Aggregation aggregation, Class<C> castClass);
+  Set<ChangeSetGroupingKey> getChangesetGroupingKeys(Criteria criteria);
+
+  List<YamlChangeSet> list(@NotNull String queueKey, @NotNull String accountId, @NotNull YamlChangeSetStatus status);
 }

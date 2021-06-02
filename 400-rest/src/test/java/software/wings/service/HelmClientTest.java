@@ -1,8 +1,10 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -23,6 +25,7 @@ import org.junit.experimental.categories.Category;
  * Created by anubhaw on 3/22/18.
  */
 @Slf4j
+@OwnedBy(CDP)
 public class HelmClientTest extends CategoryTest {
   private HelmClient helmClient = new HelmClientImpl();
   @Test

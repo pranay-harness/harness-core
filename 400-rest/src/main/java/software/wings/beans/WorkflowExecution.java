@@ -8,7 +8,9 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ApiKeyInfo;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
@@ -71,8 +73,9 @@ import org.mongodb.morphia.annotations.Transient;
 @Builder
 @FieldNameConstants(innerTypeName = "WorkflowExecutionKeys")
 @Entity(value = "workflowExecutions", noClassnameStored = true)
-@HarnessEntity(exportable = false)
+@HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowExecution implements PersistentRegularIterable, AccountDataRetentionEntity, UuidAware,
                                           CreatedAtAware, CreatedByAware, KeywordsAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
@@ -159,6 +162,14 @@ public class WorkflowExecution implements PersistentRegularIterable, AccountData
                  .descSortField(WorkflowExecutionKeys.createdAt)
                  .build())
         .add(SortCompoundMongoIndex.builder()
+                 .name("appid_status_workflowid_infraMappingIds_createdat")
+                 .field(WorkflowExecutionKeys.appId)
+                 .field(WorkflowExecutionKeys.status)
+                 .field(WorkflowExecutionKeys.workflowId)
+                 .field(WorkflowExecutionKeys.infraMappingIds)
+                 .descSortField(WorkflowExecutionKeys.createdAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
                  .name("accountId_cdPageCandidate_keywords_createdAt")
                  .field(WorkflowExecutionKeys.accountId)
                  .field(WorkflowExecutionKeys.cdPageCandidate)
@@ -198,6 +209,19 @@ public class WorkflowExecution implements PersistentRegularIterable, AccountData
                  .field(WorkflowExecutionKeys.status)
                  .field(WorkflowExecutionKeys.pipelineExecutionId)
                  .field(WorkflowExecutionKeys.endTs)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_cdPageCandidate_appId_createdAtDesc")
+                 .field(WorkflowExecutionKeys.accountId)
+                 .field(WorkflowExecutionKeys.cdPageCandidate)
+                 .field(WorkflowExecutionKeys.appId)
+                 .descSortField(WorkflowExecutionKeys.createdAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_pipelineExecutionId_appId")
+                 .field(WorkflowExecutionKeys.accountId)
+                 .field(WorkflowExecutionKeys.pipelineExecutionId)
+                 .field(WorkflowExecutionKeys.appId)
                  .build())
         .build();
   }
@@ -304,6 +328,7 @@ public class WorkflowExecution implements PersistentRegularIterable, AccountData
   private Long nextIteration;
   private List<NameValuePair> tags;
   private String message;
+  @Transient private String failureDetails;
 
   @Default @JsonIgnore @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 

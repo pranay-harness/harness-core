@@ -14,7 +14,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.rule.Owner;
-import io.harness.scheduler.BackgroundSchedulerLocker;
 
 import software.wings.service.intfc.instance.stats.collector.StatsCollector;
 
@@ -32,7 +31,7 @@ public class InstanceStatsCollectorJobTest extends CategoryTest {
   public static final String ACCOUNTID = "accountid";
   public static final String APPID_1 = "appid1";
 
-  @Mock private BackgroundSchedulerLocker persistentLocker;
+  @Mock private PersistentLocker persistentLocker;
   @Mock private StatsCollector statsCollector;
 
   @InjectMocks @Inject @Spy InstanceStatsCollectorJob instanceStatsCollectorJob;
@@ -45,10 +44,8 @@ public class InstanceStatsCollectorJobTest extends CategoryTest {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_createStats() {
-    final PersistentLocker locker = mock(PersistentLocker.class);
-    doReturn(locker).when(persistentLocker).getLocker();
     doReturn(mock(AcquiredLock.class))
-        .when(locker)
+        .when(persistentLocker)
         .tryToAcquireLock(any(Class.class), anyString(), any(Duration.class));
     doReturn(true).when(statsCollector).createStats(anyString());
     doReturn(true).when(statsCollector).createServerlessStats(anyString());
@@ -61,10 +58,8 @@ public class InstanceStatsCollectorJobTest extends CategoryTest {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_createStats_disabled() {
-    final PersistentLocker locker = mock(PersistentLocker.class);
-    doReturn(locker).when(persistentLocker).getLocker();
     doReturn(mock(AcquiredLock.class))
-        .when(locker)
+        .when(persistentLocker)
         .tryToAcquireLock(any(Class.class), anyString(), any(Duration.class));
     doReturn(false).when(statsCollector).createStats(anyString());
     doReturn(false).when(statsCollector).createServerlessStats(anyString());
@@ -76,9 +71,7 @@ public class InstanceStatsCollectorJobTest extends CategoryTest {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_createStats_nolock() {
-    final PersistentLocker locker = mock(PersistentLocker.class);
-    doReturn(locker).when(persistentLocker).getLocker();
-    doReturn(null).when(locker).tryToAcquireLock(any(Class.class), anyString(), any(Duration.class));
+    doReturn(null).when(persistentLocker).tryToAcquireLock(any(Class.class), anyString(), any(Duration.class));
     doReturn(true).when(statsCollector).createStats(anyString());
     doReturn(true).when(statsCollector).createServerlessStats(anyString());
     instanceStatsCollectorJob.createStats(ACCOUNTID);

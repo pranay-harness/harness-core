@@ -37,7 +37,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
@@ -132,16 +131,18 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
   public void pipelineExecutionIsBuiltCorrectlyEvenWhenStageIsDeleted() {
     // Note: Deleted few fields from this due to issues with serialization
     WorkflowExecution workflowExecution =
-        JsonUtils.readResourceFile("./execution/workflow_execution.json", WorkflowExecution.class);
+        JsonUtils.readResourceFile("execution/workflow_execution.json", WorkflowExecution.class);
 
     when(workflowExecutionService.fetchWorkflowVariables(any(), any(), anyString(), anyString()))
         .thenThrow(new IllegalStateException());
+
+    when(workflowExecutionService.fetchFailureDetails(anyString(), anyString())).thenReturn("failureDetails");
 
     QLPipelineExecutionBuilder builder = QLPipelineExecution.builder();
     pipelineExecutionController.populatePipelineExecution(workflowExecution, builder);
     JsonNode actual = JsonUtils.toJsonNode(builder.build());
     JsonNode expected =
-        JsonUtils.readResourceFile("./execution/qlPipeline_execution_expected_when_exception.json", JsonNode.class);
+        JsonUtils.readResourceFile("execution/qlPipeline_execution_expected_when_exception.json", JsonNode.class);
     assertEquals("QLPipeline execution should be equal", expected, actual);
   }
 
@@ -151,10 +152,11 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
   public void pipelineExecutionIsBuiltCorrectly() {
     // Note: Deleted few fields from this due to issues with serialization
     WorkflowExecution workflowExecution =
-        JsonUtils.readResourceFile("./execution/workflow_execution.json", WorkflowExecution.class);
+        JsonUtils.readResourceFile("execution/workflow_execution.json", WorkflowExecution.class);
 
     WorkflowVariablesMetadata metadata = new WorkflowVariablesMetadata(Lists.newArrayList());
     when(workflowExecutionService.fetchWorkflowVariables(any(), any(), anyString(), anyString())).thenReturn(metadata);
+    when(workflowExecutionService.fetchFailureDetails(anyString(), anyString())).thenReturn("failureDetails");
 
     QLPipelineExecutionBuilder builder = QLPipelineExecution.builder();
     pipelineExecutionController.populatePipelineExecution(workflowExecution, builder);
@@ -168,11 +170,12 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void pipelineExecutionIsBuiltCorrectlyWithApprovalStageTriggerResumed() {
     // Note: Deleted few fields from this due to issues with serialization
-    WorkflowExecution workflowExecution = JsonUtils.readResourceFile(
-        "./execution/workflow_execution_resumed_after_approval.json", WorkflowExecution.class);
+    WorkflowExecution workflowExecution =
+        JsonUtils.readResourceFile("execution/workflow_execution_resumed_after_approval.json", WorkflowExecution.class);
 
     WorkflowVariablesMetadata metadata = new WorkflowVariablesMetadata(Lists.newArrayList());
     when(workflowExecutionService.fetchWorkflowVariables(any(), any(), anyString(), anyString())).thenReturn(metadata);
+    when(workflowExecutionService.fetchFailureDetails(anyString(), anyString())).thenReturn("failureDetails");
 
     QLPipelineExecutionBuilder builder = QLPipelineExecution.builder();
     pipelineExecutionController.populatePipelineExecution(workflowExecution, builder);
@@ -188,7 +191,7 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
   public void pipelineExecutionIsBuiltCorrectlyWhenPipelineStageElementIsNull() {
     // Note: Deleted few fields from this due to issues with serialization
     WorkflowExecution workflowExecution = JsonUtils.readResourceFile(
-        "./execution/workflow_execution_without_pipeline_stage_element_id.json", WorkflowExecution.class);
+        "execution/workflow_execution_without_pipeline_stage_element_id.json", WorkflowExecution.class);
 
     WorkflowVariablesMetadata metadata = new WorkflowVariablesMetadata(Lists.newArrayList());
     when(workflowExecutionService.fetchWorkflowVariables(any(), any(), anyString(), anyString())).thenReturn(metadata);
@@ -340,17 +343,18 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
   public void pipelineExecutionByTriggerIsBuiltCorrectly() {
     // Note: Deleted few fields from this due to issues with serialization
     WorkflowExecution workflowExecution =
-        JsonUtils.readResourceFile("./execution/workflow_execution.json", WorkflowExecution.class);
+        JsonUtils.readResourceFile("execution/workflow_execution.json", WorkflowExecution.class);
 
     workflowExecution.setDeploymentTriggerId("TRIGGER_ID");
 
     when(workflowExecutionService.fetchWorkflowVariables(any(), any(), anyString(), anyString()))
         .thenThrow(new IllegalStateException());
+    when(workflowExecutionService.fetchFailureDetails(anyString(), anyString())).thenReturn("failureDetails");
 
     QLPipelineExecutionBuilder builder = QLPipelineExecution.builder();
     pipelineExecutionController.populatePipelineExecution(workflowExecution, builder);
     JsonNode actual = JsonUtils.toJsonNode(builder.build());
-    JsonNode expected = JsonUtils.readResourceFile("./execution/qlPipeline_execution_by_trigger.json", JsonNode.class);
+    JsonNode expected = JsonUtils.readResourceFile("execution/qlPipeline_execution_by_trigger.json", JsonNode.class);
     assertEquals("QLPipeline execution should be equal", expected, actual);
   }
 
@@ -360,18 +364,19 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
   public void pipelineExecutionByApiKeyIsBuiltCorrectly() {
     // Note: Deleted few fields from this due to issues with serialization
     WorkflowExecution workflowExecution =
-        JsonUtils.readResourceFile("./execution/workflow_execution.json", WorkflowExecution.class);
+        JsonUtils.readResourceFile("execution/workflow_execution.json", WorkflowExecution.class);
 
     workflowExecution.setCreatedByType(CreatedByType.API_KEY);
     workflowExecution.setCreatedBy(EmbeddedUser.builder().name("API_KEY").uuid("KEY_ID").build());
 
     when(workflowExecutionService.fetchWorkflowVariables(any(), any(), anyString(), anyString()))
         .thenThrow(new IllegalStateException());
+    when(workflowExecutionService.fetchFailureDetails(anyString(), anyString())).thenReturn("failureDetails");
 
     QLPipelineExecutionBuilder builder = QLPipelineExecution.builder();
     pipelineExecutionController.populatePipelineExecution(workflowExecution, builder);
     JsonNode actual = JsonUtils.toJsonNode(builder.build());
-    JsonNode expected = JsonUtils.readResourceFile("./execution/qlPipeline_execution_by_apikey.json", JsonNode.class);
+    JsonNode expected = JsonUtils.readResourceFile("execution/qlPipeline_execution_by_apikey.json", JsonNode.class);
     assertEquals("QLPipeline execution should be equal", expected, actual);
   }
 
@@ -809,7 +814,6 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
         .thenReturn(InfrastructureDefinition.builder().uuid(INFRA_DEFINITION_ID).build());
     when(infrastructureDefinitionService.getInfraDefByName(APP_ID, ENV_ID, INFRA_NAME + 2))
         .thenReturn(InfrastructureDefinition.builder().uuid(INFRA_DEFINITION_ID + 2).build());
-    when(featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, ACCOUNT_ID)).thenReturn(true);
 
     ArgumentCaptor<ExecutionArgs> captor = ArgumentCaptor.forClass(ExecutionArgs.class);
 

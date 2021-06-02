@@ -3,7 +3,7 @@ package software.wings.graphql.datafetcher.audit;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.GraphQLException;
 import io.harness.exception.WingsException;
@@ -33,7 +33,7 @@ import javax.validation.constraints.NotNull;
 import org.mongodb.morphia.query.Query;
 
 @Singleton
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class ChangeContentController {
   @Inject private WingsPersistence wingsPersistence;
 

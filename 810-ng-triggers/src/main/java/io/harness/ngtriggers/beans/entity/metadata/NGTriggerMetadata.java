@@ -12,4 +12,5 @@ import org.springframework.data.annotation.TypeAlias;
 public class NGTriggerMetadata {
   ArtifactMetadata artifact;
   WebhookMetadata webhook;
+  CronMetadata cron;
 }

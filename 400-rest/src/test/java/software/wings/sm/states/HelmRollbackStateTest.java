@@ -1,10 +1,14 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.rule.Owner;
@@ -26,9 +30,11 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDP)
 public class HelmRollbackStateTest extends WingsBaseTest {
   @Mock private ExecutionContext executionContext;
   @Mock private ApplicationManifestUtils applicationManifestUtils;
+  @Mock private FeatureFlagService featureFlagService;
   @InjectMocks HelmRollbackState helmRollbackState = new HelmRollbackState("Helm-Rollback");
 
   @Test

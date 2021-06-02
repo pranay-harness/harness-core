@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.connector.types;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.utils.RequestField;
@@ -8,6 +8,7 @@ import io.harness.utils.RequestField;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.connector.ConnectorsController;
+import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.connector.input.QLConnectorInput;
 import software.wings.graphql.schema.mutation.connector.input.QLUpdateConnectorInput;
 import software.wings.graphql.schema.mutation.connector.input.git.QLCustomCommitDetailsInput;
@@ -21,11 +22,12 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class GitConnector extends Connector {
   private SecretManager secretManager;
   private SettingsService settingsService;
   private ConnectorsController connectorsController;
+  private UsageScopeController usageScopeController;
 
   @Override
   public SettingAttribute getSettingAttribute(QLConnectorInput input, String accountId) {
@@ -53,10 +55,19 @@ public class GitConnector extends Connector {
       gitConnectorInput.getCustomCommitDetails().getValue().ifPresent(
           customCommitDetailsInput -> setCustomCommitDetails(gitConfig, customCommitDetailsInput));
     }
+    if (gitConnectorInput.getDelegateSelectors().isPresent()) {
+      gitConnectorInput.getDelegateSelectors().getValue().ifPresent(gitConfig::setDelegateSelectors);
+    }
 
     SettingAttribute.Builder settingAttributeBuilder =
         SettingAttribute.Builder.aSettingAttribute().withValue(gitConfig).withAccountId(accountId).withCategory(
             SettingAttribute.SettingCategory.SETTING);
+
+    if (gitConnectorInput.getSshSettingId().isPresent() && gitConnectorInput.getSshSettingId().getValue().isPresent()
+        && gitConnectorInput.getUsageScope().isPresent() && gitConnectorInput.getUsageScope().getValue().isPresent()) {
+      settingAttributeBuilder.withUsageRestrictions(usageScopeController.populateUsageRestrictions(
+          gitConnectorInput.getUsageScope().getValue().orElse(null), accountId));
+    }
 
     if (gitConnectorInput.getName().isPresent()) {
       gitConnectorInput.getName().getValue().ifPresent(settingAttributeBuilder::withName);
@@ -88,8 +99,17 @@ public class GitConnector extends Connector {
       gitConnectorInput.getCustomCommitDetails().getValue().ifPresent(
           customCommitDetailsInput -> setCustomCommitDetails(gitConfig, customCommitDetailsInput));
     }
+    if (gitConnectorInput.getDelegateSelectors().isPresent()) {
+      gitConnectorInput.getDelegateSelectors().getValue().ifPresent(gitConfig::setDelegateSelectors);
+    }
 
     settingAttribute.setValue(gitConfig);
+
+    if (gitConnectorInput.getSshSettingId().isPresent() && gitConnectorInput.getSshSettingId().getValue().isPresent()
+        && gitConnectorInput.getUsageScope().isPresent() && gitConnectorInput.getUsageScope().getValue().isPresent()) {
+      settingAttribute.setUsageRestrictions(usageScopeController.populateUsageRestrictions(
+          gitConnectorInput.getUsageScope().getValue().get(), settingAttribute.getAccountId()));
+    }
 
     if (gitConnectorInput.getName().isPresent()) {
       gitConnectorInput.getName().getValue().ifPresent(settingAttribute::setName);

@@ -14,8 +14,8 @@ import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.sm.StateType;
+import software.wings.verification.appdynamics.AppDynamicsCVConfigurationYaml;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
-import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration.AppDynamicsCVConfigurationYaml;
 
 import com.google.inject.Inject;
 import java.util.List;

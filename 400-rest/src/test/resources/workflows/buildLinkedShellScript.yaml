@@ -1,0 +1,48 @@
+harnessApiVersion: '1.0'
+type: BUILD
+envName: ENV_NAME
+notificationRules:
+- conditions:
+  - SUCCESS
+  executionScope: WORKFLOW
+  notificationGroupAsExpression: false
+  userGroupAsExpression: true
+  userGroupExpression: ${user.name}
+phases:
+- daemonSet: false
+  name: Phase 1
+  phaseSteps:
+  - type: PREPARE_STEPS
+    name: Prepare Steps
+    steps:
+    - type: SHELL_SCRIPT
+      name: git shell
+      properties:
+        commandPath: null
+        connectionAttributes: null
+        executeOnDelegate: true
+        host: null
+        publishAsVar: false
+        sshKeyRef: null
+        sweepingOutputName: null
+        sweepingOutputScope: null
+        templateExpressions: null
+        timeoutMillis: 600000
+      templateUri: App/harness-dev-3/git-shell:latest
+    stepsInParallel: false
+  - type: COLLECT_ARTIFACT
+    name: Collect Artifact
+    stepsInParallel: false
+  - type: WRAP_UP
+    name: Wrap Up
+    stepsInParallel: false
+  provisionNodes: false
+  statefulSet: false
+templatized: true
+userVariables:
+- type: NUMBER
+  allowedValues: 0,1,2,3,4,5,6,7
+  fixed: false
+  mandatory: false
+  name: numb
+  value: '0'

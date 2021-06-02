@@ -2,6 +2,8 @@ package io.harness.batch.processing.schedule;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import static java.lang.String.format;
+
 import io.harness.batch.processing.YamlPropertyLoaderFactory;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
@@ -10,6 +12,7 @@ import io.harness.batch.processing.budgets.service.impl.BudgetAlertsServiceImpl;
 import io.harness.batch.processing.budgets.service.impl.BudgetCostUpdateService;
 import io.harness.batch.processing.ccm.BatchJobBucket;
 import io.harness.batch.processing.ccm.BatchJobType;
+import io.harness.batch.processing.cleanup.CEDataCleanupRequestService;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.config.GcpScheduledQueryTriggerAction;
 import io.harness.batch.processing.metrics.ProductMetricsService;
@@ -25,13 +28,15 @@ import io.harness.batch.processing.tasklet.support.HarnessServiceInfoFetcher;
 import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
 import io.harness.batch.processing.view.CEMetaDataRecordUpdateService;
 import io.harness.batch.processing.view.ViewCostUpdateService;
+import io.harness.beans.FeatureName;
+import io.harness.cf.client.api.CfClient;
+import io.harness.cf.client.dto.Target;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
@@ -70,6 +75,10 @@ public class EventJobScheduler {
   @Autowired private ViewCostUpdateService viewCostUpdateService;
   @Autowired private BatchMainConfig batchMainConfig;
   @Autowired private CEMetaDataRecordUpdateService ceMetaDataRecordUpdateService;
+  @Autowired private CEDataCleanupRequestService ceDataCleanupRequestService;
+  @Autowired private CfClient cfClient;
+  @Autowired private FeatureFlagService featureFlagService;
+
   @PostConstruct
   public void orderJobs() {
     jobs.sort(Comparator.comparingInt(job -> BatchJobType.valueOf(job.getName()).getOrder()));
@@ -79,6 +88,11 @@ public class EventJobScheduler {
   @Scheduled(cron = "0 */20 * * * ?")
   public void runCloudEfficiencyInClusterJobs() {
     runCloudEfficiencyEventJobs(BatchJobBucket.IN_CLUSTER, true);
+  }
+
+  @Scheduled(cron = "0 */30 * * * ?")
+  public void runCloudEfficiencyInClusterRecommendationsJobs() {
+    runCloudEfficiencyEventJobs(BatchJobBucket.IN_CLUSTER_RECOMMENDATION, true);
   }
 
   @Scheduled(cron = "0 */1 * * * ?")
@@ -152,11 +166,12 @@ public class EventJobScheduler {
     }
   }
 
-  @Scheduled(cron = "0 0 */4 ? * *")
+  @Scheduled(cron = "0 0 */1 ? * *") //  0 */10 * * * ? for testing
   public void runConnectorsHealthStatusJob() {
     boolean masterPod = accountShardService.isMasterPod();
     if (masterPod) {
       try {
+        log.info("running billing data pipeline health status service job");
         billingDataPipelineHealthStatusService.processAndUpdateHealthStatus();
       } catch (Exception ex) {
         log.error("Exception while running runConnectorsHealthStatusJob {}", ex);
@@ -207,6 +222,20 @@ public class EventJobScheduler {
     }
   }
 
+  @Scheduled(cron = "0 0 */1 ? * *")
+  public void processDataCleanupRequest() {
+    boolean masterPod = accountShardService.isMasterPod();
+    if (masterPod) {
+      try {
+        try (AutoLogContext ignore2 = new BatchJobTypeLogContext("DataCleanupRequest", OVERRIDE_ERROR)) {
+          ceDataCleanupRequestService.processDataCleanUpRequest();
+        }
+      } catch (Exception ex) {
+        log.error("Exception while running processDataCleanupRequest", ex);
+      }
+    }
+  }
+
   @Scheduled(cron = "0 30 8 * * ?")
   public void runViewUpdateCostJob() {
     try {
@@ -245,8 +274,26 @@ public class EventJobScheduler {
     k8sLabelServiceInfoFetcher.logCacheStats();
   }
 
+  @Scheduled(cron = "0 0 6 * * ?")
+  public void runCfSampleJob() {
+    if (cfClient == null) {
+      return;
+    }
+    accountShardService.getCeEnabledAccounts().forEach(account -> {
+      Target target = Target.builder().name(account.getAccountName()).identifier(account.getUuid()).build();
+      boolean result = cfClient.boolVariation("cf_sample_flag", target, false);
+      log.info(format(
+          "The feature flag cf_sample_flag resolves to %s for account %s", Boolean.toString(result), target.getName()));
+    });
+  }
+
   @SuppressWarnings("squid:S1166") // not required to rethrow exceptions.
   private void runJob(String accountId, Job job, boolean runningMode) {
+    if (BatchJobType.K8S_NODE_RECOMMENDATION == BatchJobType.fromJob(job)
+        && !featureFlagService.isEnabled(FeatureName.NODE_RECOMMENDATION_AGGREGATE, accountId)) {
+      return;
+    }
+
     try {
       BatchJobType batchJobType = BatchJobType.fromJob(job);
       BatchJobBucket batchJobBucket = batchJobType.getBatchJobBucket();
@@ -255,10 +302,7 @@ public class EventJobScheduler {
            AutoLogContext ignore1 = new BatchJobBucketLogContext(batchJobBucket.name(), OVERRIDE_ERROR);
            AutoLogContext ignore2 = new BatchJobTypeLogContext(batchJobType.name(), OVERRIDE_ERROR);
            AutoLogContext ignore3 = new BatchJobRunningModeContext(runningMode, OVERRIDE_ERROR)) {
-        Instant startedAt = Instant.now();
         batchJobRunner.runJob(accountId, job, runningMode);
-        log.info(
-            "BatchJobType: {} took {} s", batchJobType.name(), Duration.between(startedAt, Instant.now()).getSeconds());
       }
     } catch (Exception ex) {
       log.error("Exception while running job {}", job);

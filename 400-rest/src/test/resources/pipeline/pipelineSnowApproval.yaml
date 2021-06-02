@@ -1,0 +1,36 @@
+harnessApiVersion: '1.0'
+type: PIPELINE
+pipelineStages:
+- type: APPROVAL
+  name: Approval 0
+  parallel: false
+  properties:
+    approvalStateParams:
+      serviceNowApprovalParams:
+        approval:
+          conditions:
+            state:
+            - Scheduled
+            - New
+            approval:
+            - test
+          operator: AND
+        rejection:
+          conditions:
+            state:
+            - Canceled
+            approval:
+            - Not Yet Requested
+          operator: OR
+        snowConnectorId: RBXHI4hgQL2-Q9GV46vGtA
+        ticketType: CHANGE_REQUEST
+        changeWindowPresent: true
+        changeWindowStartField: review_date
+        changeWindowEndField: start_date
+        issueNumber: CHG0035352
+    stageName: STAGE 1
+    timeoutMillis: 86400000
+    approvalStateType: SERVICENOW
+  skipCondition:
+    type: DO_NOT_SKIP
+  stageName: STAGE 1

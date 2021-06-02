@@ -1,7 +1,8 @@
 package io.harness.pms.yaml.validation;
 
-import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.expression.PmsEngineExpressionService;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.expression.EngineExpressionEvaluator;
 
 import java.util.Arrays;
 import java.util.List;
@@ -19,15 +20,17 @@ import java.util.stream.Collectors;
  * ${input}.allowedValues(jexl(${env} == 'dev'?(${team} == 'a' ?'dev_a, dev_b':'dev_qa, dev_qb'):'prod,stage'))
  * #evaluate
  */
+@OwnedBy(HarnessTeam.PIPELINE)
 public class AllowedValuesValidator implements RuntimeValidator {
-  private final PmsEngineExpressionService pmsEngineExpressionService;
-  private final Ambiance ambiance;
+  private final EngineExpressionEvaluator engineExpressionEvaluator;
+  private final boolean skipUnresolvedExpressionsCheck;
 
   private static final Pattern JEXL_PATTERN = Pattern.compile("jexl\\(");
 
-  public AllowedValuesValidator(PmsEngineExpressionService pmsEngineExpressionService, Ambiance ambiance) {
-    this.pmsEngineExpressionService = pmsEngineExpressionService;
-    this.ambiance = ambiance;
+  public AllowedValuesValidator(
+      EngineExpressionEvaluator engineExpressionEvaluator, boolean skipUnresolvedExpressionsCheck) {
+    this.engineExpressionEvaluator = engineExpressionEvaluator;
+    this.skipUnresolvedExpressionsCheck = skipUnresolvedExpressionsCheck;
   }
 
   @Override
@@ -46,9 +49,9 @@ public class AllowedValuesValidator implements RuntimeValidator {
     }
 
     if (isJexlExpression) {
-      parameters = (String) pmsEngineExpressionService.evaluateExpression(ambiance, parameters);
+      parameters = (String) engineExpressionEvaluator.evaluateExpression(parameters);
     } else {
-      parameters = pmsEngineExpressionService.renderExpression(ambiance, parameters);
+      parameters = engineExpressionEvaluator.renderExpression(parameters, skipUnresolvedExpressionsCheck);
     }
 
     String[] parametersList = parameters.split(",");

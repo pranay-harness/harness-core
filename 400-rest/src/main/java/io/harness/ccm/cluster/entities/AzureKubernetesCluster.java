@@ -1,7 +1,9 @@
 package io.harness.ccm.cluster.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.cluster.entities.ClusterType.AZURE_KUBERNETES;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.cluster.entities.ClusterRecord.ClusterRecordKeys;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -21,6 +23,7 @@ import org.mongodb.morphia.query.Query;
 @JsonTypeName("AZURE_KUBERNETES")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "AzureKubernetesClusterKeys")
+@OwnedBy(CE)
 public class AzureKubernetesCluster implements Cluster, KubernetesCluster {
   private String cloudProviderId;
   private String clusterName;

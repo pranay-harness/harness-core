@@ -1,19 +1,16 @@
 package io.harness.connector.utils;
 
 import io.harness.connector.ConnectorDTO;
-import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.entities.embedded.ceazure.BillingExportDetails;
 import io.harness.connector.entities.embedded.ceazure.CEAzureConfig;
+import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ceazure.BillingExportSpecDTO;
 import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
-import io.harness.delegate.beans.connector.ceazure.CEAzureFeatures;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.UtilityClass;
@@ -23,32 +20,14 @@ import lombok.experimental.UtilityClass;
 public class AzureConnectorTestHelper {
   String SUBSCRIPTION_ID = "subscriptionId";
   String TENANT_ID = "tenantId";
-  List<CEAzureFeatures> FEATURES_ENABLED = ImmutableList.of(CEAzureFeatures.OPTIMIZATION, CEAzureFeatures.BILLING);
+  List<CEFeatures> FEATURES_ENABLED = ImmutableList.of(CEFeatures.OPTIMIZATION, CEFeatures.BILLING);
 
   String CONTAINER_NAME = "containerName";
   String DIRECTORY_NAME = "directoryName";
   String STORAGE_ACCOUNT_NAME = "storageAccountName";
 
   public ConnectorDTO createConnectorDTO() {
-    final String connectorIdentifier = "identifier_ph";
-    final String name = "name_ph";
-    final String description = "description_ph";
-    final String projectIdentifier = "projectIdentifier_ph";
-    final String orgIdentifier = "orgIdentifier_ph";
-    final Map<String, String> tags = ImmutableMap.of("company", "Harness", "env", "dev");
-
-    final ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder()
-                                                  .connectorConfig(createCEAzureConnectorDTO())
-                                                  .connectorType(ConnectorType.CE_AZURE)
-                                                  .description(description)
-                                                  .identifier(connectorIdentifier)
-                                                  .name(name)
-                                                  .orgIdentifier(orgIdentifier)
-                                                  .projectIdentifier(projectIdentifier)
-                                                  .tags(tags)
-                                                  .build();
-
-    return ConnectorDTO.builder().connectorInfo(connectorInfoDTO).build();
+    return CommonTestHelper.createConnectorDTO(ConnectorType.CE_AZURE, createCEAzureConnectorDTO());
   }
 
   public CEAzureConfig createCEAzureConfig() {
@@ -64,7 +43,7 @@ public class AzureConnectorTestHelper {
     return CEAzureConfig.builder()
         .subscriptionId(SUBSCRIPTION_ID)
         .tenantId(TENANT_ID)
-        .featuresEnabled(Collections.singletonList(CEAzureFeatures.BILLING))
+        .featuresEnabled(Collections.singletonList(CEFeatures.BILLING))
         .billingExportDetails(createBillingExportDetails())
         .build();
   }
@@ -73,7 +52,7 @@ public class AzureConnectorTestHelper {
     return CEAzureConfig.builder()
         .subscriptionId(SUBSCRIPTION_ID)
         .tenantId(TENANT_ID)
-        .featuresEnabled(Collections.singletonList(CEAzureFeatures.OPTIMIZATION))
+        .featuresEnabled(Collections.singletonList(CEFeatures.OPTIMIZATION))
         .build();
   }
 
@@ -104,7 +83,7 @@ public class AzureConnectorTestHelper {
 
   public CEAzureConnectorDTO createCEAzureConnectorDTOBillingOnly() {
     return CEAzureConnectorDTO.builder()
-        .featuresEnabled(Collections.singletonList(CEAzureFeatures.BILLING))
+        .featuresEnabled(Collections.singletonList(CEFeatures.BILLING))
         .subscriptionId(SUBSCRIPTION_ID)
         .tenantId(TENANT_ID)
         .billingExportSpec(createBillingExportSpecDTO())
@@ -113,7 +92,7 @@ public class AzureConnectorTestHelper {
 
   public CEAzureConnectorDTO createCEAzureConnectorDTOOptimizationOnly() {
     return CEAzureConnectorDTO.builder()
-        .featuresEnabled(Collections.singletonList(CEAzureFeatures.OPTIMIZATION))
+        .featuresEnabled(Collections.singletonList(CEFeatures.OPTIMIZATION))
         .subscriptionId(SUBSCRIPTION_ID)
         .tenantId(TENANT_ID)
         .build();

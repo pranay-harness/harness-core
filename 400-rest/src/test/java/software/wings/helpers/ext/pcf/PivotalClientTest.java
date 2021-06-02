@@ -1171,6 +1171,20 @@ public class PivotalClientTest extends CategoryTest {
     assertThat(info.getDomain()).isEqualTo("z.example.com");
     assertThat(info.getHostName()).isNullOrEmpty();
     assertThat(info.getPath()).isNullOrEmpty();
+
+    info = client.extractRouteInfoFromPath(
+        new HashSet<>(asList("example.com", "domain.example.com")), "my-domain.example.com");
+    assertThat(info.getType()).isEqualTo(PCF_ROUTE_TYPE_HTTP);
+    assertThat(info.getDomain()).isEqualTo("example.com");
+    assertThat(info.getHostName()).isEqualTo("my-domain");
+    assertThat(info.getPath()).isNullOrEmpty();
+
+    info = client.extractRouteInfoFromPath(
+        new HashSet<>(asList("example.com", "domain.example.com")), "my-domain.example.com/path");
+    assertThat(info.getType()).isEqualTo(PCF_ROUTE_TYPE_HTTP);
+    assertThat(info.getDomain()).isEqualTo("example.com");
+    assertThat(info.getHostName()).isEqualTo("my-domain");
+    assertThat(info.getPath()).isEqualTo("path");
   }
 
   @Test

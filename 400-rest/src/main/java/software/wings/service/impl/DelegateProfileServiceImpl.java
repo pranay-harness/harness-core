@@ -1,28 +1,33 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HPersistence.returnNewOptions;
 
-import static com.google.common.cache.CacheLoader.InvalidCacheLoadException;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
+import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.observer.Subject;
 import io.harness.persistence.HPersistence;
+import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateProfileObserver;
 
 import software.wings.beans.Account;
@@ -31,50 +36,33 @@ import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.account.AccountCrudObserver;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.fabric8.utils.Strings;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
 @ValidateOnExecution
 @Slf4j
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@OwnedBy(DEL)
 public class DelegateProfileServiceImpl implements DelegateProfileService, AccountCrudObserver {
-  public static final String PRIMARY_PROFILE_NAME = "Primary";
+  public static final String CG_PRIMARY_PROFILE_NAME = "Primary";
+  public static final String NG_PRIMARY_PROFILE_NAME = "Primary Configuration";
   public static final String PRIMARY_PROFILE_DESCRIPTION = "The primary profile for the account";
 
   @Inject private HPersistence persistence;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject private DelegateCache delegateCache;
 
   @Getter private final Subject<DelegateProfileObserver> delegateProfileSubject = new Subject<>();
-
-  private LoadingCache<ImmutablePair<String, String>, DelegateProfile> delegateProfilesCache =
-      CacheBuilder.newBuilder()
-          .maximumSize(10000)
-          .expireAfterWrite(5, TimeUnit.SECONDS)
-          .build(new CacheLoader<ImmutablePair<String, String>, DelegateProfile>() {
-            @Override
-            public DelegateProfile load(ImmutablePair<String, String> delegateProfileKey) {
-              return persistence.createQuery(DelegateProfile.class)
-                  .filter(DelegateProfileKeys.accountId, delegateProfileKey.getLeft())
-                  .filter(DelegateProfileKeys.uuid, delegateProfileKey.getRight())
-                  .get();
-            }
-          });
 
   @Override
   public PageResponse<DelegateProfile> list(PageRequest<DelegateProfile> pageRequest) {
@@ -83,26 +71,32 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
   @Override
   public DelegateProfile get(String accountId, String delegateProfileId) {
-    if (StringUtils.isBlank(delegateProfileId)) {
-      return null;
-    }
-
-    try {
-      return delegateProfilesCache.get(ImmutablePair.of(accountId, delegateProfileId));
-    } catch (ExecutionException | InvalidCacheLoadException e) {
-      return null;
-    }
+    return delegateCache.getDelegateProfile(accountId, delegateProfileId);
   }
 
   @Override
-  public DelegateProfile fetchPrimaryProfile(String accountId) {
+  public DelegateProfile fetchCgPrimaryProfile(String accountId) {
+    Optional<DelegateProfile> primaryProfile = Optional.ofNullable(
+        persistence.createQuery(DelegateProfile.class)
+            .filter(DelegateProfileKeys.accountId, accountId)
+            .field(DelegateProfileKeys.ng)
+            .notEqual(Boolean.TRUE) // This is required to cover case when flag is not set at all and when it is false
+            .filter(DelegateProfileKeys.primary, Boolean.TRUE)
+            .get());
+
+    return primaryProfile.orElseGet(() -> add(buildPrimaryDelegateProfile(accountId, false)));
+  }
+
+  @Override
+  public DelegateProfile fetchNgPrimaryProfile(String accountId) {
     Optional<DelegateProfile> primaryProfile =
         Optional.ofNullable(persistence.createQuery(DelegateProfile.class)
-                                .filter(DelegateProfileKeys.primary, Boolean.TRUE)
                                 .filter(DelegateProfileKeys.accountId, accountId)
+                                .filter(DelegateProfileKeys.ng, Boolean.TRUE)
+                                .filter(DelegateProfileKeys.primary, Boolean.TRUE)
                                 .get());
 
-    return primaryProfile.orElseGet(() -> add(buildPrimaryDelegateProfile(accountId)));
+    return primaryProfile.orElseGet(() -> add(buildPrimaryDelegateProfile(accountId, true)));
   }
 
   @Override
@@ -123,7 +117,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
     // Update and invalidate cache
     persistence.update(query, updateOperations);
-    delegateProfilesCache.invalidate(ImmutablePair.of(delegateProfile.getAccountId(), delegateProfile.getUuid()));
+    delegateCache.invalidateDelegateProfileCache(delegateProfile.getAccountId(), delegateProfile.getUuid());
 
     DelegateProfile updatedDelegateProfile = get(delegateProfile.getAccountId(), delegateProfile.getUuid());
     log.info("Updated delegate profile: {}", updatedDelegateProfile.getUuid());
@@ -143,6 +137,8 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     Query<DelegateProfile> delegateProfileQuery = persistence.createQuery(DelegateProfile.class)
                                                       .filter(DelegateProfileKeys.accountId, accountId)
                                                       .filter(DelegateProfileKeys.uuid, delegateProfileId);
+    DelegateProfile originalProfile = delegateProfileQuery.get();
+
     UpdateOperations<DelegateProfile> updateOperations = persistence.createUpdateOperations(DelegateProfile.class);
 
     setUnset(updateOperations, DelegateProfileKeys.selectors, selectors);
@@ -150,8 +146,18 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     // Update and invalidate cache
     DelegateProfile delegateProfileSelectorsUpdated =
         persistence.findAndModify(delegateProfileQuery, updateOperations, returnNewOptions);
-    delegateProfilesCache.invalidate(ImmutablePair.of(accountId, delegateProfileId));
+    delegateCache.invalidateDelegateProfileCache(accountId, delegateProfileId);
     log.info("Updated delegate profile selectors: {}", delegateProfileSelectorsUpdated.getSelectors());
+
+    if (featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)) {
+      delegateProfileSubject.fireInform(
+          DelegateProfileObxxxxxxxx:onProfileSelectorsUpdated, accountId, delegateProfileId);
+    }
+
+    auditServiceHelper.reportForAuditingUsingAccountId(
+        accountId, originalProfile, delegateProfileSelectorsUpdated, Event.Type.UPDATE);
+    log.info("Auditing update of Selectors of Delegate Profile for accountId={}", accountId);
+
     return delegateProfileSelectorsUpdated;
   }
 
@@ -165,8 +171,13 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
                                        .filter(DelegateProfileKeys.uuid, delegateProfileId);
     // Update and invalidate cache
     DelegateProfile updatedDelegateProfile = persistence.findAndModify(query, updateOperations, returnNewOptions);
-    delegateProfilesCache.invalidate(ImmutablePair.of(accountId, delegateProfileId));
+    delegateCache.invalidateDelegateProfileCache(accountId, delegateProfileId);
     log.info("Updated profile scoping rules for accountId={}", accountId);
+
+    if (featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)) {
+      delegateProfileSubject.fireInform(DelegateProfileObxxxxxxxx:onProfileScopesUpdated, accountId, delegateProfileId);
+    }
+
     return updatedDelegateProfile;
   }
 
@@ -196,7 +207,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
       log.info("Deleting delegate profile: {}", delegateProfileId);
       // Delete and invalidate cache
       persistence.delete(delegateProfile);
-      delegateProfilesCache.invalidate(ImmutablePair.of(accountId, delegateProfileId));
+      delegateCache.invalidateDelegateProfileCache(accountId, delegateProfileId);
 
       auditServiceHelper.reportDeleteForAuditingUsingAccountId(delegateProfile.getAccountId(), delegateProfile);
       log.info("Auditing deleting of Delegate Profile for accountId={}", delegateProfile.getAccountId());
@@ -214,8 +225,11 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     }
 
     String delegateProfileId = delegateProfile.getUuid();
-    List<Delegate> delegates =
-        persistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, accountId).asList();
+    List<Delegate> delegates = persistence.createQuery(Delegate.class)
+                                   .filter(DelegateKeys.accountId, accountId)
+                                   .field(DelegateKeys.status)
+                                   .notEqual(DelegateInstanceStatus.DELETED)
+                                   .asList();
     List<String> delegateNames = delegates.stream()
                                      .filter(delegate -> delegateProfileId.equals(delegate.getDelegateProfileId()))
                                      .map(Delegate::getHostName)
@@ -232,10 +246,13 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     log.info("AccountCreated event received.");
 
     if (!account.isForImport()) {
-      DelegateProfile delegateProfile = buildPrimaryDelegateProfile(account.getUuid());
-      add(delegateProfile);
+      DelegateProfile cgDelegateProfile = buildPrimaryDelegateProfile(account.getUuid(), false);
+      add(cgDelegateProfile);
 
-      log.info("Primary Delegate Profile added.");
+      DelegateProfile ngDelegateProfile = buildPrimaryDelegateProfile(account.getUuid(), true);
+      add(ngDelegateProfile);
+
+      log.info("Primary Delegate Profiles added.");
 
       return;
     }
@@ -248,13 +265,27 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     // Do nothing
   }
 
-  private DelegateProfile buildPrimaryDelegateProfile(String accountId) {
+  @Override
+  public List<String> getDelegatesForProfile(String accountId, String profileId) {
+    return persistence.createQuery(Delegate.class)
+        .filter(DelegateKeys.accountId, accountId)
+        .filter(DelegateKeys.delegateProfileId, profileId)
+        .field(DelegateKeys.status)
+        .notEqual(DelegateInstanceStatus.DELETED)
+        .asKeyList()
+        .stream()
+        .map(key -> key.getId().toString())
+        .collect(toList());
+  }
+
+  private DelegateProfile buildPrimaryDelegateProfile(String accountId, boolean isNg) {
     return DelegateProfile.builder()
         .uuid(generateUuid())
         .accountId(accountId)
-        .name(PRIMARY_PROFILE_NAME)
+        .name(isNg ? NG_PRIMARY_PROFILE_NAME : CG_PRIMARY_PROFILE_NAME)
         .description(PRIMARY_PROFILE_DESCRIPTION)
         .primary(true)
+        .ng(isNg)
         .build();
   }
 

@@ -1,5 +1,8 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.context.ContextElementType;
 
 import software.wings.sm.ContextElement;
@@ -12,6 +15,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
+@OwnedBy(CDP)
 public class TerraformOutputInfoElement implements ContextElement {
   private Map<String, Object> outputVariables;
 

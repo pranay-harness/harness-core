@@ -150,14 +150,20 @@ spec:
           value: ""
         - name: KUSTOMIZE_PATH
           value: ""
+        - name: OC_PATH
+          value: ""
+        - name: KUBECTL_PATH
+          value: ""
         - name: ENABlE_CE
           value: "${enableCE}"
         - name: GRPC_SERVICE_ENABLED
           value: "${grpcServiceEnabled}"
         - name: GRPC_SERVICE_CONNECTOR_PORT
           value: "${grpcServiceConnectorPort}"
-        - name: MANAGER_SERVICE_SECRET
-          value: "${managerServiceSecret}"
+        - name: DELEGATE_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
       restartPolicy: Always
 
 <#if ciEnabled == "true">

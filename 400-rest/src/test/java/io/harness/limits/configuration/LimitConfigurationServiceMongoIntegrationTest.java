@@ -1,10 +1,12 @@
 package io.harness.limits.configuration;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.limits.ActionType.CREATE_APPLICATION;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.ConfiguredLimit.ConfiguredLimitKeys;
@@ -25,6 +27,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.Datastore;
 
+@OwnedBy(PL)
 public class LimitConfigurationServiceMongoIntegrationTest extends IntegrationTestBase {
   @Inject private LimitConfigurationServiceMongo configuredLimitService;
   @Inject private HPersistence dao;

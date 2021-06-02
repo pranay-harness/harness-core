@@ -31,6 +31,7 @@ public class StepResponseMapper {
                                      .map(StepOutcomeMapper::toStepOutcomeProto)
                                      .collect(Collectors.toList()));
     }
+
     if (stepResponse.getFailureInfo() != null) {
       builder.setFailureInfo(stepResponse.getFailureInfo());
     }

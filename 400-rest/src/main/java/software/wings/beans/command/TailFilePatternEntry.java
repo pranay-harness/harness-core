@@ -1,5 +1,13 @@
 package software.wings.beans.command;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.expression.Expression.ALLOW_SECRETS;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.expression.Expression;
+import io.harness.expression.ExpressionReflectionUtils.NestedAnnotationResolver;
 import io.harness.yaml.BaseYaml;
 
 import software.wings.stencils.DefaultValue;
@@ -14,9 +22,14 @@ import lombok.NoArgsConstructor;
 /**
  * Created by peeyushaggarwal on 8/3/16.
  */
-public class TailFilePatternEntry {
-  @DefaultValue("\"$WINGS_RUNTIME_PATH\"/") @Attributes(title = "File to tail") private String filePath;
-  @Attributes(title = "Pattern to search") private String pattern;
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+public class TailFilePatternEntry implements NestedAnnotationResolver {
+  @DefaultValue("\"$WINGS_RUNTIME_PATH\"/")
+  @Attributes(title = "File to tail")
+  @Expression(ALLOW_SECRETS)
+  private String filePath;
+  @Attributes(title = "Pattern to search") @Expression(ALLOW_SECRETS) private String pattern;
 
   /**
    * Gets file path.

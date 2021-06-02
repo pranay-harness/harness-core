@@ -40,6 +40,14 @@ public class JsonUtils {
     return objectMapper.convertValue(jsonNode, tClass);
   }
 
+  public static <T> T convertStringToObj(String jsonNode, Class<T> tClass) {
+    try {
+      return objectMapper.readValue(jsonNode, tClass);
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
   public static JsonNode toJsonNode(Object obj) {
     return objectMapper.convertValue(obj, JsonNode.class);
   }

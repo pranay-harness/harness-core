@@ -1,6 +1,9 @@
 package io.harness.yaml.validator;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
@@ -23,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(DX)
 public class YamlSchemaValidator {
   public static Map<EntityType, JsonSchema> schemas = new HashMap<>();
   ObjectMapper mapper;

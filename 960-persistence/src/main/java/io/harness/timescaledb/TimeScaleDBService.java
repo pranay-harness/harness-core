@@ -1,9 +1,11 @@
 package io.harness.timescaledb;
 
+import io.harness.health.HealthMonitor;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 
-public interface TimeScaleDBService {
+public interface TimeScaleDBService extends HealthMonitor {
   Connection getDBConnection() throws SQLException;
 
   TimeScaleDBConfig getTimeScaleDBConfig();

@@ -1,9 +1,11 @@
 package io.harness.connector.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.connector.ConnectorCategory.ARTIFACTORY;
 import static io.harness.connector.ConnectorCategory.CLOUD_PROVIDER;
 import static io.harness.connector.impl.ConnectorFilterServiceImpl.CREDENTIAL_TYPE_KEY;
 import static io.harness.connector.impl.ConnectorFilterServiceImpl.INHERIT_FROM_DELEGATE_STRING;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.connector.ConnectorType.AWS;
 import static io.harness.delegate.beans.connector.ConnectorType.DOCKER;
 import static io.harness.delegate.beans.connector.ConnectorType.GCP;
@@ -17,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorConnectivityDetails;
@@ -49,10 +52,10 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetailsDTO;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
+import io.harness.git.model.ChangeType;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.repositories.ConnectorRepository;
@@ -75,9 +78,11 @@ import org.mockito.Spy;
 import org.springframework.data.domain.Page;
 
 @Slf4j
+@OwnedBy(DX)
 public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
   @Mock OrganizationService organizationService;
   @Mock ProjectService projectService;
+  @Mock ConnectorEntityReferenceHelper connectorEntityReferenceHelper;
   @Inject @InjectMocks @Spy DefaultConnectorServiceImpl connectorService;
   @Inject ConnectorRepository connectorRepository;
   @Inject FilterService filterService;
@@ -115,6 +120,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     for (String orgId : orgs) {
       connectorInfoDTO.setOrgIdentifier(orgId);
       connectorInfoDTO.setProjectIdentifier(null);
+      connectorInfoDTO.setIdentifier(generateUuid());
       connectorInfoDTO.setName(name + System.currentTimeMillis());
       connectorService.create(ConnectorDTO.builder().connectorInfo(connectorInfoDTO).build(), accountIdentifier);
     }
@@ -126,7 +132,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
   public void testListWithOrgFilters() {
     createConnectorsWithGivenOrgs(Arrays.asList("org1", "org2", "org3", "org1", "org1", "org5"));
     Page<ConnectorResponseDTO> connectorDTOS =
-        connectorService.list(0, 100, accountIdentifier, null, "org1", null, "", "", false);
+        connectorService.list(0, 100, accountIdentifier, null, "org1", null, "", "", false, false);
     assertThat(connectorDTOS).isNotNull();
     assertThat(connectorDTOS.getTotalElements()).isEqualTo(3);
   }
@@ -137,7 +143,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
   public void testListWithProjectFilters() {
     createConnectorsWithGivenProjects(Arrays.asList("proj1", "proj1", "proj1", "proj2", "proj3", "proj4"));
     Page<ConnectorResponseDTO> connectorDTOS =
-        connectorService.list(0, 100, accountIdentifier, null, orgIdentifier, "proj1", "", "", false);
+        connectorService.list(0, 100, accountIdentifier, null, orgIdentifier, "proj1", "", "", false, false);
     assertThat(connectorDTOS).isNotNull();
     assertThat(connectorDTOS.getTotalElements()).isEqualTo(3);
   }
@@ -146,13 +152,14 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     ConnectorInfoDTO connectorInfoDTO = getConnector(name, identifier, description);
     for (String projId : projIds) {
       connectorInfoDTO.setProjectIdentifier(projId);
+      connectorInfoDTO.setIdentifier(generateUuid());
       connectorInfoDTO.setName(name + System.currentTimeMillis());
       connectorService.create(ConnectorDTO.builder().connectorInfo(connectorInfoDTO).build(), accountIdentifier);
     }
   }
 
   private void createAccountLevelConnectors() {
-    ConnectorInfoDTO connectorInfoDTO = getConnector(name + System.currentTimeMillis(), identifier, description);
+    ConnectorInfoDTO connectorInfoDTO = getConnector(name + System.currentTimeMillis(), generateUuid(), description);
     connectorInfoDTO.setOrgIdentifier(null);
     connectorInfoDTO.setProjectIdentifier(null);
     connectorService.create(ConnectorDTO.builder().connectorInfo(connectorInfoDTO).build(), accountIdentifier);
@@ -166,7 +173,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     createConnectorsWithGivenOrgs(Arrays.asList("org1", "org2"));
     createConnectorsWithGivenProjects(Arrays.asList("proj1", "proj2"));
     Page<ConnectorResponseDTO> connectorDTOS =
-        connectorService.list(0, 100, accountIdentifier, null, null, null, "", "", false);
+        connectorService.list(0, 100, accountIdentifier, null, null, null, "", "", false, false);
     assertThat(connectorDTOS).isNotNull();
     assertThat(connectorDTOS.getTotalElements()).isEqualTo(1);
   }
@@ -178,8 +185,8 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     createConnectorsWithNames(Arrays.asList("docker", "docker connector", "qa connector", "a docker connector"));
     ConnectorFilterPropertiesDTO connectorFilterPropertiesDTO =
         ConnectorFilterPropertiesDTO.builder().connectorNames(Arrays.asList("docker", "docker connector")).build();
-    Page<ConnectorResponseDTO> connectorDTOS = connectorService.list(
-        0, 100, accountIdentifier, connectorFilterPropertiesDTO, orgIdentifier, projectIdentifier, "", "", false);
+    Page<ConnectorResponseDTO> connectorDTOS = connectorService.list(0, 100, accountIdentifier,
+        connectorFilterPropertiesDTO, orgIdentifier, projectIdentifier, "", "", false, false);
     assertThat(connectorDTOS).isNotNull();
     assertThat(connectorDTOS.getTotalElements()).isEqualTo(3);
     List<String> connectorNames = connectorDTOS.stream()
@@ -192,6 +199,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     ConnectorInfoDTO connectorInfoDTO = getConnector(name, identifier, description);
     for (String name : namesList) {
       connectorInfoDTO.setName(name);
+      connectorInfoDTO.setIdentifier(generateUuid());
       connectorService.create(ConnectorDTO.builder().connectorInfo(connectorInfoDTO).build(), accountIdentifier);
     }
   }
@@ -200,13 +208,13 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testListWithIdentifierFilter() {
-    createConnectorsWithIdentifiers(Arrays.asList("dockerId", "identifier", "qa connector", "dockerId"));
+    createConnectorsWithIdentifiers(Arrays.asList("dockerId", "identifier", "qa connector", "dockerId1"));
     ConnectorFilterPropertiesDTO connectorFilterPropertiesDTO =
         ConnectorFilterPropertiesDTO.builder()
             .connectorIdentifiers(Arrays.asList("identifier", "qa connector"))
             .build();
-    Page<ConnectorResponseDTO> connectorDTOS = connectorService.list(
-        0, 100, accountIdentifier, connectorFilterPropertiesDTO, orgIdentifier, projectIdentifier, "", "", false);
+    Page<ConnectorResponseDTO> connectorDTOS = connectorService.list(0, 100, accountIdentifier,
+        connectorFilterPropertiesDTO, orgIdentifier, projectIdentifier, "", "", false, false);
     assertThat(connectorDTOS).isNotNull();
     assertThat(connectorDTOS.getTotalElements()).isEqualTo(2);
     List<String> identifiersName = connectorDTOS.stream()
@@ -232,8 +240,8 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
         Arrays.asList("docker connector", "docker", "qa connector", "qa", "harness test", "description"));
     ConnectorFilterPropertiesDTO connectorFilterPropertiesDTO =
         ConnectorFilterPropertiesDTO.builder().description("docker").build();
-    Page<ConnectorResponseDTO> connectorDTOS = connectorService.list(
-        0, 100, accountIdentifier, connectorFilterPropertiesDTO, orgIdentifier, projectIdentifier, "", "", false);
+    Page<ConnectorResponseDTO> connectorDTOS = connectorService.list(0, 100, accountIdentifier,
+        connectorFilterPropertiesDTO, orgIdentifier, projectIdentifier, "", "", false, false);
     assertThat(connectorDTOS).isNotNull();
     assertThat(connectorDTOS.getTotalElements()).isEqualTo(2);
     List<String> descriptions = connectorDTOS.stream()
@@ -246,6 +254,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     ConnectorInfoDTO connectorInfoDTO = getConnector(name, identifier, description);
     for (String description : descriptions) {
       connectorInfoDTO.setDescription(description);
+      connectorInfoDTO.setIdentifier(generateUuid());
       connectorInfoDTO.setName(name + System.currentTimeMillis());
       connectorService.create(ConnectorDTO.builder().connectorInfo(connectorInfoDTO).build(), accountIdentifier);
     }
@@ -259,8 +268,8 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     createConnectorsWithIdentifiers(Arrays.asList("docker", "identifier", "dockerId"));
     createConnectorsWithDescriptions(
         Arrays.asList("docker connector description", "docker", "qa connector test", "harness test", "description"));
-    Page<ConnectorResponseDTO> connectorDTOS =
-        connectorService.list(0, 100, accountIdentifier, null, orgIdentifier, projectIdentifier, "", "docker", false);
+    Page<ConnectorResponseDTO> connectorDTOS = connectorService.list(
+        0, 100, accountIdentifier, null, orgIdentifier, projectIdentifier, "", "docker", false, false);
     assertThat(connectorDTOS).isNotNull();
     assertThat(connectorDTOS.getTotalElements()).isEqualTo(6);
   }
@@ -273,8 +282,8 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     createK8sConnector();
     ConnectorFilterPropertiesDTO connectorFilterPropertiesDTO =
         ConnectorFilterPropertiesDTO.builder().types(Arrays.asList(KUBERNETES_CLUSTER, DOCKER)).build();
-    Page<ConnectorResponseDTO> connectorDTOS = connectorService.list(
-        0, 100, accountIdentifier, connectorFilterPropertiesDTO, orgIdentifier, projectIdentifier, "", "", false);
+    Page<ConnectorResponseDTO> connectorDTOS = connectorService.list(0, 100, accountIdentifier,
+        connectorFilterPropertiesDTO, orgIdentifier, projectIdentifier, "", "", false, false);
     assertThat(connectorDTOS).isNotNull();
     assertThat(connectorDTOS.getTotalElements()).isEqualTo(3);
     List<ConnectorType> connectorTypes =
@@ -287,20 +296,20 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
   private void createK8sConnector() {
     ConnectorDTO connectorDTO =
         ConnectorDTO.builder()
-            .connectorInfo(
-                ConnectorInfoDTO.builder()
-                    .orgIdentifier(orgIdentifier)
-                    .projectIdentifier(projectIdentifier)
-                    .identifier(identifier)
-                    .connectorType(KUBERNETES_CLUSTER)
-                    .connectorConfig(
-                        KubernetesClusterConfigDTO.builder()
-                            .credential(KubernetesCredentialDTO.builder()
-                                            .kubernetesCredentialType(KubernetesCredentialType.INHERIT_FROM_DELEGATE)
-                                            .config(KubernetesDelegateDetailsDTO.builder().build())
-                                            .build())
-                            .build())
-                    .build())
+            .connectorInfo(ConnectorInfoDTO.builder()
+                               .name(name)
+                               .orgIdentifier(orgIdentifier)
+                               .projectIdentifier(projectIdentifier)
+                               .identifier(identifier)
+                               .connectorType(KUBERNETES_CLUSTER)
+                               .connectorConfig(KubernetesClusterConfigDTO.builder()
+                                                    .credential(KubernetesCredentialDTO.builder()
+                                                                    .kubernetesCredentialType(
+                                                                        KubernetesCredentialType.INHERIT_FROM_DELEGATE)
+                                                                    .config(null)
+                                                                    .build())
+                                                    .build())
+                               .build())
             .build();
     connectorService.create(connectorDTO, accountIdentifier);
   }
@@ -313,8 +322,8 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     createK8sConnector();
     ConnectorFilterPropertiesDTO connectorFilterPropertiesDTO =
         ConnectorFilterPropertiesDTO.builder().categories(Arrays.asList(ARTIFACTORY, CLOUD_PROVIDER)).build();
-    Page<ConnectorResponseDTO> connectorDTOS = connectorService.list(
-        0, 100, accountIdentifier, connectorFilterPropertiesDTO, orgIdentifier, projectIdentifier, "", "", false);
+    Page<ConnectorResponseDTO> connectorDTOS = connectorService.list(0, 100, accountIdentifier,
+        connectorFilterPropertiesDTO, orgIdentifier, projectIdentifier, "", "", false, false);
     assertThat(connectorDTOS).isNotNull();
     assertThat(connectorDTOS.getTotalElements()).isEqualTo(3);
   }
@@ -327,20 +336,20 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     createConnectorsWithStatus(6, ConnectivityStatus.FAILURE);
     ConnectorFilterPropertiesDTO connectorFilterPropertiesDTO =
         ConnectorFilterPropertiesDTO.builder().connectivityStatuses(Arrays.asList(ConnectivityStatus.SUCCESS)).build();
-    Page<ConnectorResponseDTO> connectorWithSuccessStatus = connectorService.list(
-        0, 100, accountIdentifier, connectorFilterPropertiesDTO, orgIdentifier, projectIdentifier, "", "", false);
+    Page<ConnectorResponseDTO> connectorWithSuccessStatus = connectorService.list(0, 100, accountIdentifier,
+        connectorFilterPropertiesDTO, orgIdentifier, projectIdentifier, "", "", false, false);
     assertThat(connectorWithSuccessStatus.getTotalElements()).isEqualTo(4);
     connectorFilterPropertiesDTO =
         ConnectorFilterPropertiesDTO.builder().connectivityStatuses(Arrays.asList(ConnectivityStatus.FAILURE)).build();
-    Page<ConnectorResponseDTO> connectorWithFailedStatus = connectorService.list(
-        0, 100, accountIdentifier, connectorFilterPropertiesDTO, orgIdentifier, projectIdentifier, "", "", false);
+    Page<ConnectorResponseDTO> connectorWithFailedStatus = connectorService.list(0, 100, accountIdentifier,
+        connectorFilterPropertiesDTO, orgIdentifier, projectIdentifier, "", "", false, false);
     assertThat(connectorWithFailedStatus.getTotalElements()).isEqualTo(6);
     connectorFilterPropertiesDTO =
         ConnectorFilterPropertiesDTO.builder()
             .connectivityStatuses(Arrays.asList(ConnectivityStatus.SUCCESS, ConnectivityStatus.FAILURE))
             .build();
-    Page<ConnectorResponseDTO> allConnectors = connectorService.list(
-        0, 100, accountIdentifier, connectorFilterPropertiesDTO, orgIdentifier, projectIdentifier, "", "", false);
+    Page<ConnectorResponseDTO> allConnectors = connectorService.list(0, 100, accountIdentifier,
+        connectorFilterPropertiesDTO, orgIdentifier, projectIdentifier, "", "", false, false);
     assertThat(allConnectors.getTotalElements()).isEqualTo(10);
   }
 
@@ -371,8 +380,9 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     for (int i = 0; i < numberOfConnectors; i++) {
       KubernetesClusterConfig connector = getConnectorEntity();
       connector.setName(name + System.currentTimeMillis());
+      connector.setIdentifier(generateUuid());
       connector.setConnectivityDetails(ConnectorConnectivityDetails.builder().status(status).build());
-      connectorRepository.save(connector);
+      connectorRepository.save(connector, ChangeType.ADD);
     }
   }
 
@@ -386,16 +396,16 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     createGCPConnectorWithInheritFromDelegate();
     ConnectorFilterPropertiesDTO connectorFilterPropertiesDTO =
         ConnectorFilterPropertiesDTO.builder().inheritingCredentialsFromDelegate(true).build();
-    Page<ConnectorResponseDTO> connectorsInheritingCredentialsFromDelegate = connectorService.list(
-        0, 100, accountIdentifier, connectorFilterPropertiesDTO, orgIdentifier, projectIdentifier, "", "", false);
+    Page<ConnectorResponseDTO> connectorsInheritingCredentialsFromDelegate = connectorService.list(0, 100,
+        accountIdentifier, connectorFilterPropertiesDTO, orgIdentifier, projectIdentifier, "", "", false, false);
     assertThat(connectorsInheritingCredentialsFromDelegate.getTotalElements()).isEqualTo(3);
     connectorFilterPropertiesDTO =
         ConnectorFilterPropertiesDTO.builder().inheritingCredentialsFromDelegate(false).build();
-    Page<ConnectorResponseDTO> connectorsNotInheritingCredentialsFromDelegate = connectorService.list(
-        0, 100, accountIdentifier, connectorFilterPropertiesDTO, orgIdentifier, projectIdentifier, "", "", false);
+    Page<ConnectorResponseDTO> connectorsNotInheritingCredentialsFromDelegate = connectorService.list(0, 100,
+        accountIdentifier, connectorFilterPropertiesDTO, orgIdentifier, projectIdentifier, "", "", false, false);
     assertThat(connectorsNotInheritingCredentialsFromDelegate.getTotalElements()).isEqualTo(2);
-    Page<ConnectorResponseDTO> connectorsWhenFilterIsNotGiven =
-        connectorService.list(0, 100, accountIdentifier, null, orgIdentifier, projectIdentifier, null, "", false);
+    Page<ConnectorResponseDTO> connectorsWhenFilterIsNotGiven = connectorService.list(
+        0, 100, accountIdentifier, null, orgIdentifier, projectIdentifier, null, "", false, false);
     assertThat(connectorsWhenFilterIsNotGiven.getTotalElements()).isEqualTo(5);
   }
 
@@ -410,7 +420,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
                                         .build())
                             .build())
             .build();
-    ConnectorDTO connectorDTO = createConnectorDTO(identifier, GCP, gcpConnectorDTO);
+    ConnectorDTO connectorDTO = createConnectorDTO(generateUuid(), GCP, gcpConnectorDTO);
     connectorService.create(connectorDTO, accountIdentifier);
   }
 
@@ -439,7 +449,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
                                         .build())
                             .build())
             .build();
-    ConnectorDTO connectorDTO = createConnectorDTO(identifier, AWS, awsCredentialDTO);
+    ConnectorDTO connectorDTO = createConnectorDTO(generateUuid(), AWS, awsCredentialDTO);
     connectorService.create(connectorDTO, accountIdentifier);
   }
 
@@ -447,14 +457,10 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     String delegateName = "delegateName";
     KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
         KubernetesClusterConfigDTO.builder()
-            .credential(KubernetesCredentialDTO.builder()
-                            .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
-                            .config(KubernetesDelegateDetailsDTO.builder()
-                                        .delegateSelectors(Collections.singleton(delegateName))
-                                        .build())
-                            .build())
+            .credential(
+                KubernetesCredentialDTO.builder().kubernetesCredentialType(INHERIT_FROM_DELEGATE).config(null).build())
             .build();
-    ConnectorDTO connectorDTO = createConnectorDTO(identifier, KUBERNETES_CLUSTER, connectorDTOWithDelegateCreds);
+    ConnectorDTO connectorDTO = createConnectorDTO(generateUuid(), KUBERNETES_CLUSTER, connectorDTOWithDelegateCreds);
     connectorService.create(connectorDTO, accountIdentifier);
   }
 
@@ -505,10 +511,10 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
                               .build();
     filterService.create(accountIdentifier, filterDTO);
 
-    int numberOfConnectors =
-        connectorService
-            .list(0, 100, accountIdentifier, null, orgIdentifier, projectIdentifier, filterIdentifier, null, false)
-            .getNumberOfElements();
+    int numberOfConnectors = connectorService
+                                 .list(0, 100, accountIdentifier, null, orgIdentifier, projectIdentifier,
+                                     filterIdentifier, null, false, false)
+                                 .getNumberOfElements();
     assertThat(numberOfConnectors).isEqualTo(2);
   }
 

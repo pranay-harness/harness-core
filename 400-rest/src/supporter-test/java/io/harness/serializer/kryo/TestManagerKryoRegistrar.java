@@ -1,9 +1,9 @@
 package io.harness.serializer.kryo;
 
-import io.harness.engine.interrupts.steps.SimpleStepAsyncParams;
 import io.harness.engine.interrupts.steps.TestTransportEntity;
 import io.harness.serializer.KryoRegistrar;
 
+import software.wings.expression.MapTestSweepingOutput;
 import software.wings.expression.SweepingOutputData;
 import software.wings.service.impl.WorkflowExecutionUpdateFake;
 import software.wings.sm.CustomExecutionEventAdvisor;
@@ -24,7 +24,6 @@ public class TestManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SweepingOutputData.class, index++);
 
     kryo.register(TestTransportEntity.class, index++);
-
-    kryo.register(SimpleStepAsyncParams.class, index++);
+    kryo.register(MapTestSweepingOutput.class, index++);
   }
 }

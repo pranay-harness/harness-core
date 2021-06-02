@@ -1,7 +1,9 @@
 package io.harness.watcher.service;
 
+import static io.harness.concurrent.HTimeLimiter.callInterruptible;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.DelegateConfiguration.Action.SELF_DESTRUCT;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_GO_AHEAD;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_HEARTBEAT;
@@ -43,6 +45,7 @@ import static io.harness.watcher.app.WatcherApplication.getProcessId;
 
 import static com.google.common.collect.Sets.newHashSet;
 import static java.lang.String.join;
+import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -57,19 +60,21 @@ import static org.apache.commons.io.filefilter.FileFilterUtils.or;
 import static org.apache.commons.io.filefilter.FileFilterUtils.prefixFileFilter;
 import static org.apache.commons.io.filefilter.FileFilterUtils.suffixFileFilter;
 import static org.apache.commons.io.filefilter.FileFilterUtils.trueFileFilter;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.replace;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.message.Message;
 import io.harness.delegate.message.MessageService;
 import io.harness.event.client.impl.tailer.ChronicleEventTailer;
-import io.harness.exception.GeneralException;
 import io.harness.filesystem.FileIo;
 import io.harness.grpc.utils.DelegateGrpcConfigExtractor;
 import io.harness.managerclient.ManagerClientV2;
@@ -78,6 +83,7 @@ import io.harness.network.Http;
 import io.harness.rest.RestResponse;
 import io.harness.threading.Schedulable;
 import io.harness.utils.ProcessControl;
+import io.harness.version.VersionInfoManager;
 import io.harness.watcher.app.WatcherApplication;
 import io.harness.watcher.app.WatcherConfiguration;
 import io.harness.watcher.logging.WatcherStackdriverLogAppender;
@@ -148,6 +154,7 @@ import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
  */
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.DEL)
 public class WatcherServiceImpl implements WatcherService {
   private static final long DELEGATE_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
   private static final long DELEGATE_STARTUP_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
@@ -165,6 +172,8 @@ public class WatcherServiceImpl implements WatcherService {
   private final String watcherJreVersion = System.getProperty("java.version");
   private long delegateRestartedToUpgradeJreAt;
   private boolean watcherRestartedToUpgradeJre;
+
+  private final String delegateSize = System.getenv().get("DELEGATE_SIZE");
 
   private final SecureRandom random = new SecureRandom();
 
@@ -211,6 +220,11 @@ public class WatcherServiceImpl implements WatcherService {
     try {
       log.info(upgrade ? "[New] Upgraded watcher process started. Sending confirmation" : "Watcher process started");
       log.info("Multiversion: {}", multiVersion);
+      if (isBlank(delegateSize)) {
+        log.info("No delegate size information found. Watcher will run standard delegates.");
+      } else {
+        log.info("Delegate size {} is set. Watcher will run sized delegates.", delegateSize);
+      }
       messageService.writeMessage(WATCHER_STARTED);
       startInputCheck();
 
@@ -882,10 +896,8 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void checkAccountStatus() {
     try {
-      RestResponse<String> restResponse = timeLimiter.callWithTimeout(
-          ()
-              -> SafeHttpCall.execute(managerClient.getAccountStatus(watcherConfiguration.getAccountId())),
-          5L, TimeUnit.SECONDS, true);
+      RestResponse<String> restResponse = callInterruptible(timeLimiter, ofSeconds(5),
+          () -> SafeHttpCall.execute(managerClient.getAccountStatus(watcherConfiguration.getAccountId())));
 
       if (restResponse == null) {
         return;
@@ -912,16 +924,18 @@ public class WatcherServiceImpl implements WatcherService {
   public List<String> findExpectedDelegateVersions() {
     try {
       if (multiVersion) {
-        RestResponse<DelegateConfiguration> restResponse = timeLimiter.callWithTimeout(
-            ()
-                -> SafeHttpCall.execute(managerClient.getDelegateConfiguration(watcherConfiguration.getAccountId())),
-            15L, TimeUnit.SECONDS, true);
+        RestResponse<DelegateConfiguration> restResponse = callInterruptible(timeLimiter, ofSeconds(15),
+            () -> SafeHttpCall.execute(managerClient.getDelegateConfiguration(watcherConfiguration.getAccountId())));
 
         if (restResponse == null) {
           return null;
         }
 
         DelegateConfiguration config = restResponse.getResource();
+
+        if (config != null && config.getAction() == SELF_DESTRUCT) {
+          selfDestruct();
+        }
 
         return config.getDelegateVersions();
       } else {
@@ -935,7 +949,7 @@ public class WatcherServiceImpl implements WatcherService {
     } catch (Exception e) {
       log.warn("Unable to fetch delegate version information", e);
     }
-    throw new GeneralException("Couldn't get delegate versions.");
+    return null;
   }
 
   private int getMinorVersion(String delegateVersion) {
@@ -954,11 +968,19 @@ public class WatcherServiceImpl implements WatcherService {
       return;
     }
 
-    RestResponse<DelegateScripts> restResponse = timeLimiter.callWithTimeout(
-        ()
-            -> SafeHttpCall.execute(managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), version)),
-        1L, TimeUnit.MINUTES, true);
+    RestResponse<DelegateScripts> restResponse = null;
+    if (isBlank(delegateSize)) {
+      restResponse = callInterruptible(timeLimiter, ofMinutes(1),
+          () -> SafeHttpCall.execute(managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), version)));
+    } else {
+      restResponse = callInterruptible(timeLimiter, ofMinutes(1),
+          ()
+              -> SafeHttpCall.execute(
+                  managerClient.getDelegateScriptsNg(watcherConfiguration.getAccountId(), version, delegateSize)));
+    }
+
     if (restResponse == null) {
+      log.warn("Received null response from manager.");
       return;
     }
 
@@ -1003,11 +1025,10 @@ public class WatcherServiceImpl implements WatcherService {
       return;
     }
 
-    RestResponse<String> restResponse = timeLimiter.callWithTimeout(
+    RestResponse<String> restResponse = callInterruptible(timeLimiter, ofSeconds(30),
         ()
             -> SafeHttpCall.execute(
-                managerClient.getDelegateDownloadUrl(minorVersion, watcherConfiguration.getAccountId())),
-        30L, TimeUnit.SECONDS, true);
+                managerClient.getDelegateDownloadUrl(minorVersion, watcherConfiguration.getAccountId())));
     if (restResponse == null) {
       return;
     }
@@ -1046,11 +1067,12 @@ public class WatcherServiceImpl implements WatcherService {
             FileUtils.moveFile(downloadDestination, finalDestination);
             log.info("Moved delegate jar version {} to the final location", version);
           } else {
-            log.error("Downloaded delegate jar version {} is corrupted. Removing invalid file.", version);
+            log.warn("Downloaded delegate jar version {} is corrupted. Removing invalid file.", version);
             FileUtils.forceDelete(downloadDestination);
           }
         } catch (Exception ex) {
-          log.error("Unexpected error occurred during jar file verification. File will be deleted.", ex);
+          log.warn("Unexpected error occurred during jar file verification with message: {}. File will be deleted.",
+              ex.getMessage());
         } finally {
           if (downloadDestination.exists()) {
             FileUtils.forceDelete(downloadDestination);
@@ -1394,7 +1416,7 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private String getVersion() {
-    return System.getProperty("version", "1.0.0-DEV");
+    return (new VersionInfoManager()).getVersionInfo().getVersion();
   }
 
   private void migrate(String newUrl) {

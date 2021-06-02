@@ -1,26 +1,36 @@
 package software.wings.beans.delegation;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
+import io.harness.delegate.capability.ProcessExecutionCapabilityHelper;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.terraform.TerraformCommand;
+import io.harness.delegate.task.terraform.TerraformCommandUnit;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.provision.TfVarSource;
+import io.harness.provision.TfVarSource.TfVarSourceType;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 
+import software.wings.api.terraform.TfVarGitSource;
 import software.wings.beans.GitConfig;
 import software.wings.beans.NameValuePair;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -29,19 +39,11 @@ import lombok.Value;
 
 @Value
 @Builder
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
+@OwnedBy(CDP)
 public class TerraformProvisionParameters implements TaskParameters, ActivityAccess, ExecutionCapabilityDemander {
   public static final long TIMEOUT_IN_MINUTES = 100;
   public static final String TERRAFORM = "terraform";
-
-  public enum TerraformCommand { APPLY, DESTROY }
-
-  public enum TerraformCommandUnit {
-    Apply,
-    Adjust,
-    Destroy,
-    Rollback;
-  }
 
   private String accountId;
   private final String activityId;
@@ -82,22 +84,42 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
   private final String planName;
 
   private final TfVarSource tfVarSource;
+
+  private final boolean useTfClient; // FF: USE_TF_CLIENT
   /**
    * Boolean to indicate if we should skip updating terraform state using refresh command before applying an approved
    * terraform plan
    */
   private boolean skipRefreshBeforeApplyingPlan;
+  private boolean isGitHostConnectivityCheck;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    List<ExecutionCapability> capabilities =
-        CapabilityHelper.generateExecutionCapabilitiesForTerraform(sourceRepoEncryptionDetails, maskingEvaluator);
+    List<ExecutionCapability> capabilities = ProcessExecutionCapabilityHelper.generateExecutionCapabilitiesForTerraform(
+        sourceRepoEncryptionDetails, maskingEvaluator);
     if (sourceRepo != null) {
-      capabilities.add(GitConnectionCapability.builder()
-                           .gitConfig(sourceRepo)
-                           .settingAttribute(sourceRepo.getSshSettingAttribute())
-                           .encryptedDataDetails(sourceRepoEncryptionDetails)
-                           .build());
+      if (isGitHostConnectivityCheck) {
+        capabilities.addAll(CapabilityHelper.generateExecutionCapabilitiesForGit(sourceRepo));
+
+      } else {
+        capabilities.add(GitConnectionCapability.builder()
+                             .gitConfig(sourceRepo)
+                             .settingAttribute(sourceRepo.getSshSettingAttribute())
+                             .encryptedDataDetails(sourceRepoEncryptionDetails)
+                             .build());
+      }
+      if (isNotEmpty(sourceRepo.getDelegateSelectors())) {
+        capabilities.add(
+            SelectorCapability.builder().selectors(new HashSet<>(sourceRepo.getDelegateSelectors())).build());
+      }
+    }
+    if (tfVarSource != null && tfVarSource.getTfVarSourceType() == TfVarSourceType.GIT) {
+      TfVarGitSource tfVarGitSource = (TfVarGitSource) tfVarSource;
+      if (tfVarGitSource.getGitConfig() != null && isNotEmpty(tfVarGitSource.getGitConfig().getDelegateSelectors())) {
+        capabilities.add(SelectorCapability.builder()
+                             .selectors(new HashSet<>(tfVarGitSource.getGitConfig().getDelegateSelectors()))
+                             .build());
+      }
     }
     if (secretManagerConfig != null) {
       capabilities.addAll(

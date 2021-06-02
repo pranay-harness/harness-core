@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.execution.tasks;
+
+option java_multiple_files = true;
+
+message SkipTaskRequest {
+  string message = 1;
+}

@@ -1,5 +1,8 @@
 package io.harness.connector.entities;
 
+import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.connector.ConnectorActivityDetails;
 import io.harness.connector.ConnectorCategory;
@@ -9,10 +12,11 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.gitsync.persistance.GitSyncableEntity;
 import io.harness.mongo.index.CompoundMongoIndex;
-import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
@@ -22,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.Data;
@@ -35,6 +40,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.Persistent;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -42,21 +48,24 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @FieldNameConstants(innerTypeName = "ConnectorKeys")
 @Entity(value = "connectors", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@StoreIn(DbAliases.NG_MANAGER)
 @Document("connectors")
-public abstract class Connector implements PersistentEntity, NGAccountAccess {
+@Persistent
+@OwnedBy(HarnessTeam.DX)
+public abstract class Connector implements PersistentEntity, NGAccountAccess, GitSyncableEntity {
   @Id @org.mongodb.morphia.annotations.Id String id;
   @NotEmpty @EntityIdentifier String identifier;
   @NotEmpty @EntityName String name;
-  // todo deepak: Where we should keep the scope, it will be used by everyone
   @NotEmpty io.harness.encryption.Scope scope;
   String description;
   @Trimmed @NotEmpty String accountIdentifier;
   @Trimmed String orgIdentifier;
   @Trimmed String projectIdentifier;
-  @FdUniqueIndex @NotEmpty String fullyQualifiedIdentifier;
+  @NotEmpty String fullyQualifiedIdentifier;
   @NotEmpty ConnectorType type;
   @NotEmpty List<ConnectorCategory> categories;
   @NotNull @Singular @Size(max = 128) List<NGTag> tags;
+  Set<String> delegateSelectors;
   @CreatedBy private EmbeddedUser createdBy;
   @LastModifiedBy private EmbeddedUser lastUpdatedBy;
   @CreatedDate Long createdAt;
@@ -67,6 +76,12 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   ConnectorActivityDetails activityDetails;
   Boolean deleted = Boolean.FALSE;
   String heartbeatPerpetualTaskId;
+  String objectIdOfYaml;
+  Boolean isFromDefaultBranch;
+  String branch;
+  String yamlGitConfigRef;
+  String filePath;
+  String rootFolder;
 
   @Override
   public String getAccountIdentifier() {
@@ -74,6 +89,11 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   }
 
   public static final String CONNECTOR_COLLECTION_NAME = "connectors";
+
+  @Override
+  public String getUuid() {
+    return getId();
+  }
 
   @UtilityClass
   public static final class ConnectorKeys {
@@ -99,6 +119,30 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
                  .fields(Arrays.asList(ConnectorKeys.accountIdentifier, ConnectorKeys.orgIdentifier,
                      ConnectorKeys.projectIdentifier, ConnectorKeys.type, ConnectorKeys.connectionStatus,
                      ConnectorKeys.deleted))
+                 .descSortField(ConnectorKeys.createdAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_orgId_projectId_identifier_repo_branch_unique_index")
+                 .fields(Arrays.asList(ConnectorKeys.accountIdentifier, ConnectorKeys.orgIdentifier,
+                     ConnectorKeys.projectIdentifier, ConnectorKeys.identifier, ConnectorKeys.yamlGitConfigRef,
+                     ConnectorKeys.branch))
+                 .unique(true)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_project_org_identifier_isDefault_Index")
+                 .fields(Arrays.asList(ConnectorKeys.accountIdentifier, ConnectorKeys.projectIdentifier,
+                     ConnectorKeys.orgIdentifier, ConnectorKeys.identifier, ConnectorKeys.isFromDefaultBranch))
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_project_org_repo_branch_Index")
+                 .fields(Arrays.asList(ConnectorKeys.accountIdentifier, ConnectorKeys.projectIdentifier,
+                     ConnectorKeys.orgIdentifier, ConnectorKeys.yamlGitConfigRef, ConnectorKeys.branch))
+                 .descSortField(ConnectorKeys.createdAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_project_org_isDefault_Index")
+                 .fields(Arrays.asList(ConnectorKeys.accountIdentifier, ConnectorKeys.projectIdentifier,
+                     ConnectorKeys.orgIdentifier, ConnectorKeys.isFromDefaultBranch))
                  .descSortField(ConnectorKeys.createdAt)
                  .build())
         .build();

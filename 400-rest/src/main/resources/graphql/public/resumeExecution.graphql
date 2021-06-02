@@ -1,0 +1,19 @@
+extend type Mutation {
+  # Resume a unsuccessful pipeline. Any stage which was started (both successful/unseccessful) can be given
+  # to resume. Pipeline is resumed in block of parallel groups. i.e if given stage has parallel stages all will be
+  # restarted.
+  resumeExecution(input: ResumeExecutionInput): ResumeExecutionPayload @dataFetcher(name: resumeExecution)
+}
+
+input ResumeExecutionInput {
+  clientMutationId: String
+  applicationId: String!
+  pipelineExecutionId: String!
+  # Name of the stage to be resumed. i.e "Stage 1"
+  pipelineStageName: String!
+}
+
+type ResumeExecutionPayload {
+  clientMutationId: String
+  execution: Execution
+}

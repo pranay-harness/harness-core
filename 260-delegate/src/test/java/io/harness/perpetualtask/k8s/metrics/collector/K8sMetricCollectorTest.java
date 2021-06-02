@@ -1,5 +1,6 @@
 package io.harness.perpetualtask.k8s.metrics.collector;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
@@ -17,6 +18,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyZeroInteractions;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.health.HealthStatusService;
 import io.harness.event.client.EventPublisher;
@@ -60,6 +62,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
+@OwnedBy(CE)
 public class K8sMetricCollectorTest extends CategoryTest {
   private static final ClusterDetails CLUSTER_DETAILS = ClusterDetails.builder()
                                                             .clusterName("test-cluster-name")
@@ -142,13 +145,12 @@ public class K8sMetricCollectorTest extends CategoryTest {
     stubFor(get(urlMatching("^/api/v1/nodes/node2-name/proxy/stats/summary" + URL_REGEX_SUFFIX))
                 .willReturn(aResponse().withStatus(200).withBody("some random response")));
 
-    k8sMetricCollector =
-        new K8sMetricCollector(eventPublisher, k8sMetricsClient, CLUSTER_DETAILS, now.minus(10, ChronoUnit.MINUTES));
+    k8sMetricCollector = new K8sMetricCollector(eventPublisher, CLUSTER_DETAILS, now.minus(10, ChronoUnit.MINUTES));
     doNothing()
         .when(eventPublisher)
         .publishMessage(messageArgumentCaptor.capture(), any(Timestamp.class),
             eq(Collections.singletonMap(HealthStatusService.CLUSTER_ID_IDENTIFIER, CLUSTER_DETAILS.getClusterId())));
-    k8sMetricCollector.collectAndPublishMetrics(now);
+    k8sMetricCollector.collectAndPublishMetrics(k8sMetricsClient, now);
     verifyZeroInteractions(eventPublisher);
   }
 
@@ -263,13 +265,13 @@ public class K8sMetricCollectorTest extends CategoryTest {
     stubFor(get(urlMatching("^/api/v1/nodes/node[12]-name/proxy/stats/summary" + URL_REGEX_SUFFIX))
                 .willReturn(aResponse().withStatus(200).withBody(resourceToString)));
 
-    k8sMetricCollector = new K8sMetricCollector(eventPublisher, k8sMetricsClient, CLUSTER_DETAILS, now);
+    k8sMetricCollector = new K8sMetricCollector(eventPublisher, CLUSTER_DETAILS, now);
     doNothing()
         .when(eventPublisher)
         .publishMessage(messageArgumentCaptor.capture(), any(Timestamp.class),
             eq(Collections.singletonMap(HealthStatusService.CLUSTER_ID_IDENTIFIER, CLUSTER_DETAILS.getClusterId())));
-    k8sMetricCollector.collectAndPublishMetrics(now.plus(30, ChronoUnit.SECONDS));
-    k8sMetricCollector.collectAndPublishMetrics(now.plus(30, ChronoUnit.MINUTES));
+    k8sMetricCollector.collectAndPublishMetrics(k8sMetricsClient, now.plus(30, ChronoUnit.SECONDS));
+    k8sMetricCollector.collectAndPublishMetrics(k8sMetricsClient, now.plus(30, ChronoUnit.MINUTES));
 
     verify(2, getRequestedFor(urlMatching("^/api/v1/nodes/node[12]-name/proxy/stats/summary" + URL_REGEX_SUFFIX)));
 
@@ -338,6 +340,7 @@ public class K8sMetricCollectorTest extends CategoryTest {
                 .setKubeSystemUid(CLUSTER_DETAILS.getKubeSystemUid())
                 .setName("delegate-scope/datadir-mongo-replicaset-2")
                 .setPodUid("327d830d-e485-4964-9d97-992f97ee4f6f")
+                .setNamespace("delegate-scope")
                 .setTimestamp(HTimestamps.parse("2020-09-01T20:07:13Z"))
                 .setWindow(Durations.fromSeconds(0))
                 .setAggregatedStorage(

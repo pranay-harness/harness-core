@@ -1,7 +1,11 @@
 package io.harness.ccm.views.graphql;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.views.graphql.ViewsMetaDataFields.LABEL_KEY;
+import static io.harness.ccm.views.graphql.ViewsMetaDataFields.LABEL_KEY_UN_NESTED;
+import static io.harness.ccm.views.graphql.ViewsMetaDataFields.LABEL_VALUE_UN_NESTED;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.views.dao.ViewCustomFieldDao;
 import io.harness.ccm.views.entities.ViewCondition;
 import io.harness.ccm.views.entities.ViewCustomField;
@@ -39,9 +43,11 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CE)
 public class ViewsQueryBuilder {
   public static final String K8S_NODE = "K8S_NODE";
   public static final String K8S_POD = "K8S_POD";
+  public static final String K8S_POD_FARGATE = "K8S_POD_FARGATE";
   public static final String K8S_PV = "K8S_PV";
   public static final String ECS_TASK_FARGATE = "ECS_TASK_FARGATE";
   public static final String ECS_TASK_EC2 = "ECS_TASK_EC2";
@@ -51,8 +57,9 @@ public class ViewsQueryBuilder {
   private static final String aliasStartTimeMaxMin = "%s_%s";
   private static final String searchFilter = "REGEXP_CONTAINS( LOWER(%s), LOWER('%s') )";
   private static final String labelsSubQuery = "(SELECT value FROM UNNEST(labels) WHERE KEY='%s')";
-  private static final String leftJoinLabels = " LEFT JOIN UNNEST(labels) as labels";
-  private static final String leftJoinSelectiveLabels = " LEFT JOIN UNNEST(labels) as labels ON labels.key IN (%s)";
+  private static final String leftJoinLabels = " LEFT JOIN UNNEST(labels) as labelsUnnested";
+  private static final String leftJoinSelectiveLabels =
+      " LEFT JOIN UNNEST(labels) as labelsUnnested ON labelsUnnested.key IN (%s)";
   private static final ImmutableSet<String> podInfoImmutableSet =
       ImmutableSet.of("namespace", "workloadName", "appId", "envId", "serviceId");
   private static final ImmutableSet<String> clusterFilterImmutableSet = ImmutableSet.of("product", "region");
@@ -112,6 +119,22 @@ public class ViewsQueryBuilder {
     }
 
     log.info("Query for view {}", selectQuery.toString());
+    return selectQuery;
+  }
+
+  // Query to get columns of a bq table
+  public SelectQuery getInformationSchemaQueryForColumns(String informationSchemaView, String table) {
+    SelectQuery selectQuery = new SelectQuery();
+    selectQuery.addCustomFromTable(informationSchemaView);
+
+    // Adding group by column
+    selectQuery.addCustomColumns(new CustomSql("column_name"));
+    selectQuery.addCustomGroupings(new CustomSql("column_name"));
+
+    // Adding table name filter
+    selectQuery.addCondition(BinaryCondition.equalTo(new CustomSql("table_name"), table));
+
+    log.info("Information schema query for table {}", selectQuery.toString());
     return selectQuery;
   }
 
@@ -241,10 +264,11 @@ public class ViewsQueryBuilder {
     }
 
     if (isClusterConditionOrFilterPresent) {
-      List<String> instancetypeList = ImmutableList.of(K8S_NODE, K8S_PV, ECS_TASK_FARGATE, ECS_CONTAINER_INSTANCE);
+      List<String> instancetypeList =
+          ImmutableList.of(K8S_NODE, K8S_PV, K8S_POD_FARGATE, ECS_TASK_FARGATE, ECS_CONTAINER_INSTANCE);
 
       if (isPodFilterPresent || isLabelsOperationPresent) {
-        instancetypeList = ImmutableList.of(K8S_POD, ECS_TASK_FARGATE, ECS_TASK_EC2);
+        instancetypeList = ImmutableList.of(K8S_POD, K8S_POD_FARGATE, ECS_TASK_FARGATE, ECS_TASK_EC2);
       }
 
       String[] instancetypeStringArray = instancetypeList.toArray(new String[instancetypeList.size()]);
@@ -277,7 +301,7 @@ public class ViewsQueryBuilder {
 
     labelKeysList.addAll(collectLabelKeysList(rules, filters));
     if (isLabelsPresent || evaluateLabelsPresent(rules, filters)) {
-      decorateQueryWithLabelsMetadata(query, true, labelKeysList);
+      decorateQueryWithLabelsMetadata(query, true, labelKeysList, getIsLabelsKeyFilterQuery(filters));
     }
 
     if (!rules.isEmpty()) {
@@ -293,6 +317,7 @@ public class ViewsQueryBuilder {
       switch (viewFieldInput.getIdentifier()) {
         case AWS:
         case GCP:
+        case AZURE:
         case CLUSTER:
         case COMMON:
           query.addAliasedColumn(
@@ -302,18 +327,18 @@ public class ViewsQueryBuilder {
           break;
         case LABEL:
           if (viewFieldInput.getFieldId().equals(LABEL_KEY.getFieldName())) {
-            query.addCustomGroupings(LABEL_KEY.getAlias());
-            query.addAliasedColumn(
-                new CustomSql(String.format(distinct, viewFieldInput.getFieldId())), LABEL_KEY.getAlias());
+            query.addCustomGroupings(LABEL_KEY_UN_NESTED.getAlias());
+            query.addAliasedColumn(new CustomSql(String.format(distinct, LABEL_KEY_UN_NESTED.getFieldName())),
+                LABEL_KEY_UN_NESTED.getAlias());
             query.addCondition(
-                new CustomCondition(String.format(searchFilter, LABEL_KEY.getFieldName(), searchString)));
+                new CustomCondition(String.format(searchFilter, LABEL_KEY_UN_NESTED.getFieldName(), searchString)));
           } else {
-            query.addCustomGroupings(ViewsMetaDataFields.LABEL_VALUE.getAlias());
+            query.addCustomGroupings(LABEL_VALUE_UN_NESTED.getAlias());
             query.addCondition(getCondition(getLabelKeyFilter(new String[] {viewFieldInput.getFieldName()})));
-            query.addAliasedColumn(new CustomSql(String.format(distinct, viewFieldInput.getFieldId())),
-                ViewsMetaDataFields.LABEL_VALUE.getAlias());
-            query.addCondition(new CustomCondition(
-                String.format(searchFilter, ViewsMetaDataFields.LABEL_VALUE.getFieldName(), searchString)));
+            query.addAliasedColumn(new CustomSql(String.format(distinct, LABEL_VALUE_UN_NESTED.getFieldName())),
+                LABEL_VALUE_UN_NESTED.getAlias());
+            query.addCondition(
+                new CustomCondition(String.format(searchFilter, LABEL_VALUE_UN_NESTED.getFieldName(), searchString)));
           }
           break;
         case CUSTOM:
@@ -340,10 +365,21 @@ public class ViewsQueryBuilder {
     return ViewsQueryMetadata.builder().query(query).fields(fields).build();
   }
 
+  private boolean getIsLabelsKeyFilterQuery(List<QLCEViewFilter> filters) {
+    for (QLCEViewFilter filter : filters) {
+      QLCEViewFieldInput viewFieldInput = filter.getField();
+      if (viewFieldInput.getFieldId().equals(LABEL_KEY.getFieldName())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private void decorateQueryWithLabelsMetadata(
-      SelectQuery selectQuery, boolean isLabelsPresent, List<String> labelKeyList) {
+      SelectQuery selectQuery, boolean isLabelsPresent, List<String> labelKeyList, boolean isLabelsKeyFilterQuery) {
     if (isLabelsPresent) {
-      if (labelKeyList.isEmpty() || (labelKeyList.size() == 1 && labelKeyList.get(0).equals(""))) {
+      if (isLabelsKeyFilterQuery || labelKeyList.isEmpty()
+          || (labelKeyList.size() == 1 && labelKeyList.get(0).equals(""))) {
         selectQuery.addCustomJoin(leftJoinLabels);
       } else {
         selectQuery.addCustomJoin(String.format(leftJoinSelectiveLabels, processLabelKeyList(labelKeyList)));
@@ -415,7 +451,7 @@ public class ViewsQueryBuilder {
         conditionList.add(UnaryCondition.isNotNull(new CustomSql(fieldId)));
       }
       conditionList.add(new InCondition(
-          new CustomSql(LABEL_KEY.getFieldName()), (Object[]) labelsKeysListAcrossCustomFieldsStringArray));
+          new CustomSql(LABEL_KEY_UN_NESTED.getFieldName()), (Object[]) labelsKeysListAcrossCustomFieldsStringArray));
       selectQuery.addCondition(getSqlOrCondition(conditionList));
     }
     return labelsKeysListAcrossCustomFields;
@@ -424,7 +460,7 @@ public class ViewsQueryBuilder {
   private QLCEViewFilter getLabelKeyFilter(String[] values) {
     return QLCEViewFilter.builder()
         .field(QLCEViewFieldInput.builder()
-                   .fieldId(LABEL_KEY.getFieldName())
+                   .fieldId(LABEL_KEY_UN_NESTED.getFieldName())
                    .identifier(ViewFieldIdentifier.LABEL)
                    .identifierName(ViewFieldIdentifier.LABEL.getDisplayName())
                    .build())
@@ -745,9 +781,9 @@ public class ViewsQueryBuilder {
 
     switch (operator) {
       case BEFORE:
-        return BinaryCondition.lessThanOrEq(conditionKey, Instant.ofEpochMilli((Long) timeFilter.getValue()));
+        return BinaryCondition.lessThanOrEq(conditionKey, Instant.ofEpochMilli(timeFilter.getValue().longValue()));
       case AFTER:
-        return BinaryCondition.greaterThanOrEq(conditionKey, Instant.ofEpochMilli((Long) timeFilter.getValue()));
+        return BinaryCondition.greaterThanOrEq(conditionKey, Instant.ofEpochMilli(timeFilter.getValue().longValue()));
       default:
         throw new InvalidRequestException("Invalid View TimeFilter operator: " + operator);
     }
@@ -757,6 +793,7 @@ public class ViewsQueryBuilder {
     switch (field.getIdentifier()) {
       case AWS:
       case GCP:
+      case AZURE:
       case CLUSTER:
       case COMMON:
       case LABEL:
@@ -772,6 +809,7 @@ public class ViewsQueryBuilder {
     switch (field.getIdentifier()) {
       case AWS:
       case GCP:
+      case AZURE:
       case CLUSTER:
       case COMMON:
         return field.getFieldId();

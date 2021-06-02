@@ -1,13 +1,13 @@
 package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.interrupts.ExecutionInterruptType.RETRY;
+import static io.harness.beans.ExecutionInterruptType.RETRY;
 
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 
 import com.google.inject.Inject;
 import java.util.Map;
@@ -18,7 +18,7 @@ import java.util.Map;
  * @author Rishi
  */
 @OwnedBy(CDC)
-public class ExecutionWaitRetryCallback implements NotifyCallback {
+public class ExecutionWaitRetryCallback implements OldNotifyCallback {
   @Inject private ExecutionInterruptManager executionInterruptManager;
 
   private String appId;

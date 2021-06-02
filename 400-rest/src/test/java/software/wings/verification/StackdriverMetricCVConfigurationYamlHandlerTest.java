@@ -17,7 +17,6 @@ import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration.
 import software.wings.verification.stackdriver.StackDriverMetricDefinition;
 
 import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import java.io.File;
 import java.util.Arrays;

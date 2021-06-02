@@ -1,15 +1,11 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
+load("//:tools/bazel/macros.bzl", "run_analysis")
 
 shared_dependencies = [
     "//:lombok",
     "//970-ng-commons:module",
+    "//980-commons:module",
     "@maven//:aopalliance_aopalliance",
     "@maven//:com_cronutils_cron_utils",
     "@maven//:com_deftlabs_mongo_java_distributed_lock",
@@ -28,13 +24,12 @@ shared_dependencies = [
     "@maven//:com_google_protobuf_protobuf_java_util",
     "@maven//:com_hazelcast_hazelcast",
     "@maven//:com_jayway_jsonpath_json_path",
-    "@maven//:com_novemberain_quartz_mongodb",
+    "@maven//:com_novemberain_quartz_mongodb_harness_mongo_ssl",
     "@maven//:com_smoketurner_dropwizard_swagger",
     "@maven//:commons_dbcp_commons_dbcp",
     "@maven//:de_bwaldvogel_mongo_java_server",
     "@maven//:de_bwaldvogel_mongo_java_server_core",
     "@maven//:de_bwaldvogel_mongo_java_server_memory_backend",
-    "@maven//:de_flapdoodle_embed_de_flapdoodle_embed_mongo",
     "@maven//:io_dropwizard_dropwizard_lifecycle",
     "@maven//:io_dropwizard_metrics_metrics_core",
     "@maven//:io_swagger_swagger_annotations",
@@ -46,6 +41,7 @@ shared_dependencies = [
     "@maven//:org_eclipse_jetty_jetty_util",
     "@maven//:org_eclipse_jgit_org_eclipse_jgit",
     "@maven//:org_hibernate_hibernate_validator",
+    "@maven//:org_jooq_jooq",
     "@maven//:org_jooq_joor",
     "@maven//:org_json_json",
     "@maven//:org_jsr107_ri_cache_annotations_ri_common",
@@ -79,14 +75,16 @@ java_library(
 
 java_library(
     name = "supporter-test",
+    testonly = True,
     srcs = glob(["src/supporter-test/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "module",
+        ":module",
         "//:lombok",
         "//990-commons-test:module",
         "@maven//:ch_qos_logback_logback_classic",
         "@maven//:ch_qos_logback_logback_core",
+        "@maven//:de_flapdoodle_embed_de_flapdoodle_embed_mongo",
         "@maven//:de_flapdoodle_embed_de_flapdoodle_embed_process",
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
@@ -99,25 +97,16 @@ java_library(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "module",
-        "supporter-test",
+        ":module",
+        ":supporter-test",
         "//:lombok",
     ],
 )
 
 run_tests()
 
-checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":module",
-    ],
-)
-
-pmd()
+run_analysis()

@@ -96,11 +96,9 @@ public class DynaTraceServiceImpl implements DynaTraceService {
                                           .appId(GLOBAL_APP_ID)
                                           .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                           .build();
-    List<DynaTraceApplication> response =
-        delegateProxyFactory.get(DynaTraceDelegateService.class, syncTaskContext)
-            .getServices((DynaTraceConfig) settingAttribute.getValue(), encryptionDetails,
-                createApiCallLog(settingAttribute.getAccountId(), generateUuid()), shouldResolveAllServices);
-    return response;
+    return delegateProxyFactory.get(DynaTraceDelegateService.class, syncTaskContext)
+        .getServices((DynaTraceConfig) settingAttribute.getValue(), encryptionDetails,
+            createApiCallLog(settingAttribute.getAccountId(), generateUuid()), shouldResolveAllServices);
   }
 
   @Override

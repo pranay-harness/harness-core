@@ -5,8 +5,8 @@ import static io.harness.NGConstants.CONNECTOR_STRING;
 import static io.harness.connector.ConnectivityStatus.FAILURE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.beans.connector.ConnectorType.GIT;
 import static io.harness.errorhandling.NGErrorHelper.DEFAULT_ERROR_SUMMARY;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
 import static java.lang.String.format;
@@ -14,6 +14,8 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.SortOrder;
@@ -29,21 +31,29 @@ import io.harness.connector.ConnectorValidationResult.ConnectorValidationResultB
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.connector.helper.CatalogueHelper;
+import io.harness.connector.helper.HarnessManagedConnectorHelper;
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.services.ConnectorFilterService;
+import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.stats.ConnectorStatistics;
 import io.harness.connector.validator.ConnectionValidator;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.encryption.SecretRefData;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.errorhandling.NGErrorHelper;
+import io.harness.exception.ConnectorNotFoundException;
 import io.harness.exception.DelegateServiceDriverException;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
+import io.harness.exception.WingsException;
 import io.harness.exception.ngexception.ConnectorValidationException;
+import io.harness.git.model.ChangeType;
+import io.harness.gitsync.persistance.GitSyncSdkService;
+import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
@@ -52,6 +62,7 @@ import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 import io.harness.utils.PageUtils;
@@ -59,8 +70,6 @@ import io.harness.utils.PageUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -69,16 +78,17 @@ import java.util.Optional;
 import javax.ws.rs.NotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(HarnessTeam.DX)
 public class DefaultConnectorServiceImpl implements ConnectorService {
   private final ConnectorMapper connectorMapper;
   private final ConnectorRepository connectorRepository;
@@ -92,21 +102,26 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   private NGErrorHelper ngErrorHelper;
   private ConnectorErrorMessagesHelper connectorErrorMessagesHelper;
   private SecretRefInputValidationHelper secretRefInputValidationHelper;
+  ConnectorHeartbeatService connectorHeartbeatService;
+  private final HarnessManagedConnectorHelper harnessManagedConnectorHelper;
+  private final ConnectorEntityReferenceHelper connectorEntityReferenceHelper;
+  GitSyncSdkService gitSyncSdkService;
 
   @Override
   public Optional<ConnectorResponseDTO> get(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-    Optional<Connector> connector =
-        connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
+    Optional<Connector> connector = connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
+        fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
     return connector.map(connectorMapper::writeDTO);
   }
 
   @Override
   public Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier,
       ConnectorFilterPropertiesDTO filterProperties, String orgIdentifier, String projectIdentifier,
-      String filterIdentifier, String searchTerm, Boolean includeAllConnectorsAccessibleAtScope) {
+      String filterIdentifier, String searchTerm, Boolean includeAllConnectorsAccessibleAtScope,
+      Boolean getDistinctFromBranches) {
     Criteria criteria = filterService.createCriteriaFromConnectorListQueryParams(accountIdentifier, orgIdentifier,
         projectIdentifier, filterIdentifier, searchTerm, filterProperties, includeAllConnectorsAccessibleAtScope);
     Pageable pageable = PageUtils.getPageRequest(
@@ -116,8 +131,14 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
             .sortOrders(Collections.singletonList(
                 SortOrder.Builder.aSortOrder().withField(ConnectorKeys.createdAt, OrderType.DESC).build()))
             .build());
-    Page<Connector> connectors = connectorRepository.findAll(criteria, pageable);
-    return connectors.map(connector -> connectorMapper.writeDTO(connector));
+    Page<Connector> connectors;
+    if (Boolean.TRUE.equals(getDistinctFromBranches)
+        && gitSyncSdkService.isGitSyncEnabled(accountIdentifier, orgIdentifier, projectIdentifier)) {
+      connectors = connectorRepository.findAll(criteria, pageable, true);
+    } else {
+      connectors = connectorRepository.findAll(criteria, pageable, projectIdentifier, orgIdentifier, accountIdentifier);
+    }
+    return connectors.map(connectorMapper::writeDTO);
   }
 
   public Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
@@ -131,7 +152,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
             .sortOrders(Collections.singletonList(
                 SortOrder.Builder.aSortOrder().withField(ConnectorKeys.createdAt, OrderType.DESC).build()))
             .build());
-    Page<Connector> connectors = connectorRepository.findAll(criteria, pageable);
+    Page<Connector> connectors =
+        connectorRepository.findAll(criteria, pageable, projectIdentifier, orgIdentifier, accountIdentifier);
     return connectors.map(connector -> connectorMapper.writeDTO(connector));
   }
 
@@ -146,28 +168,15 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     if (isEmpty(decryptableEntities)) {
       return;
     }
-    List<SecretRefData> secrets = new ArrayList<>();
-    for (DecryptableEntity decryptableEntity : decryptableEntities) {
-      List<Field> secretFields = decryptableEntity.getSecretReferenceFields();
-      for (Field secretField : secretFields) {
-        SecretRefData secretRefData = null;
-        try {
-          secretField.setAccessible(true);
-          secretRefData = (SecretRefData) secretField.get(decryptableEntity);
-        } catch (IllegalAccessException ex) {
-          log.info("Error reading the secret data", ex);
-          throw new UnexpectedException("Error processing the data");
-        }
-        secrets.add(secretRefData);
-      }
-    }
+    Map<String, SecretRefData> secrets = secretRefInputValidationHelper.getDecryptableFieldsData(decryptableEntities);
     NGAccess baseNGAccess = BaseNGAccess.builder()
                                 .accountIdentifier(accountIdentifier)
                                 .orgIdentifier(connectorDTO.getOrgIdentifier())
                                 .projectIdentifier(connectorDTO.getProjectIdentifier())
                                 .build();
     if (isNotEmpty(secrets)) {
-      secrets.forEach(secret -> secretRefInputValidationHelper.validateTheSecretInput(secret, baseNGAccess));
+      secrets.forEach(
+          (fieldName, secret) -> secretRefInputValidationHelper.validateTheSecretInput(secret, baseNGAccess));
     }
   }
 
@@ -209,15 +218,27 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   @Override
   public ConnectorResponseDTO create(ConnectorDTO connectorRequestDTO, String accountIdentifier) {
     assurePredefined(connectorRequestDTO, accountIdentifier);
+    ConnectorInfoDTO connectorInfo = connectorRequestDTO.getConnectorInfo();
+    final boolean isIdentifierUnique = validateTheIdentifierIsUnique(accountIdentifier,
+        connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
+    if (!isIdentifierUnique) {
+      throw new InvalidRequestException(
+          String.format("The connector with identifier %s already exists in the account %s, org %s, project %s",
+              connectorInfo.getIdentifier(), accountIdentifier, connectorInfo.getOrgIdentifier(),
+              connectorInfo.getProjectIdentifier()));
+    }
     validateThatAConnectorWithThisNameDoesNotExists(connectorRequestDTO.getConnectorInfo(), accountIdentifier);
     Connector connectorEntity = connectorMapper.toConnector(connectorRequestDTO, accountIdentifier);
     connectorEntity.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
     Connector savedConnectorEntity = null;
     try {
-      savedConnectorEntity = connectorRepository.save(connectorEntity);
+      savedConnectorEntity = connectorRepository.save(connectorEntity, connectorRequestDTO);
+      connectorEntityReferenceHelper.createSetupUsageForSecret(
+          connectorRequestDTO.getConnectorInfo(), accountIdentifier, false);
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(format("Connector [%s] already exists", connectorEntity.getIdentifier()));
     }
+
     return connectorMapper.writeDTO(savedConnectorEntity);
   }
 
@@ -232,7 +253,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   }
 
   private Page<Connector> getConnectorsWithGivenNames(
-      Object accountIdentifier, Object orgIdentifier, Object projectIdentifier, Object name) {
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, Object name) {
     Criteria criteria = new Criteria()
                             .and(ConnectorKeys.accountIdentifier)
                             .is(accountIdentifier)
@@ -242,7 +263,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
                             .is(projectIdentifier)
                             .and(ConnectorKeys.name)
                             .is(name);
-    return connectorRepository.findAll(criteria, Pageable.unpaged());
+    return connectorRepository.findAll(
+        criteria, Pageable.unpaged(), projectIdentifier, orgIdentifier, accountIdentifier);
   }
 
   @Override
@@ -253,7 +275,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier());
     Optional<Connector> existingConnectorOptional =
-        connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
+        connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier,
+            connector.getProjectIdentifier(), connector.getOrgIdentifier(), accountIdentifier, true);
     if (!existingConnectorOptional.isPresent()) {
       throw new InvalidRequestException(
           format("No connector exists with the  Identifier %s", connector.getIdentifier()));
@@ -267,13 +290,34 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     newConnector.setCreatedAt(existingConnector.getCreatedAt());
     newConnector.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
     newConnector.setActivityDetails(existingConnector.getActivityDetails());
-    Connector updatedConnector = null;
+    setGitDetails(existingConnector, newConnector);
+    Connector updatedConnector;
     try {
-      updatedConnector = connectorRepository.save(newConnector);
+      updatedConnector = connectorRepository.save(newConnector, connectorRequest, ChangeType.MODIFY);
+      connectorEntityReferenceHelper.createSetupUsageForSecret(connector, accountIdentifier, true);
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(format("Connector [%s] already exists", existingConnector.getIdentifier()));
     }
+
+    if (existingConnector.getIsFromDefaultBranch() == null || existingConnector.getIsFromDefaultBranch()) {
+      if (existingConnector.getHeartbeatPerpetualTaskId() == null
+          && !harnessManagedConnectorHelper.isHarnessManagedSecretManager(connector)) {
+        PerpetualTaskId connectorHeartbeatTaskId = connectorHeartbeatService.createConnectorHeatbeatTask(
+            accountIdentifier, existingConnector.getOrgIdentifier(), existingConnector.getProjectIdentifier(),
+            existingConnector.getIdentifier());
+        newConnector.setHeartbeatPerpetualTaskId(
+            connectorHeartbeatTaskId == null ? null : connectorHeartbeatTaskId.getId());
+      } else {
+        connectorHeartbeatService.resetPerpetualTask(
+            accountIdentifier, existingConnector.getHeartbeatPerpetualTaskId());
+        newConnector.setHeartbeatPerpetualTaskId(existingConnector.getHeartbeatPerpetualTaskId());
+      }
+    }
     return connectorMapper.writeDTO(updatedConnector);
+  }
+
+  private void setGitDetails(Connector existingConnector, Connector newConnector) {
+    EntityGitDetailsMapper.copyEntityGitDetails(existingConnector, newConnector);
   }
 
   private void validateTheUpdateRequestIsValid(
@@ -319,16 +363,19 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-    Optional<Connector> existingConnectorOptional =
-        connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
+    Optional<Connector> existingConnectorOptional = connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
+        fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
     if (!existingConnectorOptional.isPresent()) {
       throw new InvalidRequestException(connectorErrorMessagesHelper.createConnectorNotFoundMessage(
           accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
     }
     Connector existingConnector = existingConnectorOptional.get();
+    ConnectorResponseDTO connectorDTO = connectorMapper.writeDTO(existingConnector);
     checkThatTheConnectorIsNotUsedByOthers(existingConnector);
+    connectorEntityReferenceHelper.deleteConnectorEntityReferenceWhenConnectorGetsDeleted(
+        connectorDTO.getConnector(), accountIdentifier);
     existingConnector.setDeleted(true);
-    connectorRepository.save(existingConnector);
+    connectorRepository.save(existingConnector, null, ChangeType.DELETE);
     return true;
   }
 
@@ -365,7 +412,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-    return !connectorRepository.existsByFullyQualifiedIdentifier(fullyQualifiedIdentifier);
+    return !connectorRepository.existsByFullyQualifiedIdentifier(
+        fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier);
   }
 
   @Override
@@ -389,7 +437,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
         getConnectorWithIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     ConnectorValidationResult validationResult;
 
-    if (connector.getType() != GIT) {
+    if (connector.getCategories() != null & !connector.getCategories().contains(ConnectorCategory.CODE_REPO)) {
       log.info("Test Connection failed for connector with identifier[{}] in account[{}] with error [{}]",
           connector.getIdentifier(), accountIdentifier, "Non git connector is provided for repo verification");
       validationResult = ConnectorValidationResult.builder().status(FAILURE).build();
@@ -398,11 +446,13 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
     ConnectorResponseDTO connectorDTO = connectorMapper.writeDTO(connector);
     ConnectorInfoDTO connectorInfo = connectorDTO.getConnector();
-    GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorInfo.getConnectorConfig();
+    ConnectorConfigDTO connectorConfig = connectorInfo.getConnectorConfig();
     // Use Repo URL from parameter instead of using configured URL
-    gitConfigDTO.setUrl(gitRepoURL);
-    connectorInfo.setConnectorConfig(gitConfigDTO);
-
+    if (isNotEmpty(gitRepoURL)) {
+      ScmConnector scmConnector = (ScmConnector) connectorConfig;
+      scmConnector.setUrl(gitRepoURL);
+      connectorInfo.setConnectorConfig(connectorConfig);
+    }
     return validateConnector(connector, connectorDTO, connectorInfo, accountIdentifier, orgIdentifier,
         projectIdentifier, connectorIdentifier);
   }
@@ -417,17 +467,15 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
   public void updateActivityDetailsInTheConnector(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String identifier, ConnectorValidationResult connectorValidationResult,
-      Long activityTime) {
-    return;
-  }
+      Long activityTime) {}
 
   private Connector getConnectorWithIdentifier(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
 
-    Optional<Connector> connectorOptional =
-        connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
+    Optional<Connector> connectorOptional = connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
+        fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
 
     if (connectorOptional.isPresent()) {
       return connectorOptional.get();
@@ -445,8 +493,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       validationResult = connectionValidator.validate(
           connectorInfo.getConnectorConfig(), accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     } catch (ConnectorValidationException | DelegateServiceDriverException ex) {
-      log.info("Test Connection failed for connector with identifier[{}] in account[{}] with error [{}]",
-          connectorInfo.getIdentifier(), accountIdentifier, ex.getMessage());
+      log.error("Test Connection failed for connector with identifier[{}] in account[{}]",
+          connectorInfo.getIdentifier(), accountIdentifier, ex);
       ConnectorValidationResultBuilder validationFailureBuilder = ConnectorValidationResult.builder();
       validationFailureBuilder.status(FAILURE).testedAt(System.currentTimeMillis());
       String errorMessage = ex.getMessage();
@@ -456,6 +504,9 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
         validationFailureBuilder.errorSummary(errorSummary).errors(errorDetail);
       }
       return validationFailureBuilder.build();
+    } catch (WingsException wingsException) {
+      // handle flows which are registered to error handlng framework
+      throw wingsException;
     } catch (Exception ex) {
       log.info("Encountered Error while validating the connector {}",
           String.format(CONNECTOR_STRING, connectorInfo.getIdentifier(), accountIdentifier,
@@ -484,20 +535,21 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public void updateConnectorEntityWithPerpetualtaskId(
-      String accountIdentifier, ConnectorInfoDTO connector, String perpetualTaskId) {
+  public void updateConnectorEntityWithPerpetualtaskId(String accountIdentifier, String connectorOrgIdentifier,
+      String connectorProjectIdentifier, String connectorIdentifier, String perpetualTaskId) {
     try {
       String fqn = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
-          accountIdentifier, connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier());
+          accountIdentifier, connectorOrgIdentifier, connectorProjectIdentifier, connectorIdentifier);
       Criteria criteria = new Criteria();
       criteria.and(ConnectorKeys.fullyQualifiedIdentifier).is(fqn);
       Update update = new Update();
       update.set(ConnectorKeys.heartbeatPerpetualTaskId, perpetualTaskId);
-      connectorRepository.update(new Query(criteria), update);
+      connectorRepository.update(
+          criteria, update, ChangeType.NONE, connectorProjectIdentifier, connectorOrgIdentifier, accountIdentifier);
     } catch (Exception ex) {
       log.info("{} Exception while saving perpetual task id for the {}", CONNECTOR_HEARTBEAT_LOG_PREFIX,
-          String.format(CONNECTOR_STRING, connector.getIdentifier(), accountIdentifier, connector.getOrgIdentifier(),
-              connector.getProjectIdentifier()),
+          String.format(CONNECTOR_STRING, connectorIdentifier, accountIdentifier, connectorOrgIdentifier,
+              connectorProjectIdentifier),
           ex);
     }
   }
@@ -506,6 +558,50 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   public ConnectorStatistics getConnectorStatistics(
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     return connectorStatisticsHelper.getStats(accountIdentifier, orgIdentifier, projectIdentifier);
+  }
+
+  @Override
+  public String getHeartbeatPerpetualTaskId(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    Optional<Connector> connectorOptional = connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
+        fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
+
+    return connectorOptional
+        .filter(connector -> connector.getIsFromDefaultBranch() == null || connector.getIsFromDefaultBranch())
+        .map(connector -> {
+          if (isEmpty(connector.getHeartbeatPerpetualTaskId())) {
+            PerpetualTaskId connectorHeatbeatTaskId = connectorHeartbeatService.createConnectorHeatbeatTask(
+                accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+            if (connectorHeatbeatTaskId != null) {
+              updateConnectorEntityWithPerpetualtaskId(
+                  accountIdentifier, orgIdentifier, projectIdentifier, identifier, connectorHeatbeatTaskId.getId());
+              return connectorHeatbeatTaskId.getId();
+            } else {
+              return null;
+            }
+          } else {
+            return connector.getHeartbeatPerpetualTaskId();
+          }
+        })
+        .orElseThrow(
+            ()
+                -> new ConnectorNotFoundException(
+                    format(
+                        "No connector found with identifier [%s] with accountidentifier [%s], orgIdentifier [%s] and projectIdentifier [%s]",
+                        identifier, accountIdentifier, orgIdentifier, projectIdentifier),
+                    USER));
+  }
+
+  @Override
+  public void resetHeartbeatForReferringConnectors(List<Pair<String, String>> connectorPerpetualTaskInfo) {
+    for (Pair<String, String> item : connectorPerpetualTaskInfo) {
+      log.info("Resetting perpetual task with id {} in account {}", item.getValue(), item.getKey());
+      if (item.getValue() != null) {
+        connectorHeartbeatService.resetPerpetualTask(item.getKey(), item.getValue());
+      }
+    }
   }
 
   @Override
@@ -520,8 +616,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
             .sortOrders(Collections.singletonList(
                 SortOrder.Builder.aSortOrder().withField(ConnectorKeys.createdAt, OrderType.DESC).build()))
             .build());
-    Page<Connector> connectors =
-        connectorRepository.findAll(Criteria.where(ConnectorKeys.fullyQualifiedIdentifier).in(connectorFQN), pageable);
+    Page<Connector> connectors = connectorRepository.findAll(
+        Criteria.where(ConnectorKeys.fullyQualifiedIdentifier).in(connectorFQN), pageable, false);
     return connectors.getContent().stream().map(connector -> connectorMapper.writeDTO(connector)).collect(toList());
   }
 }

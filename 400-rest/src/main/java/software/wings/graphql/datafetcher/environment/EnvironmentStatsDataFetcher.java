@@ -1,8 +1,10 @@
 package software.wings.graphql.datafetcher.environment;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
@@ -20,13 +22,15 @@ import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentT
 import software.wings.graphql.utils.nameservice.NameService;
 
 import com.google.inject.Inject;
+import graphql.schema.DataFetchingEnvironment;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class EnvironmentStatsDataFetcher
     extends RealTimeStatsDataFetcherWithTags<QLNoOpAggregateFunction, QLEnvironmentFilter, QLEnvironmentAggregation,
         QLNoOpSortCriteria, QLEnvironmentTagType, QLEnvironmentTagAggregation, QLEnvironmentEntityAggregation> {
@@ -34,7 +38,8 @@ public class EnvironmentStatsDataFetcher
 
   @Override
   protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLEnvironmentFilter> filters,
-      List<QLEnvironmentAggregation> groupByList, List<QLNoOpSortCriteria> sortCriteria) {
+      List<QLEnvironmentAggregation> groupByList, List<QLNoOpSortCriteria> sortCriteria,
+      DataFetchingEnvironment dataFetchingEnvironment) {
     final Class entityClass = Environment.class;
     final List<String> groupByEntityList = new ArrayList<>();
     if (isNotEmpty(groupByList)) {

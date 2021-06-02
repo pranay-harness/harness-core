@@ -2,7 +2,7 @@ package io.harness.perpetualtask.k8s.informer.handlers;
 
 import static io.harness.perpetualtask.k8s.informer.handlers.support.WorkloadSpecUtils.makeContainerSpecs;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.event.client.EventPublisher;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
@@ -14,7 +14,7 @@ import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1beta1CronJob;
 import java.util.List;
 
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class V1beta1CronJobHandler extends BaseHandler<V1beta1CronJob> {
   public V1beta1CronJobHandler(EventPublisher eventPublisher, ClusterDetails clusterDetails) {
     super(eventPublisher, clusterDetails);
@@ -42,6 +42,8 @@ public class V1beta1CronJobHandler extends BaseHandler<V1beta1CronJob> {
               .setWorkloadKind(getKind())
               .setWorkloadName(cronJob.getMetadata().getName())
               .setNamespace(cronJob.getMetadata().getNamespace())
+              .setUid(cronJob.getMetadata().getUid())
+              .setVersion(VERSION)
               .addAllContainerSpecs(WorkloadSpecUtils.makeContainerSpecs(containers))
               .addAllInitContainerSpecs(makeContainerSpecs(
                   cronJob.getSpec().getJobTemplate().getSpec().getTemplate().getSpec().getInitContainers()))
@@ -70,6 +72,8 @@ public class V1beta1CronJobHandler extends BaseHandler<V1beta1CronJob> {
                                      .setWorkloadKind(getKind())
                                      .addAllContainerSpecs(makeContainerSpecs(containers))
                                      .addAllInitContainerSpecs(makeContainerSpecs(initContainers))
+                                     .setUid(oldCronJob.getMetadata().getUid())
+                                     .setVersion(VERSION)
                                      .build();
       List<V1Container> newContainers =
           newCronJob.getSpec().getJobTemplate().getSpec().getTemplate().getSpec().getContainers();
@@ -82,6 +86,8 @@ public class V1beta1CronJobHandler extends BaseHandler<V1beta1CronJob> {
                                      .setWorkloadKind(getKind())
                                      .addAllContainerSpecs(makeContainerSpecs(newContainers))
                                      .addAllInitContainerSpecs(makeContainerSpecs(newInitContainers))
+                                     .setUid(newCronJob.getMetadata().getUid())
+                                     .setVersion(VERSION)
                                      .build();
       if (!oldSpecs.equals(newSpecs)) {
         publishWorkloadSpec(newSpecs, occurredAt);

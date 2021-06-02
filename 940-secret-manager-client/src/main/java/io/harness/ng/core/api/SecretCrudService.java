@@ -36,7 +36,8 @@ public interface SecretCrudService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 
   PageResponse<SecretResponseWrapper> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      List<SecretType> secretTypes, boolean includeSecretsFromEverySubScope, String searchTerm, int page, int size);
+      List<String> identifiers, List<SecretType> secretTypes, boolean includeSecretsFromEverySubScope,
+      String searchTerm, int page, int size);
 
   boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 

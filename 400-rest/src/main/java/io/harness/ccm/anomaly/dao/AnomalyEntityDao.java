@@ -1,5 +1,10 @@
 package io.harness.ccm.anomaly.dao;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.anomaly.entities.AnomalyDetectionModel;
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
 import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomaliesDataTableSchema;
@@ -34,6 +39,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @Slf4j
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class AnomalyEntityDao {
   static final int MAX_RETRY = 3;
   static final int BATCH_SIZE = 50;
@@ -82,9 +89,12 @@ public class AnomalyEntityDao {
       query.addCustomSetClause(AnomaliesDataTableSchema.feedBack, anomaly.getFeedback());
     }
 
-    query.addSetClause(AnomaliesDataTableSchema.slackInstantNotification, anomaly.isSlackInstantNotification());
-    query.addSetClause(AnomaliesDataTableSchema.slackDailyNotification, anomaly.isSlackDailyNotification());
-    query.addSetClause(AnomaliesDataTableSchema.slackWeeklyNotification, anomaly.isSlackWeeklyNotification());
+    query.addSetClause(
+        AnomaliesDataTableSchema.slackInstantNotification, ((Boolean) anomaly.isSlackInstantNotification()).toString());
+    query.addCustomSetClause(
+        AnomaliesDataTableSchema.slackDailyNotification, ((Boolean) anomaly.isSlackDailyNotification()).toString());
+    query.addCustomSetClause(
+        AnomaliesDataTableSchema.slackWeeklyNotification, ((Boolean) anomaly.isSlackWeeklyNotification()).toString());
 
     return query.validate().toString();
   }
@@ -199,6 +209,9 @@ public class AnomalyEntityDao {
           case SLACK_WEEKLY_NOTIFICATION:
             anomalyBuilder.slackWeeklyNotification(resultSet.getBoolean(field.getFieldName()));
             break;
+          case NEW_ENTITY:
+            anomalyBuilder.newEntity(resultSet.getBoolean(field.getFieldName()));
+            break;
           case REGION:
             break;
           case TIME_GRANULARITY:
@@ -268,6 +281,9 @@ public class AnomalyEntityDao {
           retryCount++;
         }
       }
+      if (!successfulInsert) {
+        throw new InvalidArgumentsException("Not being able to write anomalies into db.");
+      }
     } else {
       log.warn("Not able to write {} anomalies to timescale db(validity:{}) for account", anomaliesList.size(),
           dbService.isValid());
@@ -276,29 +292,37 @@ public class AnomalyEntityDao {
 
   private String getInsertQuery(AnomalyEntity anomaly) {
     return new InsertQuery(AnomaliesDataTableSchema.table)
-        .addColumn(AnomaliesDataTableSchema.id, anomaly.getId())
-        .addColumn(AnomaliesDataTableSchema.accountId, anomaly.getAccountId())
-        .addColumn(AnomaliesDataTableSchema.actualCost, anomaly.getActualCost())
-        .addColumn(AnomaliesDataTableSchema.expectedCost, anomaly.getExpectedCost())
-        .addColumn(AnomaliesDataTableSchema.anomalyTime, anomaly.getAnomalyTime())
-        .addColumn(AnomaliesDataTableSchema.timeGranularity, anomaly.getTimeGranularity().toString())
-        .addColumn(AnomaliesDataTableSchema.clusterId, anomaly.getClusterId())
-        .addColumn(AnomaliesDataTableSchema.clusterName, anomaly.getClusterName())
-        .addColumn(AnomaliesDataTableSchema.namespace, anomaly.getNamespace())
-        .addColumn(AnomaliesDataTableSchema.workloadType, anomaly.getWorkloadType())
-        .addColumn(AnomaliesDataTableSchema.workloadName, anomaly.getWorkloadName())
-        .addColumn(AnomaliesDataTableSchema.region, anomaly.getRegion())
-        .addColumn(AnomaliesDataTableSchema.gcpProduct, anomaly.getGcpProduct())
-        .addColumn(AnomaliesDataTableSchema.gcpProject, anomaly.getGcpProject())
-        .addColumn(AnomaliesDataTableSchema.gcpSkuId, anomaly.getGcpSKUId())
-        .addColumn(AnomaliesDataTableSchema.gcpSkuDescription, anomaly.getGcpSKUDescription())
-        .addColumn(AnomaliesDataTableSchema.awsAccount, anomaly.getAwsAccount())
-        .addColumn(AnomaliesDataTableSchema.awsInstanceType, anomaly.getAwsInstanceType())
-        .addColumn(AnomaliesDataTableSchema.awsService, anomaly.getAwsService())
-        .addColumn(AnomaliesDataTableSchema.awsUsageType, anomaly.getAwsUsageType())
-        .addColumn(AnomaliesDataTableSchema.anomalyScore, anomaly.getAnomalyScore())
-        .addColumn(AnomaliesDataTableSchema.reportedBy, anomaly.getReportedBy())
-        .validate()
-        .toString();
+               .addColumn(AnomaliesDataTableSchema.id, anomaly.getId())
+               .addColumn(AnomaliesDataTableSchema.accountId, anomaly.getAccountId())
+               .addColumn(AnomaliesDataTableSchema.actualCost, anomaly.getActualCost())
+               .addColumn(AnomaliesDataTableSchema.expectedCost, anomaly.getExpectedCost())
+               .addColumn(AnomaliesDataTableSchema.anomalyTime, anomaly.getAnomalyTime())
+               .addColumn(AnomaliesDataTableSchema.timeGranularity, anomaly.getTimeGranularity().toString())
+               .addColumn(AnomaliesDataTableSchema.clusterId, anomaly.getClusterId())
+               .addColumn(AnomaliesDataTableSchema.clusterName, anomaly.getClusterName())
+               .addColumn(AnomaliesDataTableSchema.namespace, anomaly.getNamespace())
+               .addColumn(AnomaliesDataTableSchema.workloadType, anomaly.getWorkloadType())
+               .addColumn(AnomaliesDataTableSchema.workloadName, anomaly.getWorkloadName())
+               .addColumn(AnomaliesDataTableSchema.region, anomaly.getRegion())
+               .addColumn(AnomaliesDataTableSchema.gcpProduct, anomaly.getGcpProduct())
+               .addColumn(AnomaliesDataTableSchema.gcpProject, anomaly.getGcpProject())
+               .addColumn(AnomaliesDataTableSchema.gcpSkuId, anomaly.getGcpSKUId())
+               .addColumn(AnomaliesDataTableSchema.gcpSkuDescription, anomaly.getGcpSKUDescription())
+               .addColumn(AnomaliesDataTableSchema.awsAccount, anomaly.getAwsAccount())
+               .addColumn(AnomaliesDataTableSchema.awsInstanceType, anomaly.getAwsInstanceType())
+               .addColumn(AnomaliesDataTableSchema.awsService, anomaly.getAwsService())
+               .addColumn(AnomaliesDataTableSchema.awsUsageType, anomaly.getAwsUsageType())
+               .addColumn(AnomaliesDataTableSchema.anomalyScore, anomaly.getAnomalyScore())
+               .addColumn(AnomaliesDataTableSchema.reportedBy, anomaly.getReportedBy())
+               .addColumn(AnomaliesDataTableSchema.newEntity, ((Boolean) anomaly.isNewEntity()).toString())
+               .validate()
+               .toString()
+        + " ON CONFLICT "
+        + String.format("(%1$s,%2$s) ", AnomaliesDataTableSchema.id.getColumnNameSQL(),
+            AnomaliesDataTableSchema.anomalyTime.getColumnNameSQL())
+        + "DO UPDATE SET "
+        + String.format("%s = %f , %s = %f ", AnomaliesDataTableSchema.actualCost.getColumnNameSQL(),
+            anomaly.getActualCost(), AnomaliesDataTableSchema.expectedCost.getColumnNameSQL(),
+            anomaly.getExpectedCost());
   }
 }

@@ -3,9 +3,9 @@ package io.harness.steps.resourcerestraint.service;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.shared.ResourceRestraint;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.Consumer;
-import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
 
 import java.util.List;

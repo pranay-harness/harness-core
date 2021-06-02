@@ -1,9 +1,12 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.container.ContainerInfo;
+import io.harness.delegate.task.helm.HelmChartInfo;
 
 import software.wings.beans.container.Label;
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
@@ -19,10 +22,12 @@ import lombok.EqualsAndHashCode;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
+@OwnedBy(CDP)
 public class ContainerDeploymentInfoWithLabels extends BaseContainerDeploymentInfo {
   private List<Label> labels;
   private String newVersion;
-  private String namespace;
+  @Deprecated private String namespace;
+  private List<String> namespaces;
   private HelmChartInfo helmChartInfo;
   private List<ContainerInfo> containerInfoList;
   /*
@@ -32,7 +37,7 @@ public class ContainerDeploymentInfoWithLabels extends BaseContainerDeploymentIn
 
   @Builder
   public ContainerDeploymentInfoWithLabels(String clusterName, List<Label> labels, String newVersion, String namespace,
-      HelmChartInfo helmChartInfo, List<ContainerInfo> containerInfoList, String releaseName) {
+      HelmChartInfo helmChartInfo, List<ContainerInfo> containerInfoList, String releaseName, List<String> namespaces) {
     super(clusterName);
     this.labels = labels;
     this.newVersion = newVersion;
@@ -40,5 +45,6 @@ public class ContainerDeploymentInfoWithLabels extends BaseContainerDeploymentIn
     this.helmChartInfo = helmChartInfo;
     this.containerInfoList = containerInfoList;
     this.releaseName = releaseName;
+    this.namespaces = namespaces;
   }
 }

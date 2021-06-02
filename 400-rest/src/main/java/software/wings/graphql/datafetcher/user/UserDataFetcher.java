@@ -2,7 +2,7 @@ package software.wings.graphql.datafetcher.user;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -24,7 +24,7 @@ import org.mongodb.morphia.query.CriteriaContainer;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class UserDataFetcher extends AbstractObjectDataFetcher<QLUser, QLUserQueryParameters> {
   public static final String USER_DOES_NOT_EXIST_MSG = "User does not exist";
   @Inject HPersistence persistence;

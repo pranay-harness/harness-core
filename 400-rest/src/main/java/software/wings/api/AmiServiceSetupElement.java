@@ -1,7 +1,7 @@
 package software.wings.api;
 
+import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
-import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import software.wings.api.AwsAmiInfoVariables.AwsAmiInfoVariablesBuilder;
 import software.wings.beans.ResizeStrategy;

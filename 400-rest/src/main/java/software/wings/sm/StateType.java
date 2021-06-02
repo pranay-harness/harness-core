@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static software.wings.beans.InfrastructureMappingType.AWS_ECS;
@@ -27,11 +28,14 @@ import static software.wings.beans.PhaseStepType.SELECT_NODE;
 import static software.wings.beans.PhaseStepType.START_SERVICE;
 import static software.wings.beans.PhaseStepType.STOP_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
+import static software.wings.common.ProvisionerConstants.DESTROY_TERRAGRUNT_NAME;
 import static software.wings.common.ProvisionerConstants.DE_PROVISION_CLOUD_FORMATION;
 import static software.wings.common.ProvisionerConstants.PROVISION_CLOUD_FORMATION;
 import static software.wings.common.ProvisionerConstants.PROVISION_SHELL_SCRIPT;
+import static software.wings.common.ProvisionerConstants.PROVISION_TERRAGRUNT_NAME;
 import static software.wings.common.ProvisionerConstants.ROLLBACK_CLOUD_FORMATION;
 import static software.wings.common.ProvisionerConstants.ROLLBACK_TERRAFORM_NAME;
+import static software.wings.common.ProvisionerConstants.ROLLBACK_TERRAGRUNT_NAME;
 import static software.wings.service.impl.aws.model.AwsConstants.AMI_SETUP_COMMAND_NAME;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ARTIFACT_COLLECTION_STEP;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AWS_CODE_DEPLOY;
@@ -81,6 +85,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.joor.Reflect.on;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.UnexpectedException;
 import io.harness.serializer.JsonUtils;
 
@@ -217,6 +222,9 @@ import software.wings.sm.states.provision.CloudFormationRollbackStackState;
 import software.wings.sm.states.provision.DestroyTerraformProvisionState;
 import software.wings.sm.states.provision.ShellScriptProvisionState;
 import software.wings.sm.states.provision.TerraformRollbackState;
+import software.wings.sm.states.provision.TerragruntApplyState;
+import software.wings.sm.states.provision.TerragruntDestroyState;
+import software.wings.sm.states.provision.TerragruntRollbackState;
 import software.wings.sm.states.spotinst.SpotInstDeployState;
 import software.wings.sm.states.spotinst.SpotInstListenerUpdateRollbackState;
 import software.wings.sm.states.spotinst.SpotInstListenerUpdateState;
@@ -247,6 +255,7 @@ import java.util.List;
  */
 @OwnedBy(CDC)
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
+@TargetModule(_870_CG_ORCHESTRATION)
 public enum StateType implements StateTypeDescriptor {
   /**
    * Subworkflow state type.
@@ -308,65 +317,77 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * App dynamics state type.
    */
-  APP_DYNAMICS(AppDynamicsState.class, VERIFICATIONS, 2, asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  APP_DYNAMICS(AppDynamicsState.class, VERIFICATIONS, 2, asList(K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      ORCHESTRATION_STENCILS),
 
   /**
    * New relic state type.
    */
-  NEW_RELIC(NewRelicState.class, VERIFICATIONS, 3, "New Relic", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  NEW_RELIC(NewRelicState.class, VERIFICATIONS, 3, "New Relic", asList(K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      ORCHESTRATION_STENCILS),
 
   /**
    * New relic deployment marker state type.
    */
   NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, VERIFICATIONS, 4, "New Relic Deployment Marker",
-      asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+      asList(K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * dyna trace state type.
    */
-  DYNA_TRACE(DynatraceState.class, VERIFICATIONS, 5, "Dynatrace", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  DYNA_TRACE(DynatraceState.class, VERIFICATIONS, 5, "Dynatrace", asList(K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      ORCHESTRATION_STENCILS),
 
   /**
    * Prometheus state type.
    */
-  PROMETHEUS(PrometheusState.class, VERIFICATIONS, 6, asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  PROMETHEUS(PrometheusState.class, VERIFICATIONS, 6, asList(K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      ORCHESTRATION_STENCILS),
 
   /**
    * Splunk V2 state type.
    */
-  SPLUNKV2(SplunkV2State.class, VERIFICATIONS, 8, "SPLUNK", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  SPLUNKV2(SplunkV2State.class, VERIFICATIONS, 8, "SPLUNK", asList(K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      ORCHESTRATION_STENCILS),
 
   /**
    * Elk state type.
    */
-  ELK(ElkAnalysisState.class, VERIFICATIONS, 9, "ELK", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  ELK(ElkAnalysisState.class, VERIFICATIONS, 9, "ELK", asList(K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      ORCHESTRATION_STENCILS),
 
   /**
    * LOGZ state type.
    */
-  LOGZ(LogzAnalysisState.class, VERIFICATIONS, 10, "LOGZ", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  LOGZ(LogzAnalysisState.class, VERIFICATIONS, 10, "LOGZ", asList(K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      ORCHESTRATION_STENCILS),
 
   /**
    * Sumo state type.
    */
-  SUMO(SumoLogicAnalysisState.class, VERIFICATIONS, 11, "Sumo Logic", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  SUMO(SumoLogicAnalysisState.class, VERIFICATIONS, 11, "Sumo Logic",
+      asList(K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Sumo state type.
    */
-  DATA_DOG(DatadogState.class, VERIFICATIONS, 12, "Datadog Metrics", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  DATA_DOG(DatadogState.class, VERIFICATIONS, 12, "Datadog Metrics",
+      asList(K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * DatadogLog state type.
    */
-  DATA_DOG_LOG(DatadogLogState.class, VERIFICATIONS, 13, "Datadog Log", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  DATA_DOG_LOG(DatadogLogState.class, VERIFICATIONS, 13, "Datadog Log",
+      asList(K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), ORCHESTRATION_STENCILS),
 
-  CVNG(CVNGState.class, VERIFICATIONS, 13, "CVNG verification", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  CVNG(CVNGState.class, VERIFICATIONS, 13, "CVNG verification", asList(K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      ORCHESTRATION_STENCILS),
 
   /**
    * Cloud watch state type.
    */
-  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 14, "CloudWatch", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 14, "CloudWatch",
+      asList(K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   AWS_LAMBDA_VERIFICATION(
       AwsLambdaVerification.class, VERIFICATIONS, 15, "AWS Lambda Verification", asList(), ORCHESTRATION_STENCILS),
@@ -381,35 +402,38 @@ public enum StateType implements StateTypeDescriptor {
 
    * Generic LOG verification state type.
    */
-  LOG_VERIFICATION(CustomLogVerificationState.class, VERIFICATIONS, 17, "Log Verification", asList(K8S_PHASE_STEP),
-      ORCHESTRATION_STENCILS),
+  LOG_VERIFICATION(CustomLogVerificationState.class, VERIFICATIONS, 17, "Log Verification",
+      asList(K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Bugsnag verification state type.
    */
-  BUG_SNAG(BugsnagState.class, VERIFICATIONS, 18, "Bugsnag", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  BUG_SNAG(BugsnagState.class, VERIFICATIONS, 18, "Bugsnag", asList(K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      ORCHESTRATION_STENCILS),
 
   /**
    * StackDriver state type.
    */
-  STACK_DRIVER(
-      StackDriverState.class, VERIFICATIONS, 19, "Stackdriver", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  STACK_DRIVER(StackDriverState.class, VERIFICATIONS, 19, "Stackdriver",
+      asList(K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * StackDriver log state type.
    */
-  STACK_DRIVER_LOG(
-      StackDriverLogState.class, VERIFICATIONS, 20, "Stackdriver Log", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  STACK_DRIVER_LOG(StackDriverLogState.class, VERIFICATIONS, 20, "Stackdriver Log",
+      asList(K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
    * Instana state type
    */
-  INSTANA(InstanaState.class, VERIFICATIONS, 21, "Instana", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  INSTANA(InstanaState.class, VERIFICATIONS, 21, "Instana", asList(K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      ORCHESTRATION_STENCILS),
 
   /**
    * Scalyr state type
    */
-  SCALYR(ScalyrState.class, VERIFICATIONS, 22, "Scalyr", asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  SCALYR(ScalyrState.class, VERIFICATIONS, 22, "Scalyr", asList(K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      ORCHESTRATION_STENCILS),
 
   /**
    * Env state state type.
@@ -730,7 +754,17 @@ public enum StateType implements StateTypeDescriptor {
 
   TERRAFORM_APPLY(ApplyTerraformState.class, OTHERS, 5, "Terraform Apply", asList(), ORCHESTRATION_STENCILS, COMMON),
 
-  ARM_CREATE_RESOURCE(ARMProvisionState.class, PROVISIONERS, 0, "ARM Create Resource",
+  TERRAGRUNT_PROVISION(TerragruntApplyState.class, PROVISIONERS, 0, PROVISION_TERRAGRUNT_NAME,
+      asList(InfrastructureMappingType.AWS_SSH), asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE),
+      ORCHESTRATION_STENCILS),
+
+  TERRAGRUNT_DESTROY(TerragruntDestroyState.class, PROVISIONERS, 0, DESTROY_TERRAGRUNT_NAME,
+      asList(InfrastructureMappingType.AWS_SSH), asList(POST_DEPLOYMENT, WRAP_UP), ORCHESTRATION_STENCILS),
+
+  TERRAGRUNT_ROLLBACK(TerragruntRollbackState.class, PROVISIONERS, ROLLBACK_TERRAGRUNT_NAME,
+      singletonList(InfrastructureMappingType.AWS_SSH), singletonList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
+
+  ARM_CREATE_RESOURCE(ARMProvisionState.class, PROVISIONERS, 0, WorkflowServiceHelper.ARM_CREATE_RESOURCE,
       asList(InfrastructureMappingType.AZURE_INFRA, InfrastructureMappingType.AZURE_VMSS,
           InfrastructureMappingType.AZURE_WEBAPP),
       asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE), ORCHESTRATION_STENCILS),

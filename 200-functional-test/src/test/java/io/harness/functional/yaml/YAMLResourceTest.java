@@ -1,12 +1,13 @@
 package io.harness.functional.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.FunctionalTests;
-import io.harness.exception.ExceptionUtils;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
@@ -17,7 +18,6 @@ import software.wings.yaml.YamlOperationResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.response.Response;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,8 +27,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.springframework.util.ResourceUtils;
 
+@OwnedBy(DX)
 @Slf4j
 public class YAMLResourceTest extends AbstractFunctionalTest {
   private YamlOperationResponse performYamlOperation(final Response response) {
@@ -50,12 +50,9 @@ public class YAMLResourceTest extends AbstractFunctionalTest {
 
   private Response setupTestData(final String appName) {
     File file = null;
-    try {
-      file = ResourceUtils.getFile("classpath:io/harness/yaml/" + appName + ".zip");
-    } catch (FileNotFoundException ex) {
-      log.error(ExceptionUtils.getMessage(ex));
-      assertThat(false).isTrue();
-    }
+
+    file = new File("200-functional-test/src/test/resources/io/harness/yaml/" + appName + ".zip");
+
     return Setup.portal()
         .auth()
         .oauth2(bearerToken)
@@ -100,7 +97,7 @@ public class YAMLResourceTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = VARDAN_BANSAL)
+  @Owner(developers = VARDAN_BANSAL, intermittent = true)
   @Category(FunctionalTests.class)
   public void test_deleteEntities_fewFilesDeleted() {
     setupTestData("SampleApp");
@@ -138,7 +135,7 @@ public class YAMLResourceTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = VARDAN_BANSAL)
+  @Owner(developers = VARDAN_BANSAL, intermittent = true)
   @Category(FunctionalTests.class)
   public void test_upsertDeleteEntities_emptyApp() {
     setupTestData("EmptyApp");
@@ -158,7 +155,7 @@ public class YAMLResourceTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = VARDAN_BANSAL)
+  @Owner(developers = VARDAN_BANSAL, intermittent = true)
   @Category(FunctionalTests.class)
   public void test_upsertEntity() {
     final String yamlFilePath = "Setup/Applications/test app/Index.yaml";

@@ -1,7 +1,10 @@
 package io.harness.ccm.setup.service.support.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.setup.service.support.AwsCredentialHelper;
 import io.harness.ccm.setup.service.support.impl.pojo.BucketPolicyJson;
 import io.harness.ccm.setup.service.support.impl.pojo.BucketPolicyStatement;
@@ -47,6 +50,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 
 @Slf4j
 @Singleton
+@OwnedBy(CE)
 public class AWSCEConfigValidationServiceImpl implements AWSCEConfigValidationService {
   @Inject private AwsCredentialHelper awsCredentialHelper;
   @Inject private AwsEKSHelperService awsEKSHelperService;

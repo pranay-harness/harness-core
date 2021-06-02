@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
+import static io.harness.exception.FailureType.TIMEOUT;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.TMACARI;
@@ -29,17 +31,20 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 
+import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
@@ -65,6 +70,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -90,6 +96,8 @@ public class EcsSetupRollbackTest extends WingsBaseTest {
   @Mock private ArtifactCollectionUtils mockArtifactCollectionUtils;
   @Mock private ServiceResourceService mockServiceResourceService;
   @Mock private InfrastructureMappingService mockInfrastructureMappingService;
+  @Mock private FeatureFlagService featureFlagService;
+  @Mock private StateExecutionService stateExecutionService;
   @InjectMocks private final EcsSetupRollback state = new EcsSetupRollback("stateName");
 
   @Test
@@ -104,6 +112,7 @@ public class EcsSetupRollbackTest extends WingsBaseTest {
         return (String) args[0];
       }
     });
+    doReturn(true).when(featureFlagService).isEnabled(eq(TIMEOUT_FAILURE_SUPPORT), any());
     EcsSetUpDataBag bag = EcsSetUpDataBag.builder()
                               .service(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build())
                               .application(anApplication().uuid(APP_ID).name(APP_NAME).build())
@@ -133,9 +142,10 @@ public class EcsSetupRollbackTest extends WingsBaseTest {
         .getStateExecutionData(any(), anyString(), any(), any(Activity.class));
     EcsSetupContextVariableHolder holder = EcsSetupContextVariableHolder.builder().build();
     doReturn(holder).when(mockEcsStateHelper).renderEcsSetupContextVariables(any());
-    doReturn(DEL_TASK_ID)
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
+    doReturn(DelegateTask.builder().uuid(DEL_TASK_ID).description("desc").build())
         .when(mockEcsStateHelper)
-        .createAndQueueDelegateTaskForEcsServiceSetUp(any(), any(), any(Activity.class), any());
+        .createAndQueueDelegateTaskForEcsServiceSetUp(any(), any(), any(Activity.class), any(), eq(true));
 
     ExecutionResponse response = state.execute(mockContext);
 
@@ -156,7 +166,7 @@ public class EcsSetupRollbackTest extends WingsBaseTest {
 
     ArgumentCaptor<EcsServiceSetupRequest> captor2 = ArgumentCaptor.forClass(EcsServiceSetupRequest.class);
     verify(mockEcsStateHelper)
-        .createAndQueueDelegateTaskForEcsServiceSetUp(captor2.capture(), any(), any(Activity.class), any());
+        .createAndQueueDelegateTaskForEcsServiceSetUp(captor2.capture(), any(), any(Activity.class), any(), eq(true));
     EcsServiceSetupRequest request = captor2.getValue();
     assertThat(request).isNotNull();
     assertThat(request.getEcsSetupParams()).isNotNull();
@@ -168,6 +178,8 @@ public class EcsSetupRollbackTest extends WingsBaseTest {
     assertThat(response.getCorrelationIds()).isEqualTo(singletonList(ACTIVITY_ID));
     assertThat(response.getStateExecutionData()).isEqualTo(executionData);
     assertThat(response.getDelegateTaskId()).isEqualTo(DEL_TASK_ID);
+    verify(featureFlagService).isEnabled(eq(TIMEOUT_FAILURE_SUPPORT), any());
+    verify(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   @Test
@@ -210,6 +222,51 @@ public class EcsSetupRollbackTest extends WingsBaseTest {
     ExecutionResponse response = state.handleAsyncResponse(mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse));
     verify(mockEcsStateHelper).populateFromDelegateResponse(any(), any(), any());
     verify(mockActivityService).updateStatus(eq(ACTIVITY_ID), any(), eq(ExecutionStatus.SUCCESS));
+    assertThat(response.getFailureTypes()).isNull();
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponse_TimeoutFailure() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    EcsCommandExecutionResponse delegateResponse =
+        EcsCommandExecutionResponse.builder()
+            .commandExecutionStatus(SUCCESS)
+            .ecsCommandResponse(EcsServiceSetupResponse.builder()
+                                    .isBlueGreen(false)
+                                    .setupData(ContainerSetupCommandUnitExecutionData.builder()
+                                                   .containerServiceName("ContainerServiceName")
+                                                   .instanceCountForLatestVersion(2)
+                                                   .build())
+                                    .timeoutFailure(true)
+                                    .build())
+            .build();
+
+    CommandStateExecutionData executionData =
+        aCommandStateExecutionData()
+            .withContainerSetupParams(anEcsSetupParams().withInfraMappingId(INFRA_MAPPING_ID).build())
+            .build();
+    doReturn(executionData).when(mockContext).getStateExecutionData();
+    PhaseElement phaseElement =
+        PhaseElement.builder().serviceElement(ServiceElement.builder().uuid(SERVICE_ID).build()).build();
+    doReturn(phaseElement).when(mockContext).getContextElement(any(), anyString());
+    Artifact artifact = anArtifact().withRevision("rev").build();
+    doReturn(artifact).when(mockContext).getDefaultArtifactForService(anyString());
+    ImageDetails details = ImageDetails.builder().name("imgName").tag("imgTag").build();
+    doReturn(details).when(mockArtifactCollectionUtils).fetchContainerImageDetails(any(), anyString());
+    ContainerServiceElement containerServiceElement = ContainerServiceElement.builder().build();
+    doReturn(containerServiceElement)
+        .when(mockEcsStateHelper)
+        .buildContainerServiceElement(
+            any(), any(), any(), any(), anyString(), anyString(), anyString(), any(), anyInt(), any());
+    doReturn(SweepingOutputInstance.builder()).when(mockContext).prepareSweepingOutputBuilder(any());
+    doReturn("foo").when(mockEcsStateHelper).getSweepingOutputName(any(), anyBoolean(), anyString());
+
+    ExecutionResponse response = state.handleAsyncResponse(mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse));
+    verify(mockEcsStateHelper).populateFromDelegateResponse(any(), any(), any());
+    verify(mockActivityService).updateStatus(eq(ACTIVITY_ID), any(), eq(ExecutionStatus.SUCCESS));
+    assertThat(response.getFailureTypes()).isEqualTo(TIMEOUT);
   }
 
   @Test(expected = WingsException.class)

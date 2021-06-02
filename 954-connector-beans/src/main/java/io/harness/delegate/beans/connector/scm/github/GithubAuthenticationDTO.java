@@ -1,5 +1,8 @@
 package io.harness.delegate.beans.connector.scm.github;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.connector.SourceCodeManagerAuthentication;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -14,12 +17,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+@OwnedBy(HarnessTeam.DX)
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("GithubAuthentication")
-public class GithubAuthenticationDTO {
+public class GithubAuthenticationDTO implements SourceCodeManagerAuthentication {
   @NotNull @JsonProperty("type") GitAuthType authType;
   @JsonProperty("spec")
   @JsonTypeInfo(

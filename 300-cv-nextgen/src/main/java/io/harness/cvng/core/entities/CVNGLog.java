@@ -1,15 +1,18 @@
 package io.harness.cvng.core.entities;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.cvnglog.CVNGLogDTO;
 import io.harness.cvng.beans.cvnglog.CVNGLogType;
 import io.harness.cvng.beans.cvnglog.TraceableType;
 import io.harness.cvng.core.entities.cvnglogs.ApiCallLogRecord;
 import io.harness.cvng.core.entities.cvnglogs.CVNGLogRecord;
 import io.harness.mongo.index.CompoundMongoIndex;
-import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -43,7 +46,9 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "cvngLogs", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @SuperBuilder
-public class CVNGLog implements PersistentEntity, UuidAware, AccountAccess, UpdatedAtAware {
+@OwnedBy(HarnessTeam.CV)
+@StoreIn(DbAliases.CVNG)
+public final class CVNGLog implements PersistentEntity, UuidAware, AccountAccess, UpdatedAtAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -60,7 +65,7 @@ public class CVNGLog implements PersistentEntity, UuidAware, AccountAccess, Upda
   List<CVNGLogRecord> logRecords;
 
   @Id private String uuid;
-  @FdIndex private String accountId;
+  private String accountId;
   private String traceableId;
   private Instant startTime;
   private Instant endTime;
@@ -98,7 +103,7 @@ public class CVNGLog implements PersistentEntity, UuidAware, AccountAccess, Upda
     cvngLogDTO.setAccountId(accountId);
     cvngLogDTO.setTraceableId(traceableId);
     cvngLogDTO.setTraceableType(traceableType);
-    cvngLogDTO.setStartTime(startTime);
-    cvngLogDTO.setEndTime(endTime);
+    cvngLogDTO.setStartTime(startTime.toEpochMilli());
+    cvngLogDTO.setEndTime(endTime.toEpochMilli());
   }
 }

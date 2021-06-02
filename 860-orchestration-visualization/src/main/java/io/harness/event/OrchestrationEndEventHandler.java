@@ -1,41 +1,61 @@
 package io.harness.event;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.observers.OrchestrationEndObserver;
 import io.harness.execution.PlanExecution;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
-import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.observer.AsyncInformObserver;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.service.GraphGenerationService;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import java.util.concurrent.ExecutorService;
 import lombok.extern.slf4j.Slf4j;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 @Slf4j
-public class OrchestrationEndEventHandler implements AsyncOrchestrationEventHandler {
-  @Inject PlanExecutionService planExecutionService;
-  @Inject GraphGenerationService graphGenerationService;
+@Singleton
+public class OrchestrationEndEventHandler implements AsyncInformObserver, OrchestrationEndObserver {
+  private final ExecutorService executorService;
+  private final PlanExecutionService planExecutionService;
+  private final GraphGenerationService graphGenerationService;
+
+  @Inject
+  public OrchestrationEndEventHandler(
+      @Named("OrchestrationVisualizationExecutorService") ExecutorService executorService,
+      PlanExecutionService planExecutionService, GraphGenerationService graphGenerationService) {
+    this.executorService = executorService;
+    this.planExecutionService = planExecutionService;
+    this.graphGenerationService = graphGenerationService;
+  }
 
   @Override
-  public void handleEvent(OrchestrationEvent event) {
-    NodeExecutionProto nodeExecutionProto = event.getNodeExecutionProto();
-    String planExecutionId = nodeExecutionProto.getAmbiance().getPlanExecutionId();
+  public void onEnd(Ambiance ambiance) {
     try {
-      PlanExecution planExecution = planExecutionService.get(planExecutionId);
+      PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
+      // One last time try to update the graph to process any unprocessed logs
+      graphGenerationService.updateGraph(planExecution.getUuid());
+
       log.info("Ending Execution for planExecutionId [{}] with status [{}].", planExecution.getUuid(),
           planExecution.getStatus());
 
-      OrchestrationGraph cachedGraph = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
-
-      graphGenerationService.cacheOrchestrationGraph(
-          cachedGraph.withStatus(planExecution.getStatus()).withEndTs(planExecution.getEndTs()));
+      OrchestrationGraph orchestrationGraph =
+          graphGenerationService.getCachedOrchestrationGraph(ambiance.getPlanExecutionId());
+      orchestrationGraph = orchestrationGraph.withStatus(planExecution.getStatus()).withEndTs(planExecution.getEndTs());
+      graphGenerationService.cacheOrchestrationGraph(orchestrationGraph);
     } catch (Exception e) {
-      log.error("[{}] event failed for [{}] for plan [{}]", event.getEventType(), nodeExecutionProto.getUuid(),
-          planExecutionId, e);
+      log.error("Cannot update Orchestration graph for ORCHESTRATION_END");
+      throw e;
     }
+  }
+
+  @Override
+  public ExecutorService getInformExecutorService() {
+    return executorService;
   }
 }

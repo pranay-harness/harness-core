@@ -1,8 +1,10 @@
 package software.wings.graphql.datafetcher.pipeline;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
@@ -20,13 +22,15 @@ import software.wings.graphql.schema.type.aggregation.pipeline.QLPipelineTagType
 import software.wings.graphql.utils.nameservice.NameService;
 
 import com.google.inject.Inject;
+import graphql.schema.DataFetchingEnvironment;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class PipelineStatsDataFetcher
     extends RealTimeStatsDataFetcherWithTags<QLNoOpAggregateFunction, QLPipelineFilter, QLPipelineAggregation,
         QLNoOpSortCriteria, QLPipelineTagType, QLPipelineTagAggregation, QLPipelineEntityAggregation> {
@@ -34,7 +38,8 @@ public class PipelineStatsDataFetcher
 
   @Override
   protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLPipelineFilter> filters,
-      List<QLPipelineAggregation> groupByList, List<QLNoOpSortCriteria> sortCriteria) {
+      List<QLPipelineAggregation> groupByList, List<QLNoOpSortCriteria> sortCriteria,
+      DataFetchingEnvironment dataFetchingEnvironment) {
     final Class entityClass = Pipeline.class;
     final List<String> groupByEntityList = new ArrayList<>();
     if (isNotEmpty(groupByList)) {
@@ -60,6 +65,8 @@ public class PipelineStatsDataFetcher
     switch (pipelineAggregation) {
       case Application:
         return "appId";
+      case Pipeline:
+        return "_id";
       default:
         log.warn("Unknown aggregation type" + aggregation);
         throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
@@ -96,6 +103,8 @@ public class PipelineStatsDataFetcher
     switch (groupByTag.getEntityType()) {
       case APPLICATION:
         return QLPipelineEntityAggregation.Application;
+      case PIPELINE:
+        return QLPipelineEntityAggregation.Pipeline;
       default:
         log.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
         throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);

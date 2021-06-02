@@ -1,9 +1,11 @@
 package software.wings.resources.secretsmanagement;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.PageResponse;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
@@ -35,6 +37,7 @@ import javax.ws.rs.QueryParam;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+@OwnedBy(PL)
 @Api(value = "secrets", hidden = true)
 @Path("/ng/secrets")
 @Produces("application/json")
@@ -76,8 +79,7 @@ public class SecretsResourceNG {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) final String projectIdentifier,
       @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") final String page,
       @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") final String size,
-      @QueryParam("searchTerm") final String searchTerm, @QueryParam("type") final SettingVariableTypes type,
-      @QueryParam(NGResourceFilterConstants.IDENTIFIERS) final List<String> identifiers) {
+      @QueryParam("searchTerm") final String searchTerm, @QueryParam("type") final SettingVariableTypes type) {
     PageResponse<EncryptedData> encryptedDataPageResponse;
     if (!StringUtils.isEmpty(searchTerm)) {
       List<EncryptedData> encryptedDataList =
@@ -87,7 +89,7 @@ public class SecretsResourceNG {
       return new RestResponse<>(getPageResponse(encryptedDataPageResponse));
     }
     encryptedDataPageResponse =
-        ngSecretService.listSecrets(accountIdentifier, orgIdentifier, projectIdentifier, identifiers, type, page, size);
+        ngSecretService.listSecrets(accountIdentifier, orgIdentifier, projectIdentifier, type, page, size);
     return new RestResponse<>(getPageResponse(encryptedDataPageResponse));
   }
 

@@ -16,6 +16,7 @@ import static software.wings.settings.SettingVariableTypes.BAMBOO;
 import static software.wings.settings.SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.settings.SettingVariableTypes.BUG_SNAG;
 import static software.wings.settings.SettingVariableTypes.CE_AWS;
+import static software.wings.settings.SettingVariableTypes.CE_AZURE;
 import static software.wings.settings.SettingVariableTypes.CE_GCP;
 import static software.wings.settings.SettingVariableTypes.CUSTOM;
 import static software.wings.settings.SettingVariableTypes.DATA_DOG;
@@ -246,7 +247,7 @@ public class SettingAttribute
 
     AZURE_ARTIFACTS(Lists.newArrayList(AZURE_ARTIFACTS_PAT)),
 
-    CE_CONNECTOR(Lists.newArrayList(CE_AWS, CE_GCP));
+    CE_CONNECTOR(Lists.newArrayList(CE_AWS, CE_GCP, CE_AZURE));
 
     @Getter private List<SettingVariableTypes> settingVariableTypes;
 

@@ -1,10 +1,13 @@
 package io.harness.yaml.schema;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.eraro.ErrorCode.UNEXPECTED_SCHEMA_EXCEPTION;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
 
+@OwnedBy(DX)
 public class YamlSchemaException extends WingsException {
   private static final String MESSAGE_ARG = "message";
 

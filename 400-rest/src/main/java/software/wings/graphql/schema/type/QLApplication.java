@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.type;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -14,11 +14,12 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLApplicationKeys")
 @Scope(ResourceType.APPLICATION)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLApplication implements QLObject {
   String id;
   String name;
   String description;
   Long createdAt;
   QLUser createdBy;
+  Boolean isManualTriggerAuthorized;
 }

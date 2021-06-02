@@ -18,4 +18,5 @@ enum UnitStatus {
   RUNNING = 3;
   QUEUED = 4;
   SKIPPED = 5;
+  EXPIRED = 6;
 }

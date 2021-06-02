@@ -2,7 +2,7 @@ package software.wings.graphql.datafetcher.connector;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -16,7 +16,7 @@ import software.wings.security.annotations.AuthRule;
 
 import com.google.inject.Inject;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class ConnectorDataFetcher extends AbstractObjectDataFetcher<QLConnector, QLConnectorQueryParameters> {
   @Inject HPersistence persistence;
   @Inject ConnectorsController connectorsController;

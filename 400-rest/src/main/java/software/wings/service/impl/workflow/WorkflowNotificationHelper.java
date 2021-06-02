@@ -23,7 +23,7 @@ import static java.lang.String.format;
 import static java.lang.String.join;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
@@ -98,7 +98,7 @@ import org.apache.commons.lang3.StringUtils;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-@TargetModule(Module._800_PIPELINE_SERVICE)
+@TargetModule(HarnessModule._800_PIPELINE_SERVICE)
 public class WorkflowNotificationHelper {
   private static final String APPLICATION = "APPLICATION";
   private static final String TRIGGER = "TRIGGER";
@@ -351,7 +351,7 @@ public class WorkflowNotificationHelper {
   public Map<String, String> getPlaceholderValues(ExecutionContext context, Application app, Environment env,
       ExecutionStatus status, @Nullable PhaseSubWorkflow phaseSubWorkflow) {
     WorkflowExecution workflowExecution =
-        workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId(), true);
+        workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId(), true, false);
     String triggeredBy = workflowExecution.getTriggeredBy().getName();
     if (triggeredBy.equalsIgnoreCase("Deployment trigger")) {
       triggeredBy = triggeredBy.toLowerCase();
@@ -513,9 +513,9 @@ public class WorkflowNotificationHelper {
     WorkflowNotificationDetailsBuilder infraDetails = WorkflowNotificationDetails.builder();
     List<String> infraIds = workflowExecution.getInfraDefinitionIds();
 
-    StringBuilder infraMsg = new StringBuilder();
-    StringBuilder infraDetailsName = new StringBuilder();
-    StringBuilder infraDetailsUrl = new StringBuilder();
+    StringBuilder infraMsg = new StringBuilder(64);
+    StringBuilder infraDetailsName = new StringBuilder(32);
+    StringBuilder infraDetailsUrl = new StringBuilder(32);
 
     if (isNotEmpty(infraIds)) {
       List<String> infras = infraIds.stream()

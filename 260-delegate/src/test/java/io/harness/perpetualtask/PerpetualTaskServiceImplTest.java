@@ -5,14 +5,19 @@ import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
 
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.observer.Subject;
 import io.harness.perpetualtask.ecs.EcsPerpetualTaskServiceClient;
 import io.harness.perpetualtask.instancesync.AwsSshInstanceSyncPerpetualTaskParams;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
 import io.harness.rule.Owner;
+import io.harness.service.intfc.PerpetualTaskStateObserver;
 
 import software.wings.WingsBaseTest;
 
@@ -37,6 +42,7 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
   @Mock private PerpetualTaskServiceClient client;
 
   @Inject private PerpetualTaskRecordDao perpetualTaskRecordDao;
+  @Mock private Subject<PerpetualTaskStateObserver> perpetualTaskStateObserverSubject;
 
   @InjectMocks @Inject private PerpetualTaskServiceImpl perpetualTaskService;
 
@@ -57,6 +63,8 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
     clientRegistry.registerClient(PerpetualTaskType.K8S_WATCH, client);
     FieldUtils.writeField(perpetualTaskService, "broadcastAggregateSet", testBroadcastAggregateSet, true);
     FieldUtils.writeField(perpetualTaskService, "clientRegistry", clientRegistry, true);
+    FieldUtils.writeField(
+        perpetualTaskService, "perpetualTaskStateObserverSubject", perpetualTaskStateObserverSubject, true);
   }
 
   @Test
@@ -283,6 +291,7 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
     assertThat(record).isNotNull();
     assertThat(record.getDelegateId()).isEqualTo(delegateId);
     assertThat(record.getClientContext().getLastContextUpdated()).isEqualTo(1L);
+    verify(perpetualTaskStateObserverSubject).fireInform(any(), eq(accountId), eq(taskId), eq(delegateId));
 
     String delegateId2 = UUIDGenerator.generateUuid();
 

@@ -1,8 +1,10 @@
 package software.wings.graphql.datafetcher.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
@@ -24,6 +26,7 @@ import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.service.intfc.AppService;
 
 import com.google.inject.Inject;
+import graphql.schema.DataFetchingEnvironment;
 import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -31,7 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class TriggerStatsDataFetcher extends RealTimeStatsDataFetcherWithTags<QLNoOpAggregateFunction, QLTriggerFilter,
     QLTriggerAggregation, QLNoOpSortCriteria, QLTriggerTagType, QLTriggerTagAggregation, QLTriggerEntityAggregation> {
   @Inject private AppService appService;
@@ -49,7 +53,8 @@ public class TriggerStatsDataFetcher extends RealTimeStatsDataFetcherWithTags<QL
 
   @Override
   protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLTriggerFilter> filters,
-      List<QLTriggerAggregation> groupByList, List<QLNoOpSortCriteria> sortCriteria) {
+      List<QLTriggerAggregation> groupByList, List<QLNoOpSortCriteria> sortCriteria,
+      DataFetchingEnvironment dataFetchingEnvironment) {
     final Class entityClass = Trigger.class;
     final List<String> groupByEntityList = new ArrayList<>();
     if (isNotEmpty(groupByList)) {

@@ -1,5 +1,6 @@
 package io.harness.ngpipeline.inputset.mappers;
 
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.mapper.TagMapper;
@@ -30,6 +31,8 @@ import java.util.Map;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@ToBeDeleted
+@Deprecated
 public class InputSetElementMapper {
   public InputSetEntity toInputSetEntity(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, String yaml) {

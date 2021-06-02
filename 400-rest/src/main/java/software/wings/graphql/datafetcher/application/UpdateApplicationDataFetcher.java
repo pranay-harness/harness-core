@@ -1,13 +1,16 @@
 package software.wings.graphql.datafetcher.application;
 
+import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
+
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.utils.RequestField;
 
 import software.wings.beans.Application;
@@ -26,15 +29,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class UpdateApplicationDataFetcher
     extends BaseMutatorDataFetcher<QLUpdateApplicationInput, QLUpdateApplicationPayload> {
   private AppService appService;
+  private FeatureFlagService featureFlagService;
 
   @Inject
-  public UpdateApplicationDataFetcher(AppService appService) {
+  public UpdateApplicationDataFetcher(AppService appService, FeatureFlagService featureFlagService) {
     super(QLUpdateApplicationInput.class, QLUpdateApplicationPayload.class);
     this.appService = appService;
+    this.featureFlagService = featureFlagService;
   }
 
   private Application prepareApplication(
@@ -46,6 +51,7 @@ public class UpdateApplicationDataFetcher
             .accountId(existingApplication.getAccountId())
             .name(existingApplication.getName())
             .description(existingApplication.getDescription())
+            .isManualTriggerAuthorized(existingApplication.getIsManualTriggerAuthorized())
             .yamlGitConfig(existingApplication.getYamlGitConfig()); // yaml config because the way update is written, it
                                                                     // assumes this would be coming
 
@@ -54,6 +60,18 @@ public class UpdateApplicationDataFetcher
     }
     if (qlUpdateApplicationInput.getDescription().isPresent()) {
       applicationBuilder.description(qlUpdateApplicationInput.getDescription().getValue().orElse(null));
+    }
+
+    Boolean isManualTriggerAuthorized = qlUpdateApplicationInput.getIsManualTriggerAuthorized();
+    if (Boolean.TRUE.equals(isManualTriggerAuthorized)
+        && !featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, existingApplication.getAccountId())) {
+      throw new InvalidRequestException("Please enable feature flag to authorize manual triggers");
+    }
+
+    if (isManualTriggerAuthorized != null) {
+      applicationBuilder.isManualTriggerAuthorized(isManualTriggerAuthorized);
+    } else if (existingApplication.getIsManualTriggerAuthorized() != null) {
+      applicationBuilder.isManualTriggerAuthorized(false);
     }
 
     return applicationBuilder.build();

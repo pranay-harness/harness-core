@@ -6,6 +6,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +20,7 @@ public class ConnectorDetails {
   @NotNull String identifier;
   String orgIdentifier;
   String projectIdentifier;
+  Set<String> delegateSelectors;
   @NotNull List<EncryptedDataDetail> encryptedDataDetails;
   SSHKeyDetails sshKeyDetails;
   @Singular("envToSecretEntry") Map<EnvVariableEnum, String> envToSecretsMap;

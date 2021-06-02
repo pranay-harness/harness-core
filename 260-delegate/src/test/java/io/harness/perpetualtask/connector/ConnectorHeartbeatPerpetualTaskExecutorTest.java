@@ -9,7 +9,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.DelegateTest;
+import io.harness.DelegateTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorDTO;
@@ -48,7 +48,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import retrofit2.Call;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ConnectorHeartbeatPerpetualTaskExecutorTest extends DelegateTest {
+public class ConnectorHeartbeatPerpetualTaskExecutorTest extends DelegateTestBase {
   @InjectMocks ConnectorHeartbeatPerpetualTaskExecutor connectorHeartbeatPerpetualTaskExecutor;
   @Inject KryoSerializer kryoSerializer;
   @Mock KubernetesValidationHandler KubernetesValidationHandler;

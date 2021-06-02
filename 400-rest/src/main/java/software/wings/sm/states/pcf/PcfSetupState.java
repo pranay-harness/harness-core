@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.CF_CUSTOM_EXTRACTION;
 import static io.harness.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static io.harness.beans.FeatureName.LIMIT_PCF_THREADS;
@@ -23,6 +24,10 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance.Scope;
@@ -108,6 +113,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class PcfSetupState extends State {
   @Inject private transient AppService appService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
@@ -268,7 +276,8 @@ public class PcfSetupState extends State {
 
     boolean useCliForSetup = true;
 
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+    ArtifactStreamAttributes artifactStreamAttributes =
+        artifactStream.fetchArtifactStreamAttributes(featureFlagService);
     artifactStreamAttributes.setMetadata(artifact.getMetadata());
     artifactStreamAttributes.setArtifactStreamId(artifactStream.getUuid());
     artifactStreamAttributes.setServerSetting(settingsService.get(artifactStream.getSettingId()));
@@ -365,11 +374,14 @@ public class PcfSetupState extends State {
             .environmentType(env.getEnvironmentType())
             .infrastructureMappingId(pcfInfrastructureMapping.getUuid())
             .parameters(new Object[] {pcfCommandSetupRequest, encryptedDataDetails})
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .taskDescription("PCF setup task execution")
             .serviceId(pcfInfrastructureMapping.getServiceId())
             .timeout(timeoutIntervalInMinutes == null ? DEFAULT_PCF_TASK_TIMEOUT_MIN : timeoutIntervalInMinutes)
             .build());
 
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .correlationIds(Arrays.asList(waitId))
@@ -751,9 +763,10 @@ public class PcfSetupState extends State {
 
   private ExecutionResponse executeGitTask(
       ExecutionContext context, Map<K8sValuesLocation, ApplicationManifest> appManifestMap, String activityId) {
-    final DelegateTask gitFetchFileTask =
-        pcfStateHelper.createGitFetchFileAsyncTask(context, appManifestMap, activityId);
+    final DelegateTask gitFetchFileTask = pcfStateHelper.createGitFetchFileAsyncTask(
+        context, appManifestMap, activityId, isSelectionLogsTrackingForTasksEnabled());
     final String delegateTaskId = delegateService.queueTask(gitFetchFileTask);
+    appendDelegateTaskDetails(context, gitFetchFileTask);
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Collections.singletonList(gitFetchFileTask.getWaitId()))
@@ -772,6 +785,8 @@ public class PcfSetupState extends State {
                                 .useCurrentRunningInstanceCount(useCurrentRunningCount)
                                 .tempRoutesOnSetupState(tempRouteMap)
                                 .finalRoutesOnSetupState(finalRouteMap)
+                                .useArtifactProcessingScript(useArtifactProcessingScript)
+                                .artifactProcessingScript(artifactProcessingScript)
                                 .build())
         .delegateTaskId(delegateTaskId)
         .build();
@@ -817,5 +832,10 @@ public class PcfSetupState extends State {
     canaryCommandUnits.add(new PcfDummyCommandUnit(PcfSetup));
     canaryCommandUnits.add(new PcfDummyCommandUnit(Wrapup));
     return canaryCommandUnits;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

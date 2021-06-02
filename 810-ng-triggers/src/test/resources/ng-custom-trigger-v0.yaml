@@ -1,0 +1,18 @@
+trigger:
+  name: customPayload
+  identifier: customPayload
+  enabled: true
+  target:
+    targetIdentifier: secret_http1
+    type: Pipeline
+    spec:
+      runtimeInputYaml:  ""
+  source:
+    type: Webhook
+    spec:
+      type: CUSTOM
+      spec:
+        payloadConditions:
+          - key: <+trigger.payload.project.team>
+            operator: in
+            value: "cd, ci"

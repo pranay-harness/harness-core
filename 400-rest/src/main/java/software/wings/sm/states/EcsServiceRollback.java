@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.FeatureName.ECS_AUTOSCALAR_REDESIGN;
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
 
@@ -13,6 +14,7 @@ import static software.wings.sm.states.EcsServiceDeploy.ECS_SERVICE_DEPLOY;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.beans.DelegateTask;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
@@ -151,16 +153,19 @@ public class EcsServiceRollback extends State {
                                           .cluster(deployDataBag.getEcsInfrastructureMapping().getClusterName())
                                           .awsConfig(deployDataBag.getAwsConfig())
                                           .ecsResizeParams(resizeParams)
+                                          .timeoutErrorSupported(featureFlagService.isEnabled(
+                                              TIMEOUT_FAILURE_SUPPORT, deployDataBag.getApp().getAccountId()))
                                           .build();
 
-    String delegateTaskId =
-        ecsStateHelper.createAndQueueDelegateTaskForEcsServiceDeploy(deployDataBag, request, activity, delegateService);
+    DelegateTask delegateTask = ecsStateHelper.createAndQueueDelegateTaskForEcsServiceDeploy(
+        deployDataBag, request, activity, delegateService, isSelectionLogsTrackingForTasksEnabled());
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(activity.getUuid()))
         .stateExecutionData(executionData)
-        .delegateTaskId(delegateTaskId)
+        .delegateTaskId(delegateTask.getUuid())
         .build();
   }
 
@@ -189,5 +194,10 @@ public class EcsServiceRollback extends State {
       }
       return rollbackAllPhases;
     }
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

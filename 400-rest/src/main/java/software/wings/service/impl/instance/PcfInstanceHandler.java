@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.MOVE_PCF_INSTANCE_SYNC_TO_PERPETUAL_TASK;
 import static io.harness.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_PCF_DEPLOYMENTS;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -11,6 +12,7 @@ import static software.wings.service.impl.instance.InstanceSyncFlow.PERPETUAL_TA
 
 import static java.util.function.Function.identity;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -66,6 +68,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(CDP)
 public class PcfInstanceHandler extends InstanceHandler implements InstanceSyncByPerpetualTaskHandler {
   @Inject private PcfHelperService pcfHelperService;
   @Inject private PCFInstanceSyncPerpetualTaskCreator pcfInstanceSyncPerpetualTaskCreator;

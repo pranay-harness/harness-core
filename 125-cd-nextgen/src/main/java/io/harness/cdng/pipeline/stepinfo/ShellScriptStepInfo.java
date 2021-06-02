@@ -1,13 +1,16 @@
 package io.harness.cdng.pipeline.stepinfo;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.pipeline.CDStepInfo;
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.cdstepinfo.ShellScriptStepInfoVisitorHelper;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.executions.steps.StepSpecTypeConstants;
+import io.harness.plancreator.steps.TaskSelectorYaml;
+import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.common.script.ExecutionTarget;
 import io.harness.steps.common.script.ShellScriptBaseStepInfo;
@@ -15,13 +18,14 @@ import io.harness.steps.common.script.ShellScriptSourceWrapper;
 import io.harness.steps.common.script.ShellScriptStep;
 import io.harness.steps.common.script.ShellScriptStepParameters;
 import io.harness.steps.common.script.ShellType;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.variables.NGVariable;
+import io.harness.yaml.utils.NGVariablesUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
@@ -35,22 +39,21 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.SHELL_SCRIPT)
 @SimpleVisitorHelper(helperClass = ShellScriptStepInfoVisitorHelper.class)
 @TypeAlias("shellScriptStepInfo")
+@OwnedBy(HarnessTeam.CDC)
 public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDStepInfo, Visitable {
-  @JsonIgnore String name;
-  @JsonIgnore String identifier;
+  List<NGVariable> outputVariables;
+  List<NGVariable> environmentVariables;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
+  ParameterField<List<TaskSelectorYaml>> delegateSelectors;
 
   @Builder(builderMethodName = "infoBuilder")
-  public ShellScriptStepInfo(ShellType shellType, ShellScriptSourceWrapper source,
-      List<NGVariable> environmentVariables, List<NGVariable> outputVariables, ExecutionTarget executionTarget,
-      ParameterField<String> timeout, ParameterField<Boolean> onDelegate, String name, String identifier) {
-    super(shellType, source, environmentVariables, outputVariables, executionTarget, onDelegate);
-    this.name = name;
-    this.identifier = identifier;
-  }
-
-  @Override
-  public String getDisplayName() {
-    return name;
+  public ShellScriptStepInfo(ShellType shell, ShellScriptSourceWrapper source, ExecutionTarget executionTarget,
+      ParameterField<Boolean> onDelegate, List<NGVariable> outputVariables, List<NGVariable> environmentVariables,
+      ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
+    super(shell, source, executionTarget, onDelegate);
+    this.outputVariables = outputVariables;
+    this.environmentVariables = environmentVariables;
+    this.delegateSelectors = delegateSelectors;
   }
 
   @Override
@@ -66,26 +69,16 @@ public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDSt
   }
 
   @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.SHELL_SCRIPT_STEP).build();
-  }
-
-  @Override
-  public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo baseStepParameterInfo) {
+  public SpecParameters getSpecParameters() {
     return ShellScriptStepParameters.infoBuilder()
-        .environmentVariables(getEnvironmentVariables())
         .executionTarget(getExecutionTarget())
         .onDelegate(getOnDelegate())
-        .outputVariables(getOutputVariables())
-        .environmentVariables(getEnvironmentVariables())
-        .rollbackInfo(baseStepParameterInfo.getRollbackInfo())
+        .outputVariables(NGVariablesUtils.getMapOfVariables(outputVariables, 0L))
+        .environmentVariables(NGVariablesUtils.getMapOfVariables(environmentVariables, 0L))
         .shellType(getShell())
         .source(getSource())
-        .timeout(baseStepParameterInfo.getTimeout())
-        .name(baseStepParameterInfo.getName())
-        .identifier(baseStepParameterInfo.getIdentifier())
-        .description(baseStepParameterInfo.getDescription())
-        .skipCondition(baseStepParameterInfo.getSkipCondition())
+        .delegateSelectors(ParameterField.createValueField(
+            CollectionUtils.emptyIfNull(delegateSelectors != null ? delegateSelectors.getValue() : null)))
         .build();
   }
 }

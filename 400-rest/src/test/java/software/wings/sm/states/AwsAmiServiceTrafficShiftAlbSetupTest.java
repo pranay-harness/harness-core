@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANIL;
@@ -22,6 +23,7 @@ import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -30,6 +32,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
@@ -55,6 +58,7 @@ import software.wings.service.impl.aws.model.AwsAmiServiceTrafficShiftAlbSetupRe
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionResponse;
@@ -70,6 +74,7 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 
+@OwnedBy(CDP)
 public class AwsAmiServiceTrafficShiftAlbSetupTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
   @Mock private ActivityService activityService;
@@ -78,6 +83,7 @@ public class AwsAmiServiceTrafficShiftAlbSetupTest extends WingsBaseTest {
   @Mock private AwsAmiServiceStateHelper awsAmiServiceHelper;
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private AwsStateHelper awsStateHelper;
+  @Mock private StateExecutionService stateExecutionService;
   @Captor private ArgumentCaptor<SweepingOutputInstance> sweepingOutputInstanceArgumentCaptor;
 
   @Test
@@ -179,6 +185,7 @@ public class AwsAmiServiceTrafficShiftAlbSetupTest extends WingsBaseTest {
     on(state).set("delegateService", delegateService);
     on(state).set("awsAmiServiceHelper", awsAmiServiceHelper);
     on(state).set("awsStateHelper", awsStateHelper);
+    on(state).set("stateExecutionService", stateExecutionService);
 
     when(mockContext.renderExpression(anyString())).thenAnswer((Answer<String>) invocation -> {
       Object[] args = invocation.getArguments();
@@ -210,6 +217,7 @@ public class AwsAmiServiceTrafficShiftAlbSetupTest extends WingsBaseTest {
         .when(serviceResourceService)
         .getCommandByName(any(), any(), any(), any());
     doReturn(emptyList()).when(serviceResourceService).getFlattenCommandUnitList(any(), any(), any(), any());
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
     if (!isSuccess) {
       doThrow(Exception.class).when(delegateService).queueTask(any());
     }

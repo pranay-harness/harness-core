@@ -1,12 +1,14 @@
 package software.wings.graphql.datafetcher.connector;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
+import software.wings.beans.DockerConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.datafetcher.user.UserController;
 import software.wings.graphql.schema.type.QLConnectorType;
 import software.wings.graphql.schema.type.QLCustomCommitDetails;
@@ -51,10 +53,12 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class ConnectorsController {
   public static final String WEBHOOK_URL_PATH = "api/setup-as-code/yaml/webhook/";
   @Inject private SubdomainUrlHelper subdomainUrlHelper;
+  @Inject private UsageScopeController usageScopeController;
+
   public QLConnectorBuilder populateConnector(SettingAttribute settingAttribute, QLConnectorBuilder builder) {
     return builder.id(settingAttribute.getUuid())
         .name(settingAttribute.getName())
@@ -74,7 +78,8 @@ public class ConnectorsController {
       case SLACK:
         return QLSlackConnector.builder();
       case DOCKER:
-        return QLDockerConnector.builder();
+        DockerConfig dockerConfig = (DockerConfig) settingAttribute.getValue();
+        return QLDockerConnector.builder().delegateSelectors(dockerConfig.getDelegateSelectors());
       case JENKINS:
         return QLJenkinsConnector.builder();
       case BAMBOO:
@@ -146,11 +151,13 @@ public class ConnectorsController {
         .sshSettingId(gitConfig.getSshSettingId())
         .webhookUrl(generateWebhookUrl(gitConfig.getWebhookToken(), settingAttribute.getAccountId()))
         .generateWebhookUrl(gitConfig.isGenerateWebhookUrl())
+        .delegateSelectors(gitConfig.getDelegateSelectors())
         .customCommitDetails(QLCustomCommitDetails.builder()
                                  .authorName(gitConfig.getAuthorName())
                                  .authorEmailId(gitConfig.getAuthorEmailId())
                                  .commitMessage(gitConfig.getCommitMessage())
-                                 .build());
+                                 .build())
+        .usageScope(usageScopeController.populateUsageScope(settingAttribute.getUsageRestrictions()));
     if (null != gitConfig.getEncryptedPassword()) {
       builder.passwordSecretId(gitConfig.getEncryptedPassword());
     } else if (null != gitConfig.getPassword()) {

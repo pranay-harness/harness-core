@@ -1,9 +1,11 @@
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.ERRORS_PACK_IDENTIFIER;
+import static io.harness.cvng.core.services.CVNextGenConstants.INFRASTRUCTURE_PACK_IDENTIFIER;
 import static io.harness.cvng.core.services.CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.SOWMYA;
 import static io.harness.rule.OwnerRule.VUK;
 import static io.harness.rule.TestUserProvider.testUserProvider;
 
@@ -50,7 +52,6 @@ public class MetricPackServiceImplTest extends CvNextGenTestBase {
     projectIdentifier = generateUuid();
     orgIdentifier = generateUuid();
     testUserProvider.setActiveUser(EmbeddedUser.builder().name("user1").build());
-    hPersistence.registerUserProvider(testUserProvider);
     metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
   }
 
@@ -269,5 +270,70 @@ public class MetricPackServiceImplTest extends CvNextGenTestBase {
 
     assertThat(metricPackThresholds).isNotEmpty();
     assertThat(metricPackThresholds).size().isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testCreateDefaultMetricPackAndThresholds_Stackdriver() {
+    List<MetricPack> metricPacks =
+        metricPackService.getMetricPacks(accountId, orgIdentifier, projectIdentifier, DataSourceType.STACKDRIVER);
+    assertThat(metricPacks).isNotEmpty();
+
+    List<MetricPack> infraPacks =
+        metricPacks.stream()
+            .filter(metricPack -> metricPack.getIdentifier().equals(INFRASTRUCTURE_PACK_IDENTIFIER))
+            .collect(Collectors.toList());
+    assertThat(infraPacks.size()).isEqualTo(1);
+
+    List<TimeSeriesThreshold> metricPackThresholds = metricPackService.getMetricPackThresholds(
+        accountId, orgIdentifier, projectIdentifier, infraPacks.get(0).getIdentifier(), DataSourceType.STACKDRIVER);
+
+    assertThat(metricPackThresholds).isNotEmpty();
+    assertThat(metricPackThresholds).size().isEqualTo(4);
+
+    List<MetricPack> performancePacks =
+        metricPacks.stream()
+            .filter(metricPack -> metricPack.getIdentifier().equals(PERFORMANCE_PACK_IDENTIFIER))
+            .collect(Collectors.toList());
+    assertThat(performancePacks.size()).isEqualTo(1);
+
+    metricPackThresholds = metricPackService.getMetricPackThresholds(accountId, orgIdentifier, projectIdentifier,
+        performancePacks.get(0).getIdentifier(), DataSourceType.STACKDRIVER);
+
+    assertThat(metricPackThresholds).isNotEmpty();
+    assertThat(metricPackThresholds).size().isEqualTo(6);
+
+    List<MetricPack> errorPacks = metricPacks.stream()
+                                      .filter(metricPack -> metricPack.getIdentifier().equals(ERRORS_PACK_IDENTIFIER))
+                                      .collect(Collectors.toList());
+    assertThat(errorPacks.size()).isEqualTo(1);
+
+    metricPackThresholds = metricPackService.getMetricPackThresholds(
+        accountId, orgIdentifier, projectIdentifier, errorPacks.get(0).getIdentifier(), DataSourceType.STACKDRIVER);
+
+    assertThat(metricPackThresholds).isNotEmpty();
+    assertThat(metricPackThresholds).size().isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testCreateDefaultMetricPackAndThresholds_NewRelic() {
+    List<MetricPack> metricPacks =
+        metricPackService.getMetricPacks(accountId, orgIdentifier, projectIdentifier, DataSourceType.NEW_RELIC);
+    assertThat(metricPacks).isNotEmpty();
+
+    List<MetricPack> performancePacks =
+        metricPacks.stream()
+            .filter(metricPack -> metricPack.getIdentifier().equals(PERFORMANCE_PACK_IDENTIFIER))
+            .collect(Collectors.toList());
+    assertThat(performancePacks.size()).isEqualTo(1);
+
+    List<TimeSeriesThreshold> metricPackThresholds = metricPackService.getMetricPackThresholds(
+        accountId, orgIdentifier, projectIdentifier, performancePacks.get(0).getIdentifier(), DataSourceType.NEW_RELIC);
+
+    assertThat(metricPackThresholds).isNotEmpty();
+    assertThat(metricPackThresholds).size().isEqualTo(8);
   }
 }

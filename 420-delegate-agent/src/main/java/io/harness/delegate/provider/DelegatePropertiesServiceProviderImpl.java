@@ -21,7 +21,6 @@ public class DelegatePropertiesServiceProviderImpl implements DelegateProperties
       return delegatePropertyService.getDelegateProperties(request);
     } catch (ExecutionException e) {
       log.warn("Unable to fetch Delegate Properties", e);
-      e.printStackTrace();
     }
     return null;
   }

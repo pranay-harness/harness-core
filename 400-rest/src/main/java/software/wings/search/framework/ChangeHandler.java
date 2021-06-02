@@ -3,8 +3,7 @@ package software.wings.search.framework;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-
-import software.wings.search.framework.changestreams.ChangeEvent;
+import io.harness.mongo.changestreams.ChangeEvent;
 
 /**
  * The changeHandler interface each search entity

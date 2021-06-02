@@ -20,6 +20,7 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance.Scope;
@@ -36,7 +37,6 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.HostElement;
@@ -213,6 +213,7 @@ public class InstanceFetchState extends State {
                 Cd1SetupFields.ENV_TYPE_FIELD, workflowStandardParams.getEnv().getEnvironmentType().name())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMappingId)
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infrastructureMapping.getServiceId())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .tags(getRenderedTags(context))
             .data(TaskData.builder()
                       .async(true)
@@ -390,7 +391,7 @@ public class InstanceFetchState extends State {
     } else if (t instanceof WingsException) {
       errorMessage.append(ExceptionUtils.getMessage(t));
     } else {
-      errorMessage.append(defaultErrorMessage).append("\n").append(t.getMessage());
+      errorMessage.append(defaultErrorMessage).append('\n').append(t.getMessage());
     }
     log.error(errorMessage.toString(), t);
     return responseBuilder.errorMessage(errorMessage.toString()).build();
@@ -447,5 +448,10 @@ public class InstanceFetchState extends State {
           .collect(Collectors.toList());
     }
     return Collections.emptyList();
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

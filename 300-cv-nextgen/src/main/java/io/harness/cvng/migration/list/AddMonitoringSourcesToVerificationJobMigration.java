@@ -4,7 +4,8 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
-import io.harness.cvng.migration.CNVGMigration;
+import io.harness.cvng.migration.CVNGMigration;
+import io.harness.cvng.migration.beans.ChecklistItem;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
 import io.harness.persistence.HIterator;
@@ -17,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
-public class AddMonitoringSourcesToVerificationJobMigration implements CNVGMigration {
+public class AddMonitoringSourcesToVerificationJobMigration implements CVNGMigration {
   @Inject private HPersistence hPersistence;
 
   @Override
@@ -51,5 +52,15 @@ public class AddMonitoringSourcesToVerificationJobMigration implements CNVGMigra
             .filter(cvConfig -> verificationJob.getDataSources().contains(cvConfig.getType()))
             .collect(Collectors.toList());
     return filteredConfigs.stream().map(CVConfig::getIdentifier).distinct().collect(Collectors.toList());
+  }
+
+  @Override
+  public ChecklistItem whatHappensOnRollback() {
+    return ChecklistItem.NA;
+  }
+
+  @Override
+  public ChecklistItem whatHappensIfOldVersionIteratorPicksMigratedEntity() {
+    return ChecklistItem.NA;
   }
 }

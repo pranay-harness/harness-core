@@ -20,7 +20,7 @@ import static software.wings.utils.WingsTestConstants.SSH_USER_NAME;
 import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Mockito.when;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -34,6 +34,7 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.infrastructure.Host;
 import software.wings.service.intfc.ServiceCommandExecutorService;
+import software.wings.service.intfc.security.SSHVaultService;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -42,9 +43,10 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class CommandTaskTest extends WingsBaseTest {
   @Mock ServiceCommandExecutorService serviceCommandExecutorService;
+  @Mock private SSHVaultService sshVaultService;
 
   DelegateTaskPackage delegateTaskPackage =
       DelegateTaskPackage.builder()

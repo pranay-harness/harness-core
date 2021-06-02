@@ -1,5 +1,6 @@
 package io.harness.gitsync.gitfileactivity.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -10,6 +11,7 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.newA
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.previousOperation;
 import static org.springframework.data.mongodb.core.aggregation.Fields.UNDERSCORE_ID;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.InvalidRequestException;
@@ -17,7 +19,7 @@ import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.helper.GitFileLocationHelper;
 import io.harness.gitsync.core.beans.ChangeWithErrorMsg;
 import io.harness.gitsync.core.beans.GitCommit;
-import io.harness.gitsync.core.impl.YamlSuccessfulChangeServiceImpl;
+import io.harness.gitsync.core.beans.GitCommit.GitCommitProcessingStatus;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity.GitFileActivityBuilder;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity.GitFileActivityKeys;
@@ -52,10 +54,10 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@OwnedBy(DX)
 public class GitSyncServiceImpl implements GitSyncService {
   @Inject private GitFileActivitySummaryRepository gitFileActivitySummaryRepository;
   @Inject private GitFileActivityRepository gitFileActivityRepository;
-  @Inject private YamlSuccessfulChangeServiceImpl yamlSuccessfulChangeService;
 
   @Override
   public List<GitFileActivity> saveAll(List<GitFileActivity> gitFileActivities) {
@@ -222,13 +224,6 @@ public class GitSyncServiceImpl implements GitSyncService {
         updateStatusOfGitFileActivity(
             change.getProcessingCommitId(), singletonList(change.getFilePath()), Status.SUCCESS, null, accountId);
       }
-
-      try {
-        yamlSuccessfulChangeService.updateOnSuccessfulGitChangeProcessing(
-            change, accountId, yamlGitConfig.getOrganizationId(), yamlGitConfig.getProjectId());
-      } catch (Exception e) {
-        log.error(format("error while updating successful change for file [%s]", change.getFilePath()), e);
-      }
     }
   }
 
@@ -313,7 +308,7 @@ public class GitSyncServiceImpl implements GitSyncService {
         .commitMessage(commitMessageToPersist)
         .processingCommitMessage(processingCommitMessage)
         .changeType(change.getChangeType())
-        .gitConnectorId(yamlGitConfig.getGitConnectorId())
+        .gitConnectorId(yamlGitConfig.getGitConnectorRef())
         .repo(yamlGitConfig.getRepo())
         .rootFolder(GitFileLocationHelper.getRootPathSafely(change.getFilePath()))
         .branchName(yamlGitConfig.getBranch())
@@ -321,7 +316,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   }
 
   private GitFileActivitySummaryBuilder buildBaseGitFileActivitySummary(
-      GitFileActivity gitFileActivity, boolean gitToHarness, GitCommit.Status status) {
+      GitFileActivity gitFileActivity, boolean gitToHarness, GitCommitProcessingStatus status) {
     return GitFileActivitySummary.builder()
         .accountId(gitFileActivity.getAccountId())
         .organizationId(gitFileActivity.getOrganizationId())
@@ -337,12 +332,12 @@ public class GitSyncServiceImpl implements GitSyncService {
 
   private GitFileActivitySummaryBuilder buildBaseGitFileActivitySummary(GitCommit gitCommit, boolean gitToHarness) {
     return GitFileActivitySummary.builder()
-        .accountId(gitCommit.getAccountId())
-        .organizationId(gitCommit.getOrganizationId())
-        .projectId(gitCommit.getProjectId())
+        .accountId(gitCommit.getAccountIdentifier())
+        //        .organizationId(gitCommit.getOrganizationId())
+        //        .projectId(gitCommit.getProjectId())
         .commitId(gitCommit.getCommitId())
         .branchName(gitCommit.getBranchName())
-        .repo(gitCommit.getRepo())
+        .repo(gitCommit.getRepoURL())
         .gitConnectorId(gitCommit.getGitConnectorId())
         .commitMessage(gitCommit.getCommitMessage())
         .gitToHarness(gitToHarness)
@@ -368,7 +363,7 @@ public class GitSyncServiceImpl implements GitSyncService {
 
   @Override
   public GitFileActivitySummary createGitFileActivitySummaryForCommit(final String commitId, final String accountId,
-      Boolean gitToHarness, GitCommit.Status status, YamlGitConfigDTO yamlGitConfig) {
+      Boolean gitToHarness, GitCommitProcessingStatus status, YamlGitConfigDTO yamlGitConfig) {
     try {
       List<GitFileActivity> gitFileActivities = getFileActivitesForCommit(commitId, accountId);
       if (isEmpty(gitFileActivities)) {
@@ -387,7 +382,7 @@ public class GitSyncServiceImpl implements GitSyncService {
   }
 
   private GitFileActivitySummary createGitFileActivitySummary(
-      List<GitFileActivity> gitFileActivities, Boolean gitToHarness, GitCommit.Status status) {
+      List<GitFileActivity> gitFileActivities, Boolean gitToHarness, GitCommitProcessingStatus status) {
     if (isEmpty(gitFileActivities)) {
       return null;
     }

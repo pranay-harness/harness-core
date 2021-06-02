@@ -1,5 +1,6 @@
 package io.harness.service.impl;
 
+import static io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static java.lang.System.currentTimeMillis;
@@ -25,7 +26,9 @@ import io.harness.service.intfc.DelegateTaskService;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
 
+import software.wings.beans.DelegateTaskUsageInsightsEventType;
 import software.wings.beans.TaskType;
+import software.wings.service.impl.DelegateTaskStatusObserver;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -49,6 +52,7 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
   @Inject private KryoSerializer kryoSerializer;
 
   @Getter private Subject<DelegateTaskRetryObserver> retryObserverSubject = new Subject<>();
+  @Inject @Getter private Subject<DelegateTaskStatusObserver> delegateTaskStatusObserverSubject;
 
   @Override
   public void touchExecutingTasks(String accountId, String delegateId, List<String> delegateTaskIds) {
@@ -102,7 +106,7 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
               delegateTask.getVersion());
         }
 
-        if (response.getResponseCode() == DelegateTaskResponse.ResponseCode.RETRY_ON_OTHER_DELEGATE) {
+        if (response.getResponseCode() == ResponseCode.RETRY_ON_OTHER_DELEGATE) {
           RetryDelegate retryDelegate =
               RetryDelegate.builder().delegateId(delegateId).delegateTask(delegateTask).taskQuery(taskQuery).build();
 
@@ -114,6 +118,9 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
           }
         }
         handleResponse(delegateTask, taskQuery, response);
+
+        updateDelegateTaskInsightsEvent(accountId, delegateId, taskId, response.getResponseCode());
+
         retryObserverSubject.fireInform(DelegateTaskRetryObxxxxxxxx:onTaskResponseProcessed, delegateTask, delegateId);
       }
     } else {
@@ -144,27 +151,35 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
       return;
     }
 
-    DelegateCallbackService delegateCallbackService =
-        delegateCallbackRegistry.obtainDelegateCallbackService(delegateTask.getDriverId());
-    if (delegateCallbackService == null) {
-      return;
-    }
-
     try (DelegateDriverLogContext driverLogContext =
              new DelegateDriverLogContext(delegateTask.getDriverId(), OVERRIDE_ERROR);
          TaskLogContext taskLogContext = new TaskLogContext(delegateTask.getUuid(), OVERRIDE_ERROR)) {
+      log.info("Processing task response...");
+
+      DelegateCallbackService delegateCallbackService =
+          delegateCallbackRegistry.obtainDelegateCallbackService(delegateTask.getDriverId());
+      if (delegateCallbackService == null) {
+        log.info(
+            "Failed to obtain Delegate callback service for the given task. Skipping processing of task response.");
+        return;
+      }
+
       if (delegateTask.getData().isAsync()) {
         log.info("Publishing async task response...");
         delegateCallbackService.publishAsyncTaskResponse(
             delegateTask.getUuid(), kryoSerializer.asDeflatedBytes(response.getResponse()));
+        log.info("Published async task response.");
       } else {
         log.info("Publishing sync task response...");
         delegateCallbackService.publishSyncTaskResponse(
             delegateTask.getUuid(), kryoSerializer.asDeflatedBytes(response.getResponse()));
+        log.info("Published sync task response.");
       }
     } catch (Exception ex) {
-      log.error("Failed publishing task response for task", ex);
+      log.error("Failed publishing task response", ex);
     }
+
+    log.info("Finished processing task response.");
   }
 
   private void handleInprocResponse(DelegateTask delegateTask, DelegateTaskResponse response) {
@@ -180,6 +195,29 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
                            .uuid(delegateTask.getUuid())
                            .responseData(kryoSerializer.asDeflatedBytes(response.getResponse()))
                            .build());
+    }
+  }
+
+  private void updateDelegateTaskInsightsEvent(
+      String accountId, String delegateId, String taskId, ResponseCode responseCode) {
+    DelegateTaskUsageInsightsEventType eventType = obtainDelegateTaskUsageInsightsEventType(responseCode);
+
+    delegateTaskStatusObserverSubject.fireInform(
+        DelegateTaskStatusObxxxxxxxx:onTaskCompleted, accountId, taskId, delegateId, eventType);
+  }
+
+  private DelegateTaskUsageInsightsEventType obtainDelegateTaskUsageInsightsEventType(ResponseCode taskResponseCode) {
+    if (taskResponseCode == null) {
+      return DelegateTaskUsageInsightsEventType.UNKNOWN;
+    }
+
+    switch (taskResponseCode) {
+      case OK:
+        return DelegateTaskUsageInsightsEventType.SUCCEEDED;
+      case FAILED:
+        return DelegateTaskUsageInsightsEventType.FAILED;
+      default:
+        return DelegateTaskUsageInsightsEventType.UNKNOWN;
     }
   }
 }

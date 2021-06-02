@@ -1,9 +1,7 @@
 package io.harness.engine.expressions;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.core.Recaster;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.expressions.functors.ExecutionSweepingOutputFunctor;
@@ -15,32 +13,30 @@ import io.harness.engine.expressions.functors.OutcomeFunctor;
 import io.harness.engine.expressions.functors.SecretFunctor;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
-import io.harness.exception.CriticalExpressionEvaluationException;
+import io.harness.exception.EngineExpressionEvaluationException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.expression.EngineExpressionEvaluator;
-import io.harness.expression.EngineJexlContext;
 import io.harness.expression.ExpressionEvaluatorUtils;
-import io.harness.expression.JsonFunctor;
 import io.harness.expression.RegexFunctor;
 import io.harness.expression.ResolveObjectResponse;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.expression.XmlFunctor;
-import io.harness.expression.field.dummy.DummyOrchestrationField;
+import io.harness.expression.functors.NGJsonFunctor;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.expression.OrchestrationField;
-import io.harness.pms.expression.OrchestrationFieldProcessor;
-import io.harness.pms.expression.OrchestrationFieldType;
 import io.harness.pms.expression.ProcessorResult;
-import io.harness.pms.sdk.core.registries.OrchestrationFieldRegistry;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
-import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.ParameterDocumentField;
+import io.harness.pms.yaml.ParameterDocumentFieldMapper;
+import io.harness.pms.yaml.ParameterFieldProcessor;
+import io.harness.pms.yaml.validation.InputSetValidatorFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -60,29 +56,26 @@ import org.hibernate.validator.constraints.NotEmpty;
  * ExpressionEvaluatorProvider} to be provided when adding a dependency on {@link io.harness.OrchestrationModule}. For a
  * sample implementation, look at SampleExpressionEvaluator.java and SampleExpressionEvaluatorProvider.java.
  */
-@OwnedBy(CDC)
+@OwnedBy(HarnessTeam.PIPELINE)
 @Getter
 public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
   @Inject private PmsOutcomeService pmsOutcomeService;
   @Inject private PmsSweepingOutputService pmsSweepingOutputService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
-  @Inject private OrchestrationFieldRegistry orchestrationFieldRegistry;
+  @Inject private InputSetValidatorFactory inputSetValidatorFactory;
 
   protected final Ambiance ambiance;
   private final Set<NodeExecutionEntityType> entityTypes;
   private final boolean refObjectSpecific;
   private final Map<String, String> groupAliases;
+  private NodeExecutionsCache nodeExecutionsCache;
 
   @Builder
   public AmbianceExpressionEvaluator(VariableResolverTracker variableResolverTracker, Ambiance ambiance,
       Set<NodeExecutionEntityType> entityTypes, boolean refObjectSpecific) {
     super(variableResolverTracker);
     this.ambiance = ambiance;
-    //    if (ambiance.getExpressionFunctorToken() == 0) {
-    //      ambiance.setExpressionFunctorToken(HashGenerator.generateIntegerHash());
-    //    }
-
     this.entityTypes = entityTypes == null ? NodeExecutionEntityType.allEntities() : entityTypes;
     this.refObjectSpecific = refObjectSpecific;
     this.groupAliases = new HashMap<>();
@@ -97,7 +90,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
     if (!refObjectSpecific) {
       // Add basic functors.
       addToContext("regex", new RegexFunctor());
-      addToContext("json", new JsonFunctor());
+      addToContext("json", new NGJsonFunctor());
       addToContext("xml", new XmlFunctor());
       addToContext("secrets", new SecretFunctor(ambiance.getExpressionFunctorToken()));
     }
@@ -119,7 +112,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
       return;
     }
 
-    NodeExecutionsCache nodeExecutionsCache = new NodeExecutionsCache(nodeExecutionService, ambiance);
+    nodeExecutionsCache = new NodeExecutionsCache(nodeExecutionService, ambiance);
     // Access StepParameters and Outcomes of self and children.
     addToContext("child",
         NodeExecutionChildFunctor.builder()
@@ -184,108 +177,41 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
   }
 
   @Override
-  public Object resolve(Object o) {
+  public Object resolve(Object o, boolean skipUnresolvedExpressionsCheck) {
     return ExpressionEvaluatorUtils.updateExpressions(
-        o, new AmbianceResolveFunctorImpl(this, orchestrationFieldRegistry, ambiance));
-  }
-
-  @Override
-  protected Object evaluateInternal(String expression, EngineJexlContext ctx) {
-    Object value = super.evaluateInternal(expression, ctx);
-    if (value instanceof OrchestrationField) {
-      OrchestrationField orchestrationField = (OrchestrationField) value;
-      return orchestrationField.fetchFinalValue();
-    } else if (!(value instanceof Document)) {
-      return value;
-    }
-
-    Document doc = (Document) value;
-    String recastedClass = (String) doc.getOrDefault(Recaster.RECAST_CLASS_KEY, "");
-    if (recastedClass.equals(ParameterField.class.getName())
-        || recastedClass.equals(DummyOrchestrationField.class.getName())) {
-      OrchestrationField orchestrationField = RecastOrchestrationUtils.fromDocument(doc, OrchestrationField.class);
-      return orchestrationField.fetchFinalValue();
-    }
-    return value;
+        o, new AmbianceResolveFunctorImpl(this, skipUnresolvedExpressionsCheck, inputSetValidatorFactory));
   }
 
   public static class AmbianceResolveFunctorImpl extends ResolveFunctorImpl {
-    private final OrchestrationFieldRegistry orchestrationFieldRegistry;
-    private final Ambiance ambiance;
+    private final ParameterFieldProcessor parameterFieldProcessor;
 
     public AmbianceResolveFunctorImpl(AmbianceExpressionEvaluator expressionEvaluator,
-        OrchestrationFieldRegistry orchestrationFieldRegistry, Ambiance ambiance) {
-      super(expressionEvaluator);
-      this.orchestrationFieldRegistry = orchestrationFieldRegistry;
-      this.ambiance = ambiance;
+        boolean skipUnresolvedExpressionsCheck, InputSetValidatorFactory inputSetValidatorFactory) {
+      super(expressionEvaluator, skipUnresolvedExpressionsCheck);
+      this.parameterFieldProcessor = new ParameterFieldProcessor(
+          getExpressionEvaluator(), isSkipUnresolvedExpressionsCheck(), inputSetValidatorFactory);
     }
 
-    /**
-     * <p>
-     * This method checks if we have special objects, applies custom handling for them and mutates these objects
-     * <br>
-     * Special objects: {@link Document} and {@link OrchestrationField}.
-     * </p>
-     * <p>
-     * When we encounter a {@link Document} with {@link Recaster#RECAST_CLASS_KEY} specified
-     * and equal to one of these values:
-     * <br>
-     * &nbsp;&nbsp;&nbsp;&nbsp;{@link ParameterField},
-     * <br>
-     * &nbsp;&nbsp;&nbsp;&nbsp;{@link DummyOrchestrationField} - used only for testing
-     * <br>
-     * We recast it from <code>Document</code> to <code>OrchestrationField</code> and send to
-     * <br>
-     * <code>getProcessorResult(OrchestrationField orchestrationField)</code> method
-     * <br>
-     * which mutates this object.
-     * <br>
-     * Then we recast this updated <code>OrchestrationField</code> back to Document and update (replace) original
-     * <code>Object o</code> value
-     * </p>
-     *
-     * <p>
-     * When we encounter {@link OrchestrationField} we simply call this method
-     * <code>getProcessorResult(OrchestrationField orchestrationField)</code> and update the object
-     * </p>
-     *
-     * @param o an object that should be processed
-     * @return {@link ResolveObjectResponse} with 2 boolean flags: processed and changed
-     */
     @Override
     public ResolveObjectResponse processObject(Object o) {
-      OrchestrationField orchestrationField;
-      if (o instanceof Document) {
-        Document doc = (Document) o;
-        String recastedClass = (String) doc.getOrDefault(Recaster.RECAST_CLASS_KEY, "");
-        if (recastedClass.equals(ParameterField.class.getName())
-            || recastedClass.equals(DummyOrchestrationField.class.getName())) {
-          orchestrationField = RecastOrchestrationUtils.fromDocument(doc, OrchestrationField.class);
-          ProcessorResult processorResult = getProcessorResult(orchestrationField);
-          Document recastedDocument = RecastOrchestrationUtils.toDocument(orchestrationField);
-          doc.clear();
-          doc.putAll(recastedDocument);
-          return new ResolveObjectResponse(true, processorResult.getStatus() == ProcessorResult.Status.CHANGED);
-        } else {
-          return new ResolveObjectResponse(false, false);
-        }
-      } else if (o instanceof OrchestrationField) {
-        orchestrationField = (OrchestrationField) o;
-        ProcessorResult processorResult = getProcessorResult(orchestrationField);
-        return new ResolveObjectResponse(true, processorResult.getStatus() == ProcessorResult.Status.CHANGED);
-      } else {
-        return new ResolveObjectResponse(false, false);
+      Optional<ParameterDocumentField> docFieldOptional = ParameterDocumentFieldMapper.fromParameterFieldDocument(o);
+      if (!docFieldOptional.isPresent()) {
+        return new ResolveObjectResponse(false, null);
       }
+
+      ParameterDocumentField docField = docFieldOptional.get();
+      processObjectInternal(docField);
+
+      Document doc = (Document) o;
+      RecastOrchestrationUtils.setEncodedValue(doc, RecastOrchestrationUtils.toDocument(docField));
+      return new ResolveObjectResponse(true, doc);
     }
 
-    private ProcessorResult getProcessorResult(OrchestrationField orchestrationField) {
-      OrchestrationFieldType type = orchestrationField.getType();
-      OrchestrationFieldProcessor fieldProcessor = orchestrationFieldRegistry.obtain(type);
-      ProcessorResult processorResult = fieldProcessor.process(ambiance, orchestrationField);
-      if (processorResult.getStatus() == ProcessorResult.Status.ERROR) {
-        throw new CriticalExpressionEvaluationException(processorResult.getMessage());
+    private void processObjectInternal(ParameterDocumentField documentField) {
+      ProcessorResult processorResult = parameterFieldProcessor.process(documentField);
+      if (processorResult.isError()) {
+        throw new EngineExpressionEvaluationException(processorResult.getMessage(), processorResult.getExpression());
       }
-      return processorResult;
     }
   }
 }

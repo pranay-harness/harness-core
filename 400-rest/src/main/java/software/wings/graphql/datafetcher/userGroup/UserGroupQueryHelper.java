@@ -2,7 +2,7 @@ package software.wings.graphql.datafetcher.userGroup;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.security.UserGroup;
@@ -19,7 +19,7 @@ import org.mongodb.morphia.query.Query;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class UserGroupQueryHelper {
   @Inject private DataFetcherUtils utils;
 

@@ -1,5 +1,9 @@
 package io.harness.ccm.billing.bigquery;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import com.hazelcast.util.Preconditions;
 import com.healthmarketscience.sqlbuilder.Condition;
 import com.healthmarketscience.sqlbuilder.SelectQuery;
@@ -10,6 +14,7 @@ import lombok.Value;
 
 @Value
 @Builder
+@OwnedBy(CE)
 public class BigQuerySQL {
   private SelectQuery query;
   private List<Object> selectColumns;

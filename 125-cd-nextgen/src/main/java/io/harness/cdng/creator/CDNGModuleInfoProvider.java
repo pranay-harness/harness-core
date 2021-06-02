@@ -1,5 +1,8 @@
 package io.harness.cdng.creator;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.artifact.steps.ArtifactsStep;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.steps.InfrastructureStep;
@@ -8,17 +11,21 @@ import io.harness.cdng.pipeline.executions.beans.CDPipelineModuleInfo.CDPipeline
 import io.harness.cdng.pipeline.executions.beans.CDStageModuleInfo;
 import io.harness.cdng.pipeline.executions.beans.CDStageModuleInfo.CDStageModuleInfoBuilder;
 import io.harness.cdng.pipeline.executions.beans.InfraExecutionSummary;
-import io.harness.cdng.service.beans.ServiceOutcome;
-import io.harness.cdng.service.steps.ServiceStep;
+import io.harness.cdng.service.steps.ServiceConfigStep;
+import io.harness.cdng.service.steps.ServiceStepOutcome;
+import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
+import io.harness.ngpipeline.artifact.bean.ArtifactsOutcome;
 import io.harness.ngpipeline.pipeline.executions.beans.ServiceExecutionSummary;
 import io.harness.pms.contracts.data.StepOutcomeRef;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.data.OptionalOutcome;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.execution.beans.PipelineModuleInfo;
 import io.harness.pms.sdk.execution.beans.StageModuleInfo;
@@ -31,20 +38,25 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Singleton
+@OwnedBy(HarnessTeam.PIPELINE)
 public class CDNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvider {
   @Inject OutcomeService outcomeService;
 
-  public ServiceExecutionSummary.ArtifactsSummary mapArtifactsOutcomeToSummary(ServiceOutcome serviceOutcome) {
+  public ServiceExecutionSummary.ArtifactsSummary mapArtifactsOutcomeToSummary(
+      Optional<ArtifactsOutcome> artifactsOutcomeOptional) {
     ServiceExecutionSummary.ArtifactsSummary.ArtifactsSummaryBuilder artifactsSummaryBuilder =
         ServiceExecutionSummary.ArtifactsSummary.builder();
-
-    if (serviceOutcome.getArtifactsResult().getPrimary() != null) {
-      artifactsSummaryBuilder.primary(serviceOutcome.getArtifactsResult().getPrimary().getArtifactSummary());
+    if (artifactsOutcomeOptional == null || !artifactsOutcomeOptional.isPresent()) {
+      return artifactsSummaryBuilder.build();
     }
 
-    if (EmptyPredicate.isNotEmpty(serviceOutcome.getArtifactsResult().getSidecars())) {
-      artifactsSummaryBuilder.sidecars(serviceOutcome.getArtifactsResult()
-                                           .getSidecars()
+    ArtifactsOutcome artifactsOutcome = artifactsOutcomeOptional.get();
+    if (artifactsOutcome.getPrimary() != null) {
+      artifactsSummaryBuilder.primary(artifactsOutcome.getPrimary().getArtifactSummary());
+    }
+
+    if (EmptyPredicate.isNotEmpty(artifactsOutcome.getSidecars())) {
+      artifactsSummaryBuilder.sidecars(artifactsOutcome.getSidecars()
                                            .values()
                                            .stream()
                                            .filter(Objects::nonNull)
@@ -55,32 +67,39 @@ public class CDNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvide
     return artifactsSummaryBuilder.build();
   }
 
-  private Optional<ServiceOutcome> getServiceOutcome(NodeExecutionProto nodeExecutionProto) {
-    return outcomeService
-        .fetchOutcomes(nodeExecutionProto.getOutcomeRefsList()
-                           .stream()
-                           .map(ref -> ref.getInstanceId())
-                           .collect(Collectors.toList()))
-        .stream()
-        .filter(outcome -> outcome instanceof ServiceOutcome)
-        .map(outcome -> (ServiceOutcome) outcome)
-        .findFirst();
+  private Optional<ServiceStepOutcome> getServiceStepOutcome(NodeExecutionProto nodeExecutionProto) {
+    OptionalOutcome optionalOutcome = outcomeService.resolveOptional(
+        nodeExecutionProto.getAmbiance(), RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.SERVICE));
+    if (!optionalOutcome.isFound()) {
+      return Optional.empty();
+    }
+    return Optional.ofNullable((ServiceStepOutcome) optionalOutcome.getOutcome());
+  }
+
+  private Optional<ArtifactsOutcome> getArtifactsOutcome(NodeExecutionProto nodeExecutionProto) {
+    OptionalOutcome optionalOutcome = outcomeService.resolveOptional(
+        nodeExecutionProto.getAmbiance(), RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.ARTIFACTS));
+    if (!optionalOutcome.isFound()) {
+      return Optional.empty();
+    }
+    return Optional.ofNullable((ArtifactsOutcome) optionalOutcome.getOutcome());
   }
 
   private Optional<EnvironmentOutcome> getEnvironmentOutcome(NodeExecutionProto nodeExecutionProto) {
     return outcomeService
-        .fetchOutcomes(nodeExecutionProto.getOutcomeRefsList()
-                           .stream()
-                           .map(ref -> ref.getInstanceId())
-                           .collect(Collectors.toList()))
+        .findAllByRuntimeId(nodeExecutionProto.getAmbiance().getPlanExecutionId(), nodeExecutionProto.getUuid())
         .stream()
-        .filter(outcome -> outcome instanceof EnvironmentOutcome)
-        .map(outcome -> (EnvironmentOutcome) outcome)
+        .filter(outcome -> outcome instanceof InfrastructureOutcome)
+        .map(outcome -> ((InfrastructureOutcome) outcome).getEnvironment())
         .findFirst();
   }
 
   private boolean isServiceNodeAndCompleted(PlanNodeProto node, Status status) {
-    return Objects.equals(node.getStepType(), ServiceStep.STEP_TYPE) && status == Status.SUCCEEDED;
+    return Objects.equals(node.getStepType(), ServiceConfigStep.STEP_TYPE) && status == Status.SUCCEEDED;
+  }
+
+  private boolean isArtifactsNodeAndCompleted(PlanNodeProto node, Status status) {
+    return Objects.equals(node.getStepType(), ArtifactsStep.STEP_TYPE) && status == Status.SUCCEEDED;
   }
 
   private boolean isInfrastructureNodeAndCompleted(PlanNodeProto node, Status status) {
@@ -91,7 +110,7 @@ public class CDNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvide
   public PipelineModuleInfo getPipelineLevelModuleInfo(NodeExecutionProto nodeExecutionProto) {
     CDPipelineModuleInfoBuilder cdPipelineModuleInfoBuilder = CDPipelineModuleInfo.builder();
     if (isServiceNodeAndCompleted(nodeExecutionProto.getNode(), nodeExecutionProto.getStatus())) {
-      Optional<ServiceOutcome> serviceOutcome = getServiceOutcome(nodeExecutionProto);
+      Optional<ServiceStepOutcome> serviceOutcome = getServiceStepOutcome(nodeExecutionProto);
       serviceOutcome.ifPresent(outcome
           -> cdPipelineModuleInfoBuilder.serviceDefinitionType(outcome.getServiceDefinitionType())
                  .serviceIdentifier(outcome.getIdentifier()));
@@ -102,14 +121,11 @@ public class CDNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvide
                                                                 .map(StepOutcomeRef::getInstanceId)
                                                                 .collect(Collectors.toList()));
       for (Outcome outcome : outcomes) {
-        if (outcome instanceof EnvironmentOutcome) {
-          EnvironmentOutcome environmentOutcome = (EnvironmentOutcome) outcome;
-          cdPipelineModuleInfoBuilder.envIdentifier(environmentOutcome.getIdentifier())
-              .environmentType(environmentOutcome.getEnvironmentType());
-        }
         if (outcome instanceof InfrastructureOutcome) {
           InfrastructureOutcome infrastructureOutcome = (InfrastructureOutcome) outcome;
-          cdPipelineModuleInfoBuilder.infrastructureType(infrastructureOutcome.getKind());
+          cdPipelineModuleInfoBuilder.envIdentifier(infrastructureOutcome.getEnvironment().getIdentifier())
+              .environmentType(infrastructureOutcome.getEnvironment().getType())
+              .infrastructureType(infrastructureOutcome.getKind());
         }
       }
     }
@@ -120,20 +136,24 @@ public class CDNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvide
   public StageModuleInfo getStageLevelModuleInfo(NodeExecutionProto nodeExecutionProto) {
     CDStageModuleInfoBuilder cdStageModuleInfoBuilder = CDStageModuleInfo.builder();
     if (isServiceNodeAndCompleted(nodeExecutionProto.getNode(), nodeExecutionProto.getStatus())) {
-      Optional<ServiceOutcome> serviceOutcome = getServiceOutcome(nodeExecutionProto);
+      Optional<ServiceStepOutcome> serviceOutcome = getServiceStepOutcome(nodeExecutionProto);
+      Optional<ArtifactsOutcome> artifactsOutcome = getArtifactsOutcome(nodeExecutionProto);
       serviceOutcome.ifPresent(outcome
           -> cdStageModuleInfoBuilder.serviceInfo(ServiceExecutionSummary.builder()
                                                       .identifier(outcome.getIdentifier())
                                                       .displayName(outcome.getName())
                                                       .deploymentType(outcome.getServiceDefinitionType())
-                                                      .artifacts(mapArtifactsOutcomeToSummary(outcome))
+                                                      .artifacts(mapArtifactsOutcomeToSummary(artifactsOutcome))
                                                       .build()));
     }
     if (isInfrastructureNodeAndCompleted(nodeExecutionProto.getNode(), nodeExecutionProto.getStatus())) {
       Optional<EnvironmentOutcome> environmentOutcome = getEnvironmentOutcome(nodeExecutionProto);
       environmentOutcome.ifPresent(outcome
-          -> cdStageModuleInfoBuilder.infraExecutionSummary(
-              InfraExecutionSummary.builder().identifier(outcome.getIdentifier()).name(outcome.getName()).build()));
+          -> cdStageModuleInfoBuilder.infraExecutionSummary(InfraExecutionSummary.builder()
+                                                                .identifier(outcome.getIdentifier())
+                                                                .name(outcome.getName())
+                                                                .type(outcome.getType().name())
+                                                                .build()));
     }
     return cdStageModuleInfoBuilder.build();
   }

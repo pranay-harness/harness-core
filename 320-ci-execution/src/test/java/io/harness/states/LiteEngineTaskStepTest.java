@@ -9,13 +9,15 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
+import io.harness.beans.steps.stepinfo.DockerStepInfo;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
-import io.harness.beans.steps.stepinfo.PublishStepInfo;
-import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
+import io.harness.beans.steps.stepinfo.RestoreCacheS3StepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
-import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
+import io.harness.beans.steps.stepinfo.SaveCacheS3StepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ci.k8s.CIContainerStatus;
 import io.harness.delegate.beans.ci.k8s.CiK8sTaskResponse;
@@ -24,6 +26,7 @@ import io.harness.delegate.beans.ci.k8s.PodStatus;
 import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
@@ -31,7 +34,6 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.stateutils.buildstate.BuildSetupUtils;
-import io.harness.tasks.ResponseData;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StepElement;
@@ -39,12 +41,14 @@ import io.harness.yaml.core.StepElement;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CI)
 public class LiteEngineTaskStepTest extends CIExecutionTestBase {
   @Mock private BuildSetupUtils buildSetupUtils;
   @Mock private CIDelegateTaskExecutor ciDelegateTaskExecutor;
@@ -54,6 +58,7 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
 
   private Ambiance ambiance;
   private LiteEngineTaskStepInfo liteEngineTaskStepInfo;
+  private StepElementParameters stepElementParameters;
 
   @Before
   public void setUp() {
@@ -66,7 +71,7 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
                 ExecutionElement.builder()
                     .steps(asList(StepElement.builder()
                                       .type("restoreCache")
-                                      .stepSpecType(RestoreCacheStepInfo.builder().identifier("restoreCache").build())
+                                      .stepSpecType(RestoreCacheS3StepInfo.builder().identifier("restoreCache").build())
                                       .build(),
                         StepElement.builder()
                             .type("run")
@@ -75,15 +80,16 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
                         ParallelStepElement.builder()
                             .sections(asList(StepElement.builder()
                                                  .type("publishArtifacts")
-                                                 .stepSpecType(PublishStepInfo.builder().identifier("publish").build())
+                                                 .stepSpecType(DockerStepInfo.builder().identifier("publish").build())
                                                  .build(),
                                 StepElement.builder()
                                     .type("saveCache")
-                                    .stepSpecType(SaveCacheStepInfo.builder().identifier("saveCache").build())
+                                    .stepSpecType(SaveCacheS3StepInfo.builder().identifier("saveCache").build())
                                     .build()))
                             .build()))
                     .build())
             .build();
+    stepElementParameters = StepElementParameters.builder().name("name").spec(liteEngineTaskStepInfo).build();
   }
 
   @Test
@@ -103,42 +109,44 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
     //    assertThat(taskType.getType()).isEqualTo("CI_BUILD");
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldHandleSuccessfulTaskResult() {
     PodStatus podStatus = PodStatus.builder().build();
     CiK8sTaskResponse taskResponse = CiK8sTaskResponse.builder().podName("test").podStatus(podStatus).build();
-    Map<String, ResponseData> responseDataMap = new HashMap<>();
-    responseDataMap.put("waitId",
-        K8sTaskExecutionResponse.builder()
-            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-            .k8sTaskResponse(taskResponse)
-            .build());
+    K8sTaskExecutionResponse executionResponse = K8sTaskExecutionResponse.builder()
+                                                     .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+                                                     .k8sTaskResponse(taskResponse)
+                                                     .build();
 
     when(buildSetupUtils.getBuildServiceContainers(liteEngineTaskStepInfo)).thenReturn(null);
-    StepResponse stepResponse = liteEngineTaskStep.handleTaskResult(ambiance, liteEngineTaskStepInfo, responseDataMap);
+    StepResponse stepResponse =
+        liteEngineTaskStep.handleTaskResult(ambiance, stepElementParameters, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldHandleFailedTaskResult() {
     PodStatus podStatus = PodStatus.builder().build();
     CiK8sTaskResponse taskResponse = CiK8sTaskResponse.builder().podName("test").podStatus(podStatus).build();
-    Map<String, ResponseData> responseDataMap = new HashMap<>();
-    responseDataMap.put("waitId",
-        K8sTaskExecutionResponse.builder()
-            .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-            .k8sTaskResponse(taskResponse)
-            .build());
+
+    K8sTaskExecutionResponse executionResponse = K8sTaskExecutionResponse.builder()
+                                                     .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+                                                     .k8sTaskResponse(taskResponse)
+                                                     .build();
 
     when(buildSetupUtils.getBuildServiceContainers(liteEngineTaskStepInfo)).thenReturn(null);
-    StepResponse stepResponse = liteEngineTaskStep.handleTaskResult(ambiance, liteEngineTaskStepInfo, responseDataMap);
+    StepResponse stepResponse =
+        liteEngineTaskStep.handleTaskResult(ambiance, stepElementParameters, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.FAILED);
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
@@ -159,18 +167,18 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
 
     ContainerDefinitionInfo serviceContainer =
         ContainerDefinitionInfo.builder().stepIdentifier(stepId).stepName(stepName).name(containerName).build();
-    Map<String, ResponseData> responseDataMap = new HashMap<>();
-    responseDataMap.put("waitId",
-        K8sTaskExecutionResponse.builder()
-            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-            .k8sTaskResponse(taskResponse)
-            .build());
+    K8sTaskExecutionResponse executionResponse = K8sTaskExecutionResponse.builder()
+                                                     .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+                                                     .k8sTaskResponse(taskResponse)
+                                                     .build();
 
     when(buildSetupUtils.getBuildServiceContainers(liteEngineTaskStepInfo)).thenReturn(Arrays.asList(serviceContainer));
-    StepResponse stepResponse = liteEngineTaskStep.handleTaskResult(ambiance, liteEngineTaskStepInfo, responseDataMap);
+    StepResponse stepResponse =
+        liteEngineTaskStep.handleTaskResult(ambiance, stepElementParameters, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
@@ -189,15 +197,14 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
             .containerImageDetails(
                 ContainerImageDetails.builder().imageDetails(ImageDetails.builder().name("redis").build()).build())
             .build();
-    Map<String, ResponseData> responseDataMap = new HashMap<>();
-    responseDataMap.put("waitId",
-        K8sTaskExecutionResponse.builder()
-            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-            .k8sTaskResponse(taskResponse)
-            .build());
+    K8sTaskExecutionResponse executionResponse = K8sTaskExecutionResponse.builder()
+                                                     .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+                                                     .k8sTaskResponse(taskResponse)
+                                                     .build();
 
     when(buildSetupUtils.getBuildServiceContainers(liteEngineTaskStepInfo)).thenReturn(Arrays.asList(serviceContainer));
-    StepResponse stepResponse = liteEngineTaskStep.handleTaskResult(ambiance, liteEngineTaskStepInfo, responseDataMap);
+    StepResponse stepResponse =
+        liteEngineTaskStep.handleTaskResult(ambiance, stepElementParameters, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 }

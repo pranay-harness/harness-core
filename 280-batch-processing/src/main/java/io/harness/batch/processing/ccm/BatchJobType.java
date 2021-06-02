@@ -2,11 +2,15 @@ package io.harness.batch.processing.ccm;
 
 import static io.harness.batch.processing.ccm.BatchJobBucket.IN_CLUSTER;
 import static io.harness.batch.processing.ccm.BatchJobBucket.IN_CLUSTER_BILLING;
+import static io.harness.batch.processing.ccm.BatchJobBucket.IN_CLUSTER_RECOMMENDATION;
 import static io.harness.batch.processing.ccm.BatchJobBucket.OTHERS;
 import static io.harness.batch.processing.ccm.BatchJobBucket.OUT_OF_CLUSTER;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
@@ -16,9 +20,11 @@ import lombok.Getter;
 import org.springframework.batch.core.Job;
 
 @Getter
+@OwnedBy(HarnessTeam.CE)
 public enum BatchJobType {
   BILLING_DATA_PIPELINE(50, 1, ChronoUnit.HOURS, emptyList(), OUT_OF_CLUSTER),
   SYNC_BILLING_REPORT_S3(100, 1, ChronoUnit.HOURS, emptyList(), OUT_OF_CLUSTER),
+  SYNC_BILLING_REPORT_AZURE(100, 1, ChronoUnit.HOURS, emptyList(), OUT_OF_CLUSTER),
   AWS_ECS_CLUSTER_SYNC(110, 1, ChronoUnit.DAYS, emptyList(), OUT_OF_CLUSTER),
   AWS_ECS_CLUSTER_DATA_SYNC(115, 1, ChronoUnit.HOURS, emptyList(), OUT_OF_CLUSTER),
   DEPLOYMENT_EVENT(150, 1, ChronoUnit.DAYS, emptyList(), IN_CLUSTER),
@@ -30,13 +36,18 @@ public enum BatchJobType {
   INSTANCE_BILLING(750, 1, ChronoUnit.DAYS, Arrays.asList(K8S_UTILIZATION), IN_CLUSTER_BILLING),
   ACTUAL_IDLE_COST_BILLING(800, 1, ChronoUnit.DAYS, singletonList(INSTANCE_BILLING), IN_CLUSTER_BILLING),
   NODE_POD_COUNT(860, 1, ChronoUnit.DAYS, singletonList(INSTANCE_BILLING), IN_CLUSTER_BILLING),
-  K8S_WORKLOAD_RECOMMENDATION(875, 1, ChronoUnit.DAYS, Collections.singletonList(K8S_EVENT), IN_CLUSTER_BILLING),
+  K8S_WORKLOAD_RECOMMENDATION(875, 1, ChronoUnit.DAYS, Collections.singletonList(K8S_EVENT), IN_CLUSTER_RECOMMENDATION),
+  K8S_NODE_RECOMMENDATION(
+      877, 1, ChronoUnit.DAYS, Collections.singletonList(K8S_UTILIZATION), IN_CLUSTER_RECOMMENDATION),
   INSTANCE_BILLING_HOURLY_AGGREGATION(
       881, 1, ChronoUnit.HOURS, singletonList(ACTUAL_IDLE_COST_BILLING_HOURLY), IN_CLUSTER_BILLING),
   INSTANCE_BILLING_AGGREGATION(887, 1, ChronoUnit.DAYS, Arrays.asList(ACTUAL_IDLE_COST_BILLING), IN_CLUSTER_BILLING),
   CE_SEGMENT_CALL(900, 1, ChronoUnit.DAYS, Arrays.asList(ACTUAL_IDLE_COST_BILLING), OTHERS),
   CLUSTER_DATA_TO_BIG_QUERY(1000, 1, ChronoUnit.DAYS, Arrays.asList(ACTUAL_IDLE_COST_BILLING), IN_CLUSTER_BILLING),
-  ANOMALY_DETECTION(1000, 1, ChronoUnit.DAYS, singletonList(INSTANCE_BILLING), IN_CLUSTER_BILLING);
+  ANOMALY_DETECTION_K8S(1000, 1, ChronoUnit.DAYS, singletonList(INSTANCE_BILLING), IN_CLUSTER_BILLING),
+  ANOMALY_DETECTION_CLOUD(1000, 1, ChronoUnit.DAYS, singletonList(INSTANCE_BILLING), IN_CLUSTER_BILLING),
+  DATA_CHECK_BIGQUERY_TIMESCALE(1000, 1, ChronoUnit.DAYS, singletonList(CLUSTER_DATA_TO_BIG_QUERY), IN_CLUSTER_BILLING),
+  RERUN_JOB(1500, 1, ChronoUnit.DAYS, emptyList(), IN_CLUSTER_BILLING);
 
   // Specifies order in which the jobs are to be run
   private final int order;

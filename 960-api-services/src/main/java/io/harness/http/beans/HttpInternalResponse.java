@@ -1,5 +1,8 @@
 package io.harness.http.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.CommandExecutionStatus;
 
 import lombok.AllArgsConstructor;
@@ -7,6 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@OwnedBy(CDC)
 @Data
 @Builder
 @NoArgsConstructor
@@ -19,4 +23,5 @@ public class HttpInternalResponse {
   private String httpMethod;
   private String httpUrl;
   private String header;
+  private boolean timedOut;
 }

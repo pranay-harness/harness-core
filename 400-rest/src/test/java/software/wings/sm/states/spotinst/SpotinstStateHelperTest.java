@@ -1,5 +1,6 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
@@ -42,6 +43,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SweepingOutputInstance;
@@ -97,6 +99,7 @@ import org.mockito.Spy;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+@OwnedBy(CDP)
 public class SpotinstStateHelperTest extends WingsBaseTest {
   @Mock private AppService mockAppService;
   @Mock private InfrastructureMappingService mockInfrastructureMappingService;
@@ -306,7 +309,7 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
             .awsConfig(AwsConfig.builder().build())
             .spotInstTaskParameters(SpotInstSetupTaskParameters.builder().build())
             .build(),
-        PROD, SERVICE_ID);
+        PROD, SERVICE_ID, false);
     assertThat(task).isNotNull();
     assertThat(task.getTags().size()).isEqualTo(1);
     assertThat(task.getTags().get(0)).isEqualTo(tag);

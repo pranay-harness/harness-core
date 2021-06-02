@@ -15,13 +15,11 @@ import io.harness.delegate.beans.TaskSelectorMap;
 import io.harness.exception.NoResultFoundException;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
-import io.harness.rule.TestUserProvider;
 import io.harness.service.intfc.DelegateTaskSelectorMapService;
 
 import com.google.inject.Inject;
 import java.util.HashSet;
 import java.util.Set;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -31,12 +29,6 @@ public class DelegateTaskSelectorMapServiceTest extends DelegateServiceTestBase 
   private static final TaskGroup HELM_TASK_GROUP = TaskGroup.HELM;
   @Inject private HPersistence hPersistence;
   @InjectMocks @Inject private DelegateTaskSelectorMapService taskSelectorMapService;
-
-  @Before
-  public void setUp() {
-    TestUserProvider testUserProvider = new TestUserProvider();
-    hPersistence.registerUserProvider(testUserProvider);
-  }
 
   @Test
   @Owner(developers = SANJA)

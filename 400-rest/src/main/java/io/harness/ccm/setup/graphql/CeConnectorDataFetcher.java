@@ -1,7 +1,12 @@
 package io.harness.ccm.setup.graphql;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.health.CEClusterHealth;
 import io.harness.ccm.health.CEHealthStatus;
 import io.harness.ccm.health.HealthStatusServiceImpl;
@@ -11,6 +16,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.ce.CEAwsConfig;
+import software.wings.beans.ce.CEAzureConfig;
 import software.wings.beans.ce.CEGcpConfig;
 import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
@@ -27,6 +33,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
+@OwnedBy(CE)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 public class CeConnectorDataFetcher
     extends AbstractConnectionV2DataFetcher<QLCESetupFilter, QLNoOpSortCriteria, QLCEConnectorData> {
   @Inject private CESetupQueryHelper ceSetupQueryHelper;
@@ -77,6 +85,14 @@ public class CeConnectorDataFetcher
           .infraType(QLInfraTypesEnum.AWS);
     } else if (settingAttribute.getValue() instanceof CEGcpConfig) {
       qlCEConnectorBuilder.infraType(QLInfraTypesEnum.GCP);
+    } else if (settingAttribute.getValue() instanceof CEAzureConfig) {
+      CEAzureConfig ceAzureConfig = (CEAzureConfig) settingAttribute.getValue();
+      qlCEConnectorBuilder.azureStorageAccountName(ceAzureConfig.getStorageAccountName())
+          .azureStorageContainerName(ceAzureConfig.getContainerName())
+          .azureStorageDirectoryName(ceAzureConfig.getDirectoryName())
+          .azureSubscriptionId(ceAzureConfig.getSubscriptionId())
+          .azureTenantId(ceAzureConfig.getTenantId())
+          .infraType(QLInfraTypesEnum.AZURE);
     }
     return qlCEConnectorBuilder.build();
   }

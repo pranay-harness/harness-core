@@ -1,5 +1,7 @@
 package software.wings.utils;
 
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.shell.ScriptType.POWERSHELL;
 
 import static software.wings.beans.Graph.Builder.aGraph;
@@ -24,8 +26,8 @@ import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommand
 import static software.wings.service.impl.aws.model.AwsConstants.AMI_SETUP_COMMAND_NAME;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_VMSS_DEPLOY;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_VMSS_SETUP;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_WEBAPP_SLOT_DEPLOYMENT;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_WEBAPP_SLOT_SETUP;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_WEBAPP_SLOT_SWAP;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.PCF_RESIZE;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.PCF_SETUP;
 import static software.wings.sm.states.AwsAmiServiceDeployState.ASG_COMMAND_NAME;
@@ -34,6 +36,9 @@ import static software.wings.utils.PowerShellScriptsLoader.psScriptMap;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.GraphNode;
 import software.wings.beans.command.Command;
@@ -50,6 +55,8 @@ import java.util.List;
 /**
  * The Enum ArtifactType.
  */
+@OwnedBy(CDC)
+@TargetModule(_871_CG_BEANS)
 public enum ArtifactType {
   /**
    * Jar artifact type.
@@ -349,6 +356,85 @@ public enum ArtifactType {
                                  .properties(ImmutableMap.<String, Object>builder()
                                                  .put("commandPath", "$WINGS_RUNTIME_PATH")
                                                  .put("commandString", "unzip \"$ARTIFACT_FILE_NAME\"")
+                                                 .build())
+                                 .build(),
+                             getCopyConfigsNode())
+                         .buildPipeline())
+          .build();
+    }
+  },
+
+  /**
+   * NuGET artifact type.
+   */
+  NUGET {
+    private static final long serialVersionUID = 2932493038229748527L;
+
+    @Override
+    public boolean isInternal() {
+      return false;
+    }
+
+    @Override
+    public List<Command> getDefaultCommands() {
+      return asList(getStartCommand(), getInstallCommand(), getStopCommand());
+    }
+
+    /**
+     * Gets start command graph.
+     * @return the start command graph
+     */
+    private Command getStartCommand() {
+      return aCommand()
+          .withCommandType(CommandType.START)
+          .withGraph(aGraph()
+                         .withGraphName("Start")
+                         .addNodes(getStartServiceNode("echo \"service start script should be added here\""),
+                             getServiceRunningNode())
+                         .buildPipeline())
+          .build();
+    }
+
+    /**
+     * Gets stop command graph.
+     * @return the stop command graph
+     */
+    private Command getStopCommand() {
+      return aCommand()
+          .withCommandType(CommandType.STOP)
+          .withGraph(
+              aGraph()
+                  .withGraphName("Stop")
+                  .addNodes(getStopServiceNode("echo \"service stop script should be added here\""),
+                      GraphNode.builder()
+                          .id(graphIdGenerator("node"))
+                          .name("Service Stopped")
+                          .type(PROCESS_CHECK_STOPPED.name())
+                          .properties(ImmutableMap.<String, Object>builder()
+                                          .put("commandString", "echo \"service stopped check should be added here\"")
+                                          .build())
+                          .build())
+                  .buildPipeline())
+          .build();
+    }
+
+    /**
+     * Get Install Command
+     * @return the install command graph
+     */
+    private Command getInstallCommand() {
+      return aCommand()
+          .withCommandType(CommandType.INSTALL)
+          .withGraph(aGraph()
+                         .withGraphName("Install")
+                         .addNodes(getSetupRuntimePathsNode(), getCopyArtifactNode(),
+                             GraphNode.builder()
+                                 .id(graphIdGenerator("node"))
+                                 .name("Expand Artifact")
+                                 .type(EXEC.name())
+                                 .properties(ImmutableMap.<String, Object>builder()
+                                                 .put("commandPath", "$WINGS_RUNTIME_PATH")
+                                                 .put("commandString", "nuget install \"$ARTIFACT_FILE_NAME\"")
                                                  .build())
                                  .build(),
                              getCopyConfigsNode())
@@ -729,13 +815,9 @@ public enum ArtifactType {
 
     @Override
     public List<Command> getDefaultCommands() {
-      return asList(getAzureWebAppSlotSetupCommand());
+      return asList(getAzureWebAppSlotSetupCommand(), getAzureWebAppSlotSwapCommand());
     }
 
-    /**
-     * Get Code Deploy Command
-     * @return
-     */
     private Command getAzureWebAppSlotSetupCommand() {
       return aCommand()
           .withCommandType(CommandType.SETUP)
@@ -744,7 +826,26 @@ public enum ArtifactType {
                          .addNodes(GraphNode.builder()
                                        .origin(true)
                                        .id(graphIdGenerator("node"))
-                                       .name(AZURE_WEBAPP_SLOT_DEPLOYMENT)
+                                       .name(AZURE_WEBAPP_SLOT_SETUP)
+                                       .type(CommandUnitType.AZURE_WEBAPP.name())
+                                       .build())
+                         .buildPipeline())
+          .build();
+    }
+
+    /**
+     * Get Code Deploy Command
+     * @return
+     */
+    private Command getAzureWebAppSlotSwapCommand() {
+      return aCommand()
+          .withCommandType(CommandType.INSTALL)
+          .withGraph(aGraph()
+                         .withGraphName(AZURE_WEBAPP_SLOT_SWAP)
+                         .addNodes(GraphNode.builder()
+                                       .origin(true)
+                                       .id(graphIdGenerator("node"))
+                                       .name(AZURE_WEBAPP_SLOT_SWAP)
                                        .type(CommandUnitType.AZURE_WEBAPP.name())
                                        .build())
                          .buildPipeline())

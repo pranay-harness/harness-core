@@ -1,7 +1,7 @@
 failureStrategies:
   - onFailure:
       errors:
-        - AnyOther
+        - AllErrors
       action:
         type: StageRollback
 spec:
@@ -17,7 +17,18 @@ spec:
                 type: K8sCanaryDeploy
                 timeout: 10m
                 spec:
+                  instanceSelection:
+                    type: Count
+                    spec:
+                      count: 1
                   skipDryRun: false
+            - step:
+                name: "Canary Delete"
+                identifier: canaryDelete
+                type: K8sCanaryDelete
+                timeout: 10m
+                spec: {}
+          rollbackSteps:
             - step:
                 name: "Canary Delete"
                 identifier: canaryDelete

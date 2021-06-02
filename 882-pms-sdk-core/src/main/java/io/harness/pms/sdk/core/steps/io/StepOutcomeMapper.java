@@ -13,6 +13,8 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(CDC)
 @UtilityClass
 public class StepOutcomeMapper {
+  public static String GRAPH_KEY = "_graphOutcome_";
+
   public StepOutcome fromStepOutcomeProto(StepOutcomeProto proto) {
     return StepOutcome.builder()
         .group(proto.getGroup())

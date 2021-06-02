@@ -3,14 +3,15 @@ package software.wings.search.framework;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.mongo.changestreams.ChangeSubscriber;
+import io.harness.mongo.changestreams.ChangeTracker;
+import io.harness.mongo.changestreams.ChangeTrackingInfo;
 import io.harness.persistence.PersistentEntity;
 
 import software.wings.dl.WingsPersistence;
-import software.wings.search.framework.changestreams.ChangeSubscriber;
-import software.wings.search.framework.changestreams.ChangeTracker;
-import software.wings.search.framework.changestreams.ChangeTrackingInfo;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 class ElasticsearchSyncHelper {
   @Inject private Set<SearchEntity<?>> searchEntities;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private ChangeTracker changeTracker;
+  @Inject @Named("Search") private ChangeTracker changeTracker;
 
   void startChangeListeners(ChangeSubscriber changeSubscriber) {
     Set<Class<? extends PersistentEntity>> subscribedClasses = new HashSet<>();
@@ -52,7 +53,7 @@ class ElasticsearchSyncHelper {
     if (searchSourceEntitySyncState != null) {
       token = searchSourceEntitySyncState.getLastSyncedToken();
     }
-    return new ChangeTrackingInfo<>(subscribedClass, changeSubscriber, token);
+    return new ChangeTrackingInfo<>(subscribedClass, changeSubscriber, token, null);
   }
 
   boolean checkIfAnyChangeListenerIsAlive() {

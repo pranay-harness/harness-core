@@ -27,7 +27,7 @@ import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
@@ -102,7 +102,7 @@ import org.quartz.CronScheduleBuilder;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-@TargetModule(Module._960_API_SERVICES)
+@TargetModule(HarnessModule._960_API_SERVICES)
 public class TriggerServiceHelper {
   public static final String EXECUTION_TYPE = "EXECUTION_TYPE";
   public static final String TRIGGER_NAME = "TRIGGER_NAME";
@@ -118,8 +118,8 @@ public class TriggerServiceHelper {
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
 
-  public void deletePipelineCompletionTriggers(String appId, String pipelineId) {
-    getMatchedSourcePipelineTriggers(appId, pipelineId).collect(toList()).forEach(trigger -> delete(trigger.getUuid()));
+  public List<Trigger> getPipelineCompletionTriggers(String appId, String pipelineId) {
+    return getMatchedSourcePipelineTriggers(appId, pipelineId).collect(toList());
   }
 
   public List<Trigger> getTriggersByApp(String appId) {

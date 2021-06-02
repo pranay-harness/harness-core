@@ -12,7 +12,12 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.client.NextGenClient;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.NextGenServiceImpl.EntityKey;
+import io.harness.ng.core.dto.OrganizationDTO;
+import io.harness.ng.core.dto.OrganizationResponse;
+import io.harness.ng.core.dto.ProjectDTO;
+import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.environment.dto.EnvironmentResponse;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.rule.Owner;
@@ -48,13 +53,15 @@ public class NextGenServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetEnvironment() throws IOException {
-    Call<ResponseDTO<EnvironmentResponseDTO>> call = Mockito.mock(Call.class);
+    Call<ResponseDTO<EnvironmentResponse>> call = Mockito.mock(Call.class);
     when(call.clone()).thenReturn(call);
     String envIdentifier = generateUuid();
     when(nextGenClient.getEnvironment(envIdentifier, accountId, orgIdentifier, projectIdentifier)).thenReturn(call);
     when(call.execute())
-        .thenReturn(Response.success(
-            ResponseDTO.newResponse(EnvironmentResponseDTO.builder().identifier(envIdentifier).name("env").build())));
+        .thenReturn(Response.success(ResponseDTO.newResponse(
+            EnvironmentResponse.builder()
+                .environment(EnvironmentResponseDTO.builder().identifier(envIdentifier).name("env").build())
+                .build())));
     EnvironmentResponseDTO environment =
         nextGenService.getEnvironment(accountId, orgIdentifier, projectIdentifier, envIdentifier);
     assertThat(environment).isNotNull();
@@ -63,7 +70,7 @@ public class NextGenServiceImplTest extends CvNextGenTestBase {
 
     final String newEnvIdentifier = generateUuid();
     when(nextGenClient.getEnvironment(newEnvIdentifier, accountId, orgIdentifier, projectIdentifier)).thenReturn(call);
-    when(call.execute()).thenReturn(Response.success(ResponseDTO.newResponse(null)));
+    when(call.execute()).thenReturn(Response.success(ResponseDTO.newResponse(EnvironmentResponse.builder().build())));
     assertThatThrownBy(
         () -> nextGenService.getEnvironment(accountId, orgIdentifier, projectIdentifier, newEnvIdentifier))
         .isInstanceOf(CacheLoader.InvalidCacheLoadException.class)
@@ -87,7 +94,7 @@ public class NextGenServiceImplTest extends CvNextGenTestBase {
     when(nextGenClient.getService(serviceIdentifier, accountId, orgIdentifier, projectIdentifier)).thenReturn(call);
     when(call.execute())
         .thenReturn(Response.success(ResponseDTO.newResponse(
-            ServiceResponseDTO.builder().build().builder().identifier(serviceIdentifier).name("service").build())));
+            ServiceResponseDTO.builder().identifier(serviceIdentifier).name("service").build())));
     ServiceResponseDTO service =
         nextGenService.getService(accountId, orgIdentifier, projectIdentifier, serviceIdentifier);
     assertThat(service).isNotNull();
@@ -106,6 +113,63 @@ public class NextGenServiceImplTest extends CvNextGenTestBase {
                   .orgIdentifier(orgIdentifier)
                   .projectIdentifier(projectIdentifier)
                   .entityIdentifier(newServiceIdentifier)
+                  .build()
+            + ".");
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetOrganization() throws IOException {
+    Call<ResponseDTO<OrganizationResponse>> call = Mockito.mock(Call.class);
+    when(call.clone()).thenReturn(call);
+    when(nextGenClient.getOrganization(orgIdentifier, accountId)).thenReturn(call);
+    when(call.execute())
+        .thenReturn(Response.success(ResponseDTO.newResponse(
+            OrganizationResponse.builder()
+                .organization(OrganizationDTO.builder().identifier(orgIdentifier).name("orgName").build())
+                .build())));
+    OrganizationDTO organizationDTO = nextGenService.getOrganization(accountId, this.orgIdentifier);
+    assertThat(organizationDTO).isNotNull();
+    assertThat(organizationDTO.getIdentifier()).isEqualTo(orgIdentifier);
+    assertThat(organizationDTO.getName()).isEqualTo("orgName");
+
+    final String newOrgIdentifier = generateUuid();
+    when(nextGenClient.getOrganization(newOrgIdentifier, accountId)).thenReturn(call);
+    when(call.execute()).thenReturn(Response.success(ResponseDTO.newResponse(OrganizationResponse.builder().build())));
+    assertThatThrownBy(() -> nextGenService.getOrganization(accountId, newOrgIdentifier))
+        .isInstanceOf(CacheLoader.InvalidCacheLoadException.class)
+        .hasMessage("CacheLoader returned null for key "
+            + EntityKey.builder().accountId(accountId).orgIdentifier(newOrgIdentifier).build() + ".");
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetCachedProject() throws IOException {
+    Call<ResponseDTO<ProjectResponse>> call = Mockito.mock(Call.class);
+    when(call.clone()).thenReturn(call);
+    when(nextGenClient.getProject(projectIdentifier, accountId, orgIdentifier)).thenReturn(call);
+    when(call.execute())
+        .thenReturn(Response.success(ResponseDTO.newResponse(
+            ProjectResponse.builder()
+                .project(ProjectDTO.builder().identifier(projectIdentifier).name("projectName").build())
+                .build())));
+    ProjectDTO projectDTO = nextGenService.getCachedProject(accountId, orgIdentifier, projectIdentifier);
+    assertThat(projectDTO).isNotNull();
+    assertThat(projectDTO.getIdentifier()).isEqualTo(projectIdentifier);
+    assertThat(projectDTO.getName()).isEqualTo("projectName");
+
+    final String newProjectIdentifier = generateUuid();
+    when(nextGenClient.getProject(newProjectIdentifier, accountId, orgIdentifier)).thenReturn(call);
+    when(call.execute()).thenReturn(Response.success(ResponseDTO.newResponse(ProjectResponse.builder().build())));
+    assertThatThrownBy(() -> nextGenService.getCachedProject(accountId, orgIdentifier, newProjectIdentifier))
+        .isInstanceOf(CacheLoader.InvalidCacheLoadException.class)
+        .hasMessage("CacheLoader returned null for key "
+            + EntityKey.builder()
+                  .accountId(accountId)
+                  .orgIdentifier(orgIdentifier)
+                  .projectIdentifier(newProjectIdentifier)
                   .build()
             + ".");
   }

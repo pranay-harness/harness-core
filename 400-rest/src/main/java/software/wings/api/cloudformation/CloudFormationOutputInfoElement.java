@@ -1,5 +1,8 @@
 package software.wings.api.cloudformation;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.context.ContextElementType;
 
 import software.wings.sm.ContextElement;
@@ -12,6 +15,7 @@ import lombok.Data;
 
 @Data
 @Builder
+@OwnedBy(CDP)
 public class CloudFormationOutputInfoElement implements CloudFormationElement {
   private Map<String, Object> newStackOutputs;
 

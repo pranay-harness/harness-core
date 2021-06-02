@@ -10,7 +10,7 @@ import io.harness.beans.SecretManagerConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.rule.Owner;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentInfo;
@@ -43,13 +43,13 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 @Slf4j
-@Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
 public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
   @Inject @Named("morphiaInterfaceImplementersClasses") Map<String, Class> morphiaInterfaceImplementers;
 
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testManagerImplementationClasses() {
     Map<String, Class> classes = new HashedMap(morphiaInterfaceImplementers);
 
@@ -70,7 +70,7 @@ public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
                                                            .add(StepExecutionSummary.class)
                                                            .add(InfraMappingInfrastructureProvider.class)
                                                            .add(LogDataCollectionInfoV2.class)
-                                                           .add(NotifyCallback.class)
+                                                           .add(OldNotifyCallback.class)
                                                            .add(CVConfiguration.class)
                                                            .add(InstanceInfo.class)
                                                            .add(Cluster.class)
@@ -84,6 +84,7 @@ public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testManagerKnownMovements() {
     ImmutableMap<Object, Object> known = ImmutableMap.builder().build();
 

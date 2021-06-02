@@ -6,7 +6,7 @@ import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.interrupts.RepairActionCode;
+import io.harness.beans.RepairActionCode;
 
 import software.wings.api.SkipStateExecutionData;
 import software.wings.beans.Workflow;

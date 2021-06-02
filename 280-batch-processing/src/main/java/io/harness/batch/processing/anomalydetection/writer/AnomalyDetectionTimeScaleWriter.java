@@ -29,7 +29,7 @@ public class AnomalyDetectionTimeScaleWriter implements ItemWriter<Anomaly>, Ste
     Anomaly currentAnomaly;
     while (iter.hasNext()) {
       currentAnomaly = iter.next();
-      if (!currentAnomaly.isAnomaly()) {
+      if (currentAnomaly == null || !currentAnomaly.isAnomaly()) {
         iter.remove();
       }
     }

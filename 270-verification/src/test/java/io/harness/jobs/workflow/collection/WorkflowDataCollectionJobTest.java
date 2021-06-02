@@ -10,7 +10,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.VerificationBaseTest;
+import io.harness.VerificationBase;
 import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.rest.RestResponse;
@@ -29,7 +29,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
-public class WorkflowDataCollectionJobTest extends VerificationBaseTest {
+public class WorkflowDataCollectionJobTest extends VerificationBase {
   @Mock private VerificationManagerClientHelper verificationManagerClientHelper;
   @Mock private ContinuousVerificationService continuousVerificationService;
   @Inject private WorkflowDataCollectionJob workflowDataCollectionJob;

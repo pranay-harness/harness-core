@@ -10,5 +10,5 @@ import lombok.Value;
 @Value
 public class ResolveObjectResponse {
   boolean processed;
-  boolean changed;
+  Object finalValue;
 }

@@ -1,11 +1,15 @@
 package io.harness.delegate.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.HarnessLabelValues;
@@ -33,6 +37,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(CDP)
 @Singleton
 @Slf4j
 public class K8sRollingBaseHandler {
@@ -116,8 +121,6 @@ public class K8sRollingBaseHandler {
     executionLogCallback.saveExecutionLog("Wrapping up..\n");
 
     k8sTaskHelperBase.describe(client, k8sDelegateTaskParams, executionLogCallback);
-
-    executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
   }
 
   public List<K8sPod> getPods(long timeoutInMillis, List<KubernetesResource> managedWorkloads,
@@ -143,5 +146,21 @@ public class K8sRollingBaseHandler {
     }
 
     return k8sPods;
+  }
+
+  public List<K8sPod> getExistingPods(long timeoutInMillis, List<KubernetesResource> managedWorkloads,
+      KubernetesConfig kubernetesConfig, String releaseName, LogCallback logCallback) throws Exception {
+    List<K8sPod> existingPodList;
+    try {
+      logCallback.saveExecutionLog("\nFetching existing pod list.");
+      existingPodList = getPods(timeoutInMillis, managedWorkloads, kubernetesConfig, releaseName);
+    } catch (Exception e) {
+      logCallback.saveExecutionLog(e.getMessage(), ERROR, FAILURE);
+      throw e;
+    }
+
+    logCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+
+    return existingPodList;
   }
 }

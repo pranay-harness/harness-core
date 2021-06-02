@@ -67,17 +67,20 @@ import org.mockito.MockitoAnnotations;
 
 @Slf4j
 public class PodWatcherTest extends CategoryTest {
-  private static final Map<String, String> NAMESPACE_LABELS = ImmutableMap.of("harness-managed", "true");
   private PodWatcher podWatcher;
   private EventPublisher eventPublisher;
   private SharedInformerFactory sharedInformerFactory;
   private PVCFetcher pvcFetcher;
   private NamespaceFetcher namespaceFetcher;
 
-  final DateTime TIMESTAMP = DateTime.now();
-  final DateTime DELETION_TIMESTAMP = TIMESTAMP.plusMinutes(5);
+  private static final DateTime TIMESTAMP = DateTime.now();
+  private static final DateTime DELETION_TIMESTAMP = TIMESTAMP.plusMinutes(5);
   private static final String START_RV = "1001";
   private static final String END_RV = "1002";
+  private static final String MAP_KEY_WITH_DOT = "harness.io/created.by";
+  private static final String MAP_VALUE = "harness.io/created.by";
+  private static final Map<String, String> NAMESPACE_LABELS = ImmutableMap.of("harness-managed", "true");
+  private static final Map<String, String> SAMPLE_MAP = ImmutableMap.of(MAP_KEY_WITH_DOT, MAP_VALUE);
   private static final UrlMatchingStrategy POD_URL_MATCHING = urlMatching("^/api/v1/pods.*");
 
   ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
@@ -201,6 +204,35 @@ public class PodWatcherTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void shouldPopulateMetadataAnnotations() throws Exception {
+    podWatcher.eventReceived(scheduledAndDeletedPodWitMetadataAnnotation());
+
+    verify(eventPublisher, atLeastOnce()).publishMessage(captor.capture(), any(Timestamp.class), any());
+
+    assertThat(captor.getAllValues()).hasSize(2);
+
+    assertThat(captor.getAllValues().get(0)).isInstanceOfSatisfying(PodInfo.class, podInfo -> {
+      assertThat(podInfo.getMetadataAnnotationsMap()).isNotEmpty();
+      assertThat(podInfo.getMetadataAnnotationsMap()).isEqualTo(SAMPLE_MAP);
+    });
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void shouldPopulateWithNoMetadataAnnotations() throws Exception {
+    podWatcher.eventReceived(scheduledAndDeletedPod());
+
+    verify(eventPublisher, atLeastOnce()).publishMessage(captor.capture(), any(Timestamp.class), any());
+
+    assertThat(captor.getAllValues()).hasSize(2);
+    assertThat(captor.getAllValues().get(0))
+        .isInstanceOfSatisfying(PodInfo.class, p -> assertThat(p.getMetadataAnnotationsMap()).isNotNull().isEmpty());
+  }
+
+  @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldNotPublishDuplicates() throws Exception {
@@ -218,7 +250,7 @@ public class PodWatcherTest extends CategoryTest {
     assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
   }
 
-  private V1Pod scheduledPod() {
+  private static V1Pod scheduledPod() {
     return podBuilder()
         .editSpec()
         .withNodeName("gke-pr-private-pool-1-49d0f375-12xx")
@@ -233,7 +265,11 @@ public class PodWatcherTest extends CategoryTest {
         .build();
   }
 
-  private V1Pod scheduledAndDeletedPod() {
+  private static V1Pod scheduledAndDeletedPodWitMetadataAnnotation() {
+    return new V1PodBuilder(scheduledAndDeletedPod()).editMetadata().addToAnnotations(SAMPLE_MAP).endMetadata().build();
+  }
+
+  private static V1Pod scheduledAndDeletedPod() {
     return new V1PodBuilder(scheduledPod())
         .editMetadata()
         .withDeletionGracePeriodSeconds(0L)
@@ -242,7 +278,7 @@ public class PodWatcherTest extends CategoryTest {
         .build();
   }
 
-  private V1PodBuilder podBuilder() {
+  private static V1PodBuilder podBuilder() {
     return new V1PodBuilder()
         .withApiVersion("v1")
         .withNewMetadata()

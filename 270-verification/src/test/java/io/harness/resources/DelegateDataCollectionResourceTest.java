@@ -7,7 +7,7 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.VerificationBaseIntegrationTest;
+import io.harness.VerificationIntegrationBase;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 
@@ -22,10 +22,12 @@ import java.util.stream.IntStream;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class DelegateDataCollectionResourceTest extends VerificationBaseIntegrationTest {
+@Ignore
+public class DelegateDataCollectionResourceTest extends VerificationIntegrationBase {
   @Inject CVActivityLogService cvActivityLogService;
   @Override
   @Before

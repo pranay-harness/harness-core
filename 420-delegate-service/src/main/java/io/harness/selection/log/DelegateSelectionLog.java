@@ -1,20 +1,21 @@
 package io.harness.selection.log;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
-import io.harness.selection.log.DelegateSelectionLog.DelegateSelectionLogKeys;
 import io.harness.validation.Update;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
@@ -31,14 +32,20 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "delegateSelectionLogRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "DelegateSelectionLogKeys")
-@NgUniqueIndex(name = "selectionLogsGroup",
-    fields =
-    {
-      @Field(value = DelegateSelectionLogKeys.accountId)
-      , @Field(value = DelegateSelectionLogKeys.taskId), @Field(value = DelegateSelectionLogKeys.message),
-          @Field(value = DelegateSelectionLogKeys.groupId)
-    })
 public class DelegateSelectionLog implements PersistentEntity, UuidAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .field(DelegateSelectionLogKeys.accountId)
+                 .field(DelegateSelectionLogKeys.taskId)
+                 .field(DelegateSelectionLogKeys.message)
+                 .field(DelegateSelectionLogKeys.groupId)
+                 .unique(true)
+                 .name("selectionLogsGroup")
+                 .build())
+        .build();
+  }
+
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 
   @NotEmpty private String accountId;

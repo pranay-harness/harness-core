@@ -9,15 +9,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
-import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 
 import java.io.IOException;
@@ -29,6 +28,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class DockerArtifactTaskNGTest extends CategoryTest {
   @Mock DockerArtifactTaskHelper dockerArtifactTaskHelper;
   @InjectMocks
@@ -64,15 +64,11 @@ public class DockerArtifactTaskNGTest extends CategoryTest {
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testRunDoThrowException() throws IOException {
-    ArtifactTaskResponse artifactTaskResponse =
-        ArtifactTaskResponse.builder()
-            .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-            .errorMessage(ExceptionUtils.getMessage(new GeneralException("General Exception")))
-            .errorCode(ErrorCode.INVALID_ARGUMENT)
-            .build();
-    when(dockerArtifactTaskHelper.getArtifactCollectResponse(any()))
-        .thenThrow(new GeneralException("General Exception"));
-    assertThat(dockerArtifactTaskNG.run(ArtifactTaskParameters.builder().build())).isEqualTo(artifactTaskResponse);
+    String message = "General Exception";
+    when(dockerArtifactTaskHelper.getArtifactCollectResponse(any())).thenThrow(new GeneralException(message));
+    assertThatThrownBy(() -> dockerArtifactTaskNG.run(ArtifactTaskParameters.builder().build()))
+        .isInstanceOf(GeneralException.class)
+        .hasMessage(message);
 
     verify(dockerArtifactTaskHelper).getArtifactCollectResponse(ArtifactTaskParameters.builder().build());
   }

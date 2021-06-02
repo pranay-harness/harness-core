@@ -4,14 +4,17 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.KMS_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.threading.Morpheus.sleep;
 
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.encryptors.KmsEncryptor;
 import io.harness.exception.SecretManagementDelegateException;
@@ -22,8 +25,12 @@ import io.harness.security.encryption.EncryptionConfig;
 
 import software.wings.beans.KmsConfig;
 
+import com.amazonaws.SdkClientException;
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.AWSKMSClientBuilder;
@@ -57,6 +64,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @ValidateOnExecution
 @Singleton
@@ -68,6 +76,7 @@ public class AwsKmsEncryptor implements KmsEncryptor {
   private final TimeLimiter timeLimiter;
   private final Cache<KmsEncryptionKeyCacheKey, byte[]> kmsEncryptionKeyCache =
       Caffeine.newBuilder().maximumSize(2000).expireAfterAccess(2, TimeUnit.HOURS).build();
+  private static final String AWS_SECRETS_MANAGER_VALIDATION_URL = "aws_secrets_manager_validation";
 
   @Inject
   public AwsKmsEncryptor(TimeLimiter timeLimiter) {
@@ -87,7 +96,7 @@ public class AwsKmsEncryptor implements KmsEncryptor {
         log.warn("Encryption failed. trial num: {}", failedAttempts, e);
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
-            String reason = format("Encryption failed after %d retries", NUM_OF_RETRIES);
+            String reason = format("Encryption failed after %d retries", NUM_OF_RETRIES) + e.getMessage();
             throw new DelegateRetryableException(
                 new SecretManagementDelegateException(KMS_OPERATION_ERROR, reason, e, USER));
           }
@@ -122,7 +131,8 @@ public class AwsKmsEncryptor implements KmsEncryptor {
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
             String reason =
-                format("Decryption failed for encryptedData %s after %d retries", data.getName(), NUM_OF_RETRIES);
+                format("Decryption failed for encryptedData %s after %d retries", data.getName(), NUM_OF_RETRIES)
+                + e.getMessage();
             throw new DelegateRetryableException(
                 new SecretManagementDelegateException(KMS_OPERATION_ERROR, reason, e, USER));
           }
@@ -132,6 +142,16 @@ public class AwsKmsEncryptor implements KmsEncryptor {
         }
       }
     }
+  }
+
+  @Override
+  public boolean validateKmsConfiguration(String accountId, EncryptionConfig encryptionConfig) {
+    log.info("Validating AWS KMS configuration Start {}", encryptionConfig.getName());
+    GenerateDataKeyResult generateDataKeyResult = generateKmsKey((KmsConfig) encryptionConfig);
+    boolean isValidConfiguration = generateDataKeyResult != null && !generateDataKeyResult.getKeyId().isEmpty();
+    log.info("Validating AWS KMS configuration End {0} isValidConfiguration: {1}", encryptionConfig.getName(),
+        isValidConfiguration);
+    return isValidConfiguration;
   }
 
   private GenerateDataKeyResult generateKmsKey(KmsConfig kmsConfig) {
@@ -170,10 +190,49 @@ public class AwsKmsEncryptor implements KmsEncryptor {
   @VisibleForTesting
   public AWSKMS getKmsClient(KmsConfig kmsConfig) {
     return AWSKMSClientBuilder.standard()
-        .withCredentials(new AWSStaticCredentialsProvider(
-            new BasicAWSCredentials(kmsConfig.getAccessKey(), kmsConfig.getSecretKey())))
+        .withCredentials(getAwsCredentialsProvider(kmsConfig))
         .withRegion(kmsConfig.getRegion() == null ? Regions.US_EAST_1 : Regions.fromName(kmsConfig.getRegion()))
         .build();
+  }
+
+  public AWSCredentialsProvider getAwsCredentialsProvider(KmsConfig kmsConfig) {
+    if (kmsConfig.isAssumeIamRoleOnDelegate()) {
+      log.info("Assuming IAM role on delegate : Instantiating DefaultCredentialProviderChain to resolve credential"
+          + kmsConfig);
+      try {
+        return new DefaultAWSCredentialsProviderChain();
+      } catch (SdkClientException exception) {
+        throw new SecretManagementDelegateException(
+            AWS_SECRETS_MANAGER_OPERATION_ERROR, exception.getMessage(), USER_SRE);
+      }
+    } else if (kmsConfig.isAssumeStsRoleOnDelegate()) {
+      log.info("Assuming STS role on delegate : Instantiating STSAssumeRoleSessionCredentialsProvider with config:"
+          + kmsConfig);
+      if (StringUtils.isBlank(kmsConfig.getRoleArn())) {
+        throw new SecretManagementDelegateException(
+            AWS_SECRETS_MANAGER_OPERATION_ERROR, "You must provide RoleARN if AssumeStsRole is selected", USER);
+      }
+      STSAssumeRoleSessionCredentialsProvider.Builder sessionCredentialsProviderBuilder =
+          new STSAssumeRoleSessionCredentialsProvider.Builder(kmsConfig.getRoleArn(), UUIDGenerator.generateUuid());
+      if (kmsConfig.getAssumeStsRoleDuration() > 0) {
+        sessionCredentialsProviderBuilder.withRoleSessionDurationSeconds(kmsConfig.getAssumeStsRoleDuration());
+      }
+      sessionCredentialsProviderBuilder.withExternalId(kmsConfig.getExternalName());
+      return sessionCredentialsProviderBuilder.build();
+    } else {
+      if (StringUtils.isBlank(kmsConfig.getAccessKey())) {
+        throw new SecretManagementDelegateException(
+            AWS_SECRETS_MANAGER_OPERATION_ERROR, "You must provide an AccessKey if AssumeIAMRole is not enabled", USER);
+      }
+      if (StringUtils.isBlank(kmsConfig.getSecretKey())) {
+        throw new SecretManagementDelegateException(
+            AWS_SECRETS_MANAGER_OPERATION_ERROR, "You must provide a SecretKey if AssumeIAMRole is not enabled", USER);
+      }
+      log.warn("Using Secret and Access Key (Deprecated): Instantiating AWSStaticCredentialsProvider with config:"
+          + kmsConfig);
+      return new AWSStaticCredentialsProvider(
+          new BasicAWSCredentials(kmsConfig.getAccessKey(), kmsConfig.getSecretKey()));
+    }
   }
 
   private EncryptedRecord encryptInternal(String accountId, String value, KmsConfig kmsConfig)

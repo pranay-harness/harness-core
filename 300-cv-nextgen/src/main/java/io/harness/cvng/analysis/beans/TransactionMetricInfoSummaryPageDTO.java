@@ -10,5 +10,7 @@ import lombok.Value;
 @Builder
 public class TransactionMetricInfoSummaryPageDTO {
   PageResponse<TransactionMetricInfo> pageResponse;
-  TimeRange deploymentTimeRange;
+  @Deprecated TimeRange deploymentTimeRange; // TODO: need to remove it in next release.
+  Long deploymentStartTime;
+  Long deploymentEndTime;
 }

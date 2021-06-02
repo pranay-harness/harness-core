@@ -7,17 +7,19 @@ import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
 import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
+import io.harness.batch.processing.service.intfc.InstanceInfoTimescaleDAO;
 import io.harness.batch.processing.tasklet.reader.PublishedMessageReader;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
+import io.harness.beans.FeatureName;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.event.grpc.PublishedMessage;
+import io.harness.ff.FeatureFlagService;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.NodeEvent;
 
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
@@ -26,23 +28,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 public class K8sNodeEventTasklet implements Tasklet {
-  private JobParameters parameters;
   @Autowired private BatchMainConfig config;
   @Autowired private PublishedMessageDao publishedMessageDao;
   @Autowired protected InstanceDataService instanceDataService;
   @Autowired private InstanceDataBulkWriteService instanceDataBulkWriteService;
+  @Autowired private InstanceInfoTimescaleDAO instanceInfoTimescaleDAO;
+  @Autowired private FeatureFlagService featureFlagService;
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) {
-    parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
-    Long startTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE);
-    Long endTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE);
+    final CCMJobConstants jobConstants = new CCMJobConstants(chunkContext);
+
     int batchSize = config.getBatchQueryConfig().getQueryBatchSize();
-    String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
 
     String messageType = EventTypeConstants.K8S_NODE_EVENT;
     PublishedMessageReader publishedMessageReader =
-        new PublishedMessageReader(publishedMessageDao, accountId, messageType, startTime, endTime, batchSize);
+        new PublishedMessageReader(publishedMessageDao, jobConstants.getAccountId(), messageType,
+            jobConstants.getJobStartTime(), jobConstants.getJobEndTime(), batchSize);
     List<PublishedMessage> publishedMessageList;
     do {
       publishedMessageList = publishedMessageReader.getNext();
@@ -52,6 +54,11 @@ public class K8sNodeEventTasklet implements Tasklet {
                                                   .collect(Collectors.toList());
 
       instanceDataBulkWriteService.updateList(instanceEventList);
+      if (featureFlagService.isEnabled(FeatureName.NODE_RECOMMENDATION_1, jobConstants.getAccountId())) {
+        // we are not using START event now-a-days.
+        instanceInfoTimescaleDAO.updateNodeStopEvent(
+            instanceEventList.stream().filter(e -> EventType.STOP.equals(e.getType())).collect(Collectors.toList()));
+      }
     } while (publishedMessageList.size() == batchSize);
     return null;
   }

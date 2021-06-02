@@ -1,5 +1,8 @@
 package io.harness.ccm.setup.service.support.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.setup.service.support.AwsCredentialHelper;
 import io.harness.ccm.setup.service.support.intfc.AwsEKSHelperService;
 
@@ -22,6 +25,7 @@ import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CE)
 public class AwsEKSHelperServiceImpl implements AwsEKSHelperService {
   @Inject private AwsCredentialHelper awsCredentialHelper;
   private static final String exceptionMessage = "Error while calling cluster {} {} ";

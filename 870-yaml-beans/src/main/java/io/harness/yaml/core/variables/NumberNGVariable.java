@@ -1,16 +1,20 @@
 package io.harness.yaml.core.variables;
 
-import io.harness.common.SwaggerConstants;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.validator.NGRegexValidatorConstants;
+import io.harness.validator.NGVariableName;
 import io.harness.visitor.helpers.variables.NumberVariableVisitorHelper;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
-import io.harness.yaml.core.LevelNodeQualifierName;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,9 +29,10 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(NGVariableConstants.NUMBER_TYPE)
 @SimpleVisitorHelper(helperClass = NumberVariableVisitorHelper.class)
 @TypeAlias("io.harness.yaml.core.variables.NumberNGVariable")
+@OwnedBy(CDC)
 public class NumberNGVariable implements NGVariable {
-  String name;
-  @Builder.Default NGVariableType type = NGVariableType.NUMBER;
+  @NGVariableName @Pattern(regexp = NGRegexValidatorConstants.IDENTIFIER_PATTERN) String name;
+  @ApiModelProperty(allowableValues = NGVariableConstants.NUMBER_TYPE) NGVariableType type = NGVariableType.NUMBER;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.DOUBLE_CLASSPATH) ParameterField<Double> value;
   String description;
   boolean required;
@@ -35,9 +40,7 @@ public class NumberNGVariable implements NGVariable {
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder()
-        .qualifierName(LevelNodeQualifierName.NG_VARIABLES + LevelNodeQualifierName.PATH_CONNECTOR + name)
-        .build();
+  public ParameterField<?> getCurrentValue() {
+    return value;
   }
 }

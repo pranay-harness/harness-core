@@ -1,5 +1,10 @@
 package io.harness.ng.core;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.eventsframework.EventsFrameworkConstants;
+import io.harness.eventsframework.api.Producer;
+import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
@@ -23,6 +28,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Names;
 import io.serializer.registrars.NGCommonsRegistrars;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -35,6 +41,7 @@ import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
+@OwnedBy(HarnessTeam.PL)
 @Slf4j
 public class NGCoreTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMixin {
   @Override
@@ -83,6 +90,9 @@ public class NGCoreTestRule implements InjectorRuleMixin, MethodRule, MongoRuleM
       @Override
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
+        bind(Producer.class)
+            .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
+            .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
       }
     });
     modules.add(TimeModule.getInstance());

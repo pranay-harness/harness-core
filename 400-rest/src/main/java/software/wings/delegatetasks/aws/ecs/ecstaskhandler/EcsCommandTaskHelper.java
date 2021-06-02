@@ -6,7 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -25,7 +25,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsCommandTaskHelper {
   public void registerScalableTargetForEcsService(AwsAppAutoScalingHelperServiceDelegate appAutoScalingService,
       String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,

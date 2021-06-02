@@ -2,11 +2,15 @@ package io.harness.stateutils.buildstate;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.connector.ConnectorType.BITBUCKET;
+import static io.harness.delegate.beans.connector.ConnectorType.CODECOMMIT;
+import static io.harness.delegate.beans.connector.ConnectorType.GIT;
 import static io.harness.delegate.beans.connector.ConnectorType.GITHUB;
 import static io.harness.delegate.beans.connector.ConnectorType.GITLAB;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.connector.ConnectorDTO;
@@ -34,11 +38,14 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsD
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketApiAccessType;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernameTokenApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
@@ -61,23 +68,32 @@ import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CI)
 public class ConnectorUtils {
   private final ConnectorResourceClient connectorResourceClient;
   private final SecretManagerClientService secretManagerClientService;
   private final SecretUtils secretUtils;
 
+  private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
+  private final int MAX_ATTEMPTS = 3;
+
   @Inject
   public ConnectorUtils(ConnectorResourceClient connectorResourceClient, SecretUtils secretUtils,
-      SecretManagerClientService secretManagerClientService) {
+      @Named("PRIVILEGED") SecretManagerClientService secretManagerClientService) {
     this.connectorResourceClient = connectorResourceClient;
     this.secretUtils = secretUtils;
     this.secretManagerClientService = secretManagerClientService;
@@ -103,6 +119,14 @@ public class ConnectorUtils {
   }
 
   public ConnectorDetails getConnectorDetails(NGAccess ngAccess, String connectorIdentifier) {
+    RetryPolicy<Object> retryPolicy =
+        getRetryPolicy(format("[Retrying failed call to fetch connector: [%s], attempt: {}", connectorIdentifier),
+            format("Failed to fetch connector: [%s] after retrying {} times", connectorIdentifier));
+
+    return Failsafe.with(retryPolicy).get(() -> { return getConnectorDetailsInternal(ngAccess, connectorIdentifier); });
+  }
+
+  private ConnectorDetails getConnectorDetailsInternal(NGAccess ngAccess, String connectorIdentifier) {
     log.info("Getting connector details for connector ref [{}]", connectorIdentifier);
     IdentifierRef connectorRef = IdentifierRefHelper.getIdentifierRef(connectorIdentifier,
         ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
@@ -133,6 +157,7 @@ public class ConnectorUtils {
       case GITHUB:
       case GITLAB:
       case BITBUCKET:
+      case CODECOMMIT:
         connectorDetails = getGitConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
         break;
       case GCP:
@@ -164,6 +189,27 @@ public class ConnectorUtils {
       return fetchUserNameFromBitbucketConnector(gitConfigDTO, gitConnector.getIdentifier());
     } else {
       throw new CIStageExecutionException("Unsupported git connector " + gitConnector.getConnectorType());
+    }
+  }
+
+  public String retrieveURL(ConnectorDetails gitConnector) {
+    if (gitConnector.getConnectorType() == GITHUB) {
+      GithubConnectorDTO gitConfigDTO = (GithubConnectorDTO) gitConnector.getConnectorConfig();
+      return gitConfigDTO.getUrl();
+    } else if (gitConnector.getConnectorType() == BITBUCKET) {
+      BitbucketConnectorDTO gitConfigDTO = (BitbucketConnectorDTO) gitConnector.getConnectorConfig();
+      return gitConfigDTO.getUrl();
+    } else if (gitConnector.getConnectorType() == GIT) {
+      GitConfigDTO gitConfigDTO = (GitConfigDTO) gitConnector.getConnectorConfig();
+      return gitConfigDTO.getUrl();
+    } else if (gitConnector.getConnectorType() == GITLAB) {
+      GitlabConnectorDTO gitConfigDTO = (GitlabConnectorDTO) gitConnector.getConnectorConfig();
+      return gitConfigDTO.getUrl();
+    } else if (gitConnector.getConnectorType() == CODECOMMIT) {
+      AwsCodeCommitConnectorDTO gitConfigDTO = (AwsCodeCommitConnectorDTO) gitConnector.getConnectorConfig();
+      return gitConfigDTO.getUrl();
+    } else {
+      throw new CIStageExecutionException("scmType " + gitConnector.getConnectorType() + "is not supported");
     }
   }
 
@@ -223,6 +269,10 @@ public class ConnectorUtils {
       return buildGitlabConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
     } else if (connectorDTO.getConnectorInfo().getConnectorType() == BITBUCKET) {
       return buildBitBucketConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
+    } else if (connectorDTO.getConnectorInfo().getConnectorType() == CODECOMMIT) {
+      return buildAwsCodeCommitConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
+    } else if (connectorDTO.getConnectorInfo().getConnectorType() == GIT) {
+      return buildGitConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
     } else {
       throw new CIStageExecutionException(
           "Unsupported git connector " + connectorDTO.getConnectorInfo().getConnectorType());
@@ -335,6 +385,26 @@ public class ConnectorUtils {
     }
   }
 
+  private ConnectorDetails buildAwsCodeCommitConnectorDetails(
+      NGAccess ngAccess, ConnectorDTO connectorDTO, ConnectorDetailsBuilder connectorDetailsBuilder) {
+    AwsCodeCommitConnectorDTO gitConfigDTO =
+        (AwsCodeCommitConnectorDTO) connectorDTO.getConnectorInfo().getConnectorConfig();
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    gitConfigDTO.getDecryptableEntities().forEach(decryptableEntity
+        -> encryptedDataDetails.addAll(secretManagerClientService.getEncryptionDetails(ngAccess, decryptableEntity)));
+    connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails);
+    return connectorDetailsBuilder.build();
+  }
+
+  private ConnectorDetails buildGitConnectorDetails(
+      NGAccess ngAccess, ConnectorDTO connectorDTO, ConnectorDetailsBuilder connectorDetailsBuilder) {
+    List<EncryptedDataDetail> encryptedDataDetails;
+    GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorDTO.getConnectorInfo().getConnectorConfig();
+    GitAuthenticationDTO gitAuth = gitConfigDTO.getGitAuth();
+    encryptedDataDetails = secretManagerClientService.getEncryptionDetails(ngAccess, gitAuth);
+    return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
+  }
+
   private ConnectorDetails getDockerConnectorDetails(
       NGAccess ngAccess, ConnectorDTO connectorDTO, ConnectorDetailsBuilder connectorDetailsBuilder) {
     List<EncryptedDataDetail> encryptedDataDetails;
@@ -378,11 +448,19 @@ public class ConnectorUtils {
           connectorRef.getIdentifier(), connectorRef.getAccountIdentifier(), connectorRef.getProjectIdentifier(),
           connectorRef.getOrgIdentifier());
 
-      connectorDTO =
-          SafeHttpCall
-              .execute(connectorResourceClient.get(connectorRef.getIdentifier(), connectorRef.getAccountIdentifier(),
-                  connectorRef.getOrgIdentifier(), connectorRef.getProjectIdentifier()))
-              .getData();
+      RetryPolicy<Object> retryPolicy =
+          getRetryPolicy(format("[Retrying failed call to fetch connector: [%s] with scope: [%s]; attempt: {}",
+                             connectorRef.getIdentifier(), connectorRef.getScope()),
+              format("Failed to fetch connector: [%s] with scope: [%s] after retrying {} times",
+                  connectorRef.getIdentifier(), connectorRef.getScope()));
+
+      connectorDTO = Failsafe.with(retryPolicy)
+                         .get(()
+                                  -> SafeHttpCall
+                                         .execute(connectorResourceClient.get(connectorRef.getIdentifier(),
+                                             connectorRef.getAccountIdentifier(), connectorRef.getOrgIdentifier(),
+                                             connectorRef.getProjectIdentifier()))
+                                         .getData());
 
     } catch (Exception e) {
       log.error(format("Unable to get connector information : [%s] with scope: [%s]", connectorRef.getIdentifier(),
@@ -446,5 +524,14 @@ public class ConnectorUtils {
       }
     }
     return null;
+  }
+
+  private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {
+    return new RetryPolicy<>()
+        .handle(Exception.class)
+        .withDelay(RETRY_SLEEP_DURATION)
+        .withMaxAttempts(MAX_ATTEMPTS)
+        .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
+        .onFailure(event -> log.error(failureMessage, event.getAttemptCount(), event.getFailure()));
   }
 }

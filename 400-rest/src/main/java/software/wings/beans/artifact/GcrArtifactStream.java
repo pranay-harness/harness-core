@@ -1,13 +1,17 @@
 package software.wings.beans.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.FeatureName.ENHANCED_GCR_CONNECTIVITY_CHECK;
 
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
+import io.harness.ff.FeatureFlagService;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.text.SimpleDateFormat;
@@ -26,6 +30,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonTypeName("GCR")
 @Data
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(HarnessModule._950_COMMON_ENTITIES)
 public class GcrArtifactStream extends ArtifactStream {
   @NotEmpty private String registryHostName;
   @NotEmpty private String dockerImageName;
@@ -55,12 +60,14 @@ public class GcrArtifactStream extends ArtifactStream {
   }
 
   @Override
-  public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
+  public ArtifactStreamAttributes fetchArtifactStreamAttributes(FeatureFlagService featureFlagService) {
     return ArtifactStreamAttributes.builder()
         .artifactStreamType(getArtifactStreamType())
         .imageName(dockerImageName)
         .dockerBasedDeployment(true)
         .registryHostName(registryHostName)
+        .enhancedGcrConnectivityCheckEnabled(
+            featureFlagService.isEnabled(ENHANCED_GCR_CONNECTIVITY_CHECK, getAccountId()))
         .build();
   }
 

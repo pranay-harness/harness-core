@@ -4,13 +4,13 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.mongo.changestreams.ChangeEvent;
+import io.harness.mongo.changestreams.ChangeSubscriber;
 import io.harness.persistence.HIterator;
 
 import software.wings.dl.WingsPersistence;
 import software.wings.search.framework.ElasticsearchBulkMigrationJob.ElasticsearchBulkMigrationJobBuilder;
 import software.wings.search.framework.SearchEntityIndexState.SearchEntityIndexStateKeys;
-import software.wings.search.framework.changestreams.ChangeEvent;
-import software.wings.search.framework.changestreams.ChangeSubscriber;
 
 import com.google.inject.Inject;
 import java.time.Instant;

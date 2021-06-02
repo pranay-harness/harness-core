@@ -1,9 +1,15 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.perpetualtask.AwsSshPTClientParams;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
-import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 
@@ -11,30 +17,31 @@ import software.wings.api.DeploymentSummary;
 import software.wings.beans.InfrastructureMapping;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
 import com.google.protobuf.util.Durations;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AwsSshInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetualTaskCreator {
-  @Inject private PerpetualTaskService perpetualTaskService;
-
+@OwnedBy(CDP)
+public class AwsSshInstanceSyncPerpetualTaskCreator extends AbstractInstanceSyncPerpetualTaskCreator {
   @Override
   public List<String> createPerpetualTasks(InfrastructureMapping infrastructureMapping) {
-    return Arrays.asList(createPerpetualTaskInternal(
-        infrastructureMapping.getAccountId(), infrastructureMapping.getAppId(), infrastructureMapping.getUuid()));
+    return createPerpetualTaskInternal(infrastructureMapping);
   }
 
   @Override
   public List<String> createPerpetualTasksForNewDeployment(List<DeploymentSummary> deploymentSummaries,
       List<PerpetualTaskRecord> existingPerpetualTasks, InfrastructureMapping infrastructureMapping) {
-    return createPerpetualTasks(infrastructureMapping);
+    if (isEmpty(existingPerpetualTasks)) {
+      return createPerpetualTaskInternal(infrastructureMapping);
+    }
+    existingPerpetualTasks.stream().distinct().forEach(
+        task -> perpetualTaskService.resetTask(infrastructureMapping.getAccountId(), task.getUuid(), null));
+    return emptyList();
   }
 
-  private String create(String accountId, AwsSshPTClientParams clientParams) {
+  private List<String> create(AwsSshPTClientParams clientParams, InfrastructureMapping infraMapping) {
     Map<String, String> clientParamMap = ImmutableMap.of(InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID,
         clientParams.getInframappingId(), InstanceSyncConstants.HARNESS_APPLICATION_ID, clientParams.getAppId());
 
@@ -45,12 +52,15 @@ public class AwsSshInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpe
                                          .setInterval(Durations.fromMinutes(InstanceSyncConstants.INTERVAL_MINUTES))
                                          .setTimeout(Durations.fromSeconds(InstanceSyncConstants.TIMEOUT_SECONDS))
                                          .build();
-    return perpetualTaskService.createTask(
-        PerpetualTaskType.AWS_SSH_INSTANCE_SYNC, accountId, clientContext, schedule, false, "");
+    return singletonList(perpetualTaskService.createTask(PerpetualTaskType.AWS_SSH_INSTANCE_SYNC,
+        infraMapping.getAccountId(), clientContext, schedule, false, getTaskDescription(infraMapping)));
   }
 
-  private String createPerpetualTaskInternal(String accountId, String appId, String infraMappingId) {
-    AwsSshPTClientParams params = AwsSshPTClientParams.builder().appId(appId).inframappingId(infraMappingId).build();
-    return create(accountId, params);
+  private List<String> createPerpetualTaskInternal(InfrastructureMapping infrastructureMapping) {
+    AwsSshPTClientParams params = AwsSshPTClientParams.builder()
+                                      .appId(infrastructureMapping.getAppId())
+                                      .inframappingId(infrastructureMapping.getUuid())
+                                      .build();
+    return create(params, infrastructureMapping);
   }
 }

@@ -3,19 +3,25 @@ package io.harness.grpc;
 import static io.harness.beans.PageRequest.PageRequestBuilder;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
+import static io.harness.manage.GlobalContextManager.initGlobalContextGuard;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.delegate.AccountId;
+import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileBuilder;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
+import io.harness.delegate.utils.DelegateEntityOwnerMapper;
 import io.harness.delegateprofile.AddProfileRequest;
 import io.harness.delegateprofile.AddProfileResponse;
 import io.harness.delegateprofile.DelegateProfileGrpc;
@@ -38,7 +44,11 @@ import io.harness.delegateprofile.UpdateProfileScopingRulesRequest;
 import io.harness.delegateprofile.UpdateProfileScopingRulesResponse;
 import io.harness.delegateprofile.UpdateProfileSelectorsRequest;
 import io.harness.delegateprofile.UpdateProfileSelectorsResponse;
+import io.harness.manage.GlobalContextManager.GlobalContextGuard;
+import io.harness.owner.OrgIdentifier;
+import io.harness.owner.ProjectIdentifier;
 import io.harness.paging.PageRequestGrpc;
+import io.harness.serializer.KryoSerializer;
 
 import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
@@ -59,15 +69,21 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@OwnedBy(HarnessTeam.DEL)
+@BreakDependencyOn("software.wings.beans.User")
+@BreakDependencyOn("software.wings.security.UserThreadLocal")
 public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBase {
   private DelegateProfileService delegateProfileService;
   private UserService userService;
+  private KryoSerializer kryoSerializer;
 
   @Inject
-  public DelegateProfileServiceGrpcImpl(DelegateProfileService delegateProfileService, UserService userService) {
+  public DelegateProfileServiceGrpcImpl(
+      DelegateProfileService delegateProfileService, UserService userService, KryoSerializer kryoSerializer) {
     this.delegateProfileService = delegateProfileService;
     this.userService = userService;
+    this.kryoSerializer = kryoSerializer;
   }
 
   @Override
@@ -75,6 +91,36 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
     try {
       PageRequest<DelegateProfile> pageRequest = convertGrpcPageRequest(request.getPageRequest());
       pageRequest.addFilter(DelegateProfileKeys.accountId, SearchFilter.Operator.EQ, request.getAccountId().getId());
+
+      if (request.getNg()) {
+        pageRequest.addFilter(DelegateProfileKeys.ng, SearchFilter.Operator.EQ, request.getNg());
+      } else {
+        // This is required to collect records having flag set to false, but also to collect the ones having no flag set
+        // at all
+        pageRequest.addFilter(DelegateProfileKeys.ng, SearchFilter.Operator.NOT_EQ, true);
+      }
+
+      String orgId = request.getOrgId() != null ? request.getOrgId().getId() : null;
+      String projectId = request.getProjectId() != null ? request.getProjectId().getId() : null;
+      DelegateEntityOwner owner = DelegateEntityOwnerMapper.buildOwner(orgId, projectId);
+
+      if (owner != null) {
+        pageRequest.addFilter("", SearchFilter.Operator.OR,
+            SearchFilter.builder()
+                .fieldName(DelegateProfileKeys.owner)
+                .op(SearchFilter.Operator.EQ)
+                .fieldValues(new DelegateEntityOwner[] {owner})
+                .build(),
+            SearchFilter.builder()
+                .fieldName(DelegateProfileKeys.primary)
+                .op(SearchFilter.Operator.EQ)
+                .fieldValues(new Boolean[] {true})
+                .build());
+      } else {
+        // Account level delegates
+        pageRequest.addFilter(DelegateProfileKeys.owner, SearchFilter.Operator.NOT_EXISTS);
+      }
+
       PageResponse<DelegateProfile> pageResponse = delegateProfileService.list(pageRequest);
       if (pageResponse != null) {
         DelegateProfilePageResponseGrpc response = convertPageResponse(pageResponse);
@@ -110,7 +156,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
 
   @Override
   public void addProfile(AddProfileRequest request, StreamObserver<AddProfileResponse> responseObserver) {
-    try {
+    try (GlobalContextGuard guard = initGlobalContextGuard(kryoSerializer, request.getVirtualStack())) {
       DelegateProfile delegateProfile = delegateProfileService.add(convert(request.getProfile()));
 
       responseObserver.onNext(AddProfileResponse.newBuilder().setProfile(convert(delegateProfile)).build());
@@ -123,7 +169,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
 
   @Override
   public void updateProfile(UpdateProfileRequest request, StreamObserver<UpdateProfileResponse> responseObserver) {
-    try {
+    try (GlobalContextGuard guard = initGlobalContextGuard(kryoSerializer, request.getVirtualStack())) {
       DelegateProfile delegateProfile = delegateProfileService.update(convert(request.getProfile()));
 
       if (delegateProfile != null) {
@@ -142,7 +188,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
 
   @Override
   public void deleteProfile(DeleteProfileRequest request, StreamObserver<DeleteProfileResponse> responseObserver) {
-    try {
+    try (GlobalContextGuard guard = initGlobalContextGuard(kryoSerializer, request.getVirtualStack())) {
       delegateProfileService.delete(request.getAccountId().getId(), request.getProfileId().getId());
       responseObserver.onNext(DeleteProfileResponse.newBuilder().build());
       responseObserver.onCompleted();
@@ -155,7 +201,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
   @Override
   public void updateProfileSelectors(
       UpdateProfileSelectorsRequest request, StreamObserver<UpdateProfileSelectorsResponse> responseObserver) {
-    try {
+    try (GlobalContextGuard guard = initGlobalContextGuard(kryoSerializer, request.getVirtualStack())) {
       List<String> selectors = null;
       if (isNotEmpty(request.getSelectorsList())) {
         selectors = request.getSelectorsList().stream().map(ProfileSelector::getSelector).collect(Collectors.toList());
@@ -215,7 +261,10 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
     DelegateProfileGrpc.Builder delegateProfileGrpcBuilder =
         DelegateProfileGrpc.newBuilder()
             .setPrimary(delegateProfile.isPrimary())
-            .setApprovalRequired(delegateProfile.isApprovalRequired());
+            .setApprovalRequired(delegateProfile.isApprovalRequired())
+            .setNg(delegateProfile.isNg())
+            .setCreatedAt(delegateProfile.getCreatedAt())
+            .setLastUpdatedAt(delegateProfile.getLastUpdatedAt());
 
     if (delegateProfile.getCreatedBy() != null) {
       delegateProfileGrpcBuilder.setCreatedBy(EmbeddedUserDetails.newBuilder()
@@ -276,6 +325,28 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
       delegateProfileGrpcBuilder.setIdentifier(delegateProfile.getIdentifier());
     }
 
+    if (delegateProfile.getOwner() != null) {
+      String orgId =
+          DelegateEntityOwnerMapper.extractOrgIdFromOwnerIdentifier(delegateProfile.getOwner().getIdentifier());
+      String projectId =
+          DelegateEntityOwnerMapper.extractProjectIdFromOwnerIdentifier(delegateProfile.getOwner().getIdentifier());
+
+      if (isNotBlank(orgId)) {
+        delegateProfileGrpcBuilder.setOrgIdentifier(OrgIdentifier.newBuilder().setId(orgId).build());
+      }
+
+      if (isNotBlank(projectId)) {
+        delegateProfileGrpcBuilder.setProjectIdentifier(ProjectIdentifier.newBuilder().setId(projectId).build());
+      }
+    }
+
+    List<String> delegatesForProfile =
+        delegateProfileService.getDelegatesForProfile(delegateProfile.getAccountId(), delegateProfile.getUuid());
+
+    if (isNotEmpty(delegatesForProfile)) {
+      delegateProfileGrpcBuilder.setNumberOfDelegates(delegatesForProfile.size());
+    }
+
     return delegateProfileGrpcBuilder.build();
   }
 
@@ -286,9 +357,10 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
                                                         .description(delegateProfileGrpc.getDescription())
                                                         .primary(delegateProfileGrpc.getPrimary())
                                                         .approvalRequired(delegateProfileGrpc.getApprovalRequired())
-                                                        .startupScript(delegateProfileGrpc.getStartupScript());
+                                                        .startupScript(delegateProfileGrpc.getStartupScript())
+                                                        .ng(delegateProfileGrpc.getNg());
 
-    if (delegateProfileGrpc.hasCreatedBy()) {
+    if (delegateProfileGrpc.hasCreatedBy() && isNotEmpty(delegateProfileGrpc.getCreatedBy().getUuid())) {
       delegateProfileBuilder.createdBy(EmbeddedUser.builder()
                                            .uuid(delegateProfileGrpc.getCreatedBy().getUuid())
                                            .name(delegateProfileGrpc.getCreatedBy().getName())
@@ -296,7 +368,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
                                            .build());
     }
 
-    if (delegateProfileGrpc.hasLastUpdatedBy()) {
+    if (delegateProfileGrpc.hasLastUpdatedBy() && isNotEmpty(delegateProfileGrpc.getLastUpdatedBy().getUuid())) {
       User user = userService.getUserFromCacheOrDB(delegateProfileGrpc.getLastUpdatedBy().getUuid());
       UserThreadLocal.set(user);
     }
@@ -327,6 +399,12 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
     if (isNotEmpty(delegateProfileGrpc.getIdentifier())) {
       delegateProfileBuilder.identifier(delegateProfileGrpc.getIdentifier());
     }
+
+    String orgId = delegateProfileGrpc.hasOrgIdentifier() ? delegateProfileGrpc.getOrgIdentifier().getId() : null;
+    String projectId =
+        delegateProfileGrpc.hasProjectIdentifier() ? delegateProfileGrpc.getProjectIdentifier().getId() : null;
+    DelegateEntityOwner owner = DelegateEntityOwnerMapper.buildOwner(orgId, projectId);
+    delegateProfileBuilder.owner(owner);
 
     return delegateProfileBuilder.build();
   }

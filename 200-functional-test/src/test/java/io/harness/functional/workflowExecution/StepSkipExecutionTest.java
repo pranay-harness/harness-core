@@ -1,5 +1,6 @@
 package io.harness.functional.workflowExecution;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GARVIT;
 
@@ -23,6 +24,7 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
@@ -79,6 +81,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDC)
 @Slf4j
 public class StepSkipExecutionTest extends AbstractFunctionalTest {
   private static final String WORKFLOW_VARIABLE_NAME = "var_workflow";
@@ -342,7 +345,7 @@ public class StepSkipExecutionTest extends AbstractFunctionalTest {
   }
 
   private WorkflowExecution getExecutionDetails(String executionId) {
-    return workflowExecutionService.getExecutionDetails(application.getUuid(), executionId, false);
+    return workflowExecutionService.getExecutionDetails(application.getUuid(), executionId, false, false);
   }
 
   private void assertNodeStatus(Map<String, String> stateToStatusMap, String status, Collection<Integer> nodes) {

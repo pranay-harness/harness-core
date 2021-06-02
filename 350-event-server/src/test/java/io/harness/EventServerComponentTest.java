@@ -17,7 +17,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Slf4j
-public class EventServerComponentTest extends EventServerTest {
+public class EventServerComponentTest extends EventServerTestBase {
   @Inject private Map<String, TestExecution> tests;
 
   @Test

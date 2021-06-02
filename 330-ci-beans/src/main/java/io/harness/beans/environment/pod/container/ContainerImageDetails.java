@@ -4,7 +4,6 @@ import io.harness.k8s.model.ImageDetails;
 
 import lombok.Builder;
 import lombok.Data;
-import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Stores connector identifier to fetch latest image from connector and populate imageDetails.
@@ -14,5 +13,5 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 public class ContainerImageDetails {
   private ImageDetails imageDetails;
-  @NotEmpty private String connectorIdentifier;
+  private String connectorIdentifier;
 }

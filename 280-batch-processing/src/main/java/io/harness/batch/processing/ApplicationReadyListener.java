@@ -5,16 +5,15 @@ import static io.harness.event.app.EventServiceApplication.EVENTS_STORE;
 import static com.google.common.base.Verify.verify;
 
 import io.harness.batch.processing.config.BatchMainConfig;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.mongo.IndexManager;
 import io.harness.persistence.HPersistence;
 import io.harness.timescaledb.TimeScaleDBService;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
@@ -35,21 +34,25 @@ public class ApplicationReadyListener {
   private final HPersistence hPersistence;
   private final IndexManager indexManager;
   private final Environment environment;
+  private final TimeLimiter timeLimiter;
 
   public ApplicationReadyListener(TimeScaleDBService timeScaleDBService, HPersistence hPersistence, Morphia morphia,
-      IndexManager indexManager, Environment environment) {
+      IndexManager indexManager, TimeLimiter timeLimiter, Environment environment) {
     this.timeScaleDBService = timeScaleDBService;
     this.hPersistence = hPersistence;
     this.morphia = morphia;
     this.indexManager = indexManager;
+    this.timeLimiter = timeLimiter;
     this.environment = environment;
   }
 
   @EventListener(ApplicationReadyEvent.class)
   void ensureTimescaleConnectivity() {
+    log.info("Inside ensureTimescaleConnectivity");
     if (Boolean.TRUE.equals(environment.getProperty("ensure-timescale", Boolean.class, Boolean.TRUE))) {
       verify(timeScaleDBService.isValid(), "Unable to connect to timescale db");
     }
+    log.info("End ensureTimescaleConnectivity");
   }
 
   @EventListener(ApplicationReadyEvent.class)
@@ -65,16 +68,17 @@ public class ApplicationReadyListener {
   @EventListener(ApplicationReadyEvent.class)
   @Order(Ordered.HIGHEST_PRECEDENCE)
   void ensureMongoConnectivity() throws Exception {
-    TimeLimiter timeLimiter = new SimpleTimeLimiter();
+    log.info("Inside ensureMongoConnectivity");
     try {
-      timeLimiter.callWithTimeout(() -> {
+      HTimeLimiter.callInterruptible(timeLimiter, hPersistence.healthExpectedResponseTimeout(), () -> {
         hPersistence.isHealthy();
         return null;
-      }, hPersistence.healthExpectedResponseTimeout().toMillis(), TimeUnit.MILLISECONDS, true);
+      });
     } catch (UncheckedTimeoutException e) {
       log.error("Timed out waiting for mongo connectivity");
       throw e;
     }
+    log.info("End ensureMongoConnectivity");
   }
 
   @EventListener(ApplicationReadyEvent.class)

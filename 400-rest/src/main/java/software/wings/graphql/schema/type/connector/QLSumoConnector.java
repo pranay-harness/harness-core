@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.type.connector;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.type.QLUser;
@@ -13,7 +13,7 @@ import lombok.Value;
 @Value
 @Builder
 @Scope(ResourceType.SETTING)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLSumoConnector implements QLConnector {
   private String id;
   private String name;

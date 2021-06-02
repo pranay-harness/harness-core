@@ -532,6 +532,7 @@ public class AzureComputeClientImpl extends AzureClient implements AzureComputeC
   }
 
   @Override
+  @SuppressWarnings("PMD")
   public Optional<GalleryImage> getGalleryImage(
       AzureConfig azureConfig, String subscriptionId, String resourceGroupName, String galleryName, String imageName) {
     if (isBlank(resourceGroupName)) {

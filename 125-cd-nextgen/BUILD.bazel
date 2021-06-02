@@ -1,12 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sources")
-load("//:macros.bzl", "sonarqube_test")
-load("//:macros.bzl", "test_targets_list")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
-
-sources()
+load("//:tools/bazel/macros.bzl", "run_analysis")
 
 java_library(
     name = "module",
@@ -19,21 +13,27 @@ java_library(
         "//:lombok",
         "//400-rest:module",
         "//440-connector-nextgen:module",
-        "//850-execution-plan:module",
         "//850-ng-pipeline-commons:module",
         "//860-orchestration-steps:module",
         "//879-pms-sdk:module",
         "//884-pms-commons:module",
+        "//888-pms-client:module",
         "//890-sm-core:module",
         "//910-delegate-service-driver:module",
+        "//948-access-control-sdk:module",
         "//954-connector-beans:module",
         "//955-delegate-beans:module",
         "//980-commons:module",
+        "@maven//:com_fasterxml_jackson_core_jackson_annotations",
+        "@maven//:io_swagger_swagger_annotations",
+        "@maven//:javax_validation_validation_api",
+        "@maven//:org_springframework_data_spring_data_commons",
     ],
 )
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = [
         "//125-cd-nextgen/src/test/resources:resource",
@@ -43,7 +43,7 @@ java_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "module",
+        ":module",
         "//:lombok",
         "//955-delegate-beans:module",
         "//960-persistence:supporter-test",
@@ -57,14 +57,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":module",
-    ],
-)
-
-pmd()
+run_analysis()

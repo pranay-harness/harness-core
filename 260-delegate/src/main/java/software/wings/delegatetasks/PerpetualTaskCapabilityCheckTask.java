@@ -1,10 +1,11 @@
 package software.wings.delegatetasks;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.stream.Collectors.toList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -29,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class PerpetualTaskCapabilityCheckTask extends AbstractDelegateRunnableTask {
   @Inject CapabilityCheckFactory capabilityCheckFactory;
 
@@ -50,6 +51,10 @@ public class PerpetualTaskCapabilityCheckTask extends AbstractDelegateRunnableTa
 
     List<ExecutionCapability> executionCapabilities =
         Arrays.stream(parameters).map(param -> (ExecutionCapability) param).collect(toList());
+
+    if (isEmpty(executionCapabilities)) {
+      return PerpetualTaskCapabilityCheckResponse.builder().ableToExecutePerpetualTask(true).build();
+    }
 
     executionCapabilities.forEach(delegateCapability -> {
       log.info("Checking Capability: " + delegateCapability.toString());

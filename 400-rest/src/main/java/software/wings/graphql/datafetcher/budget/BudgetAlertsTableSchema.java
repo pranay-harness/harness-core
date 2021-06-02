@@ -1,6 +1,9 @@
 package software.wings.graphql.datafetcher.budget;
 
-import io.harness.annotations.dev.Module;
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
@@ -15,7 +18,8 @@ import lombok.experimental.FieldNameConstants;
 @Value
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "BudgetAlertsTableKeys")
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class BudgetAlertsTableSchema {
   /**
    * 	TIME TIMESTAMP NOT NULL,
@@ -33,6 +37,7 @@ public class BudgetAlertsTableSchema {
   DbColumn budgetId;
   DbColumn accountId;
   DbColumn alertThreshold;
+  DbColumn alertBasedOn;
   DbColumn actualCost;
   DbColumn budgetedCost;
 
@@ -46,6 +51,7 @@ public class BudgetAlertsTableSchema {
     budgetId = budgetAlertsTable.addColumn("budgetid", "text", null);
     accountId = budgetAlertsTable.addColumn("accountid", "text", null);
     alertThreshold = budgetAlertsTable.addColumn("alertthreshold", doubleType, null);
+    alertBasedOn = budgetAlertsTable.addColumn("alertbasedon", doubleType, null);
     actualCost = budgetAlertsTable.addColumn("actualcost", doubleType, null);
     budgetedCost = budgetAlertsTable.addColumn("budgetedcost", doubleType, null);
   }

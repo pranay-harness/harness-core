@@ -1,5 +1,7 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.BOJANA;
 
@@ -9,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -17,6 +20,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
@@ -27,7 +33,6 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
 
-import software.wings.WingsBaseTest;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
@@ -47,8 +52,11 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-public class K8sTrafficSplitStateTest extends WingsBaseTest {
+@TargetModule(_861_CG_ORCHESTRATION_STATES)
+@OwnedBy(CDP)
+public class K8sTrafficSplitStateTest extends CategoryTest {
   private static final String RELEASE_NAME = "releaseName";
 
   @Mock private K8sStateHelper k8sStateHelper;
@@ -59,6 +67,7 @@ public class K8sTrafficSplitStateTest extends WingsBaseTest {
 
   @Before
   public void setup() {
+    MockitoAnnotations.initMocks(this);
     WorkflowStandardParams workflowStandardParams = new WorkflowStandardParams();
     when(context.getContextElement(any(ContextElementType.class))).thenReturn(workflowStandardParams);
     when(context.getStateExecutionData()).thenReturn(new K8sStateExecutionData());
@@ -95,12 +104,12 @@ public class K8sTrafficSplitStateTest extends WingsBaseTest {
         .when(k8sTrafficSplitState)
         .createK8sActivity(
             any(ExecutionContext.class), anyString(), anyString(), any(ActivityService.class), anyList());
-    doReturn(ExecutionResponse.builder().build()).when(k8sTrafficSplitState).queueK8sDelegateTask(any(), any());
+    doReturn(ExecutionResponse.builder().build()).when(k8sTrafficSplitState).queueK8sDelegateTask(any(), any(), any());
     doReturn(RELEASE_NAME).when(k8sTrafficSplitState).fetchReleaseName(any(), any());
     k8sTrafficSplitState.execute(context);
     verify(k8sStateHelper, times(1)).fetchContainerInfrastructureMapping(any(ExecutionContext.class));
     verify(k8sTrafficSplitState, times(1))
-        .queueK8sDelegateTask(any(ExecutionContext.class), any(K8sTaskParameters.class));
+        .queueK8sDelegateTask(any(ExecutionContext.class), any(K8sTaskParameters.class), anyMap());
   }
 
   @Test

@@ -1,7 +1,12 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
@@ -25,10 +30,12 @@ import org.hibernate.validator.constraints.NotEmpty;
  */
 @JsonTypeName("AWS_AWS_CODEDEPLOY")
 @FieldNameConstants(innerTypeName = "CodeDeployInfrastructureMappingKeys")
+@OwnedBy(CDP)
+@TargetModule(_871_CG_BEANS)
 public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Region", required = true)
   @NotEmpty
-  @EnumData(enumDataProvider = AwsInfrastructureMapping.AwsRegionDataProvider.class)
+  @EnumData(enumDataProvider = AwsRegionDataProvider.class)
   private String region;
   @Attributes(title = "Application Name", required = true) @NotEmpty private String applicationName;
   @Attributes(title = "Deployment Group", required = true) @NotEmpty private String deploymentGroup;
@@ -51,7 +58,7 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends InfrastructureMapping.YamlWithComputeProvider {
+  public static class Yaml extends YamlWithComputeProvider {
     private String region;
     private String applicationName;
     private String deploymentGroup;

@@ -1,6 +1,7 @@
 package io.harness.repositories.inputset.spring;
 
 import io.harness.annotation.HarnessRepo;
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
 import io.harness.repositories.inputset.custom.InputSetRepositoryCustom;
 
@@ -9,6 +10,8 @@ import java.util.Optional;
 import java.util.Set;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
+@ToBeDeleted
+@Deprecated
 @HarnessRepo
 public interface InputSetRepository
     extends PagingAndSortingRepository<BaseInputSetEntity, String>, InputSetRepositoryCustom {

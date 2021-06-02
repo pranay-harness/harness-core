@@ -8,7 +8,7 @@ import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
 import io.harness.data.structure.EmptyPredicate;
@@ -74,16 +74,16 @@ import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsDeployCommandTaskHelper {
+  private static final String DELIMITER = "__";
+  private static final String CONTAINER_NAME_PLACEHOLDER_REGEX = "\\$\\{CONTAINER_NAME}";
   @Inject private AwsClusterService awsClusterService;
   @Inject private AwsAppAutoScalingHelperServiceDelegate awsAppAutoScalingService;
   @Inject private AwsHelperService awsHelperService;
   @Inject private AwsEcsHelperServiceDelegate awsEcsHelperServiceDelegate;
   @Inject private EcsContainerService ecsContainerService;
   @Inject private EcsCommandTaskHelper ecsCommandTaskHelper;
-  private static final String DELIMITER = "__";
-  private static final String CONTAINER_NAME_PLACEHOLDER_REGEX = "\\$\\{CONTAINER_NAME}";
 
   public void deregisterAutoScalarsIfExists(ContextData contextData, ExecutionLogCallback executionLogCallback) {
     EcsResizeParams resizeParams = contextData.getResizeParams();
@@ -126,6 +126,7 @@ public class EcsDeployCommandTaskHelper {
 
   /**
    * Delete autoScalar targets and policies created for New service that is being downsized in rollback
+   *
    * @param contextData
    * @param executionLogCallback
    */
@@ -272,6 +273,10 @@ public class EcsDeployCommandTaskHelper {
         ecsCommandTaskHelper.registerScalableTargetForEcsService(awsAppAutoScalingService, resizeParams.getRegion(),
             awsConfig, contextData.getEncryptedDataDetails(), executionLogCallback, scalableTarget);
 
+        ecsContainerService.waitForServiceToReachStableState(resizeParams.getRegion(), awsConfig,
+            contextData.getEncryptedDataDetails(), resizeParams.getClusterName(),
+            resizeParams.getContainerServiceName(), executionLogCallback, resizeParams.getServiceSteadyStateTimeout());
+
         if (isNotEmpty(awsAutoScalarConfig.getScalingPolicyJson())) {
           executionLogCallback.saveExecutionLog(
               "Creating Auto Scaling Policies for Service: " + containerServiceData.getName());
@@ -322,6 +327,10 @@ public class EcsDeployCommandTaskHelper {
         scalableTarget.withResourceId(resourceId);
         ecsCommandTaskHelper.registerScalableTargetForEcsService(awsAppAutoScalingService, resizeParams.getRegion(),
             awsConfig, contextData.getEncryptedDataDetails(), executionLogCallback, scalableTarget);
+
+        ecsContainerService.waitForServiceToReachStableState(resizeParams.getRegion(), awsConfig,
+            contextData.getEncryptedDataDetails(), resizeParams.getClusterName(),
+            resizeParams.getContainerServiceName(), executionLogCallback, resizeParams.getServiceSteadyStateTimeout());
 
         if (isNotEmpty(awsAutoScalarConfig.getScalingPolicyJson())) {
           executionLogCallback.saveExecutionLog(
@@ -450,15 +459,15 @@ public class EcsDeployCommandTaskHelper {
 
   public boolean getDeployingToHundredPercent(EcsResizeParams resizeParams) {
     boolean deployingToHundredPercent;
-    if (!resizeParams.isRollback()) {
+    if (resizeParams.isRollback()) {
+      deployingToHundredPercent = false;
+    } else {
       Preconditions.checkNotNull(resizeParams.getInstanceCount());
       deployingToHundredPercent = resizeParams.getInstanceUnitType() == PERCENTAGE
           ? resizeParams.getInstanceCount() >= 100
           : (resizeParams.isUseFixedInstances() && resizeParams.getInstanceCount() >= resizeParams.getFixedInstances())
               || (!resizeParams.isUseFixedInstances()
                   && resizeParams.getInstanceCount() >= resizeParams.getMaxInstances());
-    } else {
-      deployingToHundredPercent = false;
     }
 
     return deployingToHundredPercent;
@@ -519,6 +528,30 @@ public class EcsDeployCommandTaskHelper {
         : Math.min(instanceCount, totalTargetInstances);
   }
 
+  /**
+   * Logic to find downsize count of older service(s)
+   * <p>
+   * If downsizeInstanceCount is not provided, downsize by removing all old instances for last step
+   * or downsize equally (number of upsize instances == number of downsize instances)
+   * <pre>
+   * eg: upsizeDesiredCount = 5, upsizePreviousCount = 4, totalOtherInstances = 100 then downsize = 5-4 = 1, reducing
+   * older instances count to 99. if last step: downsize = 100, reducing older instances count to 0.
+   * </pre>
+   * <p>
+   * If downsizeInstanceCount is provided in upgrade step, downsize by <code>downsizeInstanceCount</code> and for
+   * percentage, by <code>(downsizeInstanceCount% * total new instances)/100</code>
+   * <p>
+   * <pre>
+   * eg: downsizeInstanceCount = 5, totalOtherInstances = 100, reduce older instances to 95 downsizeInstanceCount = 5%,
+   * total new instances = 50, reduce by 5% of 50 = 3
+   * </pre>
+   *
+   * @param contextData         context data
+   * @param totalOtherInstances old service total instances
+   * @param upsizeDesiredCount  new service desired count
+   * @param upsizePreviousCount new service existing count
+   * @return
+   */
   public int getDownsizeByAmount(
       ContextData contextData, int totalOtherInstances, int upsizeDesiredCount, int upsizePreviousCount) {
     EcsResizeParams resizeParams = contextData.getResizeParams();

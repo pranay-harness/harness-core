@@ -1,6 +1,7 @@
 package io.harness.encryptors.managerproxy;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.beans.shared.tasks.NgSetupFields.OWNER;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 
@@ -10,8 +11,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.utils.TaskSetupAbstractionHelper;
 import io.harness.delegatetasks.EncryptSecretTaskParameters;
 import io.harness.delegatetasks.EncryptSecretTaskResponse;
+import io.harness.delegatetasks.ValidateSecretManagerConfigurationTaskParameters;
 import io.harness.encryptors.DelegateTaskUtils;
 import io.harness.encryptors.KmsEncryptor;
 import io.harness.exception.SecretManagementException;
@@ -30,11 +33,14 @@ import javax.validation.executable.ValidateOnExecution;
 public class ManagerKmsEncryptor implements KmsEncryptor {
   private final DelegateService delegateService;
   private final ManagerEncryptorHelper managerEncryptorHelper;
+  private final TaskSetupAbstractionHelper taskSetupAbstractionHelper;
 
   @Inject
-  public ManagerKmsEncryptor(DelegateService delegateService, ManagerEncryptorHelper managerEncryptorHelper) {
+  public ManagerKmsEncryptor(DelegateService delegateService, ManagerEncryptorHelper managerEncryptorHelper,
+      TaskSetupAbstractionHelper taskSetupAbstractionHelper) {
     this.delegateService = delegateService;
     this.managerEncryptorHelper = managerEncryptorHelper;
+    this.taskSetupAbstractionHelper = taskSetupAbstractionHelper;
   }
 
   @Override
@@ -50,6 +56,7 @@ public class ManagerKmsEncryptor implements KmsEncryptor {
                                               .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
                                               .build())
                                     .accountId(accountId)
+                                    .setupAbstraction(OWNER, managerEncryptorHelper.getOwner(encryptionConfig))
                                     .build();
     try {
       DelegateResponseData delegateResponseData = delegateService.executeTask(delegateTask);
@@ -70,5 +77,12 @@ public class ManagerKmsEncryptor implements KmsEncryptor {
   @Override
   public char[] fetchSecretValue(String accountId, EncryptedRecord encryptedRecord, EncryptionConfig encryptionConfig) {
     return managerEncryptorHelper.fetchSecretValue(accountId, encryptedRecord, encryptionConfig);
+  }
+
+  @Override
+  public boolean validateKmsConfiguration(String accountId, EncryptionConfig encryptionConfig) {
+    ValidateSecretManagerConfigurationTaskParameters parameters =
+        ValidateSecretManagerConfigurationTaskParameters.builder().encryptionConfig(encryptionConfig).build();
+    return managerEncryptorHelper.validateConfiguration(accountId, parameters);
   }
 }

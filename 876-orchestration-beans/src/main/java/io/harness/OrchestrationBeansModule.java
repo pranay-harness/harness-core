@@ -1,7 +1,5 @@
 package io.harness;
 
-import io.harness.pms.sdk.core.registries.registrar.OrchestrationFieldRegistrar;
-import io.harness.registrars.OrchestrationBeansFieldRegistrar;
 import io.harness.registrars.OrchestrationBeansTimeoutRegistrar;
 import io.harness.registries.registrar.TimeoutRegistrar;
 
@@ -24,10 +22,6 @@ public class OrchestrationBeansModule extends AbstractModule {
   protected void configure() {
     install(TimeoutEngineModule.getInstance());
 
-    MapBinder<String, OrchestrationFieldRegistrar> orchestrationFieldRegistrarMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, OrchestrationFieldRegistrar.class);
-    orchestrationFieldRegistrarMapBinder.addBinding(OrchestrationBeansFieldRegistrar.class.getName())
-        .to(OrchestrationBeansFieldRegistrar.class);
     MapBinder<String, TimeoutRegistrar> timeoutRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, TimeoutRegistrar.class);
     timeoutRegistrarMapBinder.addBinding(OrchestrationBeansTimeoutRegistrar.class.getName())

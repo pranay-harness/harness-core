@@ -4,14 +4,28 @@ import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 
 import static org.mockito.Mockito.mock;
 
+import io.harness.Microservice;
+import io.harness.SCMGrpcClientModule;
+import io.harness.ScmConnectionConfig;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.callback.DelegateCallbackToken;
 import io.harness.connector.services.ConnectorService;
+import io.harness.eventsframework.EventsFrameworkConstants;
+import io.harness.eventsframework.api.Producer;
+import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
+import io.harness.grpc.DelegateServiceGrpcClient;
+import io.harness.grpc.client.GrpcClientConfig;
+import io.harness.lock.PersistentLocker;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.NGCoreModule;
+import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.entitysetupusage.EntitySetupUsageModule;
+import io.harness.ng.userprofile.services.api.SourceCodeManagerService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
@@ -21,8 +35,13 @@ import io.harness.serializer.ManagerRegistrars;
 import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
-import io.harness.waiter.WaiterModule;
+import io.harness.threading.CurrentThreadExecutor;
+import io.harness.threading.ExecutorModule;
+import io.harness.waiter.AbstractWaiterModule;
+import io.harness.waiter.WaiterConfiguration;
+import io.harness.waiter.WaiterConfiguration.PersistenceLayer;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -30,12 +49,18 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
@@ -43,6 +68,7 @@ import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
+@OwnedBy(HarnessTeam.DX)
 @Slf4j
 public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMixin {
   protected Injector injector;
@@ -54,6 +80,7 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
 
   @Override
   public List<Module> modules(List<Annotation> annotations) {
+    ExecutorModule.getInstance().setExecutorService(new CurrentThreadExecutor());
     List<Module> modules = new ArrayList<>();
     modules.add(new AbstractModule() {
       @Override
@@ -62,7 +89,23 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
         bind(ConnectorService.class)
             .annotatedWith(Names.named(DEFAULT_CONNECTOR_SERVICE))
             .toInstance(mock(ConnectorService.class));
+        bind(ConnectorService.class)
+            .annotatedWith(Names.named("connectorDecoratorService"))
+            .toInstance(mock(ConnectorService.class));
         bind(SecretManagerClientService.class).toInstance(mock(SecretManagerClientService.class));
+        bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
+        }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
+        bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
+        bind(SecretCrudService.class).toInstance(mock(SecretCrudService.class));
+        bind(Producer.class)
+            .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CONFIG_STREAM))
+            .toInstance(mock(NoOpProducer.class));
+        bind(Producer.class)
+            .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
+            .toInstance(mock(NoOpProducer.class));
+        bind(ExecutorService.class).toInstance(mock(ExecutorService.class));
+        bind(SourceCodeManagerService.class).toInstance(mock(SourceCodeManagerService.class));
+        bind(PersistentLocker.class).toInstance(mock(PersistentLocker.class));
       }
     });
 
@@ -94,15 +137,30 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
             .addAll(ManagerRegistrars.springConverters)
             .build();
       }
+
+      @Provides
+      @Singleton
+      @Named("GitSyncGrpcClientConfigs")
+      public Map<Microservice, GrpcClientConfig> grpcClientConfigs() {
+        Map<Microservice, GrpcClientConfig> map = new HashMap<>();
+        map.put(Microservice.CORE, GrpcClientConfig.builder().target("localhost:12001").authority("localhost").build());
+        return map;
+      }
     });
     modules.add(KryoModule.getInstance());
-    modules.add(GitSyncModule.getInstance());
     modules.add(mongoTypeModule(annotations));
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
     modules.add(NGCoreModule.getInstance());
-    modules.add(new WaiterModule());
+    modules.add(new AbstractWaiterModule() {
+      @Override
+      public WaiterConfiguration waiterConfiguration() {
+        return WaiterConfiguration.builder().persistenceLayer(PersistenceLayer.MORPHIA).build();
+      }
+    });
     modules.add(new EntitySetupUsageModule());
+    modules.add(new SCMGrpcClientModule(ScmConnectionConfig.builder().url("dummyurl").build()));
+    modules.add(GitSyncModule.getInstance());
     return modules;
   }
 

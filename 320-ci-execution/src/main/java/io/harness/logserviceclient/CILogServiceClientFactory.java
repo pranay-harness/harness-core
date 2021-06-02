@@ -1,5 +1,7 @@
 package io.harness.logserviceclient;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.network.Http;
 
@@ -10,6 +12,7 @@ import com.google.inject.Provider;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+@OwnedBy(HarnessTeam.CI)
 public class CILogServiceClientFactory implements Provider<CILogServiceClient> {
   private LogServiceConfig logConfig;
 

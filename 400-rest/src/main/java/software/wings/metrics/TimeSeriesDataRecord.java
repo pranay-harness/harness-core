@@ -15,11 +15,10 @@ import static java.lang.System.currentTimeMillis;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.exception.WingsException;
-import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.GoogleDataStoreAware;
@@ -41,7 +40,8 @@ import com.google.cloud.datastore.Blob;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Key;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.TreeBasedTable;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.nio.charset.StandardCharsets;
@@ -68,33 +68,42 @@ import org.mongodb.morphia.annotations.Transient;
 /**
  * Created by rsingh on 08/30/17.
  */
-
-@CdIndex(name = "stateExIdx",
-    fields =
-    { @Field("stateExecutionId")
-      , @Field("groupName"), @Field(value = "dataCollectionMinute", type = IndexType.DESC) })
-@CdIndex(name = "workflowExIdx",
-    fields =
-    {
-      @Field("workflowExecutionId"), @Field("groupName"), @Field(value = "dataCollectionMinute", type = IndexType.DESC)
-    })
-@CdIndex(name = "serviceGuardIdx",
-    fields = { @Field(value = "dataCollectionMinute", type = IndexType.DESC)
-               , @Field("cvConfigId") })
-@CdIndex(name = "service_guard_idx",
-    fields = { @Field("cvConfigId")
-               , @Field(value = "dataCollectionMinute", type = IndexType.DESC) })
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = false, exclude = {"validUntil", "values", "deeplinkMetadata", "deeplinkUrl"})
+@EqualsAndHashCode(callSuper = false,
+    exclude = {"validUntil", "values", "valuesBytes", "deeplinkMetadata", "deeplinkUrl", "createdAt", "lastUpdatedAt"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "TimeSeriesMetricRecordKeys")
 @Entity(value = "timeSeriesMetricRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class TimeSeriesDataRecord
     implements GoogleDataStoreAware, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  private static final String BUILD_DOT_COM_ACCOUNT_ID = "JWNrP_OyRrSL6qe9pCSI0g";
+  private static final String BUILD_DOT_COM_SERVICE_ID = "ZoYZjErvQGqTKYv9obNy8w";
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(SortCompoundMongoIndex.builder()
+                 .name("stateExIdx")
+                 .field(TimeSeriesMetricRecordKeys.stateExecutionId)
+                 .field(TimeSeriesMetricRecordKeys.groupName)
+                 .descSortField(TimeSeriesMetricRecordKeys.dataCollectionMinute)
+                 .build(),
+            SortCompoundMongoIndex.builder()
+                .name("workflowExIdx")
+                .field(TimeSeriesMetricRecordKeys.workflowExecutionId)
+                .field(TimeSeriesMetricRecordKeys.groupName)
+                .descSortField(TimeSeriesMetricRecordKeys.dataCollectionMinute)
+                .build(),
+            SortCompoundMongoIndex.builder()
+                .name("service_guard_idx")
+                .field(TimeSeriesMetricRecordKeys.cvConfigId)
+                .descSortField(TimeSeriesMetricRecordKeys.dataCollectionMinute)
+                .build())
+        .build();
+  }
+
   @Id private String uuid;
 
   private StateType stateType; // could be null for older values
@@ -105,7 +114,7 @@ public class TimeSeriesDataRecord
 
   private String serviceId;
 
-  @FdIndex private String cvConfigId;
+  private String cvConfigId;
 
   private String stateExecutionId;
 
@@ -123,11 +132,11 @@ public class TimeSeriesDataRecord
 
   private byte[] valuesBytes;
 
-  @Transient @Default private TreeBasedTable<String, String, Double> values = TreeBasedTable.create();
+  @Transient @Default private HashBasedTable<String, String, Double> values = HashBasedTable.create();
 
-  @Transient @Default private TreeBasedTable<String, String, String> deeplinkMetadata = TreeBasedTable.create();
+  @Transient @Default private HashBasedTable<String, String, String> deeplinkMetadata = HashBasedTable.create();
 
-  private transient TreeBasedTable<String, String, String> deeplinkUrl;
+  private transient HashBasedTable<String, String, String> deeplinkUrl;
 
   private long createdAt;
 
@@ -168,8 +177,8 @@ public class TimeSeriesDataRecord
       return;
     }
 
-    values = TreeBasedTable.create();
-    deeplinkMetadata = TreeBasedTable.create();
+    values = HashBasedTable.create();
+    deeplinkMetadata = HashBasedTable.create();
 
     try {
       TxnMetricValues txnMetricValues = TxnMetricValues.parseFrom(valuesBytes);
@@ -278,6 +287,8 @@ public class TimeSeriesDataRecord
     appendIfNecessary(keyBuilder, workflowId);
     appendIfNecessary(keyBuilder, stateType.name());
     appendIfNecessary(keyBuilder, groupName);
+    appendIfNecessary(keyBuilder, String.valueOf(dataCollectionMinute));
+    appendIfNecessary(keyBuilder, tag);
     return Hashing.sha256().hashString(keyBuilder.toString(), StandardCharsets.UTF_8).toString();
   }
 
@@ -309,8 +320,8 @@ public class TimeSeriesDataRecord
                                                       .lastUpdatedAt(metric.getLastUpdatedAt())
                                                       .build();
 
-      TreeBasedTable<String, String, Double> values = TreeBasedTable.create();
-      TreeBasedTable<String, String, String> deeplinkMetadata = TreeBasedTable.create();
+      HashBasedTable<String, String, Double> values = HashBasedTable.create();
+      HashBasedTable<String, String, String> deeplinkMetadata = HashBasedTable.create();
       metric.getValues().forEach((metricName, value) -> values.put(metric.getName(), metricName, value));
       if (isNotEmpty(metric.getDeeplinkMetadata())) {
         metric.getDeeplinkMetadata().forEach(
@@ -333,8 +344,8 @@ public class TimeSeriesDataRecord
     metricData.forEach(TimeSeriesDataRecord::decompress);
     List<NewRelicMetricDataRecord> newRelicRecords = new ArrayList<>();
     metricData.forEach(metric -> {
-      TreeBasedTable<String, String, Double> values = metric.getValues();
-      TreeBasedTable<String, String, String> deeplinkMetadata = metric.getDeeplinkMetadata();
+      HashBasedTable<String, String, Double> values = metric.getValues();
+      HashBasedTable<String, String, String> deeplinkMetadata = metric.getDeeplinkMetadata();
 
       if (metric.getLevel() != null) {
         NewRelicMetricDataRecord newRelicMetricDataRecord = NewRelicMetricDataRecord.builder()
@@ -383,5 +394,10 @@ public class TimeSeriesDataRecord
       }
     });
     return newRelicRecords;
+  }
+
+  // TODO: remove once CV-5872 is solved
+  public static boolean shouldLogForBuildDotCom(String accountId, String serviceId) {
+    return BUILD_DOT_COM_ACCOUNT_ID.equals(accountId) && BUILD_DOT_COM_SERVICE_ID.equals(serviceId);
   }
 }

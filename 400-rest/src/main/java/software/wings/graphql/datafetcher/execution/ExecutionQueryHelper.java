@@ -3,7 +3,7 @@ package software.wings.graphql.datafetcher.execution;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
@@ -19,6 +19,7 @@ import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagFilter;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagType;
+import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentTypeFilter;
 import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
 
 import com.google.inject.Inject;
@@ -33,7 +34,7 @@ import org.mongodb.morphia.query.Query;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class ExecutionQueryHelper {
   @Inject protected DataFetcherUtils utils;
   @Inject protected TagHelper tagHelper;
@@ -174,6 +175,12 @@ public class ExecutionQueryHelper {
         field = query.field(WorkflowExecutionKeys.pipelineExecutionId);
         QLIdFilter idFilter = filter.getPipelineExecutionId();
         utils.setIdFilter(field, idFilter);
+      }
+
+      if (filter.getEnvironmentType() != null) {
+        field = query.field(WorkflowExecutionKeys.envType);
+        QLEnvironmentTypeFilter envTypeFilter = filter.getEnvironmentType();
+        utils.setEnumFilter(field, envTypeFilter);
       }
     });
   }

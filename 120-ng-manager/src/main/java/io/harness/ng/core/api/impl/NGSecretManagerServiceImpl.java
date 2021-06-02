@@ -1,7 +1,9 @@
 package io.harness.ng.core.api.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.remote.client.RestClientUtils.getResponse;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
@@ -12,11 +14,11 @@ import io.harness.secretmanagerclient.remote.SecretManagerClient;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Singleton
 @Slf4j
@@ -37,16 +39,10 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   }
 
   @Override
-  public List<SecretManagerConfigDTO> listSecretManagers(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    return getResponse(secretManagerClient.listSecretManagers(accountIdentifier, orgIdentifier, projectIdentifier));
-  }
-
-  @Override
-  public SecretManagerConfigDTO getSecretManager(
-      @NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier, @NotNull String identifier) {
-    return getResponse(
-        secretManagerClient.getSecretManager(identifier, accountIdentifier, orgIdentifier, projectIdentifier));
+  public SecretManagerConfigDTO getSecretManager(@NotNull String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, @NotNull String identifier, boolean maskSecrets) {
+    return getResponse(secretManagerClient.getSecretManager(
+        identifier, accountIdentifier, orgIdentifier, projectIdentifier, maskSecrets));
   }
 
   @Override

@@ -8,8 +8,12 @@ import static software.wings.beans.Account.Builder;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.User.Builder.anUser;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.delegate.beans.DelegateToken;
+import io.harness.delegate.beans.DelegateToken.DelegateTokenKeys;
 import io.harness.exception.WingsException;
 import io.harness.generator.LicenseGenerator.Licenses;
 import io.harness.generator.OwnerManager.Owners;
@@ -18,6 +22,7 @@ import io.harness.limits.ActionType;
 import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
+import io.harness.ng.core.account.DefaultExperience;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.framework.utils.TestUtils;
@@ -54,6 +59,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class AccountGenerator {
   private static final String adminUserUuid = "lv0euRhKRCyiXWzS7pOg6g";
   private static final String adminUserName = "Admin";
@@ -128,6 +134,7 @@ public class AccountGenerator {
                                         .withUuid(ACCOUNT_ID)
                                         .withAccountName("Harness")
                                         .withCompanyName("Harness")
+                                        .withDefaultExperience(DefaultExperience.CG)
                                         .withLicenseInfo(LicenseInfo.builder()
                                                              .accountType(AccountType.PAID)
                                                              .accountStatus(AccountStatus.ACTIVE)
@@ -193,6 +200,7 @@ public class AccountGenerator {
                     .withUuid(accountId)
                     .withAccountName(accountName)
                     .withCompanyName(companyName)
+                    .withDefaultExperience(DefaultExperience.CG)
                     .withLicenseInfo(LicenseInfo.builder()
                                          .accountType(accountType)
                                          .accountStatus(AccountStatus.ACTIVE)
@@ -227,12 +235,23 @@ public class AccountGenerator {
   }
 
   private void updateAccountKey(String secretName, Account account) {
+    String accountKey = scmSecret.decryptToString(new SecretName(secretName));
+
     // Update account key to make it work with delegate
     UpdateOperations<Account> accountUpdateOperations = wingsPersistence.createUpdateOperations(Account.class);
-    accountUpdateOperations.set("accountKey", scmSecret.decryptToString(new SecretName(secretName)));
+    accountUpdateOperations.set("accountKey", accountKey);
     wingsPersistence.update(
         wingsPersistence.createQuery(Account.class).filter(AccountKeys.accountName, account.getAccountName()),
         accountUpdateOperations);
+
+    // Update account key value in delegate tokens to make it work with delegates
+    UpdateOperations<DelegateToken> tokenUpdateOperations =
+        wingsPersistence.createUpdateOperations(DelegateToken.class);
+    tokenUpdateOperations.set(DelegateTokenKeys.value, accountKey);
+    wingsPersistence.update(wingsPersistence.createQuery(DelegateToken.class)
+                                .filter(DelegateTokenKeys.accountId, account.getUuid())
+                                .filter(DelegateTokenKeys.name, "default"),
+        tokenUpdateOperations);
   }
 
   private void updateLimitConfiguration(String accountId) {
@@ -264,7 +283,7 @@ public class AccountGenerator {
     users.add(default2faUser);
     addUsersToUserGroup(users, account.getUuid(), UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME);
     addUserToUserGroup(readOnlyUser, account.getUuid(), UserGroup.DEFAULT_READ_ONLY_USER_GROUP_NAME);
-    addUserToHarnessUserGroup(adminUser);
+    addUserToHarnessUserGroup(account.getUuid(), adminUser);
 
     return account;
   }
@@ -306,9 +325,13 @@ public class AccountGenerator {
     }
   }
 
-  public void addUserToHarnessUserGroup(User user) {
-    HarnessUserGroup harnessUserGroup =
-        HarnessUserGroup.builder().memberIds(Sets.newHashSet(user.getUuid())).name("harnessUserGroup").build();
+  public void addUserToHarnessUserGroup(String accountId, User user) {
+    HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()
+                                            .memberIds(Sets.newHashSet(user.getUuid()))
+                                            .accountIds(Sets.newHashSet(accountId))
+                                            .name("harnessUserGroup")
+                                            .groupType(HarnessUserGroup.GroupType.DEFAULT)
+                                            .build();
     harnessUserGroupService.save(harnessUserGroup);
   }
 

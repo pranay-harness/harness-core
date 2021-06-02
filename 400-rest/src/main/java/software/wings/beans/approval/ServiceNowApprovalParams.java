@@ -67,6 +67,7 @@ public class ServiceNowApprovalParams {
     return true;
   }
 
+  @SuppressWarnings("PMD")
   public static boolean validateTimeWindow(
       String endTimeField, String startTimeField, Map<String, String> currentStatus) {
     Instant nowInstant = Instant.now();
@@ -89,6 +90,7 @@ public class ServiceNowApprovalParams {
     } catch (ParseException pe) {
       throw new ServiceNowException("Invalid approval Change Window values in ServiceNow", SERVICENOW_ERROR, USER, pe);
     } catch (NullPointerException | IllegalArgumentException ex) {
+      log.error("");
       throw new ServiceNowException(ex.getMessage(), SERVICENOW_ERROR, USER, ex);
     }
   }

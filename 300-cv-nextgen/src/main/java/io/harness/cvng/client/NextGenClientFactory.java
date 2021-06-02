@@ -1,5 +1,8 @@
 package io.harness.cvng.client;
 
+import static io.harness.ng.core.CorrelationContext.getCorrelationIdInterceptor;
+import static io.harness.request.RequestContextFilter.getRequestContextInterceptor;
+
 import io.harness.cvng.core.NGManagerServiceConfig;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
@@ -47,12 +50,14 @@ public class NextGenClientFactory implements Provider<NextGenClient> {
   @Override
   public NextGenClient get() {
     String baseUrl = ngManagerServiceConfig.getNgManagerUrl();
-    final Retrofit retrofit = new Retrofit.Builder()
-                                  .baseUrl(baseUrl)
-                                  .client(getUnsafeOkHttpClient(baseUrl))
-                                  .addCallAdapterFactory(CircuitBreakerCallAdapter.of(getCircuitBreaker()))
-                                  .addConverterFactory(JacksonConverterFactory.create(objectMapper))
-                                  .build();
+    // https://resilience4j.readme.io/docs/retrofit
+    final Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .client(getUnsafeOkHttpClient(baseUrl))
+            .addCallAdapterFactory(CircuitBreakerCallAdapter.of(getCircuitBreaker(), response -> response.code() < 500))
+            .addConverterFactory(JacksonConverterFactory.create(objectMapper))
+            .build();
     return retrofit.create(NextGenClient.class);
   }
 
@@ -62,6 +67,8 @@ public class NextGenClientFactory implements Provider<NextGenClient> {
           .connectionPool(new ConnectionPool())
           .retryOnConnectionFailure(false)
           .addInterceptor(getAuthorizationInterceptor())
+          .addInterceptor(getCorrelationIdInterceptor())
+          .addInterceptor(getRequestContextInterceptor())
           .addInterceptor(chain -> {
             Request original = chain.request();
 

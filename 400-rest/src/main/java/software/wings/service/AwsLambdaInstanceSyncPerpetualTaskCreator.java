@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.perpetualtask.instancesync.AwsLambdaInstanceSyncPerpetualTaskClient.FUNCTION_NAME;
 import static io.harness.perpetualtask.instancesync.AwsLambdaInstanceSyncPerpetualTaskClient.QUALIFIER;
@@ -12,9 +13,9 @@ import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 
 import static java.lang.Long.parseLong;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
-import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.instancesync.AwsLambdaInstanceSyncPerpetualTaskClientParams;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
@@ -43,24 +44,19 @@ import org.apache.commons.lang3.tuple.Pair;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AwsLambdaInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetualTaskCreator {
+@OwnedBy(CDP)
+public class AwsLambdaInstanceSyncPerpetualTaskCreator extends AbstractInstanceSyncPerpetualTaskCreator {
   @Inject ServerlessInstanceService serverlessInstanceService;
-  @Inject PerpetualTaskService perpetualTaskService;
 
   @Override
   public List<String> createPerpetualTasks(InfrastructureMapping infrastructureMapping) {
     Set<AwsLambdaFunction> lambdaFunctions = getActiveLambdaFunctions(infrastructureMapping);
-    return createPerpetualTasksFrom(lambdaFunctions, infrastructureMapping.getAppId(), infrastructureMapping.getUuid(),
-        infrastructureMapping.getAccountId());
+    return createPerpetualTasksFrom(lambdaFunctions, infrastructureMapping);
   }
 
   @Override
   public List<String> createPerpetualTasksForNewDeployment(List<DeploymentSummary> deploymentSummaries,
       List<PerpetualTaskRecord> existingPerpetualTasks, InfrastructureMapping infrastructureMapping) {
-    String appId = deploymentSummaries.iterator().next().getAppId();
-    String infraMappingId = deploymentSummaries.iterator().next().getInfraMappingId();
-    String accountId = deploymentSummaries.iterator().next().getAccountId();
-
     final Set<AwsLambdaFunction> existingLambdaFunctions = extractLambdaFunctionsFromRecord(existingPerpetualTasks);
     final Set<AwsLambdaFunction> lambdaFunctionsFromNewDeployment =
         extractLambdaFunctionsFromNewDeployment(deploymentSummaries);
@@ -68,7 +64,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskCreator implements InstanceSyncPe
     SetView<AwsLambdaFunction> eligibleLambdaFunctions =
         Sets.difference(lambdaFunctionsFromNewDeployment, existingLambdaFunctions);
 
-    return createPerpetualTasksFrom(eligibleLambdaFunctions, appId, infraMappingId, accountId);
+    return createPerpetualTasksFrom(eligibleLambdaFunctions, infrastructureMapping);
   }
 
   private Set<AwsLambdaFunction> extractLambdaFunctionsFromNewDeployment(List<DeploymentSummary> deploymentSummaries) {
@@ -99,21 +95,22 @@ public class AwsLambdaInstanceSyncPerpetualTaskCreator implements InstanceSyncPe
   }
 
   private List<String> createPerpetualTasksFrom(
-      Set<AwsLambdaFunction> lambdaFunctions, String appId, String infraMappingId, String accountId) {
+      Set<AwsLambdaFunction> lambdaFunctions, InfrastructureMapping infrastructureMapping) {
     return lambdaFunctions.stream()
         .map(lambdaFunction
             -> AwsLambdaInstanceSyncPerpetualTaskClientParams.builder()
-                   .appId(appId)
-                   .inframappingId(infraMappingId)
+                   .appId(infrastructureMapping.getAppId())
+                   .inframappingId(infrastructureMapping.getUuid())
                    .functionName(lambdaFunction.getFunctionName())
                    .qualifier(lambdaFunction.getFunctionVersion())
                    .startDate(String.valueOf(lambdaFunction.getStartDate()))
                    .build())
-        .map(clientParams -> create(accountId, clientParams))
+        .map(clientParams -> create(clientParams, infrastructureMapping))
         .collect(Collectors.toList());
   }
 
-  private String create(String accountId, AwsLambdaInstanceSyncPerpetualTaskClientParams clientParams) {
+  private String create(
+      AwsLambdaInstanceSyncPerpetualTaskClientParams clientParams, InfrastructureMapping infraMapping) {
     Map<String, String> paramMap = ImmutableMap.<String, String>builder()
                                        .put(HARNESS_APPLICATION_ID, clientParams.getAppId())
                                        .put(INFRASTRUCTURE_MAPPING_ID, clientParams.getInframappingId())
@@ -129,8 +126,8 @@ public class AwsLambdaInstanceSyncPerpetualTaskCreator implements InstanceSyncPe
                                          .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))
                                          .build();
 
-    return perpetualTaskService.createTask(
-        PerpetualTaskType.AWS_LAMBDA_INSTANCE_SYNC, accountId, clientContext, schedule, false, "");
+    return perpetualTaskService.createTask(PerpetualTaskType.AWS_LAMBDA_INSTANCE_SYNC, infraMapping.getAccountId(),
+        clientContext, schedule, false, getTaskDescription(infraMapping));
   }
 
   private Set<AwsLambdaFunction> getActiveLambdaFunctions(InfrastructureMapping infrastructureMapping) {

@@ -27,6 +27,7 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
+import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.template.Template;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerArtifactVariable;
@@ -51,6 +52,13 @@ import software.wings.service.impl.yaml.handler.deploymentspec.container.Storage
 import software.wings.service.impl.yaml.handler.deploymentspec.lambda.DefaultSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.lambda.FunctionSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.environment.EnvironmentYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.ApplicationFilterYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.CustomAppFilterYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.CustomEnvFilterYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.EnvironmentFilterYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.GovernanceConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.GovernanceFreezeConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.governance.TimeRangeBasedFreezeConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.InfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.infraprovisioner.InfrastructureProvisionerYamlHandler;
 import software.wings.service.impl.yaml.handler.notification.NotificationGroupYamlHandler;
@@ -130,6 +138,9 @@ public class YamlHandlerFactory {
   @Inject private Map<String, AzureArtifactsYamlHandler> azureArtifactsYamlHandlerMap;
   @Inject private Map<String, CloudProviderInfrastructureYamlHandler> cloudProviderInfrastructureYamlHandlerMap;
   @Inject private Map<String, TemplateLibraryYamlHandler> templateLibraryYamlHandlerMap;
+  @Inject private Map<String, GovernanceFreezeConfigYamlHandler> governanceFreezeConfigYamlHandlerMap;
+  @Inject private Map<String, ApplicationFilterYamlHandler> applicationFilterYamlHandlerMap;
+  @Inject private Map<String, EnvironmentFilterYamlHandler> environmentFilterYamlHandlerMap;
 
   @Inject private ApplicationYamlHandler applicationYamlHandler;
   @Inject private TriggerYamlHandler triggerYamlHandler;
@@ -166,6 +177,10 @@ public class YamlHandlerFactory {
   @Inject private HarnessTagYamlHandler harnessTagYamlHandler;
   @Inject private InfrastructureDefinitionYamlHandler infrastructureDefinitionYamlHandler;
   @Inject private ManifestSelectionYamlHandler manifestSelectionYamlHandler;
+  @Inject private TimeRangeBasedFreezeConfigYamlHandler timeRangeBasedFreezeConfigYamlHandler;
+  @Inject private GovernanceConfigYamlHandler governanceConfigYamlHandler;
+  @Inject private CustomAppFilterYamlHandler customAppFilterYamlHandler;
+  @Inject private CustomEnvFilterYamlHandler customEnvFilterYamlHandler;
 
   public <T extends BaseYamlHandler> T getYamlHandler(YamlType yamlType) {
     return getYamlHandler(yamlType, null);
@@ -374,6 +389,24 @@ public class YamlHandlerFactory {
         yamlHandler = manifestSelectionYamlHandler;
         break;
 
+      // insert map here
+      case GOVERNANCE_FREEZE_CONFIG:
+        yamlHandler = governanceFreezeConfigYamlHandlerMap.get(subType);
+        break;
+
+      case GOVERNANCE_CONFIG:
+        yamlHandler = governanceConfigYamlHandler;
+        break;
+
+      // insert map here
+      case APPLICATION_FILTER:
+        yamlHandler = applicationFilterYamlHandlerMap.get(subType);
+        break;
+        // insert map here
+      case ENV_FILTER:
+        yamlHandler = environmentFilterYamlHandlerMap.get(subType);
+        break;
+
       default:
         break;
     }
@@ -431,6 +464,8 @@ public class YamlHandlerFactory {
     } else if (entity instanceof Template) {
       final String appId = ((Template) entity).getAppId();
       return TemplateYamlConfig.getInstance(appId).getYamlType();
+    } else if (entity instanceof GovernanceConfig) {
+      return YamlType.GOVERNANCE_CONFIG;
     }
 
     throw new InvalidRequestException(
@@ -488,6 +523,8 @@ public class YamlHandlerFactory {
       return ((Trigger) entity).getName();
     } else if (entity instanceof Template) {
       return ((Template) entity).getName();
+    } else if (entity instanceof GovernanceConfig) {
+      return YamlConstants.DEPLOYMENT_GOVERNANCE_FOLDER;
     }
 
     throw new InvalidRequestException(
@@ -614,7 +651,7 @@ public class YamlHandlerFactory {
         "InstanaCVConfiguration", "PrometheusCVServiceConfiguration", "StackDriverMetricCVConfiguration",
         "BugsnagCVConfiguration", "ElkCVConfiguration", "LogsCVConfiguration", "SplunkCVConfiguration",
         "StackdriverCVConfiguration", "AzureInfrastructureMapping", "InfrastructureDefinition",
-        "ShellScriptInfrastructureProvisioner", "Template", "CustomLogCVServiceConfiguration");
+        "ShellScriptInfrastructureProvisioner", "Template", "CustomLogCVServiceConfiguration", "GovernanceConfig");
   }
 
   private static List<String> obtainLeafEntitiesWithFeatureFlag() {

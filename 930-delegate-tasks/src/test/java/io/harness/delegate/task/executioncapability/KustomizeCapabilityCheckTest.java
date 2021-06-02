@@ -1,10 +1,13 @@
 package io.harness.delegate.task.executioncapability;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
@@ -22,6 +25,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({KustomizeCapabilityCheck.class})
+@OwnedBy(CDP)
 public class KustomizeCapabilityCheckTest extends CategoryTest {
   @Mock private KustomizeCapability capability;
   @InjectMocks private KustomizeCapabilityCheck capabilityCheck;

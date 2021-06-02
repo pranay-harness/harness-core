@@ -16,6 +16,7 @@ import "io/harness/pms/contracts/execution/failure/failure_info.proto";
 import "io/harness/pms/contracts/execution/skip/skip_info.proto";
 import "io/harness/pms/contracts/execution/status.proto";
 import "io/harness/pms/contracts/data/step_outcome_ref.proto";
+import "io/harness/pms/contracts/interrupts/interrupt_effect_proto.proto";
 
 message NodeExecutionProto {
   string uuid = 1;
@@ -28,6 +29,7 @@ message NodeExecutionProto {
   google.protobuf.Duration initialWaitDuration = 7;
 
   string resolvedStepParameters = 8;
+  string resolvedStepInputs = 21;
 
   string notifyId = 9;
 
@@ -48,7 +50,8 @@ message NodeExecutionProto {
 
   io.harness.pms.contracts.advisers.AdviserResponse adviserResponse = 20;
 
+  repeated io.harness.pms.contracts.interrupts.InterruptEffectProto interruptHistories = 23;
+
   // Missing Fields which needs to be added
-  // Interrupt Effect
   // Timeout Information
 }

@@ -35,7 +35,7 @@ public class WorkflowExecutionMetadataTest extends CategoryTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testAccept() {
-    MetadataTestUtils.SimpleVisitor simpleVisitor = new MetadataTestUtils.SimpleVisitor();
+    SimpleVisitor simpleVisitor = new SimpleVisitor();
     WorkflowExecutionMetadata.builder()
         .executionGraph(
             asList(GraphNodeMetadata.builder().id("id1").build(), GraphNodeMetadata.builder().id("id2").build()))

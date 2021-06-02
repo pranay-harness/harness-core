@@ -1,10 +1,20 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessModule._970_RBAC_CORE;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static software.wings.security.PermissionAttribute.PermissionType;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.event.model.EventType;
+import io.harness.ng.core.common.beans.Generation;
+import io.harness.ng.core.dto.UserInviteDTO;
+import io.harness.ng.core.invites.InviteOperationResponse;
+import io.harness.ng.core.user.PasswordChangeDTO;
+import io.harness.ng.core.user.PasswordChangeResponse;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 
@@ -20,13 +30,13 @@ import software.wings.beans.loginSettings.PasswordSource;
 import software.wings.beans.loginSettings.PasswordStrengthViolations;
 import software.wings.beans.marketplace.MarketPlaceType;
 import software.wings.beans.security.UserGroup;
+import software.wings.resources.UserResource;
 import software.wings.security.JWT_CATEGORY;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.LogoutResponse;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 import software.wings.security.authentication.oauth.OauthUserInfo;
-import software.wings.service.impl.InviteOperationResponse;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.net.URISyntaxException;
@@ -45,6 +55,8 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 /**
  * Created by anubhaw on 3/28/16.
  */
+@OwnedBy(PL)
+@TargetModule(_970_RBAC_CORE)
 public interface UserService extends OwnedByAccount {
   /**
    * Consider the following characters in email as illegal and prohibit trial signup with the following characters
@@ -67,6 +79,16 @@ public interface UserService extends OwnedByAccount {
    * @param userInvite user invite with registration info
    */
   boolean trialSignup(UserInvite userInvite);
+
+  /**
+   * Used for NG signup to create a new user and login from an NG user object
+   */
+  User createNewUserAndSignIn(User user, String accountId);
+
+  /**
+   * Used for NG signup to create a new oauth user and login from an NG user object
+   */
+  User createNewOAuthUser(User user, String accountId);
 
   UserInvite createUserInviteForMarketPlace();
 
@@ -154,6 +176,8 @@ public interface UserService extends OwnedByAccount {
 
   boolean isTwoFactorEnabled(String accountId, String usedId);
 
+  User updateUser(User oldUser, UpdateOperations<User> updateOperations);
+
   /**
    * Gets the.
    *
@@ -212,6 +236,8 @@ public interface UserService extends OwnedByAccount {
    * @return
    */
   User getUserByEmail(String email);
+
+  List<User> getUsersByEmail(List<String> emailIds, String accountId);
 
   User getUserByEmail(String email, String accountId);
 
@@ -335,6 +361,14 @@ public interface UserService extends OwnedByAccount {
   User completeInviteAndSignIn(UserInvite userInvite);
 
   /**
+   * Complete the user invite NG and login the user in one call.
+   *
+   * @param userInvite the user invite
+   * @return the logged-in user
+   */
+  User completeNGInviteAndSignIn(UserInviteDTO userInvite);
+
+  /**
    * Complete the trial user signup. Both the trial account and the account admin user will be created
    * as part of this operation.
    *
@@ -411,19 +445,29 @@ public interface UserService extends OwnedByAccount {
   /**
    * Reset password boolean.
    *
-   * @param emailId the email id
+   *
+   * @param resetPasswordRequest
    * @return the boolean
    */
-  boolean resetPassword(String emailId);
+  boolean resetPassword(UserResource.ResetPasswordRequest resetPasswordRequest);
 
   /**
-   * Update password boolean.
+   * Update password via reset-password link.
    *
    * @param resetPasswordToken the reset password token
    * @param password           the password
    * @return the boolean
    */
   boolean updatePassword(String resetPasswordToken, char[] password);
+
+  /**
+   * Change password from user profile page
+   *
+   * @param userId                 User ID for the user submitting the change request
+   * @param passwordChangeDTO      DTO with the new password
+   * @return the boolean
+   */
+  PasswordChangeResponse changePassword(String userId, PasswordChangeDTO passwordChangeDTO);
 
   LogoutResponse logout(String accountId, String userId);
 
@@ -513,7 +557,7 @@ public interface UserService extends OwnedByAccount {
   boolean postCustomEvent(String accountId, String event);
 
   PasswordStrengthViolations checkPasswordViolations(
-      String resetPasswordToken, PasswordSource passwordSource, String password);
+      String resetPasswordToken, PasswordSource passwordSource, String password, String accountId);
 
   User applyUpdateOperations(User user, UpdateOperations<User> updateOperations);
 
@@ -525,22 +569,34 @@ public interface UserService extends OwnedByAccount {
 
   boolean canEnableOrDisable(User user);
 
-  User save(User user, String accountId);
+  User createUser(User user, String accountId);
 
   String saveUserInvite(UserInvite userInvite);
 
   List<User> listUsers(PageRequest pageRequest, String accountId, String searchTerm, Integer offset, Integer pageSize,
-      boolean loadUserGroups);
+      boolean loadUserGroups, boolean includeUsersPendingInviteAcceptance);
 
-  long getTotalUserCount(String accountId, boolean listPendingUsers);
+  long getTotalUserCount(String accountId, boolean includeUsersPendingInviteAcceptance);
 
-  InviteOperationResponse checkInviteStatus(UserInvite userInvite);
+  InviteOperationResponse checkInviteStatus(UserInvite userInvite, Generation gen);
 
   void loadUserGroupsForUsers(List<User> users, String accountId);
 
-  void setNewDefaultAccountId(User user);
-
   boolean isUserPresent(String userId);
 
-  List<User> getUsers(List<String> userIds);
+  List<User> getUsers(List<String> userIds, String accountId);
+
+  String sanitizeUserName(String name);
+
+  List<UserGroup> getUserGroupsOfUserAudit(String accountId, String userId);
+
+  void addUserToAccount(String userId, String accountId);
+
+  boolean safeDeleteUser(String userId, String accountId);
+
+  String generateVerificationUrl(String userId, String accountId) throws URISyntaxException;
+
+  String generateLoginUrl(String accountId) throws URISyntaxException;
+
+  boolean isUserPasswordPresent(String accountId, String emailId);
 }

@@ -3,7 +3,6 @@ package io.harness.app.resources;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
-import io.harness.app.RestQueryFilterParser;
 import io.harness.app.beans.dto.CIBuildFilterDTO;
 import io.harness.app.beans.dto.CIBuildResponseDTO;
 import io.harness.app.intfc.CIBuildInfoService;
@@ -37,8 +36,7 @@ import org.springframework.data.domain.Page;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class CIBuildResource {
-  private CIBuildInfoService ciBuildInfoService;
-  private final RestQueryFilterParser restQueryFilterParser;
+  private final CIBuildInfoService ciBuildInfoService;
 
   @GET
   @Path("/{buildIdentifier}")

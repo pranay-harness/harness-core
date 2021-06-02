@@ -1,7 +1,10 @@
 package io.harness.ccm.setup.service.support.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.setup.service.support.AwsCredentialHelper;
 import io.harness.ccm.setup.service.support.intfc.AWSOrganizationHelperService;
 
@@ -24,6 +27,7 @@ import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CE)
 public class AWSOrganizationHelperServiceImpl implements AWSOrganizationHelperService {
   @Inject private AwsCredentialHelper awsCredentialHelper;
 

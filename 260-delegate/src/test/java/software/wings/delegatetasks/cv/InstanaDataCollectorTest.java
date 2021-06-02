@@ -10,7 +10,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.DataCollectionExecutorService;
@@ -45,7 +45,7 @@ import org.mockito.Mock;
 import retrofit2.Call;
 import retrofit2.Response;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class InstanaDataCollectorTest extends WingsBaseTest {
   private InstanaConfig config;
   private InstanaDataCollector instanaDataCollector;

@@ -1,5 +1,6 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
@@ -15,6 +16,7 @@ import static software.wings.sm.states.spotinst.SpotInstListenerUpdateState.SPOT
 
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
@@ -55,6 +57,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @ToString
 @Slf4j
+@OwnedBy(CDP)
 public class SpotinstTrafficShiftAlbSwitchRoutesState extends State {
   @Getter @Setter private boolean downsizeOldElastigroup;
   @Getter @Setter private String newElastigroupWeightExpr;
@@ -143,9 +146,10 @@ public class SpotinstTrafficShiftAlbSwitchRoutesState extends State {
     DelegateTask delegateTask = spotinstStateHelper.getDelegateTask(dataBag.getApp().getAccountId(),
         dataBag.getApp().getUuid(), TaskType.SPOTINST_COMMAND_TASK, activity.getUuid(), dataBag.getEnv().getUuid(),
         dataBag.getInfrastructureMapping().getUuid(), commandRequest, dataBag.getEnv().getEnvironmentType(),
-        dataBag.getInfrastructureMapping().getServiceId());
+        dataBag.getInfrastructureMapping().getServiceId(), isSelectionLogsTrackingForTasksEnabled());
 
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .correlationIds(singletonList(activity.getUuid()))
@@ -221,5 +225,10 @@ public class SpotinstTrafficShiftAlbSwitchRoutesState extends State {
       invalidFields.put("newElastigroupWeightExpr", "New Elastigroup weight is needed");
     }
     return invalidFields;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

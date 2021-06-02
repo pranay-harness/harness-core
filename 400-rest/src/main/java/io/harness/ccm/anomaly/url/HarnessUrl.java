@@ -1,5 +1,10 @@
 package io.harness.ccm.anomaly.url;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
 import io.harness.ccm.anomaly.utility.AnomalyUtility;
 import io.harness.data.structure.EmptyPredicate;
@@ -16,6 +21,8 @@ import org.apache.http.client.utils.URIBuilder;
 
 @UtilityClass
 @Slf4j
+@OwnedBy(CE)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 public class HarnessUrl {
   static final String SETTING_PATH = "account/%1$s/continuous-efficiency/settings";
   static final String PATH_TEMPLATE = "/account/%1$s/continuous-efficiency/%2$s/insights";
@@ -27,8 +34,8 @@ public class HarnessUrl {
       addBaseParams(uriBuilder);
       addDateParams(uriBuilder, date);
       return addHash(uriBuilder.build()).toString();
-    } catch (URISyntaxException | UnsupportedEncodingException e) {
-      e.printStackTrace();
+    } catch (URISyntaxException | UnsupportedEncodingException exception) {
+      log.error("", exception);
     }
     return null;
   }
@@ -40,8 +47,8 @@ public class HarnessUrl {
       addToQuery(uriBuilder, UrlParams.FILTER, "all");
       addToQuery(uriBuilder, UrlParams.SELECTED_VIEW, "COMMUNICATION");
       return addHash(uriBuilder.build()).toString();
-    } catch (URISyntaxException e) {
-      e.printStackTrace();
+    } catch (URISyntaxException exception) {
+      log.error("", exception);
     }
     return null;
   }
@@ -54,8 +61,8 @@ public class HarnessUrl {
       addEntityParams(uriBuilder, anomaly);
       addGroupBY(uriBuilder, anomaly);
       return addHash(uriBuilder.build()).toString();
-    } catch (UnsupportedEncodingException | URISyntaxException e) {
-      e.printStackTrace();
+    } catch (UnsupportedEncodingException | URISyntaxException exception) {
+      log.error("", exception);
     }
     return null;
   }
@@ -87,7 +94,7 @@ public class HarnessUrl {
         addToQuery(uriBuilder, UrlParams.GROUP_BY, UrlGroupBys.AWS_SERVICE.getValue());
         break;
       default:
-        log.error("Groupby not supported in harnessUrl");
+        log.error("Group by not supported in harnessUrl");
         break;
     }
   }

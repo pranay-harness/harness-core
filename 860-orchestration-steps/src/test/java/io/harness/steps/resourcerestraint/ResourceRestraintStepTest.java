@@ -14,11 +14,16 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationStepsTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.shared.ResourceConstraint;
+import io.harness.beans.shared.RestraintService;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintId;
 import io.harness.distribution.constraint.Consumer;
 import io.harness.exception.InvalidRequestException;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
@@ -29,11 +34,9 @@ import io.harness.rule.Owner;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;
 import io.harness.steps.resourcerestraint.beans.HoldingScope;
 import io.harness.steps.resourcerestraint.beans.HoldingScope.HoldingScopeBuilder;
-import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintRegistry;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintService;
-import io.harness.steps.resourcerestraint.service.RestraintService;
 
 import com.google.inject.Inject;
 import java.util.Collections;
@@ -43,8 +46,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
-  private static final String CLAIMANT_ID = generateUuid();
   private static final String RESOURCE_RESTRAINT_ID = generateUuid();
   private static final String RESOURCE_UNIT = generateUuid();
   private static final HoldingScope HOLDING_SCOPE = HoldingScopeBuilder.aPlan().build();
@@ -57,14 +60,15 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
 
   @Before
   public void setUp() {
+    ResourceConstraint resourceConstraint = ResourceConstraint.builder()
+                                                .accountId(generateUuid())
+                                                .capacity(1)
+                                                .strategy(Constraint.Strategy.FIFO)
+                                                .uuid(generateUuid())
+                                                .build();
     ConstraintId constraintId = new ConstraintId(RESOURCE_RESTRAINT_ID);
-    when(restraintService.get(any(), any()))
-        .thenReturn(ResourceConstraint.builder()
-                        .accountId(generateUuid())
-                        .capacity(1)
-                        .strategy(Constraint.Strategy.FIFO)
-                        .uuid(generateUuid())
-                        .build());
+    when(restraintService.getByNameAndAccountId(any(), any())).thenReturn(resourceConstraint);
+    when(restraintService.get(any(), any())).thenReturn(resourceConstraint);
     doReturn(Constraint.builder()
                  .id(constraintId)
                  .spec(Constraint.Spec.builder().limits(1).strategy(Constraint.Strategy.FIFO).build())
@@ -88,14 +92,13 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
                                 Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
                             .build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
-    ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
-                                                         .resourceRestraintId(RESOURCE_RESTRAINT_ID)
+    ResourceRestraintSpecParameters specParameters = ResourceRestraintSpecParameters.builder()
                                                          .resourceUnit(RESOURCE_UNIT)
                                                          .acquireMode(AcquireMode.ACCUMULATE)
                                                          .holdingScope(holdingScope)
                                                          .permits(1)
-                                                         .claimantId(CLAIMANT_ID)
                                                          .build();
+    StepElementParameters stepElementParameters = StepElementParameters.builder().spec(specParameters).build();
 
     doReturn(Collections.singletonList(ResourceRestraintInstance.builder()
                                            .state(Consumer.State.ACTIVE)
@@ -106,7 +109,7 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
         .when(resourceRestraintService)
         .getAllByRestraintIdAndResourceUnitAndStates(any(), any(), any());
     AsyncExecutableResponse asyncExecutableResponse =
-        resourceRestraintStep.executeAsync(ambiance, stepParameters, stepInputPackage);
+        resourceRestraintStep.executeAsync(ambiance, stepElementParameters, stepInputPackage);
 
     assertThat(asyncExecutableResponse).isNotNull();
   }
@@ -123,20 +126,19 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
                                 Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
                             .build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
-    ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
-                                                         .resourceRestraintId(RESOURCE_RESTRAINT_ID)
+    ResourceRestraintSpecParameters specParameters = ResourceRestraintSpecParameters.builder()
                                                          .resourceUnit(RESOURCE_UNIT)
                                                          .acquireMode(AcquireMode.ACCUMULATE)
                                                          .holdingScope(HOLDING_SCOPE)
                                                          .permits(1)
-                                                         .claimantId(CLAIMANT_ID)
                                                          .build();
+    StepElementParameters stepElementParameters = StepElementParameters.builder().spec(specParameters).build();
 
     doReturn(Collections.emptyList())
         .when(resourceRestraintService)
         .getAllByRestraintIdAndResourceUnitAndStates(any(), any(), any());
 
-    assertThatThrownBy(() -> resourceRestraintStep.executeAsync(ambiance, stepParameters, stepInputPackage))
+    assertThatThrownBy(() -> resourceRestraintStep.executeAsync(ambiance, stepElementParameters, stepInputPackage))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageStartingWith("The state should be BLOCKED");
   }
@@ -153,20 +155,20 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
                                 Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
                             .build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
-    ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
-                                                         .resourceRestraintId(RESOURCE_RESTRAINT_ID)
+    ResourceRestraintSpecParameters specParameters = ResourceRestraintSpecParameters.builder()
                                                          .resourceUnit(RESOURCE_UNIT)
                                                          .acquireMode(AcquireMode.ACCUMULATE)
                                                          .holdingScope(HOLDING_SCOPE)
                                                          .permits(1)
-                                                         .claimantId(CLAIMANT_ID)
                                                          .build();
+    StepElementParameters stepElementParameters = StepElementParameters.builder().spec(specParameters).build();
 
     doReturn(Collections.emptyList())
         .when(resourceRestraintService)
         .getAllByRestraintIdAndResourceUnitAndStates(any(), any(), any());
 
-    StepResponse stepResponse = resourceRestraintStep.executeSync(ambiance, stepParameters, stepInputPackage, null);
+    StepResponse stepResponse =
+        resourceRestraintStep.executeSync(ambiance, stepElementParameters, stepInputPackage, null);
 
     assertThat(stepResponse).isNotNull();
     assertThat(stepResponse.getStatus()).isEqualTo(SUCCEEDED);
@@ -184,14 +186,13 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
                                 Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
                             .build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
-    ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
-                                                         .resourceRestraintId(RESOURCE_RESTRAINT_ID)
+    ResourceRestraintSpecParameters specParameters = ResourceRestraintSpecParameters.builder()
                                                          .resourceUnit(RESOURCE_UNIT)
                                                          .acquireMode(AcquireMode.ACCUMULATE)
                                                          .holdingScope(HOLDING_SCOPE)
                                                          .permits(1)
-                                                         .claimantId(CLAIMANT_ID)
                                                          .build();
+    StepElementParameters stepElementParameters = StepElementParameters.builder().spec(specParameters).build();
 
     doReturn(Collections.singletonList(ResourceRestraintInstance.builder()
                                            .state(Consumer.State.ACTIVE)
@@ -202,7 +203,7 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
         .when(resourceRestraintService)
         .getAllByRestraintIdAndResourceUnitAndStates(any(), any(), any());
 
-    assertThatThrownBy(() -> resourceRestraintStep.executeSync(ambiance, stepParameters, stepInputPackage, null))
+    assertThatThrownBy(() -> resourceRestraintStep.executeSync(ambiance, stepElementParameters, stepInputPackage, null))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageStartingWith("The state should be ACTIVE");
   }
@@ -218,23 +219,22 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
                             .addAllLevels(Collections.singletonList(
                                 Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
                             .build();
-    ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
-                                                         .resourceRestraintId(RESOURCE_RESTRAINT_ID)
+    ResourceRestraintSpecParameters specParameters = ResourceRestraintSpecParameters.builder()
                                                          .resourceUnit(RESOURCE_UNIT)
                                                          .acquireMode(AcquireMode.ACCUMULATE)
                                                          .holdingScope(HOLDING_SCOPE)
                                                          .permits(1)
-                                                         .claimantId(CLAIMANT_ID)
                                                          .build();
+    StepElementParameters stepElementParameters = StepElementParameters.builder().spec(specParameters).build();
 
     doNothing().when(resourceRestraintService).updateBlockedConstraints(any());
 
-    StepResponse stepResponse = resourceRestraintStep.handleAsyncResponse(ambiance, stepParameters, null);
+    StepResponse stepResponse = resourceRestraintStep.handleAsyncResponse(ambiance, stepElementParameters, null);
 
     assertThat(stepResponse).isNotNull();
     assertThat(stepResponse.getStatus()).isEqualTo(SUCCEEDED);
 
-    verify(restraintService).get(any(), any());
+    verify(restraintService).getByNameAndAccountId(any(), any());
     verify(resourceRestraintService).updateBlockedConstraints(any());
   }
 
@@ -249,19 +249,18 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
                             .addAllLevels(Collections.singletonList(
                                 Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
                             .build();
-    ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
-                                                         .resourceRestraintId(RESOURCE_RESTRAINT_ID)
+    ResourceRestraintSpecParameters specParameters = ResourceRestraintSpecParameters.builder()
                                                          .resourceUnit(RESOURCE_UNIT)
                                                          .acquireMode(AcquireMode.ACCUMULATE)
                                                          .holdingScope(HOLDING_SCOPE)
                                                          .permits(1)
-                                                         .claimantId(CLAIMANT_ID)
                                                          .build();
+    StepElementParameters stepElementParameters = StepElementParameters.builder().spec(specParameters).build();
 
     when(resourceRestraintService.finishInstance(any(), any())).thenReturn(ResourceRestraintInstance.builder().build());
 
     resourceRestraintStep.handleAbort(
-        ambiance, stepParameters, AsyncExecutableResponse.newBuilder().addCallbackIds(generateUuid()).build());
+        ambiance, stepElementParameters, AsyncExecutableResponse.newBuilder().addCallbackIds(generateUuid()).build());
 
     verify(resourceRestraintService).finishInstance(any(), any());
   }
@@ -277,19 +276,18 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
                             .addAllLevels(Collections.singletonList(
                                 Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
                             .build();
-    ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
-                                                         .resourceRestraintId(RESOURCE_RESTRAINT_ID)
+    ResourceRestraintSpecParameters specParameters = ResourceRestraintSpecParameters.builder()
                                                          .resourceUnit(RESOURCE_UNIT)
                                                          .acquireMode(AcquireMode.ACCUMULATE)
                                                          .holdingScope(HOLDING_SCOPE)
                                                          .permits(1)
-                                                         .claimantId(CLAIMANT_ID)
                                                          .build();
+    StepElementParameters stepElementParameters = StepElementParameters.builder().spec(specParameters).build();
 
     when(resourceRestraintService.finishInstance(any(), any())).thenThrow(new InvalidRequestException("Exception"));
 
     assertThatThrownBy(()
-                           -> resourceRestraintStep.handleAbort(ambiance, stepParameters,
+                           -> resourceRestraintStep.handleAbort(ambiance, stepElementParameters,
                                AsyncExecutableResponse.newBuilder().addCallbackIds("").build()))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageStartingWith("Exception");

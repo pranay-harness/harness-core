@@ -16,7 +16,6 @@ import io.harness.connector.entities.embedded.kubernetescluster.KubernetesAuth;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterDetails;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesCredential;
-import io.harness.connector.entities.embedded.kubernetescluster.KubernetesDelegateDetails;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
@@ -57,9 +56,7 @@ public class KubernetesDTOToEntity
     if (k8CredentialType == INHERIT_FROM_DELEGATE) {
       KubernetesDelegateDetailsDTO kubernetesDelegateDetails =
           castToKubernetesDelegateDetails(k8ClusterDTO.getCredential().getConfig());
-      return KubernetesDelegateDetails.builder()
-          .delegateSelectors(kubernetesDelegateDetails.getDelegateSelectors())
-          .build();
+      return null;
     } else if (k8CredentialType == KubernetesCredentialType.MANUAL_CREDENTIALS) {
       KubernetesClusterDetailsDTO kubernetesClusterDetails =
           castToKubernetesClusterDetails(k8ClusterDTO.getCredential().getConfig());

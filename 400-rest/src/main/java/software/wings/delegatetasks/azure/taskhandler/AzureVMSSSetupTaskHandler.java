@@ -29,7 +29,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureMachineImageArtifact;
@@ -79,7 +79,7 @@ import org.jetbrains.annotations.Nullable;
 @Singleton
 @NoArgsConstructor
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
   @Inject private AzureAutoScaleHelper azureAutoScaleHelper;
 
@@ -371,8 +371,7 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
     String baseVirtualMachineScaleSetName = setupTaskParameters.getBaseVMSSName();
     AzureMachineImageArtifactDTO imageArtifactDTO = setupTaskParameters.getImageArtifactDTO();
 
-    AzureMachineImageArtifact imageArtifact =
-        getAzureMachineImageArtifact(azureConfig, subscriptionId, resourceGroupName, imageArtifactDTO, logCallback);
+    AzureMachineImageArtifact imageArtifact = getAzureMachineImageArtifact(azureConfig, imageArtifactDTO, logCallback);
     AzureVMSSTagsData azureVMSSTagsData = getAzureVMSSTagsData(setupTaskParameters, newHarnessRevision);
     AzureUserAuthVMInstanceData azureUserAuthVMInstanceData = buildUserAuthVMInstanceData(setupTaskParameters);
 
@@ -398,10 +397,11 @@ public class AzureVMSSSetupTaskHandler extends AzureVMSSTaskHandler {
   }
 
   @VisibleForTesting
-  AzureMachineImageArtifact getAzureMachineImageArtifact(AzureConfig azureConfig, String subscriptionId,
-      String resourceGroupName, AzureMachineImageArtifactDTO azureMachineImageArtifactDTO,
-      ExecutionLogCallback logCallback) {
+  AzureMachineImageArtifact getAzureMachineImageArtifact(AzureConfig azureConfig,
+      AzureMachineImageArtifactDTO azureMachineImageArtifactDTO, ExecutionLogCallback logCallback) {
     GalleryImageDefinitionDTO imageDefinition = azureMachineImageArtifactDTO.getImageDefinition();
+    String subscriptionId = imageDefinition.getSubscriptionId();
+    String resourceGroupName = imageDefinition.getResourceGroupName();
     String imageDefinitionName = imageDefinition.getDefinitionName();
     String imageGalleryName = imageDefinition.getGalleryName();
     String imageVersion = imageDefinition.getVersion();

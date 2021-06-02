@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.dl.WingsPersistence;
@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public abstract class BaseDataFetcher implements DataFetcher {
   @Inject protected AuthRuleGraphQL authRuleInstrumentation;
   @Inject protected DataFetcherUtils utils;

@@ -1,6 +1,8 @@
 package software.wings.graphql.datafetcher.trigger;
 
+import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.MILAN;
 import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.PRABU;
@@ -15,6 +17,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.configuration.DeployMode;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.app.MainConfiguration;
@@ -72,6 +75,7 @@ public class TriggerConditionControllerTest extends CategoryTest {
   @Mock SettingsService settingsService;
   @Mock ArtifactStreamService artifactStreamService;
   @Mock TriggerActionController triggerActionController;
+  @Mock FeatureFlagService featureFlagService;
 
   @InjectMocks TriggerConditionController triggerConditionController = Mockito.spy(new TriggerConditionController());
 
@@ -1526,6 +1530,48 @@ public class TriggerConditionControllerTest extends CategoryTest {
         .isEqualTo(BitBucketEventType.BUILD_STATUS_UPDATED.getValue());
     assertThat(webHookTriggerCondition.getBitBucketEvents().get(0).name())
         .isEqualTo(BitBucketEventType.BUILD_STATUS_UPDATED.name());
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testHeaderForCustomTriggerWithFfEnabled() {
+    String accountId = "1234";
+    PortalConfig portalConfig = Mockito.mock(PortalConfig.class);
+
+    Mockito.when(portalConfig.getUrl()).thenReturn("URL");
+    mainConfiguration.setPortal(portalConfig);
+    Mockito.when(mainConfiguration.getPortal()).thenReturn(portalConfig);
+
+    when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES_ONPREM);
+
+    WebHookToken webHookToken =
+        WebHookToken.builder().webHookToken("webhookToken").httpMethod("POST").payload("payload").build();
+    StringBuilder webhookURL = new StringBuilder(mainConfiguration.getPortal().getUrl());
+    webhookURL.append("/api/webhooks/").append(webHookToken.getWebHookToken()).append("?accountId=").append(accountId);
+
+    WebHookTriggerCondition webhookTriggerCondition =
+        WebHookTriggerCondition.builder().webHookToken(webHookToken).build();
+    Trigger trigger = Trigger.builder().appId(APP_ID).condition(webhookTriggerCondition).build();
+
+    SettingAttribute gitConfig = new SettingAttribute();
+    gitConfig.setName("gitConnectorName");
+    Mockito.when(settingsService.get(Matchers.anyString())).thenReturn(gitConfig);
+    when(featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, accountId)).thenReturn(true);
+
+    QLOnWebhook qlOnWebhook = (QLOnWebhook) triggerConditionController.populateTriggerCondition(trigger, accountId);
+
+    assertThat(qlOnWebhook).isNotNull();
+    assertThat(qlOnWebhook.getWebhookSource().name()).isEqualTo(QLWebhookSource.CUSTOM.name());
+    assertThat(qlOnWebhook.getTriggerConditionType().name())
+        .isEqualTo(webhookTriggerCondition.getConditionType().name());
+    assertThat(qlOnWebhook.getWebhookDetails()).isNotNull();
+    assertThat(qlOnWebhook.getWebhookDetails().getHeader())
+        .isEqualTo("content-type: application/json, x-api-key: x-api-key_placeholder");
+    assertThat(qlOnWebhook.getWebhookDetails().getMethod()).isEqualTo(webHookToken.getHttpMethod());
+    assertThat(qlOnWebhook.getWebhookDetails().getPayload()).isEqualTo(webHookToken.getPayload());
+    assertThat(qlOnWebhook.getWebhookDetails().getWebhookURL()).isEqualTo(webhookURL.toString());
+    assertThat(qlOnWebhook.getWebhookEvent()).isNull();
   }
 
   private QLCreateOrUpdateTriggerInput getQLCreateOrUpdateTriggerInput(

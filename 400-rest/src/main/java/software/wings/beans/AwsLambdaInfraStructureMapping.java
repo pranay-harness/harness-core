@@ -1,7 +1,12 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.InvalidRequestException;
 
@@ -30,6 +35,8 @@ import org.apache.commons.lang3.StringUtils;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "AwsLambdaInfraStructureMappingKeys")
+@OwnedBy(CDP)
+@TargetModule(_871_CG_BEANS)
 public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
   /**
    * Instantiates a new Infrastructure mapping.
@@ -39,7 +46,7 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
   }
 
   @Attributes(title = "Region", required = true)
-  @EnumData(enumDataProvider = AwsInfrastructureMapping.AwsRegionDataProvider.class)
+  @EnumData(enumDataProvider = AwsRegionDataProvider.class)
   @Blueprint
   private String region;
 
@@ -121,7 +128,7 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends InfrastructureMapping.YamlWithComputeProvider {
+  public static final class Yaml extends YamlWithComputeProvider {
     private String region;
     private String vpcId;
     private List<String> subnetIds = new ArrayList<>();

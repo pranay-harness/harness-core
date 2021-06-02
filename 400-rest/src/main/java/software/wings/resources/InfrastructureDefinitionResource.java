@@ -437,7 +437,7 @@ public class InfrastructureDefinitionResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
-  public RestResponse<List<String>> getSubscriptionLocations(
+  public RestResponse<List<String>> getCloudProviderLocations(
       @QueryParam("appId") String appId, @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(
         infrastructureDefinitionService.listAzureCloudProviderLocations(appId, computeProviderId));

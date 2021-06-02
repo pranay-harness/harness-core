@@ -6,21 +6,22 @@
     "orgIdentifier": "orgIdentifier",
     "projectIdentifier": "projectIdentifier",
     "tags": {
-      "company" : "Harness",
-      "env" : "dev"
+      "company": "Harness",
+      "env": "dev"
     },
-    "type":"Nexus",
-    "spec" : {
-      "nexusServerUrl" : "https://nexusUrl.com",
-      "version" : "3.x",
-      "auth" : {
-        "type" : "UsernamePassword",
-        "spec" : {
-          "username" : "nexusUserName",
+    "type": "Nexus",
+    "spec": {
+      "nexusServerUrl": "https://nexusUrl.com",
+      "version": "3.x",
+      "auth": {
+        "type": "UsernamePassword",
+        "spec": {
+          "username": "nexusUserName",
           "usernameRef": null,
-          "passwordRef" : "account.nexus_pass"
+          "passwordRef": "account.nexus_pass"
         }
-      }
+      },
+      "delegateSelectors": null
     }
   }
 }

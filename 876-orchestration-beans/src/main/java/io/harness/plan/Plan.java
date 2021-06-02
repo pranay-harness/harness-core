@@ -2,9 +2,11 @@ package io.harness.plan;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.pms.contracts.plan.GraphLayoutInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
@@ -41,6 +43,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @FieldNameConstants(innerTypeName = "PlanKeys")
 @TypeAlias("plan")
+@StoreIn(DbAliases.PMS)
 public final class Plan implements PersistentEntity {
   List<PlanNodeProto> nodes;
 

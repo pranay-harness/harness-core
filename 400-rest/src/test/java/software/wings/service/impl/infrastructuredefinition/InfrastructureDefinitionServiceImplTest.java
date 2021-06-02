@@ -55,6 +55,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -71,6 +72,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.queue.QueuePublisher;
 import io.harness.rule.Owner;
 
 import software.wings.api.CloudProviderType;
@@ -108,6 +110,7 @@ import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionBui
 import software.wings.infra.PcfInfraStructure;
 import software.wings.infra.PhysicalInfra;
 import software.wings.infra.PhysicalInfraWinrm;
+import software.wings.prune.PruneEvent;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
 import software.wings.service.intfc.AppService;
@@ -166,6 +169,7 @@ public class InfrastructureDefinitionServiceImplTest extends CategoryTest {
   @Mock private CustomDeploymentTypeService customDeploymentTypeService;
   @Mock private AwsRoute53HelperServiceManager awsRoute53HelperServiceManager;
   @Mock private SecretManager secretManager;
+  @Mock private QueuePublisher<PruneEvent> pruneQueue;
 
   @Spy @InjectMocks private InfrastructureDefinitionServiceImpl infrastructureDefinitionService;
 
@@ -431,6 +435,11 @@ public class InfrastructureDefinitionServiceImplTest extends CategoryTest {
     verify(yamlPushService, times(1))
         .pushYamlChangeSet(eq(ACCOUNT_ID), any(InfrastructureDefinitionService.class), eq(null), eq(Event.Type.DELETE),
             eq(false), eq(false));
+    ArgumentCaptor<PruneEvent> captor = ArgumentCaptor.forClass(PruneEvent.class);
+    verify(pruneQueue, times(1)).send(captor.capture());
+    assertThat(captor.getValue().getEntityId()).isEqualTo(INFRA_DEFINITION_ID);
+    assertThat(captor.getValue().getAppId()).isEqualTo(APP_ID);
+    assertThat(captor.getValue().getEntityClass()).isEqualTo(InfrastructureDefinition.class.getCanonicalName());
   }
 
   @Test
@@ -796,7 +805,10 @@ public class InfrastructureDefinitionServiceImplTest extends CategoryTest {
     }
     when(mockSettingsService.getByAccountAndId(anyString(), anyString()))
         .thenReturn(SettingAttribute.Builder.aSettingAttribute()
-                        .withValue(GcpConfig.builder().useDelegate(true).delegateSelector("abc").build())
+                        .withValue(GcpConfig.builder()
+                                       .useDelegateSelectors(true)
+                                       .delegateSelectors(Collections.singletonList("abc"))
+                                       .build())
                         .build());
     InfrastructureDefinition invalid_gcp_k8s_delegate_selector = valid.cloneForUpdate();
     assertThatExceptionOfType(InvalidRequestException.class)
@@ -1331,6 +1343,146 @@ public class InfrastructureDefinitionServiceImplTest extends CategoryTest {
     Map<String, String> loadBalancers =
         infrastructureDefinitionService.listElasticLoadBalancers(APP_ID, INFRA_MAPPING_ID);
     assertThat(loadBalancers.keySet()).containsOnly("a", "b", "c");
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testListElasticLoadBalancersWithProvisioner() {
+    doReturn(InfrastructureDefinition.builder()
+                 .infrastructure(AwsEcsInfrastructure.builder().region(Regions.US_EAST_1.name()).build())
+                 .provisionerId("provisioner1")
+                 .build())
+        .when(wingsPersistence)
+        .getWithAppId(any(), anyString(), anyString());
+
+    doReturn(SettingAttribute.Builder.aSettingAttribute().withCategory(SettingCategory.SETTING).build())
+        .when(mockSettingsService)
+        .get(anyString());
+
+    AwsInfrastructureProvider awsInfrastructureProvider = mock(AwsInfrastructureProvider.class);
+    doThrow(new RuntimeException("Failed to fetch ELB from AWS"))
+        .when(awsInfrastructureProvider)
+        .listElasticBalancers(any(), anyString(), anyString());
+    doReturn(awsInfrastructureProvider).when(infrastructureProviderMap).get(anyString());
+
+    Map<String, String> loadBalancers =
+        infrastructureDefinitionService.listElasticLoadBalancers(APP_ID, INFRA_MAPPING_ID);
+    assertThat(loadBalancers).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testListElasticLoadBalancersExceptionCase() {
+    doReturn(InfrastructureDefinition.builder()
+                 .infrastructure(AwsEcsInfrastructure.builder().region(Regions.US_EAST_1.name()).build())
+                 .build())
+        .when(wingsPersistence)
+        .getWithAppId(any(), anyString(), anyString());
+
+    doReturn(SettingAttribute.Builder.aSettingAttribute().withCategory(SettingCategory.SETTING).build())
+        .when(mockSettingsService)
+        .get(anyString());
+
+    AwsInfrastructureProvider awsInfrastructureProvider = mock(AwsInfrastructureProvider.class);
+    doThrow(new RuntimeException("Failed to fetch ELB from AWS"))
+        .when(awsInfrastructureProvider)
+        .listElasticBalancers(any(), anyString(), anyString());
+    doReturn(awsInfrastructureProvider).when(infrastructureProviderMap).get(anyString());
+
+    try {
+      infrastructureDefinitionService.listElasticLoadBalancers(APP_ID, INFRA_MAPPING_ID);
+    } catch (Exception ex) {
+      assertThat(ex.getMessage()).isEqualTo("Failed to fetch ELB from AWS");
+      assertThat(ex).isInstanceOf(RuntimeException.class);
+    }
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testListTargetGroups() {
+    doReturn(InfrastructureDefinition.builder()
+                 .infrastructure(AwsEcsInfrastructure.builder().region(Regions.US_EAST_1.name()).build())
+                 .build())
+        .when(wingsPersistence)
+        .getWithAppId(any(), anyString(), anyString());
+
+    doReturn(SettingAttribute.Builder.aSettingAttribute().withCategory(SettingCategory.SETTING).build())
+        .when(mockSettingsService)
+        .get(anyString());
+
+    AwsInfrastructureProvider awsInfrastructureProvider = mock(AwsInfrastructureProvider.class);
+    Map<String, String> targetGroups = new HashMap<>();
+    targetGroups.put("arn1", "tg1");
+    targetGroups.put("arn2", "tg2");
+    doReturn(targetGroups).when(awsInfrastructureProvider).listTargetGroups(any(), anyString(), eq("lb1"), anyString());
+    doReturn(awsInfrastructureProvider).when(infrastructureProviderMap).get(anyString());
+
+    Map<String, String> loadBalancers =
+        infrastructureDefinitionService.listTargetGroups(APP_ID, INFRA_DEFINITION_ID, "lb1");
+    assertThat(loadBalancers.keySet()).containsOnly("arn1", "arn2");
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testListTargetGroupsWithProvisioner() {
+    doReturn(InfrastructureDefinition.builder()
+                 .infrastructure(AwsEcsInfrastructure.builder().region(Regions.US_EAST_1.name()).build())
+                 .provisionerId("provisioner1")
+                 .build())
+        .when(wingsPersistence)
+        .getWithAppId(any(), anyString(), anyString());
+
+    doReturn(SettingAttribute.Builder.aSettingAttribute().withCategory(SettingCategory.SETTING).build())
+        .when(mockSettingsService)
+        .get(anyString());
+
+    AwsInfrastructureProvider awsInfrastructureProvider = mock(AwsInfrastructureProvider.class);
+    Map<String, String> targetGroups = new HashMap<>();
+    targetGroups.put("arn1", "tg1");
+    targetGroups.put("arn2", "tg2");
+    doThrow(new RuntimeException("Failed to fetch Target Group from AWS"))
+        .when(awsInfrastructureProvider)
+        .listTargetGroups(any(), anyString(), eq("lb1"), anyString());
+    doReturn(awsInfrastructureProvider).when(infrastructureProviderMap).get(anyString());
+
+    Map<String, String> loadBalancers =
+        infrastructureDefinitionService.listTargetGroups(APP_ID, INFRA_DEFINITION_ID, "lb1");
+    assertThat(loadBalancers).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testListTargetGroupsExceptionCase() {
+    doReturn(InfrastructureDefinition.builder()
+                 .infrastructure(AwsEcsInfrastructure.builder().region(Regions.US_EAST_1.name()).build())
+                 .build())
+        .when(wingsPersistence)
+        .getWithAppId(any(), anyString(), anyString());
+
+    doReturn(SettingAttribute.Builder.aSettingAttribute().withCategory(SettingCategory.SETTING).build())
+        .when(mockSettingsService)
+        .get(anyString());
+
+    AwsInfrastructureProvider awsInfrastructureProvider = mock(AwsInfrastructureProvider.class);
+    Map<String, String> targetGroups = new HashMap<>();
+    targetGroups.put("arn1", "tg1");
+    targetGroups.put("arn2", "tg2");
+    doThrow(new RuntimeException("Failed to fetch Target Group from AWS"))
+        .when(awsInfrastructureProvider)
+        .listTargetGroups(any(), anyString(), eq("lb1"), anyString());
+    doReturn(awsInfrastructureProvider).when(infrastructureProviderMap).get(anyString());
+
+    try {
+      infrastructureDefinitionService.listTargetGroups(APP_ID, INFRA_DEFINITION_ID, "lb1");
+    } catch (Exception ex) {
+      assertThat(ex.getMessage()).isEqualTo("Failed to fetch Target Group from AWS");
+      assertThat(ex).isInstanceOf(RuntimeException.class);
+    }
   }
 
   @Test

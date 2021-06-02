@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -7,13 +8,14 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.AwsLambdaContextElement.FunctionMeta;
@@ -55,6 +57,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 
 @Slf4j
+@OwnedBy(CDP)
 public class AwsLambdaVerification extends State {
   @Attributes(title = "Function Test Events") private List<LambdaTestEvent> lambdaTestEvents = new ArrayList<>();
 
@@ -118,7 +121,7 @@ public class AwsLambdaVerification extends State {
               .awsLambdaExecutionData(awsLambdaExecutionData)
               .lambdaTestEvent(lambdaTestEvent)
               .build(),
-          context.getAppId(), activityId, infrastructureMapping);
+          activityId, infrastructureMapping, context);
 
     } catch (WingsException e) {
       throw e;
@@ -127,15 +130,18 @@ public class AwsLambdaVerification extends State {
     }
   }
 
-  private ExecutionResponse executeTask(String accountId, AwsLambdaRequest request, String appId, String activityId,
-      InfrastructureMapping infrastructureMapping) {
+  private ExecutionResponse executeTask(String accountId, AwsLambdaRequest request, String activityId,
+      InfrastructureMapping infrastructureMapping, ExecutionContext context) {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(accountId)
-            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
+            .setupAbstraction(
+                Cd1SetupFields.APP_ID_FIELD, isNotEmpty(context.getAppId()) ? context.getAppId() : GLOBAL_APP_ID)
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, infrastructureMapping.getEnvId())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMapping.getUuid())
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("Aws Lambda Verification task")
             .data(TaskData.builder()
                       .async(true)
                       .taskType(TaskType.AWS_LAMBDA_TASK.name())
@@ -146,6 +152,7 @@ public class AwsLambdaVerification extends State {
             .build();
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(activityId))
@@ -261,5 +268,10 @@ public class AwsLambdaVerification extends State {
 
   public void setLambdaTestEvents(List<LambdaTestEvent> lambdaTestEvents) {
     this.lambdaTestEvents = lambdaTestEvents;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

@@ -1,12 +1,14 @@
 package io.harness.cvng.dashboard.entities;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -34,7 +36,8 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "HealthVerificationHeatMapKeys")
 @Entity(value = "healthVerificationHeatMaps", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class HealthVerificationHeatMap implements UuidAware, PersistentEntity, CreatedAtAware, UpdatedAtAware {
+@StoreIn(DbAliases.CVNG)
+public final class HealthVerificationHeatMap implements UuidAware, PersistentEntity, CreatedAtAware, UpdatedAtAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -56,6 +59,7 @@ public class HealthVerificationHeatMap implements UuidAware, PersistentEntity, C
 
   @Id private String uuid;
   private String aggregationId;
+  // TODO: remove this if possible.
   @FdIndex private String activityId;
   private String serviceIdentifier;
   private String envIdentifier;

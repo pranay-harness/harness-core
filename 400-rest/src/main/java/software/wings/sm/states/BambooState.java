@@ -14,6 +14,7 @@ import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.sm.StateType.BAMBOO;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
@@ -21,7 +22,6 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.BambooExecutionData;
@@ -198,6 +198,7 @@ public class BambooState extends State {
             .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
             .waitId(activityId)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, ((ExecutionContextImpl) context).getApp().getAppId())
+            .description("Trigger Bamboo plan")
             .data(TaskData.builder()
                       .async(true)
                       .taskType(getTaskType().name())
@@ -211,10 +212,11 @@ public class BambooState extends State {
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, context.getEnvType())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, serviceId)
-
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .build();
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .stateExecutionData(BambooExecutionData.builder()
@@ -319,6 +321,11 @@ public class BambooState extends State {
 
   protected void updateActivityStatus(String activityId, String appId, ExecutionStatus status) {
     activityService.updateStatus(activityId, appId, status);
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 
   @Data

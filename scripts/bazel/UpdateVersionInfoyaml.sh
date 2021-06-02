@@ -1,6 +1,6 @@
 set -x
 
-if [[ "$BUILD_TAG" == *pr-portal-*-tests* || "${PLATFORM}" != jenkins ]]
+if [[ "$BUILD_TAG" == *pr-portal-* || "${PLATFORM}" != jenkins ]]
 then
   exit 0
 fi

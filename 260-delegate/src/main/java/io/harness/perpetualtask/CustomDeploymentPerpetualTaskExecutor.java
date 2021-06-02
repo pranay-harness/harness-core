@@ -4,7 +4,7 @@ import static io.harness.network.SafeHttpCall.execute;
 
 import static java.util.Collections.emptyList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.ExceptionUtils;
@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.server.Response;
 
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class CustomDeploymentPerpetualTaskExecutor implements PerpetualTaskExecutor {
   @Inject private ShellExecutorFactory shellExecutorFactory;
   @Inject private DelegateAgentManagerClient delegateAgentManagerClient;

@@ -1,13 +1,12 @@
 package io.harness.batch.processing.pricing.service.impl;
 
-import io.harness.batch.processing.pricing.data.EcsFargatePricingInfo;
 import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.beans.InstanceType;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.entities.InstanceData;
 
 import com.github.benmanes.caffeine.cache.Cache;
@@ -44,11 +43,22 @@ public class AwsCustomBillingServiceImpl implements AwsCustomBillingService {
     private Instant endTime;
   }
 
+  @Override
   public void updateAwsEC2BillingDataCache(
       List<String> resourceIds, Instant startTime, Instant endTime, String dataSetId) {
     Map<String, VMInstanceBillingData> awsEC2BillingData =
         bigQueryHelperService.getAwsEC2BillingData(resourceIds, startTime, endTime, dataSetId);
     awsEC2BillingData.forEach(
+        (resourceId, vmInstanceBillingData)
+            -> awsResourceBillingCache.put(new CacheKey(resourceId, startTime, endTime), vmInstanceBillingData));
+  }
+
+  @Override
+  public void updateEksFargateDataCache(
+      List<String> resourceIds, Instant startTime, Instant endTime, String dataSetId) {
+    Map<String, VMInstanceBillingData> eksFargateBillingData =
+        bigQueryHelperService.getEKSFargateBillingData(resourceIds, startTime, endTime, dataSetId);
+    eksFargateBillingData.forEach(
         (resourceId, vmInstanceBillingData)
             -> awsResourceBillingCache.put(new CacheKey(resourceId, startTime, endTime), vmInstanceBillingData));
   }
@@ -88,7 +98,7 @@ public class AwsCustomBillingServiceImpl implements AwsCustomBillingService {
   }
 
   @Override
-  public EcsFargatePricingInfo getFargateVMPricingInfo(InstanceData instanceData, Instant startTime) {
-    return null;
+  public VMInstanceBillingData getFargateVMPricingInfo(String resourceId, Instant startTime, Instant endTime) {
+    return awsResourceBillingCache.getIfPresent(new CacheKey(resourceId, startTime, endTime));
   }
 }

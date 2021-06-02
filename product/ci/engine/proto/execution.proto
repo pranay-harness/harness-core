@@ -5,10 +5,10 @@ package io.harness.product.ci.engine.proto;
 option java_multiple_files = true;
 option go_package = "cienginepb";
 
-import "product/ci/engine/proto/artifact.proto";
+import "product/ci/engine/proto/publish_artifact.proto";
 
 message StepContext {
-  int32 num_retries = 1;
+  int32 num_retries = 1;  // Deprecated
   int64 execution_timeout_secs = 2;
 }
 
@@ -28,25 +28,41 @@ message Report {
 }
 
 message RunTestsStep {
-  string goals = 1;
-  string language = 2;   // repo language for running tests. Java | Python | Go etc.
+  string args = 1;
+  string language = 2;   // language used for running tests. Java | Python | Go etc.
   string buildTool = 3;  // build tool used for running tests. maven | bazel | gradle.
-  StepContext context = 4;
-  uint32 container_port = 5;  // Port of the container on which run step needs to be executed.
+  string testAnnotations = 4;
+  string packages = 5;
+  bool runOnlySelectedTests = 6;
+  StepContext context = 7;
+  uint32 container_port = 8;           // Port of the container on which run step needs to be executed.
+  repeated Report reports = 9;         // Spec for publishing junit reports
+  string preTestCommand = 10;          // Pre-commands to setup environment before running tests
+  string postTestCommand = 11;         // Post commands after running tests
+  repeated string envVarOutputs = 12;  // produced output variables
+  // This is added on by the lite engine specifically. Ideally we should just forward
+  // to addon and have it calculate this, this proxy can be added later.
+  string diff_files = 13;
 }
 
 message RunStep {
   string command = 1;
   StepContext context = 2;
-  repeated string envVarOutputs = 3;  // produced output variables
-  uint32 container_port = 4;          // Port of the container on which run step needs to be executed
+  repeated string envVarOutputs = 3;  // output variables to export as step outcome
+  uint32 container_port = 4;          // Deprecated. Port of the container on which run step needs to be executed
   repeated Report reports = 5;
+  map<string, string> environment = 6;
 }
 
 message PluginStep {
   string image = 1;
   StepContext context = 2;
-  uint32 container_port = 3;  // Port of the container on which plugin step needs to be executed
+  // Deprecated. Port of the container on which plugin step needs to be executed
+  uint32 container_port = 3;
+  // Optional. Entrypoint for plugin step. If empty, it calls docker registry to retrieve the entrypoint
+  repeated string entrypoint = 4;
+  map<string, string> environment = 5;
+  string artifact_file_path = 6;  // file path to store generated artifact file
 }
 
 message SaveCacheStep {
@@ -73,6 +89,9 @@ message UnitStep {
   string callback_token = 7;
   string task_id = 8;
   string skip_condition = 11;
+  string log_key = 12;
+  string account_id = 13;
+  uint32 container_port = 14;  // Port of the container on which step needs to be executed
 }
 
 message ParallelStep {
@@ -129,8 +148,22 @@ message EvaluateJEXLResponse {
   map<string, string> evaluated_expressions = 1;  // expression is key & value is evaluated expression
 }
 
+message PingRequest {}
+
+message PingResponse {}
+
+message ExecuteStepRequest {
+  string execution_id = 1;
+  UnitStep step = 2;
+  string tmp_file_path = 3;
+  string delegate_svc_endpoint = 4;
+}
+
+message ExecuteStepResponse {}
+
 service LiteEngine {
   // Synchronous RPC to execute a step
+  // Deprecated
   rpc UpdateState(UpdateStateRequest) returns (UpdateStateResponse);
 
   // Synchronous RPC to fetch image entrypoint
@@ -138,4 +171,12 @@ service LiteEngine {
 
   // Synchronous RPC to evaluate JEXL expression
   rpc EvaluateJEXL(EvaluateJEXLRequest) returns (EvaluateJEXLResponse);
+
+  // Synchronous RPC to check health of lite-engine service.
+  rpc Ping(PingRequest) returns (PingResponse);
+
+  // Asynchronous RPC that starts execution of a step.
+  // It is idempotent such that if two requests are fired with same id, then
+  // only one request will start execution of the step.
+  rpc ExecuteStep(ExecuteStepRequest) returns (ExecuteStepResponse);
 }

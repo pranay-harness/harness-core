@@ -17,9 +17,16 @@ public interface GitFileLocationRepository
   Optional<GitFileLocation> findByProjectIdAndOrganizationIdAndAccountIdAndEntityTypeAndEntityIdentifier(
       String projectId, String orgId, String accountId, String entityType, String entityId);
 
-  List<GitFileLocation> findByProjectIdAndOrganizationIdAndAccountIdAndScope(
-      String projectId, String orgId, String accountId, Scope scope);
-
   long countByProjectIdAndOrganizationIdAndAccountIdAndScopeAndEntityType(
       String projectId, String orgId, String accountId, Scope scope, String entityType);
+
+  Optional<GitFileLocation> findByEntityIdentifierFQNAndEntityTypeAndAccountIdAndBranch(
+      String fqn, String entityType, String accountId, String branch);
+
+  Optional<GitFileLocation> findByEntityGitPathAndGitSyncConfigIdAndAccountId(
+      String entityGitPath, String gitSyncConfigId, String accountId);
+
+  List<GitFileLocation> findByAccountIdAndOrganizationIdAndProjectIdAndGitSyncConfigIdAndIsDefault(
+      String accountIdentifier, String organizationIdentifier, String projectIdentifier, String yamlGitConfigId,
+      boolean b);
 }

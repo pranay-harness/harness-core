@@ -1,8 +1,10 @@
 package io.harness.pms.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.serializer.jackson.NGHarnessJacksonModule;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
@@ -11,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -23,15 +26,15 @@ import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(PIPELINE)
 public class YamlUtils {
-  private static List<String> ignorableStringForQualifiedName = Arrays.asList("step", "parallel", "spec");
+  private static final List<String> ignorableStringForQualifiedName = Arrays.asList("step", "parallel");
 
   private final ObjectMapper mapper;
 
@@ -113,7 +116,10 @@ public class YamlUtils {
     ObjectNode objectNode = (ObjectNode) node;
     objectNode.put(YamlNode.UUID_FIELD_NAME, generateUuid());
     boolean isIdentifierPresent = false;
+
     Entry<String, JsonNode> nameField = null;
+    Entry<String, JsonNode> keyField = null;
+
     for (Iterator<Entry<String, JsonNode>> it = objectNode.fields(); it.hasNext();) {
       Entry<String, JsonNode> field = it.next();
       if (field.getValue().isValueNode()) {
@@ -123,6 +129,9 @@ public class YamlUtils {
             break;
           case YamlNode.NAME_FIELD_NAME:
             nameField = field;
+            break;
+          case YamlNode.KEY_FIELD_NAME:
+            keyField = field;
             break;
           case YamlNode.UUID_FIELD_NAME:
           case YamlNode.TYPE_FIELD_NAME:
@@ -140,9 +149,12 @@ public class YamlUtils {
     if (isIdentifierPresent && nameField != null) {
       objectNode.put(nameField.getKey(), generateUuid());
     }
+    if (keyField != null && (isIdentifierPresent || nameField != null)) {
+      objectNode.put(keyField.getKey(), generateUuid());
+    }
   }
 
-  private boolean checkIfNodeIsArrayWithPrimitiveTypes(JsonNode jsonNode) {
+  public boolean checkIfNodeIsArrayWithPrimitiveTypes(JsonNode jsonNode) {
     if (jsonNode.isArray()) {
       ArrayNode arrayNode = (ArrayNode) jsonNode;
       // Empty array is not primitive array
@@ -210,7 +222,7 @@ public class YamlUtils {
     StringBuilder response = new StringBuilder();
     for (String qualifiedName : qualifiedNames) {
       if (qualifiedName.equals(from)) {
-        response.append(qualifiedName).append(".");
+        response.append(qualifiedName).append('.');
       }
       if (qualifiedName.equals(to)) {
         response.append(qualifiedName);
@@ -222,7 +234,9 @@ public class YamlUtils {
 
   private List<String> getQualifiedNameList(YamlNode yamlNode, String fieldName) {
     if (yamlNode.getParentNode() == null) {
-      return Collections.singletonList(getQNForNode(yamlNode, null));
+      List<String> qualifiedNameList = new ArrayList<>();
+      qualifiedNameList.add(getQNForNode(yamlNode, null));
+      return qualifiedNameList;
     }
     String qualifiedName = getQNForNode(yamlNode, yamlNode.getParentNode());
     if (isEmpty(qualifiedName)) {
@@ -254,6 +268,8 @@ public class YamlUtils {
         return yamlNode.getIdentifier();
       } else if (parentNode.getName() != null) {
         return parentNode.getName();
+      } else if (parentNode.getKey() != null) {
+        return parentNode.getKey();
       } else {
         return "";
       }
@@ -274,10 +290,7 @@ public class YamlUtils {
   }
 
   public boolean shouldNotIncludeInQualifiedName(String fieldName) {
-    if (ignorableStringForQualifiedName.contains(fieldName)) {
-      return true;
-    }
-    return fieldName.contains("Definition");
+    return ignorableStringForQualifiedName.contains(fieldName);
   }
 
   private void injectUuidInObject(JsonNode node) {
@@ -381,5 +394,22 @@ public class YamlUtils {
     String json = yamlField.getNode().toString();
     JsonNode jsonNode = mapper.readTree(json);
     return mapper.writeValueAsString(jsonNode);
+  }
+
+  public String getStageIdentifierFromFqn(String fqn) {
+    String[] strings = fqn.split("\\.");
+    return strings[2];
+  }
+
+  public String getErrorNodePartialFQN(YamlNode yamlNode, JsonMappingException e) {
+    List<JsonMappingException.Reference> path = e.getPath();
+    StringBuilder partialFQN = new StringBuilder(getFullyQualifiedName(yamlNode));
+    for (JsonMappingException.Reference pathNode : path) {
+      if (pathNode.getFieldName() == null) {
+        break;
+      }
+      partialFQN.append('.').append(pathNode.getFieldName());
+    }
+    return partialFQN.toString();
   }
 }

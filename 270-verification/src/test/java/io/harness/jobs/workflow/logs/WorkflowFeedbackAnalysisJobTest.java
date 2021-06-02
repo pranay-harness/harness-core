@@ -17,7 +17,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.VerificationBaseTest;
+import io.harness.VerificationBase;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.jobs.workflow.logs.WorkflowFeedbackAnalysisJob.FeedbackAnalysisTask;
@@ -55,7 +55,7 @@ import org.quartz.Scheduler;
 import retrofit2.Call;
 import retrofit2.Response;
 
-public class WorkflowFeedbackAnalysisJobTest extends VerificationBaseTest {
+public class WorkflowFeedbackAnalysisJobTest extends VerificationBase {
   @Inject private WingsPersistence wingsPersistence;
 
   @Mock private JobExecutionContext jobExecutionContext;

@@ -39,20 +39,25 @@ type BillingPeriod struct {
 	End   string `json:"end"`
 }
 
+type AdditionalArtifact struct {
+	ArtifactType string `json:"artifactType"`
+	Name         string `json:"name"`
+}
+
 //ManifestJson : The Json Structure AWS publishes in the CUR report
 type manifestJSON struct {
-	AssemblyID             string        `json:"assemblyId"`
-	Account                string        `json:"account"`
-	Columns                []Column      `json:"columns"`
-	Charset                string        `json:"charset"`
-	Compression            string        `json:"compression"`
-	ContentType            string        `json:"contentType"`
-	ReportID               string        `json:"reportId"`
-	ReportName             string        `json:"reportName"`
-	BillingPeriod          BillingPeriod `json:"billingPeriod"`
-	Bucket                 string        `json:"bucket"`
-	ReportKeys             []string      `json:"reportKeys"`
-	AdditionalArtifactKeys []string      `json:"additionalArtifactKeys"`
+	AssemblyID             string               `json:"assemblyId"`
+	Account                string               `json:"account"`
+	Columns                []Column             `json:"columns"`
+	Charset                string               `json:"charset"`
+	Compression            string               `json:"compression"`
+	ContentType            string               `json:"contentType"`
+	ReportID               string               `json:"reportId"`
+	ReportName             string               `json:"reportName"`
+	BillingPeriod          BillingPeriod        `json:"billingPeriod"`
+	Bucket                 string               `json:"bucket"`
+	ReportKeys             []string             `json:"reportKeys"`
+	AdditionalArtifactKeys []AdditionalArtifact `json:"additionalArtifactKeys"`
 }
 
 //CreateTable : is responsible for creating a Table in BigQuery
@@ -72,6 +77,7 @@ func CreateTable(ctx context.Context, e GCSEvent) error {
 	}
 	PathSlice := strings.Split(e.Name, "/")
 	awsRoleIdWithaccountIdSlice := strings.Split(PathSlice[0], ":")
+	accountIdOrig := awsRoleIdWithaccountIdSlice[len(awsRoleIdWithaccountIdSlice)-1]
 	accountId := strings.ToLower(awsRoleIdWithaccountIdSlice[len(awsRoleIdWithaccountIdSlice)-1])
 	inValidRegex, _ := regexp.Compile("[^a-z0-9_]")
 	if inValidRegex.MatchString(accountId) {
@@ -91,17 +97,23 @@ func CreateTable(ctx context.Context, e GCSEvent) error {
 	rc, readerClientErr := storageClient.Bucket(e.Bucket).Object(e.Name).NewReader(ctxBack)
 	// log.Printf("Printing Event Context %+v\n", e)
 	if readerClientErr != nil {
-		log.Fatal(readerClientErr)
+		fmt.Println(readerClientErr)
+		return nil
 	}
 	defer rc.Close()
 	fmt.Println("Reading data from manifest")
 	body, readingErr := ioutil.ReadAll(rc)
 	if readingErr != nil {
-		log.Fatal(readingErr)
+		fmt.Println(readingErr)
+		return nil
 	}
 	var jsonData manifestJSON
 	if readingErr = json.Unmarshal(body, &jsonData); readingErr != nil {
-		log.Fatal("Could not Deserialise Manifest File: {}", readingErr.Error())
+		fmt.Println("Could not Deserialise Manifest File: {}", readingErr.Error())
+		return nil
+	} else if jsonData.Columns == nil {
+		fmt.Println("Could not Deserialise Manifest File. No columns found. Exiting")
+		return nil
 	}
 
 	createDataSet := true
@@ -142,6 +154,7 @@ func CreateTable(ctx context.Context, e GCSEvent) error {
 	}
 	msgData := make(map[string]string)
 	msgData["accountId"] = accountId
+	msgData["accountIdOrig"] = accountIdOrig
 	msgData["bucket"] = e.Bucket
 	msgData["fileName"] = e.Name
 	msgData["datasetName"] = datasetName
@@ -152,7 +165,7 @@ func CreateTable(ctx context.Context, e GCSEvent) error {
 	msgDataString := string(msgDataJson)
 
 	triggerTime := time.Now().UTC()
-	triggerTime = triggerTime.Add(10 * time.Minute) // after 10 mins
+	triggerTime = triggerTime.Add(20 * time.Minute) // after 10 mins
 	schedule := fmt.Sprintf("%d %d %d %d *", triggerTime.Minute(), triggerTime.Hour(), triggerTime.Day(), int(triggerTime.Month()))
 
 	topic := fmt.Sprintf("projects/%s/topics/ce-awsdata-scheduler", projectId)
@@ -182,26 +195,39 @@ func CreateTable(ctx context.Context, e GCSEvent) error {
 		Description: description,
 		Target:      jobTarget,
 		Schedule:    schedule,
+		TimeZone:    "UTC",
 	}
 
 	// https://godoc.org/google.golang.org/genproto/googleapis/cloud/scheduler/v1#DeleteJobRequest
-	req1 := &schedulerpb.DeleteJobRequest{
-		Name: name,
-	}
-	err = c.DeleteJob(ctxBack, req1)
-	if err != nil {
-		fmt.Printf("Error while trying to delete older schedules. This can be ignored. %s\n", err)
-	}
+	/*
+	  req1 := &schedulerpb.DeleteJobRequest{
+	    Name: name,
+	  }
+	  err = c.DeleteJob(ctxBack, req1)
+	  if err != nil {
+	    fmt.Printf("Error while trying to delete older schedules. This can be ignored. %s\n", err)
+	  }
+	*/
 
-	req := &schedulerpb.CreateJobRequest{
-		Parent: fmt.Sprintf("projects/%s/locations/us-central1", projectId),
-		Job:    job,
+	// https://godoc.org/google.golang.org/genproto/googleapis/cloud/scheduler/v1#DeleteJobRequest
+	req1 := &schedulerpb.UpdateJobRequest{
+		Job: job,
 	}
-	_, err = c.CreateJob(ctxBack, req)
+	_, err = c.UpdateJob(ctxBack, req1)
 	if err != nil {
-		fmt.Printf("%s\n", err)
-		return err
+		fmt.Printf("No older schedules found to update. This can be ignored. %s\n", err)
+		req := &schedulerpb.CreateJobRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/us-central1", projectId),
+			Job:    job,
+		}
+		_, err = c.CreateJob(ctxBack, req)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return err
+		}
+		fmt.Printf("Created new schedule\n")
 	}
+	fmt.Printf("Updated older schedule\n")
 
 	// Delete manifest only when scheduler is set
 	if DeleteObjectErr := storageClient.Bucket(e.Bucket).Object(e.Name).Delete(ctxBack); DeleteObjectErr != nil {

@@ -1,5 +1,9 @@
 package io.harness.common;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(HarnessTeam.CI)
 public class BuildEnvironmentConstants {
   public static final String DRONE_BUILD_NUMBER = "DRONE_BUILD_NUMBER";
 
@@ -36,6 +40,8 @@ public class BuildEnvironmentConstants {
   public static final String DRONE_TAG = "DRONE_TAG";
   public static final String DRONE_NETRC_MACHINE = "DRONE_NETRC_MACHINE";
   public static final String DRONE_NETRC_USERNAME = "DRONE_NETRC_USERNAME";
+  public static final String DRONE_NETRC_PORT = "DRONE_NETRC_PORT";
   public static final String DRONE_NETRC_PASSWORD = "DRONE_NETRC_PASSWORD";
   public static final String SSH_KEY = "SSH_KEY";
+  public static final String DRONE_AWS_REGION = "DRONE_AWS_REGION";
 }

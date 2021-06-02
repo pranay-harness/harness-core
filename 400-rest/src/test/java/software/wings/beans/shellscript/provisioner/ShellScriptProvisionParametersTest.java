@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
@@ -15,6 +16,7 @@ import io.harness.security.encryption.EncryptionType;
 import software.wings.WingsBaseTest;
 import software.wings.beans.KmsConfig;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,12 +42,17 @@ public class ShellScriptProvisionParametersTest extends WingsBaseTest {
             .build());
 
     ShellScriptProvisionParameters shellScriptProvisionParameters =
-        ShellScriptProvisionParameters.builder().encryptedVariables(encryptedVariables).build();
+        ShellScriptProvisionParameters.builder()
+            .encryptedVariables(encryptedVariables)
+            .delegateSelectors(Collections.singletonList("primary"))
+            .build();
 
     List<ExecutionCapability> executionCapabilities =
         shellScriptProvisionParameters.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).isNotEmpty();
     assertThat(((HttpConnectionExecutionCapability) executionCapabilities.get(0)).getHost())
         .isEqualTo("kms.us-east-1.amazonaws.com");
+    assertThat(((SelectorCapability) executionCapabilities.get(1)).getSelectors())
+        .isEqualTo(Collections.singleton("primary"));
   }
 }

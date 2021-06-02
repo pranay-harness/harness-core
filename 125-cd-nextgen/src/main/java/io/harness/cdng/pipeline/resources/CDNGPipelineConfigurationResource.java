@@ -1,6 +1,10 @@
 package io.harness.cdng.pipeline.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStrategyType;
+import io.harness.cdng.infra.beans.ProvisionerType;
 import io.harness.cdng.pipeline.StepCategory;
 import io.harness.cdng.pipeline.helpers.CDNGPipelineConfigurationHelper;
 import io.harness.cdng.service.beans.ServiceDefinitionType;
@@ -26,6 +30,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(CDP)
 @Api("pipelines")
 @Path("pipelines/configuration")
 @Produces({"application/json", "application/yaml"})
@@ -54,9 +59,21 @@ public class CDNGPipelineConfigurationResource {
       nickname = "getExecutionStrategyYaml")
   public ResponseDTO<String>
   getExecutionStrategyYaml(@NotNull @QueryParam("serviceDefinitionType") ServiceDefinitionType serviceDefinitionType,
-      @NotNull @QueryParam("strategyType") ExecutionStrategyType executionStrategyType) throws IOException {
+      @NotNull @QueryParam("strategyType") ExecutionStrategyType executionStrategyType,
+      @QueryParam("includeVerify") boolean includeVerify) throws IOException {
+    return ResponseDTO.newResponse(cdngPipelineConfigurationHelper.getExecutionStrategyYaml(
+        serviceDefinitionType, executionStrategyType, includeVerify));
+  }
+
+  @GET
+  @Path("/strategies/provisioner-yaml-snippets")
+  @ApiOperation(value = "Gets Yaml for Execution Strategy based on Provisioner Type",
+      nickname = "getProvisionerExecutionStrategyYaml")
+  public ResponseDTO<String>
+  getProvisionerExecutionStrategyYaml(@NotNull @QueryParam("provisionerType") ProvisionerType provisionerType)
+      throws IOException {
     return ResponseDTO.newResponse(
-        cdngPipelineConfigurationHelper.getExecutionStrategyYaml(serviceDefinitionType, executionStrategyType));
+        cdngPipelineConfigurationHelper.getProvisionerExecutionStrategyYaml(provisionerType));
   }
 
   @GET
@@ -72,5 +89,12 @@ public class CDNGPipelineConfigurationResource {
   public ResponseDTO<StepCategory> getSteps(
       @NotNull @QueryParam("serviceDefinitionType") ServiceDefinitionType serviceDefinitionType) {
     return ResponseDTO.newResponse(cdngPipelineConfigurationHelper.getSteps(serviceDefinitionType));
+  }
+
+  @GET
+  @Path("/provisioner-steps")
+  @ApiOperation(value = "get provisioner steps", nickname = "getProvisionerSteps")
+  public ResponseDTO<StepCategory> getProvisionerSteps() {
+    return ResponseDTO.newResponse(cdngPipelineConfigurationHelper.getStepsForProvisioners());
   }
 }

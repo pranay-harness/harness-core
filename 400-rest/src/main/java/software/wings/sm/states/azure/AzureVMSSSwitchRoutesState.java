@@ -16,6 +16,7 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 import io.harness.azure.model.AzureConstants;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
@@ -27,7 +28,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.beans.Activity;
@@ -113,8 +113,8 @@ public class AzureVMSSSwitchRoutesState extends State {
       AzureVMSSCommandRequest azureVMSSCommandRequest =
           buildAzureVMSSSwitchRouteRequest(setupElement.get(), azureVMSSStateData, activity);
 
-      AzureVMSSSwitchRouteStateExecutionData stateExecutionData =
-          createAndEnqueueDelegateTask(setupElement.get(), azureVMSSStateData, activity, azureVMSSCommandRequest);
+      AzureVMSSSwitchRouteStateExecutionData stateExecutionData = createAndEnqueueDelegateTask(
+          setupElement.get(), azureVMSSStateData, activity, azureVMSSCommandRequest, context);
       return successResponse(activity, stateExecutionData);
     } catch (Exception exception) {
       return taskCreationFailureResponse(activity, executionLogCallback, exception);
@@ -168,7 +168,8 @@ public class AzureVMSSSwitchRoutesState extends State {
   }
 
   private AzureVMSSSwitchRouteStateExecutionData createAndEnqueueDelegateTask(AzureVMSSSetupContextElement setupElement,
-      AzureVMSSStateData azureVMSSStateData, Activity activity, AzureVMSSCommandRequest commandRequest) {
+      AzureVMSSStateData azureVMSSStateData, Activity activity, AzureVMSSCommandRequest commandRequest,
+      ExecutionContext context) {
     AzureLoadBalancerDetailForBGDeployment azureLoadBalancerDetail = setupElement.getAzureLoadBalancerDetail();
     AzureVMSSSwitchRouteStateExecutionData stateExecutionData =
         AzureVMSSSwitchRouteStateExecutionData.builder()
@@ -198,8 +199,11 @@ public class AzureVMSSSwitchRoutesState extends State {
                 Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, azureVMSSStateData.getInfrastructureMapping().getUuid())
             .setupAbstraction(
                 Cd1SetupFields.SERVICE_ID_FIELD, azureVMSSStateData.getInfrastructureMapping().getServiceId())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("Azure VMSS switch routes task execution")
             .build();
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
     return stateExecutionData;
   }
 
@@ -276,5 +280,10 @@ public class AzureVMSSSwitchRoutesState extends State {
         .executionStatus(ExecutionStatus.SUCCESS)
         .correlationId(activity.getUuid())
         .build();
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

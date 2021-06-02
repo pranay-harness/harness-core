@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/base64"
+	"io"
 	"os"
 	"testing"
 
@@ -28,6 +29,12 @@ func TestMainEmptyStage(t *testing.T) {
 	defer func() {
 		args.Stage = nil
 	}()
+
+	oldGetLogKey := getLogKey
+	defer func() { getLogKey = oldGetLogKey }()
+	getLogKey = func(keyID string) (string, error) {
+		return "foo:bar", nil
+	}
 
 	oldLogger := newHTTPRemoteLogger
 	defer func() { newHTTPRemoteLogger = oldLogger }()
@@ -57,7 +64,7 @@ func TestMainEmptyStage(t *testing.T) {
 	m := &mockServer{err: nil}
 	oldServer := engineServer
 	defer func() { engineServer = oldServer }()
-	engineServer = func(port uint, log *zap.SugaredLogger) (grpc.EngineServer, error) {
+	engineServer = func(port uint, log *zap.SugaredLogger, procWriter io.Writer) (grpc.EngineServer, error) {
 		return m, nil
 	}
 
@@ -71,6 +78,12 @@ func TestMainEmptyStageMultiWorkers(t *testing.T) {
 	defer func() {
 		args.Stage = nil
 	}()
+
+	oldGetLogKey := getLogKey
+	defer func() { getLogKey = oldGetLogKey }()
+	getLogKey = func(keyID string) (string, error) {
+		return "foo:bar", nil
+	}
 
 	oldLogger := newHTTPRemoteLogger
 	defer func() { newHTTPRemoteLogger = oldLogger }()
@@ -100,7 +113,7 @@ func TestMainEmptyStageMultiWorkers(t *testing.T) {
 	m := &mockServer{err: nil}
 	oldServer := engineServer
 	defer func() { engineServer = oldServer }()
-	engineServer = func(port uint, log *zap.SugaredLogger) (grpc.EngineServer, error) {
+	engineServer = func(port uint, log *zap.SugaredLogger, procWriter io.Writer) (grpc.EngineServer, error) {
 		return m, nil
 	}
 

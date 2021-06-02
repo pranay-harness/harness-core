@@ -1,6 +1,6 @@
 package io.harness.perpetualtask.k8s.watch;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.k8s.apiclient.ApiClientFactory;
 import io.harness.k8s.model.KubernetesConfig;
@@ -17,6 +17,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.kubernetes.client.common.KubernetesObject;
 import io.kubernetes.client.informer.SharedInformer;
 import io.kubernetes.client.informer.SharedInformerFactory;
 import io.kubernetes.client.informer.cache.Store;
@@ -40,16 +41,17 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class K8sWatchServiceDelegate {
-  private static final Map<String, Class<?>> KNOWN_WORKLOAD_TYPES = ImmutableMap.<String, Class<?>>builder()
-                                                                        .put("Deployment", V1Deployment.class)
-                                                                        .put("ReplicaSet", V1ReplicaSet.class)
-                                                                        .put("DaemonSet", V1DaemonSet.class)
-                                                                        .put("StatefulSet", V1StatefulSet.class)
-                                                                        .put("Job", V1Job.class)
-                                                                        .put("CronJob", V1beta1CronJob.class)
-                                                                        .build();
+  private static final Map<String, Class<? extends KubernetesObject>> KNOWN_WORKLOAD_TYPES =
+      ImmutableMap.<String, Class<? extends KubernetesObject>>builder()
+          .put("Deployment", V1Deployment.class)
+          .put("ReplicaSet", V1ReplicaSet.class)
+          .put("DaemonSet", V1DaemonSet.class)
+          .put("StatefulSet", V1StatefulSet.class)
+          .put("Job", V1Job.class)
+          .put("CronJob", V1beta1CronJob.class)
+          .build();
 
   private final WatcherFactory watcherFactory;
   private final SharedInformerFactoryFactory sharedInformerFactoryFactory;
@@ -108,7 +110,7 @@ public class K8sWatchServiceDelegate {
                                           .clusterId(params.getClusterId())
                                           .clusterName(params.getClusterName())
                                           .kubeSystemUid(kubeSystemUid)
-                                          .isSeen(K8sClusterHelper.isSeen(params.getClusterId()))
+                                          .isSeen(K8sClusterHelper.isSeen(params.getClusterId(), kubeSystemUid))
                                           .build();
 
       SharedInformerFactory sharedInformerFactory =
@@ -142,7 +144,7 @@ public class K8sWatchServiceDelegate {
       sharedInformerFactory.startAllRegisteredInformers();
 
       // cluster is seen/old now, any new onAdd event older than 2 hours will be ignored.
-      K8sClusterHelper.setAsSeen(params.getClusterId());
+      K8sClusterHelper.setAsSeen(params.getClusterId(), kubeSystemUid);
       return WatcherGroup.builder().watchId(id).sharedInformerFactory(sharedInformerFactory).build();
     });
 

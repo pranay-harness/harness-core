@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.analysis.entities.LogAnalysisResult;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary;
@@ -27,6 +28,8 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
+import io.harness.cvng.verificationjob.entities.HealthVerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.rule.Owner;
@@ -62,9 +65,11 @@ public class HealthVerificationServiceImplTest extends CvNextGenTestBase {
   private String verificationJobInstanceId;
   private String cvConfigId;
   private long startTime = 1603780200000l;
+  private BuilderFactory builderFactory;
 
   @Before
   public void setup() throws Exception {
+    builderFactory = BuilderFactory.getDefault();
     verificationTaskId = generateUuid();
     envIdentifier = generateUuid();
     serviceIdentifier = generateUuid();
@@ -180,13 +185,25 @@ public class HealthVerificationServiceImplTest extends CvNextGenTestBase {
     Instant start = Instant.ofEpochMilli(startTime);
     Instant end = Instant.ofEpochMilli(startTime).plus(Duration.ofMinutes(15));
     when(verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId))
-        .thenReturn(VerificationJobInstance.builder()
+        .thenReturn(
+            builderFactory.verificationJobInstanceBuilder()
+                .accountId(accountId)
+                .deploymentStartTime(start.plus(Duration.ofMinutes(3)))
+                .startTime(start.plus(Duration.ofMinutes(5)))
+                .uuid(verificationJobInstanceId)
+                .resolvedJob(
+                    HealthVerificationJob.builder()
                         .accountId(accountId)
-                        .preActivityVerificationStartTime(start)
-                        .startTime(start.plus(Duration.ofMinutes(5)))
-                        .postActivityVerificationStartTime(start.plus(Duration.ofMinutes(10)))
-                        .uuid(verificationJobInstanceId)
-                        .build());
+                        .orgIdentifier(generateUuid())
+                        .projectIdentifier(projectIdentifier)
+                        .identifier("identifier")
+                        .duration(VerificationJob.RuntimeParameter.builder().value("5m").isRuntimeParam(false).build())
+                        .envIdentifier(
+                            VerificationJob.RuntimeParameter.builder().isRuntimeParam(false).value("e0").build())
+                        .serviceIdentifier(
+                            VerificationJob.RuntimeParameter.builder().isRuntimeParam(false).value("s0").build())
+                        .build())
+                .build());
 
     healthVerificationService.updateProgress(
         verificationTaskId, start.plus(Duration.ofMinutes(10)), AnalysisStatus.RUNNING, false);

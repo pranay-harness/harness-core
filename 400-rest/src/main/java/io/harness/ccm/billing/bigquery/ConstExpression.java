@@ -1,5 +1,9 @@
 package io.harness.ccm.billing.bigquery;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import com.healthmarketscience.common.util.AppendableExt;
 import com.healthmarketscience.sqlbuilder.Converter;
 import com.healthmarketscience.sqlbuilder.Expression;
@@ -9,6 +13,7 @@ import java.io.IOException;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 
+@OwnedBy(CE)
 public class ConstExpression extends Expression {
   private final String _constant;
   @Getter public final String alias;

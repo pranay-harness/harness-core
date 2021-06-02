@@ -118,7 +118,7 @@ func (c *HTTPClient) DownloadLink(ctx context.Context, key string) (*Link, error
 // Open opens the data stream.
 func (c *HTTPClient) Open(ctx context.Context, key string) error {
 	path := fmt.Sprintf(streamEndpoint, c.AccountID, key)
-	backoff := createBackoff(60 * time.Second)
+	backoff := createBackoff(10 * time.Second)
 	_, err := c.retry(ctx, c.Endpoint+path, "POST", nil, nil, false, backoff)
 	return err
 }
@@ -203,7 +203,7 @@ func (c *HTTPClient) retry(ctx context.Context, method, path string, in, out int
 			// relate to outages on the server side.
 
 			if res.StatusCode >= 500 {
-				logger.FromContext(ctx).WithError(err).WithField("path", path).Warnln("http: server error: reconnect and retry")
+				logger.FromContext(ctx).WithError(err).WithField("path", path).Warnln("http: log-service server error: reconnect and retry")
 				if duration == backoff.Stop {
 					return nil, err
 				}

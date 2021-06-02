@@ -2,7 +2,7 @@ package software.wings.graphql.datafetcher.workflow.batch;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.persistence.HIterator;
 
@@ -30,7 +30,7 @@ import org.dataloader.MappedBatchLoader;
 import org.mongodb.morphia.query.Query;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class WorkflowBatchDataLoader implements MappedBatchLoader<String, QLWorkflow> {
   @Inject private WingsPersistence wingsPersistence;
 
