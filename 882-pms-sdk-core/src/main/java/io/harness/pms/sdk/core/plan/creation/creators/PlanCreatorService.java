@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.PlanCreatorException;
 import io.harness.exception.UnexpectedException;
 import io.harness.manage.ManagedExecutorService;
 import io.harness.pms.contracts.plan.ErrorResponse;
@@ -21,7 +22,6 @@ import io.harness.pms.contracts.plan.VariablesCreationBlobRequest;
 import io.harness.pms.contracts.plan.VariablesCreationBlobResponse;
 import io.harness.pms.contracts.plan.VariablesCreationResponse;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
-import io.harness.pms.exception.YamlNodeErrorInfo;
 import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
@@ -33,8 +33,8 @@ import io.harness.pms.sdk.core.variables.VariableCreatorService;
 import io.harness.pms.utils.CompletableFutures;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
-import io.harness.serializer.JsonUtils;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
@@ -171,20 +171,24 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
         } else {
           try {
             obj = YamlUtils.read(field.getNode().toString(), cls);
+          } catch (JsonMappingException e) {
+            // YamlUtils.getFullyQualifiedName() here does not give the full FQN here, hence using a new method.
+            // YamlUtils.getErrorNodePartialFQN() uses exception path to build FQN
+            throw new PlanCreatorException(
+                format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(field.getNode(), e)), e);
           } catch (IOException e) {
-            throw new InvalidRequestException(
-                format("Invalid yaml in node [%s]", JsonUtils.asJson(YamlNodeErrorInfo.fromField(field))), e);
+            throw new PlanCreatorException(
+                format("Invalid yaml in node [%s]", YamlUtils.getFullyQualifiedName(field.getNode())), e);
           }
         }
 
         try {
           return planCreator.createPlanForField(PlanCreationContext.cloneWithCurrentField(ctx, field), obj);
         } catch (Exception ex) {
-          YamlNodeErrorInfo errorInfo = YamlNodeErrorInfo.fromField(field);
-          log.error(format("Error creating plan for node: %s", JsonUtils.asJson(errorInfo)), ex);
+          log.error(format("Error creating plan for node: %s", YamlUtils.getFullyQualifiedName(field.getNode())), ex);
           return PlanCreationResponse.builder()
-              .errorMessage(format("Could not create plan for node [%s]: %s", JsonUtils.asJson(errorInfo),
-                  ExceptionUtils.getMessage(ex)))
+              .errorMessage(format("Could not create plan for node [%s]: %s",
+                  YamlUtils.getFullyQualifiedName(field.getNode()), ExceptionUtils.getMessage(ex)))
               .build();
         }
       });

@@ -153,7 +153,7 @@ public class PlanCreatorMergeService {
       throw new UnexpectedException("Error fetching plan creation response from service", ex);
     }
 
-    PmsExceptionUtils.checkAndThrowErrorResponseException("Error creating plan", errorResponses);
+    PmsExceptionUtils.checkAndThrowPlanCreatorException(errorResponses);
     return currIterationResponseBuilder.build();
   }
 
