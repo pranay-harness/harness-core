@@ -187,7 +187,7 @@ public class NGSecretServiceImpl implements NGSecretService {
       wingsPersistence.save(data);
       return data;
     } else {
-      String message = "No such secret manager found";
+      String message = "No such secret manager found ";
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
           formNotFoundMessage(message, metadata.getOrgIdentifier(), metadata.getProjectIdentifier()), USER);
     }
