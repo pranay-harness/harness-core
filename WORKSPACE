@@ -1816,6 +1816,7 @@ maven_install(
     override_targets = {
         "org.apache.commons:commons-io": "@maven//:commons_io_commons_io",
         "com.jcraft:jsch": "@maven//:com_jcraft_harness_jsch_0_1_54_harness_patch",
+        "org.mongodb:mongodb-driver": "@maven//:org_mongodb_mongo_java_driver",
     },
     repositories = [
         "https://repo1.maven.org/maven2",
