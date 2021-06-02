@@ -20,7 +20,6 @@ import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
-import io.harness.pms.plan.execution.registrar.PmsOrchestrationEventRegistrar;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.rule.InjectorRuleMixin;
@@ -38,6 +37,7 @@ import io.harness.time.TimeModule;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -137,9 +137,7 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
 
     modules.add(mongoTypeModule(annotations));
 
-    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
-                                        .engineEventHandlersMap(PmsOrchestrationEventRegistrar.getEngineEventHandlers())
-                                        .build();
+    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder().engineEventHandlersMap(ImmutableMap.of()).build();
     modules.add(PmsSdkModule.getInstance(sdkConfig));
     return modules;
   }

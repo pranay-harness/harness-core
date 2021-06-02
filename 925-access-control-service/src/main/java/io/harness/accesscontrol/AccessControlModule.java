@@ -19,8 +19,10 @@ import static io.harness.lock.DistributedLockImplementation.MONGO;
 import io.harness.AccessControlClientModule;
 import io.harness.DecisionModule;
 import io.harness.accesscontrol.aggregator.AggregatorStackDriverMetricsPublisherImpl;
+import io.harness.accesscontrol.aggregator.consumers.AccessControlChangeEventFailureHandler;
 import io.harness.accesscontrol.commons.events.EventConsumer;
 import io.harness.accesscontrol.commons.iterators.AccessControlIteratorsConfig;
+import io.harness.accesscontrol.commons.notifications.NotificationConfig;
 import io.harness.accesscontrol.commons.outbox.AccessControlOutboxEventHandler;
 import io.harness.accesscontrol.commons.validation.HarnessActionValidator;
 import io.harness.accesscontrol.preference.AccessControlPreferenceModule;
@@ -42,6 +44,7 @@ import io.harness.accesscontrol.scopes.core.ScopeLevel;
 import io.harness.accesscontrol.scopes.core.ScopeParamsFactory;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParamsFactory;
 import io.harness.aggregator.AggregatorModule;
+import io.harness.aggregator.consumers.ChangeEventFailureHandler;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.eventsframework.api.Consumer;
@@ -105,6 +108,12 @@ public class AccessControlModule extends AbstractModule {
   @Singleton
   DistributedLockImplementation distributedLockImplementation() {
     return config.getDistributedLockImplementation() == null ? MONGO : config.getDistributedLockImplementation();
+  }
+
+  @Provides
+  @Singleton
+  NotificationConfig notificationConfig() {
+    return config.getNotificationConfig();
   }
 
   @Provides
@@ -179,7 +188,9 @@ public class AccessControlModule extends AbstractModule {
     install(new ValidationModule(validatorFactory));
     install(AccessControlCoreModule.getInstance());
     install(DecisionModule.getInstance(config.getDecisionModuleConfiguration()));
+
     if (config.getAggregatorConfiguration().isEnabled()) {
+      bind(ChangeEventFailureHandler.class).to(AccessControlChangeEventFailureHandler.class);
       install(AggregatorModule.getInstance(config.getAggregatorConfiguration()));
     }
 

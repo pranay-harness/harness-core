@@ -2968,6 +2968,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         .jreDirectory("jdk8u242-b08-jre")
         .jreMacDirectory("jdk8u242-b08-jre")
         .jreTarPath("jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz")
+        .alpnJarPath("tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar")
         .build();
   }
 

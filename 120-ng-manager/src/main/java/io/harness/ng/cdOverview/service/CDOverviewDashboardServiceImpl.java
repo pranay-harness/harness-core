@@ -81,8 +81,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   private List<String> failedStatusList =
       Arrays.asList(ExecutionStatus.FAILED.name(), ExecutionStatus.ABORTED.name(), ExecutionStatus.EXPIRED.name());
   private List<String> activeStatusList = Arrays.asList(ExecutionStatus.RUNNING.name(), ExecutionStatus.PAUSED.name());
-  private List<String> pendingStatusList = Arrays.asList(ExecutionStatus.INTERVENTION_WAITING.name(),
-      ExecutionStatus.APPROVAL_WAITING.name(), ExecutionStatus.WAITING.name());
+  private List<String> pendingStatusList = Arrays.asList(ExecutionStatus.INTERVENTIONWAITING.name(),
+      ExecutionStatus.APPROVALWAITING.name(), ExecutionStatus.WAITING.name());
   private static final int MAX_RETRY_COUNT = 5;
 
   public String queryBuilderSelectStatusTime(

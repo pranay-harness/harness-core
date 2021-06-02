@@ -204,7 +204,7 @@ public class NewRelicDeploymentMarkerState extends AbstractAnalysisState {
 
   @Override
   protected ExecutionResponse generateAnalysisResponse(
-      AnalysisContext context, ExecutionStatus status, boolean analyzed, String message) {
+      AnalysisContext context, ExecutionStatus status, String message) {
     throw new UnsupportedOperationException();
   }
 }

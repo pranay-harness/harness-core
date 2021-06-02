@@ -27,6 +27,7 @@ import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -225,10 +226,12 @@ public class OrchestrationAdjacencyListGenerator {
         String currentNodeId = queue.removeFirst();
         NodeExecution nodeExecution = nodeExIdMap.get(currentNodeId);
 
-        List<Document> outcomes = new ArrayList<>();
+        Map<String, Document> outcomes;
         if (isOutcomePresent) {
-          outcomes = PmsOutcomeMapper.convertJsonToDocument(
-              pmsOutcomeService.findAllByRuntimeId(nodeExecution.getAmbiance().getPlanExecutionId(), currentNodeId));
+          outcomes = PmsOutcomeMapper.convertJsonToDocument(pmsOutcomeService.findAllOutcomesMapByRuntimeId(
+              nodeExecution.getAmbiance().getPlanExecutionId(), currentNodeId));
+        } else {
+          outcomes = new LinkedHashMap<>();
         }
 
         GraphVertex graphVertex = GraphVertexConverter.convertFrom(nodeExecution, outcomes);

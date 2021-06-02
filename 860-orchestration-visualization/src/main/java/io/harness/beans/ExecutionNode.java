@@ -12,6 +12,7 @@ import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.execution.ExecutionStatus;
 
 import java.util.List;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
 import org.bson.Document;
@@ -25,7 +26,7 @@ public class ExecutionNode {
   String name;
   String identifier;
   String baseFqn;
-  List<Document> outcomes;
+  Map<String, Document> outcomes;
   Document stepParameters;
   Long startTs;
   Long endTs;

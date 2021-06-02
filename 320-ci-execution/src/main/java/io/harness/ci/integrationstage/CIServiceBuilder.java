@@ -1,5 +1,7 @@
 package io.harness.ci.integrationstage;
 
+import static io.harness.beans.serializer.RunTimeInputHandler.UNRESOLVED_PARAMETER;
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameter;
 import static io.harness.common.CIExecutionConstants.HARNESS_SERVICE_ARGS;
 import static io.harness.common.CIExecutionConstants.HARNESS_SERVICE_ENTRYPOINT;
 import static io.harness.common.CIExecutionConstants.SERVICE_PREFIX;
@@ -14,9 +16,6 @@ import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.stages.IntegrationStageConfig;
-import io.harness.beans.yaml.extended.container.ContainerResource;
-import io.harness.beans.yaml.extended.container.quantity.unit.DecimalQuantityUnit;
-import io.harness.beans.yaml.extended.container.quantity.unit.MemoryQuantityUnit;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.ci.utils.QuantityUtils;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
@@ -24,6 +23,9 @@ import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.stateutils.buildstate.providers.ServiceContainerUtils;
 import io.harness.util.PortFinder;
+import io.harness.yaml.extended.ci.container.ContainerResource;
+import io.harness.yaml.extended.ci.container.quantity.unit.DecimalQuantityUnit;
+import io.harness.yaml.extended.ci.container.quantity.unit.MemoryQuantityUnit;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -118,14 +120,17 @@ public class CIServiceBuilder {
 
     if (resource != null && resource.getLimits() != null) {
       if (resource.getLimits().getCpu() != null) {
-        String cpuQuantity = RunTimeInputHandler.resolveStringParameter(
-            "cpu", "Service", identifier, resource.getLimits().getCpu(), false);
-        cpu = QuantityUtils.getCpuQuantityValueInUnit(cpuQuantity, DecimalQuantityUnit.m);
+        String cpuQuantity = resolveStringParameter("cpu", "Service", identifier, resource.getLimits().getCpu(), false);
+        if (isNotEmpty(cpuQuantity) && !UNRESOLVED_PARAMETER.equals(cpuQuantity)) {
+          cpu = QuantityUtils.getCpuQuantityValueInUnit(cpuQuantity, DecimalQuantityUnit.m);
+        }
       }
       if (resource.getLimits().getMemory() != null) {
         String memoryQuantity = RunTimeInputHandler.resolveStringParameter(
             "memory", "Service", identifier, resource.getLimits().getMemory(), false);
-        memory = QuantityUtils.getMemoryQuantityValueInUnit(memoryQuantity, MemoryQuantityUnit.Mi);
+        if (isNotEmpty(memoryQuantity) && !UNRESOLVED_PARAMETER.equals(memoryQuantity)) {
+          memory = QuantityUtils.getMemoryQuantityValueInUnit(memoryQuantity, MemoryQuantityUnit.Mi);
+        }
       }
     }
     return ContainerResourceParams.builder()

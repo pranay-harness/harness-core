@@ -103,7 +103,7 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
       // For backwards compatibility when internalStatus was not there
       return status;
     }
-    return internalStatus == Status.NO_OP ? ExecutionStatus.NOT_STARTED
+    return internalStatus == Status.NO_OP ? ExecutionStatus.NOTSTARTED
                                           : ExecutionStatus.getExecutionStatus(internalStatus);
   }
 

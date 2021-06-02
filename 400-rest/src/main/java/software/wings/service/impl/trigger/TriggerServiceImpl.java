@@ -934,6 +934,7 @@ public class TriggerServiceImpl implements TriggerService {
     ArtifactStream artifactStream = artifactStreamService.get(artifactSelection.getArtifactStreamId());
     notNullCheck("ArtifactStream was deleted", artifactStream, USER);
     Artifact lastCollectedArtifact;
+    reCollectArtifactsForLastCollectedSelection(artifactSelection, appId);
     if (isEmpty(artifactSelection.getArtifactFilter())) {
       lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(artifactStream);
       if (lastCollectedArtifact != null
@@ -948,6 +949,10 @@ public class TriggerServiceImpl implements TriggerService {
         artifacts.add(lastCollectedArtifact);
       }
     }
+  }
+
+  private void reCollectArtifactsForLastCollectedSelection(ArtifactSelection artifactSelection, String appId) {
+    triggerServiceHelper.collectArtifactsForSelection(artifactSelection, appId);
   }
 
   private void addLastDeployedArtifacts(String appId, String workflowId, String serviceId, List<Artifact> artifacts) {

@@ -80,7 +80,7 @@ public class QueryBuilderTest {
         Arrays.asList(ExecutionStatus.FAILED.name(), ExecutionStatus.ABORTED.name(), ExecutionStatus.EXPIRED.name());
     List<String> activeStatusList = Arrays.asList(ExecutionStatus.RUNNING.name());
     List<String> pendingStatusList =
-        Arrays.asList(ExecutionStatus.INTERVENTION_WAITING.name(), ExecutionStatus.APPROVAL_WAITING.name());
+        Arrays.asList(ExecutionStatus.INTERVENTIONWAITING.name(), ExecutionStatus.APPROVALWAITING.name());
 
     // failedStatusList
     String expectedQueryResult =
@@ -98,7 +98,7 @@ public class QueryBuilderTest {
 
     // pending
     expectedQueryResult =
-        "select id,name,startts,endTs,status from pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and status in ('INTERVENTION_WAITING','APPROVAL_WAITING') and startts is not null ORDER BY startts DESC LIMIT 20;";
+        "select id,name,startts,endTs,status from pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and status in ('INTERVENTIONWAITING','APPROVALWAITING') and startts is not null ORDER BY startts DESC LIMIT 20;";
     queryResult = new CDOverviewDashboardServiceImpl().queryBuilderStatus(
         "accountId", "orgId", "projectId", 20, pendingStatusList);
     assertThat(queryResult).isEqualTo(expectedQueryResult);
@@ -112,7 +112,7 @@ public class QueryBuilderTest {
         Arrays.asList(ExecutionStatus.FAILED.name(), ExecutionStatus.ABORTED.name(), ExecutionStatus.EXPIRED.name());
     List<String> activeStatusList = Arrays.asList(ExecutionStatus.RUNNING.name());
     List<String> pendingStatusList =
-        Arrays.asList(ExecutionStatus.INTERVENTION_WAITING.name(), ExecutionStatus.APPROVAL_WAITING.name());
+        Arrays.asList(ExecutionStatus.INTERVENTIONWAITING.name(), ExecutionStatus.APPROVALWAITING.name());
 
     String expectedQueryResult =
         "select service_name,tag,pipeline_execution_summary_cd_id from service_infra_info where pipeline_execution_summary_cd_id in (abc) and service_name is not null;";
@@ -128,7 +128,7 @@ public class QueryBuilderTest {
         Arrays.asList(ExecutionStatus.FAILED.name(), ExecutionStatus.ABORTED.name(), ExecutionStatus.EXPIRED.name());
     List<String> activeStatusList = Arrays.asList(ExecutionStatus.RUNNING.name());
     List<String> pendingStatusList =
-        Arrays.asList(ExecutionStatus.INTERVENTION_WAITING.name(), ExecutionStatus.APPROVAL_WAITING.name());
+        Arrays.asList(ExecutionStatus.INTERVENTIONWAITING.name(), ExecutionStatus.APPROVALWAITING.name());
 
     // failed
     String expectedQueryResult =
@@ -146,7 +146,7 @@ public class QueryBuilderTest {
 
     // pending
     expectedQueryResult =
-        "select id from pipeline_execution_summary_cd where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status in ('INTERVENTION_WAITING','APPROVAL_WAITING') and startts is not null ORDER BY startts DESC LIMIT 4";
+        "select id from pipeline_execution_summary_cd where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status in ('INTERVENTIONWAITING','APPROVALWAITING') and startts is not null ORDER BY startts DESC LIMIT 4";
     queryResult = new CDOverviewDashboardServiceImpl().queryBuilderSelectIdLimitTimeCdTable(
         "acc", "org", "pro", 4, pendingStatusList);
     assertThat(queryResult).isEqualTo(expectedQueryResult);

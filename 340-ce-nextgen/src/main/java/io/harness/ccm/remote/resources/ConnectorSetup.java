@@ -5,6 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.CENextGenConfiguration;
+import io.harness.ccm.ccmAws.AwsAccountConnectionDetailsHelper;
+import io.harness.ccm.commons.entities.AwsAccountConnectionDetail;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.security.annotations.NextGenManagerAuth;
 
@@ -28,22 +30,20 @@ import org.springframework.stereotype.Service;
 @OwnedBy(CE)
 public class ConnectorSetup {
   @Inject CENextGenConfiguration configuration;
-
-  @GET
-  @Path("/ceawstemplateurl")
-  @ApiOperation(value = "Get CE Aws Connector Template URL Environment Wise", nickname = "ceawstemplateurl")
-  public ResponseDTO<String> getCEAwsTemplate(
-      @QueryParam(NGCommonEntityConstants.IS_EVENTS_ENABLED) Boolean eventsEnabled,
-      @QueryParam(NGCommonEntityConstants.IS_CUR_ENABLED) Boolean curEnabled,
-      @QueryParam(NGCommonEntityConstants.IS_OPTIMIZATION_ENABLED) Boolean optimizationEnabled) {
-    final String templateURL = configuration.getAwsConnectorTemplate();
-    return ResponseDTO.newResponse(templateURL);
-  }
+  @Inject AwsAccountConnectionDetailsHelper awsAccountConnectionDetailsHelper;
 
   @GET
   @Path("/azureappclientid")
   @ApiOperation(value = "Get Azure application client Id", nickname = "azureappclientid")
   public ResponseDTO<String> getAzureAppClientId() {
     return ResponseDTO.newResponse(configuration.getAzureConfig().getAzureAppClientId());
+  }
+
+  @GET
+  @Path("/awsaccountconnectiondetail")
+  @ApiOperation(value = "Get Aws account connection details", nickname = "awsaccountconnectiondetail")
+  public ResponseDTO<AwsAccountConnectionDetail> getAwsAccountConnectionDetail(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId) {
+    return ResponseDTO.newResponse(awsAccountConnectionDetailsHelper.getAwsAccountConnectorDetail(accountId));
   }
 }

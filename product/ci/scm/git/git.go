@@ -29,7 +29,7 @@ func CreatePR(ctx context.Context, request *pb.CreatePRRequest, log *zap.Sugared
 		Source: request.Source,
 	}
 
-	_, response, err := client.PullRequests.Create(ctx, request.GetSlug(), &inputParams)
+	pr, response, err := client.PullRequests.Create(ctx, request.GetSlug(), &inputParams)
 	if err != nil {
 		log.Errorw("CreatePR failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "source", request.GetSource(), "target", request.GetTarget(),
 			"elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
@@ -38,6 +38,7 @@ func CreatePR(ctx context.Context, request *pb.CreatePRRequest, log *zap.Sugared
 	log.Infow("CreatePR success", "slug", request.GetSlug(), "source", request.GetSource(), "target", request.GetTarget(), "elapsed_time_ms", utils.TimeSince(start))
 
 	out = &pb.CreatePRResponse{
+		Number: int32(pr.Number),
 		Status: int32(response.Status),
 	}
 	return out, nil
@@ -211,6 +212,33 @@ func ListCommits(ctx context.Context, request *pb.ListCommitsRequest, log *zap.S
 
 	out = &pb.ListCommitsResponse{
 		CommitIds: commitIDs,
+		Pagination: &pb.PageResponse{
+			Next: int32(response.Page.Next),
+		},
+	}
+	return out, nil
+}
+
+func CompareCommits(ctx context.Context, request *pb.CompareCommitsRequest, log *zap.SugaredLogger) (out *pb.CompareCommitsResponse, err error) {
+	start := time.Now()
+	log.Infow("CompareCommits starting", "slug", request.GetSlug())
+
+	client, err := gitclient.GetGitClient(*request.GetProvider(), log)
+	if err != nil {
+		log.Errorw("CompareCommits failure", "bad provider", request.GetProvider(), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		return nil, err
+	}
+
+	changes, response, err := client.Git.CompareChanges(ctx, request.GetSlug(), request.GetSource(), request.GetTarget(), scm.ListOptions{Page: int(request.GetPagination().GetPage())})
+	if err != nil {
+		log.Errorw("CompareCommits failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "source", request.GetSource(), "target", request.GetTarget(),
+			"elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		return nil, err
+	}
+	log.Infow("CompareCommits success", "slug", request.GetSlug(), "source", request.GetSource(), "target", request.GetTarget(), "elapsed_time_ms", utils.TimeSince(start))
+
+	out = &pb.CompareCommitsResponse{
+		Files: convertChangesList(changes),
 		Pagination: &pb.PageResponse{
 			Next: int32(response.Page.Next),
 		},

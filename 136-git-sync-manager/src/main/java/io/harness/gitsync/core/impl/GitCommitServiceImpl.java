@@ -62,4 +62,10 @@ public class GitCommitServiceImpl implements GitCommitService {
     }
     return false;
   }
+
+  @Override
+  public Optional<GitCommit> findLastGitCommit(String accountIdentifier, String repo, String branchName) {
+    return gitCommitRepository.findFirstByAccountIdentifierAndRepoURLAndBranchNameOrderByCreatedAtDesc(
+        accountIdentifier, repo, branchName);
+  }
 }

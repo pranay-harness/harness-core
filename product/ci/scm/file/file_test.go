@@ -240,9 +240,24 @@ func TestUpdateFileNoMatch(t *testing.T) {
 }
 
 func TestDeleteFile(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(200)
+		content, _ := ioutil.ReadFile("testdata/FileUpdateSource.json")
+		fmt.Fprint(w, string(content))
+	}))
+	defer ts.Close()
+
 	in := &pb.DeleteFileRequest{
-		Slug: "tphoney/scm-test",
-		Path: "jello",
+		Slug:    "tphoney/scm-test",
+		Path:    "jello",
+		Message: "message",
+		Branch:  "main",
+		BlobId:  "4ea5e4dd2666245c95ea7d4cd353182ea19934b3",
+		Signature: &pb.Signature{
+			Name:  "tp honey",
+			Email: "tp@harness.io",
+		},
 		Provider: &pb.Provider{
 			Hook: &pb.Provider_Github{
 				Github: &pb.GithubProvider{
@@ -251,14 +266,15 @@ func TestDeleteFile(t *testing.T) {
 					},
 				},
 			},
-			Endpoint: "https://localhost:8081",
+			Endpoint: ts.URL,
 		},
 	}
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	_, err := DeleteFile(context.Background(), in, log.Sugar())
+	got, err := DeleteFile(context.Background(), in, log.Sugar())
 
-	assert.NotNil(t, err, "throws an error")
+	assert.Nil(t, err, "no errors")
+	assert.Equal(t, got.Status, int32(200), "status matches")
 }
 
 func TestPushNewFile(t *testing.T) {

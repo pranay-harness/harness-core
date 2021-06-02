@@ -3,6 +3,7 @@ package io.harness.cvng.core.jobs;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Consumer;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
 
 import com.google.inject.Inject;
@@ -12,12 +13,13 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
 public class EntityCRUDStreamConsumer implements Runnable {
-  private static final int MAX_WAIT_TIME_SEC = 2;
+  private static final int MAX_WAIT_TIME_SEC = 10;
   private final Consumer consumer;
   private final Map<String, ConsumerMessageProcessor> processorMap;
 
@@ -43,11 +45,20 @@ public class EntityCRUDStreamConsumer implements Runnable {
   public void run() {
     log.info("Started the consumer for entity crud stream");
     try {
-      while (true) {
-        pollAndProcessMessages();
+      while (!Thread.currentThread().isInterrupted()) {
+        readEventsFrameworkMessages();
       }
     } catch (Exception ex) {
       log.error("Entity crud stream consumer unexpectedly stopped", ex);
+    }
+  }
+
+  private void readEventsFrameworkMessages() throws InterruptedException {
+    try {
+      pollAndProcessMessages();
+    } catch (EventsFrameworkDownException e) {
+      log.error("Events framework is down for Entity crud stream consumer. Retrying again...", e);
+      TimeUnit.SECONDS.sleep(MAX_WAIT_TIME_SEC);
     }
   }
 

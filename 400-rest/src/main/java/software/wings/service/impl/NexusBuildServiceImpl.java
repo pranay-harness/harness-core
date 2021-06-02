@@ -15,6 +15,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.nexus.NexusRequest;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -24,6 +25,8 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.service.intfc.NexusBuildService;
+import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.mappers.artifact.NexusConfigToNexusRequestMapper;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryFormat;
 
@@ -44,10 +47,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NexusBuildServiceImpl implements NexusBuildService {
   @Inject private NexusService nexusService;
+  @Inject private EncryptionService encryptionService;
 
   @Override
   public Map<String, String> getPlans(NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    return nexusService.getRepositories(config, encryptionDetails);
+    return nexusService.getRepositories(
+        NexusConfigToNexusRequestMapper.toNexusRequest(config, encryptionService, encryptionDetails));
   }
 
   @Override
@@ -57,16 +62,20 @@ public class NexusBuildServiceImpl implements NexusBuildService {
         && repositoryFormat.equals(RepositoryFormat.docker.name())) {
       throw new WingsException(format("Not supported for Artifact Type %s", artifactType), USER);
     }
+    NexusRequest nexusRequest =
+        NexusConfigToNexusRequestMapper.toNexusRequest(config, encryptionService, encryptionDetails);
     if (artifactType == ArtifactType.DOCKER) {
-      return nexusService.getRepositories(config, encryptionDetails, RepositoryFormat.docker.name());
+      return nexusService.getRepositories(nexusRequest, RepositoryFormat.docker.name());
     }
-    return nexusService.getRepositories(config, encryptionDetails, repositoryFormat);
+    return nexusService.getRepositories(nexusRequest, repositoryFormat);
   }
 
   @Override
   public Map<String, String> getPlans(
       NexusConfig config, List<EncryptedDataDetail> encryptionDetails, RepositoryFormat repositoryFormat) {
-    return nexusService.getRepositories(config, encryptionDetails, repositoryFormat.name());
+    NexusRequest nexusRequest =
+        NexusConfigToNexusRequestMapper.toNexusRequest(config, encryptionService, encryptionDetails);
+    return nexusService.getRepositories(nexusRequest, repositoryFormat.name());
   }
 
   @Override
@@ -91,16 +100,18 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   private List<BuildDetails> getBuildsInternal(ArtifactStreamAttributes artifactStreamAttributes, NexusConfig config,
       List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.NEXUS.name());
+    NexusRequest nexusRequest =
+        NexusConfigToNexusRequestMapper.toNexusRequest(config, encryptionService, encryptionDetails);
     if (artifactStreamAttributes.getArtifactType() != null
             && artifactStreamAttributes.getArtifactType() == ArtifactType.DOCKER
         || (artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.docker.name()))) {
-      return nexusService.getBuilds(config, encryptionDetails, artifactStreamAttributes, 50);
+      return nexusService.getBuilds(nexusRequest, artifactStreamAttributes, 50);
     } else if (artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.nuget.name())
         || artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.npm.name())) {
-      return nexusService.getVersions(artifactStreamAttributes.getRepositoryFormat(), config, encryptionDetails,
+      return nexusService.getVersions(artifactStreamAttributes.getRepositoryFormat(), nexusRequest,
           artifactStreamAttributes.getJobName(), artifactStreamAttributes.getNexusPackageName());
     } else {
-      return nexusService.getVersions(config, encryptionDetails, artifactStreamAttributes.getJobName(),
+      return nexusService.getVersions(nexusRequest, artifactStreamAttributes.getJobName(),
           artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName(),
           artifactStreamAttributes.getExtension(), artifactStreamAttributes.getClassifier());
     }
@@ -109,12 +120,14 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   private List<BuildDetails> getBuildInternal(ArtifactStreamAttributes artifactStreamAttributes, NexusConfig config,
       List<EncryptedDataDetail> encryptionDetails, String buildNo) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.NEXUS.name());
+    NexusRequest nexusRequest =
+        NexusConfigToNexusRequestMapper.toNexusRequest(config, encryptionService, encryptionDetails);
     if (artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.nuget.name())
         || artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.npm.name())) {
-      return nexusService.getVersion(artifactStreamAttributes.getRepositoryFormat(), config, encryptionDetails,
+      return nexusService.getVersion(artifactStreamAttributes.getRepositoryFormat(), nexusRequest,
           artifactStreamAttributes.getJobName(), artifactStreamAttributes.getNexusPackageName(), buildNo);
     } else {
-      return nexusService.getVersion(config, encryptionDetails, artifactStreamAttributes.getJobName(),
+      return nexusService.getVersion(nexusRequest, artifactStreamAttributes.getJobName(),
           artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName(),
           artifactStreamAttributes.getExtension(), artifactStreamAttributes.getClassifier(), buildNo);
     }
@@ -123,46 +136,58 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   @Override
   public List<JobDetails> getJobs(
       NexusConfig config, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName) {
-    List<String> jobNames = Lists.newArrayList(nexusService.getRepositories(config, encryptionDetails).keySet());
+    NexusRequest nexusRequest =
+        NexusConfigToNexusRequestMapper.toNexusRequest(config, encryptionService, encryptionDetails);
+    List<String> jobNames = Lists.newArrayList(nexusService.getRepositories(nexusRequest).keySet());
     return wrapJobNameWithJobDetails(jobNames);
   }
 
   @Override
   public List<String> getArtifactPaths(
       String repoId, String groupId, NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    NexusRequest nexusRequest =
+        NexusConfigToNexusRequestMapper.toNexusRequest(config, encryptionService, encryptionDetails);
     if (isBlank(groupId)) {
-      return nexusService.getArtifactPaths(config, encryptionDetails, repoId);
+      return nexusService.getArtifactPaths(nexusRequest, repoId);
     }
-    return nexusService.getArtifactNames(config, encryptionDetails, repoId, groupId);
+    return nexusService.getArtifactNames(nexusRequest, repoId, groupId);
   }
 
   @Override
   public List<String> getArtifactPaths(String repoId, String groupId, NexusConfig config,
       List<EncryptedDataDetail> encryptionDetails, String repositoryFormat) {
+    NexusRequest nexusRequest =
+        NexusConfigToNexusRequestMapper.toNexusRequest(config, encryptionService, encryptionDetails);
     if (isBlank(groupId)) {
-      return nexusService.getArtifactPaths(config, encryptionDetails, repoId);
+      return nexusService.getArtifactPaths(nexusRequest, repoId);
     }
-    return nexusService.getArtifactNames(config, encryptionDetails, repoId, groupId, repositoryFormat);
+    return nexusService.getArtifactNames(nexusRequest, repoId, groupId, repositoryFormat);
   }
 
   @Override
   public List<String> getGroupIds(
       String repositoryName, NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    return nexusService.getGroupIdPaths(config, encryptionDetails, repositoryName, null);
+    NexusRequest nexusRequest =
+        NexusConfigToNexusRequestMapper.toNexusRequest(config, encryptionService, encryptionDetails);
+    return nexusService.getGroupIdPaths(nexusRequest, repositoryName, null);
   }
 
   @Override
   public List<String> getGroupIds(
       String repositoryName, String repositoryFormat, NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    return nexusService.getGroupIdPaths(config, encryptionDetails, repositoryName, repositoryFormat);
+    NexusRequest nexusRequest =
+        NexusConfigToNexusRequestMapper.toNexusRequest(config, encryptionService, encryptionDetails);
+    return nexusService.getGroupIdPaths(nexusRequest, repositoryName, repositoryFormat);
   }
 
   @Override
   public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.NEXUS.name());
+    NexusRequest nexusRequest =
+        NexusConfigToNexusRequestMapper.toNexusRequest(config, encryptionService, encryptionDetails);
     return wrapLastSuccessfulBuildWithLabels(
-        nexusService.getLatestVersion(config, encryptionDetails, artifactStreamAttributes.getJobName(),
+        nexusService.getLatestVersion(nexusRequest, artifactStreamAttributes.getJobName(),
             artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName()),
         artifactStreamAttributes, config);
   }
@@ -172,14 +197,18 @@ public class NexusBuildServiceImpl implements NexusBuildService {
     if (!connectableHttpUrl(nexusConfig.getNexusUrl())) {
       throw new InvalidArtifactServerException("Could not reach Nexus Server at : " + nexusConfig.getNexusUrl(), USER);
     }
-    return nexusService.isRunning(nexusConfig, encryptedDataDetails);
+    NexusRequest nexusRequest =
+        NexusConfigToNexusRequestMapper.toNexusRequest(nexusConfig, encryptionService, encryptedDataDetails);
+    return nexusService.isRunning(nexusRequest);
   }
 
   @Override
   public boolean validateArtifactSource(NexusConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes) {
     if (isNotEmpty(artifactStreamAttributes.getExtension()) || isNotEmpty(artifactStreamAttributes.getClassifier())) {
-      return nexusService.existsVersion(config, encryptionDetails, artifactStreamAttributes.getJobName(),
+      NexusRequest nexusRequest =
+          NexusConfigToNexusRequestMapper.toNexusRequest(config, encryptionService, encryptionDetails);
+      return nexusService.existsVersion(nexusRequest, artifactStreamAttributes.getJobName(),
           artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName(),
           artifactStreamAttributes.getExtension(), artifactStreamAttributes.getClassifier());
     }

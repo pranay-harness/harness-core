@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotation.HarnessRepo;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.MongoConfig;
+import io.harness.repositories.outbox.OutboxEventRepository;
 import io.harness.springdata.HMongoTemplate;
 
 import com.google.inject.Inject;
@@ -13,8 +14,6 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.ReadPreference;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Objects;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -34,7 +33,7 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 @OwnedBy(PL)
 @Configuration
 @EnableMongoRepositories(
-    basePackages = {"io.harness.repositories"}, includeFilters = @ComponentScan.Filter(HarnessRepo.class))
+    basePackageClasses = {OutboxEventRepository.class}, includeFilters = @ComponentScan.Filter(HarnessRepo.class))
 @EnableMongoAuditing
 public class OutboxPersistenceConfig extends AbstractMongoConfiguration {
   private final MongoConfig mongoBackendConfiguration;
@@ -68,11 +67,6 @@ public class OutboxPersistenceConfig extends AbstractMongoConfiguration {
   @Bean
   MongoTransactionManager transactionManager(MongoDbFactory dbFactory) {
     return new MongoTransactionManager(dbFactory);
-  }
-
-  @Override
-  protected Collection<String> getMappingBasePackages() {
-    return Collections.singleton("io.harness");
   }
 
   @Bean

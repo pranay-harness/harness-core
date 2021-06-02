@@ -135,21 +135,20 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
         cleanUpForRetry(context);
         AnalysisContext analysisContext = getAnalysisContext(context, corelationId);
         getLogger().info("context: {}", analysisContext);
-        saveWorkflowVerificationResult(analysisContext);
 
         if (!checkLicense(appService.getAccountIdByAppId(context.getAppId()), StateType.valueOf(getStateType()),
                 context.getStateExecutionInstanceId())) {
-          return generateAnalysisResponse(analysisContext, ExecutionStatus.SKIPPED, false,
+          return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
               "Your license type does not support running this verification. Skipping Analysis");
         }
 
         if (!isEmpty(getTimeDuration()) && Integer.parseInt(getTimeDuration()) > MAX_WORKFLOW_TIMEOUT) {
-          return generateAnalysisResponse(analysisContext, ExecutionStatus.SKIPPED, false,
-              "Time duration cannot be more than 4 hours. Skipping Analysis");
+          return generateAnalysisResponse(
+              analysisContext, ExecutionStatus.SUCCESS, "Time duration cannot be more than 4 hours. Skipping Analysis");
         }
 
         if (unresolvedHosts(analysisContext)) {
-          return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED, false,
+          return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
               "The expression " + hostnameTemplate + " could not be resolved for hosts");
         }
         if (analysisContext.isHistoricalDataCollection()) {
@@ -202,7 +201,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
         if (analysisContext.isSkipVerification()) {
           getLogger().warn(
               "id: {}, Could not find test nodes to compare the data", context.getStateExecutionInstanceId());
-          return generateAnalysisResponse(analysisContext, ExecutionStatus.SKIPPED, false,
+          return generateAnalysisResponse(analysisContext, ExecutionStatus.SKIPPED,
               "Could not find newly deployed instances. Skipping verification");
         }
 
@@ -210,7 +209,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
         if (isEmpty(lastExecutionNodes) && !isAwsLambdaState(context)) {
           if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
             getLogger().info("No nodes with older version found to compare the logs. Skipping analysis");
-            return generateAnalysisResponse(analysisContext, ExecutionStatus.SKIPPED, false,
+            return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
                 "As no previous version instances exist for comparison, analysis will be skipped. Check your setup if this is the first deployment or if the previous instances have been deleted or replaced.");
           }
 
@@ -223,14 +222,14 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
                 || analysisContext.getNewNodesTrafficShiftPercent() > 50)) {
           getLogger().info(
               "New nodes cannot be analyzed against old nodes if new traffic percentage is greater than 50");
-          return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED, false,
+          return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
               "Analysis cannot be performed with this traffic split. Please run verify steps with new traffic percentage greater than 0 and less than 50");
         }
 
         if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
             && lastExecutionNodes.equals(canaryNewHostNames)) {
           getLogger().warn("Control and test nodes are same. Will not be running Log analysis");
-          return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED, false,
+          return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
               "Skipping analysis because both the new and old instances of the service and environment are same. Please check your setup.");
         }
 
@@ -387,8 +386,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
                                                                                          : ExecutionStatus.SUCCESS;
       continuousVerificationService.setMetaDataExecutionStatus(
           context.getStateExecutionId(), executionStatus, true, false);
-      return generateAnalysisResponse(
-          context, executionStatus, false, "No Analysis result found. This is not a failure.");
+      return generateAnalysisResponse(context, executionStatus, "No Analysis result found. This is not a failure.");
     }
 
     getLogger().info(
@@ -413,7 +411,6 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     continuousVerificationService.setMetaDataExecutionStatus(
         context.getStateExecutionId(), executionStatus, false, false);
 
-    updateExecutionStatus(context.getStateExecutionId(), true, executionStatus, "Analysis completed");
     return ExecutionResponse.builder()
         .executionStatus(executionStatus)
         .stateExecutionData(executionResponse.getStateExecutionData())
@@ -422,15 +419,13 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {
-    updateExecutionStatus(context.getStateExecutionInstanceId(), false, ExecutionStatus.ABORTED, "Aborted");
     continuousVerificationService.setMetaDataExecutionStatus(
         context.getStateExecutionInstanceId(), ExecutionStatus.ABORTED, true, false);
   }
 
   @Override
   protected ExecutionResponse generateAnalysisResponse(
-      AnalysisContext context, ExecutionStatus status, boolean analyzed, String message) {
-    updateExecutionStatus(context.getStateExecutionId(), analyzed, status, message);
+      AnalysisContext context, ExecutionStatus status, String message) {
     NewRelicMetricAnalysisRecord metricAnalysisRecord = NewRelicMetricAnalysisRecord.builder()
                                                             .accountId(context.getAccountId())
                                                             .message(message)
@@ -480,7 +475,6 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
             .startDataCollectionMinute(TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()))
             .parallelProcesses(PARALLEL_PROCESSES)
             .managerVersion(versionInfoManager.getVersionInfo().getVersion())
-            .envId(getEnvId(context))
             .isHistoricalDataCollection(isHistoricalDataCollection)
             .initialDelaySeconds(getDelaySeconds(initialAnalysisDelay))
             .dataCollectionIntervalMins(getDataCollectionRate())

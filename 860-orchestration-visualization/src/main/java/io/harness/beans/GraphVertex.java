@@ -52,7 +52,7 @@ public class GraphVertex implements Serializable {
   private List<ExecutableResponse> executableResponses;
   private List<GraphDelegateSelectionLogParams> graphDelegateSelectionLogParams;
   private List<InterruptEffect> interruptHistories;
-  private List<Document> outcomeDocuments;
+  private Map<String, Document> outcomeDocuments;
   private List<String> retryIds;
 
   private Map<String, List<ProgressData>> progressDataMap;
