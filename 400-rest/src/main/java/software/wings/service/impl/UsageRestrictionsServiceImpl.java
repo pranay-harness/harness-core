@@ -837,8 +837,12 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     Map<String, Set<String>> appEnvMapFromUserPermissions =
         getRestrictionsAndAppEnvMapFromCache(accountId, Action.UPDATE).getAppEnvMap();
 
+    log.info("test sm : appEnvMapFromUserPermissions " + appEnvMapFromUserPermissions);
+
     Map<String, Set<String>> appEnvMapFromEntityRestrictions =
         getAppEnvMap(entityUsageRestrictions.getAppEnvRestrictions(), appIdEnvMap);
+
+    log.info("test sm : appEnvMapFromEntityRestrictions " + appEnvMapFromEntityRestrictions);
 
     return isUsageRestrictionsSubsetInternal(entityUsageRestrictions, appEnvMapFromEntityRestrictions,
         restrictionsFromUserPermissions, appEnvMapFromUserPermissions);
@@ -870,6 +874,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     return appEnvMap.entrySet().stream().allMatch((Entry<String, Set<String>> appEnvEntryOfEntity) -> {
       String appId = appEnvEntryOfEntity.getKey();
       if (!parentAppEnvMap.containsKey(appId)) {
+        log.info("test sm : missed application is : " + appId);
         return false;
       }
       Set<String> envIdsFromRestrictions = appEnvEntryOfEntity.getValue();
@@ -908,6 +913,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
      */
     if (!scopedToAccount && hasNoRestrictions(usageRestrictions)) {
       // Read only user should not be able to create with null restrictions
+      log.info("test sm : throwing first user not authorised " );
       if (hasNoRestrictions(restrictionsFromUserPermissions)) {
         throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
       }
@@ -922,6 +928,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         accountId, permissionType, usageRestrictions, restrictionsFromUserPermissions, appIdEnvMap, scopedToAccount);
 
     if (!canUpdateEntity) {
+      log.info("test sm : throwing second user not authorised " );
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED_DUE_TO_USAGE_RESTRICTIONS, USER);
     }
   }
@@ -1062,12 +1069,18 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       return builder.build();
     }
 
+    if (userRestrictionInfo != null) {
+      log.info("test sm : userRestrictionInfo is : " + userRestrictionInfo.toString());
+    }
+
     switch (action) {
       case READ:
         builder.appEnvMap(userRestrictionInfo.getAppEnvMapForReadAction());
         builder.usageRestrictions(userRestrictionInfo.getUsageRestrictionsForReadAction());
         break;
       case UPDATE:
+        log.info("test sm : userRestrictionInfo.getAppEnvMapForUpdateAction() is : " + userRestrictionInfo.getAppEnvMapForUpdateAction().toString());
+        log.info("test sm : userRestrictionInfo.getUsageRestrictionsForUpdateAction() is : " + userRestrictionInfo.getUsageRestrictionsForUpdateAction().toString());
         builder.appEnvMap(userRestrictionInfo.getAppEnvMapForUpdateAction());
         builder.usageRestrictions(userRestrictionInfo.getUsageRestrictionsForUpdateAction());
         break;
