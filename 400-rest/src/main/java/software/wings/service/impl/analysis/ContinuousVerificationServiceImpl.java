@@ -55,7 +55,6 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
-import io.harness.cv.api.WorkflowVerificationResultService;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.eraro.ErrorCode;
@@ -266,7 +265,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private DatadogService datadogService;
   @Inject private EnvironmentService environmentService;
   @Inject private AccountService accountService;
-  @Inject private WorkflowVerificationResultService workflowVerificationResultService;
 
   private static final String DATE_PATTERN = "yyyy-MM-dd HH:MM";
   public static final String HARNESS_DEFAULT_TAG = "_HARNESS_DEFAULT_TAG_";
@@ -1755,7 +1753,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       throw new IllegalArgumentException("Invalid state type :" + analysisContext.getStateType());
     }
     setMetaDataExecutionStatus(stateExecutionId, status, true, true);
-    workflowVerificationResultService.updateWorkflowVerificationResult(stateExecutionId, false, status, message);
     try {
       final VerificationStateAnalysisExecutionData stateAnalysisExecutionData =
           VerificationStateAnalysisExecutionData.builder()
