@@ -1,6 +1,7 @@
 package io.harness.batch.processing.billing.service;
 
 import static io.harness.ccm.commons.beans.InstanceType.K8S_NODE;
+import static io.harness.ccm.commons.beans.InstanceType.K8S_POD;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_PV;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_PVC;
 
@@ -69,6 +70,9 @@ public class BillingCalculationService {
     }
     if (null == parentInstanceActiveSecond || parentInstanceActiveSecond == 0) {
       parentInstanceActiveSecond = instanceActiveSeconds;
+      if (instanceData.getInstanceType() == K8S_POD) {
+        parentInstanceActiveSecond = 24 * 3600D;
+      }
     }
 
     PricingData pricingData =
