@@ -3,6 +3,7 @@ package io.harness.gitsync.common.dtos;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.git.model.ChangeType;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -14,8 +15,6 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(DX)
 public class GitPRFileDTO {
-  boolean added;
-  boolean deleted;
-  boolean renamed;
+  ChangeType changeType;
   String path;
 }
