@@ -21,6 +21,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.WingsException;
 import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionMetadataKeys;
+import io.harness.exception.runtime.GcrConnectRuntimeException;
 import io.harness.exception.runtime.GcrImageNotFoundRuntimeException;
 import io.harness.exception.runtime.GcrInvalidTagRuntimeException;
 import io.harness.expression.RegexFunctor;
@@ -84,6 +85,15 @@ public class GcrApiServiceImpl implements GcrApiService {
       GlobalContextManager.upsertGlobalContextRecord(mdcGlobalContextData);
       throw ex;
     } catch (IOException e) {
+      ErrorHandlingGlobalContextData globalContextData =
+          GlobalContextManager.get(ErrorHandlingGlobalContextData.IS_SUPPORTED_ERROR_FRAMEWORK);
+      if (globalContextData != null && globalContextData.isSupportedErrorFramework()) {
+        Map<String, String> imageDataMap = new HashMap<>();
+        imageDataMap.put(ExceptionMetadataKeys.URL.name(), gcpConfig.getRegistryHostname());
+        MdcGlobalContextData mdcGlobalContextData = MdcGlobalContextData.builder().map(imageDataMap).build();
+        GlobalContextManager.upsertGlobalContextRecord(mdcGlobalContextData);
+        throw new GcrConnectRuntimeException(e.getMessage(), e.getCause());
+      }
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER, e).addParam("message", ExceptionUtils.getMessage(e));
     }
   }
