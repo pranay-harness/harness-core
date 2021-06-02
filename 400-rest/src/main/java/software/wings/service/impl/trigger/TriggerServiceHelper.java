@@ -67,6 +67,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.url.SubdomainUrlHelper;
 import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.PipelineService;
@@ -81,6 +82,7 @@ import com.cronutils.parser.CronParser;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -117,6 +119,7 @@ public class TriggerServiceHelper {
   @Inject private AppService appService;
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
+  @Inject @Named("ArtifactCollectionService") private ArtifactCollectionService artifactCollectionService;
 
   public List<Trigger> getPipelineCompletionTriggers(String appId, String pipelineId) {
     return getMatchedSourcePipelineTriggers(appId, pipelineId).collect(toList());
@@ -567,5 +570,9 @@ public class TriggerServiceHelper {
     placeholderValues.put(EXECUTION_TYPE, workflowType == ORCHESTRATION ? "Workflow" : "Pipeline");
     placeholderValues.put(TRIGGER_URL, getTriggersUrl(accountId, appId));
     return placeholderValues;
+  }
+
+  public void collectArtifactsForSelection(ArtifactSelection artifactSelection, String appId) {
+    artifactCollectionService.collectNewArtifacts(appId, artifactSelection.getArtifactStreamId());
   }
 }
