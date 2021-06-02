@@ -79,6 +79,13 @@ public class NoOpGitAwarePersistenceImpl implements GitAwarePersistence {
   }
 
   @Override
+  public <B extends GitSyncableEntity, Y extends YamlDTO> Optional<B> findOne(
+      Criteria criteria, String repo, String branch, Class<B> entityClass) {
+    final B object = mongoTemplate.findOne(query(criteria), entityClass);
+    return Optional.ofNullable(object);
+  }
+
+  @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> B save(
       B objectToSave, ChangeType changeType, Class<B> entityClass, Supplier functors) {
     return mongoTemplate.save(objectToSave);
