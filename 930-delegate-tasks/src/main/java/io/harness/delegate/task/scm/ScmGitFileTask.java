@@ -45,7 +45,7 @@ public class ScmGitFileTask extends AbstractDelegateRunnableTask {
         scmGitFileTaskParams.getEncryptedDataDetails());
     switch (scmGitFileTaskParams.getGitFileTaskType()) {
       case GET_FILE_CONTENT_BATCH:
-        final FileBatchContentResponse fileBatchContentResponse = scmDelegateClient.processScmRequest(c
+        FileBatchContentResponse fileBatchContentResponse = scmDelegateClient.processScmRequest(c
             -> scmServiceClient.listFiles(scmGitFileTaskParams.getScmConnector(), scmGitFileTaskParams.getFoldersList(),
                 scmGitFileTaskParams.getBranchName(), SCMGrpc.newBlockingStub(c)));
         return GitFileTaskResponseData.builder()
@@ -59,6 +59,15 @@ public class ScmGitFileTask extends AbstractDelegateRunnableTask {
         return GitFileTaskResponseData.builder()
             .gitFileTaskType(scmGitFileTaskParams.getGitFileTaskType())
             .fileContent(fileContent.toByteArray())
+            .build();
+      case GET_FILE_CONTENT_BATCH_BY_FILE_PATHS:
+        fileBatchContentResponse = scmDelegateClient.processScmRequest(c
+            -> scmServiceClient.listFilesByFilePaths(scmGitFileTaskParams.getScmConnector(),
+                scmGitFileTaskParams.getFilePathsList(), scmGitFileTaskParams.getBranchName(),
+                SCMGrpc.newBlockingStub(c)));
+        return GitFileTaskResponseData.builder()
+            .gitFileTaskType(scmGitFileTaskParams.getGitFileTaskType())
+            .fileBatchContentResponse(fileBatchContentResponse.toByteArray())
             .build();
       default:
         throw new UnknownEnumTypeException("GitFileTaskType", scmGitFileTaskParams.getGitFileTaskType().toString());
