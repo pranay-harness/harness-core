@@ -379,6 +379,8 @@ public enum ErrorCode {
 
   READ_FILE_FROM_GCP_STORAGE_FAILED,
 
+  FILE_NOT_FOUND_ERROR,
+
   USAGE_LIMITS_EXCEEDED(Status.FORBIDDEN, "Usage Limit Exceeded"),
 
   EVENT_PUBLISH_FAILED("Event published failed"),
