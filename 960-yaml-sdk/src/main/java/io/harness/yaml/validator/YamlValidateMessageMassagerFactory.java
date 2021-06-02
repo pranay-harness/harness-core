@@ -12,7 +12,7 @@ import lombok.experimental.UtilityClass;
 public class YamlValidateMessageMassagerFactory {
   /**
    * In case of library upgrade all the messages will have to be revisited.
-   * * Check error code at {@link ValidatorTypeCode} and also the error msg for adding more things to factory.
+   * Check error code at {@link ValidatorTypeCode} and also the error msg for adding more things to factory.
    */
   public String massageMessage(ValidationMessage validationMessage) {
     final String code = validationMessage.getCode();
