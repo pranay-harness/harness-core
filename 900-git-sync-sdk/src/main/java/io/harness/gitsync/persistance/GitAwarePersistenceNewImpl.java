@@ -173,6 +173,25 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
   }
 
   @Override
+  public <B extends GitSyncableEntity, Y extends YamlDTO> Optional<B> findOne(
+      Criteria criteria, String repo, String branch, Class<B> entityClass) {
+    final Criteria gitSyncCriteria = createGitSyncCriteriaForRepoAndBranch(repo, branch, null, entityClass);
+    List<Criteria> criteriaList = Arrays.asList(criteria, gitSyncCriteria);
+    Query query =
+        new Query().addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[criteriaList.size()])));
+    final B object = mongoTemplate.findOne(query, entityClass);
+    return Optional.ofNullable(object);
+  }
+
+  private <B extends GitSyncableEntity> Criteria createGitSyncCriteriaForRepoAndBranch(
+      String repo, String branch, Boolean isFindDefaultFromOtherBranches, Class<B> entityClass) {
+    if (repo == null || branch == null || repo.equals(DEFAULT) || branch.equals(DEFAULT)) {
+      return getCriteriaWhenGitSyncNotEnabled(entityClass);
+    }
+    return getRepoAndBranchCriteria(repo, branch, isFindDefaultFromOtherBranches, entityClass);
+  }
+
+  @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> List<B> find(Criteria criteria, Pageable pageable,
       String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
     final Criteria gitSyncCriteria = getCriteriaWithGitSync(projectIdentifier, orgIdentifier, accountId, entityClass);
@@ -213,35 +232,43 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
     return gitSyncSdkService.isGitSyncEnabled(accountIdentifier, orgIdentifier, projectIdentifier);
   }
 
+  private Criteria getCriteriaWhenGitSyncNotEnabled(Class entityClass) {
+    final GitSdkEntityHandlerInterface gitSdkEntityHandlerInterface =
+        gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName());
+    return new Criteria().andOperator(
+        new Criteria().orOperator(Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey()).is(true),
+            Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey()).exists(false)));
+  }
+
+  private Criteria getRepoAndBranchCriteria(
+      String repo, String branch, Boolean isFindDefaultFromOtherBranches, Class entityClass) {
+    final GitSdkEntityHandlerInterface gitSdkEntityHandlerInterface =
+        gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName());
+    Criteria criteria = new Criteria()
+                            .and(gitSdkEntityHandlerInterface.getBranchKey())
+                            .is(branch)
+                            .and(gitSdkEntityHandlerInterface.getYamlGitConfigRefKey())
+                            .is(repo);
+    if (isFindDefaultFromOtherBranches != null && isFindDefaultFromOtherBranches) {
+      return new Criteria().orOperator(criteria,
+          Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey())
+              .is(true)
+              .and(gitSdkEntityHandlerInterface.getYamlGitConfigRefKey())
+              .ne(repo));
+    }
+    return criteria;
+  }
+
   @Override
   public Criteria getCriteriaWithGitSync(
       String projectIdentifier, String orgIdentifier, String accountId, Class entityClass) {
     if (isGitSyncEnabled(projectIdentifier, orgIdentifier, accountId)) {
-      final GitSdkEntityHandlerInterface gitSdkEntityHandlerInterface =
-          gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName());
       final GitEntityInfo gitBranchInfo = getGitEntityInfo();
-      if (gitBranchInfo == null || gitBranchInfo.getYamlGitConfigId() == null || gitBranchInfo.getBranch() == null
-          || gitBranchInfo.getYamlGitConfigId().equals(DEFAULT) || gitBranchInfo.getBranch().equals(DEFAULT)) {
-        return new Criteria().andOperator(
-            new Criteria().orOperator(Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey()).is(true),
-                Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey()).exists(false)));
-      } else {
-        // case 1: list from branch only
-        // case 2: list from branch in context and default of others.
-        final Criteria criteria = new Criteria()
-                                      .and(gitSdkEntityHandlerInterface.getBranchKey())
-                                      .is(gitBranchInfo.getBranch())
-                                      .and(gitSdkEntityHandlerInterface.getYamlGitConfigRefKey())
-                                      .is(gitBranchInfo.getYamlGitConfigId());
-        if (gitBranchInfo.isFindDefaultFromOtherBranches()) {
-          return new Criteria().orOperator(criteria,
-              Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey())
-                  .is(true)
-                  .and(gitSdkEntityHandlerInterface.getYamlGitConfigRefKey())
-                  .ne(gitBranchInfo.getYamlGitConfigId()));
-        }
-        return criteria;
+      if (gitBranchInfo == null) {
+        return createGitSyncCriteriaForRepoAndBranch(null, null, null, entityClass);
       }
+      return createGitSyncCriteriaForRepoAndBranch(gitBranchInfo.getYamlGitConfigId(), gitBranchInfo.getBranch(),
+          gitBranchInfo.isFindDefaultFromOtherBranches(), entityClass);
     }
     return new Criteria();
   }

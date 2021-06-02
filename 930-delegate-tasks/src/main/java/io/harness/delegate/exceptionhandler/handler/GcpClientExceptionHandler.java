@@ -5,6 +5,7 @@ import static io.harness.exception.WingsException.USER;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.context.MdcGlobalContextData;
+import io.harness.exception.ConnectException;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.GcpServerException;
 import io.harness.exception.HintException;
@@ -14,6 +15,7 @@ import io.harness.exception.WingsException;
 import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionHandler;
 import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionMetadataKeys;
 import io.harness.exception.runtime.GcpClientRuntimeException;
+import io.harness.exception.runtime.GcrConnectRuntimeException;
 import io.harness.exception.runtime.GcrImageNotFoundRuntimeException;
 import io.harness.exception.runtime.GcrInvalidTagRuntimeException;
 import io.harness.manage.GlobalContextManager;
@@ -63,6 +65,15 @@ public class GcpClientExceptionHandler implements ExceptionHandler {
                     new io.harness.exception.ImageNotFoundException(ex.getMessage(), USER))));
       }
       return new HintException(HintException.HINT_GCR_IMAGE_NAME, new ImageNotFoundException(ex.getMessage(), USER));
+    } else if (ex instanceof GcrConnectRuntimeException) {
+      if (GlobalContextManager.get(MdcGlobalContextData.MDC_ID) != null) {
+        Map<String, String> imageDetails =
+            ((MdcGlobalContextData) GlobalContextManager.get(MdcGlobalContextData.MDC_ID)).getMap();
+        return new HintException(
+            String.format(HintException.HINT_HOST_UNREACHABLE, imageDetails.get(ExceptionMetadataKeys.URL.name())),
+            new ConnectException(ex.getMessage(), USER));
+      }
+      return new HintException(HintException.HINT_HOST_UNREACHABLE, new ConnectException(ex.getMessage(), USER));
     } else if (ex instanceof GcpClientRuntimeException) {
       if (GlobalContextManager.get(MdcGlobalContextData.MDC_ID) != null) {
         Map<String, String> imageDetails =

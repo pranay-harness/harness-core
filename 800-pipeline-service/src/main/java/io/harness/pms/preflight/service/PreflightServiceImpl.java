@@ -36,6 +36,7 @@ import java.sql.Date;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -134,11 +135,13 @@ public class PreflightServiceImpl implements PreflightService {
     pipelineRbacServiceImpl.validateStaticallyReferredEntities(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml, entityDetails);
 
-    InputSetErrorWrapperDTOPMS errorMap = MergeUtils.getErrorMap(pipelineEntity.get().getYaml(), inputSetPipelineYaml);
+    InputSetErrorWrapperDTOPMS errorMap = EmptyPredicate.isEmpty(inputSetPipelineYaml)
+        ? null
+        : MergeUtils.getErrorMap(pipelineEntity.get().getYaml(), inputSetPipelineYaml);
     PreFlightEntity preFlightEntitySaved;
     if (errorMap == null) {
-      preFlightEntitySaved = saveInitialPreflightEntity(
-          accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml, entityDetails, null);
+      preFlightEntitySaved = saveInitialPreflightEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier,
+          pipelineYaml, entityDetails, Collections.emptyList());
     } else {
       List<PipelineInputResponse> pipelineInputResponses = getPipelineInputResponses(errorMap);
       preFlightEntitySaved = saveInitialPreflightEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier,

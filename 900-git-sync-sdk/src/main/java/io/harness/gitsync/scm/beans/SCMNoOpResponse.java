@@ -20,4 +20,5 @@ public class SCMNoOpResponse implements ScmPushResponse {
   String objectId;
   String folderPath;
   String branch;
+  String commitId;
 }

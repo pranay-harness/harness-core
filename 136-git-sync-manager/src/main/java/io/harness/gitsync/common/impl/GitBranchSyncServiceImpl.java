@@ -1,12 +1,12 @@
 package io.harness.gitsync.common.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus.TO_DO;
 
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.CollectionUtils;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.gitsync.ChangeType;
 import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest;
@@ -24,6 +24,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,10 +42,13 @@ public class GitBranchSyncServiceImpl implements GitBranchSyncService {
       String filePathToBeExcluded, YamlChangeSet yamlChangeSet) {
     final GitToHarnessProgress gitToHarnessProgressRecord =
         saveGitToHarnessStatusRecord(yamlGitConfig, branchName, accountId, yamlChangeSet);
+    // todo(abhinav): add a try catch around this block and see what can be done, maybe retry?
     List<GitFileChangeDTO> harnessFilesOfBranch = getFilesBelongingToThisBranch(accountId, yamlGitConfig, branchName);
+    log.info("Received file paths: [{}] from git in harness folders.",
+        emptyIfNull(harnessFilesOfBranch).stream().map(GitFileChangeDTO::getPath).collect(Collectors.toList()));
     List<GitFileChangeDTO> filteredFileList = getFilteredFiles(harnessFilesOfBranch, filePathToBeExcluded);
     List<GitToHarnessFileProcessingRequest> gitToHarnessFilesToProcess =
-        CollectionUtils.emptyIfNull(filteredFileList)
+        emptyIfNull(filteredFileList)
             .stream()
             .map(fileContent
                 -> GitToHarnessFileProcessingRequest.builder()
@@ -75,7 +79,7 @@ public class GitBranchSyncServiceImpl implements GitBranchSyncService {
 
   private List<GitFileChangeDTO> getFilesBelongingToThisBranch(
       String accountIdentifier, YamlGitConfigDTO yamlGitConfig, String branchName) {
-    List<String> foldersList = CollectionUtils.emptyIfNull(yamlGitConfig.getRootFolders())
+    List<String> foldersList = emptyIfNull(yamlGitConfig.getRootFolders())
                                    .stream()
                                    .map(YamlGitConfigDTO.RootFolder::getRootFolder)
                                    .collect(toList());

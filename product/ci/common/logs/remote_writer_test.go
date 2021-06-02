@@ -8,8 +8,11 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/wings-software/portal/commons/go/lib/logs"
+
 	"github.com/wings-software/portal/product/log-service/client"
 	"github.com/wings-software/portal/product/log-service/mock"
+	"github.com/wings-software/portal/product/log-service/stream"
 )
 
 func Test_GetRemoteWriter_Success(t *testing.T) {
@@ -17,7 +20,7 @@ func Test_GetRemoteWriter_Success(t *testing.T) {
 	defer ctrl.Finish()
 
 	mclient := mock.NewMockClient(ctrl)
-	rw, _ := NewRemoteWriter(mclient, "key")
+	rw, _ := NewRemoteWriter(mclient, "key", []logs.Nudge{})
 	assert.NotEqual(t, rw, nil)
 }
 
@@ -27,7 +30,7 @@ func Test_RemoteWriter_Open_Success(t *testing.T) {
 
 	mclient := mock.NewMockClient(ctrl)
 	mclient.EXPECT().Open(context.Background(), "key").Return(nil)
-	rw, _ := NewRemoteWriter(mclient, "key")
+	rw, _ := NewRemoteWriter(mclient, "key", []logs.Nudge{})
 	err := rw.Open()
 	assert.Equal(t, err, nil)
 	assert.Equal(t, rw.opened, true)
@@ -50,7 +53,7 @@ func Test_RemoteWriter_Open_Failure(t *testing.T) {
 	mclient.EXPECT().UploadUsingLink(context.Background(), strLink, gomock.Any())
 	mclient.EXPECT().Close(context.Background(), key)
 
-	rw, _ := NewRemoteWriter(mclient, key)
+	rw, _ := NewRemoteWriter(mclient, key, []logs.Nudge{})
 	err := rw.Open()
 	assert.NotEqual(t, err, nil)
 
@@ -83,7 +86,7 @@ func Test_RemoteWriter_Limits(t *testing.T) {
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
 
-	rw, _ := NewRemoteWriter(mclient, key)
+	rw, _ := NewRemoteWriter(mclient, key, []logs.Nudge{})
 	err := rw.Open()
 	assert.Nil(t, err)
 
@@ -115,7 +118,7 @@ func Test_RemoteWriter_WriteSingleLine(t *testing.T) {
 
 	mclient := mock.NewMockClient(ctrl)
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
-	rw, _ := NewRemoteWriter(mclient, key)
+	rw, _ := NewRemoteWriter(mclient, key, []logs.Nudge{})
 	rw.opened = true // open the stream to write to it
 	rw.SetInterval(time.Duration(100) * time.Second)
 	rw.Write([]byte(msg))
@@ -139,7 +142,7 @@ func Test_RemoteWriter_WriteMultiple(t *testing.T) {
 	mclient := mock.NewMockClient(ctrl)
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
-	rw, _ := NewRemoteWriter(mclient, key)
+	rw, _ := NewRemoteWriter(mclient, key, []logs.Nudge{})
 	rw.opened = true // open the stream to write to it
 	rw.SetInterval(time.Duration(100) * time.Second)
 	rw.Write([]byte(msg1))
@@ -174,7 +177,7 @@ func Test_RemoteWriter_MultipleCharacters(t *testing.T) {
 	mclient := mock.NewMockClient(ctrl)
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
-	rw, _ := NewRemoteWriter(mclient, key)
+	rw, _ := NewRemoteWriter(mclient, key, []logs.Nudge{})
 	rw.opened = true // open the stream to write to it
 	rw.SetInterval(time.Duration(100) * time.Second)
 
@@ -239,7 +242,7 @@ func Test_RemoteWriter_VariousCases(t *testing.T) {
 
 	mclient := mock.NewMockClient(ctrl)
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
-	rw, _ := NewRemoteWriter(mclient, key)
+	rw, _ := NewRemoteWriter(mclient, key, []logs.Nudge{})
 	rw.opened = true // open the stream to write to it
 	rw.SetInterval(time.Duration(100) * time.Second)
 
@@ -298,7 +301,7 @@ func Test_RemoteWriter_VariousCases_WithFlushes(t *testing.T) {
 
 	mclient := mock.NewMockClient(ctrl)
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any()).Times(5)
-	rw, _ := NewRemoteWriter(mclient, key)
+	rw, _ := NewRemoteWriter(mclient, key, []logs.Nudge{})
 	rw.opened = true // open the stream to write to it
 	rw.SetInterval(time.Duration(100) * time.Second)
 
@@ -330,7 +333,7 @@ func Test_RemoteWriter_JSON(t *testing.T) {
 
 	mclient := mock.NewMockClient(ctrl)
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
-	rw, _ := NewRemoteWriter(mclient, key)
+	rw, _ := NewRemoteWriter(mclient, key, []logs.Nudge{})
 	rw.opened = true // open the stream to write to it
 	rw.SetInterval(time.Duration(100) * time.Second)
 
@@ -362,7 +365,7 @@ func Test_RemoteWriter_Close(t *testing.T) {
 	mclient.EXPECT().UploadLink(context.Background(), key).Return(link, nil)
 	mclient.EXPECT().UploadUsingLink(context.Background(), strLink, gomock.Any())
 	mclient.EXPECT().Close(context.Background(), key)
-	rw, _ := NewRemoteWriter(mclient, key)
+	rw, _ := NewRemoteWriter(mclient, key, []logs.Nudge{})
 	rw.opened = true // open the stream to write to it
 	rw.SetInterval(time.Duration(100) * time.Second)
 
@@ -384,4 +387,50 @@ func Test_RemoteWriter_Close(t *testing.T) {
 	rw.Close()
 	assert.Equal(t, rw.prev, []byte{}) // Ensure existing data gets flushed
 	assert.Equal(t, rw.closed, true)
+}
+
+func Test_RemoteWriter_WithErrors(t *testing.T) {
+	ctrl, _ := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	key := "key"
+
+	msg1 := `{"level":"warn","msg":"Testing","k1":"v1","k2":"v2"}`
+	strLink := "http://minio:9000"
+	link := &client.Link{Value: strLink}
+	msg1 = msg1 + "\n"
+	msg2 := "Some random message\n"
+	msg3 := "fatal: unable to access 'https://github-dev.example/test.git': SSL certificate problem: self signed certificate\n"
+	msg4 := "Another random message\n"
+
+	x := logs.NewNudge(".*git.* SSL certificate problem",
+		"Set GIT_SSL_NO_VERIFY=true as a stage variable", errors.New("SSL certificate error"))
+	n := []logs.Nudge{x}
+
+	mclient := mock.NewMockClient(ctrl)
+	mclient.EXPECT().Write(context.Background(), key, gomock.Any()).AnyTimes()
+	mclient.EXPECT().UploadLink(context.Background(), key).Return(link, nil)
+	mclient.EXPECT().UploadUsingLink(context.Background(), strLink, gomock.Any())
+	mclient.EXPECT().Close(context.Background(), key)
+	rw, _ := NewRemoteWriter(mclient, key, n)
+	rw.opened = true // open the stream to write to it
+	rw.SetInterval(time.Duration(100) * time.Second)
+
+	l := &stream.Line{Level: "info", Number: 2, Message: msg3}
+	expErr := formatNudge(l, x)
+
+	rw.Write([]byte(msg1))
+	rw.flush()
+
+	rw.Write([]byte(msg2))
+	rw.flush()
+
+	rw.Write([]byte(msg3))
+	rw.flush()
+
+	rw.Write([]byte(msg4))
+	rw.flush()
+
+	rw.Close()
+	assert.Equal(t, expErr, rw.Error())
 }
