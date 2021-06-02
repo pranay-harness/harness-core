@@ -9,6 +9,7 @@ import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.beans.converter.EphemeralOrchestrationGraphConverter;
 import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
+import io.harness.cache.SpringCacheEntity;
 import io.harness.cache.SpringMongoStore;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.dto.OrchestrationGraphDTO;
@@ -98,7 +99,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
 
   @Override
   public void cacheOrchestrationGraph(OrchestrationGraph orchestrationGraph) {
-    mongoStore.upsert(orchestrationGraph, Duration.ofDays(10));
+    mongoStore.upsert(orchestrationGraph, SpringCacheEntity.TTL);
   }
 
   @Deprecated

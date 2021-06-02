@@ -12,7 +12,6 @@ import io.harness.cdng.artifact.resources.ecr.dtos.EcrResponseDTO;
 import io.harness.cdng.artifact.resources.ecr.service.EcrResourceService;
 import io.harness.common.NGExpressionUtils;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.evaluators.YamlExpressionEvaluator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
 import io.harness.ng.core.artifacts.resources.util.ArtifactResourceUtils;
@@ -25,7 +24,6 @@ import io.harness.utils.IdentifierRefHelper;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import javax.validation.constraints.NotNull;
@@ -80,15 +78,12 @@ public class EcrArtifactResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
-      @NotNull @QueryParam("fqnPath") String fqnPath, @NotNull @ApiParam(hidden = true) String runtimeInputYaml,
+      @NotNull @QueryParam("fqnPath") String fqnPath, @NotNull String runtimeInputYaml,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     IdentifierRef connectorRef =
         IdentifierRefHelper.getIdentifierRef(ecrConnectorIdentifier, accountId, orgIdentifier, projectIdentifier);
-
-    String mergedCompleteYaml = ArtifactResourceUtils.getMergedCompleteYaml(pipelineServiceClient, accountId,
-        orgIdentifier, projectIdentifier, pipelineIdentifier, runtimeInputYaml, gitEntityBasicInfo);
-    YamlExpressionEvaluator yamlExpressionEvaluator = new YamlExpressionEvaluator(mergedCompleteYaml, fqnPath);
-    imagePath = yamlExpressionEvaluator.renderExpression(imagePath);
+    imagePath = ArtifactResourceUtils.getResolvedImagePath(pipelineServiceClient, accountId, orgIdentifier,
+        projectIdentifier, pipelineIdentifier, runtimeInputYaml, imagePath, fqnPath, gitEntityBasicInfo);
     EcrResponseDTO buildDetails =
         ecrResourceService.getBuildDetails(connectorRef, imagePath, region, orgIdentifier, projectIdentifier);
     return ResponseDTO.newResponse(buildDetails);

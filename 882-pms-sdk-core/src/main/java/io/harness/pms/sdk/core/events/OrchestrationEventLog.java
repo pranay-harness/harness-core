@@ -1,5 +1,7 @@
 package io.harness.pms.sdk.core.events;
 
+import static java.time.Duration.ofDays;
+
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -10,6 +12,8 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 
 import com.google.common.collect.ImmutableList;
+import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
 import lombok.Builder;
@@ -32,6 +36,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @HarnessEntity(exportable = false)
 @TypeAlias("OrchestrationEventLog")
 public class OrchestrationEventLog implements PersistentEntity {
+  public static final Duration TTL = ofDays(14);
+
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -53,6 +59,6 @@ public class OrchestrationEventLog implements PersistentEntity {
   String nodeExecutionId;
   OrchestrationEventType orchestrationEventType;
   @Deprecated OrchestrationEvent event;
-  @FdTtlIndex Date validUntil;
+  @Builder.Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());
   long createdAt;
 }
