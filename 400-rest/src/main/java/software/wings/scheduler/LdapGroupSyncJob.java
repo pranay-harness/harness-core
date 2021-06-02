@@ -13,8 +13,10 @@ import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.FeatureName;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.AutoLogContext;
@@ -104,6 +106,7 @@ public class LdapGroupSyncJob implements Job {
   @Inject private SecretManager secretManager;
   @Inject private UserService userService;
   @Inject private UserGroupService userGroupService;
+  @Inject private FeatureFlagService featureFlagService;
   @Inject private AccountService accountService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject @Named(LdapFeature.FEATURE_NAME) private PremiumFeature ldapFeature;
@@ -187,6 +190,8 @@ public class LdapGroupSyncJob implements Job {
     if (!removedGroupMembers.containsKey(userGroup)) {
       removedGroupMembers.put(userGroup, Sets.newHashSet());
     }
+    log.info("LDAPIterator: Removing users {} as part of sync with usergroup {} in accountId {}", removedUsers,
+        userGroup.getUuid(), userGroup.getAccountId());
     removedGroupMembers.getOrDefault(userGroup, Sets.newHashSet()).addAll(removedUsers);
   }
 
@@ -362,6 +367,11 @@ public class LdapGroupSyncJob implements Job {
   private void executeInternal(String accountId, String ssoId) {
     if (!ldapFeature.isAvailableForAccount(accountId)) {
       log.info("Skipping LDAP sync. ssoId {} accountId {}", ssoId, accountId);
+      return;
+    }
+
+    if (featureFlagService.isEnabled(FeatureName.LDAP_GROUP_SYNC_JOB_ITERATOR, accountId)) {
+      log.info("LDAP_GROUP_SYNC_JOB_ITERATOR LDAP sync not for ssoId {} accountId {}", ssoId, accountId);
       return;
     }
 

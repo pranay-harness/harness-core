@@ -23,6 +23,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.beans.Account;
@@ -59,11 +60,13 @@ public class LdapGroupSyncJobTest {
   @InjectMocks private LdapGroupSyncJob ldapGroupSyncJob;
   @Mock private SSOSettingService ssoSettingService;
   @Mock private UserService userService;
+  @Mock private FeatureFlagService featureFlagService;
 
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
     ldapGroupSyncJob = spy(ldapGroupSyncJob);
+    when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
   }
 
   @Test
