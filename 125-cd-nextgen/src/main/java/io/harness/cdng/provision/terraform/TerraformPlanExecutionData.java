@@ -1,5 +1,7 @@
 package io.harness.cdng.provision.terraform;
 
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
@@ -7,6 +9,7 @@ import io.harness.cdng.provision.terraform.TerraformPlanExecutionDataParameters.
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.validation.Validator;
+import io.harness.yaml.YamlSchemaTypes;
 import io.harness.yaml.core.variables.NGVariable;
 import io.harness.yaml.utils.NGVariablesUtils;
 
@@ -28,7 +31,9 @@ public class TerraformPlanExecutionData {
   @JsonProperty("configFiles") TerraformConfigFilesWrapper terraformConfigFilesWrapper;
   @JsonProperty("varFiles") List<TerraformVarFileWrapper> terraformVarFiles;
   @JsonProperty("backendConfig") TerraformBackendConfig terraformBackendConfig;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH) ParameterField<List<String>> targets;
+  @YamlSchemaTypes(value = {string})
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
+  ParameterField<List<String>> targets;
   List<NGVariable> environmentVariables;
 
   TerraformPlanCommand command;
