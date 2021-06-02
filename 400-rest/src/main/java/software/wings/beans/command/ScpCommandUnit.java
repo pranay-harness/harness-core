@@ -28,7 +28,7 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionReflectionUtils.NestedAnnotationResolver;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
-import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.nexus.NexusRequest;
 
 import software.wings.beans.AppContainer;
 import software.wings.beans.BambooConfig;
@@ -49,6 +49,7 @@ import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.helpers.ext.nexus.NexusTwoServiceImpl;
 import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.mappers.artifact.NexusConfigToNexusRequestMapper;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
@@ -246,8 +247,8 @@ public class ScpCommandUnit extends SshCommandUnit implements NestedAnnotationRe
             return SUCCESS;
           } else if (artifactStreamType.equalsIgnoreCase(ArtifactStreamType.NEXUS.name())) {
             NexusConfig nexusConfig = (NexusConfig) artifactStreamAttributes.getServerSetting().getValue();
-            List<EncryptedDataDetail> encryptionDetails =
-                artifactStreamAttributes.getArtifactServerEncryptedDataDetails();
+            NexusRequest nexusRequest = NexusConfigToNexusRequestMapper.toNexusRequest(
+                nexusConfig, encryptionService, artifactStreamAttributes.getArtifactServerEncryptedDataDetails());
 
             if (isEmpty(artifactStreamAttributes.getArtifactFileMetadata())) {
               // Try once more of to get download url
@@ -255,15 +256,15 @@ public class ScpCommandUnit extends SshCommandUnit implements NestedAnnotationRe
                 List<BuildDetails> buildDetailsList;
                 if (artifactStreamAttributes.getRepositoryType() != null
                     && artifactStreamAttributes.getRepositoryType().equals(RepositoryType.maven.name())) {
-                  buildDetailsList = nexusTwoService.getVersion(nexusConfig, encryptionDetails,
+                  buildDetailsList = nexusTwoService.getVersion(nexusRequest,
                       artifactStreamAttributes.getRepositoryName(), artifactStreamAttributes.getGroupId(),
                       artifactStreamAttributes.getArtifactName(), artifactStreamAttributes.getExtension(),
                       artifactStreamAttributes.getClassifier(), artifactStreamAttributes.getMetadata().get("buildNo"));
                 } else {
-                  buildDetailsList = Collections.singletonList(nexusTwoService.getVersion(
-                      artifactStreamAttributes.getRepositoryFormat(), nexusConfig, encryptionDetails,
-                      artifactStreamAttributes.getRepositoryName(), artifactStreamAttributes.getNexusPackageName(),
-                      artifactStreamAttributes.getMetadata().get("buildNo")));
+                  buildDetailsList = Collections.singletonList(
+                      nexusTwoService.getVersion(artifactStreamAttributes.getRepositoryFormat(), nexusRequest,
+                          artifactStreamAttributes.getRepositoryName(), artifactStreamAttributes.getNexusPackageName(),
+                          artifactStreamAttributes.getMetadata().get("buildNo")));
                 }
 
                 if (isEmpty(buildDetailsList) || isEmpty(buildDetailsList.get(0).getArtifactFileMetadataList())) {
@@ -299,8 +300,8 @@ public class ScpCommandUnit extends SshCommandUnit implements NestedAnnotationRe
               metadata.put(ArtifactMetadataKeys.artifactFileName, artifactFileMetadata.getFileName());
               metadata.put(ArtifactMetadataKeys.artifactPath, artifactFileMetadata.getUrl());
               metadata.put(ArtifactMetadataKeys.artifactFileSize,
-                  String.valueOf(nexusService.getFileSize(nexusConfig, encryptionDetails,
-                      artifactFileMetadata.getFileName(), artifactFileMetadata.getUrl())));
+                  String.valueOf(nexusService.getFileSize(
+                      nexusRequest, artifactFileMetadata.getFileName(), artifactFileMetadata.getUrl())));
               artifactStreamAttributes.setMetadata(metadata);
               CommandExecutionStatus executionStatus = context.copyFiles(destinationDirectoryPath,
                   artifactStreamAttributes, context.getAccountId(), context.getAppId(), context.getActivityId(),
