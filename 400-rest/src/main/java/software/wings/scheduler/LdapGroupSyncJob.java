@@ -187,6 +187,8 @@ public class LdapGroupSyncJob implements Job {
     if (!removedGroupMembers.containsKey(userGroup)) {
       removedGroupMembers.put(userGroup, Sets.newHashSet());
     }
+    log.info("LDAP: Removing users {} as part of sync with usergroup {} in accountId {}", removedUsers,
+        userGroup.getUuid(), userGroup.getAccountId());
     removedGroupMembers.getOrDefault(userGroup, Sets.newHashSet()).addAll(removedUsers);
   }
 

@@ -10,7 +10,6 @@ import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
 
-import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -113,8 +112,8 @@ public class LdapGroupSyncJobHandler implements MongoPersistenceIterator.Handler
         MongoPersistenceIterator.<SSOSettings, SpringFilterExpander>builder()
             .clazz(SSOSettings.class)
             .fieldName(SSOSettingsKeys.nextIteration)
-            .targetInterval(ofHours(12))
-            .acceptableNoAlertDelay(ofHours(14))
+            .targetInterval(ofMinutes(60))
+            .acceptableNoAlertDelay(ofMinutes(80))
             .handler(this)
             .schedulingType(REGULAR)
             .persistenceProvider(new SpringPersistenceProvider<>(mongoTemplate))
@@ -123,7 +122,7 @@ public class LdapGroupSyncJobHandler implements MongoPersistenceIterator.Handler
 
   @Override
   public void handle(SSOSettings ssoSettings) {
-    if (featureFlagService.isGlobalEnabled(FeatureName.LDAP_GROUP_SYNC_JOB_ITERATOR)
+    if (featureFlagService.isEnabled(FeatureName.LDAP_GROUP_SYNC_JOB_ITERATOR, ssoSettings.getAccountId())
         && ssoSettings instanceof LdapSettings) {
       LdapSettings ldapSettings = (LdapSettings) ssoSettings;
       String accountId = ldapSettings.getAccountId();
@@ -183,6 +182,8 @@ public class LdapGroupSyncJobHandler implements MongoPersistenceIterator.Handler
     if (!removedGroupMembers.containsKey(userGroup)) {
       removedGroupMembers.put(userGroup, Sets.newHashSet());
     }
+    log.info("LDAPIterator: Removing users {} as part of sync with usergroup {} in accountId {}", removedUsers,
+        userGroup.getUuid(), userGroup.getAccountId());
     removedGroupMembers.getOrDefault(userGroup, Sets.newHashSet()).addAll(removedUsers);
   }
 
