@@ -497,7 +497,8 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (isEmpty(groupMembers)) {
       return userGroup;
     }
-
+    log.info("Members to be removed are {} for usergroup {} in accountId {}", members, userGroup.getUuid(),
+        userGroup.getAccountId());
     userGroup.getMemberIds().removeAll(members.stream().map(User::getUuid).collect(toList()));
     return updateMembers(userGroup, sendNotification, toBeAudited);
   }
