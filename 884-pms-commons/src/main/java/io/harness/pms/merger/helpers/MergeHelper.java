@@ -135,6 +135,12 @@ public class MergeHelper {
     templateConfig.getFqnToValueMap().keySet().forEach(key -> {
       if (inputSetConfig.getFqnToValueMap().containsKey(key)) {
         Object value = inputSetConfig.getFqnToValueMap().get(key);
+        Object templateValue = templateConfig.getFqnToValueMap().get(key);
+        if (key.isType() || key.isIdentifierOrVariableName()) {
+          if (!value.toString().equals(templateValue.toString())) {
+            throwUpdatedKeyException(key, templateValue, value);
+          }
+        }
         if (appendInputSetValidator) {
           value = checkForRuntimeInputExpressions(value, templateConfig.getFqnToValueMap().get(key));
         }
@@ -148,6 +154,11 @@ public class MergeHelper {
       }
     });
     return (new PipelineYamlConfig(res, pipelineConfig.getYamlMap())).getYaml();
+  }
+
+  private static void throwUpdatedKeyException(FQN key, Object templateValue, Object value) {
+    throw new InvalidRequestException("The value for " + key.getExpressionFqn() + " is " + templateValue.toString()
+        + "in the pipeline yaml, but the input set has it as " + value.toString());
   }
 
   public String getPipelineComponent(String inputSetYaml) {
