@@ -90,10 +90,10 @@ public class GithubStore implements GitStoreConfig, Visitable, WithConnectorRef 
       resultantGithubStore = resultantGithubStore.withGitFetchType(githubStore.getGitFetchType());
     }
     if (!ParameterField.isNull(githubStore.getBranch())) {
-      resultantGithubStore = resultantGithubStore.withBranch(githubStore.getBranch());
+      resultantGithubStore = resultantGithubStore.withBranch(githubStore.getBranch()).withCommitId(null);
     }
     if (!ParameterField.isNull(githubStore.getCommitId())) {
-      resultantGithubStore = resultantGithubStore.withCommitId(githubStore.getCommitId());
+      resultantGithubStore = resultantGithubStore.withCommitId(githubStore.getCommitId()).withBranch(null);
     }
     if (!ParameterField.isNull(githubStore.getRepoName())) {
       resultantGithubStore = resultantGithubStore.withRepoName(githubStore.getRepoName());
