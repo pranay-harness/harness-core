@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.gitsync.common.beans.GitSyncDirection;
 import io.harness.gitsync.gitfileactivity.beans.GitFileProcessingSummary;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.CreatedAtAware;
@@ -47,8 +48,8 @@ public class GitCommit
   @FdIndex private GitCommitProcessingStatus status;
   private FailureReason failureReason;
   private GitFileProcessingSummary fileProcessingSummary;
+  private GitSyncDirection gitSyncDirection;
   private String commitMessage;
-  private String gitConnectorId;
   private String repoURL;
   private String branchName;
   @CreatedBy private EmbeddedUser createdBy;

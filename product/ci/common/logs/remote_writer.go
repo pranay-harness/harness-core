@@ -1,6 +1,5 @@
 // This code has been adapted from Drone
 // https://github.com/drone/runner-go/blob/master/livelog/livelog.go
-
 package logs
 
 import (
@@ -9,12 +8,22 @@ import (
 	"encoding/json"
 	"fmt"
 	"go.uber.org/zap"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/wings-software/portal/commons/go/lib/logs"
 	"github.com/wings-software/portal/product/log-service/client"
 	"github.com/wings-software/portal/product/log-service/stream"
+)
+
+const (
+	defaultLimit    = 5242880 // 5MB
+	defaultInterval = 1 * time.Second
+	defaultLevel    = "info"
+	messageKey      = "msg"
+	levelKey        = "level"
 )
 
 // RemoteWriter is an io.Writer that sends logs to the server.
@@ -30,6 +39,8 @@ type RemoteWriter struct {
 	size   int
 	limit  int
 	opened bool // whether the stream has been successfully opened
+	nudges []logs.Nudge
+	errs   []error
 
 	interval time.Duration
 	pending  []*stream.Line
@@ -44,7 +55,7 @@ type RemoteWriter struct {
 }
 
 // NewWriter returns a new writer
-func NewRemoteWriter(client client.Client, key string) (*RemoteWriter, error) {
+func NewRemoteWriter(client client.Client, key string, nudges []logs.Nudge) (*RemoteWriter, error) {
 	l, err := zap.NewProduction()
 	if err != nil {
 		return &RemoteWriter{}, err
@@ -56,6 +67,7 @@ func NewRemoteWriter(client client.Client, key string) (*RemoteWriter, error) {
 		now:      time.Now(),
 		limit:    defaultLimit,
 		interval: defaultInterval,
+		nudges:   nudges,
 		close:    make(chan struct{}),
 		ready:    make(chan struct{}, 1),
 		log:      l.Sugar(),
@@ -206,10 +218,24 @@ func (b *RemoteWriter) Close() error {
 func (b *RemoteWriter) upload() error {
 	// Write history to a file and use that for upload.
 	data := new(bytes.Buffer)
-	for _, line := range b.history {
+	l := len(b.history)
+	for idx, line := range b.history {
 		buf := new(bytes.Buffer)
 		if err := json.NewEncoder(buf).Encode(line); err != nil {
 			return err
+		}
+		// Only check in last 10 lines for now TODO: (Vistaar) see if this can be made better
+		if l-idx <= 10 {
+			// Iterate over the nudges and see if we get a match
+			for _, n := range b.nudges {
+				r, err := regexp.Compile(n.GetSearch())
+				if err != nil {
+					continue
+				}
+				if r.Match([]byte(line.Message)) {
+					b.errs = append(b.errs, formatNudge(line, n))
+				}
+			}
 		}
 		data.Write(buf.Bytes())
 	}
@@ -247,6 +273,13 @@ func (b *RemoteWriter) flush() error {
 	}
 	b.log.Infow("successfully flushed lines", "key", b.key, "num_lines", len(lines))
 	return nil
+}
+
+func (b *RemoteWriter) Error() error {
+	if len(b.errs) == 0 {
+		return nil
+	}
+	return b.errs[len(b.errs)-1]
 }
 
 // copy returns a copy of the buffered lines.
@@ -330,4 +363,9 @@ func split(p []byte) []string {
 		v = strings.SplitAfter(s, "\n")
 	}
 	return v
+}
+
+func formatNudge(line *stream.Line, nudge logs.Nudge) error {
+	return fmt.Errorf("Found possible error on line %d\n Log: %s\n Possible error: %s\n Possible resolution: %s",
+		line.Number, line.Message, nudge.GetError(), nudge.GetResolution())
 }

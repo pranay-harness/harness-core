@@ -56,6 +56,7 @@ public class SCMGitSyncHelper {
           .yamlGitConfigId(gitBranchInfo.getYamlGitConfigId())
           .branch(gitBranchInfo.getBranch())
           .folderPath(gitBranchInfo.getFolderPath())
+          .commitId(gitBranchInfo.getCommitId())
           .build();
     }
     final InfoForGitPush infoForPush = getInfoForPush(gitBranchInfo, entityDetail);

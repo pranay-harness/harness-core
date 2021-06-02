@@ -21,4 +21,5 @@ public class GatewayAccountRequestDTO {
   String uuid;
   String accountName;
   String companyName;
+  boolean createdFromNG;
 }

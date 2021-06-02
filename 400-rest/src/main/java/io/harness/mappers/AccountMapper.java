@@ -36,6 +36,7 @@ public class AccountMapper {
         .uuid(account.getUuid())
         .accountName(account.getAccountName())
         .companyName(account.getCompanyName())
+        .createdFromNG(account.isCreatedFromNG())
         .build();
   }
 }

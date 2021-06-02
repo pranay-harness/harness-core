@@ -917,7 +917,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(delegateProxyFactory.get(any(), any(SyncTaskContext.class))).thenReturn(nexusBuildService);
     ArtifactStreamAttributes nexusArtifactStream = ArtifactStreamAttributes.builder().extension("jar").build();
-    when(nexusService.existsVersion(any(), any(), anyString(), anyString(), anyString(), anyString(), anyString()))
+    when(nexusService.existsVersion(any(), anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(false);
     assertThat(buildSourceService.validateArtifactSource(APP_ID, SETTING_ID, nexusArtifactStream)).isFalse();
   }
@@ -1363,7 +1363,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(delegateProxyFactory.get(any(), any(SyncTaskContext.class))).thenReturn(nexusBuildService);
     ArtifactStreamAttributes nexusArtifactStream = ArtifactStreamAttributes.builder().extension("jar").build();
-    when(nexusService.existsVersion(any(), any(), anyString(), anyString(), anyString(), anyString(), anyString()))
+    when(nexusService.existsVersion(any(), anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(false);
     assertThat(buildSourceService.validateArtifactSource(APP_ID, SETTING_ID, nexusArtifactStream)).isFalse();
   }

@@ -120,7 +120,7 @@ public class ExecutionSummaryCreateEventHandlerTest extends PipelineServiceTestB
     assertThat(capturedEntity.getPlanExecutionId()).isEqualTo(ambiance.getPlanExecutionId());
     assertThat(capturedEntity.getPipelineDeleted()).isFalse();
     assertThat(capturedEntity.getInternalStatus()).isEqualTo(Status.NO_OP);
-    assertThat(capturedEntity.getStatus()).isEqualTo(ExecutionStatus.NOT_STARTED);
+    assertThat(capturedEntity.getStatus()).isEqualTo(ExecutionStatus.NOTSTARTED);
     assertThat(capturedEntity.getTags()).isEmpty();
     assertThat(capturedEntity.getStartingNodeId()).isEqualTo("startId");
     assertThat(capturedEntity.getModules()).containsExactly("pms");

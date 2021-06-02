@@ -45,6 +45,9 @@ JRE_SOLARIS_2=jre_x64_solaris_8u242b08.tar.gz
 JRE_MACOSX_2=jre_x64_macosx_8u242b08.tar.gz
 JRE_LINUX_2=jre_x64_linux_8u242b08.tar.gz
 
+ALPN_BOOT_JAR_URL=https://app.harness.io/public/shared/tools/alpn/release/8.1.13.v20181017
+ALPN_BOOT_JAR=alpn-boot-8.1.13.v20181017.jar
+
 KUBECTL_VERSION=v1.13.2
 KUBECTL_LINUX_DIR="${IMAGES_DIR}/kubectl/linux/$KUBECTL_VERSION/"
 KUBECTL_MAC_DIR="${IMAGES_DIR}/kubectl/darwin/$KUBECTL_VERSION/"
@@ -140,6 +143,8 @@ curl "${JRE_SOURCE_URL_1}/${JRE_LINUX_1}" > "${JRE_LINUX_1}"
 curl "${JRE_SOURCE_URL_2}/${JRE_SOLARIS_2}" > "${JRE_SOLARIS_2}"
 curl "${JRE_SOURCE_URL_2}/${JRE_MACOSX_2}" > "${JRE_MACOSX_2}"
 curl "${JRE_SOURCE_URL_2}/${JRE_LINUX_2}" > "${JRE_LINUX_2}"
+
+curl "${ALPN_BOOT_JAR_URL}/${ALPN_BOOT_JAR}" > "${ALPN_BOOT_JAR}"
 
 curl -L -o "${KUBECTL_MAC_DIR}kubectl" "${KUBECTL_MAC_URL}"
 curl -L -o "${KUBECTL_LINUX_DIR}kubectl" "${KUBECTL_LINUX_URL}"
@@ -293,6 +298,8 @@ mv "${JRE_LINUX_1}" "${IMAGES_DIR}/"
 mv "${JRE_SOLARIS_2}" "${IMAGES_DIR}/"
 mv "${JRE_MACOSX_2}" "${IMAGES_DIR}/"
 mv "${JRE_LINUX_2}" "${IMAGES_DIR}/"
+
+mv "${ALPN_BOOT_JAR}" "${IMAGES_DIR}/"
 
 tar -cvzf "${INSTALLER_COMPRESSED_FILE}" "${INSTALLER_DIR}"
 #rm -rf "${INSTALLER_DIR}"

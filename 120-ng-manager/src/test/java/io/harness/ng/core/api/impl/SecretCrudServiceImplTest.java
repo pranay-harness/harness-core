@@ -87,7 +87,10 @@ public class SecretCrudServiceImplTest extends CategoryTest {
     when(secretTextService.create(any(), any())).thenReturn(encryptedDataDTO);
     when(ngSecretServiceV2.create(any(), any(), eq(false))).thenReturn(secret);
 
-    SecretDTOV2 secretDTOV2 = SecretDTOV2.builder().type(SecretType.SecretText).build();
+    SecretDTOV2 secretDTOV2 = SecretDTOV2.builder()
+                                  .type(SecretType.SecretText)
+                                  .spec(SecretTextSpecDTO.builder().valueType(ValueType.Inline).value("value").build())
+                                  .build();
     SecretResponseWrapper responseWrapper = secretCrudService.create("account", secretDTOV2);
     assertThat(responseWrapper).isNotNull();
 

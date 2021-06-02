@@ -26,6 +26,7 @@ func (m *mockWriter) Write(p []byte) (int, error) {
 	m.data = append(m.data, string(p))
 	return len(p), nil
 }
+func (*mockWriter) Error() error { return nil }
 
 func Test_GetRemoteLogger_OpenSuccess(t *testing.T) {
 	ctrl, _ := gomock.WithContext(context.Background(), t)
