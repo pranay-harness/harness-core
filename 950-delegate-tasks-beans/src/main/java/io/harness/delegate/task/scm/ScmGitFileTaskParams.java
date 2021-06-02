@@ -22,6 +22,7 @@ public class ScmGitFileTaskParams implements TaskParameters, ExecutionCapability
   GitFileTaskType gitFileTaskType;
   ScmConnector scmConnector;
   List<String> foldersList;
+  List<String> filePathsList;
   String branchName;
   List<EncryptedDataDetail> encryptedDataDetails;
   GitFilePathDetails gitFilePathDetails;

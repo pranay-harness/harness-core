@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitPRCreateRequest;
+import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.ng.beans.PageRequest;
@@ -27,4 +28,7 @@ public interface ScmClientFacilitatorService {
 
   List<GitFileChangeDTO> listFilesOfBranches(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String yamlGitConfigIdentifier, List<String> foldersList, String branchName);
+
+  List<GitFileChangeDTO> listFilesByFilePaths(
+      YamlGitConfigDTO yamlGitConfigDTO, List<String> filePaths, String branchName);
 }
