@@ -2,6 +2,7 @@ package external
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/logs"
+	plogs "github.com/wings-software/portal/product/ci/common/logs"
 	ticlient "github.com/wings-software/portal/product/ci/ti-service/client"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"github.com/wings-software/portal/product/log-service/client"
@@ -77,6 +79,15 @@ func GetChangedFiles(ctx context.Context, workspace string, log *zap.SugaredLogg
 	return res, nil
 }
 
+func GetNudges() []logs.Nudge {
+	// <search-term> <resolution> <error-msg>
+	return []logs.Nudge{
+		logs.NewNudge("Killed", "Increase memory resources for the step", errors.New("Out of memory")),
+		logs.NewNudge(".*git.* SSL certificate problem",
+			"Set sslVerify to false in CI codebase properties", errors.New("SSL certificate error")),
+	}
+}
+
 func GetSecrets() []logs.Secret {
 	res := []logs.Secret{}
 	secrets := os.Getenv(secretList)
@@ -102,7 +113,7 @@ func GetHTTPRemoteLogger(key string) (*logs.RemoteLogger, error) {
 	if err != nil {
 		return nil, err
 	}
-	rw, err := logs.NewRemoteWriter(client, key)
+	rw, err := plogs.NewRemoteWriter(client, key, GetNudges())
 	if err != nil {
 		return nil, err
 	}
