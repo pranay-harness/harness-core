@@ -27,6 +27,10 @@ public class YamlValidateMessageMassagerFactory {
         String cleanedNodes = nodeInMsg.replaceAll("\"required\":", "");
         final StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(validationMessage.getPath()).append(": ");
+        /**
+         * Library has hardcoded the msg at {@link
+         * com.networknt.schema.OneOfValidator#getMultiSchemasValidErrorMsg(String)}.
+         */
         stringBuilder.append("should contain only one of ");
         stringBuilder.append(cleanedNodes);
         return String.valueOf(stringBuilder);
