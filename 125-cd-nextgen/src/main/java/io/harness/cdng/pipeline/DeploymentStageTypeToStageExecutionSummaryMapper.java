@@ -10,7 +10,7 @@ public class DeploymentStageTypeToStageExecutionSummaryMapper
   @Override
   public StageExecutionSummary getStageExecution(DeploymentStage stageType, String planNodeId, String executionId) {
     return CDStageExecutionSummary.builder()
-        .executionStatus(ExecutionStatus.NOT_STARTED)
+        .executionStatus(ExecutionStatus.NOTSTARTED)
         .stageIdentifier(stageType.getIdentifier())
         .stageName(stageType.getName())
         .planNodeId(planNodeId)

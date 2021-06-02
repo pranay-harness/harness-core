@@ -288,6 +288,7 @@ public class DelegateServiceImpl implements DelegateService {
   private static final String JRE_DIRECTORY = "jreDirectory";
   private static final String JRE_MAC_DIRECTORY = "jreMacDirectory";
   private static final String JRE_TAR_PATH = "jreTarPath";
+  private static final String ALPN_JAR_PATH = "alpnJarPath";
   public static final String JRE_VERSION_KEY = "jreVersion";
   private static final String ENV_ENV_VAR = "ENV";
   public static final String TASK_SELECTORS = "Task Selectors";
@@ -1302,6 +1303,7 @@ public class DelegateServiceImpl implements DelegateService {
       params.put(JRE_DIRECTORY, jreConfig.getJreDirectory());
       params.put(JRE_MAC_DIRECTORY, jreConfig.getJreMacDirectory());
       params.put(JRE_TAR_PATH, jreConfig.getJreTarPath());
+      params.put(ALPN_JAR_PATH, jreConfig.getAlpnJarPath());
       params.put("enableCE", String.valueOf(inquiry.isCeEnabled()));
 
       if (isNotBlank(inquiry.getDelegateSessionIdentifier())) {
@@ -1385,11 +1387,13 @@ public class DelegateServiceImpl implements DelegateService {
 
     if (useCDN && cdnConfig != null) {
       String tarPath = cdnConfig.getCdnJreTarPaths().get(jreVersion);
+      String alpnJarPath = cdnConfig.getAlpnJarPath();
       jreConfig = JreConfig.builder()
                       .version(jreConfig.getVersion())
                       .jreDirectory(jreConfig.getJreDirectory())
                       .jreMacDirectory(jreConfig.getJreMacDirectory())
                       .jreTarPath(tarPath)
+                      .alpnJarPath(alpnJarPath)
                       .build();
     }
     return jreConfig;

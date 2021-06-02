@@ -5,7 +5,6 @@ from google.cloud import bigquery
 from google.cloud import scheduler
 from google.cloud import pubsub_v1
 from google.cloud import storage
-from util import create_dataset, if_tbl_exists, createTable, print_
 import datetime
 
 """
@@ -84,9 +83,10 @@ def main(event, context):
     jsonData["bucket"] = jsonData.get("transferSpec", {}).get("gcsDataSink", {}).get("bucketName")
 
     unique_cur_paths = get_csv_paths(jsonData)
-    if len(unique_cur_paths) >= 0:
+    if len(unique_cur_paths) > 0:
         send_event_for_processing(unique_cur_paths, jsonData)
-
+    else:
+        print("No events to send")
     #create_scheduler_job(jsonData) #deprecated
 
 
@@ -101,7 +101,7 @@ def get_csv_paths(jsonData):
             path = blob.name.split("/")
             # We will have multiple connectors per account in Harness in NG.
             # verifications.  azure path format is vZYBQdFRSlesqo3CMB90Ag/myqO-niJS46aVm3b646SKA/cereportnikunj/20210201-20210228/cereportnikunj_f1a6618a-d21e-4b74-a35b-55ef47ea0e68.csv
-            if len(path) not in [5, 6]:
+            if len(path) not in [4, 5, 6]:
                 continue
             # verify second last should be month folder
             try:
@@ -117,11 +117,11 @@ def get_csv_paths(jsonData):
                 datetime.datetime.strptime(endstr, '%Y%m%d')
             except Exception as e:
                 # Any error we should not take this path for processing
-                print_(e)
+                print(e)
                 continue
             unique_cur_paths.add('/'.join(path[:-1]))
 
-    print_("Found unique folders with CSVs: \n%s" % unique_cur_paths)
+    print("Found unique folders with CSVs: %s" % unique_cur_paths)
     return list(unique_cur_paths)
 
 def send_event_for_processing(unique_cur_paths, jsonData):
@@ -143,7 +143,7 @@ def send_event(event_data):
     try:
         publish_future = publisher.publish(TOPIC_PATH, data=message_bytes)
         publish_future.result()  # Verify the publish succeeded
-        print_('Message published: %s.' % event_data)
+        print('Message published: %s.' % event_data)
     except Exception as e:
         print(e)
 
@@ -173,9 +173,9 @@ def create_scheduler_job(jsonData):
     try:
         # Update existing jobs with the same name if any.
         client.update_job(job=job)
-        print_("Job updated.")
+        print("Job updated.")
     except Exception as e:
-        print_("%s. This can be ignored" % e, "WARN")
+        print("%s. This can be ignored" % e, "WARN")
         # Use the client to send the job creation request.
         response = client.create_job(
             request={
@@ -183,5 +183,5 @@ def create_scheduler_job(jsonData):
                 "job": job
             }
         )
-        print_('Created job: {}'.format(response.name))
+        print('Created job: {}'.format(response.name))
     return

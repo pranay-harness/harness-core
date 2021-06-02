@@ -85,7 +85,6 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     FieldUtils.writeField(splunkState, "accountService", accountService, true);
     FieldUtils.writeField(splunkState, "analysisService", analysisService, true);
     FieldUtils.writeField(splunkState, "templateExpressionProcessor", templateExpressionProcessor, true);
-    FieldUtils.writeField(splunkState, "workflowVerificationResultService", workflowVerificationResultService, true);
   }
 
   @Test
@@ -143,7 +142,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
         .getCVInstanceAPIResponse(any());
 
     ExecutionResponse response = spyState.execute(executionContext);
-    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SKIPPED);
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     String analysisResponseMsg =
         "As no previous version instances exist for comparison, analysis will be skipped. Check your setup if this is the first deployment or if the previous instances have been deleted or replaced.";
     assertThat(response.getErrorMessage()).isEqualTo(analysisResponseMsg);
@@ -177,7 +176,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
         .getCVInstanceAPIResponse(any());
 
     ExecutionResponse response = spyState.execute(executionContext);
-    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SKIPPED);
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     String analysisResponseMsg =
         "As no previous version instances exist for comparison, analysis will be skipped. Check your setup if this is the first deployment or if the previous instances have been deleted or replaced.";
     assertThat(response.getErrorMessage()).isEqualTo(analysisResponseMsg);

@@ -24,6 +24,7 @@ import io.harness.engine.facilitation.FacilitationHelper;
 import io.harness.engine.facilitation.RunPreFacilitationChecker;
 import io.harness.engine.facilitation.SkipPreFacilitationChecker;
 import io.harness.engine.interrupts.InterruptService;
+import io.harness.engine.observers.OrchestrationEndObserver;
 import io.harness.engine.pms.EngineAdviseCallback;
 import io.harness.engine.resume.EngineWaitResumeCallback;
 import io.harness.engine.utils.TransactionUtils;
@@ -36,6 +37,7 @@ import io.harness.execution.NodeExecutionMapper;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.logging.AutoLogContext;
+import io.harness.observer.Subject;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -75,6 +77,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import java.util.ArrayList;
@@ -83,6 +86,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -93,6 +97,7 @@ import lombok.extern.slf4j.Slf4j;
 @SuppressWarnings({"rawtypes", "unchecked"})
 @Slf4j
 @OwnedBy(HarnessTeam.PIPELINE)
+@Singleton
 public class OrchestrationEngine {
   @Inject private Injector injector;
   @Inject private WaitNotifyEngine waitNotifyEngine;
@@ -114,6 +119,8 @@ public class OrchestrationEngine {
   @Inject private TransactionUtils transactionUtils;
   @Inject private ExceptionManager exceptionManager;
   @Inject private FacilitationHelper facilitationHelper;
+
+  @Getter private final Subject<OrchestrationEndObserver> orchestrationEndSubject = new Subject<>();
 
   public void startNodeExecution(String nodeExecutionId) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
@@ -384,6 +391,7 @@ public class OrchestrationEngine {
                                .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
                                .eventType(OrchestrationEventType.ORCHESTRATION_END)
                                .build());
+    orchestrationEndSubject.fireInform(OrchestrationEndObxxxxxxxx:onEnd, ambiance);
   }
 
   public void resume(String nodeExecutionId, Map<String, ByteString> response, boolean asyncError) {

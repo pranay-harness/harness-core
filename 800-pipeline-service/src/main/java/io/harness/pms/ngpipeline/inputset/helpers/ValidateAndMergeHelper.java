@@ -124,6 +124,10 @@ public class ValidateAndMergeHelper {
       String pipelineIdentifier, List<String> inputSetReferences, String pipelineBranch, String pipelineRepoID) {
     String pipelineTemplate = getPipelineTemplate(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineBranch, pipelineRepoID);
+    if (EmptyPredicate.isEmpty(pipelineTemplate)) {
+      throw new InvalidRequestException(
+          "Pipeline " + pipelineIdentifier + " does not have any runtime input. All existing input sets are invalid");
+    }
     List<String> inputSetYamlList = new ArrayList<>();
     inputSetReferences.forEach(identifier -> {
       Optional<InputSetEntity> entity =

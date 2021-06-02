@@ -8,6 +8,7 @@ import io.harness.pms.sdk.core.resolver.GroupNotFoundException;
 import io.harness.pms.sdk.core.resolver.ResolverUtils;
 
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.NonNull;
 
@@ -40,6 +41,7 @@ public interface PmsOutcomeService {
   String consumeInternal(@NotNull Ambiance ambiance, @NotNull String name, String value, int levelsToKeep);
 
   List<String> findAllByRuntimeId(String planExecutionId, String runtimeId);
+  Map<String, String> findAllOutcomesMapByRuntimeId(String planExecutionId, String runtimeId);
 
   List<String> fetchOutcomes(List<String> outcomeInstanceIds);
 
