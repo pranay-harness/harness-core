@@ -54,8 +54,7 @@ public class YamlSchemaValidator {
 
   public Set<String> validate(String yaml, JsonSchema schema) throws IOException {
     JsonNode jsonNode = mapper.readTree(yaml);
-    Set<ValidationMessage> validateMsg = schema.validate(jsonNode);
-    return validateMsg.stream().map(ValidationMessage::getMessage).collect(Collectors.toSet());
+    return validateInternal(schema, jsonNode);
   }
 
   public Set<String> validate(String yaml, String stringSchema) throws IOException {
@@ -63,8 +62,12 @@ public class YamlSchemaValidator {
     JsonSchemaFactory factory =
         JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7)).build();
     JsonSchema schema = factory.getSchema(stringSchema);
+    return validateInternal(schema, jsonNode);
+  }
+
+  private Set<String> validateInternal(JsonSchema schema, JsonNode jsonNode) {
     Set<ValidationMessage> validateMsg = schema.validate(jsonNode);
-    return validateMsg.stream().map(ValidationMessage::getMessage).collect(Collectors.toSet());
+    return validateMsg.stream().map(YamlValidateMessageMassagerFactory::massageMessage).collect(Collectors.toSet());
   }
 
   public void populateSchemaInStaticMap(JsonNode schema, EntityType entityType) {
