@@ -178,7 +178,7 @@ public class FilterCreatorMergeService {
       throw new UnexpectedException("Error fetching filter creation response from service", ex);
     }
 
-    PmsExceptionUtils.checkAndThrowErrorResponseException("Error creating filters", errorResponses);
+    PmsExceptionUtils.checkAndThrowFilterCreatorException(errorResponses);
     return currentIteration.build();
   }
 }

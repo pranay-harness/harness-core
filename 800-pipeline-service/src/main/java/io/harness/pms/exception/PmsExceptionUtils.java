@@ -2,7 +2,8 @@ package io.harness.pms.exception;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.HarnessStringUtils;
-import io.harness.exception.GeneralException;
+import io.harness.exception.FilterCreatorException;
+import io.harness.exception.PlanCreatorException;
 import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.yaml.YamlField;
@@ -31,12 +32,21 @@ public class PmsExceptionUtils {
     return yamlNodeErrorInfos;
   }
 
-  public void checkAndThrowErrorResponseException(String msg, List<ErrorResponse> errorResponses) {
+  public void checkAndThrowFilterCreatorException(List<ErrorResponse> errorResponses) {
     if (EmptyPredicate.isEmpty(errorResponses)) {
       return;
     }
     List<String> messages =
         errorResponses.stream().flatMap(resp -> resp.getMessagesList().stream()).collect(Collectors.toList());
-    throw new GeneralException(String.format("%s: %s", msg, HarnessStringUtils.join(",", messages)));
+    throw new FilterCreatorException(HarnessStringUtils.join(",", messages));
+  }
+
+  public void checkAndThrowPlanCreatorException(List<ErrorResponse> errorResponses) {
+    if (EmptyPredicate.isEmpty(errorResponses)) {
+      return;
+    }
+    List<String> messages =
+        errorResponses.stream().flatMap(resp -> resp.getMessagesList().stream()).collect(Collectors.toList());
+    throw new PlanCreatorException(String.format("Error creating Plan: %s", HarnessStringUtils.join(",", messages)));
   }
 }

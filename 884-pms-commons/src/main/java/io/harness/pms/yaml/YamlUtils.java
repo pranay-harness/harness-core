@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -398,5 +399,17 @@ public class YamlUtils {
   public String getStageIdentifierFromFqn(String fqn) {
     String[] strings = fqn.split("\\.");
     return strings[2];
+  }
+
+  public String getErrorNodePartialFQN(YamlNode yamlNode, JsonMappingException e) {
+    List<JsonMappingException.Reference> path = e.getPath();
+    StringBuilder partialFQN = new StringBuilder(getFullyQualifiedName(yamlNode));
+    for (JsonMappingException.Reference pathNode : path) {
+      if (pathNode.getFieldName() == null) {
+        break;
+      }
+      partialFQN.append('.').append(pathNode.getFieldName());
+    }
+    return partialFQN.toString();
   }
 }
