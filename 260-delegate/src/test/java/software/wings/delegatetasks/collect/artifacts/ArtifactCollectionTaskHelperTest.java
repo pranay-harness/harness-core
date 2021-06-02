@@ -155,7 +155,6 @@ public class ArtifactCollectionTaskHelperTest extends WingsBaseTest {
   public void shouldGetAzureArtifactsFileSize() {
     String fileName = "file.war";
     String content = "file content";
-    InputStream inputStream = new ByteArrayInputStream(content.getBytes());
     when(azureArtifactsService.listFiles(any(AzureArtifactsConfig.class), anyListOf(EncryptedDataDetail.class),
              any(ArtifactStreamAttributes.class), anyMap(), eq(false)))
         .thenReturn(Arrays.asList(new AzureArtifactsPackageFileInfo("random1", 4),
@@ -287,7 +286,7 @@ public class ArtifactCollectionTaskHelperTest extends WingsBaseTest {
   public void shouldDownloadNexusArtifactAtRuntime() {
     String content = "file content";
     InputStream inputStream = new ByteArrayInputStream(content.getBytes());
-    when(nexusService.downloadArtifactByUrl(any(), any(), anyString(), anyString()))
+    when(nexusService.downloadArtifactByUrl(any(), anyString(), anyString()))
         .thenReturn(ImmutablePair.of(NEXUS2_FILE_NAME, inputStream));
 
     Pair<String, InputStream> pair = artifactCollectionTaskHelper.downloadArtifactAtRuntime(
@@ -303,7 +302,7 @@ public class ArtifactCollectionTaskHelperTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetNexusArtifactsFileSize() {
-    when(nexusService.getFileSize(any(), any(), eq(NEXUS2_FILE_NAME), eq(NEXUS2_FILE_PATH))).thenReturn(1234L);
+    when(nexusService.getFileSize(any(), eq(NEXUS2_FILE_NAME), eq(NEXUS2_FILE_PATH))).thenReturn(1234L);
     long size = artifactCollectionTaskHelper.getArtifactFileSize(artifactStreamAttributesForNexus);
     assertThat(size).isEqualTo(1234L);
   }

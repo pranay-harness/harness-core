@@ -338,7 +338,6 @@ public class GitSyncServiceImpl implements GitSyncService {
         .commitId(gitCommit.getCommitId())
         .branchName(gitCommit.getBranchName())
         .repo(gitCommit.getRepoURL())
-        .gitConnectorId(gitCommit.getGitConnectorId())
         .commitMessage(gitCommit.getCommitMessage())
         .gitToHarness(gitToHarness)
         .status(gitCommit.getStatus());

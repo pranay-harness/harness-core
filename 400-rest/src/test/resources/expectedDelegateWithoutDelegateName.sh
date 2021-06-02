@@ -45,6 +45,8 @@ esac
 
 JVM_URL=http://localhost:8888/jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
 
+ALPN_BOOT_JAR_URL=http://localhost:8888/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar
+
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
   DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
@@ -262,7 +264,7 @@ if [[ ! -z $INSTRUMENTATION ]]; then
 fi
 
 if [ ! -e alpn-boot-8.1.13.v20181017.jar ]; then
-  curl $MANAGER_PROXY_CURL -ks https://app.harness.io/public/shared/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar  --output alpn-boot-8.1.13.v20181017.jar
+  curl $MANAGER_PROXY_CURL -ks $ALPN_BOOT_JAR_URL -o alpn-boot-8.1.13.v20181017.jar
 fi
 
 if [[ $DEPLOY_MODE == "KUBERNETES" ]]; then

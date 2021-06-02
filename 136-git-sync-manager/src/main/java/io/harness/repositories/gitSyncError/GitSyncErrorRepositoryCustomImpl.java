@@ -8,6 +8,7 @@ import static org.springframework.data.mongodb.core.query.Update.update;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.git.model.ChangeType;
+import io.harness.gitsync.common.beans.GitSyncDirection;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.gitsyncerror.GitSyncErrorStatus;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
@@ -43,10 +44,10 @@ public class GitSyncErrorRepositoryCustomImpl implements GitSyncErrorRepositoryC
   }
 
   @Override
-  public UpdateResult upsertGitError(String accountId, String yamlFilePath,
-      GitSyncError.GitSyncDirection gitSyncDirection, String errorMessage, boolean fullSyncPath, ChangeType changeType,
-      GitSyncErrorDetails gitSyncErrorDetails, String gitConnector, String repo, String branchName, String rootFolder,
-      String yamlGitConfigId, String projectId, String orgId) {
+  public UpdateResult upsertGitError(String accountId, String yamlFilePath, GitSyncDirection gitSyncDirection,
+      String errorMessage, boolean fullSyncPath, ChangeType changeType, GitSyncErrorDetails gitSyncErrorDetails,
+      String gitConnector, String repo, String branchName, String rootFolder, String yamlGitConfigId, String projectId,
+      String orgId) {
     Criteria criteria = Criteria.where(GitSyncErrorKeys.accountId)
                             .is(accountId)
                             .and(GitSyncErrorKeys.yamlFilePath)
@@ -74,8 +75,7 @@ public class GitSyncErrorRepositoryCustomImpl implements GitSyncErrorRepositoryC
 
   @Override
   public List<GitSyncError> getActiveGitSyncError(String accountId, long fromTimestamp,
-      GitSyncError.GitSyncDirection gitSyncDirection, String gitConnectorId, String repo, String branchName,
-      String rootFolder) {
+      GitSyncDirection gitSyncDirection, String gitConnectorId, String repo, String branchName, String rootFolder) {
     Criteria criteria = Criteria.where(GitSyncErrorKeys.accountId)
                             .is(accountId)
                             .and(GitSyncErrorKeys.createdAt)

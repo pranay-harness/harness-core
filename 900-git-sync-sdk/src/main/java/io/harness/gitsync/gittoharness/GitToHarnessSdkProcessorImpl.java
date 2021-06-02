@@ -119,7 +119,8 @@ public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
         }
         try (GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
           GlobalContextManager.upsertGlobalContextRecord(
-              createGitEntityInfo(gitToHarnessRequest.getGitToHarnessBranchInfo(), changeSet));
+              createGitEntityInfo(gitToHarnessRequest.getGitToHarnessBranchInfo(), changeSet,
+                  gitToHarnessRequest.getCommitId().getValue()));
           changeSetHelperService.process(changeSet);
           updateFileProcessingResponse(
               FileProcessingStatus.SUCCESS, null, processingResponseMap, changeSet.getFilePath(), commitId, accountId);
@@ -135,7 +136,8 @@ public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
     return false;
   }
 
-  private GitSyncBranchContext createGitEntityInfo(GitToHarnessInfo gitToHarnessBranchInfo, ChangeSet changeSet) {
+  private GitSyncBranchContext createGitEntityInfo(
+      GitToHarnessInfo gitToHarnessBranchInfo, ChangeSet changeSet, String commitId) {
     String[] pathSplited = emptyIfNull(changeSet.getFilePath()).split(GitSyncConstants.FOLDER_PATH);
     if (pathSplited.length != 2) {
       throw new InvalidRequestException(
@@ -152,6 +154,7 @@ public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
                            .yamlGitConfigId(gitToHarnessBranchInfo.getYamlGitConfigId())
                            .lastObjectId(changeSet.getObjectId() == null ? null : changeSet.getObjectId().getValue())
                            .isSyncFromGit(true)
+                           .commitId(commitId)
                            .build())
         .build();
   }

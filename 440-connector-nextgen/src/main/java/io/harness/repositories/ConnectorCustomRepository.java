@@ -44,4 +44,6 @@ public interface ConnectorCustomRepository {
   Connector save(Connector objectToSave, ChangeType changeType);
 
   Connector save(Connector objectToSave, ConnectorDTO connectorDTO, ChangeType changeType);
+
+  Optional<Connector> findOne(Criteria criteria, String repo, String branch);
 }

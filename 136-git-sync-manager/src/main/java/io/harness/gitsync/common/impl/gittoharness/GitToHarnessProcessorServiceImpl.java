@@ -96,6 +96,10 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
     return gitToHarnessProcessingResponses;
   }
 
+  private void markSkippedFiles(List<ChangeSet> skippedChangeSet) {
+    // @todo deepak mark skipped in progress.
+  }
+
   private void updateTheGitToHarnessStatus(
       String gitToHarnessProgressRecordId, List<GitToHarnessProcessingResponse> gitToHarnessProcessingResponses) {
     GitToHarnessProcessingStepStatus status = getStatus(gitToHarnessProcessingResponses);
@@ -157,9 +161,18 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
 
   private Map<EntityType, List<ChangeSet>> createMapOfEntityTypeAndFileContent(List<ChangeSet> fileContentsList) {
     Map<EntityType, List<ChangeSet>> mapOfEntityTypeAndContent = new HashMap<>();
+    List<ChangeSet> unprocessableChangesets = new ArrayList<>();
     for (ChangeSet fileContent : fileContentsList) {
       final String yamlOfFile = fileContent.getYaml();
-      EntityType entityTypeFromYaml = GitSyncUtils.getEntityTypeFromYaml(yamlOfFile);
+      EntityType entityTypeFromYaml;
+      try {
+        // in case entity type cannot be resolved from yaml we have an unprocessable yaml.
+        entityTypeFromYaml = GitSyncUtils.getEntityTypeFromYaml(yamlOfFile);
+      } catch (Exception e) {
+        log.error("Unknown entity type encountered in file {}", fileContent.getFilePath());
+        unprocessableChangesets.add(fileContent);
+        continue;
+      }
       if (mapOfEntityTypeAndContent.containsKey(entityTypeFromYaml)) {
         mapOfEntityTypeAndContent.get(entityTypeFromYaml).add(fileContent);
       } else {
@@ -168,6 +181,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
         mapOfEntityTypeAndContent.put(entityTypeFromYaml, newFileContentList);
       }
     }
+    markSkippedFiles(unprocessableChangesets);
     return mapOfEntityTypeAndContent;
   }
 }

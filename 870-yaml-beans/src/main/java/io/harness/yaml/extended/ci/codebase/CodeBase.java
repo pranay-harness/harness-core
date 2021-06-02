@@ -4,6 +4,7 @@ import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.YamlSchemaTypes;
+import io.harness.yaml.extended.ci.container.ContainerResource;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModelProperty;
@@ -25,4 +26,5 @@ public class CodeBase {
   ParameterField<Build> build;
   Integer depth;
   Boolean sslVerify;
+  ContainerResource resources;
 }

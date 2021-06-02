@@ -15,6 +15,7 @@ import static org.mockito.Matchers.any;
 import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.artifactory.ArtifactoryConfigRequest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.exception.ArtifactoryServerException;
@@ -25,10 +26,8 @@ import io.harness.rule.Owner;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
-import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.helpers.ext.artifactory.ArtifactoryServiceImpl.ArtifactoryErrorResponse;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.RepositoryType;
@@ -42,7 +41,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.ProtocolVersion;
 import org.apache.http.message.BasicStatusLine;
@@ -73,24 +71,25 @@ public class ArtifactoryServiceTest extends CategoryTest {
 
   String url = "http://localhost:9881/artifactory/";
 
-  private ArtifactoryConfig artifactoryConfig;
-  private ArtifactoryConfig artifactoryConfigAnonymous;
+  private ArtifactoryConfigRequest artifactoryConfig;
+  private ArtifactoryConfigRequest artifactoryConfigAnonymous;
 
   @Before
   public void setUp() throws IllegalAccessException {
     url = String.format("http://localhost:%d/artifactory/", wireMockRule.port());
-    artifactoryConfig =
-        ArtifactoryConfig.builder().artifactoryUrl(url).username("admin").password("dummy123!".toCharArray()).build();
-    artifactoryConfigAnonymous = ArtifactoryConfig.builder().artifactoryUrl(url).build();
-    FieldUtils.writeField(
-        artifactoryService, "encryptionService", new EncryptionServiceImpl(null, null, null, null, null), true);
+    artifactoryConfig = ArtifactoryConfigRequest.builder()
+                            .artifactoryUrl(url)
+                            .username("admin")
+                            .password("dummy123!".toCharArray())
+                            .build();
+    artifactoryConfigAnonymous = ArtifactoryConfigRequest.builder().artifactoryUrl(url).build();
   }
 
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetMavenRepositories() {
-    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, WAR);
+    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, WAR);
     assertThat(repositories).isNotNull();
     assertThat(repositories).containsKeys("harness-maven");
     assertThat(repositories).doesNotContainKeys("docker");
@@ -100,7 +99,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetIvyRepositories() {
-    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, WAR);
+    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, WAR);
     assertThat(repositories).isNotNull();
     assertThat(repositories).containsKeys("harness-ivy");
     assertThat(repositories).doesNotContainKeys("docker");
@@ -110,7 +109,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetDockerRepositoriesWithArtifactType() {
-    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, ArtifactType.DOCKER);
+    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, ArtifactType.DOCKER);
     assertThat(repositories).isNotNull();
     assertThat(repositories).containsKeys("docker");
     assertThat(repositories).doesNotContainKeys("harness-maven");
@@ -120,7 +119,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetDockerRepositories() {
-    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null);
+    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig);
     assertThat(repositories).isNotNull();
     assertThat(repositories).containsKeys("docker");
     assertThat(repositories).doesNotContainKeys("harness-maven");
@@ -130,7 +129,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void testGetRepositoriesForMavenWithPackageType() {
-    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, "maven");
+    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, "maven");
     assertThat(repositories).isNotNull();
     assertThat(repositories).containsKeys("harness-maven");
     assertThat(repositories).containsKeys("harness-maven-snapshots");
@@ -141,7 +140,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetRpmRepositories() {
-    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, RPM);
+    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, RPM);
     assertThat(repositories).isNotNull();
     assertThat(repositories).containsKeys("harness-rpm");
   }
@@ -150,7 +149,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetDockerImages() {
-    List<String> repositories = artifactoryService.getRepoPaths(artifactoryConfig, null, "docker");
+    List<String> repositories = artifactoryService.getRepoPaths(artifactoryConfig, "docker");
     assertThat(repositories).isNotNull();
     assertThat(repositories).contains("wingsplugins/todolist");
   }
@@ -159,7 +158,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldGetDockerTags() {
-    List<BuildDetails> builds = artifactoryService.getBuilds(artifactoryConfig, null,
+    List<BuildDetails> builds = artifactoryService.getBuilds(artifactoryConfig,
         ArtifactStreamAttributes.builder()
             .artifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
             .metadataOnly(true)
@@ -178,7 +177,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldGetRpmFilePaths() {
     List<BuildDetails> builds =
-        artifactoryService.getFilePaths(artifactoryConfig, null, "harness-rpm", "todolist*/", "generic", 50);
+        artifactoryService.getFilePaths(artifactoryConfig, "harness-rpm", "todolist*/", "generic", 50);
     assertThat(builds).isNotNull();
     assertThat(builds).extracting(BuildDetails::getNumber).contains("todolist-1.0-2.x86_64.rpm");
   }
@@ -188,7 +187,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldGetCorrectBuildNoWithAnyWildcardMatch() {
     List<BuildDetails> builds = artifactoryService.getFilePaths(
-        artifactoryConfig, null, "harness-maven", "io/harness/todolist/todolist/*/*.war", "any", 50);
+        artifactoryConfig, "harness-maven", "io/harness/todolist/todolist/*/*.war", "any", 50);
     assertThat(builds).isNotNull();
     assertThat(builds)
         .extracting(BuildDetails::getNumber)
@@ -200,7 +199,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldGetCorrectBuildNoForAtLeastOneWildcardPattern() {
     List<BuildDetails> builds = artifactoryService.getFilePaths(
-        artifactoryConfig, null, "harness-maven", "io/harness/todolist/todolist/[0-9]+/*.war", "any", 50);
+        artifactoryConfig, "harness-maven", "io/harness/todolist/todolist/[0-9]+/*.war", "any", 50);
     assertThat(builds).isNotNull();
     assertThat(builds)
         .extracting(BuildDetails::getNumber)
@@ -212,7 +211,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldGetCorrectBuildNoForArtifactPathsWithoutAnyWildcardCharacter() {
     List<BuildDetails> builds = artifactoryService.getFilePaths(
-        artifactoryConfig, null, "harness-maven", "/io/harness/todolist/todolist/1.0/todolist-1.0.war", "any", 50);
+        artifactoryConfig, "harness-maven", "/io/harness/todolist/todolist/1.0/todolist-1.0.war", "any", 50);
     assertThat(builds).isNotNull();
     assertThat(builds)
         .extracting(BuildDetails::getNumber)
@@ -224,7 +223,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldGetCorrectBuildNoForArtifactPathsWithoutAnyWildcardCharacter1() {
     List<BuildDetails> builds = artifactoryService.getFilePaths(
-        artifactoryConfig, null, "harness-maven", "io/harness/todolist/todolist/1.0/*.war", "any", 50);
+        artifactoryConfig, "harness-maven", "io/harness/todolist/todolist/1.0/*.war", "any", 50);
     assertThat(builds).isNotNull();
     assertThat(builds).extracting(BuildDetails::getNumber).contains("todolist-1.0.war");
   }
@@ -234,7 +233,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldDownloadRpmArtifacts() {
     ListNotifyResponseData listNotifyResponseData =
-        artifactoryService.downloadArtifacts(artifactoryConfig, null, "harness-rpm",
+        artifactoryService.downloadArtifacts(artifactoryConfig, "harness-rpm",
             ImmutableMap.of(ArtifactMetadataKeys.artifactPath, "harness-rpm/todolist-1.0-2.x86_64.rpm",
                 ArtifactMetadataKeys.artifactFileName, "todolist-1.0-2.x86_64.rpm"),
             "delegateId", "taskId", "ACCOUNT_ID");
@@ -245,7 +244,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldValidateArtifactPath() {
-    assertThat(artifactoryService.validateArtifactPath(artifactoryConfig, null, "harness-rpm", "todolist*", "generic"))
+    assertThat(artifactoryService.validateArtifactPath(artifactoryConfig, "harness-rpm", "todolist*", "generic"))
         .isTrue();
   }
 
@@ -253,8 +252,8 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldValidateArtifactPathAnonymous() {
-    assertThat(artifactoryService.validateArtifactPath(
-                   artifactoryConfigAnonymous, null, "harness-rpm", "todolist*", "generic"))
+    assertThat(
+        artifactoryService.validateArtifactPath(artifactoryConfigAnonymous, "harness-rpm", "todolist*", "generic"))
         .isTrue();
   }
 
@@ -262,16 +261,19 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldValidateArtifactPathPasswordEmpty() {
-    ArtifactoryConfig artifactoryConfigNoPassword =
-        ArtifactoryConfig.builder().artifactoryUrl("some url").username("some username").build();
-    artifactoryService.validateArtifactPath(artifactoryConfigNoPassword, null, "harness-rpm", "todolist*", "generic");
+    ArtifactoryConfigRequest artifactoryConfigNoPassword = ArtifactoryConfigRequest.builder()
+                                                               .artifactoryUrl("some url")
+                                                               .username("some username")
+                                                               .hasCredentials(true)
+                                                               .build();
+    artifactoryService.validateArtifactPath(artifactoryConfigNoPassword, "harness-rpm", "todolist*", "generic");
   }
 
   @Test(expected = WingsException.class)
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldValidateArtifactPathEmpty() {
-    artifactoryService.validateArtifactPath(artifactoryConfig, null, "harness-rpm", "", "generic");
+    artifactoryService.validateArtifactPath(artifactoryConfig, "harness-rpm", "", "generic");
   }
 
   @Test
@@ -279,14 +281,14 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldValidateArtifactPathMaven() {
     artifactoryService.validateArtifactPath(
-        artifactoryConfig, null, "harness-rpm", "io/harness/todolist/*/todolist", "maven");
+        artifactoryConfig, "harness-rpm", "io/harness/todolist/*/todolist", "maven");
   }
 
   @Test(expected = WingsException.class)
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldDownloadRpmArtifact() {
-    Pair<String, InputStream> pair = artifactoryService.downloadArtifact(artifactoryConfig, null, "harness-rpm",
+    Pair<String, InputStream> pair = artifactoryService.downloadArtifact(artifactoryConfig, "harness-rpm",
         ImmutableMap.of(ArtifactMetadataKeys.artifactPath, "harness-rpm/todolist-1.0-2.x86_64.rpm",
             ArtifactMetadataKeys.artifactFileName, "todolist-1.0-2.x86_64.rpm"));
     assertThat(pair).isNotNull();
@@ -298,7 +300,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   public void shouldGetFileSize() {
     Map<String, String> metadata = new HashMap<>();
     metadata.put(ArtifactMetadataKeys.artifactPath, "harness-maven/io/harness/todolist/todolist/1.1/todolist-1.1.war");
-    Long size = artifactoryService.getFileSize(artifactoryConfig, null, metadata);
+    Long size = artifactoryService.getFileSize(artifactoryConfig, metadata);
     assertThat(size).isEqualTo(1776799L);
   }
 
@@ -308,7 +310,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   public void shouldFailWhenSizeIsNull() {
     Map<String, String> metadata = new HashMap<>();
     metadata.put(ArtifactMetadataKeys.artifactPath, "harness-maven/io/harness/todolist/todolist/1.2/todolist-1.2.war");
-    assertThatThrownBy(() -> artifactoryService.getFileSize(artifactoryConfig, null, metadata))
+    assertThatThrownBy(() -> artifactoryService.getFileSize(artifactoryConfig, metadata))
         .isInstanceOf(ArtifactoryServerException.class)
         .hasMessageContaining("Unable to get artifact file size. The file probably does not exist");
   }
@@ -317,7 +319,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTestArtifactoryRunning() {
-    assertThat(artifactoryService.isRunning(artifactoryConfig, null)).isTrue();
+    assertThat(artifactoryService.isRunning(artifactoryConfig)).isTrue();
   }
 
   @Test
@@ -327,14 +329,13 @@ public class ArtifactoryServiceTest extends CategoryTest {
     ArtifactoryServiceImpl service = Mockito.spy(ArtifactoryServiceImpl.class);
     Artifactory client = Mockito.mock(Artifactory.class);
     ArtifactoryResponse artifactoryResponse = Mockito.mock(ArtifactoryResponse.class);
-    FieldUtils.writeField(service, "encryptionService", new EncryptionServiceImpl(null, null, null, null, null), true);
 
     when(artifactoryResponse.getStatusLine())
         .thenReturn(new BasicStatusLine(new ProtocolVersion("", 1, 1), 407, "407 Related Exception Phrase"));
-    when(service.getArtifactoryClient(artifactoryConfig, null)).thenReturn(client);
+    when(service.getArtifactoryClient(artifactoryConfig)).thenReturn(client);
     when(client.restCall(any())).thenReturn(artifactoryResponse);
 
-    assertThatThrownBy(() -> service.isRunning(artifactoryConfig, null))
+    assertThatThrownBy(() -> service.isRunning(artifactoryConfig))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("407 Related Exception Phrase");
   }
@@ -346,7 +347,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
     ArtifactoryServiceImpl service = Mockito.spy(ArtifactoryServiceImpl.class);
     Artifactory client = Mockito.mock(Artifactory.class);
     ArtifactoryResponse artifactoryResponse = Mockito.mock(ArtifactoryResponseImpl.class);
-    FieldUtils.writeField(service, "encryptionService", new EncryptionServiceImpl(null, null, null, null, null), true);
 
     when(artifactoryResponse.getStatusLine())
         .thenReturn(new BasicStatusLine(new ProtocolVersion("", 1, 1), 500, "Internal Server Error"));
@@ -358,10 +358,10 @@ public class ArtifactoryServiceTest extends CategoryTest {
                 + "  } ]\n"
                 + "}",
             ArtifactoryErrorResponse.class));
-    when(service.getArtifactoryClient(artifactoryConfig, null)).thenReturn(client);
+    when(service.getArtifactoryClient(artifactoryConfig)).thenReturn(client);
     when(client.restCall(any())).thenReturn(artifactoryResponse);
 
-    assertThatThrownBy(() -> service.isRunning(artifactoryConfig, null))
+    assertThatThrownBy(() -> service.isRunning(artifactoryConfig))
         .isInstanceOf(ArtifactoryServerException.class)
         .hasMessageContaining(
             "Request to server failed with status code: 500 with message - Artifactory failed to initialize: check Artifactory logs for errors.");
@@ -375,7 +375,6 @@ public class ArtifactoryServiceTest extends CategoryTest {
     ArtifactoryServiceImpl service = Mockito.spy(ArtifactoryServiceImpl.class);
     Artifactory client = Mockito.mock(Artifactory.class);
     ArtifactoryResponse artifactoryResponse = Mockito.mock(ArtifactoryResponseImpl.class);
-    FieldUtils.writeField(service, "encryptionService", new EncryptionServiceImpl(null, null, null, null, null), true);
 
     when(artifactoryResponse.getStatusLine())
         .thenReturn(new BasicStatusLine(new ProtocolVersion("", 1, 1), 500, "Internal Server Error"));
@@ -387,10 +386,10 @@ public class ArtifactoryServiceTest extends CategoryTest {
                 + "  } ]\n"
                 + "}",
             ArtifactoryErrorResponse.class));
-    when(service.getArtifactoryClient(artifactoryConfig, null)).thenReturn(client);
+    when(service.getArtifactoryClient(artifactoryConfig)).thenReturn(client);
     when(client.restCall(any())).thenReturn(artifactoryResponse);
 
-    assertThatThrownBy(() -> service.getRepositories(artifactoryConfig, null))
+    assertThatThrownBy(() -> service.getRepositories(artifactoryConfig))
         .isInstanceOf(ArtifactoryServerException.class)
         .hasMessageContaining(
             "Request to server failed with status code: 500 with message - Artifactory failed to initialize: check Artifactory logs for errors.");
@@ -400,8 +399,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void testGetRepositoriesWithRepositoryType() {
-    Map<String, String> repositories =
-        artifactoryService.getRepositories(artifactoryConfig, null, RepositoryType.docker);
+    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, RepositoryType.docker);
     assertThat(repositories).isNotNull();
     assertThat(repositories).containsKeys("docker");
     assertThat(repositories).doesNotContainKeys("harness-maven");
@@ -411,8 +409,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void testGetMavenRepositoriesWithRepositoryType() {
-    Map<String, String> repositories =
-        artifactoryService.getRepositories(artifactoryConfig, null, RepositoryType.maven);
+    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, RepositoryType.maven);
     assertThat(repositories).isNotNull();
     assertThat(repositories).containsKeys("harness-maven");
     assertThat(repositories).doesNotContainKeys("docker");
@@ -422,7 +419,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void testGetAnyRepositoriesWithRepositoryType() {
-    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, RepositoryType.any);
+    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, RepositoryType.any);
     assertThat(repositories).isNotNull();
     assertThat(repositories).containsKeys("harness-rpm");
     assertThat(repositories).doesNotContainKeys("docker");
@@ -432,8 +429,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
   public void testGetDefaultRepositoriesWithRepositoryType() {
-    Map<String, String> repositories =
-        artifactoryService.getRepositories(artifactoryConfig, null, RepositoryType.nuget);
+    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, RepositoryType.nuget);
     assertThat(repositories).isNotNull();
     assertThat(repositories).containsKeys("harness-rpm");
     assertThat(repositories).doesNotContainKeys("docker");
@@ -444,7 +440,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldGetFilePathsWithWildCardForAnonymousUser() {
     List<BuildDetails> builds =
-        artifactoryService.getFilePaths(artifactoryConfigAnonymous, null, "harness-maven", "tdlist/*/*.war", "any", 50);
+        artifactoryService.getFilePaths(artifactoryConfigAnonymous, "harness-maven", "tdlist/*/*.war", "any", 50);
     assertThat(builds).isNotNull();
     assertThat(builds)
         .extracting(BuildDetails::getNumber)
@@ -455,8 +451,8 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
   public void shouldGetFilePathsWithWildCardForAnonymousUser1() {
-    List<BuildDetails> builds = artifactoryService.getFilePaths(
-        artifactoryConfigAnonymous, null, "harness-maven", "tdlist/1.1/*.war", "any", 50);
+    List<BuildDetails> builds =
+        artifactoryService.getFilePaths(artifactoryConfigAnonymous, "harness-maven", "tdlist/1.1/*.war", "any", 50);
     assertThat(builds).isNotNull();
     assertThat(builds).extracting(BuildDetails::getNumber).contains("tdlist-1.1.war");
   }
@@ -466,7 +462,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldThrowExceptionWhenEmptyArtifactPath() {
     assertThatThrownBy(
-        () -> artifactoryService.getFilePaths(artifactoryConfigAnonymous, null, "harness-maven", "    ", "any", 50))
+        () -> artifactoryService.getFilePaths(artifactoryConfigAnonymous, "harness-maven", "    ", "any", 50))
         .isInstanceOf(ArtifactoryServerException.class)
         .extracting("message")
         .isEqualTo("Artifact path can not be empty");
@@ -477,7 +473,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldGetFilePathsForAnonymousUser() {
     List<BuildDetails> builds =
-        artifactoryService.getFilePaths(artifactoryConfigAnonymous, null, "harness-maven", "//myartifact/", "any", 50);
+        artifactoryService.getFilePaths(artifactoryConfigAnonymous, "harness-maven", "//myartifact/", "any", 50);
     assertThat(builds).isNotNull();
     assertThat(builds).extracting(BuildDetails::getNumber).contains("myartifact2");
   }
@@ -489,7 +485,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
     System.setProperty("http.proxyHost", "proxyHost");
     System.setProperty("proxyScheme", "http");
     System.setProperty("http.proxyPort", "123");
-    ArtifactoryConfig artifactoryConfig = ArtifactoryConfig.builder().artifactoryUrl("url").build();
+    ArtifactoryConfigRequest artifactoryConfig = ArtifactoryConfigRequest.builder().artifactoryUrl("url").build();
     ArtifactoryClientBuilder artifactoryClientBuilder = ArtifactoryClientBuilder.create();
     ((ArtifactoryServiceImpl) artifactoryService)
         .checkIfUseProxyAndAppendConfig(artifactoryClientBuilder, artifactoryConfig);
@@ -507,7 +503,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
     System.setProperty("http.proxyHost", "proxyHost");
     System.setProperty("http.proxyPort", "123");
     System.setProperty("http.nonProxyHosts", "url");
-    ArtifactoryConfig artifactoryConfig = ArtifactoryConfig.builder().artifactoryUrl("url").build();
+    ArtifactoryConfigRequest artifactoryConfig = ArtifactoryConfigRequest.builder().artifactoryUrl("url").build();
     ArtifactoryClientBuilder artifactoryClientBuilder = ArtifactoryClientBuilder.create();
     ((ArtifactoryServiceImpl) artifactoryService)
         .checkIfUseProxyAndAppendConfig(artifactoryClientBuilder, artifactoryConfig);
@@ -523,7 +519,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldNotAppendProxyConfigWhenProxyIsNotEnabled() {
-    ArtifactoryConfig artifactoryConfig = ArtifactoryConfig.builder().artifactoryUrl("url").build();
+    ArtifactoryConfigRequest artifactoryConfig = ArtifactoryConfigRequest.builder().artifactoryUrl("url").build();
     ArtifactoryClientBuilder artifactoryClientBuilder = ArtifactoryClientBuilder.create();
     ((ArtifactoryServiceImpl) artifactoryService)
         .checkIfUseProxyAndAppendConfig(artifactoryClientBuilder, artifactoryConfig);

@@ -11,6 +11,7 @@ go_library(
     deps = [
         "//commons/go/lib/exec:go_default_library",
         "//commons/go/lib/logs:go_default_library",
+        "//product/ci/common/logs:go_default_library",
         "//product/ci/ti-service/client:go_default_library",
         "//product/ci/ti-service/types:go_default_library",
         "//product/log-service/client:go_default_library",

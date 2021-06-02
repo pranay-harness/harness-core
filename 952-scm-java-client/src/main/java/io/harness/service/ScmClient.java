@@ -8,6 +8,7 @@ import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.beans.gitsync.GitWebhookDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.product.ci.scm.proto.CompareCommitsResponse;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
 import io.harness.product.ci.scm.proto.CreateWebhookResponse;
@@ -59,6 +60,8 @@ public interface ScmClient {
 
   FileBatchContentResponse listFiles(ScmConnector connector, List<String> foldersList, String branchName);
 
+  FileBatchContentResponse listFilesByFilePaths(ScmConnector connector, List<String> filePathsList, String branchName);
+
   void createNewBranch(ScmConnector scmConnector, String branch, String defaultBranchName);
 
   CreatePRResponse createPullRequest(ScmConnector scmConnector, GitPRCreateRequest gitPRCreateRequest);
@@ -70,4 +73,6 @@ public interface ScmClient {
   ListWebhooksResponse listWebhook(ScmConnector scmConnector);
 
   CreateWebhookResponse upsertWebhook(ScmConnector scmConnector, GitWebhookDetails gitWebhookDetails);
+
+  CompareCommitsResponse compareCommits(ScmConnector scmConnector, String initialCommitId, String finalCommitId);
 }

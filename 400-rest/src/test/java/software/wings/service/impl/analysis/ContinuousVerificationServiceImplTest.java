@@ -1,7 +1,6 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.beans.ExecutionStatus.ERROR;
-import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -30,14 +29,11 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EnvironmentType;
-import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
 import io.harness.category.element.UnitTests;
-import io.harness.cv.WorkflowVerificationResult;
-import io.harness.cv.api.WorkflowVerificationResultService;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -161,7 +157,6 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private AppService appService;
   @Mock private EnvironmentService environmentService;
-  @Inject private WorkflowVerificationResultService workflowVerificationResultService;
 
   private Logger logger = mock(Logger.class);
 
@@ -203,8 +198,6 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
     FieldUtils.writeField(continuousVerificationService, "featureFlagService", featureFlagService, true);
     FieldUtils.writeField(continuousVerificationService, "appService", appService, true);
     FieldUtils.writeField(continuousVerificationService, "environmentService", environmentService, true);
-    FieldUtils.writeField(
-        continuousVerificationService, "workflowVerificationResultService", workflowVerificationResultService, true);
 
     when(environmentService.get(anyString(), anyString()))
         .thenReturn(Environment.Builder.anEnvironment().environmentType(EnvironmentType.PROD).build());
@@ -872,44 +865,5 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
       assertThat(hostBatch).containsExactlyInAnyOrderElementsOf(
           ((LogDataCollectionInfo) tasks.get(i++).getData().getParameters()[0]).getHosts());
     }
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
-  public void testNotifyWorkflowVerificationState_updatesWorkflowVerificationResult() throws IllegalAccessException {
-    FieldUtils.writeField(continuousVerificationService, "wingsPersistence", persistence, true);
-
-    AnalysisContext context =
-        AnalysisContext.builder().stateExecutionId(stateExecutionId).stateType(ELK).accountId(accountId).build();
-    persistence.save(context);
-
-    workflowVerificationResultService.addWorkflowVerificationResult(WorkflowVerificationResult.builder()
-                                                                        .accountId(accountId)
-                                                                        .appId(appId)
-                                                                        .stateExecutionId(stateExecutionId)
-                                                                        .serviceId(serviceId)
-                                                                        .envId(envId)
-                                                                        .workflowId(workflowId)
-                                                                        .stateType("PROMETHEUS")
-                                                                        .executionStatus(ExecutionStatus.RUNNING)
-                                                                        .build());
-    WorkflowVerificationResult workflowVerificationResult =
-        persistence.createQuery(WorkflowVerificationResult.class, excludeAuthority).get();
-    assertThat(workflowVerificationResult.getMessage()).isNull();
-    assertThat(workflowVerificationResult.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
-    assertThat(workflowVerificationResult.isAnalyzed()).isFalse();
-    assertThat(workflowVerificationResult.isRollback()).isFalse();
-
-    boolean notifyStatus =
-        continuousVerificationService.notifyWorkflowVerificationState(appId, stateExecutionId, FAILED);
-
-    assertThat(notifyStatus).isTrue();
-
-    workflowVerificationResult = persistence.createQuery(WorkflowVerificationResult.class, excludeAuthority).get();
-    assertThat(workflowVerificationResult.getMessage()).isEqualTo("The state was marked failed");
-    assertThat(workflowVerificationResult.getExecutionStatus()).isEqualTo(FAILED);
-    assertThat(workflowVerificationResult.isAnalyzed()).isFalse();
-    assertThat(workflowVerificationResult.isRollback()).isFalse();
   }
 }

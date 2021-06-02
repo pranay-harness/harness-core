@@ -218,7 +218,7 @@ if [[ ! -z $INSTRUMENTATION ]]; then
 fi
 
 if [ ! -e alpn-boot-8.1.13.v20181017.jar ]; then
-  curl $MANAGER_PROXY_CURL -ks https://app.harness.io/public/shared/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar  --output alpn-boot-8.1.13.v20181017.jar
+  curl $MANAGER_PROXY_CURL -ks $ALPN_BOOT_JAR_URL -o alpn-boot-8.1.13.v20181017.jar
 fi
 
 if [[ $DEPLOY_MODE == "KUBERNETES" ]]; then

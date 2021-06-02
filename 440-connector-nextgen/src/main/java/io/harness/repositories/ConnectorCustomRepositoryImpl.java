@@ -111,4 +111,9 @@ public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository 
   public Connector save(Connector objectToSave, ConnectorDTO connectorDTO, ChangeType changeType) {
     return gitAwarePersistence.save(objectToSave, connectorDTO, changeType, Connector.class);
   }
+
+  @Override
+  public Optional<Connector> findOne(Criteria criteria, String repo, String branch) {
+    return gitAwarePersistence.findOne(criteria, repo, branch, Connector.class);
+  }
 }

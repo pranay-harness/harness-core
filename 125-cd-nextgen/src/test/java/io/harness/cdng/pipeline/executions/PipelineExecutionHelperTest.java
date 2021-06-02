@@ -81,7 +81,7 @@ public class PipelineExecutionHelperTest extends CDNGTestBase {
     CDStageExecutionSummary executionSummary = CDStageExecutionSummary.builder()
                                                    .planNodeId("node1")
                                                    .stageIdentifier("testIdentifier")
-                                                   .executionStatus(ExecutionStatus.NOT_STARTED)
+                                                   .executionStatus(ExecutionStatus.NOTSTARTED)
                                                    .build();
     assertThat(pipelineExecutionSummary.getStageExecutionSummarySummaryElements().size()).isEqualTo(1);
     assertThat(pipelineExecutionSummary.getStageExecutionSummarySummaryElements().get(0)).isEqualTo(executionSummary);
@@ -121,7 +121,7 @@ public class PipelineExecutionHelperTest extends CDNGTestBase {
     CDStageExecutionSummary executionSummary = CDStageExecutionSummary.builder()
                                                    .planNodeId("node1")
                                                    .stageIdentifier("testIdentifier")
-                                                   .executionStatus(ExecutionStatus.NOT_STARTED)
+                                                   .executionStatus(ExecutionStatus.NOTSTARTED)
                                                    .build();
     assertThat(pipelineExecutionSummary.getStageExecutionSummarySummaryElements().size()).isEqualTo(1);
     assertThat(pipelineExecutionSummary.getStageExecutionSummarySummaryElements().get(0))
