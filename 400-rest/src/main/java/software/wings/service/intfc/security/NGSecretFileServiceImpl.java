@@ -222,7 +222,7 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
         encryptedData.getNgMetadata().setTags(dto.getTags());
 
         // save to DB and return
-        wingsPersistence.save(savedEncryptedData);
+        wingsPersistence.save(encryptedData);
 
         switch (secretManagerConfigOptional.get().getEncryptionType()) {
           case LOCAL:
