@@ -50,7 +50,6 @@ public class AbortInterruptCallback implements OldNotifyCallback {
     List<UnitProgress> unitProgresses = InterruptHelper.evaluateUnitProgresses(nodeExecution, FAILURE);
     NodeExecution updatedNodeExecution =
         nodeExecutionService.updateStatusWithOps(nodeExecutionId, Status.ABORTED, ops -> {
-          ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis());
           ops.set(NodeExecutionKeys.unitProgresses, unitProgresses);
           ops.addToSet(NodeExecutionKeys.interruptHistories,
               InterruptEffect.builder()

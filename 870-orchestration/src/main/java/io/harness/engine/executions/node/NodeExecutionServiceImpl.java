@@ -217,9 +217,14 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     Update updateOps = new Update()
                            .set(NodeExecutionKeys.status, status)
                            .set(NodeExecutionKeys.lastUpdatedAt, System.currentTimeMillis());
+
+    if (StatusUtils.isFinalStatus(status)) {
+      updateOps.set(NodeExecutionKeys.endTs, System.currentTimeMillis());
+    }
     if (ops != null) {
       ops.accept(updateOps);
     }
+
     NodeExecution updated = mongoTemplate.findAndModify(query, updateOps, returnNewOptions, NodeExecution.class);
     if (updated == null) {
       log.warn("Cannot update execution status for the node {} with {}", nodeExecutionId, status);

@@ -131,8 +131,8 @@ public class OrchestrationEngine {
     String uuid = generateUuid();
     NodeExecution previousNodeExecution = null;
     if (AmbianceUtils.obtainCurrentRuntimeId(ambiance) != null) {
-      previousNodeExecution = nodeExecutionService.update(AmbianceUtils.obtainCurrentRuntimeId(ambiance),
-          ops -> ops.set(NodeExecutionKeys.nextId, uuid).set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
+      previousNodeExecution = nodeExecutionService.update(
+          AmbianceUtils.obtainCurrentRuntimeId(ambiance), ops -> ops.set(NodeExecutionKeys.nextId, uuid));
     }
     Ambiance cloned = reBuildAmbiance(ambiance, node, uuid);
     NodeExecution nodeExecution =
@@ -306,8 +306,8 @@ public class OrchestrationEngine {
   }
 
   public void concludeNodeExecution(NodeExecution nodeExecution, Status status, EnumSet<Status> overrideStatusSet) {
-    NodeExecution updatedNodeExecution = nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), status,
-        ops -> ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis()), overrideStatusSet);
+    NodeExecution updatedNodeExecution =
+        nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), status, null, overrideStatusSet);
     if (updatedNodeExecution == null) {
       log.warn(
           "Cannot conclude node execution. Status update failed From :{}, To:{}", nodeExecution.getStatus(), status);
@@ -356,8 +356,6 @@ public class OrchestrationEngine {
   }
 
   public void endTransition(NodeExecution nodeExecution) {
-    nodeExecutionService.update(
-        nodeExecution.getUuid(), ops -> ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
     if (isNotEmpty(nodeExecution.getNotifyId())) {
       PlanNodeProto planNode = nodeExecution.getNode();
       StepResponseNotifyData responseData = StepResponseNotifyData.builder()

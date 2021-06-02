@@ -45,7 +45,6 @@ public class FailureInterruptCallback implements OldNotifyCallback {
   public void notify(Map<String, ResponseData> response) {
     try {
       NodeExecution updatedNodeExecution = nodeExecutionService.update(nodeExecutionId, ops -> {
-        ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis());
         ops.addToSet(NodeExecutionKeys.interruptHistories,
             InterruptEffect.builder()
                 .interruptId(interruptId)
