@@ -36,4 +36,5 @@ public class TerraformExecuteStepRequest {
   @Nonnull LogCallback logCallback;
   @Nonnull PlanJsonLogOutputStream planJsonLogOutputStream;
   long timeoutInMillis;
+  boolean isTfPlanDestroy;
 }

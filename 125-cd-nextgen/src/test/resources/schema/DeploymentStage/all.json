@@ -4407,10 +4407,17 @@
           }
         },
         "targets": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "varFiles": {
           "type": "array",
@@ -4460,10 +4467,17 @@
           "type": "string"
         },
         "targets": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "varFiles": {
           "type": "array",
