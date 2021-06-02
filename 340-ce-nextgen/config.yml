@@ -123,11 +123,12 @@ cfMigrationConfig:
   connectionTimeout: 10000
   readTimeout: 30000
 
-# CloudFormation template for AWS Connector
-awsConnectorTemplate: https://continuous-efficiency-templates.s3.amazonaws.com/templateOptimOnly.yaml
-
 gcpConfig:
   gcpProjectId: gcpProjectIdPlaceHolder
 
 azureConfig:
   azureAppClientId: azureAppClientIdPlaceholder
+
+awsConfig:
+  harnessAwsAccountId: 108817434118
+  awsConnectorTemplate: https://continuous-efficiency-templates.s3.amazonaws.com/templateOptimOnly.yaml

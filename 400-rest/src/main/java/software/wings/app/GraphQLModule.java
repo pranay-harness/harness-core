@@ -98,7 +98,6 @@ import software.wings.graphql.datafetcher.connector.ConnectorStatsDataFetcher;
 import software.wings.graphql.datafetcher.connector.CreateConnectorDataFetcher;
 import software.wings.graphql.datafetcher.connector.DeleteConnectorDataFetcher;
 import software.wings.graphql.datafetcher.connector.UpdateConnectorDataFetcher;
-import software.wings.graphql.datafetcher.cv.VerificationResultConnectionDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentConnectionDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentStatsDataFetcher;
@@ -425,7 +424,6 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(TagConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(TagUsageConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(TagDataFetcher.class);
-    bindDataFetcherWithAnnotation(VerificationResultConnectionDataFetcher.class);
 
     binder()
         .bind(SecretManagerMutationDataFetcher.class)

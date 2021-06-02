@@ -56,13 +56,15 @@ public class InputSetEntity
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("unique_accountId_organizationId_projectId_pipelineId_inputSetId")
+                 .name("unique_accountId_organizationId_projectId_pipelineId_inputSetId_repo_branch")
                  .unique(true)
                  .field(InputSetEntityKeys.accountId)
                  .field(InputSetEntityKeys.orgIdentifier)
                  .field(InputSetEntityKeys.projectIdentifier)
                  .field(InputSetEntityKeys.pipelineIdentifier)
                  .field(InputSetEntityKeys.identifier)
+                 .field(InputSetEntityKeys.yamlGitConfigRef)
+                 .field(InputSetEntityKeys.branch)
                  .build())
         .build();
   }
@@ -90,7 +92,7 @@ public class InputSetEntity
 
   @Setter @NonFinal String objectIdOfYaml;
   @Setter @NonFinal Boolean isFromDefaultBranch;
-  @Setter @NonFinal transient String branch;
+  @Setter @NonFinal String branch;
   @Setter @NonFinal String yamlGitConfigRef;
   @Setter @NonFinal String filePath;
   @Setter @NonFinal String rootFolder;

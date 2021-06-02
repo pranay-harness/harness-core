@@ -246,6 +246,11 @@ message Provider {
   bool debug = 9;
 }
 
+/*
+For an invalid page request, next = 0
+For the last valid page response, next = 0
+For other cases, next = request.pageRequest.page + 1 // basically it corresponds to the next valid page
+ */
 message PageResponse {
   int32 next = 1;
 }

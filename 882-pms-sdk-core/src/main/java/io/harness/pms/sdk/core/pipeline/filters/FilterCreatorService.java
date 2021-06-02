@@ -9,12 +9,13 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.FilterCreatorException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.plan.FilterCreationBlobRequest;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
 import io.harness.pms.contracts.plan.SetupMetadata;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
-import io.harness.pms.exception.YamlNodeErrorInfo;
 import io.harness.pms.filter.creation.FilterCreationResponse;
 import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
@@ -22,8 +23,8 @@ import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
-import io.harness.serializer.JsonUtils;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
@@ -117,9 +118,16 @@ public class FilterCreatorService {
           Object obj = YamlUtils.read(yamlField.getNode().toString(), clazz);
           response = filterJsonCreator.handleNode(
               FilterCreationContext.builder().currentField(yamlField).setupMetadata(setupMetadata).build(), obj);
+        } catch (JsonMappingException e) {
+          // YamlUtils.getFullyQualifiedName() here does not give the full FQN here, hence using a new method.
+          // YamlUtils.getErrorNodePartialFQN() uses exception path to build FQN
+          throw new FilterCreatorException(
+              format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(yamlField.getNode(), e)),
+              ErrorCode.INVALID_YAML_ERROR, e);
         } catch (IOException e) {
-          throw new InvalidRequestException(
-              format("Invalid yaml in node [%s]", JsonUtils.asJson(YamlNodeErrorInfo.fromField(yamlField))), e);
+          throw new FilterCreatorException(
+              format("Invalid yaml in node [%s]", YamlUtils.getFullyQualifiedName(yamlField.getNode())),
+              ErrorCode.INVALID_YAML_ERROR, e);
         }
       }
 

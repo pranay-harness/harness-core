@@ -27,8 +27,11 @@ import io.harness.testlib.RealMongo;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.time.Duration;
+import java.util.concurrent.ExecutorService;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mockito;
 
 /**
  * Test class for {@link OrchestrationEndEventHandler}
@@ -38,7 +41,15 @@ public class OrchestrationEndEventHandlerTest extends OrchestrationVisualization
 
   @Inject PlanExecutionService planExecutionService;
   @Inject GraphGenerationService graphGenerationService;
-  @Inject OrchestrationEndEventHandler orchestrationEndEventHandler;
+
+  private OrchestrationEndEventHandler orchestrationEndEventHandler;
+
+  @Before
+  public void setUp() {
+    ExecutorService executorService = Mockito.mock(ExecutorService.class);
+    orchestrationEndEventHandler =
+        new OrchestrationEndEventHandler(executorService, planExecutionService, graphGenerationService);
+  }
 
   private static final ExecutionMetadata metadata =
       ExecutionMetadata.newBuilder()
@@ -84,7 +95,7 @@ public class OrchestrationEndEventHandlerTest extends OrchestrationVisualization
                                                 .build();
     mongoStore.upsert(orchestrationGraph, Duration.ofDays(10));
 
-    orchestrationEndEventHandler.handleEvent(event);
+    orchestrationEndEventHandler.onEnd(event.getAmbiance());
 
     OrchestrationGraph updatedGraph = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
     assertThat(updatedGraph).isNotNull();

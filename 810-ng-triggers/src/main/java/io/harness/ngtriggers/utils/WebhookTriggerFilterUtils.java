@@ -191,23 +191,17 @@ public class WebhookTriggerFilterUtils {
       return true;
     }
 
-    for (WebhookCondition webhookHeaderCondition : triggerSpec.getHeaderConditions()) {
-      HeaderConfig header = headers.stream()
-                                .filter(headerConfig -> headerConfig.getKey().equals(webhookHeaderCondition.getKey()))
-                                .findAny()
-                                .orElse(null);
+    String input;
+    String standard;
+    String operator;
+    TriggerExpressionEvaluator triggerExpressionEvaluator = generatorPMSExpressionEvaluator(null, headers, "{}");
 
-      if (header != null) {
-        for (String value : header.getValues()) {
-          if (!ConditionEvaluator.evaluate(
-                  value, webhookHeaderCondition.getValue(), webhookHeaderCondition.getOperator())) {
-            return false;
-          }
-        }
-      } else {
-        if (!webhookHeaderCondition.getOperator().contains("not")) {
-          return false;
-        }
+    for (WebhookCondition webhookHeaderCondition : triggerSpec.getHeaderConditions()) {
+      input = readFromPayload(webhookHeaderCondition.getKey(), triggerExpressionEvaluator);
+      standard = webhookHeaderCondition.getValue();
+      operator = webhookHeaderCondition.getOperator();
+      if (!ConditionEvaluator.evaluate(input, standard, operator)) {
+        return false;
       }
     }
     return true;
@@ -215,7 +209,7 @@ public class WebhookTriggerFilterUtils {
 
   @VisibleForTesting
   String readFromPayload(String key, TriggerExpressionEvaluator triggerExpressionEvaluator) {
-    return triggerExpressionEvaluator.renderExpression(key);
+    return triggerExpressionEvaluator.renderExpression(key, true);
   }
 
   TriggerExpressionEvaluator generatorPMSExpressionEvaluator(WebhookPayloadData webhookPayloadData) {

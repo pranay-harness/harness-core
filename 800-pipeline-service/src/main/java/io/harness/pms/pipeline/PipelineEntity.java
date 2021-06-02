@@ -57,15 +57,16 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class PipelineEntity
     implements GitSyncableEntity, PersistentEntity, AccountAccess, UuidAware, CreatedAtAware, UpdatedAtAware {
   public static List<MongoIndex> mongoIndexes() {
-    // TODO(gpahal): Update indexes for git sync
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("unique_accountId_organizationId_projectId_pipelineId")
+                 .name("unique_accountId_organizationId_projectId_pipelineId_repo_branch")
                  .unique(true)
                  .field(PipelineEntityKeys.accountId)
                  .field(PipelineEntityKeys.orgIdentifier)
                  .field(PipelineEntityKeys.projectIdentifier)
                  .field(PipelineEntityKeys.identifier)
+                 .field(PipelineEntityKeys.yamlGitConfigRef)
+                 .field(PipelineEntityKeys.branch)
                  .build())
         .build();
   }

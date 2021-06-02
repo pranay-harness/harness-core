@@ -10,6 +10,7 @@ import io.harness.beans.gitsync.GitWebhookDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.impl.jgit.JgitGitServiceImpl;
 import io.harness.impl.scm.SCMServiceGitClientImpl;
+import io.harness.product.ci.scm.proto.CompareCommitsResponse;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
 import io.harness.product.ci.scm.proto.CreateWebhookResponse;
@@ -115,6 +116,12 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
   }
 
   @Override
+  public FileBatchContentResponse listFilesByFilePaths(
+      ScmConnector connector, List<String> filePathsList, String branchName) {
+    return scmServiceGitClient.listFilesByFilePaths(connector, filePathsList, branchName);
+  }
+
+  @Override
   public void createNewBranch(ScmConnector scmConnector, String branch, String defaultBranchName) {
     scmServiceGitClient.createNewBranch(scmConnector, branch, defaultBranchName);
   }
@@ -137,6 +144,12 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
   @Override
   public CreateWebhookResponse upsertWebhook(ScmConnector scmConnector, GitWebhookDetails gitWebhookDetails) {
     return scmServiceGitClient.upsertWebhook(scmConnector, gitWebhookDetails);
+  }
+
+  @Override
+  public CompareCommitsResponse compareCommits(
+      ScmConnector scmConnector, String initialCommitId, String finalCommitId) {
+    return scmServiceGitClient.compareCommits(scmConnector, initialCommitId, finalCommitId);
   }
 
   @Override
