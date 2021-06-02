@@ -137,7 +137,7 @@ public class EventsFrameworkModule extends AbstractModule {
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
           .toInstance(RedisProducer.of(EventsFrameworkConstants.USERMEMBERSHIP, redisConfig,
-              EventsFrameworkConstants.DEFAULT_TOPIC_SIZE, NG_MANAGER.getServiceId()));
+              EventsFrameworkConstants.USER_MEMBERSHIP_TOPIC_SIZE, NG_MANAGER.getServiceId()));
       bind(Producer.class)
           .annotatedWith(Names.named(WEBHOOK_EVENTS_STREAM))
           .toInstance(RedisProducer.of(

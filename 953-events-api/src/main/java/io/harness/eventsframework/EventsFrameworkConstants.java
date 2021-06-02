@@ -5,7 +5,9 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotations.dev.OwnedBy;
 
 import java.time.Duration;
+import lombok.experimental.UtilityClass;
 
+@UtilityClass
 @OwnedBy(PL)
 public final class EventsFrameworkConstants {
   public static final String DUMMY_REDIS_URL = "dummyRedisUrl";
@@ -29,18 +31,19 @@ public final class EventsFrameworkConstants {
   public static final String DUMMY_GROUP_NAME = "dummy_group_name";
   public static final String DUMMY_NAME = "dummy_name";
 
-  public static final int DEFAULT_TOPIC_SIZE = 1000000;
-  public static final int ENTITY_CRUD_MAX_TOPIC_SIZE = 1000000;
-  public static final int FEATURE_FLAG_MAX_TOPIC_SIZE = 1000000;
-  public static final int SETUP_USAGE_MAX_TOPIC_SIZE = 1000000;
+  public static final int DEFAULT_TOPIC_SIZE = 10000;
+  public static final int USER_MEMBERSHIP_TOPIC_SIZE = 100000;
+  public static final int ENTITY_CRUD_MAX_TOPIC_SIZE = 100000;
+  public static final int FEATURE_FLAG_MAX_TOPIC_SIZE = 50000;
+  public static final int SETUP_USAGE_MAX_TOPIC_SIZE = 10000;
   public static final int ENTITY_ACTIVITY_MAX_TOPIC_SIZE = 10000;
-  public static final int HARNESS_TO_GIT_PUSH_MAX_TOPIC_SIZE = 1000000;
-  public static final int WEBHOOK_REQUEST_PAYLOAD_DETAILS_MAX_TOPIC_SIZE = 1000000;
-  public static final int WEBHOOK_EVENTS_STREAM_MAX_TOPIC_SIZE = 1000000;
-  public static final int GIT_PUSH_EVENT_STREAM_MAX_TOPIC_SIZE = 1000000;
-  public static final int GIT_PR_EVENT_STREAM_MAX_TOPIC_SIZE = 1000000;
-  public static final int GIT_CREATE_BRANCH_EVENT_STREAM_MAX_TOPIC_SIZE = 1000000;
-  public static final int GIT_CONFIG_STREAM_MAX_TOPIC_SIZE = 1000000;
+  public static final int HARNESS_TO_GIT_PUSH_MAX_TOPIC_SIZE = 10000;
+  public static final int WEBHOOK_REQUEST_PAYLOAD_DETAILS_MAX_TOPIC_SIZE = 10000;
+  public static final int WEBHOOK_EVENTS_STREAM_MAX_TOPIC_SIZE = 10000;
+  public static final int GIT_PUSH_EVENT_STREAM_MAX_TOPIC_SIZE = 10000;
+  public static final int GIT_PR_EVENT_STREAM_MAX_TOPIC_SIZE = 10000;
+  public static final int GIT_CREATE_BRANCH_EVENT_STREAM_MAX_TOPIC_SIZE = 10000;
+  public static final int GIT_CONFIG_STREAM_MAX_TOPIC_SIZE = 10000;
 
   public static final Duration DEFAULT_MAX_PROCESSING_TIME = Duration.ofSeconds(10);
   public static final Duration ENTITY_CRUD_MAX_PROCESSING_TIME = Duration.ofSeconds(20);

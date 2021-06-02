@@ -16,6 +16,7 @@ import io.harness.cli.CliResponse;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.task.terraform.TerraformBaseHelper;
+import io.harness.delegate.task.terraform.TerraformCommand;
 import io.harness.delegate.task.terraform.TerraformTaskNGParameters;
 import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
 import io.harness.exception.ExceptionUtils;
@@ -44,8 +45,6 @@ public class TerraformPlanTaskHandler extends TerraformAbstractTaskHandler {
   public TerraformTaskNGResponse executeTaskInternal(TerraformTaskNGParameters taskParameters, String delegateId,
       String taskId, LogCallback logCallback) throws IOException {
     GitStoreDelegateConfig confileFileGitStore = taskParameters.getConfigFile().getGitStoreDelegateConfig();
-    GitConfigDTO configFileGitConfigDTO =
-        (GitConfigDTO) taskParameters.getConfigFile().getGitStoreDelegateConfig().getGitConfigDTO();
     String scriptPath = confileFileGitStore.getPaths().get(0);
 
     if (isNotEmpty(confileFileGitStore.getBranch())) {
@@ -95,6 +94,7 @@ public class TerraformPlanTaskHandler extends TerraformAbstractTaskHandler {
               .logCallback(logCallback)
               .planJsonLogOutputStream(planJsonLogOutputStream)
               .timeoutInMillis(taskParameters.getTimeoutInMillis())
+              .isTfPlanDestroy(taskParameters.getTerraformCommand() == TerraformCommand.DESTROY)
               .build();
 
       CliResponse response = terraformBaseHelper.executeTerraformPlanStep(terraformExecuteStepRequest);
