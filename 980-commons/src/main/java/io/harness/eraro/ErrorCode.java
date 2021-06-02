@@ -96,6 +96,8 @@ public enum ErrorCode {
 
   SOCKET_CONNECTION_ERROR("Connection error"),
 
+  CONNECTION_ERROR,
+
   SOCKET_CONNECTION_TIMEOUT("Socket Connection timeout"),
 
   CONNECTION_TIMEOUT("Connection timeout"),
