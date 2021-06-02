@@ -1339,8 +1339,6 @@ plain_artifacts = [
     "io.prometheus:simpleclient_servlet:0.3.0",
     "io.reactivex.rxjava2:rxjava:2.2.19",
     "io.reactivex:rxjava:1.3.8",
-    "io.rest-assured:rest-assured:3.2.0",
-    "io.rest-assured:rest-assured:3.2.0",
     "io.specto:hoverfly-java:0.13.1",
     "io.sundr:builder-annotations:0.21.0",
     "io.sundr:resourcecify-annotations:0.21.0",
@@ -1799,6 +1797,7 @@ maven_install(
         maven_test_artifact("io.fabric8:kubernetes-server-mock:3.1.12"),
         maven_test_artifact("io.fabric8:mockwebxxxxxxxx0.1.0"),
         maven_test_artifact("io.grpc:grpc-testing:1.33.1"),
+        maven_test_artifact("io.rest-assured:rest-assured:4.4.0"),
         maven_test_artifact("junit:junit:4.12"),
         maven_test_artifact("org.assertj:assertj-core:3.16.1"),
         maven_test_artifact("org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-grizzly2:2.23.1"),
@@ -5350,4 +5349,10 @@ pkg_tar(
 """,
     sha256 = "5edfaefdbb0469d8b24d61c8aef80c076611053b1738029c0232b9a632fe2708",
     urls = ["https://app.harness.io/storage/wingsdelegates/jre/openjdk-8u242/jre_x64_linux_8u242b08.tar.gz"],
+)
+
+http_file(
+    name = "alpn_boot_8.1.13.v20181017",
+    sha256 = "05165e53fd9aeb774f95178c85740c3ee9ea72a9ca489497df837cc397a5da06",
+    urls = ["https://app.harness.io/public/shared/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar"],
 )
