@@ -41,6 +41,7 @@ public class ScmManagerGitHelper implements ScmGitHelper {
         try {
           ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
               createFileResponse.getStatus(), createFileResponse.getError());
+          return ScmGitUtils.createScmCreateFileResponse(yaml, infoForPush, createFileResponse);
         } catch (ScmException e) {
           if (ErrorCode.SCM_CONFLICT_ERROR.equals(e.getCode())) {
             throw new InvalidRequestException(String.format(
@@ -48,19 +49,18 @@ public class ScmManagerGitHelper implements ScmGitHelper {
           }
           throw e;
         }
-        return ScmGitUtils.createScmCreateFileResponse(yaml, infoForPush);
       case DELETE:
         final DeleteFileResponse deleteFileResponse = doScmDeleteFile(gitBranchInfo, infoForPush);
         ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
             deleteFileResponse.getStatus(), deleteFileResponse.getError());
-        return ScmGitUtils.createScmDeleteFileResponse(yaml, infoForPush);
+        return ScmGitUtils.createScmDeleteFileResponse(yaml, infoForPush, deleteFileResponse);
       case RENAME:
         throw new NotImplementedException("Not implemented");
       case MODIFY:
         final UpdateFileResponse updateFileResponse = doScmUpdateFile(yaml, gitBranchInfo, infoForPush);
         ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
             updateFileResponse.getStatus(), updateFileResponse.getError());
-        return ScmGitUtils.createScmUpdateFileResponse(yaml, infoForPush);
+        return ScmGitUtils.createScmUpdateFileResponse(yaml, infoForPush, updateFileResponse);
       default:
         throw new EnumConstantNotPresentException(changeType.getClass(), "Incorrect changeType");
     }

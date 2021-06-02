@@ -23,4 +23,6 @@ public interface ScmPushResponse {
   String getFolderPath();
 
   String getBranch();
+
+  String getCommitId();
 }

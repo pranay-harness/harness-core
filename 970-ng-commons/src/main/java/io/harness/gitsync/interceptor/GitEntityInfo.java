@@ -31,6 +31,7 @@ public class GitEntityInfo {
   boolean isSyncFromGit;
   @Wither boolean findDefaultFromOtherBranches;
   String baseBranch;
+  String commitId; // used for passing commitId in case of g2h.
 
   public boolean isNull() {
     // todo @Abhinav Maybe we should use null in place of default

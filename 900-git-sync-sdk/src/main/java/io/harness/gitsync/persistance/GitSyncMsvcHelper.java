@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc.HarnessToGitPushInfoServiceBlockingStub;
 import io.harness.gitsync.PushInfo;
+import io.harness.gitsync.PushResponse;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.scm.beans.ScmPushResponse;
 import io.harness.ng.core.EntityDetail;
@@ -23,10 +24,10 @@ public class GitSyncMsvcHelper {
 
   public void postPushInformationToGitMsvc(
       EntityDetail entityDetail, ScmPushResponse scmResponse, GitEntityInfo gitBranchInfo) {
-    harnessToGitPushInfoServiceBlockingStub.pushFromHarness(
+    final PushResponse pushResponse = harnessToGitPushInfoServiceBlockingStub.pushFromHarness(
         PushInfo.newBuilder()
             .setAccountId(entityDetail.getEntityRef().getAccountIdentifier())
-            .setCommitId(scmResponse.getObjectId())
+            .setCommitId(scmResponse.getCommitId())
             .setEntityDetail(entityDetailRestToProtoMapper.createEntityDetailDTO(entityDetail))
             .setFolderPath(scmResponse.getFolderPath())
             .setFilePath(scmResponse.getFilePath())
@@ -34,6 +35,8 @@ public class GitSyncMsvcHelper {
             .setBranchName(gitBranchInfo.getBranch())
             .setIsNewBranch(checkIfItsANewBranch(gitBranchInfo))
             .build());
+    log.info("Posted information to git sync manager for commit id: [{}], entity detail: [{}]",
+        scmResponse.getCommitId(), entityDetail);
   }
 
   private boolean checkIfItsANewBranch(GitEntityInfo gitBranchInfo) {
