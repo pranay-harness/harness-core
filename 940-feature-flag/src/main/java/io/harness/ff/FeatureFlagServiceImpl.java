@@ -21,6 +21,9 @@ import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureFlag.FeatureFlagKeys;
 import io.harness.beans.FeatureFlag.Scope;
 import io.harness.beans.FeatureName;
+import io.harness.cf.CfMigrationConfig;
+import io.harness.cf.client.api.CfClient;
+import io.harness.cf.client.dto.Target;
 import io.harness.configuration.DeployMode;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
@@ -69,6 +72,9 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   private long lastEpoch;
   private final Map<FeatureName, FeatureFlag> cache = new HashMap<>();
   @Inject CfMigrationService cfMigrationService;
+  @Inject CfMigrationConfig cfMigrationConfig;
+  @Inject CfClient cfClient;
+  @Inject FeatureFlagConfig featureFlagConfig;
   @Override
   public boolean isEnabledReloadCache(FeatureName featureName, String accountId) {
     synchronized (cache) {
@@ -176,6 +182,16 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   }
   @Override
   public boolean isGlobalEnabled(FeatureName featureName) {
+    switch (featureFlagConfig.getFeatureFlagSystem()) {
+      case CF:
+        return cfFeatureFlagEvaluation(featureName, null);
+      case LOCAL:
+      default:
+        return isLocalGlobalEnabled(featureName);
+    }
+  }
+
+  private boolean isLocalGlobalEnabled(FeatureName featureName) {
     if (featureName.getScope() != Scope.GLOBAL) {
       log.warn("FeatureFlag {} is not global", featureName.name(), new Exception(""));
     }
@@ -210,6 +226,27 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
 
   @Override
   public boolean isEnabled(@NonNull FeatureName featureName, String accountId) {
+    switch (featureFlagConfig.getFeatureFlagSystem()) {
+      case CF:
+        return cfFeatureFlagEvaluation(featureName, accountId);
+      case LOCAL:
+      default:
+        return localFeatureFlagEvaluation(featureName, accountId);
+    }
+  }
+
+  private boolean cfFeatureFlagEvaluation(@NonNull FeatureName featureName, String accountId) {
+    if (isEmpty(accountId)) {
+      /**
+       * If accountID is null or empty, use a static accountID
+       */
+      accountId = FeatureFlagConstants.STATIC_ACCOUNT_ID;
+    }
+    Target target = Target.builder().identifier(accountId).name(accountId).build();
+    return cfClient.boolVariation(featureName.name(), target, false);
+  }
+
+  private boolean localFeatureFlagEvaluation(@NonNull FeatureName featureName, String accountId) {
     Optional<FeatureFlag> featureFlagOptional = getFeatureFlag(featureName);
     boolean featureValue = false;
 
@@ -246,6 +283,16 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
 
   @Override
   public boolean isEnabledForAllAccounts(FeatureName featureName) {
+    switch (featureFlagConfig.getFeatureFlagSystem()) {
+      case CF:
+        return cfFeatureFlagEvaluation(featureName, null);
+      case LOCAL:
+      default:
+        return localIsEnabledForAllAccounts(featureName);
+    }
+  }
+
+  private boolean localIsEnabledForAllAccounts(FeatureName featureName) {
     Optional<FeatureFlag> featureFlagOptional = getFeatureFlag(featureName);
     if (featureFlagOptional.isPresent()) {
       FeatureFlag featureFlag = featureFlagOptional.get();
@@ -322,7 +369,26 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
             persistence.createUpdateOperations(FeatureFlag.class).set(FeatureFlagKeys.enabled, enabled.contains(name)));
       }
     }
-    cfMigrationService.syncAllFlagsWithCFServer(this);
+    /**
+     *
+     * If featureFlagConfig mode is CF and sync is enabled, then only sync creation of feature flags to CF
+     *
+     * else
+     *
+     * if Migration is enabled,
+     * migrate everything including current configuration over to CF -> This will be required initially as we migrate
+     * our current system over to CF
+     *
+     */
+    if (FeatureFlagSystem.CF.equals(featureFlagConfig.getFeatureFlagSystem())
+        && featureFlagConfig.isSyncFeaturesToCF()) {
+      log.info("FeatureFlagSystem is CF and sync is turned on, will only create flags not in the system");
+      cfMigrationService.syncAllFlagsWithCFServer(this, false);
+    } else if (cfMigrationConfig.isEnabled()) {
+      log.info("migration is enabled, will sync feature flags and rules");
+      cfMigrationService.syncAllFlagsWithCFServer(this, true);
+      return;
+    }
   }
 
   /**

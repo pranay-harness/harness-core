@@ -29,6 +29,7 @@ import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.exception.ConstraintViolationExceptionMapper;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.iterator.PersistenceIterator;
@@ -290,7 +291,12 @@ public class VerificationServiceApplication extends Application<VerificationServ
 
       @Override
       public CfMigrationConfig cfMigrationConfig() {
-        return configuration.getCfMigrationConfig();
+        return CfMigrationConfig.builder().build();
+      }
+
+      @Override
+      public FeatureFlagConfig featureFlagConfig() {
+        return configuration.getFeatureFlagConfig();
       }
     });
     Injector injector = Guice.createInjector(modules);
