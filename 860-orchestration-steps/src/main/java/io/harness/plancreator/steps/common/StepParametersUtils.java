@@ -8,6 +8,7 @@ import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.plancreator.steps.common.StageElementParameters.StageElementParametersBuilder;
 import io.harness.plancreator.steps.common.StepElementParameters.StepElementParametersBuilder;
+import io.harness.pms.tags.TagUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.timeout.TimeoutUtils;
 
@@ -40,6 +41,8 @@ public class StepParametersUtils {
   }
 
   public StageElementParametersBuilder getStageParameters(StageElementConfig stageElementConfig) {
+    TagUtils.removeUuidFromTags(stageElementConfig.getTags());
+
     StageElementParametersBuilder stageBuilder = StageElementParameters.builder();
     stageBuilder.name(stageElementConfig.getName());
     stageBuilder.identifier(stageElementConfig.getIdentifier());

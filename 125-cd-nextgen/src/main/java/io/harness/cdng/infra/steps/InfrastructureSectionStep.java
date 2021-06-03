@@ -3,6 +3,8 @@ package io.harness.cdng.infra.steps;
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.environment.EnvironmentMapper;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
@@ -22,6 +24,7 @@ import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.tags.TagUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.tasks.ResponseData;
 
@@ -31,6 +34,7 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CDC)
 public class InfrastructureSectionStep implements ChildExecutable<InfraSectionStepParameters> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.INFRASTRUCTURE_SECTION.getName()).build();
@@ -94,6 +98,8 @@ public class InfrastructureSectionStep implements ChildExecutable<InfraSectionSt
     String accountId = AmbianceHelper.getAccountId(ambiance);
     String projectIdentifier = AmbianceHelper.getProjectIdentifier(ambiance);
     String orgIdentifier = AmbianceHelper.getOrgIdentifier(ambiance);
+
+    TagUtils.removeUuidFromTags(environmentYaml.getTags());
 
     return Environment.builder()
         .name(environmentYaml.getName())

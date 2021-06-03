@@ -1,11 +1,15 @@
 package io.harness.steps.common.pipeline;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.flowcontrol.FlowControlConfig;
 import io.harness.plancreator.pipeline.PipelineInfoConfig;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.tags.TagUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.properties.NGProperties;
 import io.harness.yaml.core.variables.NGVariable;
@@ -20,6 +24,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @NoArgsConstructor
 @TypeAlias("pipelineSetupStepParameters")
+@OwnedBy(PIPELINE)
 public class PipelineSetupStepParameters implements StepParameters {
   String childNodeID;
 
@@ -61,6 +66,9 @@ public class PipelineSetupStepParameters implements StepParameters {
           .sequenceId(executionMetadata.getRunSequence())
           .build();
     }
+
+    TagUtils.removeUuidFromTags(infoConfig.getTags());
+
     return new PipelineSetupStepParameters(childNodeID, infoConfig.getName(), infoConfig.getIdentifier(),
         infoConfig.getFlowControl(), infoConfig.getDescription(), infoConfig.getTags(), infoConfig.getProperties(),
         infoConfig.getVariables(), executionMetadata.getExecutionUuid(), executionMetadata.getRunSequence());
