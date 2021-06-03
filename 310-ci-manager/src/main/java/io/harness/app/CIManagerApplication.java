@@ -2,10 +2,10 @@ package io.harness.app;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_INTERRUPT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_TOPIC;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.pms.listener.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
-import static io.harness.pms.listener.PmsUtilityConsumerConstants.INTERRUPT_TOPIC;
-import static io.harness.pms.listener.PmsUtilityConsumerConstants.ORCHESTRATION_EVENT_TOPIC;
 
 import static java.util.Collections.singletonList;
 
@@ -333,11 +333,12 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())
         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
         .useRedisForSdkResponseEvents(config.getUseRedisForSdkResponseEvents())
-        .interruptConsumerConfig(
-            ConsumerConfig.newBuilder().setRedis(Redis.newBuilder().setTopicName(INTERRUPT_TOPIC).build()).build())
+        .interruptConsumerConfig(ConsumerConfig.newBuilder()
+                                     .setRedis(Redis.newBuilder().setTopicName(PIPELINE_INTERRUPT_TOPIC).build())
+                                     .build())
         .orchestrationEventConsumerConfig(
             ConsumerConfig.newBuilder()
-                .setRedis(Redis.newBuilder().setTopicName(ORCHESTRATION_EVENT_TOPIC).build())
+                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_ORCHESTRATION_EVENT_TOPIC).build())
                 .build())
         .build();
   }

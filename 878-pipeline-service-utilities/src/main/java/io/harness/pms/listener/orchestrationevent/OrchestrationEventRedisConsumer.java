@@ -1,8 +1,8 @@
 package io.harness.pms.listener.orchestrationevent;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.pms.listener.PmsUtilityConsumerConstants.ORCHESTRATION_EVENT_CONSUMER;
-import static io.harness.pms.listener.PmsUtilityConsumerConstants.ORCHESTRATION_EVENT_LISTENER;
+import static io.harness.pms.listener.PmsUtilityConsumerConstants.PT_ORCHESTRATION_EVENT_CONSUMER;
+import static io.harness.pms.listener.PmsUtilityConsumerConstants.PT_ORCHESTRATION_EVENT_LISTENER;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
@@ -17,8 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PIPELINE)
 public class OrchestrationEventRedisConsumer extends PmsAbstractRedisConsumer {
   @Inject
-  public OrchestrationEventRedisConsumer(@Named(ORCHESTRATION_EVENT_CONSUMER) Consumer redisConsumer,
-      @Named(ORCHESTRATION_EVENT_LISTENER) MessageListener sdkOrchestrationEventMessageListener) {
+  public OrchestrationEventRedisConsumer(@Named(PT_ORCHESTRATION_EVENT_CONSUMER) Consumer redisConsumer,
+      @Named(PT_ORCHESTRATION_EVENT_LISTENER) MessageListener sdkOrchestrationEventMessageListener) {
     super(redisConsumer, sdkOrchestrationEventMessageListener);
   }
 }
