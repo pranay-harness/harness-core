@@ -1785,14 +1785,10 @@
     "GcpBillingExportSpec": {
       "type": "object",
       "required": [
-        "datasetId",
-        "projectId"
+        "datasetId"
       ],
       "properties": {
         "datasetId": {
-          "type": "string"
-        },
-        "projectId": {
           "type": "string"
         }
       },
@@ -1805,6 +1801,9 @@
         },
         {
           "type": "object",
+          "required": [
+            "projectId"
+          ],
           "properties": {
             "billingExportSpec": {
               "$ref": "#/definitions/GcpBillingExportSpec"
@@ -1814,9 +1813,14 @@
               "items": {
                 "type": "string",
                 "enum": [
-                  "BILLING"
+                  "BILLING",
+                  "OPTIMIZATION",
+                  "VISIBILITY"
                 ]
               }
+            },
+            "projectId": {
+              "type": "string"
             }
           }
         }

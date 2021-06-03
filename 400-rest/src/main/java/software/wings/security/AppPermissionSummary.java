@@ -68,6 +68,11 @@ public class AppPermissionSummary {
   private Set<String> workflowExecutePermissionsForEnvs;
   private Set<String> pipelineExecutePermissionsForEnvs;
 
+  /**
+   * The environments that the user can rollback workflow to.
+   */
+  private Set<String> rollbackWorkflowExecutePermissionsForEnvs;
+
   // Key - action, Value - set of entity ids
   private Map<Action, Set<String>> servicePermissions;
   private Map<Action, Set<String>> provisionerPermissions;
@@ -91,9 +96,10 @@ public class AppPermissionSummary {
       Set<String> workflowUpdatePermissionsForEnvs, Set<String> pipelineCreatePermissionsForEnvs,
       Set<String> pipelineUpdatePermissionsForEnvs, Set<String> deploymentExecutePermissionsForEnvs,
       Set<String> pipelineExecutePermissionsForEnvs, Set<String> workflowExecutePermissionsForEnvs,
-      Map<Action, Set<String>> servicePermissions, Map<Action, Set<String>> provisionerPermissions,
-      Map<Action, Set<EnvInfo>> envPermissions, Map<Action, Set<String>> workflowPermissions,
-      Map<Action, Set<String>> deploymentPermissions, Map<Action, Set<String>> pipelinePermissions) {
+      Set<String> rollbackWorkflowExecutePermissionsForEnvs, Map<Action, Set<String>> servicePermissions,
+      Map<Action, Set<String>> provisionerPermissions, Map<Action, Set<EnvInfo>> envPermissions,
+      Map<Action, Set<String>> workflowPermissions, Map<Action, Set<String>> deploymentPermissions,
+      Map<Action, Set<String>> pipelinePermissions) {
     this.canCreateService = canCreateService;
     this.canCreateProvisioner = canCreateProvisioner;
     this.canCreateEnvironment = canCreateEnvironment;
@@ -108,6 +114,7 @@ public class AppPermissionSummary {
     this.deploymentExecutePermissionsForEnvs = deploymentExecutePermissionsForEnvs;
     this.pipelineExecutePermissionsForEnvs = pipelineExecutePermissionsForEnvs;
     this.workflowExecutePermissionsForEnvs = workflowExecutePermissionsForEnvs;
+    this.rollbackWorkflowExecutePermissionsForEnvs = rollbackWorkflowExecutePermissionsForEnvs;
     this.servicePermissions = servicePermissions;
     this.provisionerPermissions = provisionerPermissions;
     this.envPermissions = envPermissions;

@@ -352,6 +352,9 @@ public class OrchestrationEngine {
     }
     NodeExecution updatedNodeExecution =
         endNodeExecutionHelper.handleStepResponsePreAdviser(nodeExecution, stepResponse);
+    if (updatedNodeExecution == null) {
+      return;
+    }
     queueAdvisingEvent(updatedNodeExecution, nodeExecution.getStatus());
   }
 

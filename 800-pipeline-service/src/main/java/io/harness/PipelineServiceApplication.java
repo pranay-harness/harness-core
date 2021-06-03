@@ -3,9 +3,9 @@ package io.harness;
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.PipelineServiceConfiguration.getResourceClasses;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_INTERRUPT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_TOPIC;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
-import static io.harness.pms.listener.PmsUtilityConsumerConstants.INTERRUPT_TOPIC;
-import static io.harness.pms.listener.PmsUtilityConsumerConstants.ORCHESTRATION_EVENT_TOPIC;
 import static io.harness.waiter.PmsNotifyEventListener.PMS_ORCHESTRATION;
 
 import static com.google.common.collect.ImmutableMap.of;
@@ -425,11 +425,12 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .executionSummaryModuleInfoProviderClass(PmsExecutionServiceInfoProvider.class)
         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
         .useRedisForSdkResponseEvents(config.getUseRedisForSdkResponseEvents())
-        .interruptConsumerConfig(
-            ConsumerConfig.newBuilder().setRedis(Redis.newBuilder().setTopicName(INTERRUPT_TOPIC).build()).build())
+        .interruptConsumerConfig(ConsumerConfig.newBuilder()
+                                     .setRedis(Redis.newBuilder().setTopicName(PIPELINE_INTERRUPT_TOPIC).build())
+                                     .build())
         .orchestrationEventConsumerConfig(
             ConsumerConfig.newBuilder()
-                .setRedis(Redis.newBuilder().setTopicName(ORCHESTRATION_EVENT_TOPIC).build())
+                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_ORCHESTRATION_EVENT_TOPIC).build())
                 .build())
         .build();
   }

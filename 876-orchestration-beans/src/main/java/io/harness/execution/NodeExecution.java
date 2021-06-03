@@ -81,7 +81,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   // Relationships
   String parentId;
   String nextId;
-  @FdIndex String previousId;
+  String previousId;
 
   // Mutable
   @Wither @LastModifiedDate Long lastUpdatedAt;
@@ -196,6 +196,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
                  .field(NodeExecutionKeys.status)
                  .field(NodeExecutionKeys.oldRetry)
                  .build())
+        .add(CompoundMongoIndex.builder().name("previous_id_idx").field(NodeExecutionKeys.previousId).build())
         .build();
   }
 }
