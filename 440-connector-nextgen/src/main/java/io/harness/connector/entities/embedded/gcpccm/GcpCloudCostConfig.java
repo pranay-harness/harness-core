@@ -4,10 +4,11 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.Connector;
-import io.harness.delegate.beans.connector.gcpccm.GcpCloudCostFeatures;
+import io.harness.delegate.beans.connector.CEFeatures;
 
 import java.util.List;
 import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -26,7 +27,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("io.harness.connector.entities.embedded.gcpccm.GcpCloudCostConfig")
 @OwnedBy(CE)
 public class GcpCloudCostConfig extends Connector {
-  @NotEmpty List<GcpCloudCostFeatures> featuresEnabled;
-
+  @NotEmpty List<CEFeatures> featuresEnabled;
+  @NotNull String projectId;
   @Nullable GcpBillingExportDetails billingExportDetails;
 }

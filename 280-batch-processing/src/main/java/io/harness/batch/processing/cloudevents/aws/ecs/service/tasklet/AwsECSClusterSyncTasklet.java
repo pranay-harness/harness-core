@@ -44,6 +44,8 @@ public class AwsECSClusterSyncTasklet implements Tasklet {
       CECloudAccount cloudAccount = CECloudAccount.builder()
                                         .accountId(accountId)
                                         .infraAccountId(ceAwsConfig.getAwsMasterAccountId())
+                                        .infraMasterAccountId(ceAwsConfig.getAwsMasterAccountId())
+                                        .masterAccountSettingId(ceConnector.getUuid())
                                         .awsCrossAccountAttributes(ceAwsConfig.getAwsCrossAccountAttributes())
                                         .build();
       awsECSClusterService.syncCEClusters(cloudAccount);
