@@ -28,6 +28,7 @@ import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.security.annotations.HarnessApiKeyAuth;
+import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.annotations.PublicApi;
@@ -228,8 +229,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
 
     if (isDelegateRequest(requestContext) || isLearningEngineServiceRequest(requestContext)
-        || isIdentityServiceRequest(requestContext) || isAdminPortalRequest(requestContext)
-        || isNextGenManagerRequest()) {
+        || isIdentityServiceRequest(requestContext) || isAdminPortalRequest(requestContext) || isNextGenManagerRequest()
+        || isInternalAPI()) {
       return;
     }
 
@@ -709,6 +710,13 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     Method resourceMethod = resourceInfo.getResourceMethod();
 
     return resourceMethod.getAnnotation(ListAPI.class) != null || resourceClass.getAnnotation(ListAPI.class) != null;
+  }
+
+  private boolean isInternalAPI() {
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    Method resourceMethod = resourceInfo.getResourceMethod();
+    return resourceMethod.getAnnotation(InternalApi.class) != null
+        || resourceClass.getAnnotation(InternalApi.class) != null;
   }
 
   public PermissionAttribute buildPermissionAttribute(AuthRule authRule, String httpMethod, ResourceType resourceType) {
