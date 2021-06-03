@@ -3,7 +3,7 @@ package io.harness.batch.processing.reader;
 import static com.google.common.base.MoreObjects.firstNonNull;
 
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
-import io.harness.event.grpc.PublishedMessage;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
 
 import java.util.List;
 import lombok.NonNull;

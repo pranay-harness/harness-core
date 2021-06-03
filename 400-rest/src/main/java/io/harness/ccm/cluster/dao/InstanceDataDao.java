@@ -6,8 +6,8 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.ccm.commons.entities.InstanceData;
-import io.harness.ccm.commons.entities.InstanceData.InstanceDataKeys;
+import io.harness.ccm.commons.entities.batch.InstanceData;
+import io.harness.ccm.commons.entities.batch.InstanceData.InstanceDataKeys;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;

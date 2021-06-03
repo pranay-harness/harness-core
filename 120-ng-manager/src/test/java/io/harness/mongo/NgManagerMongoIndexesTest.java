@@ -42,7 +42,7 @@ public class NgManagerMongoIndexesTest extends NgManagerTestBase {
     morphia.map(classes);
 
     List<IndexCreator> indexCreators = IndexManagerSession.allIndexes(
-        persistence.getDatastore(Connector.class), morphia, Store.builder().name(DbAliases.NG_MANAGER).build());
+        persistence.getDatastore(Connector.class), morphia, Store.builder().name(DbAliases.NG_MANAGER).build(), null);
 
     List<String> indexes = indexCreators.stream()
                                .map(creator

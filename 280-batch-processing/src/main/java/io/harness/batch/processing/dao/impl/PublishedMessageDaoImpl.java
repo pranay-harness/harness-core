@@ -3,8 +3,8 @@ package io.harness.batch.processing.dao.impl;
 import static io.harness.persistence.HQuery.excludeCount;
 
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
-import io.harness.event.grpc.PublishedMessage;
-import io.harness.event.grpc.PublishedMessage.PublishedMessageKeys;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
+import io.harness.ccm.commons.entities.events.PublishedMessage.PublishedMessageKeys;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;

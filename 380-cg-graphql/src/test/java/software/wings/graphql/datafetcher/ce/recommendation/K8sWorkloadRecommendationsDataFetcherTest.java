@@ -12,6 +12,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.dao.ClusterRecordDao;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
+import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation;
+import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation.K8sWorkloadRecommendationBuilder;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
@@ -27,8 +29,6 @@ import software.wings.graphql.datafetcher.ce.recommendation.dto.QLLastDayCost;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLResourceEntry;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLResourceRequirement;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation.K8sWorkloadRecommendationBuilder;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;

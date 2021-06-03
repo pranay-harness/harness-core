@@ -41,7 +41,7 @@ public class MongoIndexesTest extends WingsBaseTest {
     morphia.map(classes);
 
     List<IndexCreator> indexCreators =
-        IndexManagerSession.allIndexes(persistence.getDatastore(Account.class), morphia, null);
+        IndexManagerSession.allIndexes(persistence.getDatastore(Account.class), morphia, null, null);
 
     List<String> indexes = indexCreators.stream()
                                .map(creator

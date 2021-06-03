@@ -114,14 +114,16 @@ public class ScmServiceClientImpl implements ScmServiceClient {
 
   @Override
   public DeleteFileResponse deleteFile(
-      ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+      ScmConnector scmConnector, GitFileDetails gitFileDetails, SCMGrpc.SCMBlockingStub scmBlockingStub) {
     Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
     String slug = scmGitProviderHelper.getSlug(scmConnector);
     final DeleteFileRequest deleteFileRequest = DeleteFileRequest.newBuilder()
-                                                    .setBranch(gitFilePathDetails.getBranch())
-                                                    .setPath(gitFilePathDetails.getFilePath())
+                                                    .setBranch(gitFileDetails.getBranch())
+                                                    .setPath(gitFileDetails.getFilePath())
                                                     .setProvider(gitProvider)
                                                     .setSlug(slug)
+                                                    .setBlobId(gitFileDetails.getOldFileSha())
+                                                    .setBranch(gitFileDetails.getBranch())
                                                     .build();
 
     return scmBlockingStub.deleteFile(deleteFileRequest);

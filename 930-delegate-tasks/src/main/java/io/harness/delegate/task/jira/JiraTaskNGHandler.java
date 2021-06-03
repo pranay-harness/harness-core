@@ -52,8 +52,8 @@ public class JiraTaskNGHandler {
 
   public JiraTaskNGResponse getIssueCreateMetadata(JiraTaskNGParameters params) {
     JiraClient jiraClient = getJiraClient(params);
-    JiraIssueCreateMetadataNG createMetadata = jiraClient.getIssueCreateMetadata(
-        params.getProjectKey(), params.getIssueType(), params.getExpand(), params.isFetchStatus());
+    JiraIssueCreateMetadataNG createMetadata = jiraClient.getIssueCreateMetadata(params.getProjectKey(),
+        params.getIssueType(), params.getExpand(), params.isFetchStatus(), params.isIgnoreComment());
     return JiraTaskNGResponse.builder().issueCreateMetadata(createMetadata).build();
   }
 

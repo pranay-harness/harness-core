@@ -35,7 +35,7 @@ public interface ScmClient {
 
   UpdateFileResponse updateFile(ScmConnector scmConnector, GitFileDetails gitFileDetails);
 
-  DeleteFileResponse deleteFile(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails);
+  DeleteFileResponse deleteFile(ScmConnector scmConnector, GitFileDetails gitFileDetails);
 
   FileContent getFileContent(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails);
 

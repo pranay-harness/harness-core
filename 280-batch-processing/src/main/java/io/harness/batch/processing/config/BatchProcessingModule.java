@@ -29,6 +29,7 @@ import io.harness.lock.PersistentLocker;
 import io.harness.lock.noop.PersistentNoopLocker;
 import io.harness.mongo.MongoConfig;
 import io.harness.persistence.HPersistence;
+import io.harness.time.TimeModule;
 
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
@@ -41,8 +42,6 @@ import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.security.SecretManager;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
@@ -86,7 +85,7 @@ public class BatchProcessingModule extends AbstractModule {
   private void bindCFServices() {
     bind(PersistentLocker.class).to(PersistentNoopLocker.class).in(Scopes.SINGLETON);
     bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
-    bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+    install(TimeModule.getInstance());
     install(new ConnectorResourceClientModule(batchMainConfig.getNgManagerServiceHttpClientConfig(),
         batchMainConfig.getNgManagerServiceSecret(), BATCH_PROCESSING.getServiceId()));
   }

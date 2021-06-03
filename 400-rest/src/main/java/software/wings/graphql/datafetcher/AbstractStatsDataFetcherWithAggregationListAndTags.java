@@ -8,7 +8,7 @@ import static java.util.function.Function.identity;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.ccm.cluster.entities.K8sWorkload;
+import io.harness.ccm.commons.entities.k8s.K8sWorkload;
 
 import software.wings.beans.EntityType;
 import software.wings.beans.HarnessTagLink;

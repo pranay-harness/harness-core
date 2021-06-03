@@ -55,8 +55,8 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
   }
 
   @Override
-  public DeleteFileResponse deleteFile(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails) {
-    return scmServiceGitClient.deleteFile(scmConnector, gitFilePathDetails);
+  public DeleteFileResponse deleteFile(ScmConnector scmConnector, GitFileDetails gitFileDetails) {
+    return scmServiceGitClient.deleteFile(scmConnector, gitFileDetails);
   }
 
   @Override

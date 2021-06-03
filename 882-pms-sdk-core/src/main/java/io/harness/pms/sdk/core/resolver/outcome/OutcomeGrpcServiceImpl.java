@@ -39,75 +39,57 @@ public class OutcomeGrpcServiceImpl implements OutcomeService {
 
   @Override
   public List<Outcome> findAllByRuntimeId(String planExecutionId, String runtimeId) {
-    try {
-      OutcomeFindAllBlobResponse allByRuntimeId = outcomeProtoServiceBlockingStub.findAllByRuntimeId(
-          OutcomeFindAllBlobRequest.newBuilder().setPlanExecutionId(planExecutionId).setRuntimeId(runtimeId).build());
-      return PmsOutcomeMapper.convertJsonToOutcome(allByRuntimeId.getOutcomesList());
-    } catch (Exception ex) {
-      throw PmsSdkGrpcClientUtils.processException(ex);
-    }
+    OutcomeFindAllBlobResponse allByRuntimeId =
+        PmsSdkGrpcClientUtils.retryAndProcessException(outcomeProtoServiceBlockingStub::findAllByRuntimeId,
+            OutcomeFindAllBlobRequest.newBuilder().setPlanExecutionId(planExecutionId).setRuntimeId(runtimeId).build());
+    return PmsOutcomeMapper.convertJsonToOutcome(allByRuntimeId.getOutcomesList());
   }
 
   @Override
   public List<Outcome> fetchOutcomes(List<String> outcomeInstanceIds) {
-    try {
-      OutcomeFetchOutcomesBlobResponse outcomeFetchOutcomesBlobResponse = outcomeProtoServiceBlockingStub.fetchOutcomes(
-          OutcomeFetchOutcomesBlobRequest.newBuilder().addAllOutcomeInstanceIds(outcomeInstanceIds).build());
-      return PmsOutcomeMapper.convertJsonToOutcome(outcomeFetchOutcomesBlobResponse.getOutcomesList());
-    } catch (Exception ex) {
-      throw PmsSdkGrpcClientUtils.processException(ex);
-    }
+    OutcomeFetchOutcomesBlobResponse outcomeFetchOutcomesBlobResponse =
+        PmsSdkGrpcClientUtils.retryAndProcessException(outcomeProtoServiceBlockingStub::fetchOutcomes,
+            OutcomeFetchOutcomesBlobRequest.newBuilder().addAllOutcomeInstanceIds(outcomeInstanceIds).build());
+    return PmsOutcomeMapper.convertJsonToOutcome(outcomeFetchOutcomesBlobResponse.getOutcomesList());
   }
 
   @Override
   public Outcome fetchOutcome(@NonNull String outcomeInstanceId) {
-    try {
-      OutcomeFetchOutcomeBlobResponse outcomeFetchOutcomeBlobResponse = outcomeProtoServiceBlockingStub.fetchOutcome(
-          OutcomeFetchOutcomeBlobRequest.newBuilder().setOutcomeInstanceId(outcomeInstanceId).build());
-      return PmsOutcomeMapper.convertJsonToOutcome(outcomeFetchOutcomeBlobResponse.getOutcome());
-    } catch (Exception ex) {
-      throw PmsSdkGrpcClientUtils.processException(ex);
-    }
+    OutcomeFetchOutcomeBlobResponse outcomeFetchOutcomeBlobResponse =
+        PmsSdkGrpcClientUtils.retryAndProcessException(outcomeProtoServiceBlockingStub::fetchOutcome,
+            OutcomeFetchOutcomeBlobRequest.newBuilder().setOutcomeInstanceId(outcomeInstanceId).build());
+    return PmsOutcomeMapper.convertJsonToOutcome(outcomeFetchOutcomeBlobResponse.getOutcome());
   }
 
   @Override
   public Outcome resolve(Ambiance ambiance, RefObject refObject) {
-    try {
-      OutcomeResolveBlobResponse resolve = outcomeProtoServiceBlockingStub.resolve(
-          OutcomeResolveBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
-      return PmsOutcomeMapper.convertJsonToOutcome(resolve.getStepTransput());
-    } catch (Exception ex) {
-      throw PmsSdkGrpcClientUtils.processException(ex);
-    }
+    OutcomeResolveBlobResponse resolve =
+        PmsSdkGrpcClientUtils.retryAndProcessException(outcomeProtoServiceBlockingStub::resolve,
+            OutcomeResolveBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
+    return PmsOutcomeMapper.convertJsonToOutcome(resolve.getStepTransput());
   }
 
   @Override
   public String consume(Ambiance ambiance, String name, Outcome value, String groupName) {
-    try {
-      OutcomeConsumeBlobResponse response =
-          outcomeProtoServiceBlockingStub.consume(OutcomeConsumeBlobRequest.newBuilder()
-                                                      .setAmbiance(ambiance)
-                                                      .setName(name)
-                                                      .setValue(PmsOutcomeMapper.convertOutcomeValueToJson(value))
-                                                      .setGroupName(groupName)
-                                                      .build());
-      return response.getResponse();
-    } catch (Exception ex) {
-      throw PmsSdkGrpcClientUtils.processException(ex);
-    }
+    OutcomeConsumeBlobResponse response =
+        PmsSdkGrpcClientUtils.retryAndProcessException(outcomeProtoServiceBlockingStub::consume,
+            OutcomeConsumeBlobRequest.newBuilder()
+                .setAmbiance(ambiance)
+                .setName(name)
+                .setValue(PmsOutcomeMapper.convertOutcomeValueToJson(value))
+                .setGroupName(groupName)
+                .build());
+    return response.getResponse();
   }
 
   @Override
   public OptionalOutcome resolveOptional(Ambiance ambiance, RefObject refObject) {
-    try {
-      OutcomeResolveOptionalBlobResponse response = outcomeProtoServiceBlockingStub.resolveOptional(
-          OutcomeResolveOptionalBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
-      return OptionalOutcome.builder()
-          .found(response.getFound())
-          .outcome(PmsOutcomeMapper.convertJsonToOutcome(response.getOutcome()))
-          .build();
-    } catch (Exception ex) {
-      throw PmsSdkGrpcClientUtils.processException(ex);
-    }
+    OutcomeResolveOptionalBlobResponse response =
+        PmsSdkGrpcClientUtils.retryAndProcessException(outcomeProtoServiceBlockingStub::resolveOptional,
+            OutcomeResolveOptionalBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
+    return OptionalOutcome.builder()
+        .found(response.getFound())
+        .outcome(PmsOutcomeMapper.convertJsonToOutcome(response.getOutcome()))
+        .build();
   }
 }

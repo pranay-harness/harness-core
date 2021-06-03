@@ -79,6 +79,7 @@ public abstract class ApprovalInstance implements PersistentEntity, PersistentRe
 
   @NotNull ApprovalType type;
   @NotNull ApprovalStatus status;
+  String errorMessage;
   long deadline;
 
   @CreatedDate Long createdAt;
