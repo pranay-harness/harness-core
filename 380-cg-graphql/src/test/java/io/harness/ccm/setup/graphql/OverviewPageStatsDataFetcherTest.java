@@ -12,7 +12,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.dao.CEMetadataRecordDao;
-import io.harness.ccm.commons.entities.CEMetadataRecord;
+import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
 import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 

@@ -3,6 +3,8 @@ package io.harness.ccm.setup.service.impl;
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.commons.entities.billing.CECloudAccount;
+import io.harness.ccm.commons.entities.billing.CECloudAccount.AccountStatus;
 import io.harness.ccm.setup.CECloudAccountDao;
 import io.harness.ccm.setup.service.intfc.AWSAccountService;
 import io.harness.ccm.setup.service.support.intfc.AWSOrganizationHelperService;
@@ -12,8 +14,6 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEAwsConfig;
-import software.wings.beans.ce.CECloudAccount;
-import software.wings.beans.ce.CECloudAccount.AccountStatus;
 import software.wings.service.intfc.SettingsService;
 
 import com.amazonaws.services.organizations.model.Account;

@@ -7,8 +7,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.batch.processing.BatchProcessingTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
-import io.harness.ccm.billing.entities.BillingDataPipelineRecord.BillingDataPipelineRecordKeys;
+import io.harness.ccm.commons.entities.billing.BillingDataPipelineRecord;
+import io.harness.ccm.commons.entities.billing.BillingDataPipelineRecord.BillingDataPipelineRecordKeys;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 

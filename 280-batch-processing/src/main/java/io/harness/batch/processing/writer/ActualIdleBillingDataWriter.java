@@ -6,7 +6,7 @@ import io.harness.batch.processing.ccm.ActualIdleCostData;
 import io.harness.batch.processing.ccm.ActualIdleCostWriterData;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.entities.batch.InstanceData;
 
 import com.google.inject.Singleton;
 import java.math.BigDecimal;

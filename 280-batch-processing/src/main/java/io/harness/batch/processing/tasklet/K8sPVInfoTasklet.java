@@ -1,6 +1,6 @@
 package io.harness.batch.processing.tasklet;
 
-import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
+import static io.harness.ccm.commons.entities.k8s.K8sWorkload.encodeDotsInKey;
 
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.ClusterType;
@@ -17,7 +17,7 @@ import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.StorageResource;
 import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
-import io.harness.event.grpc.PublishedMessage;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.PVInfo;
 

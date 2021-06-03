@@ -8,8 +8,8 @@ import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.service.intfc.BatchJobIntervalService;
 import io.harness.batch.processing.service.intfc.BatchJobScheduledDataService;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
-import io.harness.ccm.cluster.entities.BatchJobInterval;
-import io.harness.ccm.cluster.entities.BatchJobScheduledData;
+import io.harness.ccm.commons.entities.batch.BatchJobInterval;
+import io.harness.ccm.commons.entities.batch.BatchJobScheduledData;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;

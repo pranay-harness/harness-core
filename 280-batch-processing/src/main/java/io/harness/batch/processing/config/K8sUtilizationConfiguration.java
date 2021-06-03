@@ -10,7 +10,7 @@ import io.harness.batch.processing.writer.NodeUtilizationMetricsWriter;
 import io.harness.batch.processing.writer.PVUtilizationMetricsWriter;
 import io.harness.batch.processing.writer.PodUtilizationMetricsWriter;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
-import io.harness.event.grpc.PublishedMessage;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
 
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;

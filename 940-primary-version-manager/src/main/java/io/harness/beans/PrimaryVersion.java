@@ -21,7 +21,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "primaryVersion", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @StoreIn(DbAliases.ALL)
-public class PrimaryVersion implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+public final class PrimaryVersion implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   public static final String GLOBAL_CONFIG_ID = "__GLOBAL_CONFIG_ID__";
   public static final String MATCH_ALL_VERSION = "*";
   @Id private String uuid;

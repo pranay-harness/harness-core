@@ -18,7 +18,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.entities.batch.InstanceData;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;

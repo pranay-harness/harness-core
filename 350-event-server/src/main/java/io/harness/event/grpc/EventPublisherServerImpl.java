@@ -9,6 +9,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static java.util.Objects.requireNonNull;
 
+import io.harness.ccm.commons.entities.events.PublishedMessage;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.event.EventPublisherGrpc;
 import io.harness.event.MessageProcessorType;
@@ -57,8 +58,8 @@ public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherI
          AutoLogContext ignore1 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
       log.info("Received publish request with {} messages", request.getMessagesCount());
 
-      List<PublishedMessage> withoutCategory = new ArrayList<>();
-      List<PublishedMessage> withCategory = new ArrayList<>();
+      List<io.harness.ccm.commons.entities.events.PublishedMessage> withoutCategory = new ArrayList<>();
+      List<io.harness.ccm.commons.entities.events.PublishedMessage> withCategory = new ArrayList<>();
       request.getMessagesList()
           .stream()
           .map(publishMessage -> toPublishedMessage(accountId, publishMessage))
@@ -103,7 +104,8 @@ public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherI
     }
   }
 
-  public PublishedMessage toPublishedMessage(String accountId, PublishMessage publishMessage) {
+  public io.harness.ccm.commons.entities.events.PublishedMessage toPublishedMessage(
+      String accountId, PublishMessage publishMessage) {
     try {
       return PublishedMessage.builder()
           .uuid(StringUtils.defaultIfEmpty(publishMessage.getMessageId(), generateUuid()))

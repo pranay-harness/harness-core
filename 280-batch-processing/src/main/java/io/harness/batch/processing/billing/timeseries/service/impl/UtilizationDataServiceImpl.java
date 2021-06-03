@@ -6,7 +6,7 @@ import io.harness.batch.processing.billing.service.UtilizationData;
 import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationData;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.entities.batch.InstanceData;
 import io.harness.ccm.commons.utils.TimeUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;

@@ -3,9 +3,9 @@ package io.harness.batch.processing.config;
 import io.harness.batch.processing.service.intfc.BillingDataPipelineService;
 import io.harness.ccm.billing.dao.BillingDataPipelineRecordDao;
 import io.harness.ccm.billing.dao.CloudBillingTransferRunDao;
-import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
-import io.harness.ccm.billing.entities.CloudBillingTransferRun;
-import io.harness.ccm.billing.entities.TransferJobRunState;
+import io.harness.ccm.commons.entities.billing.BillingDataPipelineRecord;
+import io.harness.ccm.commons.entities.billing.CloudBillingTransferRun;
+import io.harness.ccm.commons.entities.billing.TransferJobRunState;
 import io.harness.ccm.config.GcpOrganization;
 import io.harness.ccm.config.GcpOrganizationDao;
 

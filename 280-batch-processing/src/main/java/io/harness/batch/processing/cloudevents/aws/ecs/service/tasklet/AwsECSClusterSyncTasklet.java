@@ -6,11 +6,11 @@ import static software.wings.settings.SettingVariableTypes.CE_AWS;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.intfc.AwsAccountService;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.intfc.AwsECSClusterService;
+import io.harness.ccm.commons.entities.billing.CECloudAccount;
 import io.harness.ccm.setup.CECloudAccountDao;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEAwsConfig;
-import software.wings.beans.ce.CECloudAccount;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 import com.google.inject.Singleton;

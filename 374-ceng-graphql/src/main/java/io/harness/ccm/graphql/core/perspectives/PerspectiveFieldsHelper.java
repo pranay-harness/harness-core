@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.commons.dao.CEMetadataRecordDao;
-import io.harness.ccm.commons.entities.CEMetadataRecord;
+import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
 import io.harness.ccm.commons.utils.BigQueryHelper;
 import io.harness.ccm.graphql.dto.perspectives.PerspectiveFieldsData;
 import io.harness.ccm.views.entities.CEView;

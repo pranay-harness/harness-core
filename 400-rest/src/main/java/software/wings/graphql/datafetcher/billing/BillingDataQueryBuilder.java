@@ -10,7 +10,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.commons.dao.CEMetadataRecordDao;
-import io.harness.ccm.commons.entities.CEMetadataRecord;
+import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
