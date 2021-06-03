@@ -10,6 +10,11 @@ ${approvalMessage}<br><br>
 <b>Project:</b> ${projectIdentifier}<br>
 <b>Triggered by:</b> ${triggeredBy}<br><br>
 
+<b>Pipeline execution summary:</b><br>
+Upcoming Stages: ${upcomingStages}<br>
+Completed Stages: ${finishedStages}<br>
+Running Stages: ${runningStages}<br><br>
+
 <i>Pipeline started on ${startedAt} and approval expires on ${expiresAt}</i><br>
 <div>
     <span>
