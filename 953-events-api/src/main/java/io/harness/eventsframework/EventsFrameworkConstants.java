@@ -52,9 +52,9 @@ public final class EventsFrameworkConstants {
   // Pipeline Service Events
   public static final int PIPELINE_INTERRUPT_BATCH_SIZE = 10;
   public static final int PIPELINE_ORCHESTRATION_EVENT_BATCH_SIZE = 20;
-  public static final int PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE = 50000;
-  public static final int PIPELINE_ORCHESTRATION_EVENT_MAX_TOPIC_SIZE = 50000;
-  public static final int PIPELINE_INTERRUPT_EVENT_MAX_TOPIC_SIZE = 5000;
+  public static final int PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE = 5000;
+  public static final int PIPELINE_ORCHESTRATION_EVENT_MAX_TOPIC_SIZE = 5000;
+  public static final int PIPELINE_INTERRUPT_EVENT_MAX_TOPIC_SIZE = 1000;
 
   public static final Duration DEFAULT_MAX_PROCESSING_TIME = Duration.ofSeconds(10);
   public static final Duration ENTITY_CRUD_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
