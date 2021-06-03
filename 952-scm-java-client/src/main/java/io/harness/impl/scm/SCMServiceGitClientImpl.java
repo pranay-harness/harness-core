@@ -55,8 +55,8 @@ public class SCMServiceGitClientImpl implements ScmClient {
   }
 
   @Override
-  public DeleteFileResponse deleteFile(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails) {
-    return scmServiceClient.deleteFile(scmConnector, gitFilePathDetails, scmBlockingStub);
+  public DeleteFileResponse deleteFile(ScmConnector scmConnector, GitFileDetails gitFileDetails) {
+    return scmServiceClient.deleteFile(scmConnector, gitFileDetails, scmBlockingStub);
   }
 
   @Override

@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitFileDetails;
-import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -74,9 +73,9 @@ public class ScmManagerGitHelper implements ScmGitHelper {
   }
 
   private DeleteFileResponse doScmDeleteFile(GitEntityInfo gitBranchInfo, InfoForGitPush infoForPush) {
-    final GitFilePathDetails gitFilePathDetails =
-        GitFilePathDetails.builder().branch(infoForPush.getBranch()).filePath(infoForPush.getFilePath()).build();
-    return scmClient.deleteFile(infoForPush.getScmConnector(), gitFilePathDetails);
+    final GitFileDetails gitFileDetails =
+        ScmGitUtils.getGitFileDetails(gitBranchInfo, null).oldFileSha(gitBranchInfo.getLastObjectId()).build();
+    return scmClient.deleteFile(infoForPush.getScmConnector(), gitFileDetails);
   }
 
   private CreateFileResponse doScmCreateFile(String yaml, GitEntityInfo gitBranchInfo, InfoForGitPush infoForPush) {
