@@ -51,7 +51,9 @@ import io.harness.repositories.pipeline.PipelineExecutionRepository;
 import io.harness.rule.Owner;
 
 import io.fabric8.utils.Lists;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -254,13 +256,16 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
             .build();
 
     when(pipelineExecutionRepository.save(any(PipelineExecutionSummary.class)))
-        .thenReturn(PipelineExecutionSummary.builder().build());
+        .thenReturn(PipelineExecutionSummary.builder()
+                        .validUntil(Date.from(OffsetDateTime.now().plusMonths(6).toInstant()))
+                        .build());
 
     ngPipelineExecutionService.createPipelineExecutionSummary(
         ACCOUNT_ID, ORG_ID, PROJECT_ID, planExecution, cdPipelineSetupParameters);
 
     verify(pipelineExecutionRepository).save(pipelineExecutionSummaryArgumentCaptor.capture());
 
-    assertThat(pipelineExecutionSummaryArgumentCaptor.getValue()).isEqualTo(pipelineExecutionSummary);
+    PipelineExecutionSummary actualSummary = pipelineExecutionSummaryArgumentCaptor.getValue();
+    assertThat(actualSummary.getId()).isEqualTo(pipelineExecutionSummary.getId());
   }
 }
