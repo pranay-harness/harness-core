@@ -13,6 +13,7 @@ public class SdkResponseEventMessageExtractor implements MonitoringMetadataExtra
   @Override
   public ThreadAutoLogContext metricContext(SdkResponseEventProto sdkResponseEvent) {
     Map<String, String> logContext = new HashMap<>();
+    logContext.put("accountId", sdkResponseEvent.getMetadata().getAccountId());
     logContext.put("eventType", sdkResponseEvent.getSdkResponseEventType().name());
     return new ThreadAutoLogContext(logContext, OVERRIDE_NESTS);
   }
@@ -30,5 +31,10 @@ public class SdkResponseEventMessageExtractor implements MonitoringMetadataExtra
   @Override
   public Long getCreatedAt(SdkResponseEventProto message) {
     return ProtoUtils.timestampToUnixMillis(message.getCreatedAt());
+  }
+
+  @Override
+  public String getAccountId(SdkResponseEventProto message) {
+    return message.getMetadata().getAccountId();
   }
 }

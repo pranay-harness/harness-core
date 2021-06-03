@@ -7,10 +7,7 @@ import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.contracts.execution.events.QueueTaskRequest;
-import io.harness.pms.contracts.execution.events.SpawnChildRequest;
-import io.harness.pms.contracts.execution.events.SpawnChildrenRequest;
-import io.harness.pms.contracts.execution.events.SuspendChainRequest;
+import io.harness.pms.contracts.execution.events.*;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
@@ -25,30 +22,34 @@ import lombok.NonNull;
 
 @OwnedBy(CDC)
 public interface SdkNodeExecutionService {
-  void suspendChainExecution(String currentNodeExecutionId, SuspendChainRequest suspendChainRequest);
+  void suspendChainExecution(String currentNodeExecutionId, SuspendChainRequest suspendChainRequest,
+      SdkResponseEventMetadata responseEventMetadata);
 
-  void addExecutableResponse(
-      @NonNull String nodeExecutionId, Status status, ExecutableResponse executableResponse, List<String> callbackIds);
+  void addExecutableResponse(@NonNull String nodeExecutionId, Status status, ExecutableResponse executableResponse,
+      List<String> callbackIds, SdkResponseEventMetadata metadata);
 
-  void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponseProto stepResponse);
+  void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponseProto stepResponse,
+      SdkResponseEventMetadata sdkResponseEventMetadata);
 
-  void resumeNodeExecution(String nodeExecutionId, Map<String, ResponseData> response, boolean asyncError);
+  void resumeNodeExecution(String nodeExecutionId, Map<String, ResponseData> response, boolean asyncError,
+      SdkResponseEventMetadata sdkResponseEventMetadata);
 
   StepParameters extractResolvedStepParameters(NodeExecutionProto nodeExecution);
 
-  void handleFacilitationResponse(
-      @NonNull String nodeExecutionId, @NonNull String notifyId, FacilitatorResponseProto facilitatorResponseProto);
+  void handleFacilitationResponse(@NonNull String nodeExecutionId, @NonNull String notifyId,
+      FacilitatorResponseProto facilitatorResponseProto, SdkResponseEventMetadata sdkResponseEventMetadata);
 
-  void handleAdviserResponse(
-      @NonNull String nodeExecutionId, @NonNull String notifyId, AdviserResponse adviserResponse);
+  void handleAdviserResponse(@NonNull String nodeExecutionId, @NonNull String notifyId, AdviserResponse adviserResponse,
+      SdkResponseEventMetadata sdkResponseEventMetadata);
 
-  void handleEventError(NodeExecutionEventType eventType, String eventNotifyId, FailureInfo failureInfo);
+  void handleEventError(NodeExecutionEventType eventType, String eventNotifyId, FailureInfo failureInfo,
+      SdkResponseEventMetadata sdkResponseEventMetadata);
 
-  void spawnChild(SpawnChildRequest spawnChildRequest);
+  void spawnChild(SpawnChildRequest spawnChildRequest, SdkResponseEventMetadata sdkResponseEventMetadata);
 
-  void queueTaskRequest(QueueTaskRequest queueTaskRequest);
+  void queueTaskRequest(QueueTaskRequest queueTaskRequest, SdkResponseEventMetadata sdkResponseEventMetadata);
 
-  void spawnChildren(SpawnChildrenRequest spawnChildrenRequest);
+  void spawnChildren(SpawnChildrenRequest spawnChildrenRequest, SdkResponseEventMetadata sdkResponseEventMetadata);
 
   void handleProgressResponse(NodeExecutionProto nodeExecutionProto, ProgressData progressData);
 }

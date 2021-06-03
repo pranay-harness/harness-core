@@ -11,7 +11,9 @@ import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.events.SdkResponseEventMetadata;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.execution.AsyncSdkProgressCallback;
 import io.harness.pms.sdk.core.execution.AsyncSdkResumeCallback;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
@@ -51,10 +53,12 @@ public class AsyncStrategy extends ProgressableStrategy {
     NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
     AsyncExecutable asyncExecutable = extractStep(nodeExecution);
+    String accountId = AmbianceUtils.getAccountId(nodeExecution.getAmbiance());
     StepResponse stepResponse = asyncExecutable.handleAsyncResponse(ambiance,
         sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), resumePackage.getResponseDataMap());
-    sdkNodeExecutionService.handleStepResponse(
-        nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
+    sdkNodeExecutionService.handleStepResponse(nodeExecution.getUuid(),
+        StepResponseMapper.toStepResponseProto(stepResponse),
+        SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
   }
 
   private void handleResponse(NodeExecutionProto nodeExecution, AsyncExecutableResponse response) {
@@ -64,13 +68,15 @@ public class AsyncStrategy extends ProgressableStrategy {
           + ", nodeExecutionId: " + nodeExecution.getUuid());
       throw new InvalidRequestException("Callback Ids cannot be empty for Async Executable Response");
     }
-
-    AsyncSdkResumeCallback callback = AsyncSdkResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
+    String accountId = AmbianceUtils.getAccountId(nodeExecution.getAmbiance());
+    AsyncSdkResumeCallback callback =
+        AsyncSdkResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).accountId(accountId).build();
     AsyncSdkProgressCallback progressCallback =
         AsyncSdkProgressCallback.builder().nodeExecutionBytes(nodeExecution.toByteArray()).build();
     asyncWaitEngine.waitForAllOn(callback, progressCallback, response.getCallbackIdsList().toArray(new String[0]));
     sdkNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), extractStatus(response),
-        ExecutableResponse.newBuilder().setAsync(response).build(), Collections.emptyList());
+        ExecutableResponse.newBuilder().setAsync(response).build(), Collections.emptyList(),
+        SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
   }
 
   @Override

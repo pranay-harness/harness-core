@@ -70,4 +70,9 @@ public class NodeExecutionEvent extends Queuable implements WithMonitoring {
     logContext.put(NodeExecutionEventKeys.notifyId, notifyId);
     return logContext;
   }
+
+  @Override
+  public String getAccountId() {
+    return AmbianceUtils.getAccountId(nodeExecution.getAmbiance());
+  }
 }

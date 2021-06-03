@@ -64,6 +64,11 @@ public class OrchestrationEvent extends Queuable implements WithMonitoring {
   }
 
   @Override
+  public String getAccountId() {
+    return AmbianceUtils.getAccountId(ambiance);
+  }
+
+  @Override
   public String getMetricPrefix() {
     return "orchestration_event";
   }

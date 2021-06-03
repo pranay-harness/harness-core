@@ -8,6 +8,7 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.SyncExecutableResponse;
+import io.harness.pms.contracts.execution.events.SdkResponseEventMetadata;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.execution.ExecuteStrategy;
@@ -33,6 +34,7 @@ public class SyncStrategy implements ExecuteStrategy {
   public void start(InvokerPackage invokerPackage) {
     NodeExecutionProto nodeExecution = invokerPackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
+    String accountId = AmbianceUtils.getAccountId(ambiance);
     SyncExecutable syncExecutable = extractStep(nodeExecution);
     StepResponse stepResponse =
         syncExecutable.executeSync(ambiance, sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution),
@@ -44,9 +46,10 @@ public class SyncStrategy implements ExecuteStrategy {
                          .addAllUnits(syncExecutable.getCommandUnits(nodeExecution.getAmbiance()))
                          .build())
             .build(),
-        new ArrayList<>());
-    sdkNodeExecutionService.handleStepResponse(
-        AmbianceUtils.obtainCurrentRuntimeId(ambiance), StepResponseMapper.toStepResponseProto(stepResponse));
+        new ArrayList<>(), SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
+    sdkNodeExecutionService.handleStepResponse(AmbianceUtils.obtainCurrentRuntimeId(ambiance),
+        StepResponseMapper.toStepResponseProto(stepResponse),
+        SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
   }
 
   @Override

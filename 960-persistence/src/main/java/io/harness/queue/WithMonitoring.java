@@ -8,4 +8,6 @@ public interface WithMonitoring {
   String getMetricPrefix();
 
   Long getCreatedAt();
+
+  String getAccountId();
 }

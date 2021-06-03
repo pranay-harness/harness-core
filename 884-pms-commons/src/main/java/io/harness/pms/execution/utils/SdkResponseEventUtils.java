@@ -21,6 +21,7 @@ public class SdkResponseEventUtils {
 
   private Map<String, String> logContextMap(SdkResponseEvent sdkResponseEvent) {
     Map<String, String> logContext = new HashMap<>();
+    logContext.put("accountId", sdkResponseEvent.getMetadata().getAccountId());
     logContext.put("sdkResponseEventType", sdkResponseEvent.getSdkResponseEventType().name());
     logContext.put("nodeExecutionId", sdkResponseEvent.getSdkResponseEventRequest().getNodeExecutionId());
     return logContext;
@@ -28,6 +29,7 @@ public class SdkResponseEventUtils {
 
   public SdkResponseEvent fromProtoToSdkResponseEvent(SdkResponseEventProto sdkResponseEventProto) {
     return SdkResponseEvent.builder()
+        .metadata(sdkResponseEventProto.getMetadata())
         .sdkResponseEventRequest(sdkResponseEventProto.getSdkResponseEventRequest())
         .sdkResponseEventType(sdkResponseEventProto.getSdkResponseEventType())
         .build();
@@ -35,6 +37,7 @@ public class SdkResponseEventUtils {
 
   public SdkResponseEventProto fromSdkResponseEventToProto(SdkResponseEvent sdkResponseEvent) {
     return SdkResponseEventProto.newBuilder()
+        .setMetadata(sdkResponseEvent.getMetadata())
         .setSdkResponseEventRequest(sdkResponseEvent.getSdkResponseEventRequest())
         .setSdkResponseEventType(sdkResponseEvent.getSdkResponseEventType())
         .setCreatedAt(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))

@@ -12,6 +12,7 @@ import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.events.SdkResponseEventMetadata;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
@@ -23,6 +24,7 @@ import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.execution.ProgressNodeExecutionEventData;
 import io.harness.pms.execution.ResumeNodeExecutionEventData;
 import io.harness.pms.execution.StartNodeExecutionEventData;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
@@ -129,6 +131,7 @@ public class NodeExecutionEventListener extends QueueListenerWithObservers<NodeE
     try {
       NodeExecutionProto nodeExecution = event.getNodeExecution();
       Ambiance ambiance = nodeExecution.getAmbiance();
+      String accountId = AmbianceUtils.getAccountId(ambiance);
       StepInputPackage inputPackage = obtainInputPackage(nodeExecution);
       PlanNodeProto node = nodeExecution.getNode();
       FacilitatorResponse currFacilitatorResponse = null;
@@ -143,15 +146,18 @@ public class NodeExecutionEventListener extends QueueListenerWithObservers<NodeE
       }
       if (currFacilitatorResponse == null) {
         sdkNodeExecutionService.handleFacilitationResponse(nodeExecution.getUuid(), event.getNotifyId(),
-            FacilitatorResponseProto.newBuilder().setIsSuccessful(false).build());
+            FacilitatorResponseProto.newBuilder().setIsSuccessful(false).build(),
+            SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
         return true;
       }
       sdkNodeExecutionService.handleFacilitationResponse(nodeExecution.getUuid(), event.getNotifyId(),
-          FacilitatorResponseMapper.toFacilitatorResponseProto(currFacilitatorResponse));
+          FacilitatorResponseMapper.toFacilitatorResponseProto(currFacilitatorResponse),
+          SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
       return true;
     } catch (Exception ex) {
       log.error("Error while facilitating execution", ex);
-      sdkNodeExecutionService.handleEventError(event.getEventType(), event.getNotifyId(), constructFailureInfo(ex));
+      sdkNodeExecutionService.handleEventError(event.getEventType(), event.getNotifyId(), constructFailureInfo(ex),
+          SdkResponseEventMetadata.newBuilder().build());
       return false;
     }
   }
@@ -174,7 +180,9 @@ public class NodeExecutionEventListener extends QueueListenerWithObservers<NodeE
       return true;
     } catch (Exception ex) {
       log.error("Error while starting execution", ex);
-      sdkNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), constructStepResponse(ex));
+      String accountId = AmbianceUtils.getAccountId(nodeExecution.getAmbiance());
+      sdkNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), constructStepResponse(ex),
+          SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
       return false;
     }
   }
@@ -184,6 +192,7 @@ public class NodeExecutionEventListener extends QueueListenerWithObservers<NodeE
     ExecutableProcessor processor = executableProcessorFactory.obtainProcessor(nodeExecution.getMode());
     ResumeNodeExecutionEventData eventData = (ResumeNodeExecutionEventData) event.getEventData();
     Map<String, ResponseData> response = new HashMap<>();
+    String accountId = AmbianceUtils.getAccountId(nodeExecution.getAmbiance());
     if (EmptyPredicate.isNotEmpty(eventData.getResponse())) {
       eventData.getResponse().forEach((k, v) -> response.put(k, (ResponseData) kryoSerializer.asInflatedObject(v)));
     }
@@ -199,7 +208,8 @@ public class NodeExecutionEventListener extends QueueListenerWithObservers<NodeE
                                     .setErrorMessage(errorResponseData.getErrorMessage())
                                     .build())
                 .build();
-        sdkNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), stepResponse);
+        sdkNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), stepResponse,
+            SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
         return true;
       }
 
@@ -207,7 +217,8 @@ public class NodeExecutionEventListener extends QueueListenerWithObservers<NodeE
       return true;
     } catch (Exception ex) {
       log.error("Error while resuming execution", ex);
-      sdkNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), constructStepResponse(ex));
+      sdkNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), constructStepResponse(ex),
+          SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
       return false;
     }
   }
@@ -220,6 +231,7 @@ public class NodeExecutionEventListener extends QueueListenerWithObservers<NodeE
   private boolean adviseExecution(NodeExecutionEvent event) {
     try {
       NodeExecutionProto nodeExecutionProto = event.getNodeExecution();
+      String accountId = AmbianceUtils.getAccountId(nodeExecutionProto.getAmbiance());
       PlanNodeProto planNodeProto = nodeExecutionProto.getNode();
       AdviseNodeExecutionEventData data = (AdviseNodeExecutionEventData) event.getEventData();
       AdviserResponse adviserResponse = null;
@@ -240,16 +252,18 @@ public class NodeExecutionEventListener extends QueueListenerWithObservers<NodeE
       }
 
       if (adviserResponse != null) {
-        sdkNodeExecutionService.handleAdviserResponse(
-            nodeExecutionProto.getUuid(), event.getNotifyId(), adviserResponse);
+        sdkNodeExecutionService.handleAdviserResponse(nodeExecutionProto.getUuid(), event.getNotifyId(),
+            adviserResponse, SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
       } else {
         sdkNodeExecutionService.handleAdviserResponse(nodeExecutionProto.getUuid(), event.getNotifyId(),
-            AdviserResponse.newBuilder().setType(AdviseType.UNKNOWN).build());
+            AdviserResponse.newBuilder().setType(AdviseType.UNKNOWN).build(),
+            SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
       }
       return true;
     } catch (Exception ex) {
       log.error("Error while advising execution", ex);
-      sdkNodeExecutionService.handleEventError(event.getEventType(), event.getNotifyId(), constructFailureInfo(ex));
+      sdkNodeExecutionService.handleEventError(event.getEventType(), event.getNotifyId(), constructFailureInfo(ex),
+          SdkResponseEventMetadata.newBuilder().build());
       return false;
     }
   }

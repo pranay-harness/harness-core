@@ -18,6 +18,11 @@ message SdkResponseEventProto {
   SdkResponseEventType sdkResponseEventType = 1;
   SdkResponseEventRequest sdkResponseEventRequest = 2;
   google.protobuf.Timestamp createdAt = 3;
+  SdkResponseEventMetadata metadata = 4;
+}
+
+message SdkResponseEventMetadata {
+  string accountId = 1;
 }
 
 message SdkResponseEventRequest {

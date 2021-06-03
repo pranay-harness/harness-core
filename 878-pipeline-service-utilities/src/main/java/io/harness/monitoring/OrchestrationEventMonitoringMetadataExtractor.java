@@ -36,4 +36,9 @@ public class OrchestrationEventMonitoringMetadataExtractor implements Monitoring
   public Long getCreatedAt(OrchestrationEvent event) {
     return ProtoUtils.timestampToUnixMillis(event.getCreatedAt());
   }
+
+  @Override
+  public String getAccountId(OrchestrationEvent message) {
+    return AmbianceUtils.getAccountId(message.getAmbiance());
+  }
 }

@@ -13,9 +13,11 @@ import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.SkipTaskExecutableResponse;
 import io.harness.pms.contracts.execution.TaskExecutableResponse;
 import io.harness.pms.contracts.execution.events.QueueTaskRequest;
+import io.harness.pms.contracts.execution.events.SdkResponseEventMetadata;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest.RequestCase;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.data.StringOutcome;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
 import io.harness.pms.sdk.core.execution.ProgressableStrategy;
@@ -53,6 +55,7 @@ public class TaskStrategy extends ProgressableStrategy {
   public void resume(ResumePackage resumePackage) {
     NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
+    String accountId = AmbianceUtils.getAccountId(ambiance);
     TaskExecutable taskExecutable = extractStep(nodeExecution);
     StepResponse stepResponse = null;
     try {
@@ -62,11 +65,13 @@ public class TaskStrategy extends ProgressableStrategy {
     } catch (Exception e) {
       stepResponse = strategyHelper.handleException(e);
     }
-    sdkNodeExecutionService.handleStepResponse(
-        nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
+    sdkNodeExecutionService.handleStepResponse(nodeExecution.getUuid(),
+        StepResponseMapper.toStepResponseProto(stepResponse),
+        SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
   }
 
   private void handleResponse(@NonNull Ambiance ambiance, NodeExecutionProto nodeExecution, TaskRequest taskRequest) {
+    String accountId = AmbianceUtils.getAccountId(ambiance);
     if (RequestCase.SKIPTASKREQUEST == taskRequest.getRequestCase()) {
       sdkNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), NO_OP,
           ExecutableResponse.newBuilder()
@@ -74,7 +79,7 @@ public class TaskStrategy extends ProgressableStrategy {
                                .setMessage(taskRequest.getSkipTaskRequest().getMessage())
                                .build())
               .build(),
-          Collections.emptyList());
+          Collections.emptyList(), SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
       sdkNodeExecutionService.handleStepResponse(nodeExecution.getUuid(),
           StepResponseMapper.toStepResponseProto(
               StepResponse.builder()
@@ -85,7 +90,8 @@ public class TaskStrategy extends ProgressableStrategy {
                           .outcome(
                               StringOutcome.builder().message(taskRequest.getSkipTaskRequest().getMessage()).build())
                           .build())
-                  .build()));
+                  .build()),
+          SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
       return;
     }
 
@@ -107,7 +113,8 @@ public class TaskStrategy extends ProgressableStrategy {
                                             .setExecutableResponse(executableResponse)
                                             .setStatus(TASK_WAITING)
                                             .build();
-    sdkNodeExecutionService.queueTaskRequest(queueTaskRequest);
+    sdkNodeExecutionService.queueTaskRequest(
+        queueTaskRequest, SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
   }
 
   @Override

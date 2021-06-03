@@ -7,6 +7,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
 import io.harness.metrics.ThreadAutoLogContext;
+import io.harness.pms.contracts.execution.events.SdkResponseEventMetadata;
 import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventType;
 import io.harness.queue.Queuable;
@@ -39,6 +40,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class SdkResponseEvent extends Queuable implements WithMonitoring {
   SdkResponseEventType sdkResponseEventType;
   SdkResponseEventRequest sdkResponseEventRequest;
+  SdkResponseEventMetadata metadata;
   @Getter @Setter @NonFinal @CreatedDate Long createdAt;
   @Setter @NonFinal @Version Long version;
 
@@ -53,6 +55,11 @@ public class SdkResponseEvent extends Queuable implements WithMonitoring {
     logContext.put("eventType", sdkResponseEventType.name());
     logContext.put("runtimeId", sdkResponseEventRequest.getNodeExecutionId());
     return new ThreadAutoLogContext(logContext, OVERRIDE_NESTS);
+  }
+
+  @Override
+  public String getAccountId() {
+    return metadata.getAccountId();
   }
 
   @Override

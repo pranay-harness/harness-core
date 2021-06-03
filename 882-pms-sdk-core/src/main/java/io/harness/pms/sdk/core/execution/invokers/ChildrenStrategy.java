@@ -6,8 +6,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildrenExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
+import io.harness.pms.contracts.execution.events.SdkResponseEventMetadata;
 import io.harness.pms.contracts.execution.events.SpawnChildrenRequest;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.execution.ExecuteStrategy;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
 import io.harness.pms.sdk.core.execution.ResumePackage;
@@ -39,11 +41,13 @@ public class ChildrenStrategy implements ExecuteStrategy {
   public void resume(ResumePackage resumePackage) {
     NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
+    String accountId = AmbianceUtils.getAccountId(ambiance);
     ChildrenExecutable childrenExecutable = extractStep(nodeExecution);
     StepResponse stepResponse = childrenExecutable.handleChildrenResponse(ambiance,
         sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), resumePackage.getResponseDataMap());
-    sdkNodeExecutionService.handleStepResponse(
-        nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
+    sdkNodeExecutionService.handleStepResponse(nodeExecution.getUuid(),
+        StepResponseMapper.toStepResponseProto(stepResponse),
+        SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
   }
 
   @Override
@@ -55,11 +59,13 @@ public class ChildrenStrategy implements ExecuteStrategy {
   private void handleResponse(NodeExecutionProto nodeExecution, ChildrenExecutableResponse response) {
     Ambiance ambiance = nodeExecution.getAmbiance();
 
+    String accountId = AmbianceUtils.getAccountId(ambiance);
     SpawnChildrenRequest spawnChildrenRequest = SpawnChildrenRequest.newBuilder()
                                                     .setPlanExecutionId(ambiance.getPlanExecutionId())
                                                     .setNodeExecutionId(nodeExecution.getUuid())
                                                     .setChildren(response)
                                                     .build();
-    sdkNodeExecutionService.spawnChildren(spawnChildrenRequest);
+    sdkNodeExecutionService.spawnChildren(
+        spawnChildrenRequest, SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
   }
 }

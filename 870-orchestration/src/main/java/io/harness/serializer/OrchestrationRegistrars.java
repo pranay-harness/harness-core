@@ -85,10 +85,7 @@ import io.harness.serializer.spring.converters.skip.SkipInfoReadConverter;
 import io.harness.serializer.spring.converters.skip.SkipInfoWriteConverter;
 import io.harness.serializer.spring.converters.stepoutcomeref.StepOutcomeRefReadConverter;
 import io.harness.serializer.spring.converters.stepoutcomeref.StepOutcomeRefWriteConverter;
-import io.harness.serializer.spring.converters.steps.SdkResponseEventRequestReadConverter;
-import io.harness.serializer.spring.converters.steps.SdkResponseEventRequestWriteConverter;
-import io.harness.serializer.spring.converters.steps.StepInfoReadConverter;
-import io.harness.serializer.spring.converters.steps.StepInfoWriteConverter;
+import io.harness.serializer.spring.converters.steps.*;
 import io.harness.serializer.spring.converters.steptype.StepTypeReadConverter;
 import io.harness.serializer.spring.converters.steptype.StepTypeWriteConverter;
 import io.harness.serializer.spring.converters.sweepingoutput.SweepingOutputReadMongoConverter;
@@ -181,7 +178,8 @@ public class OrchestrationRegistrars {
       NodeRunInfoReadConverter.class, NodeRunInfoWriteConverter.class, ExecutionPrincipalInfoReadConverter.class,
       ExecutionPrincipalInfoWriteConverter.class, InterruptEffectReadConverter.class,
       InterruptEffectWriteConverter.class, SdkModuleInfoReadConverter.class, SdkModuleInfoWriteConverter.class,
-      ConsumerConfigReadConverter.class, ConsumerConfigWriteConverter.class);
+      ConsumerConfigReadConverter.class, ConsumerConfigWriteConverter.class,
+      SdkResponseEventMetadataReadConverter.class, SdkResponseEventMetadataWriteConverter.class);
 
   public static final List<Class<? extends Converter<?, ?>>> springConverters =
       ImmutableList.<Class<? extends Converter<?, ?>>>builder()

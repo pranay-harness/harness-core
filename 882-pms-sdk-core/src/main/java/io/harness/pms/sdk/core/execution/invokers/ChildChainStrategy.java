@@ -9,9 +9,11 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
+import io.harness.pms.contracts.execution.events.SdkResponseEventMetadata;
 import io.harness.pms.contracts.execution.events.SpawnChildRequest;
 import io.harness.pms.contracts.execution.events.SuspendChainRequest;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.ExecuteStrategy;
@@ -61,6 +63,7 @@ public class ChildChainStrategy implements ExecuteStrategy {
   public void resume(ResumePackage resumePackage) {
     NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
+    String accountId = AmbianceUtils.getAccountId(ambiance);
     ChildChainExecutable childChainExecutable = extractStep(nodeExecution);
     ChildChainExecutableResponse lastChildChainExecutableResponse = Preconditions.checkNotNull(
         Objects.requireNonNull(NodeExecutionUtils.obtainLatestExecutableResponse(nodeExecution)).getChildChain());
@@ -72,8 +75,9 @@ public class ChildChainStrategy implements ExecuteStrategy {
         || isBroken(accumulatedResponse) || isAborted(accumulatedResponse)) {
       StepResponse stepResponse = childChainExecutable.finalizeExecution(ambiance,
           sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), passThroughData, accumulatedResponse);
-      sdkNodeExecutionService.handleStepResponse(
-          nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
+      sdkNodeExecutionService.handleStepResponse(nodeExecution.getUuid(),
+          StepResponseMapper.toStepResponseProto(stepResponse),
+          SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
     } else {
       StepInputPackage inputPackage =
           engineObtainmentHelper.obtainInputPackage(ambiance, nodeExecution.getNode().getRebObjectsList());
@@ -106,7 +110,9 @@ public class ChildChainStrategy implements ExecuteStrategy {
                                               .setNodeExecutionId(nodeExecution.getUuid())
                                               .setChildChain(childChainResponse)
                                               .build();
-    sdkNodeExecutionService.spawnChild(spawnChildRequest);
+    String accountId = AmbianceUtils.getAccountId(ambiance);
+    sdkNodeExecutionService.spawnChild(
+        spawnChildRequest, SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
   }
 
   private void suspendChain(ChildChainExecutableResponse childChainResponse, NodeExecutionProto nodeExecution) {
@@ -120,13 +126,15 @@ public class ChildChainStrategy implements ExecuteStrategy {
                 .status(SUSPENDED)
                 .description("Ignoring Execution as next child found to be null")
                 .build()));
+    String accountId = AmbianceUtils.getAccountId(nodeExecution.getAmbiance());
     sdkNodeExecutionService.suspendChainExecution(nodeExecution.getUuid(),
         SuspendChainRequest.newBuilder()
             .setNodeExecutionId(nodeExecution.getUuid())
             .setExecutableResponse(ExecutableResponse.newBuilder().setChildChain(childChainResponse).build())
             .setIsError(false)
             .putAllResponse(responseBytes)
-            .build());
+            .build(),
+        SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
   }
 
   private boolean isBroken(Map<String, ResponseData> accumulatedResponse) {

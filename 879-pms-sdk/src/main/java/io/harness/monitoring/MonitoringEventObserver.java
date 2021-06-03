@@ -2,9 +2,11 @@ package io.harness.monitoring;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.metrics.ThreadAutoLogContext;
 import io.harness.metrics.service.api.MetricService;
 import io.harness.observer.AsyncInformObserver;
+import io.harness.pms.helpers.PmsFeatureFlagHelper;
 import io.harness.queue.EventListenerObserver;
 import io.harness.queue.WithMonitoring;
 
@@ -20,24 +22,26 @@ public class MonitoringEventObserver<T> implements EventListenerObserver<T>, Asy
   private static final ExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
   @Inject MetricService metricService;
+  @Inject PmsFeatureFlagHelper pmsFeatureFlagHelper;
 
   @Override
   public void onListenerEnd(T message) {
-    if (WithMonitoring.class.isAssignableFrom(message.getClass())) {
-      WithMonitoring monitoring = (WithMonitoring) message;
-      try (ThreadAutoLogContext autoLogContext = monitoring.metricContext()) {
-        metricService.recordMetric(String.format(LISTENER_END_METRIC, monitoring.getMetricPrefix()),
-            System.currentTimeMillis() - monitoring.getCreatedAt());
-      }
-    }
+    sendMetric(message, LISTENER_END_METRIC);
   }
 
   @Override
   public void onListenerStart(T message) {
+    sendMetric(message, LISTENER_START_METRIC);
+  }
+
+  private void sendMetric(T message, String metricName) {
     if (WithMonitoring.class.isAssignableFrom(message.getClass())) {
       WithMonitoring monitoring = (WithMonitoring) message;
+      if (!pmsFeatureFlagHelper.isEnabled(monitoring.getAccountId(), FeatureName.PIPELINE_SERVICE_MONITORING)) {
+        return;
+      }
       try (ThreadAutoLogContext autoLogContext = monitoring.metricContext()) {
-        metricService.recordMetric(String.format(LISTENER_START_METRIC, monitoring.getMetricPrefix()),
+        metricService.recordMetric(String.format(metricName, monitoring.getMetricPrefix()),
             System.currentTimeMillis() - monitoring.getCreatedAt());
       }
     }

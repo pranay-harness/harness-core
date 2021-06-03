@@ -10,8 +10,10 @@ import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
 import io.harness.pms.contracts.execution.events.QueueTaskRequest;
+import io.harness.pms.contracts.execution.events.SdkResponseEventMetadata;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
@@ -59,6 +61,7 @@ public class TaskChainStrategy extends ProgressableStrategy {
   public void resume(ResumePackage resumePackage) {
     NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
+    String accountId = AmbianceUtils.getAccountId(ambiance);
     TaskChainExecutable taskChainExecutable = extractStep(nodeExecution);
     TaskChainExecutableResponse lastLinkResponse =
         Objects.requireNonNull(NodeExecutionUtils.obtainLatestExecutableResponse(nodeExecution)).getTaskChain();
@@ -72,8 +75,9 @@ public class TaskChainStrategy extends ProgressableStrategy {
       } catch (Exception e) {
         stepResponse = strategyHelper.handleException(e);
       }
-      sdkNodeExecutionService.handleStepResponse(
-          nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
+      sdkNodeExecutionService.handleStepResponse(nodeExecution.getUuid(),
+          StepResponseMapper.toStepResponseProto(stepResponse),
+          SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
     } else {
       StepInputPackage inputPackage =
           engineObtainmentHelper.obtainInputPackage(ambiance, nodeExecution.getNode().getRebObjectsList());
@@ -85,14 +89,16 @@ public class TaskChainStrategy extends ProgressableStrategy {
             buildResponseDataSupplier(resumePackage.getResponseDataMap()));
         handleResponse(ambiance, nodeExecution, chainResponse);
       } catch (Exception e) {
-        sdkNodeExecutionService.handleStepResponse(
-            nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(strategyHelper.handleException(e)));
+        sdkNodeExecutionService.handleStepResponse(nodeExecution.getUuid(),
+            StepResponseMapper.toStepResponseProto(strategyHelper.handleException(e)),
+            SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
       }
     }
   }
 
   private void handleResponse(
       @NonNull Ambiance ambiance, NodeExecutionProto nodeExecution, @NonNull TaskChainResponse taskChainResponse) {
+    String accountId = AmbianceUtils.getAccountId(nodeExecution.getAmbiance());
     if (taskChainResponse.isChainEnd() && taskChainResponse.getTaskRequest() == null) {
       TaskChainExecutable taskChainExecutable = extractStep(nodeExecution);
       sdkNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.NO_OP,
@@ -105,7 +111,7 @@ public class TaskChainStrategy extends ProgressableStrategy {
                                 .addAllUnits(CollectionUtils.emptyIfNull(taskChainResponse.getUnits()))
                                 .build())
               .build(),
-          Collections.emptyList());
+          Collections.emptyList(), SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
       StepResponse stepResponse = null;
       try {
         stepResponse = taskChainExecutable.finalizeExecution(ambiance,
@@ -114,8 +120,9 @@ public class TaskChainStrategy extends ProgressableStrategy {
       } catch (Exception e) {
         stepResponse = strategyHelper.handleException(e);
       }
-      sdkNodeExecutionService.handleStepResponse(
-          nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
+      sdkNodeExecutionService.handleStepResponse(nodeExecution.getUuid(),
+          StepResponseMapper.toStepResponseProto(stepResponse),
+          SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
       return;
     }
     TaskRequest taskRequest = taskChainResponse.getTaskRequest();
@@ -140,7 +147,8 @@ public class TaskChainStrategy extends ProgressableStrategy {
                                             .setExecutableResponse(executableResponse)
                                             .setStatus(Status.TASK_WAITING)
                                             .build();
-    sdkNodeExecutionService.queueTaskRequest(queueTaskRequest);
+    sdkNodeExecutionService.queueTaskRequest(
+        queueTaskRequest, SdkResponseEventMetadata.newBuilder().setAccountId(accountId).build());
   }
 
   @Override

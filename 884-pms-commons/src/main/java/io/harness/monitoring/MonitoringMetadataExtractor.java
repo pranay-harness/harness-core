@@ -12,4 +12,5 @@ public interface MonitoringMetadataExtractor<T extends Message> {
   String getMetricPrefix(T message);
   Class<T> getType();
   Long getCreatedAt(T message);
+  String getAccountId(T message);
 }
