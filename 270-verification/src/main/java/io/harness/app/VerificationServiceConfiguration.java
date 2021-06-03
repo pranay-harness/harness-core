@@ -7,6 +7,7 @@ import static java.util.Collections.singletonList;
 
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.scheduler.SchedulerConfig;
 
@@ -56,7 +57,7 @@ public class VerificationServiceConfiguration extends Configuration implements A
   @JsonProperty("scheduler") private SchedulerConfig schedulerConfig = new SchedulerConfig();
   @JsonProperty("dataStorageMode") private DataStorageMode dataStorageMode;
   @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
-  @JsonProperty("cfMigrationConfig") private CfMigrationConfig cfMigrationConfig;
+  @JsonProperty("featureFlagConfig") private FeatureFlagConfig featureFlagConfig;
 
   /**
    * Instantiates a new Main configuration.

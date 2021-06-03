@@ -11,6 +11,7 @@ import io.harness.cf.AbstractCfModule;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
 import io.harness.controller.PrimaryVersionChangeScheduler;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.ff.FeatureFlagService;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
@@ -118,7 +119,12 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
 
           @Override
           public CfMigrationConfig cfMigrationConfig() {
-            return configuration.getCfMigrationConfig();
+            return CfMigrationConfig.builder().build();
+          }
+
+          @Override
+          public FeatureFlagConfig featureFlagConfig() {
+            return configuration.getFeatureFlagConfig();
           }
         });
 

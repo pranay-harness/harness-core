@@ -31,6 +31,7 @@ import io.harness.connector.ConnectorDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.gitsync.ConnectorGitSyncHelper;
 import io.harness.controller.PrimaryVersionChangeScheduler;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.gitsync.AbstractGitSyncModule;
 import io.harness.gitsync.AbstractGitSyncSdkModule;
 import io.harness.gitsync.GitSdkConfiguration;
@@ -224,7 +225,12 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
       @Override
       public CfMigrationConfig cfMigrationConfig() {
-        return appConfig.getCfMigrationConfig();
+        return CfMigrationConfig.builder().build();
+      }
+
+      @Override
+      public FeatureFlagConfig featureFlagConfig() {
+        return appConfig.getFeatureFlagConfig();
       }
     });
     if (appConfig.getShouldDeployWithGitSync()) {
