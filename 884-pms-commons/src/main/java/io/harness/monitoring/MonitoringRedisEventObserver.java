@@ -41,7 +41,7 @@ public class MonitoringRedisEventObserver<T extends Message> implements EventLis
     MonitoringMetadataExtractor<T> monitoringMetadataExtractor =
         monitoringMetadataExtractorFactory.getMetadataExtractor(message.getClass());
     if (!pmsFeatureFlagHelper.isEnabled(
-            monitoringMetadataExtractor.getAccountId(message), FeatureName.PIPELINE_SERVICE_MONITORING)) {
+            monitoringMetadataExtractor.getAccountId(message), FeatureName.PIPELINE_MONITORING)) {
       return;
     }
     try (ThreadAutoLogContext autoLogContext = monitoringMetadataExtractor.metricContext(message)) {

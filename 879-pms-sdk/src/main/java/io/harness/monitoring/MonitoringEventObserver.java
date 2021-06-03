@@ -37,7 +37,7 @@ public class MonitoringEventObserver<T> implements EventListenerObserver<T>, Asy
   private void sendMetric(T message, String metricName) {
     if (WithMonitoring.class.isAssignableFrom(message.getClass())) {
       WithMonitoring monitoring = (WithMonitoring) message;
-      if (!pmsFeatureFlagHelper.isEnabled(monitoring.getAccountId(), FeatureName.PIPELINE_SERVICE_MONITORING)) {
+      if (!pmsFeatureFlagHelper.isEnabled(monitoring.getAccountId(), FeatureName.PIPELINE_MONITORING)) {
         return;
       }
       try (ThreadAutoLogContext autoLogContext = monitoring.metricContext()) {
