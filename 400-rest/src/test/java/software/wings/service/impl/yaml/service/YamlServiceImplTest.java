@@ -302,6 +302,29 @@ public class YamlServiceImplTest extends WingsBaseTest {
     verify(harnessTagYamlHelper, times(1)).upsertTagLinksIfRequired(any());
   }
 
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category(UnitTests.class)
+  public void testUpsertFromYamlForAccountDefaults() throws Exception {
+    GitFileChange change =
+        GitFileChange.Builder.aGitFileChange()
+            .withChangeType(ChangeType.MODIFY)
+            .withFileContent(
+                "\"harnessApiVersion: '1.0'\\ntype: ACCOUNT_DEFAULTS\\ndefaults:\\n- name: SampleKey\\n  value: SampleValue3\\n\"")
+            .withFilePath("Setup/Defaults.yaml")
+            .withAccountId("TestAccountID")
+            .withEntityId("inputEntityId")
+            .build();
+    ChangeContext changeContext = ChangeContext.Builder.aChangeContext()
+                                      .withChange(change)
+                                      .withYamlSyncHandler(baseYamlHandler)
+                                      .withYamlType(YamlType.ACCOUNT_DEFAULTS)
+                                      .build();
+    verify(changeContext.getYamlSyncHandler(), times(0)).upsertFromYaml(any(), anyList());
+    yamlService.upsertFromYaml(changeContext, Collections.singletonList(changeContext));
+    verify(harnessTagYamlHelper, times(1)).upsertTagLinksIfRequired(any());
+  }
+
   private void shouldThrowInvalidYamlNameException(YamlPayload yamlPayload) {
     GitFileChange change = GitFileChange.Builder.aGitFileChange()
                                .withChangeType(ChangeType.MODIFY)
