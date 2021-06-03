@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+CONFIG_FILE=/opt/harness/command-library-server-config.yml
+
 replace_key_value () {
   CONFIG_KEY="$1";
   CONFIG_VALUE="$2";
