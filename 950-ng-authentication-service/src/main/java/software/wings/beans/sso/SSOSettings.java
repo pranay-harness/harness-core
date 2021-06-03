@@ -65,10 +65,10 @@ public abstract class SSOSettings
   @Id private String uuid;
   @FdIndex @NotNull @SchemaIgnore protected String appId;
 
-  @SchemaIgnore private EmbeddedUser createdBy;
-  @SchemaIgnore @FdIndex private long createdAt;
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore @NotNull private long lastUpdatedAt;
+  @SchemaIgnore private EmbeddedUser createdBy;
+  @SchemaIgnore @FdIndex private long createdAt;
 
   @NotNull protected SSOType type;
   @NotEmpty protected String displayName;
