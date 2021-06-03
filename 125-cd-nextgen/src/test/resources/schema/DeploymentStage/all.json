@@ -1393,6 +1393,10 @@
     },
     "InfrastructureDef": {
       "type": "object",
+      "required": [
+        "spec",
+        "type"
+      ],
       "properties": {
         "provisioner": {
           "$ref": "#/definitions/ExecutionElementConfig"
@@ -2823,6 +2827,20 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
       "allOf": [
+        {
+          "oneOf": [
+            {
+              "required": [
+                "useFromStage"
+              ]
+            },
+            {
+              "required": [
+                "infrastructureDefinition"
+              ]
+            }
+          ]
+        },
         {
           "oneOf": [
             {
