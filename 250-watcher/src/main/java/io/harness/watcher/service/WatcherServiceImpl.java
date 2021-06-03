@@ -1131,7 +1131,8 @@ public class WatcherServiceImpl implements WatcherService {
         String newDelegateProcess = null;
 
         if (newDelegate.getProcess().isAlive()) {
-          Message message = messageService.waitForMessage(NEW_DELEGATE, TimeUnit.MINUTES.toMillis(4));
+          Message message =
+              messageService.waitForMessage(NEW_DELEGATE, TimeUnit.MINUTES.toMillis(version == null ? 15 : 4));
           if (message != null) {
             newDelegateProcess = message.getParams().get(0);
             log.info("Got process ID from new delegate: {}", newDelegateProcess);
