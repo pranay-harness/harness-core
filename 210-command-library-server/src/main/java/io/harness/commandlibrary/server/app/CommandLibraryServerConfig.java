@@ -4,9 +4,11 @@ import static com.google.common.collect.ImmutableMap.of;
 import static java.lang.Boolean.FALSE;
 import static java.util.Collections.singletonList;
 
+import io.harness.cf.CfClientConfig;
 import io.harness.commandlibrary.server.beans.ServiceSecretConfig;
 import io.harness.commandlibrary.server.beans.TagConfig;
 import io.harness.commandlibrary.server.utils.CommandLibraryServerConstants;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.mongo.MongoConfig;
 
 import software.wings.beans.HttpMethod;
@@ -46,6 +48,8 @@ public class CommandLibraryServerConfig extends Configuration implements AssetsB
   @JsonProperty("tag") private TagConfig tagConfig = TagConfig.builder().build();
   @JsonProperty("serviceSecret")
   private ServiceSecretConfig serviceSecretConfig = ServiceSecretConfig.builder().build();
+  @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
+  @JsonProperty("featureFlagConfig") private FeatureFlagConfig featureFlagConfig;
 
   @Override
   public void setServerFactory(ServerFactory factory) {

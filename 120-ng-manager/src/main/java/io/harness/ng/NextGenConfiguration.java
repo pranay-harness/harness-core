@@ -8,8 +8,8 @@ import io.harness.accesscontrol.AccessControlAdminClientConfiguration;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cf.CfClientConfig;
-import io.harness.cf.CfMigrationConfig;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.file.FileServiceConfiguration;
 import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
@@ -98,7 +98,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty(value = "enableDefaultResourceGroupCreation", defaultValue = "false")
   private boolean enableDefaultResourceGroupCreation;
   @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
-  @JsonProperty("cfMigrationConfig") private CfMigrationConfig cfMigrationConfig;
+  @JsonProperty("featureFlagConfig") private FeatureFlagConfig featureFlagConfig;
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
   @JsonProperty("enableDashboardTimescale") private Boolean enableDashboardTimescale;
   @JsonProperty("yamlSchemaClientConfig") private YamlSchemaClientConfig yamlSchemaClientConfig;

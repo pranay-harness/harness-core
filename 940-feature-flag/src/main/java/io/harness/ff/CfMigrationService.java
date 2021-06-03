@@ -1,6 +1,7 @@
 package io.harness.ff;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ff.FeatureFlagSystem.CF;
 
 import static java.time.Duration.ofMinutes;
 import static org.joda.time.Minutes.minutes;
@@ -45,11 +46,11 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 @OwnedBy(HarnessTeam.CF)
 public class CfMigrationService {
-  private static final String STATIC_ACCOUNT_ID = "CF-STATIC-ACCOUNT-ID";
   @Inject @Named("cfMigrationAPI") private CFApi cfAdminApi;
   @Inject private CfMigrationConfig cfMigrationConfig;
   @Inject private CfClient cfClient;
   @Inject private PersistentLocker persistentLocker;
+  @Inject private FeatureFlagConfig featureFlagConfig;
 
   void verifyBehaviorWithCF(FeatureName featureName, boolean featureValue, String accountId) {
     if (cfMigrationConfig.isEnabled()) {
@@ -57,7 +58,7 @@ public class CfMigrationService {
         /**
          * If accountID is null or empty, use a static accountID
          */
-        accountId = STATIC_ACCOUNT_ID;
+        accountId = FeatureFlagConstants.STATIC_ACCOUNT_ID;
       }
       Target target = Target.builder().identifier(accountId).name(accountId).build();
       boolean cfFeatureValue = cfClient.boolVariation(featureName.name(), target, false);
@@ -70,12 +71,7 @@ public class CfMigrationService {
     }
   }
 
-  void syncAllFlagsWithCFServer(FeatureFlagService featureFlagService) {
-    if (!cfMigrationConfig.isEnabled()) {
-      log.debug("Not syncing all flags with CF Server since CF Migration is disabled");
-      return;
-    }
-
+  void syncAllFlagsWithCFServer(FeatureFlagService featureFlagService, boolean syncRules) {
     /**
      * Wrapping this in a distributed lock to prevent multiple pods from syncing on featureflags together which will
      * cause race conditions
@@ -125,7 +121,9 @@ public class CfMigrationService {
           log.info("CF-SYNC FeatureFlag [{}] already present in CF, not creating it again", featureName.name());
         }
 
-        updateFeatureFlagInCF(featureFlag.get(), featureMap.get(featureName.name()));
+        if (syncRules) {
+          updateFeatureFlagInCF(featureFlag.get(), featureMap.get(featureName.name()));
+        }
       }
     } catch (Exception e) {
       log.error("Failed to sync with Harness CF", e);
@@ -140,6 +138,11 @@ public class CfMigrationService {
   }
 
   void syncFeatureFlagWithCF(FeatureFlag featureFlag) {
+    if (CF.equals(featureFlagConfig.getFeatureFlagSystem()) && featureFlagConfig.isSyncFeaturesToCF()) {
+      log.warn("Not syncing flag [{}] with CF Server since CF Sync is enabled", featureFlag.getName());
+      return;
+    }
+
     if (!cfMigrationConfig.isEnabled()) {
       log.debug("Not syncing flag [{}] with CF Server since CF Migration is disabled", featureFlag.getName());
       return;

@@ -5,9 +5,9 @@ import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cf.CfClientConfig;
-import io.harness.cf.CfMigrationConfig;
 import io.harness.cvng.core.NGManagerServiceConfig;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
@@ -51,7 +51,7 @@ public class VerificationConfiguration extends Configuration {
   @JsonProperty("pmsGrpcClientConfig") private GrpcClientConfig pmsGrpcClientConfig;
   @JsonProperty("shouldConfigureWithPMS") private Boolean shouldConfigureWithPMS;
   @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
-  @JsonProperty("cfMigrationConfig") private CfMigrationConfig cfMigrationConfig;
+  @JsonProperty("featureFlagConfig") private FeatureFlagConfig featureFlagConfig;
   @JsonProperty("useRedisForSdkResponseEvents") private Boolean useRedisForSdkResponseEvents;
 
   private String portalUrl;
