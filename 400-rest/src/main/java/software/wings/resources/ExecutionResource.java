@@ -20,6 +20,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.CreatedByType;
+import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -329,7 +330,7 @@ public class ExecutionResource {
       @QueryParam("appId") String appId, @QueryParam("workflowExecutionId") String workflowExecutionId) {
     WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
     notNullCheck("No Workflow Execution exist for Id: " + workflowExecutionId, workflowExecution);
-    deploymentAuthHandler.authorize(appId, workflowExecution);
+    deploymentAuthHandler.authorizeRollback(appId, workflowExecution);
     WorkflowExecution rollbackWorkflowExecution =
         workflowExecutionService.triggerRollbackExecutionWorkflow(appId, workflowExecution);
     rollbackWorkflowExecution.setStateMachine(null);
@@ -346,7 +347,7 @@ public class ExecutionResource {
       @QueryParam("appId") String appId, @QueryParam("workflowExecutionId") String workflowExecutionId) {
     WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
     notNullCheck("No Workflow Execution exist for Id: " + workflowExecutionId, workflowExecution);
-    deploymentAuthHandler.authorize(appId, workflowExecution);
+    deploymentAuthHandler.authorizeRollback(appId, workflowExecution);
     RollbackConfirmation rollbackConfirmation =
         workflowExecutionService.getOnDemandRollbackConfirmation(appId, workflowExecution);
     return new RestResponse<>(rollbackConfirmation);
@@ -369,7 +370,11 @@ public class ExecutionResource {
       @PathParam("workflowExecutionId") String workflowExecutionId, ExecutionInterrupt executionInterrupt) {
     executionInterrupt.setAppId(appId);
     executionInterrupt.setExecutionUuid(workflowExecutionId);
-    deploymentAuthHandler.authorize(appId, workflowExecutionId);
+    if (ExecutionInterruptType.ROLLBACK.equals(executionInterrupt.getExecutionInterruptType())) {
+      deploymentAuthHandler.authorizeRollback(appId, workflowExecutionId);
+    } else {
+      deploymentAuthHandler.authorize(appId, workflowExecutionId);
+    }
     return new RestResponse<>(workflowExecutionService.triggerExecutionInterrupt(executionInterrupt));
   }
 
