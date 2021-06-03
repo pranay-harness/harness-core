@@ -47,6 +47,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 @Slf4j
 public class WatcherApplication {
   private static String processId;
+
   private static WatcherConfiguration configuration;
 
   public static String getProcessId() {

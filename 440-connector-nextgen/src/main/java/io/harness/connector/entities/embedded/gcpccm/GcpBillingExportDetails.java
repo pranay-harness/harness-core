@@ -19,6 +19,5 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("io.harness.connector.entities.embedded.gcpccm.GcpBillingExportDetails")
 @OwnedBy(CE)
 public class GcpBillingExportDetails {
-  @NotNull String projectId;
   @NotNull String datasetId;
 }
