@@ -28,6 +28,7 @@ import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 
+import software.wings.app.MainConfiguration;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
@@ -106,20 +107,22 @@ public class LdapGroupSyncJobHandler implements MongoPersistenceIterator.Handler
   @Inject private WingsPersistence wingsPersistence;
   @Inject @Named(LdapFeature.FEATURE_NAME) private PremiumFeature ldapFeature;
   @Inject private MorphiaPersistenceProvider<SSOSettings> persistenceProvider;
+  @Inject private MainConfiguration mainConfiguration;
 
   public void registerIterators() {
+    LdapGroupSyncConfig config = mainConfiguration.getLdapGroupSyncConfig();
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("LdapGroupSyncTask")
-            .poolSize(3)
-            .interval(ofMinutes(15))
+            .poolSize(config.getThreadPoolSize())
+            .interval(ofMinutes(config.getIntervalInMinutes()))
             .build(),
         SSOSettings.class,
         MongoPersistenceIterator.<SSOSettings, MorphiaFilterExpander<SSOSettings>>builder()
             .clazz(SSOSettings.class)
             .fieldName(SSOSettingsKeys.nextIteration)
-            .targetInterval(ofMinutes(60))
-            .acceptableNoAlertDelay(ofMinutes(80))
+            .targetInterval(ofMinutes(config.getTargetIntervalInMinutes()))
+            .acceptableNoAlertDelay(ofMinutes(config.getAcceptableNoAlertDelayInMinutes()))
             .handler(this)
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .filterExpander(query -> query.field(SSOSettingsKeys.type).equal(SSOType.LDAP))

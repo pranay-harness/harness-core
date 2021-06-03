@@ -593,3 +593,9 @@ logStreamingServiceConfig:
   serviceToken: token
 
 exportAccountDataBatchSize: 1000
+
+ldapGroupSyncConfig:
+  threadPoolSize: 3
+  intervalInMinutes: 15
+  targetIntervalInMinutes: 60
+  acceptableNoAlertDelayInMinutes: 80

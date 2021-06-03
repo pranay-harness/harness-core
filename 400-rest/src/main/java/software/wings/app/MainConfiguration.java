@@ -45,6 +45,7 @@ import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.cdn.CdnConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.jre.JreConfig;
+import software.wings.scheduler.LdapGroupSyncConfig;
 import software.wings.search.framework.ElasticsearchConfig;
 import software.wings.security.authentication.MarketPlaceConfig;
 import software.wings.security.authentication.oauth.AzureConfig;
@@ -95,6 +96,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
           .mimeTypes(of("js", "application/json; charset=UTF-8", "zip", "application/zip"))
           .build();
 
+  @JsonProperty("ldapGroupSyncConfig") private LdapGroupSyncConfig ldapGroupSyncConfig;
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConnectionFactory = MongoConfig.builder().build();
   @JsonProperty("distributedLockImplementation") private DistributedLockImplementation distributedLockImplementation;
