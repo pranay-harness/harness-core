@@ -7,7 +7,6 @@
     <packaging>pom</packaging>
     <modules>
         <module>980-java-agent</module>
-        <module>260-delegate</module>
     </modules>
     <scm>
         <connection>scm:git:git://github.com/wings-software/portal.git</connection>
@@ -535,21 +534,6 @@
                 <artifactId>java-semver</artifactId>
                 <version>0.9.0</version>
             </dependency>
-            <dependency>
-                <groupId>com.google.api</groupId>
-                <artifactId>api-common</artifactId>
-                <version>1.10.1</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.api</groupId>
-                <artifactId>gax</artifactId>
-                <version>1.60.1</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.api</groupId>
-                <artifactId>gax-grpc</artifactId>
-                <version>1.60.1</version>
-            </dependency>
             <!-- Generated using https://github.com/google/apis-client-generator and uploaded to artifactory -->
             <dependency>
                 <groupId>com.google.apis</groupId>
@@ -605,17 +589,7 @@
             <dependency>
                 <groupId>com.google.auth</groupId>
                 <artifactId>google-auth-library-credentials</artifactId>
-                <version>0.22.2</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.auth</groupId>
-                <artifactId>google-auth-library-oauth2-http</artifactId>
-                <version>0.22.2</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.auto.value</groupId>
-                <artifactId>auto-value-annotations</artifactId>
-                <version>1.7.4</version>
+                <version>0.18.0</version>
             </dependency>
             <dependency>
                 <groupId>com.google.cloud</groupId>
@@ -1077,17 +1051,17 @@
             <dependency>
                 <groupId>io.kubernetes</groupId>
                 <artifactId>client-java</artifactId>
-                <version>9.0.2</version>
+                <version>8.0.2</version>
             </dependency>
             <dependency>
                 <groupId>io.kubernetes</groupId>
                 <artifactId>client-java-api</artifactId>
-                <version>9.0.2</version>
+                <version>8.0.2</version>
             </dependency>
             <dependency>
                 <groupId>io.kubernetes</groupId>
                 <artifactId>client-java-extended</artifactId>
-                <version>9.0.2</version>
+                <version>8.0.2</version>
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>

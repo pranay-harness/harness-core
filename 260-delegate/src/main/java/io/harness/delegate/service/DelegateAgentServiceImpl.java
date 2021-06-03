@@ -838,7 +838,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             dispatchDelegateTask(delegateTaskEvent);
           }
         }
-      } catch (Throwable e) {
+      } catch (Exception e) {
+        log.info(message);
         log.error("Exception while decoding task", e);
       }
     }
