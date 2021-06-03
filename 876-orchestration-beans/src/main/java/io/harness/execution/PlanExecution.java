@@ -20,7 +20,6 @@ import io.harness.pms.contracts.plan.ExecutionMetadata;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
-import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.HashMap;
