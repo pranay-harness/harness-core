@@ -26,7 +26,6 @@ public class AppDynamicsConnector extends Connector {
   private String accountname;
   private String passwordRef;
   private String controllerUrl;
-  private String accountId;
   private AppDynamicsAuthType authType;
   private String clientId;
   private String clientSecret;

@@ -1,5 +1,7 @@
 package io.harness.delegate.beans.connector.appdynamicsconnector;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
@@ -22,6 +24,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Data
 @Builder
@@ -34,8 +37,7 @@ import lombok.experimental.FieldDefaults;
 public class AppDynamicsConnectorDTO extends ConnectorConfigDTO implements DecryptableEntity, DelegateSelectable {
   String username;
   @NotNull String accountname;
-  @NotNull String controllerUrl;
-  @NotNull String accountId;
+  @NotNull @NotBlank String controllerUrl;
   Set<String> delegateSelectors;
 
   @ApiModelProperty(dataType = "string") @SecretReference SecretRefData passwordRef;
@@ -60,6 +62,7 @@ public class AppDynamicsConnectorDTO extends ConnectorConfigDTO implements Decry
 
   @Override
   public void validate() {
+    Preconditions.checkState(isNotEmpty(controllerUrl), "Controller URL cannot be empty");
     if (getAuthType().equals(AppDynamicsAuthType.USERNAME_PASSWORD)) {
       Preconditions.checkNotNull(username, "Username cannot be empty");
       Preconditions.checkNotNull(passwordRef, "Password cannot be empty");

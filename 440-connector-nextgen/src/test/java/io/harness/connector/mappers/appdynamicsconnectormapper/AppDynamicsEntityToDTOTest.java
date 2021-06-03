@@ -47,7 +47,6 @@ public class AppDynamicsEntityToDTOTest extends CategoryTest {
                                                     .accountname(accountname)
                                                     .authType(AppDynamicsAuthType.USERNAME_PASSWORD)
                                                     .controllerUrl(controllerUrl)
-                                                    .accountId(accountId)
                                                     .build();
 
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = appDynamicsEntityToDTO.createConnectorDTO(appDynamicsConnector);
@@ -58,7 +57,7 @@ public class AppDynamicsEntityToDTOTest extends CategoryTest {
         .isEqualTo(appDynamicsConnector.getPasswordRef());
     assertThat(appDynamicsConnectorDTO.getAccountname()).isEqualTo(appDynamicsConnector.getAccountname());
     assertThat(appDynamicsConnectorDTO.getControllerUrl()).isEqualTo(appDynamicsConnector.getControllerUrl() + "/");
-    assertThat(appDynamicsConnectorDTO.getAccountId()).isEqualTo(appDynamicsConnector.getAccountId());
+
     assertThat(appDynamicsConnectorDTO.getAuthType().name()).isEqualTo(AppDynamicsAuthType.USERNAME_PASSWORD.name());
     assertThat(appDynamicsConnectorDTO.getClientId()).isNull();
     assertThat(appDynamicsConnectorDTO.getClientSecretRef().getIdentifier()).isNull();
@@ -82,7 +81,6 @@ public class AppDynamicsEntityToDTOTest extends CategoryTest {
                                                     .authType(AppDynamicsAuthType.API_CLIENT_TOKEN)
                                                     .accountname(accountname)
                                                     .controllerUrl(controllerUrl)
-                                                    .accountId(accountId)
                                                     .build();
 
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = appDynamicsEntityToDTO.createConnectorDTO(appDynamicsConnector);
@@ -92,7 +90,6 @@ public class AppDynamicsEntityToDTOTest extends CategoryTest {
     assertThat(appDynamicsConnectorDTO.getPasswordRef().getIdentifier()).isNull();
     assertThat(appDynamicsConnectorDTO.getAccountname()).isEqualTo(appDynamicsConnector.getAccountname());
     assertThat(appDynamicsConnectorDTO.getControllerUrl()).isEqualTo(appDynamicsConnector.getControllerUrl() + "/");
-    assertThat(appDynamicsConnectorDTO.getAccountId()).isEqualTo(appDynamicsConnector.getAccountId());
     assertThat(appDynamicsConnectorDTO.getAuthType().name()).isEqualTo(AppDynamicsAuthType.API_CLIENT_TOKEN.name());
     assertThat(appDynamicsConnectorDTO.getClientId()).isEqualTo(appDynamicsConnector.getClientId());
     assertThat(appDynamicsConnectorDTO.getClientSecretRef().getIdentifier())
@@ -117,7 +114,6 @@ public class AppDynamicsEntityToDTOTest extends CategoryTest {
                                                     .authType(AppDynamicsAuthType.API_CLIENT_TOKEN)
                                                     .accountname(accountname)
                                                     .controllerUrl(controllerUrl)
-                                                    .accountId(accountId)
                                                     .build();
 
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = appDynamicsEntityToDTO.createConnectorDTO(appDynamicsConnector);
@@ -144,7 +140,6 @@ public class AppDynamicsEntityToDTOTest extends CategoryTest {
                                                     .authType(AppDynamicsAuthType.USERNAME_PASSWORD)
                                                     .accountname(accountname)
                                                     .controllerUrl(controllerUrl)
-                                                    .accountId(accountId)
                                                     .build();
 
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = appDynamicsEntityToDTO.createConnectorDTO(appDynamicsConnector);
