@@ -12,7 +12,7 @@ import io.harness.batch.processing.billing.timeseries.service.impl.UtilizationDa
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.entities.batch.InstanceData;
 
 import com.google.inject.Singleton;
 import java.time.Instant;

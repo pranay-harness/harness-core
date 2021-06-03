@@ -729,4 +729,74 @@ public class AuthServiceTest extends WingsBaseTest {
     // no error since the environment is not required in the pipeline
     assertThat(exceptionThrown).isFalse();
   }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void checkIfUserAllowedToRollbackWorkflowToEnv() {
+    Application application = anApplication().name("appName").uuid(generateUuid()).build();
+    String envId = generateUuid();
+
+    Set<String> workflowRollbackExecutePermissionsForEnvs = new HashSet<>();
+    workflowRollbackExecutePermissionsForEnvs.add(envId);
+
+    AppPermissionSummary appPermissionSummary =
+        AppPermissionSummary.builder()
+            .rollbackWorkflowExecutePermissionsForEnvs(workflowRollbackExecutePermissionsForEnvs)
+            .build();
+
+    Map<String, AppPermissionSummary> appPermissionMapInternal = new HashMap<>();
+    appPermissionMapInternal.put(application.getUuid(), appPermissionSummary);
+
+    UserPermissionInfo userPermissionInfo =
+        UserPermissionInfo.builder().appPermissionMapInternal(appPermissionMapInternal).build();
+    UserRequestContext userRequestContext = UserRequestContext.builder().userPermissionInfo(userPermissionInfo).build();
+
+    User user = anUser().uuid(generateUuid()).name("user-name").userRequestContext(userRequestContext).build();
+
+    UserThreadLocal.set(user);
+    boolean exceptionThrown = false;
+
+    try {
+      authService.checkIfUserAllowedToRollbackWorkflowToEnv(application.getUuid(), envId);
+    } catch (InvalidRequestException ue) {
+      exceptionThrown = true;
+    } finally {
+      UserThreadLocal.unset();
+    }
+    assertThat(exceptionThrown).isFalse();
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void throwErrorIfUserNotAuthorizedToRollbackWorkflowToEnv() {
+    Application application = anApplication().name("appName").uuid(generateUuid()).build();
+    String envId = generateUuid();
+
+    // No env where user is allowed to rollback workflow for
+    Set<String> workflowRollbackExecutePermissionsForEnvs = new HashSet<>();
+
+    AppPermissionSummary appPermissionSummary =
+        AppPermissionSummary.builder()
+            .rollbackWorkflowExecutePermissionsForEnvs(workflowRollbackExecutePermissionsForEnvs)
+            .build();
+
+    Map<String, AppPermissionSummary> appPermissionMapInternal = new HashMap<>();
+    appPermissionMapInternal.put(application.getUuid(), appPermissionSummary);
+
+    UserPermissionInfo userPermissionInfo =
+        UserPermissionInfo.builder().appPermissionMapInternal(appPermissionMapInternal).build();
+    UserRequestContext userRequestContext = UserRequestContext.builder().userPermissionInfo(userPermissionInfo).build();
+
+    User user = anUser().uuid(generateUuid()).name("user-name").userRequestContext(userRequestContext).build();
+
+    UserThreadLocal.set(user);
+
+    assertThatThrownBy(() -> authService.checkIfUserAllowedToRollbackWorkflowToEnv(application.getUuid(), envId))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("User doesn't have rights to rollback Workflow in this Environment");
+
+    UserThreadLocal.unset();
+  }
 }

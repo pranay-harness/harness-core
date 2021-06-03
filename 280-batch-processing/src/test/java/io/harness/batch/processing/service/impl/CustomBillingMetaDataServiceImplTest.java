@@ -11,7 +11,7 @@ import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.dao.CEMetadataRecordDao;
-import io.harness.ccm.commons.entities.CEMetadataRecord;
+import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
 import io.harness.rule.Owner;
 
 import software.wings.beans.SettingAttribute;

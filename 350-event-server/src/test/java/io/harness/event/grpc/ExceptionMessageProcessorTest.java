@@ -7,7 +7,8 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.health.CeExceptionRecord;
+import io.harness.ccm.commons.entities.events.CeExceptionRecord;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
 import io.harness.ccm.health.CeExceptionRecordDao;
 import io.harness.event.payloads.CeExceptionMessage;
 import io.harness.rule.Owner;
@@ -36,14 +37,14 @@ public class ExceptionMessageProcessorTest extends CategoryTest {
   public void shouldProcess() {
     CeExceptionMessage message =
         CeExceptionMessage.newBuilder().setClusterId(clusterId).setMessage("Exception").build();
-    PublishedMessage publishedMessage = getPublishedMessage(message);
+    io.harness.ccm.commons.entities.events.PublishedMessage publishedMessage = getPublishedMessage(message);
     CeExceptionRecord exception =
         CeExceptionRecord.builder().accountId(accountId).clusterId(clusterId).message("Exception").build();
     processor.process(publishedMessage);
     verify(CeExceptionRecordDao).save(eq(exception));
   }
 
-  private PublishedMessage getPublishedMessage(Message message) {
+  private io.harness.ccm.commons.entities.events.PublishedMessage getPublishedMessage(Message message) {
     Any payload = Any.pack(message);
     return PublishedMessage.builder()
         .accountId(accountId)

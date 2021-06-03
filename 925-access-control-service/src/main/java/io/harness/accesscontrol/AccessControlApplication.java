@@ -24,6 +24,7 @@ import io.harness.accesscontrol.commons.events.UserMembershipEventListenerServic
 import io.harness.accesscontrol.principals.usergroups.iterators.UserGroupReconciliationIterator;
 import io.harness.accesscontrol.resources.resourcegroups.iterators.ResourceGroupReconciliationIterator;
 import io.harness.aggregator.AggregatorService;
+import io.harness.aggregator.MongoOffsetCleanupJob;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.exception.ConstraintViolationExceptionMapper;
@@ -133,6 +134,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
 
     if (appConfig.getAggregatorConfiguration().isEnabled()) {
       environment.lifecycle().manage(injector.getInstance(AggregatorService.class));
+      environment.lifecycle().manage(injector.getInstance(MongoOffsetCleanupJob.class));
     }
 
     if (appConfig.getAggregatorConfiguration().isExportMetricsToStackDriver()) {

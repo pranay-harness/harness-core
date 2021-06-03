@@ -19,9 +19,9 @@ import io.harness.batch.processing.support.Deduper;
 import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.ccm.cluster.dao.K8sYamlDao;
-import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
-import io.harness.event.grpc.PublishedMessage;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
+import io.harness.ccm.commons.entities.k8s.K8sWorkload;
 import io.harness.govern.Switch;
 import io.harness.perpetualtask.k8s.watch.K8sWatchEvent;
 

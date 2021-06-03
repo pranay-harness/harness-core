@@ -9,6 +9,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.InternalApi;
 
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.ApiKeyEntry.ApiKeyEntryKeys;
@@ -102,5 +103,14 @@ public class ApiKeyResource {
     Map<String, Object> status = new HashMap<>();
     status.put("deleted", true);
     return new RestResponse<>(status);
+  }
+
+  @POST
+  @Path("validate")
+  @Timed
+  @ExceptionMetered
+  @InternalApi
+  public RestResponse<Boolean> validate(@NotEmpty @QueryParam("accountId") String accountId, String apiKey) {
+    return new RestResponse<>(apiKeyService.isApiKeyValid(apiKey, accountId));
   }
 }

@@ -3,7 +3,7 @@ package io.harness.ccm.cluster;
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.entities.batch.InstanceData;
 
 import java.util.List;
 

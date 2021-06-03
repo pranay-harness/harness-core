@@ -1,0 +1,62 @@
+load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
+
+container_image(
+    name = "delegate_layer_1_image",
+    base = "//260-delegate/container:delegate_layer_1_image",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+    tars = [
+        "@jre_x64_linux_8u242b08",
+        "//:alpn_boot_8.1.13.v20181017_tar",
+    ],
+)
+
+container_image(
+    name = "delegate_layer_2_image",
+    base = ":delegate_layer_1_image",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+    tars = [
+        "//250-watcher/container:watcher_jar",
+    ],
+)
+
+container_image(
+    name = "delegate_layer_3_image",
+    base = ":delegate_layer_2_image",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+    tars = [
+        "//260-delegate/container:delegate_scripts_tar",
+        "//260-delegate:delegate_jar",
+    ],
+)
+
+container_image(
+    name = "delegate_image",
+    base = ":delegate_layer_3_image",
+    cmd = [
+        "/bin/bash",
+        "-c",
+        "./entrypoint.sh && " +
+        "/bin/bash -c '" +
+        "while [[ ! -e watcher.log ]]; do sleep 1s; done; tail -F watcher.log & " +
+        "while [[ ! -e delegate.log ]]; do sleep 1s; done; tail -F delegate.log'",
+    ],
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+    workdir = "/opt/harness-delegate",
+)

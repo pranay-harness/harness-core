@@ -103,12 +103,21 @@ public class ApprovalInstanceServiceImpl implements ApprovalInstanceService {
 
   @Override
   public void finalizeStatus(@NotNull String approvalInstanceId, ApprovalStatus status) {
+    finalizeStatus(approvalInstanceId, status, null);
+  }
+
+  @Override
+  public void finalizeStatus(@NotNull String approvalInstanceId, ApprovalStatus status, String errorMessage) {
     // Only allow waiting instances to be approved or rejected. This is to prevent race condition between instance
     // expiry and instance approval/rejection.
+    Update update = new Update().set(ApprovalInstanceKeys.status, status);
+    if (errorMessage != null) {
+      update.set(ApprovalInstanceKeys.errorMessage, errorMessage);
+    }
     approvalInstanceRepository.updateFirst(
         new Query(Criteria.where(Mapper.ID_KEY).is(approvalInstanceId))
             .addCriteria(Criteria.where(ApprovalInstanceKeys.status).is(ApprovalStatus.WAITING)),
-        new Update().set(ApprovalInstanceKeys.status, status));
+        update);
     if (status.isFinalStatus()) {
       waitNotifyEngine.doneWith(
           approvalInstanceId, JiraApprovalResponseData.builder().instanceId(approvalInstanceId).build());

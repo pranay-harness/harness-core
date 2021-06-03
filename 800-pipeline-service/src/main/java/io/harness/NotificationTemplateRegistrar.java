@@ -30,7 +30,9 @@ public class NotificationTemplateRegistrar implements Runnable {
           PredefinedTemplate.STAGE_PLAIN_MSTEAMS, PredefinedTemplate.STEP_PLAIN_EMAIL,
           PredefinedTemplate.STEP_PLAIN_SLACK, PredefinedTemplate.STEP_PLAIN_MSTEAMS,
           PredefinedTemplate.STEP_PLAIN_PAGERDUTY, PredefinedTemplate.HARNESS_APPROVAL_NOTIFICATION_SLACK,
-          PredefinedTemplate.HARNESS_APPROVAL_NOTIFICATION_EMAIL));
+          PredefinedTemplate.HARNESS_APPROVAL_NOTIFICATION_EMAIL,
+          PredefinedTemplate.HARNESS_APPROVAL_EXECUTION_NOTIFICATION_SLACK,
+          PredefinedTemplate.HARNESS_APPROVAL_EXECUTION_NOTIFICATION_EMAIL));
       while (true) {
         List<PredefinedTemplate> unprocessedTemplate = new ArrayList<>();
         for (PredefinedTemplate template : templates) {

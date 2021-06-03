@@ -14,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.annotations.ApiModelProperty;
 import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
@@ -25,9 +26,11 @@ import org.springframework.data.annotation.TypeAlias;
 @SimpleVisitorHelper(helperClass = InfrastructureDefVisitorHelper.class)
 @TypeAlias("infrastructureDef")
 public class InfrastructureDef implements Visitable {
-  String type;
+  @NotNull String type;
+
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
+  @NotNull
   Infrastructure spec;
 
   @JsonProperty("provisioner") @Nullable ExecutionElementConfig provisioner;

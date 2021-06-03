@@ -7,7 +7,6 @@ import static io.harness.ng.NextGenModule.CONNECTOR_DECORATOR_SERVICE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.DelegateTaskRequest;
-import io.harness.beans.HookEventType;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.gitsync.GitWebhookDetails;
 import io.harness.connector.ConnectorResponseDTO;
@@ -20,8 +19,11 @@ import io.harness.delegate.task.scm.ScmGitWebhookTaskParams;
 import io.harness.delegate.task.scm.ScmGitWebhookTaskResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.BaseNGAccess;
+import io.harness.ng.webhook.UpsertWebhookRequestDTO;
+import io.harness.ng.webhook.UpsertWebhookResponseDTO;
 import io.harness.ng.webhook.entities.WebhookEvent;
 import io.harness.ng.webhook.services.api.WebhookService;
+import io.harness.product.ci.scm.proto.CreateWebhookResponse;
 import io.harness.repositories.ng.webhook.spring.WebhookEventRepository;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -33,6 +35,7 @@ import software.wings.beans.TaskType;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.time.Duration;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -68,30 +71,45 @@ public class WebhookServiceImpl implements WebhookService {
     }
   }
 
-  public ScmGitWebhookTaskResponseData upsertWebhook(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String connectorIdentifierRef, String target, HookEventType hookEventType,
-      String repoURL) {
+  public UpsertWebhookResponseDTO upsertWebhook(UpsertWebhookRequestDTO upsertWebhookRequestDTO) {
     final ScmConnector scmConnector =
-        getScmConnector(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifierRef);
-    if (!isEmpty(repoURL)) {
-      scmConnector.setUrl(repoURL);
+        getScmConnector(upsertWebhookRequestDTO.getAccountIdentifier(), upsertWebhookRequestDTO.getOrgIdentifier(),
+            upsertWebhookRequestDTO.getProjectIdentifier(), upsertWebhookRequestDTO.getConnectorIdentifierRef());
+    if (!isEmpty(upsertWebhookRequestDTO.getRepoURL())) {
+      scmConnector.setUrl(upsertWebhookRequestDTO.getRepoURL());
     }
     final List<EncryptedDataDetail> encryptionDetails =
-        getEncryptedDataDetails(accountIdentifier, orgIdentifier, projectIdentifier, scmConnector);
+        getEncryptedDataDetails(upsertWebhookRequestDTO.getAccountIdentifier(),
+            upsertWebhookRequestDTO.getOrgIdentifier(), upsertWebhookRequestDTO.getProjectIdentifier(), scmConnector);
     final ScmGitWebhookTaskParams gitWebhookTaskParams =
         ScmGitWebhookTaskParams.builder()
             .gitWebhookTaskType(GitWebhookTaskType.UPSERT)
             .scmConnector(scmConnector)
             .encryptedDataDetails(encryptionDetails)
-            .gitWebhookDetails(GitWebhookDetails.builder().hookEventType(hookEventType).target(target).build())
+            .gitWebhookDetails(GitWebhookDetails.builder()
+                                   .hookEventType(upsertWebhookRequestDTO.getHookEventType())
+                                   .target(upsertWebhookRequestDTO.getTarget())
+                                   .build())
             .build();
     DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
-                                                  .accountId(accountIdentifier)
+                                                  .accountId(upsertWebhookRequestDTO.getAccountIdentifier())
                                                   .taskType(TaskType.SCM_GIT_WEBHOOK_TASK.name())
                                                   .taskParameters(gitWebhookTaskParams)
                                                   .executionTimeout(Duration.ofMinutes(2))
                                                   .build();
-    return (ScmGitWebhookTaskResponseData) delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    ScmGitWebhookTaskResponseData scmGitWebhookTaskResponseData =
+        (ScmGitWebhookTaskResponseData) delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    try {
+      final CreateWebhookResponse createWebhookResponse =
+          CreateWebhookResponse.parseFrom(scmGitWebhookTaskResponseData.getCreateWebhookResponse());
+      return UpsertWebhookResponseDTO.builder()
+          .webhookResponse(createWebhookResponse.getWebhook())
+          .error(createWebhookResponse.getError())
+          .status(createWebhookResponse.getStatus())
+          .build();
+    } catch (InvalidProtocolBufferException e) {
+      throw new InvalidRequestException(String.format("Exception in unpacking Create Webhook Response", e));
+    }
   }
 
   private List<EncryptedDataDetail> getEncryptedDataDetails(

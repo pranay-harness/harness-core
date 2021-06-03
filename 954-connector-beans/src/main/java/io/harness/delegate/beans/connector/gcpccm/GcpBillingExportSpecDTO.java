@@ -20,12 +20,10 @@ import lombok.experimental.FieldDefaults;
 @ApiModel("GcpBillingExportSpec")
 @OwnedBy(CE)
 public class GcpBillingExportSpecDTO {
-  @NotNull String projectId;
   @NotNull String datasetId;
 
   @Builder
-  public GcpBillingExportSpecDTO(String projectId, String datasetId) {
-    this.projectId = projectId;
+  public GcpBillingExportSpecDTO(String datasetId) {
     this.datasetId = datasetId;
   }
 }

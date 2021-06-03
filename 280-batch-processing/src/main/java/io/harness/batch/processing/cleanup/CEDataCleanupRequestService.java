@@ -4,7 +4,7 @@ import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataSe
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.service.intfc.BatchJobScheduledDataService;
 import io.harness.ccm.commons.dao.CEDataCleanupRequestDao;
-import io.harness.ccm.commons.entities.CEDataCleanupRequest;
+import io.harness.ccm.commons.entities.batch.CEDataCleanupRequest;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Singleton;
