@@ -1,7 +1,7 @@
 package io.harness.batch.processing.tasklet.support;
 
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
-import io.harness.ccm.cluster.entities.K8sWorkload;
+import io.harness.ccm.commons.entities.k8s.K8sWorkload;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;

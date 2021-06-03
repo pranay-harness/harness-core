@@ -78,6 +78,7 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
   @Override
   public void initialize(Bootstrap<CENextGenConfiguration> bootstrap) {
     initializeLogging();
+    bootstrap.addCommand(new InspectCommand<>(this));
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(getConfigurationProvider(bootstrap.getConfigurationSourceProvider()));
     bootstrap.addBundle(getSwaggerBundle());

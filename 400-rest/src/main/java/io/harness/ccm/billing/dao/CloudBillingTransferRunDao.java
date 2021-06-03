@@ -5,9 +5,9 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeValidate;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ccm.billing.entities.CloudBillingTransferRun;
-import io.harness.ccm.billing.entities.CloudBillingTransferRun.CloudBillingTransferRunKeys;
-import io.harness.ccm.billing.entities.TransferJobRunState;
+import io.harness.ccm.commons.entities.billing.CloudBillingTransferRun;
+import io.harness.ccm.commons.entities.billing.CloudBillingTransferRun.CloudBillingTransferRunKeys;
+import io.harness.ccm.commons.entities.billing.TransferJobRunState;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;

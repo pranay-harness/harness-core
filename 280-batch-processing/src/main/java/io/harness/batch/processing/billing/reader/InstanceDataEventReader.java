@@ -1,6 +1,6 @@
 package io.harness.batch.processing.billing.reader;
 
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.entities.batch.InstanceData;
 
 import org.springframework.batch.item.ItemReader;
 

@@ -2,6 +2,7 @@ package io.harness.ccm.views.entities;
 
 import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -23,12 +24,12 @@ import org.mongodb.morphia.annotations.Id;
 
 @Data
 @Builder
-@StoreIn("events")
+@StoreIn(DbAliases.CENG)
 @FieldNameConstants(innerTypeName = "CEViewKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "ceView", noClassnameStored = true)
-public class CEView implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess,
-                               CreatedByAware, UpdatedByAware {
+public final class CEView implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess,
+                                     CreatedByAware, UpdatedByAware {
   @Id String uuid;
   @Size(min = 1, max = 32, message = "for view must be between 1 and 32 characters long") @NotBlank String name;
   String accountId;

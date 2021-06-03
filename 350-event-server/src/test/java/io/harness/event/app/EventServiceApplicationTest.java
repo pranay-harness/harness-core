@@ -12,9 +12,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.EventServerTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.client.impl.tailer.ChronicleEventTailer;
-import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.persistence.HPersistence;
