@@ -136,8 +136,16 @@ public class AwsClusterServiceImpl implements AwsClusterService {
   @Override
   public LinkedHashMap<String, Integer> getActiveServiceCounts(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String containerServiceName) {
-    LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
     String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceName);
+    return getActiveServiceCountsByServiceNamePrefix(
+        region, cloudProviderSetting, encryptedDataDetails, clusterName, serviceNamePrefix);
+  }
+
+  @Override
+  public LinkedHashMap<String, Integer> getActiveServiceCountsByServiceNamePrefix(String region,
+      SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> encryptedDataDetails, String clusterName,
+      String serviceNamePrefix) {
+    LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
     List<Service> activeOldServices =
         getServices(region, cloudProviderSetting, encryptedDataDetails, clusterName, serviceNamePrefix)
             .stream()
