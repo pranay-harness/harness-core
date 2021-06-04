@@ -51,5 +51,6 @@ public class OverviewPageStatsDataFetcherTest extends AbstractDataFetcherTestBas
     assertThat(data.getApplicationDataPresent()).isTrue();
     assertThat(data.getClusterDataPresent()).isTrue();
     assertThat(data.getCeEnabledClusterPresent()).isTrue();
+    assertThat(data.getInventoryDataPresent()).isFalse();
   }
 }
