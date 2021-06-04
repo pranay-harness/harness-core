@@ -37,6 +37,9 @@ public class EntityLookupHelper implements EntityKeySource {
 
   @Override
   public boolean fetchKey(EntityScopeInfo entityScopeInfo) {
+    if (isNotBlank(entityScopeInfo.getProjectId())) {
+      return true;
+    }
     boolean b = (boolean) keyCache.get(entityScopeInfo, ref -> {
       boolean result = harnessToGitPushInfoServiceBlockingStub.isGitSyncEnabledForScope(entityScopeInfo).getEnabled();
       log.info("Result from service {}", result);
