@@ -33,20 +33,26 @@ public class CommonStepInfo {
           .setType("Http")
           .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Utilities/Non-Scripted").build())
           .build();
-  StepInfo harnessApprovalStepInfo =
-      StepInfo.newBuilder()
-          .setName("Harness Approval")
-          .setType("HarnessApproval")
-          .setStepMetaData(StepMetaData.newBuilder().addCategory("Approval").setFolderPath("Approval").build())
-          .setFeatureFlag(FeatureName.NG_HARNESS_APPROVAL.name())
-          .build();
-  StepInfo jiraApprovalStepInfo =
-      StepInfo.newBuilder()
-          .setName("Jira Approval")
-          .setType("JiraApproval")
-          .setStepMetaData(StepMetaData.newBuilder().addCategory("Approval").setFolderPath("Approval").build())
-          .setFeatureFlag(FeatureName.NG_HARNESS_APPROVAL.name())
-          .build();
+  StepInfo harnessApprovalStepInfo = StepInfo.newBuilder()
+                                         .setName("Harness Approval")
+                                         .setType("HarnessApproval")
+                                         .setStepMetaData(StepMetaData.newBuilder()
+                                                              .addCategory("Provisioner")
+                                                              .addCategory("Approval")
+                                                              .setFolderPath("Approval")
+                                                              .build())
+                                         .setFeatureFlag(FeatureName.NG_HARNESS_APPROVAL.name())
+                                         .build();
+  StepInfo jiraApprovalStepInfo = StepInfo.newBuilder()
+                                      .setName("Jira Approval")
+                                      .setType("JiraApproval")
+                                      .setStepMetaData(StepMetaData.newBuilder()
+                                                           .addCategory("Provisioner")
+                                                           .addCategory("Approval")
+                                                           .setFolderPath("Approval")
+                                                           .build())
+                                      .setFeatureFlag(FeatureName.NG_HARNESS_APPROVAL.name())
+                                      .build();
   StepInfo jiraCreateStepInfo =
       StepInfo.newBuilder()
           .setName("Jira Create")
