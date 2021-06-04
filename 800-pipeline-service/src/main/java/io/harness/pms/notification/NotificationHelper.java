@@ -4,9 +4,11 @@ import io.harness.PipelineServiceConfiguration;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
+import io.harness.execution.PlanExecutionMetadata;
 import io.harness.notification.PipelineEventType;
 import io.harness.notification.bean.NotificationChannelWrapper;
 import io.harness.notification.bean.NotificationRules;
@@ -40,6 +42,7 @@ public class NotificationHelper {
   @Inject NotificationClient notificationClient;
   @Inject PlanExecutionService planExecutionService;
   @Inject PipelineServiceConfiguration pipelineServiceConfiguration;
+  @Inject PlanExecutionMetadataService planExecutionMetadataService;
 
   public Optional<PipelineEventType> getEventTypeForStage(NodeExecution nodeExecution) {
     if (!isStageNode(nodeExecution)) {
@@ -64,7 +67,8 @@ public class NotificationHelper {
     String accountId = AmbianceUtils.getAccountId(ambiance);
     String orgIdentifier = AmbianceUtils.getOrgIdentifier(ambiance);
     String projectIdentifier = AmbianceUtils.getProjectIdentifier(ambiance);
-    String yaml = ambiance.getMetadata().getYaml();
+
+    String yaml = obtainYaml(ambiance.getPlanExecutionId());
     if (EmptyPredicate.isEmpty(yaml)) {
       log.error("Empty yaml found in executionMetaData");
       return;
@@ -173,5 +177,10 @@ public class NotificationHelper {
         pipelineServiceConfiguration.getPipelineServiceBaseUrl(), AmbianceUtils.getAccountId(ambiance),
         AmbianceUtils.getOrgIdentifier(ambiance), AmbianceUtils.getProjectIdentifier(ambiance),
         ambiance.getMetadata().getPipelineIdentifier(), ambiance.getPlanExecutionId());
+  }
+
+  private String obtainYaml(String planExecutionId) {
+    Optional<PlanExecutionMetadata> optional = planExecutionMetadataService.findByPlanExecutionId(planExecutionId);
+    return optional.map(PlanExecutionMetadata::getYaml).orElse(null);
   }
 }

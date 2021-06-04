@@ -11,8 +11,10 @@ import io.harness.OrchestrationVisualizationTestBase;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.observers.beans.OrchestrationStartInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
+import io.harness.execution.PlanExecutionMetadata;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
@@ -40,12 +42,18 @@ public class OrchestrationStartEventHandlerTest extends OrchestrationVisualizati
   @RealMongo
   public void shouldThrowInvalidRequestException() {
     String planExecutionId = generateUuid();
+    PlanExecutionMetadata planExecutionMetadata =
+        PlanExecutionMetadata.builder().planExecutionId(planExecutionId).build();
     OrchestrationEvent event = OrchestrationEvent.builder()
                                    .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecutionId).build())
                                    .eventType(ORCHESTRATION_START)
                                    .build();
 
-    assertThatThrownBy(() -> orchestrationStartEventHandler.onStart(event.getAmbiance()))
+    assertThatThrownBy(()
+                           -> orchestrationStartEventHandler.onStart(OrchestrationStartInfo.builder()
+                                                                         .ambiance(event.getAmbiance())
+                                                                         .planExecutionMetadata(planExecutionMetadata)
+                                                                         .build()))
         .isInstanceOf(InvalidRequestException.class);
   }
 
@@ -58,12 +66,18 @@ public class OrchestrationStartEventHandlerTest extends OrchestrationVisualizati
         PlanExecution.builder().uuid(generateUuid()).startTs(System.currentTimeMillis()).status(Status.RUNNING).build();
     planExecutionService.save(planExecution);
 
+    PlanExecutionMetadata planExecutionMetadata =
+        PlanExecutionMetadata.builder().planExecutionId(planExecution.getUuid()).build();
+
     OrchestrationEvent event = OrchestrationEvent.builder()
                                    .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecution.getUuid()).build())
                                    .eventType(ORCHESTRATION_START)
                                    .build();
 
-    orchestrationStartEventHandler.onStart(event.getAmbiance());
+    orchestrationStartEventHandler.onStart(OrchestrationStartInfo.builder()
+                                               .ambiance(event.getAmbiance())
+                                               .planExecutionMetadata(planExecutionMetadata)
+                                               .build());
 
     Awaitility.await().atMost(2, TimeUnit.SECONDS).pollInterval(500, TimeUnit.MILLISECONDS).until(() -> {
       OrchestrationGraph graphInternal = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());

@@ -6,7 +6,8 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.barrier.Barrier;
 import io.harness.engine.observers.OrchestrationStartObserver;
-import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.engine.observers.beans.OrchestrationStartInfo;
+import io.harness.execution.PlanExecutionMetadata;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierPositionInfo;
 import io.harness.steps.barriers.beans.BarrierSetupInfo;
@@ -25,16 +26,17 @@ public class BarrierInitializer implements OrchestrationStartObserver {
   @Inject private BarrierService barrierService;
 
   @Override
-  public void onStart(Ambiance ambiance) {
-    String planExecutionId = ambiance.getPlanExecutionId();
+  public void onStart(OrchestrationStartInfo orchestrationStartInfo) {
+    String planExecutionId = orchestrationStartInfo.getPlanExecutionId();
+    PlanExecutionMetadata planExecutionMetadata = orchestrationStartInfo.getPlanExecutionMetadata();
     try {
       Map<String, BarrierSetupInfo> barrierIdentifierSetupInfoMap =
-          barrierService.getBarrierSetupInfoList(ambiance.getMetadata().getProcessedYaml())
+          barrierService.getBarrierSetupInfoList(planExecutionMetadata.getProcessedYaml())
               .stream()
               .collect(Collectors.toMap(BarrierSetupInfo::getIdentifier, Function.identity()));
 
       Map<String, List<BarrierPositionInfo.BarrierPosition>> barrierPositionInfoMap =
-          barrierService.getBarrierPositionInfoList(ambiance.getMetadata().getProcessedYaml());
+          barrierService.getBarrierPositionInfoList(planExecutionMetadata.getProcessedYaml());
 
       List<BarrierExecutionInstance> barriers =
           barrierPositionInfoMap.entrySet()
@@ -45,13 +47,13 @@ public class BarrierInitializer implements OrchestrationStartObserver {
                          .uuid(generateUuid())
                          .setupInfo(barrierIdentifierSetupInfoMap.get(entry.getKey()))
                          .positionInfo(BarrierPositionInfo.builder()
-                                           .planExecutionId(ambiance.getPlanExecutionId())
+                                           .planExecutionId(planExecutionId)
                                            .barrierPositionList(entry.getValue())
                                            .build())
                          .name(barrierIdentifierSetupInfoMap.get(entry.getKey()).getName())
                          .barrierState(Barrier.State.STANDING)
                          .identifier(entry.getKey())
-                         .planExecutionId(ambiance.getPlanExecutionId())
+                         .planExecutionId(planExecutionId)
                          .build())
               .collect(Collectors.toList());
 

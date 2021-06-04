@@ -9,6 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
+import io.harness.execution.PlanExecutionMetadata;
 import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.PlanCreationBlobRequest;
@@ -52,23 +53,24 @@ public class PlanCreatorMergeService {
   }
 
   public PlanCreationBlobResponse createPlan(@NotNull String content) throws IOException {
-    return createPlan(content, ExecutionMetadata.newBuilder().setExecutionUuid(generateUuid()));
+    String executionId = generateUuid();
+    return createPlan(content, ExecutionMetadata.newBuilder().setExecutionUuid(executionId).build(),
+        PlanExecutionMetadata.builder().planExecutionId(executionId));
   }
 
-  public PlanCreationBlobResponse createPlan(@NotNull String content, ExecutionMetadata.Builder metadataBuilder)
-      throws IOException {
+  public PlanCreationBlobResponse createPlan(@NotNull String content, ExecutionMetadata metadata,
+      PlanExecutionMetadata.Builder planExecutionMetadataBuilder) throws IOException {
     log.info("Starting plan creation");
     Map<String, PlanCreatorServiceInfo> services = pmsSdkHelper.getServices();
 
     String processedYaml = YamlUtils.injectUuid(content);
 
-    metadataBuilder.setProcessedYaml(processedYaml);
+    planExecutionMetadataBuilder.processedYaml(processedYaml);
 
     YamlField pipelineField = YamlUtils.extractPipelineField(processedYaml);
     Map<String, YamlFieldBlob> dependencies = new HashMap<>();
     dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
-    PlanCreationBlobResponse finalResponse =
-        createPlanForDependenciesRecursive(services, dependencies, metadataBuilder.build());
+    PlanCreationBlobResponse finalResponse = createPlanForDependenciesRecursive(services, dependencies, metadata);
     validatePlanCreationBlobResponse(finalResponse);
     log.info("Done with plan creation");
     return finalResponse;
