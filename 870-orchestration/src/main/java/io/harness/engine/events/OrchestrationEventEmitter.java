@@ -40,28 +40,23 @@ public class OrchestrationEventEmitter {
       Set<OrchestrationEventHandler> handlers = handlerRegistry.obtain(event.getEventType());
       subject.registerAll(handlers);
       subject.handleEventSync(event);
-      String serviceName = event.getNodeExecutionProto() == null
-          ? PmsConstants.INTERNAL_SERVICE_NAME
-          : event.getNodeExecutionProto().getNode().getServiceName();
+      String serviceName = event.getServiceName() == null ? PmsConstants.INTERNAL_SERVICE_NAME : event.getServiceName();
 
       if (configuration.isUseRedisForEvents()) {
         emitViaEventsFramework(event, serviceName);
         return;
       }
 
-      if (event.getNodeExecutionProto() == null) {
-        orchestrationEventQueue.send(Collections.singletonList(PmsConstants.INTERNAL_SERVICE_NAME), event);
-      } else {
-        orchestrationEventQueue.send(Collections.singletonList(serviceName), event);
-        // For calling event handlers in PMS, create a one level clone of the event and then emit
-        if (!serviceName.equals(PmsConstants.INTERNAL_SERVICE_NAME)) {
-          orchestrationEventQueue.send(Collections.singletonList(PmsConstants.INTERNAL_SERVICE_NAME),
-              OrchestrationEvent.builder()
-                  .ambiance(event.getAmbiance())
-                  .nodeExecutionProto(event.getNodeExecutionProto())
-                  .eventType(event.getEventType())
-                  .build());
-        }
+      orchestrationEventQueue.send(Collections.singletonList(serviceName), event);
+      // For calling event handlers in PMS, create a one level clone of the event and then emit
+      if (!serviceName.equals(PmsConstants.INTERNAL_SERVICE_NAME)) {
+        orchestrationEventQueue.send(Collections.singletonList(PmsConstants.INTERNAL_SERVICE_NAME),
+            OrchestrationEvent.builder()
+                .ambiance(event.getAmbiance())
+                .status(event.getStatus())
+                .resolvedStepParameters(event.getResolvedStepParameters())
+                .eventType(event.getEventType())
+                .build());
       }
     } catch (Exception ex) {
       log.error("Failed to create orchestration event", ex);
@@ -85,8 +80,14 @@ public class OrchestrationEventEmitter {
     if (event.getAmbiance() != null) {
       protoEvent.setAmbiance(event.getAmbiance());
     }
-    if (event.getNodeExecutionProto() != null) {
-      protoEvent.setNodeExecution(event.getNodeExecutionProto());
+    if (event.getStatus() != null) {
+      protoEvent.setStatus(event.getStatus());
+    }
+    if (event.getResolvedStepParameters() != null) {
+      protoEvent.setStepParameters(ByteString.copyFromUtf8(event.getResolvedStepParameters()));
+    }
+    if (event.getServiceName() != null) {
+      protoEvent.setServiceName(event.getServiceName());
     }
     return protoEvent.build().toByteString();
   }
