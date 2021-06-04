@@ -6,6 +6,7 @@ import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
@@ -13,6 +14,8 @@ import io.harness.persistence.UuidAccess;
 import io.harness.pms.contracts.ambiance.Level;
 
 import com.google.common.collect.ImmutableList;
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.List;
 import lombok.Builder;
 import lombok.Singular;
@@ -37,6 +40,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("outcomeInstance")
 @StoreIn(DbAliases.PMS)
 public class OutcomeInstance implements PersistentEntity, UuidAccess {
+  public static final long TTL_MONTHS = 6;
+
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -66,6 +71,7 @@ public class OutcomeInstance implements PersistentEntity, UuidAccess {
   org.bson.Document outcome;
   @Wither @CreatedDate Long createdAt;
   @Wither @Version Long version;
+  @Builder.Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL_MONTHS).toInstant());
 
   @UtilityClass
   public static class OutcomeInstanceKeys {

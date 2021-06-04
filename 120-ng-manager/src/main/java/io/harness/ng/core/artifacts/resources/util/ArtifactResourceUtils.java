@@ -2,7 +2,9 @@ package io.harness.ng.core.artifacts.resources.util;
 
 import io.harness.common.NGExpressionUtils;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.evaluators.YamlExpressionEvaluator;
 import io.harness.exception.InvalidRequestException;
+import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
 import io.harness.pipeline.remote.PipelineServiceClient;
 import io.harness.pms.inputset.MergeInputSetResponseDTOPMS;
@@ -20,7 +22,7 @@ public class ArtifactResourceUtils {
     return !EmptyPredicate.isEmpty(fieldValue) && !NGExpressionUtils.isRuntimeOrExpressionField(fieldValue);
   }
 
-  public String getMergedCompleteYaml(PipelineServiceClient pipelineServiceClient, String accountId,
+  private String getMergedCompleteYaml(PipelineServiceClient pipelineServiceClient, String accountId,
       String orgIdentifier, String projectIdentifier, String pipelineIdentifier, String runtimeInputYaml,
       GitEntityFindInfoDTO gitEntityBasicInfo) {
     if (EmptyPredicate.isEmpty(pipelineIdentifier)) {
@@ -40,5 +42,17 @@ public class ArtifactResourceUtils {
       throw new InvalidRequestException("Failed to get Merged Pipeline yaml.");
     }
     return response.getCompletePipelineYaml();
+  }
+
+  public String getResolvedImagePath(PipelineServiceClient pipelineServiceClient, String accountId,
+      String orgIdentifier, String projectIdentifier, String pipelineIdentifier, String runtimeInputYaml,
+      String imagePath, String fqnPath, GitEntityFindInfoDTO gitEntityBasicInfo) {
+    if (EngineExpressionEvaluator.hasVariables(imagePath)) {
+      String mergedCompleteYaml = getMergedCompleteYaml(pipelineServiceClient, accountId, orgIdentifier,
+          projectIdentifier, pipelineIdentifier, runtimeInputYaml, gitEntityBasicInfo);
+      YamlExpressionEvaluator yamlExpressionEvaluator = new YamlExpressionEvaluator(mergedCompleteYaml, fqnPath);
+      imagePath = yamlExpressionEvaluator.renderExpression(imagePath);
+    }
+    return imagePath;
   }
 }
