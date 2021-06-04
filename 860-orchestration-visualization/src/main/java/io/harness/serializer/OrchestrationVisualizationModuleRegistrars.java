@@ -7,6 +7,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.CommonEntitiesKryoRegistrar;
 import io.harness.serializer.kryo.DelegateServiceBeansKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationVisualizationKryoRegistrar;
+import io.harness.serializer.morphia.OrchestrationVisualizationMorphiaRegistrar;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -26,6 +27,7 @@ public class OrchestrationVisualizationModuleRegistrars {
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+          .add(OrchestrationVisualizationMorphiaRegistrar.class)
           .addAll(OrchestrationRegistrars.morphiaRegistrars)
           .build();
 

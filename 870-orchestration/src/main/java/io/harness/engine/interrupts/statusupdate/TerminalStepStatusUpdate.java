@@ -4,20 +4,22 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.observers.NodeStatusUpdateHandler;
+import io.harness.engine.observers.NodeUpdateInfo;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.execution.utils.StatusUtils;
 
 import com.google.inject.Inject;
 
 @OwnedBy(PIPELINE)
-public class TerminalStepStatusUpdate implements StepStatusUpdate {
+public class TerminalStepStatusUpdate implements NodeStatusUpdateHandler {
   @Inject private PlanExecutionService planExecutionService;
 
   @Override
-  public void onStepStatusUpdate(StepStatusUpdateInfo stepStatusUpdateInfo) {
-    Status planStatus = planExecutionService.calculateStatus(stepStatusUpdateInfo.getPlanExecutionId());
+  public void handleNodeStatusUpdate(NodeUpdateInfo nodeStatusUpdateInfo) {
+    Status planStatus = planExecutionService.calculateStatus(nodeStatusUpdateInfo.getPlanExecutionId());
     if (!StatusUtils.isFinalStatus(planStatus)) {
-      planExecutionService.updateStatus(stepStatusUpdateInfo.getPlanExecutionId(), planStatus);
+      planExecutionService.updateStatus(nodeStatusUpdateInfo.getPlanExecutionId(), planStatus);
     }
   }
 }

@@ -2,15 +2,12 @@ package io.harness.pms.notification.orchestration.handlers;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdate;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
+import io.harness.engine.observers.NodeStatusUpdateObserver;
+import io.harness.engine.observers.NodeUpdateInfo;
 import io.harness.execution.NodeExecution;
-import io.harness.execution.NodeExecutionMapper;
 import io.harness.notification.PipelineEventType;
 import io.harness.observer.AsyncInformObserver;
 import io.harness.plancreator.beans.OrchestrationConstants;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.notification.NotificationHelper;
@@ -23,15 +20,13 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class StageStatusUpdateNotificationEventHandler implements AsyncInformObserver, StepStatusUpdate {
+public class StageStatusUpdateNotificationEventHandler implements AsyncInformObserver, NodeStatusUpdateObserver {
   @Inject @Named("PipelineExecutorService") ExecutorService executorService;
   @Inject NotificationHelper notificationHelper;
-  @Inject NodeExecutionService nodeExecutionService;
 
   @Override
-  public void onStepStatusUpdate(StepStatusUpdateInfo stepStatusUpdateInfo) {
-    NodeExecution nodeExecution = nodeExecutionService.get(stepStatusUpdateInfo.getNodeExecutionId());
-    NodeExecutionProto nodeExecutionProto = NodeExecutionMapper.toNodeExecutionProto(nodeExecution);
+  public void onNodeStatusUpdate(NodeUpdateInfo nodeUpdateInfo) {
+    NodeExecution nodeExecution = nodeUpdateInfo.getNodeExecution();
     if (Objects.equals(nodeExecution.getNode().getGroup(), StepOutcomeGroup.STAGE.name())) {
       Optional<PipelineEventType> pipelineEventType = notificationHelper.getEventTypeForStage(nodeExecution);
       pipelineEventType.ifPresent(
@@ -46,7 +41,7 @@ public class StageStatusUpdateNotificationEventHandler implements AsyncInformObs
       return;
     }
     if (!Objects.equals(nodeExecution.getNode().getSkipType(), SkipType.SKIP_NODE)
-        && StatusUtils.brokeStatuses().contains(nodeExecutionProto.getStatus())) {
+        && StatusUtils.brokeStatuses().contains(nodeExecution.getStatus())) {
       notificationHelper.sendNotification(nodeExecution.getAmbiance(), PipelineEventType.STEP_FAILED, nodeExecution);
     }
   }
