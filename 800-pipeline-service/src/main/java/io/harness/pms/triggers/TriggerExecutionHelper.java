@@ -23,6 +23,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.TriggerException;
 import io.harness.execution.PlanExecution;
+import io.harness.execution.PlanExecutionMetadata;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
@@ -91,13 +92,17 @@ public class TriggerExecutionHelper {
 
       String runtimeInputYaml = readRuntimeInputFromConfig(triggerDetails.getNgTriggerConfig());
 
+      final String executionId = generateUuid();
       ExecutionMetadata.Builder executionMetaDataBuilder =
           ExecutionMetadata.newBuilder()
-              .setExecutionUuid(generateUuid())
+              .setExecutionUuid(executionId)
               .setTriggerInfo(triggerInfo)
               .setRunSequence(pipelineEntityToExecute.get().getRunSequence())
               .setTriggerPayload(triggerPayload)
               .setPipelineIdentifier(pipelineEntityToExecute.get().getIdentifier());
+
+      PlanExecutionMetadata.Builder planExecutionMetadataBuilder =
+          PlanExecutionMetadata.builder().planExecutionId(executionId);
 
       String pipelineYaml;
       if (isBlank(runtimeInputYaml)) {
@@ -108,21 +113,22 @@ public class TriggerExecutionHelper {
         if (isBlank(sanitizedRuntimeInputYaml)) {
           pipelineYaml = pipelineYamlBeforeMerge;
         } else {
-          executionMetaDataBuilder.setInputSetYaml(sanitizedRuntimeInputYaml);
+          planExecutionMetadataBuilder.inputSetYaml(sanitizedRuntimeInputYaml);
           pipelineYaml =
               MergeHelper.mergeInputSetIntoPipeline(pipelineYamlBeforeMerge, sanitizedRuntimeInputYaml, true);
         }
       }
+      planExecutionMetadataBuilder.yaml(pipelineYaml);
 
       pmsYamlSchemaService.validateYamlSchema(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
           ngTriggerEntity.getProjectIdentifier(), pipelineYaml);
 
-      executionMetaDataBuilder.setYaml(pipelineYaml);
       executionMetaDataBuilder.setPrincipalInfo(
           ExecutionPrincipalInfo.newBuilder().setShouldValidateRbac(false).build());
 
       return pipelineExecuteHelper.startExecution(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
-          ngTriggerEntity.getProjectIdentifier(), pipelineYaml, executionMetaDataBuilder.build());
+          ngTriggerEntity.getProjectIdentifier(), pipelineYaml, executionMetaDataBuilder.build(),
+          planExecutionMetadataBuilder);
     } catch (Exception e) {
       throw new TriggerException("Failed while requesting Pipeline Execution" + e.getMessage(), USER);
     }

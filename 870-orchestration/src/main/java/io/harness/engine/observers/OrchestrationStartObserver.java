@@ -2,9 +2,9 @@ package io.harness.engine.observers;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.engine.observers.beans.OrchestrationStartInfo;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public interface OrchestrationStartObserver {
-  void onStart(Ambiance ambiance);
+  void onStart(OrchestrationStartInfo orchestrationStartInfo);
 }

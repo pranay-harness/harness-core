@@ -14,7 +14,9 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.observers.beans.OrchestrationStartInfo;
 import io.harness.execution.PlanExecution;
+import io.harness.execution.PlanExecutionMetadata;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
@@ -60,13 +62,13 @@ public class ExecutionSummaryCreateEventHandlerTest extends PipelineServiceTestB
   @Category(UnitTests.class)
   public void shouldTestOnStart() {
     Ambiance ambiance = Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build();
+    PlanExecutionMetadata planExecutionMetadata = PlanExecutionMetadata.builder()
+                                                      .planExecutionId(ambiance.getPlanExecutionId())
+                                                      .inputSetYaml("some-yaml")
+                                                      .build();
     PlanExecution planExecution =
         PlanExecution.builder()
-            .metadata(ExecutionMetadata.newBuilder()
-                          .setRunSequence(1)
-                          .setInputSetYaml("some-yaml")
-                          .setPipelineIdentifier("pipelineId")
-                          .build())
+            .metadata(ExecutionMetadata.newBuilder().setRunSequence(1).setPipelineIdentifier("pipelineId").build())
             .plan(Plan.builder()
                       .layoutNodeInfo(GraphLayoutInfo.newBuilder()
                                           .setStartingNodeId("startId")
@@ -104,7 +106,8 @@ public class ExecutionSummaryCreateEventHandlerTest extends PipelineServiceTestB
 
     when(nodeTypeLookupService.findNodeTypeServiceName(anyString())).thenReturn("pms");
 
-    executionSummaryCreateEventHandler.onStart(ambiance);
+    executionSummaryCreateEventHandler.onStart(
+        OrchestrationStartInfo.builder().ambiance(ambiance).planExecutionMetadata(planExecutionMetadata).build());
 
     ExecutionSummaryInfo executionSummaryInfo = executionSummaryInfoArgumentCaptor.getValue();
     assertThat(executionSummaryInfo.getLastExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);

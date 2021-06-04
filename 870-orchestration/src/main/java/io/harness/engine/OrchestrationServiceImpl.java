@@ -4,11 +4,14 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.engine.events.OrchestrationEventEmitter;
+import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.engine.observers.OrchestrationStartObserver;
+import io.harness.engine.observers.beans.OrchestrationStartInfo;
 import io.harness.execution.PlanExecution;
+import io.harness.execution.PlanExecutionMetadata;
 import io.harness.interrupts.Interrupt;
 import io.harness.observer.Subject;
 import io.harness.plan.Plan;
@@ -33,17 +36,18 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private OrchestrationEventEmitter eventEmitter;
   @Inject private InterruptManager interruptManager;
+  @Inject private PlanExecutionMetadataService planExecutionMetadataService;
 
   @Getter private final Subject<OrchestrationStartObserver> orchestrationStartSubject = new Subject<>();
 
   @Override
   public PlanExecution startExecution(Plan plan, ExecutionMetadata metadata) {
-    return startExecution(plan, new HashMap<>(), metadata);
+    return startExecution(plan, new HashMap<>(), metadata, PlanExecutionMetadata.builder().build());
   }
 
   @Override
-  public PlanExecution startExecution(
-      @Valid Plan plan, Map<String, String> setupAbstractions, ExecutionMetadata metadata) {
+  public PlanExecution startExecution(@Valid Plan plan, Map<String, String> setupAbstractions,
+      ExecutionMetadata metadata, PlanExecutionMetadata planExecutionMetadata) {
     PlanExecution planExecution = PlanExecution.builder()
                                       .uuid(metadata.getExecutionUuid())
                                       .plan(plan)
@@ -57,7 +61,11 @@ public class OrchestrationServiceImpl implements OrchestrationService {
       log.error("Cannot Start Execution for empty plan");
       return null;
     }
+
     PlanExecution savedPlanExecution = planExecutionService.save(planExecution);
+
+    planExecutionMetadataService.save(planExecutionMetadata);
+
     Ambiance ambiance = Ambiance.newBuilder()
                             .putAllSetupAbstractions(setupAbstractions)
                             .setPlanExecutionId(savedPlanExecution.getUuid())
@@ -66,16 +74,10 @@ public class OrchestrationServiceImpl implements OrchestrationService {
                             .build();
     eventEmitter.emitEvent(
         OrchestrationEvent.builder().ambiance(ambiance).eventType(OrchestrationEventType.ORCHESTRATION_START).build());
-    orchestrationStartSubject.fireInform(OrchestrationStartObxxxxxxxx:onStart, ambiance);
+    orchestrationStartSubject.fireInform(OrchestrationStartObxxxxxxxx:onStart,
+        OrchestrationStartInfo.builder().ambiance(ambiance).planExecutionMetadata(planExecutionMetadata).build());
     orchestrationEngine.triggerExecution(ambiance, planNode);
     return savedPlanExecution;
-  }
-
-  @Override
-  public PlanExecution rerunExecution(String planExecutionId, Map<String, String> setupAbstractions) {
-    PlanExecution planExecution = planExecutionService.get(planExecutionId);
-    return startExecution(planExecution.getPlan(), setupAbstractions == null ? new HashMap<>() : setupAbstractions,
-        planExecution.getMetadata());
   }
 
   @Override
