@@ -6,6 +6,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.plan.execution.SetupAbstractionKeys;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -103,5 +104,10 @@ public class AmbianceUtils {
 
   public static String getOrgIdentifier(Ambiance ambiance) {
     return ambiance.getSetupAbstractionsMap().get(SetupAbstractionKeys.orgIdentifier);
+  }
+
+  public static StepType getCurrentStepType(Ambiance ambiance) {
+    Level level = obtainCurrentLevel(ambiance);
+    return level == null || level.getStepType() == null ? null : level.getStepType();
   }
 }
