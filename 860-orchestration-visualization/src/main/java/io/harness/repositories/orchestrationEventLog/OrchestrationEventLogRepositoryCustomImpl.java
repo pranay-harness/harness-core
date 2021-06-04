@@ -1,11 +1,9 @@
 package io.harness.repositories.orchestrationEventLog;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
-import io.harness.pms.sdk.core.events.OrchestrationEventLog;
-import io.harness.pms.sdk.core.events.OrchestrationEventLog.OrchestrationEventLogKeys;
+import io.harness.beans.OrchestrationEventLog;
+import io.harness.beans.OrchestrationEventLog.OrchestrationEventLogKeys;
 
 import com.google.inject.Inject;
 import java.sql.Date;
@@ -22,7 +20,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 public class OrchestrationEventLogRepositoryCustomImpl implements OrchestrationEventLogRepositoryCustom {
   private final MongoTemplate mongoTemplate;

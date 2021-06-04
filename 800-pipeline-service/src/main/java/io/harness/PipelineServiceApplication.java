@@ -12,20 +12,18 @@ import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.OrchestrationVisualizationEventLogHandlerAsync;
 import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.delay.DelayEventListener;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.OrchestrationServiceImpl;
 import io.harness.engine.events.NodeExecutionStatusUpdateEventHandler;
-import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionServiceImpl;
-import io.harness.engine.observers.OrchestrationLogPublisher;
 import io.harness.event.OrchestrationEndEventHandler;
+import io.harness.event.OrchestrationLogPublisher;
 import io.harness.event.OrchestrationStartEventHandler;
 import io.harness.exception.GeneralException;
 import io.harness.execution.SdkResponseEventListener;
@@ -308,13 +306,10 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         injector.getInstance(Key.get(PipelineExecutionSummaryDeleteObserver.class)));
     pmsPipelineService.getPipelineSubject().register(injector.getInstance(Key.get(InputSetsDeleteObserver.class)));
 
-    OrchestrationEventEmitter orchestrationEventEmitter =
-        injector.getInstance(Key.get(OrchestrationEventEmitter.class));
-    orchestrationEventEmitter.getOrchestrationEventLogSubjectSubject().register(
-        injector.getInstance(Key.get(OrchestrationVisualizationEventLogHandlerAsync.class)));
-
     NodeExecutionServiceImpl nodeExecutionService =
         (NodeExecutionServiceImpl) injector.getInstance(Key.get(NodeExecutionService.class));
+
+    // NodeStatusUpdateObserver
     nodeExecutionService.getStepStatusUpdateSubject().register(
         injector.getInstance(Key.get(PlanExecutionService.class)));
     nodeExecutionService.getStepStatusUpdateSubject().register(
@@ -324,18 +319,20 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     nodeExecutionService.getStepStatusUpdateSubject().register(injector.getInstance(Key.get(BarrierDropper.class)));
     nodeExecutionService.getStepStatusUpdateSubject().register(
         injector.getInstance(Key.get(NodeExecutionStatusUpdateEventHandler.class)));
+    nodeExecutionService.getStepStatusUpdateSubject().register(
+        injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
 
-    nodeExecutionService.getNodeExecutionStartSubject().register(
-        injector.getInstance(Key.get(StageStartNotificationHandler.class)));
+    // NodeUpdateObservers
     nodeExecutionService.getNodeUpdateObserverSubject().register(
         injector.getInstance(Key.get(ExecutionSummaryUpdateEventHandler.class)));
     nodeExecutionService.getNodeUpdateObserverSubject().register(
         injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
+    nodeExecutionService.getNodeUpdateObserverSubject().register(
+        injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
 
-    OrchestrationLogPublisher orchestrationLogPublisher =
-        (OrchestrationLogPublisher) injector.getInstance(Key.get(OrchestrationLogPublisher.class));
-    orchestrationLogPublisher.getOrchestrationEventLogSubjectSubject().register(
-        injector.getInstance(Key.get(OrchestrationVisualizationEventLogHandlerAsync.class)));
+    // NodeExecutionStartObserver
+    nodeExecutionService.getNodeExecutionStartSubject().register(
+        injector.getInstance(Key.get(StageStartNotificationHandler.class)));
 
     PlanStatusEventEmitterHandler planStatusEventEmitterHandler =
         injector.getInstance(Key.get(PlanStatusEventEmitterHandler.class));
@@ -349,6 +346,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     planExecutionService.getPlanStatusUpdateSubject().register(planStatusEventEmitterHandler);
     planExecutionService.getPlanStatusUpdateSubject().register(
         injector.getInstance(Key.get(PipelineStatusUpdateEventHandler.class)));
+    planExecutionService.getPlanStatusUpdateSubject().register(
+        injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
 
     OrchestrationServiceImpl orchestrationService =
         (OrchestrationServiceImpl) injector.getInstance(Key.get(OrchestrationService.class));

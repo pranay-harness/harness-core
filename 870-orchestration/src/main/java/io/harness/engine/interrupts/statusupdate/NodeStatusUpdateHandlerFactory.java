@@ -3,14 +3,15 @@ package io.harness.engine.interrupts.statusupdate;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.engine.observers.NodeStatusUpdateHandler;
+import io.harness.engine.observers.NodeUpdateInfo;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @OwnedBy(PIPELINE)
 @Singleton
-public class StepStatusUpdateFactory {
+public class NodeStatusUpdateHandlerFactory {
   @Inject ApprovalStepStatusUpdate approvalStepStatusUpdate;
   @Inject InterventionWaitStepStatusUpdate interventionWaitStepStatusUpdate;
   @Inject PausedStepStatusUpdate pausedStepStatusUpdate;
@@ -18,8 +19,8 @@ public class StepStatusUpdateFactory {
   @Inject TerminalStepStatusUpdate terminalStepStatusUpdate;
   @Inject AbortAndRunningStepStatusUpdate abortAndRunningStepStatusUpdate;
 
-  public StepStatusUpdate obtainStepStatusUpdate(StepStatusUpdateInfo stepStatusUpdateInfo) {
-    switch (stepStatusUpdateInfo.getStatus()) {
+  public NodeStatusUpdateHandler obtainStepStatusUpdate(NodeUpdateInfo nodeStatusUpdateInfo) {
+    switch (nodeStatusUpdateInfo.getStatus()) {
       case APPROVAL_WAITING:
         return approvalStepStatusUpdate;
       case INTERVENTION_WAITING:
@@ -28,13 +29,11 @@ public class StepStatusUpdateFactory {
         return pausedStepStatusUpdate;
       case QUEUED:
         return resumeStepStatusUpdate;
-      case RUNNING:
       case ABORTED:
         return abortAndRunningStepStatusUpdate;
       default:
-        if (StatusUtils.isFinalStatus(stepStatusUpdateInfo.getStatus())) {
-          return terminalStepStatusUpdate;
-        }
+        // Do not do this for other statuses as there multiple queries
+        // Till Now only handling these will figure out a better way to do this
         return null;
     }
   }

@@ -1,13 +1,16 @@
-package io.harness.pms.sdk.core.events;
+package io.harness.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.sdk.core.events.OrchestrationEvent;
 
 import com.google.common.collect.ImmutableList;
 import java.util.Date;
@@ -31,6 +34,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("orchestrationEventLog")
 @HarnessEntity(exportable = false)
 @TypeAlias("OrchestrationEventLog")
+@StoreIn(DbAliases.PMS)
 public class OrchestrationEventLog implements PersistentEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

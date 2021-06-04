@@ -3,7 +3,7 @@ package io.harness.engine.executions.plan;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdate;
+import io.harness.engine.observers.NodeStatusUpdateObserver;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
@@ -14,7 +14,7 @@ import lombok.NonNull;
 import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(PIPELINE)
-public interface PlanExecutionService extends StepStatusUpdate {
+public interface PlanExecutionService extends NodeStatusUpdateObserver {
   PlanExecution update(@NonNull String planExecutionId, @NonNull Consumer<Update> ops);
 
   PlanExecution updateStatus(@NonNull String planExecutionId, @NonNull Status status);

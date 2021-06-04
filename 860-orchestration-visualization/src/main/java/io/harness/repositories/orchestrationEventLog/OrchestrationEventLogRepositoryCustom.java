@@ -4,7 +4,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.pms.sdk.core.events.OrchestrationEventLog;
+import io.harness.beans.OrchestrationEventLog;
 
 import java.util.List;
 

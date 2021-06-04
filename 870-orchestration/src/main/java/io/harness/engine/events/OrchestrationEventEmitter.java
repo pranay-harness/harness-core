@@ -9,29 +9,20 @@ import io.harness.engine.utils.OrchestrationEventsFrameworkUtils;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.logging.AutoLogContext;
-import io.harness.observer.Subject;
-import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
-import io.harness.pms.sdk.core.events.OrchestrationEventLog;
 import io.harness.pms.sdk.core.events.OrchestrationSubject;
 import io.harness.pms.sdk.core.registries.OrchestrationEventHandlerRegistry;
 import io.harness.pms.utils.PmsConstants;
 import io.harness.queue.QueuePublisher;
-import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
 import io.harness.serializer.ProtoUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
-import java.sql.Date;
-import java.time.Duration;
-import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Set;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -42,9 +33,6 @@ public class OrchestrationEventEmitter {
   @Inject private OrchestrationEventsFrameworkUtils eventsFrameworkUtils;
   @Inject private OrchestrationEventHandlerRegistry handlerRegistry;
   @Inject private QueuePublisher<OrchestrationEvent> orchestrationEventQueue;
-  @Inject private OrchestrationEventLogRepository orchestrationEventLogRepository;
-
-  @Getter @Setter Subject<OrchestrationEventLogHandler> orchestrationEventLogSubjectSubject = new Subject<>();
 
   public void emitEvent(OrchestrationEvent event) {
     try (AutoLogContext ignore = event.autoLogContext()) {
@@ -52,9 +40,6 @@ public class OrchestrationEventEmitter {
       Set<OrchestrationEventHandler> handlers = handlerRegistry.obtain(event.getEventType());
       subject.registerAll(handlers);
       subject.handleEventSync(event);
-      populateEventLog(event.getEventType(),
-          event.getNodeExecutionProto() == null ? null : event.getNodeExecutionProto().getUuid(),
-          event.getAmbiance().getPlanExecutionId());
       String serviceName = event.getNodeExecutionProto() == null
           ? PmsConstants.INTERNAL_SERVICE_NAME
           : event.getNodeExecutionProto().getNode().getServiceName();
@@ -104,21 +89,5 @@ public class OrchestrationEventEmitter {
       protoEvent.setNodeExecution(event.getNodeExecutionProto());
     }
     return protoEvent.build().toByteString();
-  }
-
-  public void populateEventLog(OrchestrationEventType eventType, String nodeExecutionId, String planExecutionId) {
-    if (eventType == OrchestrationEventType.NODE_EXECUTION_UPDATE
-        || eventType == OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE
-        || eventType == OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE) {
-      OrchestrationEventLog orchestrationEventLog = orchestrationEventLogRepository.save(
-          OrchestrationEventLog.builder()
-              .createdAt(System.currentTimeMillis())
-              .nodeExecutionId(nodeExecutionId)
-              .orchestrationEventType(eventType)
-              .planExecutionId(planExecutionId)
-              .validUntil(Date.from(OffsetDateTime.now().plus(Duration.ofDays(14)).toInstant()))
-              .build());
-      orchestrationEventLogSubjectSubject.fireInform(OrchestrationEventLogHandler::handleLog, orchestrationEventLog);
-    }
   }
 }

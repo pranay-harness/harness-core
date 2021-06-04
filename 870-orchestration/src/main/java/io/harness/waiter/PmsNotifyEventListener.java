@@ -32,14 +32,14 @@ public final class PmsNotifyEventListener extends NotifyEventListener {
 
   private static QueueConsumer<NotifyEvent> getNgQueueConsumer(
       Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
-    return QueueFactory.createNgQueueConsumer(injector, NotifyEvent.class, ofSeconds(5),
+    return QueueFactory.createNgQueueConsumer(injector, NotifyEvent.class, ofSeconds(10),
         asList(asList(versionInfoManager.getVersionInfo().getVersion()), asList(PMS_ORCHESTRATION)), config,
         injector.getInstance(MongoTemplate.class));
   }
 
   private static QueueConsumer<NotifyEvent> getQueueConsumer(
       Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
-    return QueueFactory.createQueueConsumer(injector, NotifyEvent.class, ofSeconds(5),
+    return QueueFactory.createQueueConsumer(injector, NotifyEvent.class, ofSeconds(10),
         asList(asList(versionInfoManager.getVersionInfo().getVersion()), asList(PMS_ORCHESTRATION)), config);
   }
 }

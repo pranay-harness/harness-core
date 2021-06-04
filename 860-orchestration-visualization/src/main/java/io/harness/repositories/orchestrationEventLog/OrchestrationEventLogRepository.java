@@ -1,7 +1,7 @@
 package io.harness.repositories.orchestrationEventLog;
 
 import io.harness.annotation.HarnessRepo;
-import io.harness.pms.sdk.core.events.OrchestrationEventLog;
+import io.harness.beans.OrchestrationEventLog;
 
 import org.springframework.data.repository.PagingAndSortingRepository;
 
