@@ -154,20 +154,19 @@ public class TerraformStepHelperTest extends CategoryTest {
                                     .type("Github")
                                     .build());
     RemoteTerraformVarFileSpec remoteTerraformVarFileSpec = new RemoteTerraformVarFileSpec();
-    remoteTerraformVarFileSpec.setStoreConfigWrapper(
-        StoreConfigWrapper.builder()
-            .spec(GitLabStore.builder()
-                      .branch(ParameterField.createValueField("master"))
-                      .gitFetchType(FetchType.BRANCH)
-                      .folderPath(ParameterField.createValueField("VarFiles/"))
-                      .build())
-            .type("GitLab")
-            .build());
+    remoteTerraformVarFileSpec.setStore(StoreConfigWrapper.builder()
+                                            .spec(GitLabStore.builder()
+                                                      .branch(ParameterField.createValueField("master"))
+                                                      .gitFetchType(FetchType.BRANCH)
+                                                      .folderPath(ParameterField.createValueField("VarFiles/"))
+                                                      .build())
+                                            .type("GitLab")
+                                            .build());
     LinkedHashMap<String, TerraformVarFile> varFilesMap = new LinkedHashMap<>();
     varFilesMap.put("var-file-1",
         TerraformVarFile.builder().identifier("var-file-1").type("Inline").spec(remoteTerraformVarFileSpec).build());
     TerraformApplyStepParameters parameters = TerraformApplyStepParameters.infoBuilder()
-                                                  .configuration(TerrformStepConfigurationParameters.builder()
+                                                  .configuration(TerraformStepConfigurationParameters.builder()
                                                                      .type(TerraformStepConfigurationType.INLINE)
                                                                      .spec(TerraformExecutionDataParameters.builder()
                                                                                .configFiles(configFilesWrapper)
@@ -212,7 +211,7 @@ public class TerraformStepHelperTest extends CategoryTest {
   public void testToTerraformVarFileInfo() {
     Ambiance ambiance = getAmbiance();
     RemoteTerraformVarFileSpec remoteTerraformVarFileSpec = new RemoteTerraformVarFileSpec();
-    remoteTerraformVarFileSpec.setStoreConfigWrapper(
+    remoteTerraformVarFileSpec.setStore(
         StoreConfigWrapper.builder()
             .spec(GitLabStore.builder()
                       .branch(ParameterField.createValueField("master"))

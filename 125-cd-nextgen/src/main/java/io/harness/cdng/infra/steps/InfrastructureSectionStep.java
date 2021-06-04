@@ -3,11 +3,17 @@ package io.harness.cdng.infra.steps;
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 
+import io.harness.accesscontrol.Principal;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
+import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.environment.EnvironmentMapper;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
+import io.harness.cdng.infra.beans.InfraUseFromStage;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -18,7 +24,10 @@ import io.harness.ng.core.mapper.TagMapper;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
+import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.rbac.PrincipalTypeProtoToPrincipalTypeMapper;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
@@ -26,9 +35,11 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.tags.TagUtils;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.rbac.CDNGRbacPermissions;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +52,7 @@ public class InfrastructureSectionStep implements ChildExecutable<InfraSectionSt
 
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject private EnvironmentService environmentService;
+  @Inject @Named("PRIVILEGED") private AccessControlClient accessControlClient;
 
   @Override
   public Class<InfraSectionStepParameters> getStepParametersClass() {
@@ -51,11 +63,32 @@ public class InfrastructureSectionStep implements ChildExecutable<InfraSectionSt
   public ChildExecutableResponse obtainChild(
       Ambiance ambiance, InfraSectionStepParameters stepParameters, StepInputPackage inputPackage) {
     log.info("Starting execution for InfraSection Step [{}]", stepParameters);
-    EnvironmentOutcome environmentOutcome = processEnvironment(ambiance, stepParameters);
+    validateEnvironment(stepParameters, ambiance);
+    EnvironmentOutcome environmentOutcome = processEnvironment(ambiance, stepParameters.getUseFromStage(),
+        stepParameters.getEnvironment(), stepParameters.getEnvironmentRef());
     executionSweepingOutputResolver.consume(
         ambiance, OutcomeExpressionConstants.ENVIRONMENT, environmentOutcome, StepOutcomeGroup.STAGE.name());
 
     return ChildExecutableResponse.newBuilder().setChildNodeId(stepParameters.getChildNodeID()).build();
+  }
+
+  private void validateEnvironment(InfraSectionStepParameters stepParameters, Ambiance ambiance) {
+    String accountIdentifier = AmbianceUtils.getAccountId(ambiance);
+    String orgIdentifier = AmbianceUtils.getOrgIdentifier(ambiance);
+    String projectIdentifier = AmbianceUtils.getProjectIdentifier(ambiance);
+    ExecutionPrincipalInfo executionPrincipalInfo = ambiance.getMetadata().getPrincipalInfo();
+    String principal = executionPrincipalInfo.getPrincipal();
+    if (EmptyPredicate.isEmpty(principal)) {
+      return;
+    }
+    PrincipalType principalType = PrincipalTypeProtoToPrincipalTypeMapper.convertToAccessControlPrincipalType(
+        executionPrincipalInfo.getPrincipalType());
+    if (stepParameters.getEnvironmentRef() == null
+        || EmptyPredicate.isEmpty(stepParameters.getEnvironmentRef().getValue())) {
+      accessControlClient.checkForAccessOrThrow(Principal.of(principalType, principal),
+          ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier), Resource.of("ENVIRONMENT", null),
+          CDNGRbacPermissions.ENVIRONMENT_CREATE_PERMISSION, "Validation for Infrastructure Step failed");
+    }
   }
 
   @Override
@@ -65,24 +98,23 @@ public class InfrastructureSectionStep implements ChildExecutable<InfraSectionSt
     return createStepResponseFromChildResponse(responseDataMap);
   }
 
-  EnvironmentOutcome processEnvironment(Ambiance ambiance, InfraSectionStepParameters pipelineInfrastructure) {
+  EnvironmentOutcome processEnvironment(Ambiance ambiance, InfraUseFromStage useFromStage, EnvironmentYaml environment,
+      ParameterField<String> environmentRef) {
     EnvironmentYaml environmentOverrides = null;
 
-    if (pipelineInfrastructure.getUseFromStage() != null
-        && pipelineInfrastructure.getUseFromStage().getOverrides() != null) {
-      environmentOverrides = pipelineInfrastructure.getUseFromStage().getOverrides().getEnvironment();
+    if (useFromStage != null && useFromStage.getOverrides() != null) {
+      environmentOverrides = useFromStage.getOverrides().getEnvironment();
       if (EmptyPredicate.isEmpty(environmentOverrides.getName())) {
         environmentOverrides.setName(environmentOverrides.getIdentifier());
       }
     }
-    return processEnvironment(pipelineInfrastructure, environmentOverrides, ambiance);
+    return processEnvironment(environmentOverrides, ambiance, environment, environmentRef);
   }
 
-  private EnvironmentOutcome processEnvironment(
-      InfraSectionStepParameters pipelineInfrastructure, EnvironmentYaml environmentOverrides, Ambiance ambiance) {
-    EnvironmentYaml environmentYaml = pipelineInfrastructure.getEnvironment();
+  private EnvironmentOutcome processEnvironment(EnvironmentYaml environmentOverrides, Ambiance ambiance,
+      EnvironmentYaml environmentYaml, ParameterField<String> environmentRef) {
     if (environmentYaml == null) {
-      environmentYaml = createEnvYamlFromEnvRef(pipelineInfrastructure, ambiance);
+      environmentYaml = createEnvYamlFromEnvRef(ambiance, environmentRef);
     }
     if (EmptyPredicate.isEmpty(environmentYaml.getName())) {
       environmentYaml.setName(environmentYaml.getIdentifier());
@@ -112,12 +144,11 @@ public class InfrastructureSectionStep implements ChildExecutable<InfraSectionSt
         .build();
   }
 
-  private EnvironmentYaml createEnvYamlFromEnvRef(
-      InfraSectionStepParameters pipelineInfrastructure, Ambiance ambiance) {
+  private EnvironmentYaml createEnvYamlFromEnvRef(Ambiance ambiance, ParameterField<String> environmentRef) {
     String accountId = AmbianceHelper.getAccountId(ambiance);
     String projectIdentifier = AmbianceHelper.getProjectIdentifier(ambiance);
     String orgIdentifier = AmbianceHelper.getOrgIdentifier(ambiance);
-    String envIdentifier = pipelineInfrastructure.getEnvironmentRef().getValue();
+    String envIdentifier = environmentRef.getValue();
 
     Optional<Environment> optionalEnvironment =
         environmentService.get(accountId, orgIdentifier, projectIdentifier, envIdentifier, false);
