@@ -66,19 +66,28 @@ public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHan
           DBObject branch = (DBObject) (ciExecutionInfo.get("branch"));
 
           HashMap firstCommit = null;
-          if (branch != null) {
-            firstCommit = (HashMap) ((List) branch.get("commits")).get(0);
+          String commits = "commits";
+          if (branch != null && branch.get(commits) != null && ((List) branch.get(commits)).size() > 0) {
+            firstCommit = (HashMap) ((List) branch.get(commits)).get(0);
             if (firstCommit != null) {
-              columnValueMapping.put("moduleInfo_branch_commit_id", firstCommit.get("id").toString());
-              columnValueMapping.put("moduleInfo_branch_commit_message", firstCommit.get("message").toString());
+              if (firstCommit.get("id") != null) {
+                columnValueMapping.put("moduleInfo_branch_commit_id", firstCommit.get("id").toString());
+              }
+              if (firstCommit.get("message") != null) {
+                columnValueMapping.put("moduleInfo_branch_commit_message", firstCommit.get("message").toString());
+              }
             }
           } else if (ciExecutionInfo.get("pullRequest") != null) {
             DBObject pullRequestObject = (DBObject) ciExecutionInfo.get("pullRequest");
-            if (pullRequestObject.get("commits") != null) {
-              firstCommit = (HashMap) ((List) pullRequestObject.get("commits")).get(0);
+            if (pullRequestObject.get(commits) != null && ((List) pullRequestObject.get(commits)).size() > 0) {
+              firstCommit = (HashMap) ((List) pullRequestObject.get(commits)).get(0);
               if (firstCommit != null) {
-                columnValueMapping.put("moduleInfo_branch_commit_id", firstCommit.get("id").toString());
-                columnValueMapping.put("moduleInfo_branch_commit_message", firstCommit.get("message").toString());
+                if (firstCommit.get("id") != null) {
+                  columnValueMapping.put("moduleInfo_branch_commit_id", firstCommit.get("id").toString());
+                }
+                if (firstCommit.get("message") != null) {
+                  columnValueMapping.put("moduleInfo_branch_commit_message", firstCommit.get("message").toString());
+                }
               }
             }
           }
