@@ -16,13 +16,13 @@ public class AwsAccountConnectionDetailsHelper {
 
   private static final String EXTERNAL_ID_TEMPLATE = "harness:%s:%s";
   private static final String stackBaseTemplate =
-      "https://console.aws.amazon.com/cloudformation/home?#/stacks/quickcreate?stackName=%s&templateURL=%s&param_ExternalId=%s";
+      "https://console.aws.amazon.com/cloudformation/home?#/stacks/quickcreate?stackName=%s&templateURL=%s";
   private static final String stackNameValue = "harness-ce-iam-role-stack";
   public AwsAccountConnectionDetail getAwsAccountConnectorDetail(String accountId) {
     String harnessAccountId = configuration.getAwsConfig().getHarnessAwsAccountId();
     String externalId = String.format(EXTERNAL_ID_TEMPLATE, harnessAccountId, accountId);
-    String stackLaunchTemplateLink = String.format(
-        stackBaseTemplate, stackNameValue, configuration.getAwsConfig().getAwsConnectorTemplate(), externalId);
+    String stackLaunchTemplateLink =
+        String.format(stackBaseTemplate, stackNameValue, configuration.getAwsConfig().getAwsConnectorTemplate());
     return AwsAccountConnectionDetail.builder()
         .externalId(externalId)
         .harnessAccountId(harnessAccountId)
