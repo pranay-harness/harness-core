@@ -4,10 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.commons.entities.billing.CECluster;
+import io.harness.ccm.commons.entities.billing.CECluster.CEClusterKeys;
 import io.harness.persistence.HPersistence;
-
-import software.wings.beans.ce.CECluster;
-import software.wings.beans.ce.CECluster.CEClusterKeys;
 
 import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;

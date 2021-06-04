@@ -22,6 +22,7 @@ import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.manage.GlobalContextManager;
@@ -186,6 +187,11 @@ public class DataGenApplication extends Application<MainConfiguration> {
       @Override
       public CfMigrationConfig cfMigrationConfig() {
         return configuration.getCfMigrationConfig();
+      }
+
+      @Override
+      public FeatureFlagConfig featureFlagConfig() {
+        return FeatureFlagConfig.builder().build();
       }
     });
     modules.add(new ValidationModule(validatorFactory));

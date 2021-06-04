@@ -11,6 +11,7 @@ import io.harness.OrchestrationTestBase;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.engine.observers.NodeUpdateInfo;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
@@ -93,11 +94,7 @@ public class TerminalStepStatusUpdateTest extends OrchestrationTestBase {
     mongoTemplate.save(child2);
     mongoTemplate.save(child3);
 
-    stepStatusUpdate.onStepStatusUpdate(StepStatusUpdateInfo.builder()
-                                            .nodeExecutionId("child1")
-                                            .planExecutionId(ambiance.getPlanExecutionId())
-                                            .status(Status.SUCCEEDED)
-                                            .build());
+    stepStatusUpdate.handleNodeStatusUpdate(NodeUpdateInfo.builder().nodeExecution(child1).build());
 
     PlanExecution updated =
         mongoTemplate.findOne(query(where(PlanExecutionKeys.uuid).is(planExecutionId)), PlanExecution.class);
@@ -171,11 +168,7 @@ public class TerminalStepStatusUpdateTest extends OrchestrationTestBase {
     mongoTemplate.save(child2);
     mongoTemplate.save(child3);
 
-    stepStatusUpdate.onStepStatusUpdate(StepStatusUpdateInfo.builder()
-                                            .nodeExecutionId("child1")
-                                            .planExecutionId(ambiance.getPlanExecutionId())
-                                            .status(Status.SUCCEEDED)
-                                            .build());
+    stepStatusUpdate.handleNodeStatusUpdate(NodeUpdateInfo.builder().nodeExecution(child1).build());
 
     PlanExecution updated =
         mongoTemplate.findOne(query(where(PlanExecutionKeys.uuid).is(planExecutionId)), PlanExecution.class);

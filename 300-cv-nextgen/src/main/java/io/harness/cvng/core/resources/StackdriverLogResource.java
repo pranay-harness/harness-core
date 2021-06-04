@@ -1,6 +1,7 @@
 package io.harness.cvng.core.resources;
 
 import io.harness.annotations.ExposeInternalException;
+import io.harness.cvng.core.beans.LogSampleDTO;
 import io.harness.cvng.core.services.api.StackdriverService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -21,6 +22,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import retrofit2.http.Body;
 
 @Api("stackdriver-log")
 @Path("/stackdriver-log")
@@ -44,8 +46,8 @@ public class StackdriverLogResource {
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @QueryParam("tracingId") String tracingId,
-      @NotNull String query) {
+      @Body LogSampleDTO logSampleDTO) {
     return ResponseDTO.newResponse(stackdriverService.getSampleLogData(
-        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, query, tracingId));
+        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, logSampleDTO.getQuery(), tracingId));
   }
 }

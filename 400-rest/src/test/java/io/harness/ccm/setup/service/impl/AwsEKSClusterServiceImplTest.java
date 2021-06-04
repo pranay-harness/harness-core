@@ -9,13 +9,13 @@ import static org.mockito.Mockito.doReturn;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.entities.billing.CECluster;
 import io.harness.ccm.setup.service.support.intfc.AwsEKSHelperService;
 import io.harness.rule.Owner;
 
 import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.ce.CEAwsConfig;
-import software.wings.beans.ce.CECluster;
 import software.wings.service.intfc.AwsHelperResourceService;
 
 import com.google.common.collect.ImmutableList;

@@ -60,8 +60,6 @@ public class StackdriverLogDSConfigTest extends DSConfigTestBase {
     cvConfig.setQuery(query);
     cvConfig.setMessageIdentifier("message");
     cvConfig.setServiceInstanceIdentifier("pod_name");
-    cvConfig.setTimestampIdentifier("timestamp");
-    cvConfig.setTimestampFormat("HH:MM:SS");
     return cvConfig;
   }
 

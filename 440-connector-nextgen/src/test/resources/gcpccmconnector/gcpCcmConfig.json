@@ -12,10 +12,12 @@
     },
     "spec": {
       "featuresEnabled": [
-        "BILLING"
+        "BILLING",
+        "OPTIMIZATION",
+        "VISIBILITY"
       ],
+      "projectId": "projectId",
       "billingExportSpec": {
-        "projectId": "projectId",
         "datasetId": "datasetId"
       }
     }

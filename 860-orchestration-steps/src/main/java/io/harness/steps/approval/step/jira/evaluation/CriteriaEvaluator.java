@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.InvalidRequestException;
+import io.harness.exception.JiraStepException;
 import io.harness.jira.JiraIssueNG;
 import io.harness.steps.approval.step.jira.JiraExpressionEvaluator;
 import io.harness.steps.approval.step.jira.beans.ConditionDTO;
@@ -26,14 +26,14 @@ public class CriteriaEvaluator {
     } else if (criteriaSpec instanceof KeyValuesCriteriaSpecDTO) {
       return evaluateKeyValuesCriteria(issue, (KeyValuesCriteriaSpecDTO) criteriaSpec);
     } else {
-      throw new InvalidRequestException("Unknown criteria type");
+      throw new JiraStepException("Unknown criteria type", true);
     }
   }
 
   private boolean evaluateJexlCriteria(JiraIssueNG issue, JexlCriteriaSpecDTO jexlCriteriaSpec) {
     String expression = jexlCriteriaSpec.getExpression();
     if (StringUtils.isBlank(expression)) {
-      throw new InvalidRequestException("Expression cannot be blank in jexl criteria");
+      throw new JiraStepException("Expression cannot be blank in jexl criteria", true);
     }
 
     try {
@@ -42,18 +42,18 @@ public class CriteriaEvaluator {
       if (result instanceof Boolean) {
         return (boolean) result;
       } else {
-        throw new InvalidRequestException("Non boolean result while evaluating approval condition");
+        throw new JiraStepException("Non boolean result while evaluating approval condition", true);
       }
     } catch (Exception e) {
-      throw new InvalidRequestException(
-          String.format("Error while evaluating approval condition. expression: %s%n", expression), e);
+      throw new JiraStepException(
+          String.format("Error while evaluating approval condition. expression: %s%n", expression), true, e);
     }
   }
 
   private boolean evaluateKeyValuesCriteria(JiraIssueNG issue, KeyValuesCriteriaSpecDTO keyValueCriteriaSpec) {
     List<ConditionDTO> conditions = keyValueCriteriaSpec.getConditions();
     if (isEmpty(conditions)) {
-      throw new InvalidRequestException("Conditions in KeyValues criteria can't be empty");
+      throw new JiraStepException("Conditions in KeyValues criteria can't be empty", true);
     }
 
     boolean matchAnyCondition = keyValueCriteriaSpec.isMatchAnyCondition();
@@ -73,8 +73,8 @@ public class CriteriaEvaluator {
           }
         }
       } catch (Exception e) {
-        throw new InvalidRequestException(
-            String.format("Error while evaluating condition %s", condition.toString()), e);
+        throw new JiraStepException(
+            String.format("Error while evaluating condition %s", condition.toString()), true, e);
       }
     }
     return !matchAnyCondition;

@@ -1,6 +1,6 @@
 package io.harness.pms.sdk.core;
 
-import static io.harness.pms.events.PmsEventFrameworkConstants.SDK_RESPONSE_EVENT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_SDK_RESPONSE_EVENT_TOPIC;
 import static io.harness.pms.sdk.core.PmsSdkCoreEventsFrameworkConstants.SDK_RESPONSE_EVENT_PRODUCER;
 
 import io.harness.eventsframework.EventsFrameworkConfiguration;
@@ -8,7 +8,6 @@ import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
-import io.harness.pms.events.PmsEventFrameworkConstants;
 import io.harness.redis.RedisConfig;
 
 import com.google.inject.AbstractModule;
@@ -42,8 +41,8 @@ public class PmsSdkCoreEventsFrameworkModule extends AbstractModule {
     } else {
       bind(Producer.class)
           .annotatedWith(Names.named(SDK_RESPONSE_EVENT_PRODUCER))
-          .toInstance(RedisProducer.of(
-              SDK_RESPONSE_EVENT_TOPIC, redisConfig, PmsEventFrameworkConstants.MAX_TOPIC_SIZE, serviceName));
+          .toInstance(RedisProducer.of(PIPELINE_SDK_RESPONSE_EVENT_TOPIC, redisConfig,
+              EventsFrameworkConstants.PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE, serviceName));
     }
   }
 }

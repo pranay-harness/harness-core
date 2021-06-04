@@ -23,6 +23,7 @@ import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
@@ -328,6 +329,11 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
       @Override
       public CfMigrationConfig cfMigrationConfig() {
         return CfMigrationConfig.builder().build();
+      }
+
+      @Override
+      public FeatureFlagConfig featureFlagConfig() {
+        return FeatureFlagConfig.builder().build();
       }
     });
 

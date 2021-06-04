@@ -9,9 +9,9 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdate;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdateFactory;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
+import io.harness.engine.interrupts.statusupdate.NodeStatusUpdateHandlerFactory;
+import io.harness.engine.observers.NodeStatusUpdateHandler;
+import io.harness.engine.observers.NodeUpdateInfo;
 import io.harness.engine.observers.PlanStatusUpdateObserver;
 import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.exception.InvalidRequestException;
@@ -53,7 +53,7 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
   @Inject private PlanExecutionRepository planExecutionRepository;
   @Inject private MongoTemplate mongoTemplate;
   @Inject private OrchestrationEventEmitter eventEmitter;
-  @Inject private StepStatusUpdateFactory stepStatusUpdateFactory;
+  @Inject private NodeStatusUpdateHandlerFactory nodeStatusUpdateHandlerFactory;
   @Inject private NodeExecutionService nodeExecutionService;
 
   @Getter private final Subject<PlanStatusUpdateObserver> planStatusUpdateSubject = new Subject<>();
@@ -126,10 +126,11 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
   }
 
   @Override
-  public void onStepStatusUpdate(StepStatusUpdateInfo stepStatusUpdateInfo) {
-    StepStatusUpdate stepStatusUpdate = stepStatusUpdateFactory.obtainStepStatusUpdate(stepStatusUpdateInfo);
-    if (stepStatusUpdate != null) {
-      stepStatusUpdate.onStepStatusUpdate(stepStatusUpdateInfo);
+  public void onNodeStatusUpdate(NodeUpdateInfo nodeUpdateInfo) {
+    NodeStatusUpdateHandler nodeStatusUpdateObserver =
+        nodeStatusUpdateHandlerFactory.obtainStepStatusUpdate(nodeUpdateInfo);
+    if (nodeStatusUpdateObserver != null) {
+      nodeStatusUpdateObserver.handleNodeStatusUpdate(nodeUpdateInfo);
     }
   }
 

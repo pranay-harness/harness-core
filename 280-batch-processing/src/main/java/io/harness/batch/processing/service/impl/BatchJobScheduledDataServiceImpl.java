@@ -4,8 +4,8 @@ import io.harness.batch.processing.ccm.BatchJobBucket;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.dao.intfc.BatchJobScheduledDataDao;
 import io.harness.batch.processing.service.intfc.BatchJobScheduledDataService;
-import io.harness.ccm.cluster.entities.BatchJobScheduledData;
-import io.harness.ccm.commons.entities.CEDataCleanupRequest;
+import io.harness.ccm.commons.entities.batch.BatchJobScheduledData;
+import io.harness.ccm.commons.entities.batch.CEDataCleanupRequest;
 import io.harness.ccm.health.LastReceivedPublishedMessageDao;
 
 import software.wings.beans.SettingAttribute;

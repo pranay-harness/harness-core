@@ -50,7 +50,7 @@ public class JgitGitServiceImpl implements ScmClient {
   }
 
   @Override
-  public DeleteFileResponse deleteFile(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails) {
+  public DeleteFileResponse deleteFile(ScmConnector scmConnector, GitFileDetails gitFileDetails) {
     return null;
   }
 

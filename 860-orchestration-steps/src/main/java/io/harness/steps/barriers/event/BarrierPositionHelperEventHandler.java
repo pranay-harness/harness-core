@@ -2,9 +2,8 @@ package io.harness.steps.barriers.event;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdate;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
+import io.harness.engine.observers.NodeStatusUpdateObserver;
+import io.harness.engine.observers.NodeUpdateInfo;
 import io.harness.execution.NodeExecution;
 import io.harness.observer.AsyncInformObserver;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
@@ -21,17 +20,15 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 @OwnedBy(HarnessTeam.PIPELINE)
-public class BarrierPositionHelperEventHandler implements AsyncInformObserver, StepStatusUpdate {
-  @Inject @Named("PipelineExecutorService") ExecutorService executorService;
-  @Inject NodeExecutionService nodeExecutionService;
+public class BarrierPositionHelperEventHandler implements AsyncInformObserver, NodeStatusUpdateObserver {
+  @Inject @Named("OrchestrationVisualizationExecutorService") ExecutorService executorService;
   @Inject BarrierService barrierService;
 
   @Override
-  public void onStepStatusUpdate(StepStatusUpdateInfo stepStatusUpdateInfo) {
-    String planExecutionId = stepStatusUpdateInfo.getPlanExecutionId();
+  public void onNodeStatusUpdate(NodeUpdateInfo nodeUpdateInfo) {
+    String planExecutionId = nodeUpdateInfo.getPlanExecutionId();
+    NodeExecution nodeExecution = nodeUpdateInfo.getNodeExecution();
     try {
-      NodeExecution nodeExecution = nodeExecutionService.get(stepStatusUpdateInfo.getNodeExecutionId());
-
       if (BarrierPositionType.STAGE.name().equals(nodeExecution.getNode().getGroup())) {
         updatePosition(planExecutionId, BarrierPositionType.STAGE, nodeExecution);
       } else if (BarrierPositionType.STEP_GROUP.name().equals(nodeExecution.getNode().getGroup())) {

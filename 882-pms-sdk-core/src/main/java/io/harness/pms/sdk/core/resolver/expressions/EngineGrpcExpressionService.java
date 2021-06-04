@@ -28,29 +28,21 @@ public class EngineGrpcExpressionService implements EngineExpressionService {
 
   @Override
   public String renderExpression(Ambiance ambiance, String expression, boolean skipUnresolvedExpressionsCheck) {
-    try {
-      ExpressionRenderBlobResponse expressionRenderBlobResponse =
-          engineExpressionProtoServiceBlockingStub.renderExpression(
-              ExpressionRenderBlobRequest.newBuilder()
-                  .setAmbiance(ambiance)
-                  .setExpression(expression)
-                  .setSkipUnresolvedExpressionsCheck(skipUnresolvedExpressionsCheck)
-                  .build());
-      return expressionRenderBlobResponse.getValue();
-    } catch (Exception ex) {
-      throw PmsSdkGrpcClientUtils.processException(ex);
-    }
+    ExpressionRenderBlobResponse expressionRenderBlobResponse =
+        PmsSdkGrpcClientUtils.retryAndProcessException(engineExpressionProtoServiceBlockingStub::renderExpression,
+            ExpressionRenderBlobRequest.newBuilder()
+                .setAmbiance(ambiance)
+                .setExpression(expression)
+                .setSkipUnresolvedExpressionsCheck(skipUnresolvedExpressionsCheck)
+                .build());
+    return expressionRenderBlobResponse.getValue();
   }
 
   @Override
   public Object evaluateExpression(Ambiance ambiance, String expression) {
-    try {
-      ExpressionEvaluateBlobResponse expressionEvaluateBlobResponse =
-          engineExpressionProtoServiceBlockingStub.evaluateExpression(
-              ExpressionEvaluateBlobRequest.newBuilder().setAmbiance(ambiance).setExpression(expression).build());
-      return RecastOrchestrationUtils.fromDocumentJson(expressionEvaluateBlobResponse.getValue(), Object.class);
-    } catch (Exception ex) {
-      throw PmsSdkGrpcClientUtils.processException(ex);
-    }
+    ExpressionEvaluateBlobResponse expressionEvaluateBlobResponse =
+        PmsSdkGrpcClientUtils.retryAndProcessException(engineExpressionProtoServiceBlockingStub::evaluateExpression,
+            ExpressionEvaluateBlobRequest.newBuilder().setAmbiance(ambiance).setExpression(expression).build());
+    return RecastOrchestrationUtils.fromDocumentJson(expressionEvaluateBlobResponse.getValue(), Object.class);
   }
 }

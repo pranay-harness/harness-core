@@ -1,7 +1,7 @@
 package io.harness.gitsync.gitsyncerror.utils;
 
-import static io.harness.gitsync.gitsyncerror.beans.GitSyncError.GitSyncDirection.GIT_TO_HARNESS;
-import static io.harness.gitsync.gitsyncerror.beans.GitSyncError.GitSyncDirection.HARNESS_TO_GIT;
+import static io.harness.gitsync.common.beans.GitSyncDirection.GIT_TO_HARNESS;
+import static io.harness.gitsync.common.beans.GitSyncDirection.HARNESS_TO_GIT;
 import static io.harness.rule.OwnerRule.ABHINAV;
 
 import static org.assertj.core.api.Assertions.assertThat;

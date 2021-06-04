@@ -311,7 +311,7 @@ public class TerraformStepHelper {
   public void saveRollbackDestroyConfigInline(
       TerraformApplyStepParameters stepParameters, TerraformTaskNGResponse response, Ambiance ambiance) {
     validateApplyStepConfigFilesInline(stepParameters);
-    TerrformStepConfigurationParameters configuration = stepParameters.getConfiguration();
+    TerraformStepConfigurationParameters configuration = stepParameters.getConfiguration();
     TerraformExecutionDataParameters spec = configuration.getSpec();
     TerraformConfigBuilder builder =
         TerraformConfig.builder()
@@ -439,7 +439,7 @@ public class TerraformStepHelper {
               varFileInfo.add(InlineTerraformVarFileInfo.builder().varFileContent(content).build());
             }
           } else if (spec instanceof RemoteTerraformVarFileSpec) {
-            StoreConfigWrapper storeConfigWrapper = ((RemoteTerraformVarFileSpec) spec).getStoreConfigWrapper();
+            StoreConfigWrapper storeConfigWrapper = ((RemoteTerraformVarFileSpec) spec).getStore();
             if (storeConfigWrapper != null) {
               i++;
               StoreConfig storeConfig = storeConfigWrapper.getSpec();
@@ -470,7 +470,7 @@ public class TerraformStepHelper {
               varFileConfigs.add(TerraformInlineVarFileConfig.builder().varFileContent(content).build());
             }
           } else if (spec instanceof RemoteTerraformVarFileSpec) {
-            StoreConfigWrapper storeConfigWrapper = ((RemoteTerraformVarFileSpec) spec).getStoreConfigWrapper();
+            StoreConfigWrapper storeConfigWrapper = ((RemoteTerraformVarFileSpec) spec).getStore();
             if (storeConfigWrapper != null) {
               i++;
               StoreConfig storeConfig = storeConfigWrapper.getSpec();

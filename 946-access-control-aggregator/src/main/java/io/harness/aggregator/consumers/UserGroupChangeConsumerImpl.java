@@ -38,7 +38,9 @@ public class UserGroupChangeConsumerImpl implements ChangeConsumer<UserGroupDBO>
   private final ACLRepository aclRepository;
   private final RoleAssignmentRepository roleAssignmentRepository;
   private final ChangeConsumer<RoleAssignmentDBO> roleAssignmentChangeConsumer;
-  private final ExecutorService executorService = Executors.newFixedThreadPool(4);
+  // Number of threads = Number of Available Cores * (1 + (Wait time / Service time) )
+  private final ExecutorService executorService =
+      Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
 
   private long processRoleAssignmentInternal(RoleAssignmentDBO roleAssignmentDBO, UserGroupDBO updatedUserGroup) {
     long createdCount = 0;

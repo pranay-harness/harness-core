@@ -12,8 +12,8 @@ import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.support.ActiveInstanceIterator;
 import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
-import io.harness.ccm.commons.entities.InstanceData;
-import io.harness.ccm.commons.entities.InstanceData.InstanceDataKeys;
+import io.harness.ccm.commons.entities.batch.InstanceData;
+import io.harness.ccm.commons.entities.batch.InstanceData.InstanceDataKeys;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.grpc.utils.HTimestamps;
 

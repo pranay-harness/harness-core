@@ -21,6 +21,7 @@ import static software.wings.security.PermissionAttribute.Action.CREATE;
 import static software.wings.security.PermissionAttribute.Action.DELETE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_PIPELINE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW;
+import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW_ROLLBACK;
 import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
@@ -714,12 +715,12 @@ public class AuthServiceImpl implements AuthService {
       }
     }
 
-    AppPermission appPermission =
-        AppPermission.builder()
-            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
-            .permissionType(PermissionType.ALL_APP_ENTITIES)
-            .actions(Sets.newHashSet(READ, UPDATE, DELETE, CREATE, EXECUTE_PIPELINE, EXECUTE_WORKFLOW))
-            .build();
+    AppPermission appPermission = AppPermission.builder()
+                                      .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                      .permissionType(PermissionType.ALL_APP_ENTITIES)
+                                      .actions(Sets.newHashSet(READ, UPDATE, DELETE, CREATE, EXECUTE_PIPELINE,
+                                          EXECUTE_WORKFLOW, EXECUTE_WORKFLOW_ROLLBACK))
+                                      .build();
 
     AccountPermissions accountPermissions =
         AccountPermissions.builder().permissions(authHandler.getAllAccountPermissions()).build();
@@ -1010,6 +1011,30 @@ public class AuthServiceImpl implements AuthService {
     if (isEmpty(pipelineExecutePermissionsForEnvs) || !pipelineExecutePermissionsForEnvs.contains(envId)) {
       throw new InvalidRequestException(
           "User doesn't have rights to execute Pipeline in this Environment", ErrorCode.ACCESS_DENIED, USER);
+    }
+  }
+
+  @Override
+  public void checkIfUserAllowedToRollbackWorkflowToEnv(String appId, String envId) {
+    if (isEmpty(envId)) {
+      return;
+    }
+
+    User user = UserThreadLocal.get();
+    if (user == null) {
+      throw new InvalidRequestException("User not found", USER);
+    }
+
+    Set<String> rollbackWorkflowExecutePermissionsForEnvs = user.getUserRequestContext()
+                                                                .getUserPermissionInfo()
+                                                                .getAppPermissionMapInternal()
+                                                                .get(appId)
+                                                                .getRollbackWorkflowExecutePermissionsForEnvs();
+
+    if (isEmpty(rollbackWorkflowExecutePermissionsForEnvs)
+        || !rollbackWorkflowExecutePermissionsForEnvs.contains(envId)) {
+      throw new InvalidRequestException(
+          "User doesn't have rights to rollback Workflow in this Environment", ErrorCode.ACCESS_DENIED, USER);
     }
   }
 

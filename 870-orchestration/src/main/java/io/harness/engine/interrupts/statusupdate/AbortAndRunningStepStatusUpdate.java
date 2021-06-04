@@ -5,6 +5,8 @@ import static io.harness.pms.contracts.execution.Status.RUNNING;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.observers.NodeStatusUpdateHandler;
+import io.harness.engine.observers.NodeUpdateInfo;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.execution.Status;
 
@@ -14,12 +16,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PIPELINE)
 @Slf4j
-public class AbortAndRunningStepStatusUpdate implements StepStatusUpdate {
+public class AbortAndRunningStepStatusUpdate implements NodeStatusUpdateHandler {
   @Inject private NodeExecutionService nodeExecutionService;
 
   @Override
-  public void onStepStatusUpdate(StepStatusUpdateInfo stepStatusUpdateInfo) {
-    NodeExecution nodeExecution = nodeExecutionService.get(stepStatusUpdateInfo.getNodeExecutionId());
+  public void handleNodeStatusUpdate(NodeUpdateInfo nodeStatusUpdateInfo) {
+    NodeExecution nodeExecution = nodeStatusUpdateInfo.getNodeExecution();
     if (nodeExecution.getParentId() == null) {
       return;
     }

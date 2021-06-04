@@ -8,7 +8,7 @@ import io.harness.batch.processing.billing.timeseries.data.K8sGranularUtilizatio
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
 import io.harness.batch.processing.tasklet.util.K8sResourceUtils;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
-import io.harness.event.grpc.PublishedMessage;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
 import io.harness.event.payloads.AggregatedUsage;
 import io.harness.event.payloads.PodMetric;
 

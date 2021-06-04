@@ -72,8 +72,27 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
+  public Optional<ConnectorResponseDTO> getByName(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String name, boolean isDeletedAllowed) {
+    return defaultConnectorService.getByName(
+        accountIdentifier, orgIdentifier, projectIdentifier, name, isDeletedAllowed);
+  }
+
+  @Override
+  public Optional<ConnectorResponseDTO> getFromBranch(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String connectorIdentifier, String repo, String branch) {
+    return defaultConnectorService.getFromBranch(
+        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier, repo, branch);
+  }
+
+  @Override
   public ConnectorResponseDTO create(@Valid ConnectorDTO connector, String accountIdentifier) {
     return createSecretManagerConnector(connector, accountIdentifier);
+  }
+
+  @Override
+  public ConnectorResponseDTO create(ConnectorDTO connector, String accountIdentifier, ChangeType gitChangeType) {
+    return defaultConnectorService.create(connector, accountIdentifier, gitChangeType);
   }
 
   private ConnectorResponseDTO createSecretManagerConnector(ConnectorDTO connector, String accountIdentifier) {

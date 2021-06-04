@@ -549,7 +549,8 @@ public enum ErrorCode {
   ENGINE_EXPRESSION_EVALUATION_ERROR,
   ENGINE_FUNCTOR_ERROR,
   JIRA_CLIENT_ERROR,
-  SCM_NOT_MODIFIED;
+  SCM_NOT_MODIFIED,
+  JIRA_STEP_ERROR;
 
   private Status status = BAD_REQUEST;
   private String description;

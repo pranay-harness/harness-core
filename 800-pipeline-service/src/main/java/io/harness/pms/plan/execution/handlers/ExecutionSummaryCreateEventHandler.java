@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.observers.OrchestrationStartObserver;
+import io.harness.engine.observers.beans.OrchestrationStartInfo;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
@@ -50,7 +51,8 @@ public class ExecutionSummaryCreateEventHandler implements OrchestrationStartObs
   }
 
   @Override
-  public void onStart(Ambiance ambiance) {
+  public void onStart(OrchestrationStartInfo orchestrationStartInfo) {
+    Ambiance ambiance = orchestrationStartInfo.getAmbiance();
     String accountId = AmbianceUtils.getAccountId(ambiance);
     String projectId = AmbianceUtils.getProjectIdentifier(ambiance);
     String orgId = AmbianceUtils.getOrgIdentifier(ambiance);
@@ -90,7 +92,7 @@ public class ExecutionSummaryCreateEventHandler implements OrchestrationStartObs
             .startingNodeId(startingNodeId)
             .planExecutionId(planExecutionId)
             .name(pipelineEntity.get().getName())
-            .inputSetYaml(metadata.getInputSetYaml())
+            .inputSetYaml(orchestrationStartInfo.getPlanExecutionMetadata().getInputSetYaml())
             .internalStatus(Status.NO_OP)
             .status(ExecutionStatus.NOTSTARTED)
             .startTs(planExecution.getStartTs())

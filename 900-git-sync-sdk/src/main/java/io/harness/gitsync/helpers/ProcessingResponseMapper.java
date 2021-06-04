@@ -34,15 +34,13 @@ public class ProcessingResponseMapper {
     List<FileProcessingResponseDTO> fileProcessingResponseDTOList =
         emptyIfNull(responseList)
             .stream()
-            .map(fileProcessingResponse -> toFileProcessingResponseDTO(fileProcessingResponse))
+            .map(ProcessingResponseMapper::toFileProcessingResponseDTO)
             .collect(Collectors.toList());
     GitToHarnessProcessingResponseDTOBuilder gitToHarnessProcessingResponseDTOBuilder =
         GitToHarnessProcessingResponseDTO.builder()
             .accountId(processingResponse.getAccountId())
             .fileResponses(fileProcessingResponseDTOList);
-    if (processingFailureStage != null) {
-      gitToHarnessProcessingResponseDTOBuilder.processingStageFailure(String.valueOf(processingFailureStage));
-    }
+    gitToHarnessProcessingResponseDTOBuilder.processingStageFailure(String.valueOf(processingFailureStage));
     return gitToHarnessProcessingResponseDTOBuilder.build();
   }
 }

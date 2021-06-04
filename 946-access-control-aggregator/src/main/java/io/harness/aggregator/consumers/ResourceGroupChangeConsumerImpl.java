@@ -40,7 +40,9 @@ public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceG
   private final ACLRepository aclRepository;
   private final RoleAssignmentRepository roleAssignmentRepository;
   private final ChangeConsumer<RoleAssignmentDBO> roleAssignmentChangeConsumer;
-  private final ExecutorService executorService = Executors.newFixedThreadPool(8);
+  // Number of threads = Number of Available Cores * (1 + (Wait time / Service time) )
+  private final ExecutorService executorService =
+      Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
 
   private long processRoleAssignmentInternal(
       RoleAssignmentDBO roleAssignmentDBO, ResourceGroupDBO updatedResourceGroup) {

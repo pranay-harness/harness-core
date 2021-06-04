@@ -151,20 +151,23 @@ public class JiraClient {
    *   - version
    * - comment: added as a string field
    *
-   * @param projectKey  the project key - can be null if not known
-   * @param issueType   the issue type - can be null if not known
-   * @param expand      the expand query parameter - if null a default value of `projects.issuetypes.fields` is used
-   * @param fetchStatus should also fetch status
+   * @param projectKey    the project key - can be null if not known
+   * @param issueType     the issue type - can be null if not known
+   * @param expand        the expand query parameter - if null a default value of `projects.issuetypes.fields` is used
+   * @param fetchStatus   should also fetch status
+   * @param ignoreComment should not fetch comment
    * @return the issue create metadata
    */
   public JiraIssueCreateMetadataNG getIssueCreateMetadata(
-      String projectKey, String issueType, String expand, boolean fetchStatus) {
+      String projectKey, String issueType, String expand, boolean fetchStatus, boolean ignoreComment) {
     JiraIssueCreateMetadataNG createMetadata =
         executeCall(restClient.getIssueCreateMetadata(EmptyPredicate.isEmpty(projectKey) ? null : projectKey,
                         EmptyPredicate.isEmpty(issueType) ? null : issueType,
                         EmptyPredicate.isEmpty(expand) ? "projects.issuetypes.fields" : expand),
             "fetching create metadata");
-    createMetadata.addField(COMMENT_FIELD);
+    if (!ignoreComment) {
+      createMetadata.addField(COMMENT_FIELD);
+    }
 
     if (fetchStatus) {
       if (EmptyPredicate.isEmpty(projectKey)) {
@@ -242,7 +245,7 @@ public class JiraClient {
    */
   public JiraIssueNG createIssue(
       @NotBlank String projectKey, @NotBlank String issueTypeName, Map<String, String> fields) {
-    JiraIssueCreateMetadataNG createMetadata = getIssueCreateMetadata(projectKey, issueTypeName, null, false);
+    JiraIssueCreateMetadataNG createMetadata = getIssueCreateMetadata(projectKey, issueTypeName, null, false, false);
     JiraProjectNG project = createMetadata.getProjects().get(projectKey);
     if (project == null) {
       throw new InvalidRequestException(String.format("Invalid project: %s", projectKey));

@@ -1,6 +1,6 @@
 package io.harness.pms.listener.interrupts;
 
-import static io.harness.pms.listener.PmsUtilityConsumerConstants.INTERRUPT_CONSUMER;
+import static io.harness.pms.listener.PmsUtilityConsumerConstants.PT_INTERRUPT_CONSUMER;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
@@ -17,7 +17,7 @@ public class InterruptRedisConsumerService implements Managed {
   @Override
   public void start() throws Exception {
     interruptConsumerExecutorService =
-        Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat(INTERRUPT_CONSUMER).build());
+        Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat(PT_INTERRUPT_CONSUMER).build());
     interruptConsumerExecutorService.execute(interruptEventRedisConsumer);
   }
 

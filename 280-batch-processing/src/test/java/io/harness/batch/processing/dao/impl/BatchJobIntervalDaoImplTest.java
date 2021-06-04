@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.batch.processing.BatchProcessingTestBase;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.cluster.entities.BatchJobInterval;
+import io.harness.ccm.commons.entities.batch.BatchJobInterval;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;

@@ -1,7 +1,7 @@
 package io.harness.batch.processing.service.intfc;
 
-import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.ccm.commons.beans.recommendation.ResourceId;
+import io.harness.ccm.commons.entities.k8s.K8sWorkload;
 import io.harness.perpetualtask.k8s.watch.PodInfo;
 
 import java.util.List;

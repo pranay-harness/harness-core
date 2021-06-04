@@ -170,6 +170,8 @@ if [[ "" != "$CF_MIGRATION_ENVIRONMENT" ]]; then
   yq write -i $CONFIG_FILE cfMigrationConfig.environment "$CF_MIGRATION_ENVIRONMENT"
 fi
 
+replace_key_value featureFlagConfig.featureFlagSystem "$FEATURE_FLAG_SYSTEM"
+replace_key_value featureFlagConfig.syncFeaturesToCF "$SYNC_FEATURES_TO_CF"
 
 
 if [[ "" != "$ELASTICSEARCH_URI" ]]; then

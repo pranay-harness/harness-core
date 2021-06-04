@@ -31,13 +31,13 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.TERRAFORM_DESTROY)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TerraformDestroyStepInfo extends TerraformDestroyBaseStepInfo implements CDStepInfo, Visitable {
-  @JsonProperty("configuration") TerrformStepConfiguration terrformStepConfiguration;
+  @JsonProperty("configuration") TerraformStepConfiguration terraformStepConfiguration;
 
   @Builder(builderMethodName = "infoBuilder")
   public TerraformDestroyStepInfo(ParameterField<String> provisionerIdentifier,
-      ParameterField<List<String>> delegateSelectors, TerrformStepConfiguration terrformStepConfiguration) {
+      ParameterField<List<String>> delegateSelectors, TerraformStepConfiguration terraformStepConfiguration) {
     super(provisionerIdentifier, delegateSelectors);
-    this.terrformStepConfiguration = terrformStepConfiguration;
+    this.terraformStepConfiguration = terraformStepConfiguration;
   }
 
   @Override
@@ -54,11 +54,11 @@ public class TerraformDestroyStepInfo extends TerraformDestroyBaseStepInfo imple
 
   @Override
   public SpecParameters getSpecParameters() {
-    Validator.notNullCheck("Terraform Step configuration is null", terrformStepConfiguration);
+    Validator.notNullCheck("Terraform Step configuration is null", terraformStepConfiguration);
     return TerraformDestroyStepParameters.infoBuilder()
         .provisionerIdentifier(provisionerIdentifier)
         .delegateSelectors(delegateSelectors)
-        .configuration(terrformStepConfiguration.toStepParameters())
+        .configuration(terraformStepConfiguration.toStepParameters())
         .build();
   }
 }

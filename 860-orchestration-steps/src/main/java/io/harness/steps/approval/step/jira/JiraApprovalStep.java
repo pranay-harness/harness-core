@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.CollectionUtils;
+import io.harness.exception.JiraStepException;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.AsyncExecutableWithRollback;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -16,6 +17,7 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.StepUtils;
 import io.harness.steps.approval.step.ApprovalInstanceService;
+import io.harness.steps.approval.step.beans.ApprovalStatus;
 import io.harness.steps.approval.step.jira.beans.JiraApprovalResponseData;
 import io.harness.steps.approval.step.jira.entities.JiraApprovalInstance;
 import io.harness.tasks.ResponseData;
@@ -50,6 +52,10 @@ public class JiraApprovalStep extends AsyncExecutableWithRollback {
         (JiraApprovalResponseData) responseDataMap.values().iterator().next();
     JiraApprovalInstance instance =
         (JiraApprovalInstance) approvalInstanceService.get(jiraApprovalResponseData.getInstanceId());
+    if (instance.getStatus() == ApprovalStatus.FAILED) {
+      throw new JiraStepException(
+          instance.getErrorMessage() != null ? instance.getErrorMessage() : "Unknown error polling jira issue");
+    }
     return StepResponse.builder()
         .status(instance.getStatus().toFinalExecutionStatus())
         .stepOutcome(

@@ -90,10 +90,10 @@ public class GitLabStore implements GitStoreConfig, Visitable, WithConnectorRef 
       resultantGitLabStore = resultantGitLabStore.withGitFetchType(gitLabStore.getGitFetchType());
     }
     if (!ParameterField.isNull(gitLabStore.getBranch())) {
-      resultantGitLabStore = resultantGitLabStore.withBranch(gitLabStore.getBranch());
+      resultantGitLabStore = resultantGitLabStore.withBranch(gitLabStore.getBranch()).withCommitId(null);
     }
     if (!ParameterField.isNull(gitLabStore.getCommitId())) {
-      resultantGitLabStore = resultantGitLabStore.withCommitId(gitLabStore.getCommitId());
+      resultantGitLabStore = resultantGitLabStore.withCommitId(gitLabStore.getCommitId()).withBranch(null);
     }
     if (!ParameterField.isNull(gitLabStore.getRepoName())) {
       resultantGitLabStore = resultantGitLabStore.withRepoName(gitLabStore.getRepoName());

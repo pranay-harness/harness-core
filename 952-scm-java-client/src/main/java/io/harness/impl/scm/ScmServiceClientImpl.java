@@ -14,6 +14,7 @@ import io.harness.beans.gitsync.GitWebhookDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExplanationException;
+import io.harness.exception.ScmException;
 import io.harness.exception.WingsException;
 import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.product.ci.scm.proto.Commit;
@@ -86,7 +87,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
   }
 
   private FileModifyRequest.Builder getFileModifyRequest(ScmConnector scmConnector, GitFileDetails gitFileDetails) {
-    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector, true);
     String slug = scmGitProviderHelper.getSlug(scmConnector);
     return FileModifyRequest.newBuilder()
         .setBranch(gitFileDetails.getBranch())
@@ -113,14 +114,21 @@ public class ScmServiceClientImpl implements ScmServiceClient {
 
   @Override
   public DeleteFileResponse deleteFile(
-      ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails, SCMGrpc.SCMBlockingStub scmBlockingStub) {
-    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+      ScmConnector scmConnector, GitFileDetails gitFileDetails, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector, true);
     String slug = scmGitProviderHelper.getSlug(scmConnector);
     final DeleteFileRequest deleteFileRequest = DeleteFileRequest.newBuilder()
-                                                    .setBranch(gitFilePathDetails.getBranch())
-                                                    .setPath(gitFilePathDetails.getFilePath())
+                                                    .setBranch(gitFileDetails.getBranch())
+                                                    .setPath(gitFileDetails.getFilePath())
                                                     .setProvider(gitProvider)
                                                     .setSlug(slug)
+                                                    .setBlobId(gitFileDetails.getOldFileSha())
+                                                    .setBranch(gitFileDetails.getBranch())
+                                                    .setMessage(gitFileDetails.getCommitMessage())
+                                                    .setSignature(Signature.newBuilder()
+                                                                      .setEmail(gitFileDetails.getUserEmail())
+                                                                      .setName(gitFileDetails.getUserName())
+                                                                      .build())
                                                     .build();
 
     return scmBlockingStub.deleteFile(deleteFileRequest);
@@ -406,7 +414,11 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     String latestShaOfBranch = getLatestShaOfBranch(slug, gitProvider, defaultBranchName, scmBlockingStub);
     final CreateBranchResponse createBranchResponse =
         createNewBranchFromDefault(slug, gitProvider, branch, latestShaOfBranch, scmBlockingStub);
-    ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(createBranchResponse.getStatus(), null);
+    try {
+      ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(createBranchResponse.getStatus(), null);
+    } catch (ScmException e) {
+      throw new ExplanationException(String.format("Failed to create branch %s", branch), e);
+    }
   }
 
   @Override

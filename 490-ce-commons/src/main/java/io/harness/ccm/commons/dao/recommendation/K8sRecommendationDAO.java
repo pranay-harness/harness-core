@@ -33,19 +33,18 @@ import io.harness.ccm.commons.beans.recommendation.TotalResourceUsage;
 import io.harness.ccm.commons.beans.recommendation.models.RecommendationResponse;
 import io.harness.ccm.commons.constants.CloudProvider;
 import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
-import io.harness.ccm.commons.entities.InstanceData;
-import io.harness.ccm.commons.entities.InstanceData.InstanceDataKeys;
-import io.harness.ccm.commons.entities.recommendation.K8sNodeRecommendation;
-import io.harness.ccm.commons.entities.recommendation.K8sNodeRecommendation.K8sNodeRecommendationKeys;
+import io.harness.ccm.commons.entities.batch.InstanceData;
+import io.harness.ccm.commons.entities.batch.InstanceData.InstanceDataKeys;
+import io.harness.ccm.commons.entities.k8s.recommendation.K8sNodeRecommendation;
+import io.harness.ccm.commons.entities.k8s.recommendation.K8sNodeRecommendation.K8sNodeRecommendationKeys;
+import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation;
+import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation.K8sWorkloadRecommendationKeys;
+import io.harness.ccm.commons.entities.k8s.recommendation.PartialRecommendationHistogram;
+import io.harness.ccm.commons.entities.k8s.recommendation.PartialRecommendationHistogram.PartialRecommendationHistogramKeys;
 import io.harness.persistence.HPersistence;
 import io.harness.timescaledb.Keys;
 import io.harness.timescaledb.Routines;
 import io.harness.timescaledb.tables.pojos.CeRecommendations;
-
-import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation.K8sWorkloadRecommendationKeys;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram.PartialRecommendationHistogramKeys;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;

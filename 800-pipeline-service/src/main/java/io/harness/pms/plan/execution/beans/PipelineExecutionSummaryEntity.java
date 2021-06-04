@@ -124,6 +124,22 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
                  .field(PlanExecutionSummaryKeys.projectIdentifier)
                  .field(PlanExecutionSummaryKeys.pipelineIdentifier)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_organizationId_projectId_createdAt_idx")
+                 .field(PlanExecutionSummaryKeys.projectIdentifier)
+                 .field(PlanExecutionSummaryKeys.orgIdentifier)
+                 .field(PlanExecutionSummaryKeys.accountId)
+                 .field(PlanExecutionSummaryKeys.createdAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_organizationId_projectId_pipelineId_createdAt_idx")
+                 .field(PlanExecutionSummaryKeys.pipelineIdentifier)
+                 .field(PlanExecutionSummaryKeys.projectIdentifier)
+                 .field(PlanExecutionSummaryKeys.orgIdentifier)
+                 .field(PlanExecutionSummaryKeys.accountId)
+                 .field(PlanExecutionSummaryKeys.createdAt)
+                 .build())
+
         .build();
   }
 }

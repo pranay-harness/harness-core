@@ -31,13 +31,13 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.TERRAFORM_APPLY)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TerraformApplyStepInfo extends TerraformApplyBaseStepInfo implements CDStepInfo, Visitable {
-  @JsonProperty("configuration") TerrformStepConfiguration terrformStepConfiguration;
+  @JsonProperty("configuration") TerraformStepConfiguration terraformStepConfiguration;
 
   @Builder(builderMethodName = "infoBuilder")
   public TerraformApplyStepInfo(ParameterField<String> provisionerIdentifier,
-      ParameterField<List<String>> delegateSelectors, TerrformStepConfiguration terrformStepConfiguration) {
+      ParameterField<List<String>> delegateSelectors, TerraformStepConfiguration terraformStepConfiguration) {
     super(provisionerIdentifier, delegateSelectors);
-    this.terrformStepConfiguration = terrformStepConfiguration;
+    this.terraformStepConfiguration = terraformStepConfiguration;
   }
 
   @Override
@@ -54,10 +54,10 @@ public class TerraformApplyStepInfo extends TerraformApplyBaseStepInfo implement
 
   @Override
   public SpecParameters getSpecParameters() {
-    Validator.notNullCheck("Terraform Step configuration is null", terrformStepConfiguration);
+    Validator.notNullCheck("Terraform Step configuration is null", terraformStepConfiguration);
     return TerraformApplyStepParameters.infoBuilder()
         .provisionerIdentifier(getProvisionerIdentifier())
-        .configuration(terrformStepConfiguration.toStepParameters())
+        .configuration(terraformStepConfiguration.toStepParameters())
         .delegateSelectors(getDelegateSelectors())
         .build();
   }

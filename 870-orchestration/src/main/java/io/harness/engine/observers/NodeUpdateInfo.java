@@ -1,11 +1,26 @@
 package io.harness.engine.observers;
 
-import lombok.Builder;
-import lombok.Data;
+import io.harness.execution.NodeExecution;
+import io.harness.pms.contracts.execution.Status;
 
-@Data
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.Value;
+
+@Value
 @Builder
 public class NodeUpdateInfo {
-  String planExecutionId;
-  String nodeExecutionId;
+  @NonNull NodeExecution nodeExecution;
+
+  public String getNodeExecutionId() {
+    return nodeExecution.getUuid();
+  }
+
+  public String getPlanExecutionId() {
+    return nodeExecution.getAmbiance().getPlanExecutionId();
+  }
+
+  public Status getStatus() {
+    return nodeExecution.getStatus();
+  }
 }

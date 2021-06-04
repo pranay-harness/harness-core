@@ -19,10 +19,10 @@ import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingIdFilter;
 import io.harness.ccm.billing.graphql.CloudBillingTimeFilter;
+import io.harness.ccm.commons.entities.billing.CECloudAccount;
 import io.harness.ccm.setup.CECloudAccountDao;
 import io.harness.rule.Owner;
 
-import software.wings.beans.ce.CECloudAccount;
 import software.wings.graphql.datafetcher.billing.QLEntityData;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
