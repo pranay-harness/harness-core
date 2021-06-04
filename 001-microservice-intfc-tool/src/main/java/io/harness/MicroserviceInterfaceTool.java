@@ -1,6 +1,22 @@
 package io.harness;
 
+import io.harness.beans.DelegateHeartbeatResponse;
+import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.data.structure.HarnessStringUtils;
+import io.harness.delegate.beans.ChecksumType;
+import io.harness.delegate.beans.DelegateConnectionHeartbeat;
+import io.harness.delegate.beans.DelegateFile;
+import io.harness.delegate.beans.DelegateParams;
+import io.harness.delegate.beans.DelegateProfileParams;
+import io.harness.delegate.beans.DelegateRegisterResponse;
+import io.harness.delegate.beans.DelegateScripts;
+import io.harness.delegate.beans.DelegateTaskAbortEvent;
+import io.harness.delegate.beans.DelegateTaskEvent;
+import io.harness.delegate.beans.FileBucket;
+import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
+import io.harness.logging.AccessTokenBean;
+import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.packages.HarnessPackages;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.serializer.KryoRegistrar;
@@ -14,6 +30,7 @@ import com.google.protobuf.GeneratedMessageV3;
 import com.google.protobuf.ProtocolMessageEnum;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -25,6 +42,22 @@ import org.reflections.Reflections;
 class MicroserviceInterfaceTool {
   private static void log(String message) {
     System.out.println(message);
+  }
+
+  // There is some communication that happens neither over Kryo / Proto
+  // We have a static Set of classes for the same for now.
+  // Eventually the plan is to move this communication to Kryo also.
+  private static Map<String, String> computeJsonHashes() throws Exception {
+    Set<Class> jsonClasses = new HashSet<>(Arrays.asList(DelegateRegisterResponse.class, DelegateParams.class,
+        DelegateConnectionHeartbeat.class, DelegateProfileParams.class, FileBucket.class, DelegateFile.class,
+        ChecksumType.class, DelegateScripts.class, AccessTokenBean.class, DelegateTaskEvent.class,
+        DelegateTaskAbortEvent.class, ConnectorHeartbeatDelegateResponse.class, ConnectorValidationResult.class,
+        ConnectivityStatus.class, ErrorDetail.class, DelegateHeartbeatResponse.class));
+    Map<String, String> jsonHashes = new HashMap<>();
+    for (Class jsonClass : jsonClasses) {
+      jsonHashes.put(jsonClass.getCanonicalName(), calculateStringHash(jsonClass));
+    }
+    return jsonHashes;
   }
 
   private static Map<String, String> computeProtoHashes() throws Exception {
@@ -69,6 +102,7 @@ class MicroserviceInterfaceTool {
     try {
       Map<String, String> classToHash = computeKryoHashes();
       classToHash.putAll(computeProtoHashes());
+      classToHash.putAll(computeJsonHashes());
       List<String> sortedClasses = classToHash.keySet().stream().sorted(String::compareTo).collect(Collectors.toList());
       List<String> sortedHashes = sortedClasses.stream().map(classToHash::get).collect(Collectors.toList());
       String concatenatedHashes = HarnessStringUtils.join(",", sortedHashes);
