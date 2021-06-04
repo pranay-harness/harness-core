@@ -1,5 +1,5 @@
 Portal Project Dev environment setup instructions
-==================================================
+================================================== 
 ## On MacOS 
 
 ### Prerequisities
