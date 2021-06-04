@@ -85,6 +85,10 @@ public interface AwsClusterService {
   LinkedHashMap<String, Integer> getActiveServiceCounts(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String containerServiceName);
 
+  LinkedHashMap<String, Integer> getActiveServiceCountsByServiceNamePrefix(String region,
+      SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> encryptedDataDetails, String clusterName,
+      String serviceNamePrefix);
+
   Map<String, String> getActiveServiceImages(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String containerServiceName,
       String imagePrefix);
