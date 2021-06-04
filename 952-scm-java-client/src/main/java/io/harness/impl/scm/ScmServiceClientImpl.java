@@ -124,6 +124,11 @@ public class ScmServiceClientImpl implements ScmServiceClient {
                                                     .setSlug(slug)
                                                     .setBlobId(gitFileDetails.getOldFileSha())
                                                     .setBranch(gitFileDetails.getBranch())
+                                                    .setMessage(gitFileDetails.getCommitMessage())
+                                                    .setSignature(Signature.newBuilder()
+                                                                      .setEmail(gitFileDetails.getUserEmail())
+                                                                      .setName(gitFileDetails.getUserName())
+                                                                      .build())
                                                     .build();
 
     return scmBlockingStub.deleteFile(deleteFileRequest);
