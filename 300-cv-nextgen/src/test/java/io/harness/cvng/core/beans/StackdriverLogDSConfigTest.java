@@ -133,8 +133,8 @@ public class StackdriverLogDSConfigTest extends DSConfigTestBase {
       assertThat(cvConfig.getEnvIdentifier()).isEqualTo(envIdentifier);
       assertThat(cvConfig.getCategory().name()).isEqualTo(CVMonitoringCategory.ERRORS.name());
     });
-    assertThat(cvConfigs.get(0).getMessageIdentifier()).isEqualTo("new_message");
-    assertThat(cvConfigs.get(1).getMessageIdentifier()).isEqualTo("message");
+    assertThat(cvConfigs.stream().map(cvConfig -> cvConfig.getMessageIdentifier()))
+        .containsExactlyInAnyOrder("new_message", "message");
   }
 
   @Test

@@ -829,7 +829,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
       assertThat(verificationJobInstance.getExecutionStatus()).isEqualTo(ExecutionStatus.QUEUED);
       assertThat(verificationJobInstance.getStartTime()).isEqualTo(Instant.parse("2021-02-26T09:00:00.000Z"));
       assertThat(((HealthVerificationJob) verificationJobInstance.getResolvedJob())
-                     .getPreActivityVerificationStartTime(verificationJobInstance.getStartTime(), null))
+                     .getPreActivityVerificationStartTime(verificationJobInstance.getStartTime()))
           .isEqualTo(Instant.parse("2021-02-26T08:55:00.000Z"));
       assertThat(verificationJobInstance.getStartTime()).isEqualTo(Instant.parse("2021-02-26T09:00:00.000Z"));
 
@@ -928,8 +928,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
         VerificationJobInstanceKeys.dataCollectionTaskIteration, VerificationJobInstanceKeys.timeoutTaskIteration,
         VerificationJobInstanceKeys.dataCollectionDelay, VerificationJobInstanceKeys.oldVersionHosts,
         VerificationJobInstanceKeys.newVersionHosts, VerificationJobInstanceKeys.newHostsTrafficSplitPercentage,
-        VerificationJobInstanceKeys.progressLogs, VerificationJobInstanceKeys.preActivityVerificationStartTime,
-        VerificationJobInstanceKeys.postActivityVerificationStartTime, VerificationJobInstanceKeys.cvConfigMap,
+        VerificationJobInstanceKeys.progressLogs, VerificationJobInstanceKeys.cvConfigMap,
         VerificationJobInstanceKeys.verificationStatus);
     verificationJobInstances.forEach(verificationJobInstance -> {
       List<Field> fields = ReflectionUtils.getAllDeclaredAndInheritedFields(VerificationJobInstance.class);
