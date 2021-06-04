@@ -7,7 +7,7 @@ import io.harness.engine.observers.PlanStatusUpdateObserver;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
+import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 
 import com.google.inject.Inject;
@@ -36,14 +36,13 @@ public class PipelineStatusUpdateEventHandler implements PlanStatusUpdateObserve
 
     Update update = new Update();
 
-    update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.internalStatus, planExecution.getStatus());
-    update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.status, status);
+    update.set(PlanExecutionSummaryKeys.internalStatus, planExecution.getStatus());
+    update.set(PlanExecutionSummaryKeys.status, status);
     if (ExecutionStatus.isTerminal(status)) {
-      update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.endTs, planExecution.getEndTs());
+      update.set(PlanExecutionSummaryKeys.endTs, planExecution.getEndTs());
     }
 
-    Criteria criteria =
-        Criteria.where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.planExecutionId).is(planExecutionId);
+    Criteria criteria = Criteria.where(PlanExecutionSummaryKeys.planExecutionId).is(planExecutionId);
     Query query = new Query(criteria);
     pmsExecutionSummaryRepository.update(query, update);
   }
