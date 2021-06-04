@@ -11,10 +11,12 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import groovy.util.logging.Slf4j;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.ParametersAreNonnullByDefault;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+@Slf4j
 @ParametersAreNonnullByDefault
 @Singleton
 @OwnedBy(DX)
@@ -35,14 +37,20 @@ public class EntityLookupHelper implements EntityKeySource {
 
   @Override
   public boolean fetchKey(EntityScopeInfo entityScopeInfo) {
-    return (boolean) keyCache.get(entityScopeInfo,
-        ref -> harnessToGitPushInfoServiceBlockingStub.isGitSyncEnabledForScope(entityScopeInfo).getEnabled());
+    boolean b = (boolean) keyCache.get(entityScopeInfo, ref -> {
+      boolean result = harnessToGitPushInfoServiceBlockingStub.isGitSyncEnabledForScope(entityScopeInfo).getEnabled();
+      log.info("Result from service {}", result);
+      return result;
+    });
+    log.info("Cache result {}", b);
+    return b;
   }
 
   @Override
   public void updateKey(EntityScopeInfo entityScopeInfo) {
     final IsGitSyncEnabled gitSyncEnabledForScope =
         harnessToGitPushInfoServiceBlockingStub.isGitSyncEnabledForScope(entityScopeInfo);
+    log.info("Got response as {} for  {}", gitSyncEnabledForScope, entityScopeInfo);
     keyCache.put(entityScopeInfo, gitSyncEnabledForScope.getEnabled());
   }
 }
