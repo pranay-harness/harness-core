@@ -26,8 +26,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 public class StackdriverLogCVConfig extends LogCVConfig {
   String messageIdentifier;
   String serviceInstanceIdentifier;
-  String timestampIdentifier;
-  String timestampFormat;
 
   @Override
   public String getHostCollectionDSL() {
@@ -40,8 +38,6 @@ public class StackdriverLogCVConfig extends LogCVConfig {
     checkNotNull(messageIdentifier, generateErrorMessageFromParam(StackdriverLogCVConfigKeys.messageIdentifier));
     checkNotNull(
         serviceInstanceIdentifier, generateErrorMessageFromParam(StackdriverLogCVConfigKeys.serviceInstanceIdentifier));
-    checkNotNull(timestampIdentifier, generateErrorMessageFromParam(StackdriverLogCVConfigKeys.timestampIdentifier));
-    checkNotNull(timestampFormat, generateErrorMessageFromParam(StackdriverLogCVConfigKeys.timestampFormat));
   }
 
   @Override
@@ -63,9 +59,6 @@ public class StackdriverLogCVConfig extends LogCVConfig {
       updateOperations.set(StackdriverLogCVConfigKeys.messageIdentifier, stackdriverLogCVConfig.getMessageIdentifier());
       updateOperations.set(
           StackdriverLogCVConfigKeys.serviceInstanceIdentifier, stackdriverLogCVConfig.getServiceInstanceIdentifier());
-      updateOperations.set(
-          StackdriverLogCVConfigKeys.timestampIdentifier, stackdriverLogCVConfig.getTimestampIdentifier());
-      updateOperations.set(StackdriverLogCVConfigKeys.timestampFormat, stackdriverLogCVConfig.getTimestampFormat());
     }
   }
 }
