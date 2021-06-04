@@ -23,6 +23,7 @@ import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsAuthT
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
+import io.harness.git.model.ChangeType;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -98,7 +99,7 @@ public class AppDynamicsConnectorTest extends CategoryTest {
                                          .build();
     connectorRequest = ConnectorDTO.builder().connectorInfo(connectorInfo).build();
     connectorResponse = ConnectorResponseDTO.builder().connector(connectorInfo).build();
-    when(connectorRepository.save(appDynamicsConfig, connectorRequest)).thenReturn(appDynamicsConfig);
+    when(connectorRepository.save(appDynamicsConfig, connectorRequest, ChangeType.ADD)).thenReturn(appDynamicsConfig);
     when(connectorMapper.writeDTO(appDynamicsConfig)).thenReturn(connectorResponse);
     when(connectorMapper.toConnector(connectorRequest, accountIdentifier)).thenReturn(appDynamicsConfig);
     doNothing().when(connectorService).assurePredefined(any(), any());
