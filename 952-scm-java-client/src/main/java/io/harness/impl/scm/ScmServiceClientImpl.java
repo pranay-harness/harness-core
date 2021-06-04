@@ -87,7 +87,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
   }
 
   private FileModifyRequest.Builder getFileModifyRequest(ScmConnector scmConnector, GitFileDetails gitFileDetails) {
-    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector, true);
     String slug = scmGitProviderHelper.getSlug(scmConnector);
     return FileModifyRequest.newBuilder()
         .setBranch(gitFileDetails.getBranch())
@@ -115,7 +115,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
   @Override
   public DeleteFileResponse deleteFile(
       ScmConnector scmConnector, GitFileDetails gitFileDetails, SCMGrpc.SCMBlockingStub scmBlockingStub) {
-    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector, true);
     String slug = scmGitProviderHelper.getSlug(scmConnector);
     final DeleteFileRequest deleteFileRequest = DeleteFileRequest.newBuilder()
                                                     .setBranch(gitFileDetails.getBranch())
