@@ -90,7 +90,7 @@ public class ScmDelegateGitHelper implements ScmGitHelper {
               DeleteFileResponse.parseFrom(scmPushTaskResponseData.getDeleteFileResponse());
           ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
               deleteFileResponse.getStatus(), deleteFileResponse.getError());
-          return ScmGitUtils.createScmDeleteFileResponse(yaml, infoForPush, deleteFileResponse);
+          return ScmGitUtils.createScmDeleteFileResponse(infoForPush, deleteFileResponse);
         case NONE:
         case RENAME:
           throw new NotImplementedException(changeType + " is not Implemented");
