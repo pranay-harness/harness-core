@@ -96,8 +96,26 @@ public class TerraformStepHelper {
         provisionerIdentifier);
   }
 
+  private void validateGitStoreConfig(GitStoreConfig gitStoreConfig) {
+    Validator.notNullCheck("Git Store Config is null", gitStoreConfig);
+    FetchType gitFetchType = gitStoreConfig.getGitFetchType();
+    switch (gitFetchType) {
+      case BRANCH:
+        Validator.notEmptyCheck("Branch is Empty in Git Store config",
+            ParameterFieldHelper.getParameterFieldValue(gitStoreConfig.getBranch()));
+        break;
+      case COMMIT:
+        Validator.notEmptyCheck("Commit Id is Empty in Git Store config",
+            ParameterFieldHelper.getParameterFieldValue(gitStoreConfig.getCommitId()));
+        break;
+      default:
+        throw new InvalidRequestException(String.format("Unrecognized git fetch type: [%s]", gitFetchType.name()));
+    }
+  }
+
   public GitFetchFilesConfig getGitFetchFilesConfig(StoreConfig store, Ambiance ambiance, String identifier) {
     GitStoreConfig gitStoreConfig = (GitStoreConfig) store;
+    validateGitStoreConfig(gitStoreConfig);
     String connectorId = gitStoreConfig.getConnectorRef().getValue();
     ConnectorInfoDTO connectorDTO = k8sStepHelper.getConnector(connectorId, ambiance);
     String validationMessage = String.format("Invalid type for manifestType: [%s]", identifier);
@@ -154,7 +172,8 @@ public class TerraformStepHelper {
     OptionalSweepingOutput output = executionSweepingOutputService.resolveOptional(
         ambiance, RefObjectUtils.getSweepingOutputRefObject(inheritOutputName));
     if (!output.isFound()) {
-      throw new InvalidRequestException(String.format("Terraform inherit output: [%s] not found", inheritOutputName));
+      throw new InvalidRequestException(
+          String.format("Did not find any Plan step for provisioner identifier: [%s]", provisionerIdentifier));
     }
 
     return (TerraformInheritOutput) output.getOutput();
@@ -311,7 +330,7 @@ public class TerraformStepHelper {
   public void saveRollbackDestroyConfigInline(
       TerraformApplyStepParameters stepParameters, TerraformTaskNGResponse response, Ambiance ambiance) {
     validateApplyStepConfigFilesInline(stepParameters);
-    TerrformStepConfigurationParameters configuration = stepParameters.getConfiguration();
+    TerraformStepConfigurationParameters configuration = stepParameters.getConfiguration();
     TerraformExecutionDataParameters spec = configuration.getSpec();
     TerraformConfigBuilder builder =
         TerraformConfig.builder()
@@ -439,7 +458,7 @@ public class TerraformStepHelper {
               varFileInfo.add(InlineTerraformVarFileInfo.builder().varFileContent(content).build());
             }
           } else if (spec instanceof RemoteTerraformVarFileSpec) {
-            StoreConfigWrapper storeConfigWrapper = ((RemoteTerraformVarFileSpec) spec).getStoreConfigWrapper();
+            StoreConfigWrapper storeConfigWrapper = ((RemoteTerraformVarFileSpec) spec).getStore();
             if (storeConfigWrapper != null) {
               i++;
               StoreConfig storeConfig = storeConfigWrapper.getSpec();
@@ -470,7 +489,7 @@ public class TerraformStepHelper {
               varFileConfigs.add(TerraformInlineVarFileConfig.builder().varFileContent(content).build());
             }
           } else if (spec instanceof RemoteTerraformVarFileSpec) {
-            StoreConfigWrapper storeConfigWrapper = ((RemoteTerraformVarFileSpec) spec).getStoreConfigWrapper();
+            StoreConfigWrapper storeConfigWrapper = ((RemoteTerraformVarFileSpec) spec).getStore();
             if (storeConfigWrapper != null) {
               i++;
               StoreConfig storeConfig = storeConfigWrapper.getSpec();

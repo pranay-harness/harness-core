@@ -2,9 +2,8 @@ package io.harness.steps.barriers.event;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdate;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
+import io.harness.engine.observers.NodeStatusUpdateObserver;
+import io.harness.engine.observers.NodeUpdateInfo;
 import io.harness.execution.NodeExecution;
 import io.harness.observer.AsyncInformObserver;
 import io.harness.plancreator.steps.common.StepElementParameters;
@@ -24,16 +23,15 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 @OwnedBy(HarnessTeam.PIPELINE)
-public class BarrierDropper implements AsyncInformObserver, StepStatusUpdate {
-  @Inject @Named("PipelineExecutorService") ExecutorService executorService;
-  @Inject private NodeExecutionService nodeExecutionService;
+public class BarrierDropper implements AsyncInformObserver, NodeStatusUpdateObserver {
+  @Inject @Named("OrchestrationVisualizationExecutorService") ExecutorService executorService;
   @Inject private BarrierService barrierService;
 
   @Override
-  public void onStepStatusUpdate(StepStatusUpdateInfo stepStatusUpdateInfo) {
-    String planExecutionId = stepStatusUpdateInfo.getPlanExecutionId();
+  public void onNodeStatusUpdate(NodeUpdateInfo nodeUpdateInfo) {
+    String planExecutionId = nodeUpdateInfo.getPlanExecutionId();
     try {
-      NodeExecution nodeExecution = nodeExecutionService.get(stepStatusUpdateInfo.getNodeExecutionId());
+      NodeExecution nodeExecution = nodeUpdateInfo.getNodeExecution();
       if (Status.ASYNC_WAITING != nodeExecution.getStatus()
           || !BarrierStep.STEP_TYPE.equals(nodeExecution.getNode().getStepType())) {
         return;

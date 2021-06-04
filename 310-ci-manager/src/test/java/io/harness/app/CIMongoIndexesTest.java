@@ -42,8 +42,8 @@ public class CIMongoIndexesTest extends CIManagerTestBase {
     morphia.getMapper().getOptions().setMapSubPackages(true);
     morphia.map(classes);
     AdvancedDatastore advancedDatastore = persistence.getDatastore(Store.builder().name("cimanager-mongo").build());
-    List<IndexCreator> indexCreators =
-        IndexManagerSession.allIndexes(advancedDatastore, morphia, Store.builder().name("cimanager-mongo").build());
+    List<IndexCreator> indexCreators = IndexManagerSession.allIndexes(
+        advancedDatastore, morphia, Store.builder().name("cimanager-mongo").build(), true);
 
     List<String> indexes = indexCreators.stream()
                                .map(creator

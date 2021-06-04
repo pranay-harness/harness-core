@@ -65,13 +65,6 @@ public class UserMembershipRepositoryCustomImpl implements UserMembershipReposit
   }
 
   @Override
-  public boolean upsert(String userId, Update update) {
-    Criteria criteria = Criteria.where(UserMembershipKeys.userId).is(userId);
-    Query query = new Query(criteria);
-    return mongoTemplate.upsert(query, update, UserMembership.class).wasAcknowledged();
-  }
-
-  @Override
   public UserMembership update(String userId, Update update) {
     Criteria criteria = Criteria.where(UserMembershipKeys.userId).is(userId);
     Query query = new Query(criteria);

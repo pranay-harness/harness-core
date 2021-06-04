@@ -8,11 +8,11 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.delegate.beans.ci.CIK8CleanupTaskParams;
-import io.harness.execution.NodeExecution;
-import io.harness.execution.NodeExecutionMapper;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
+import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
@@ -37,18 +37,18 @@ public class PipelineExecutionUpdateEventHandler implements AsyncOrchestrationEv
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   @Override
   public void handleEvent(OrchestrationEvent event) {
-    NodeExecutionProto nodeExecutionProto = event.getNodeExecutionProto();
-    NodeExecution nodeExecution = NodeExecutionMapper.fromNodeExecutionProto(nodeExecutionProto);
-    Ambiance ambiance = nodeExecution.getAmbiance();
+    Ambiance ambiance = event.getAmbiance();
     String accountId = AmbianceHelper.getAccountId(ambiance);
+    Level level = AmbianceUtils.obtainCurrentLevel(ambiance);
+    Status status = event.getStatus();
     try {
-      if (gitBuildStatusUtility.shouldSendStatus(nodeExecution)) {
-        log.info("Received event with status {} to update git status for stage {}, planExecutionId {}",
-            nodeExecution.getStatus(), nodeExecution.getNode().getIdentifier(), ambiance.getPlanExecutionId());
-        gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
+      if (gitBuildStatusUtility.shouldSendStatus(level.getGroup())) {
+        log.info("Received event with status {} to update git status for stage {}, planExecutionId {}", status,
+            level.getIdentifier(), ambiance.getPlanExecutionId());
+        gitBuildStatusUtility.sendStatusToGit(status, event.getResolvedStepParameters(), ambiance, accountId);
       }
     } catch (Exception ex) {
-      log.error("Failed to send git status update task for node {}, planExecutionId {}", nodeExecution.getUuid(),
+      log.error("Failed to send git status update task for node {}, planExecutionId {}", level.getRuntimeId(),
           ambiance.getPlanExecutionId(), ex);
     }
 
@@ -57,13 +57,11 @@ public class PipelineExecutionUpdateEventHandler implements AsyncOrchestrationEv
           format("Failed to clean pod after retrying {} times"));
 
       Failsafe.with(retryPolicy).run(() -> {
-        if (Objects.equals(nodeExecution.getNode().getGroup(), StepOutcomeGroup.STAGE.name())
-            && isFinalStatus(nodeExecution.getStatus())) {
+        if (Objects.equals(level.getGroup(), StepOutcomeGroup.STAGE.name()) && isFinalStatus(status)) {
           CIK8CleanupTaskParams cik8CleanupTaskParams = podCleanupUtility.buildAndfetchCleanUpParameters(ambiance);
 
-          log.info("Received event with status {} to clean podName {}, planExecutionId {}, stage {}",
-              nodeExecution.getStatus(), cik8CleanupTaskParams.getPodNameList(), ambiance.getPlanExecutionId(),
-              nodeExecution.getNode().getIdentifier());
+          log.info("Received event with status {} to clean podName {}, planExecutionId {}, stage {}", status,
+              cik8CleanupTaskParams.getPodNameList(), ambiance.getPlanExecutionId(), level.getIdentifier());
 
           DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                         .accountId(accountId)
@@ -75,12 +73,11 @@ public class PipelineExecutionUpdateEventHandler implements AsyncOrchestrationEv
                                                         .build();
           String taskId = delegateGrpcClientWrapper.submitAsyncTask(delegateTaskRequest, Duration.ZERO);
           log.info("Submitted cleanup request with taskId {} for podName {}, planExecutionId {}, stage {}", taskId,
-              cik8CleanupTaskParams.getPodNameList(), ambiance.getPlanExecutionId(),
-              nodeExecution.getNode().getIdentifier());
+              cik8CleanupTaskParams.getPodNameList(), ambiance.getPlanExecutionId(), level.getIdentifier());
         }
       });
     } catch (Exception ex) {
-      log.error("Failed to send cleanup call for node {}", nodeExecution.getUuid(), ex);
+      log.error("Failed to send cleanup call for node {}", level.getRuntimeId(), ex);
     }
   }
 

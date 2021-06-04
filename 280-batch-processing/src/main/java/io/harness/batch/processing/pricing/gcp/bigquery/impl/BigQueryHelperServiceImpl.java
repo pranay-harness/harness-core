@@ -30,7 +30,7 @@ import io.harness.batch.processing.pricing.data.VMInstanceServiceBillingData;
 import io.harness.batch.processing.pricing.data.VMInstanceServiceBillingData.VMInstanceServiceBillingDataBuilder;
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants;
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
-import io.harness.ccm.commons.entities.CEMetadataRecord.CEMetadataRecordBuilder;
+import io.harness.ccm.commons.entities.batch.CEMetadataRecord.CEMetadataRecordBuilder;
 
 import software.wings.graphql.datafetcher.billing.CloudBillingHelper;
 

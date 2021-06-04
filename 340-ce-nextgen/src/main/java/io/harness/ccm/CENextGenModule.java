@@ -13,7 +13,7 @@ import io.harness.annotations.retry.RetryOnExceptionInterceptor;
 import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.bigQuery.BigQueryServiceImpl;
-import io.harness.ccm.commons.entities.GcpConfig;
+import io.harness.ccm.commons.beans.config.GcpConfig;
 import io.harness.ccm.eventframework.ConnectorEntityCRUDStreamListener;
 import io.harness.ccm.persistence.JooqExecuteListener;
 import io.harness.ccm.service.impl.CEYamlServiceImpl;
@@ -40,9 +40,8 @@ import io.harness.persistence.UserProvider;
 import io.harness.queryconverter.SQLConverter;
 import io.harness.queryconverter.SQLConverterImpl;
 import io.harness.redis.RedisConfig;
-import io.harness.serializer.CENextGenRegistrars;
+import io.harness.serializer.CENextGenModuleRegistrars;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.morphia.PrimaryVersionManagerMorphiaRegistrar;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 import io.harness.timescaledb.JooqModule;
@@ -81,7 +80,7 @@ public class CENextGenModule extends AbstractModule {
       @Singleton
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-            .addAll(CENextGenRegistrars.kryoRegistrars)
+            .addAll(CENextGenModuleRegistrars.kryoRegistrars)
             .build();
       }
 
@@ -89,15 +88,16 @@ public class CENextGenModule extends AbstractModule {
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-            .addAll(CENextGenRegistrars.morphiaRegistrars)
-            .add(PrimaryVersionManagerMorphiaRegistrar.class)
+            .addAll(CENextGenModuleRegistrars.morphiaRegistrars)
             .build();
       }
 
       @Provides
       @Singleton
       Set<Class<? extends TypeConverter>> morphiaConverters() {
-        return ImmutableSet.<Class<? extends TypeConverter>>builder().build();
+        return ImmutableSet.<Class<? extends TypeConverter>>builder()
+            .addAll(CENextGenModuleRegistrars.morphiaConverters)
+            .build();
       }
 
       @Provides

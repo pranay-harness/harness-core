@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class StatusUtils {
   // Status Groups
-  private final EnumSet<Status> FINALIZABLE_STATUSES = EnumSet.of(QUEUED, RUNNING, PAUSED, ASYNC_WAITING,
+  private final EnumSet<Status> FINALIZABLE_STATUSES = EnumSet.of(QUEUED, RUNNING, PAUSING, PAUSED, ASYNC_WAITING,
       APPROVAL_WAITING, RESOURCE_WAITING, INTERVENTION_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING, PAUSING);
 
   private final EnumSet<Status> POSITIVE_STATUSES = EnumSet.of(SUCCEEDED, SKIPPED, SUSPENDED, IGNORE_FAILED);
@@ -148,6 +148,8 @@ public class StatusUtils {
         return EnumSet.of(RUNNING, PAUSING, PAUSED);
       case PAUSED:
         return EnumSet.of(QUEUED, RUNNING, PAUSING, INTERVENTION_WAITING);
+      case SUCCEEDED:
+        return EnumSet.of(PAUSING, INTERVENTION_WAITING, RUNNING);
       default:
         return nodeAllowedStartSet(status);
     }

@@ -912,7 +912,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       BaseYamlHandler yamlSyncHandler, String accountId, String filePath, ChangeContext changeContext) {
     GitFileChange change = (GitFileChange) changeContext.getChange();
     if (changeContext.getYamlType() == TAG || changeContext.getYamlType() == APPLICATION_DEFAULTS
-        || isEmpty(change.getEntityId())) {
+        || changeContext.getYamlType() == ACCOUNT_DEFAULTS || isEmpty(change.getEntityId())) {
       return;
     }
     String entityIdFromYaml;

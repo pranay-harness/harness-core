@@ -1,12 +1,12 @@
 package io.harness.batch.processing.billing.tasklet;
 
 import io.harness.batch.processing.billing.tasklet.dao.intfc.DataGeneratedNotificationDao;
-import io.harness.batch.processing.billing.tasklet.entities.DataGeneratedNotification;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.mail.CEMailNotificationService;
 import io.harness.ccm.cluster.entities.CEUserInfo;
 import io.harness.ccm.commons.dao.CEMetadataRecordDao;
-import io.harness.ccm.commons.entities.CEMetadataRecord;
+import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
+import io.harness.ccm.commons.entities.batch.DataGeneratedNotification;
 import io.harness.ccm.commons.utils.TimeUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;

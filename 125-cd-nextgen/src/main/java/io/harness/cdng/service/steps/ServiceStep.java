@@ -29,6 +29,7 @@ import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.tags.TagUtils;
 import io.harness.rbac.CDNGRbacPermissions;
 import io.harness.steps.EntityReferenceExtractorUtils;
 
@@ -107,6 +108,8 @@ public class ServiceStep implements SyncExecutable<ServiceStepParameters> {
         throw new InvalidRequestException("Service with identifier " + serviceIdentifier + " does not exist");
       }
     }
+
+    TagUtils.removeUuidFromTags(stepParameters.getTags());
 
     return ServiceEntity.builder()
         .identifier(stepParameters.getIdentifier())

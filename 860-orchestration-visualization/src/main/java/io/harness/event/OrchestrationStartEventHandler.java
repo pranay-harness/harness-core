@@ -7,6 +7,7 @@ import io.harness.beans.OrchestrationGraph;
 import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.observers.OrchestrationStartObserver;
+import io.harness.engine.observers.beans.OrchestrationStartInfo;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.service.GraphGenerationService;
@@ -25,7 +26,8 @@ public class OrchestrationStartEventHandler implements OrchestrationStartObserve
   @Inject GraphGenerationService graphGenerationService;
 
   @Override
-  public void onStart(Ambiance ambiance) {
+  public void onStart(OrchestrationStartInfo orchestrationStartInfo) {
+    Ambiance ambiance = orchestrationStartInfo.getAmbiance();
     OrchestrationGraph orchestrationGraph = handleEventFromLog(ambiance);
     if (orchestrationGraph != null) {
       graphGenerationService.cacheOrchestrationGraph(orchestrationGraph);

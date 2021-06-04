@@ -58,6 +58,19 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
 
     Update update = new Update();
 
+    if (pipelineInfoDoc != null) {
+      for (Map.Entry<String, Object> entry : pipelineInfoDoc.entrySet()) {
+        String key = String.format(PIPELINE_MODULE_INFO_UPDATE_KEY, moduleName, entry.getKey());
+        if (entry.getValue() != null && Collection.class.isAssignableFrom(entry.getValue().getClass())) {
+          Collection<Object> values = (Collection<Object>) entry.getValue();
+          update.addToSet(key).each(values);
+        } else {
+          if (entry.getValue() != null) {
+            update.set(key, entry.getValue());
+          }
+        }
+      }
+    }
     ExecutionSummaryUpdateUtils.addPipelineUpdateCriteria(update, planExecutionId, nodeExecution);
     Criteria criteria =
         Criteria.where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.planExecutionId).is(planExecutionId);

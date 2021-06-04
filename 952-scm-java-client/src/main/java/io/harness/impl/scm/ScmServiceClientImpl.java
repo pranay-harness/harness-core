@@ -87,7 +87,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
   }
 
   private FileModifyRequest.Builder getFileModifyRequest(ScmConnector scmConnector, GitFileDetails gitFileDetails) {
-    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector, true);
     String slug = scmGitProviderHelper.getSlug(scmConnector);
     return FileModifyRequest.newBuilder()
         .setBranch(gitFileDetails.getBranch())
@@ -114,14 +114,21 @@ public class ScmServiceClientImpl implements ScmServiceClient {
 
   @Override
   public DeleteFileResponse deleteFile(
-      ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails, SCMGrpc.SCMBlockingStub scmBlockingStub) {
-    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+      ScmConnector scmConnector, GitFileDetails gitFileDetails, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector, true);
     String slug = scmGitProviderHelper.getSlug(scmConnector);
     final DeleteFileRequest deleteFileRequest = DeleteFileRequest.newBuilder()
-                                                    .setBranch(gitFilePathDetails.getBranch())
-                                                    .setPath(gitFilePathDetails.getFilePath())
+                                                    .setBranch(gitFileDetails.getBranch())
+                                                    .setPath(gitFileDetails.getFilePath())
                                                     .setProvider(gitProvider)
                                                     .setSlug(slug)
+                                                    .setBlobId(gitFileDetails.getOldFileSha())
+                                                    .setBranch(gitFileDetails.getBranch())
+                                                    .setMessage(gitFileDetails.getCommitMessage())
+                                                    .setSignature(Signature.newBuilder()
+                                                                      .setEmail(gitFileDetails.getUserEmail())
+                                                                      .setName(gitFileDetails.getUserName())
+                                                                      .build())
                                                     .build();
 
     return scmBlockingStub.deleteFile(deleteFileRequest);

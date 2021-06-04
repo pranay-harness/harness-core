@@ -9,14 +9,28 @@ import io.harness.exception.WingsException;
 
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import java.time.Duration;
+import java.util.function.Function;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
 @Slf4j
 public class PmsSdkGrpcClientUtils {
-  public WingsException processException(Exception ex) {
+  private static final RetryPolicy<Object> RETRY_POLICY = createRetryPolicy();
+
+  public <T, R> R retryAndProcessException(Function<T, R> fn, T arg) {
+    try {
+      return Failsafe.with(RETRY_POLICY).get(() -> fn.apply(arg));
+    } catch (Exception ex) {
+      throw processException(ex);
+    }
+  }
+
+  private WingsException processException(Exception ex) {
     if (ex instanceof WingsException) {
       return (WingsException) ex;
     } else if (ex instanceof StatusRuntimeException) {
@@ -38,5 +52,25 @@ public class PmsSdkGrpcClientUtils {
 
     log.error("Error connecting to pipeline service. Is it running?", ex);
     return new GeneralException("Error connecting to pipeline service");
+  }
+
+  private RetryPolicy<Object> createRetryPolicy() {
+    return new RetryPolicy<>()
+        .withDelay(Duration.ofMillis(750))
+        .withMaxAttempts(3)
+        .onFailedAttempt(event
+            -> log.warn(
+                String.format("Pms sdk grpc retry attempt: %d", event.getAttemptCount()), event.getLastFailure()))
+        .onFailure(event
+            -> log.error(String.format("Pms sdk grpc retry failed after attempts: %d", event.getAttemptCount()),
+                event.getFailure()))
+        .handleIf(throwable -> {
+          if (!(throwable instanceof StatusRuntimeException)) {
+            return false;
+          }
+          StatusRuntimeException statusRuntimeException = (StatusRuntimeException) throwable;
+          return statusRuntimeException.getStatus() == Status.UNAVAILABLE
+              || statusRuntimeException.getStatus() == Status.UNKNOWN;
+        });
   }
 }

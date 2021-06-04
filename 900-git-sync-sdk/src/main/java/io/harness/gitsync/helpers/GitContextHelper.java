@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(DX)
 public class GitContextHelper {
-  public static GitEntityInfo getGitEntityInfo() {
+  public GitEntityInfo getGitEntityInfo() {
     final GitSyncBranchContext gitSyncBranchContext =
         GlobalContextManager.get(GitSyncBranchContext.NG_GIT_SYNC_CONTEXT);
     if (gitSyncBranchContext == null) {
@@ -29,5 +29,13 @@ public class GitContextHelper {
       return null;
     }
     return gitBranchInfo;
+  }
+
+  public boolean isUpdateToNewBranch() {
+    GitEntityInfo gitEntityInfo = getGitEntityInfo();
+    if (gitEntityInfo == null) {
+      return false;
+    }
+    return gitEntityInfo.isNewBranch();
   }
 }

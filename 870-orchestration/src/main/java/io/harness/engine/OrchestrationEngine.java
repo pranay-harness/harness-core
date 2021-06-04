@@ -89,6 +89,7 @@ import java.util.concurrent.ExecutorService;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 
 /**
  * Please do not use this class outside of orchestration module. All the interactions with engine must be done via
@@ -352,6 +353,9 @@ public class OrchestrationEngine {
     }
     NodeExecution updatedNodeExecution =
         endNodeExecutionHelper.handleStepResponsePreAdviser(nodeExecution, stepResponse);
+    if (updatedNodeExecution == null) {
+      return;
+    }
     queueAdvisingEvent(updatedNodeExecution, nodeExecution.getStatus());
   }
 
@@ -381,6 +385,11 @@ public class OrchestrationEngine {
     Status status = planExecutionService.calculateStatus(ambiance.getPlanExecutionId());
     PlanExecution planExecution = planExecutionService.updateStatus(
         ambiance.getPlanExecutionId(), status, ops -> ops.set(PlanExecutionKeys.endTs, System.currentTimeMillis()));
+    Document resolvedStepParameters = nodeExecution.getResolvedStepParameters();
+    String stepParameters = null;
+    if (resolvedStepParameters != null) {
+      stepParameters = resolvedStepParameters.toJson();
+    }
     eventEmitter.emitEvent(OrchestrationEvent.builder()
                                .ambiance(Ambiance.newBuilder()
                                              .setPlanExecutionId(planExecution.getUuid())
@@ -388,8 +397,9 @@ public class OrchestrationEngine {
                                                      ? Collections.emptyMap()
                                                      : planExecution.getSetupAbstractions())
                                              .build())
-                               .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
                                .eventType(OrchestrationEventType.ORCHESTRATION_END)
+                               .status(nodeExecution.getStatus())
+                               .resolvedStepParameters(stepParameters)
                                .build());
     orchestrationEndSubject.fireInform(OrchestrationEndObxxxxxxxx:onEnd, ambiance);
   }

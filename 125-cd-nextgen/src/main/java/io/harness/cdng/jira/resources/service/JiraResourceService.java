@@ -18,7 +18,7 @@ public interface JiraResourceService {
   List<JiraStatusNG> getStatuses(
       IdentifierRef jiraConnectorRef, String orgId, String projectId, String projectKey, String issueType);
   JiraIssueCreateMetadataNG getIssueCreateMetadata(IdentifierRef jiraConnectorRef, String orgId, String projectId,
-      String projectKey, String issueType, String expand, boolean fetchStatus);
+      String projectKey, String issueType, String expand, boolean fetchStatus, boolean ignoreComment);
   JiraIssueUpdateMetadataNG getIssueUpdateMetadata(
       IdentifierRef jiraConnectorRef, String orgId, String projectId, String issueKey);
 }

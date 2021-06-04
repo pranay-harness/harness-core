@@ -60,7 +60,8 @@ public class GitPushEventExecutionServiceImpl implements GitPushEventExecutionSe
   // ------------------------- PRIVATE METHODS --------------------------
 
   private YamlChangeSetSaveDTO prepareQueueEvent(WebhookDTO webhookDTO) {
-    Repository repository = webhookDTO.getParsedResponse().getCreateBranch().getRepo();
+    Repository repository = webhookDTO.getParsedResponse().getPush().getRepo();
+    String commitId = webhookDTO.getParsedResponse().getPush().getCommit().getSha();
     return YamlChangeSetSaveDTO.builder()
         .accountId(webhookDTO.getAccountId())
         .branch(repository.getBranch())
@@ -71,6 +72,7 @@ public class GitPushEventExecutionServiceImpl implements GitPushEventExecutionSe
                                          .repo(repository.getLink())
                                          .webhookBody(webhookDTO.getJsonPayload())
                                          .webhookHeaders(webhookDTO.getHeadersList().toString())
+                                         .headCommitId(commitId)
                                          .build())
         .build();
   }

@@ -535,8 +535,6 @@ public class UserGroupServiceImpl implements UserGroupService {
             actionSet.add(EXECUTE_PIPELINE);
             actionSet.add(EXECUTE_WORKFLOW);
             actionSet.add(EXECUTE_WORKFLOW_ROLLBACK);
-          } else if (action != null && action.equals(EXECUTE_WORKFLOW)) {
-            actionSet.add(EXECUTE_WORKFLOW_ROLLBACK);
           }
           actionSet.add(action);
         });

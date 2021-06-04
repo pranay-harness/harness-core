@@ -45,7 +45,7 @@ public class PmsMongoIndexesTest extends PipelineServiceTestBase {
     morphia.map(classes);
 
     List<IndexCreator> indexCreators = IndexManagerSession.allIndexes(
-        persistence.getDatastore(PipelineEntity.class), morphia, Store.builder().name(DbAliases.PMS).build());
+        persistence.getDatastore(PipelineEntity.class), morphia, Store.builder().name(DbAliases.PMS).build(), null);
 
     List<String> indexes = indexCreators.stream()
                                .map(creator

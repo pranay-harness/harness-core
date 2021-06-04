@@ -45,4 +45,5 @@ public enum SnippetTag implements YamlSnippetTags {
   gcpcloudcost,
   prometheus,
   datadog,
+  sumologic
 }

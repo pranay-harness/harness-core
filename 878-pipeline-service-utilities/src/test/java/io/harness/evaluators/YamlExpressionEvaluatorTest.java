@@ -26,12 +26,17 @@ public class YamlExpressionEvaluatorTest extends CategoryTest {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("inputset/pipeline.yaml");
     String yamlContent = Resources.toString(testFile, Charsets.UTF_8);
-    YamlExpressionEvaluator yamlExpressionEvaluator = new YamlExpressionEvaluator(yamlContent,
-        "pipeline.stages.stage1.spec.serviceConfig.serviceDefinition.spec.artifacts.primary.spec.imagePath");
+    YamlExpressionEvaluator yamlExpressionEvaluator = new YamlExpressionEvaluator(
+        yamlContent, "pipeline.stages.stage1.spec.serviceConfig.serviceDefinition.spec.artifacts.primary.spec.tag");
 
     // Partial expression
     String renderExpression = yamlExpressionEvaluator.renderExpression("<+serviceConfig.service.name>");
     assertThat(renderExpression).isEqualTo("service1");
+
+    // Partial expression
+    renderExpression =
+        yamlExpressionEvaluator.renderExpression("<+serviceConfig.serviceDefinition.spec.variables.serviceN1>");
+    assertThat(renderExpression).isEqualTo("stringValue3");
 
     // Partial expression
     renderExpression = yamlExpressionEvaluator.renderExpression(

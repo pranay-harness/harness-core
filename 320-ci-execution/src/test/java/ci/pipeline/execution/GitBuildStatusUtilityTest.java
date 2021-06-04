@@ -18,6 +18,7 @@ import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
 import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.stateutils.buildstate.ConnectorUtils;
@@ -59,8 +60,9 @@ public class GitBuildStatusUtilityTest extends CIExecutionTestBase {
 
     when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(ciExecutionPlanTestHelper.getGitConnector());
 
-    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
-    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    gitBuildStatusUtility.sendStatusToGit(
+        nodeExecution.getStatus(), nodeExecution.getResolvedStepParameters().toJson(), ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution.getNode().getGroup())).isEqualTo(true);
     verify(delegateGrpcClientWrapper).submitAsyncTask(any(), any());
   }
 
@@ -73,8 +75,9 @@ public class GitBuildStatusUtilityTest extends CIExecutionTestBase {
 
     when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(ciExecutionPlanTestHelper.getGitLabConnector());
 
-    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
-    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    gitBuildStatusUtility.sendStatusToGit(
+        nodeExecution.getStatus(), nodeExecution.getResolvedStepParameters().toJson(), ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution.getNode().getGroup())).isEqualTo(true);
     verify(delegateGrpcClientWrapper).submitAsyncTask(any(), any());
   }
 
@@ -88,8 +91,9 @@ public class GitBuildStatusUtilityTest extends CIExecutionTestBase {
     when(connectorUtils.getConnectorDetails(any(), any()))
         .thenReturn(ciExecutionPlanTestHelper.getBitBucketConnector());
 
-    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
-    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    gitBuildStatusUtility.sendStatusToGit(
+        nodeExecution.getStatus(), nodeExecution.getResolvedStepParameters().toJson(), ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution.getNode().getGroup())).isEqualTo(true);
     verify(delegateGrpcClientWrapper).submitAsyncTask(any(), any());
   }
 
@@ -101,8 +105,9 @@ public class GitBuildStatusUtilityTest extends CIExecutionTestBase {
     NodeExecution nodeExecution = getNodeExecution(Status.SUCCEEDED);
     when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(ciExecutionPlanTestHelper.getGitConnector());
 
-    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
-    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    gitBuildStatusUtility.sendStatusToGit(
+        nodeExecution.getStatus(), nodeExecution.getResolvedStepParameters().toJson(), ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution.getNode().getGroup())).isEqualTo(true);
     verify(delegateGrpcClientWrapper).submitAsyncTask(any(), any());
   }
 
@@ -114,8 +119,9 @@ public class GitBuildStatusUtilityTest extends CIExecutionTestBase {
     NodeExecution nodeExecution = getNodeExecution(Status.SUCCEEDED);
     when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(ciExecutionPlanTestHelper.getGitLabConnector());
 
-    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
-    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    gitBuildStatusUtility.sendStatusToGit(
+        nodeExecution.getStatus(), nodeExecution.getResolvedStepParameters().toJson(), ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution.getNode().getGroup())).isEqualTo(true);
     verify(delegateGrpcClientWrapper).submitAsyncTask(any(), any());
   }
 
@@ -128,8 +134,9 @@ public class GitBuildStatusUtilityTest extends CIExecutionTestBase {
     when(connectorUtils.getConnectorDetails(any(), any()))
         .thenReturn(ciExecutionPlanTestHelper.getBitBucketConnector());
 
-    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
-    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    gitBuildStatusUtility.sendStatusToGit(
+        nodeExecution.getStatus(), nodeExecution.getResolvedStepParameters().toJson(), ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution.getNode().getGroup())).isEqualTo(true);
     verify(delegateGrpcClientWrapper).submitAsyncTask(any(), any());
   }
 
@@ -140,8 +147,9 @@ public class GitBuildStatusUtilityTest extends CIExecutionTestBase {
   public void testHandleEventForError() throws IOException {
     when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(ciExecutionPlanTestHelper.getGitConnector());
     NodeExecution nodeExecution = getNodeExecution(Status.ERRORED);
-    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
-    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    gitBuildStatusUtility.sendStatusToGit(
+        nodeExecution.getStatus(), nodeExecution.getResolvedStepParameters().toJson(), ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution.getNode().getGroup())).isEqualTo(true);
     verify(delegateGrpcClientWrapper).submitAsyncTask(any(), any());
   }
 
@@ -152,8 +160,9 @@ public class GitBuildStatusUtilityTest extends CIExecutionTestBase {
   public void testGitlabHandleEventForError() throws IOException {
     when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(ciExecutionPlanTestHelper.getGitLabConnector());
     NodeExecution nodeExecution = getNodeExecution(Status.ERRORED);
-    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
-    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    gitBuildStatusUtility.sendStatusToGit(
+        nodeExecution.getStatus(), nodeExecution.getResolvedStepParameters().toJson(), ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution.getNode().getGroup())).isEqualTo(true);
     verify(delegateGrpcClientWrapper).submitAsyncTask(any(), any());
   }
 
@@ -165,8 +174,9 @@ public class GitBuildStatusUtilityTest extends CIExecutionTestBase {
     when(connectorUtils.getConnectorDetails(any(), any()))
         .thenReturn(ciExecutionPlanTestHelper.getBitBucketConnector());
     NodeExecution nodeExecution = getNodeExecution(Status.ERRORED);
-    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
-    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    gitBuildStatusUtility.sendStatusToGit(
+        nodeExecution.getStatus(), nodeExecution.getResolvedStepParameters().toJson(), ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution.getNode().getGroup())).isEqualTo(true);
     verify(delegateGrpcClientWrapper).submitAsyncTask(any(), any());
   }
 
@@ -177,8 +187,9 @@ public class GitBuildStatusUtilityTest extends CIExecutionTestBase {
   public void testHandleEventForAborted() throws IOException {
     when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(ciExecutionPlanTestHelper.getGitConnector());
     NodeExecution nodeExecution = getNodeExecution(Status.ABORTED);
-    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
-    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    gitBuildStatusUtility.sendStatusToGit(
+        nodeExecution.getStatus(), nodeExecution.getResolvedStepParameters().toJson(), ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution.getNode().getGroup())).isEqualTo(true);
     verify(delegateGrpcClientWrapper).submitAsyncTask(any(), any());
   }
 
@@ -189,8 +200,9 @@ public class GitBuildStatusUtilityTest extends CIExecutionTestBase {
   public void testGitlabHandleEventForAborted() throws IOException {
     when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(ciExecutionPlanTestHelper.getGitLabConnector());
     NodeExecution nodeExecution = getNodeExecution(Status.ABORTED);
-    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
-    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    gitBuildStatusUtility.sendStatusToGit(
+        nodeExecution.getStatus(), nodeExecution.getResolvedStepParameters().toJson(), ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution.getNode().getGroup())).isEqualTo(true);
     verify(delegateGrpcClientWrapper).submitAsyncTask(any(), any());
   }
 
@@ -202,8 +214,9 @@ public class GitBuildStatusUtilityTest extends CIExecutionTestBase {
     when(connectorUtils.getConnectorDetails(any(), any()))
         .thenReturn(ciExecutionPlanTestHelper.getBitBucketConnector());
     NodeExecution nodeExecution = getNodeExecution(Status.ABORTED);
-    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
-    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    gitBuildStatusUtility.sendStatusToGit(
+        nodeExecution.getStatus(), nodeExecution.getResolvedStepParameters().toJson(), ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution.getNode().getGroup())).isEqualTo(true);
     verify(delegateGrpcClientWrapper).submitAsyncTask(any(), any());
   }
 
@@ -214,8 +227,9 @@ public class GitBuildStatusUtilityTest extends CIExecutionTestBase {
   public void testHandleEventForUNSUPPORTED() throws IOException {
     when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(ciExecutionPlanTestHelper.getGitConnector());
     NodeExecution nodeExecution = getNodeExecution(Status.QUEUED);
-    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
-    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    gitBuildStatusUtility.sendStatusToGit(nodeExecution.getStatus(),
+        RecastOrchestrationUtils.toDocumentJson(nodeExecution.getResolvedStepParameters()), ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution.getNode().getGroup())).isEqualTo(true);
     verify(delegateGrpcClientWrapper, never()).submitAsyncTask(any(), any());
   }
 
@@ -226,8 +240,9 @@ public class GitBuildStatusUtilityTest extends CIExecutionTestBase {
   public void testGitlabHandleEventForUNSUPPORTED() throws IOException {
     when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(ciExecutionPlanTestHelper.getGitLabConnector());
     NodeExecution nodeExecution = getNodeExecution(Status.QUEUED);
-    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
-    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    gitBuildStatusUtility.sendStatusToGit(
+        nodeExecution.getStatus(), nodeExecution.getResolvedStepParameters().toJson(), ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution.getNode().getGroup())).isEqualTo(true);
     verify(delegateGrpcClientWrapper, never()).submitAsyncTask(any(), any());
   }
 
@@ -239,8 +254,9 @@ public class GitBuildStatusUtilityTest extends CIExecutionTestBase {
     when(connectorUtils.getConnectorDetails(any(), any()))
         .thenReturn(ciExecutionPlanTestHelper.getBitBucketConnector());
     NodeExecution nodeExecution = getNodeExecution(Status.QUEUED);
-    gitBuildStatusUtility.sendStatusToGit(nodeExecution, ambiance, accountId);
-    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution)).isEqualTo(true);
+    gitBuildStatusUtility.sendStatusToGit(
+        nodeExecution.getStatus(), nodeExecution.getResolvedStepParameters().toJson(), ambiance, accountId);
+    assertThat(gitBuildStatusUtility.shouldSendStatus(nodeExecution.getNode().getGroup())).isEqualTo(true);
     verify(delegateGrpcClientWrapper, never()).submitAsyncTask(any(), any());
   }
 

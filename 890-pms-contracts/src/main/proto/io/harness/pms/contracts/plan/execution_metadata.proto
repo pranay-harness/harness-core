@@ -14,10 +14,7 @@ message ExecutionMetadata {
   ExecutionTriggerInfo triggerInfo = 2;
   io.harness.pms.contracts.triggers.TriggerPayload triggerPayload = 3;
   string pipelineIdentifier = 4;
-  string inputSetYaml = 5;
   string executionUuid = 6;
-  string yaml = 7;
   ExecutionPrincipalInfo principalInfo = 8;
-  string processedYaml = 9;
   bytes gitSyncBranchContext = 10;
 }

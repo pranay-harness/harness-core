@@ -91,7 +91,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
     if (isEmpty(outcomesMap)) {
       return Collections.emptyList();
     }
-    return new ArrayList<>(outcomesMap.keySet());
+    return new ArrayList<>(outcomesMap.values());
   }
 
   @Override

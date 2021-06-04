@@ -2,7 +2,7 @@ package io.harness.batch.processing.billing.reader;
 
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.ccm.commons.beans.InstanceType;
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.entities.batch.InstanceData;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;

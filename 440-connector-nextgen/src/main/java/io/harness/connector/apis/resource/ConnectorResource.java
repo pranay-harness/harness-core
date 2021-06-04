@@ -29,6 +29,8 @@ import io.harness.connector.helper.ConnectorRbacHelper;
 import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.stats.ConnectorStatistics;
+import io.harness.connector.utils.ConnectorAllowedFieldValues;
+import io.harness.connector.utils.FieldValues;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
@@ -321,5 +323,13 @@ public class ConnectorResource {
       @QueryParam(NGCommonEntityConstants.IS_OPTIMIZATION_ENABLED) Boolean optimizationEnabled) {
     final String templateURL = ceAwsSetupConfig.getTemplateURL();
     return ResponseDTO.newResponse(templateURL);
+  }
+
+  @GET
+  @Path("/fieldValues")
+  @ApiOperation(value = "Get All Allowed field values for Connector Type", nickname = "getAllAllowedFieldValues")
+  public ResponseDTO<FieldValues> getAllAllowedFieldValues(
+      @NotNull @QueryParam(NGCommonEntityConstants.CONNECTOR_TYPE) ConnectorType connectorType) {
+    return ResponseDTO.newResponse(ConnectorAllowedFieldValues.TYPE_TO_FIELDS.get(connectorType));
   }
 }

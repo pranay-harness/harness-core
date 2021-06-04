@@ -12,9 +12,8 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdate;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
 import io.harness.engine.observers.NodeExecutionStartObserver;
+import io.harness.engine.observers.NodeStatusUpdateObserver;
 import io.harness.engine.observers.NodeUpdateInfo;
 import io.harness.engine.observers.NodeUpdateObserver;
 import io.harness.exception.InvalidRequestException;
@@ -42,6 +41,7 @@ import java.util.function.Consumer;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -54,7 +54,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Inject private MongoTemplate mongoTemplate;
   @Inject private OrchestrationEventEmitter eventEmitter;
 
-  @Getter private final Subject<StepStatusUpdate> stepStatusUpdateSubject = new Subject<>();
+  @Getter private final Subject<NodeStatusUpdateObserver> stepStatusUpdateSubject = new Subject<>();
   @Getter private final Subject<NodeExecutionStartObserver> nodeExecutionStartSubject = new Subject<>();
   @Getter private final Subject<NodeUpdateObserver> nodeUpdateObserverSubject = new Subject<>();
 
@@ -159,11 +159,8 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       throw new NodeExecutionUpdateFailedException(
           "Node Execution Cannot be updated with provided operations" + nodeExecutionId);
     }
-    nodeUpdateObserverSubject.fireInform(NodeUpdateObxxxxxxxx:onNodeUpdate,
-        NodeUpdateInfo.builder()
-            .nodeExecutionId(nodeExecutionId)
-            .planExecutionId(updated.getAmbiance().getPlanExecutionId())
-            .build());
+    nodeUpdateObserverSubject.fireInform(
+        NodeUpdateObxxxxxxxx:onNodeUpdate, NodeUpdateInfo.builder().nodeExecution(updated).build());
     return updated;
   }
 
@@ -181,8 +178,12 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     if (nodeExecution.getVersion() == null) {
       eventEmitter.emitEvent(OrchestrationEvent.builder()
                                  .ambiance(nodeExecution.getAmbiance())
-                                 .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
+                                 .status(nodeExecution.getStatus())
+                                 .resolvedStepParameters(nodeExecution.getResolvedStepParameters() != null
+                                         ? nodeExecution.getResolvedStepParameters().toJson()
+                                         : null)
                                  .eventType(OrchestrationEventType.NODE_EXECUTION_START)
+                                 .serviceName(nodeExecution.getNode().getServiceName())
                                  .build());
 
       nodeExecutionStartSubject.fireInform(
@@ -225,12 +226,8 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       log.warn("Cannot update execution status for the node {} with {}", nodeExecutionId, status);
     } else {
       emitEvent(updated, OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE);
-      stepStatusUpdateSubject.fireInform(StepStatusUpdate::onStepStatusUpdate,
-          StepStatusUpdateInfo.builder()
-              .nodeExecutionId(updated.getUuid())
-              .planExecutionId(updated.getAmbiance().getPlanExecutionId())
-              .status(updated.getStatus())
-              .build());
+      stepStatusUpdateSubject.fireInform(
+          NodeStatusUpdateObxxxxxxxx:onNodeStatusUpdate, NodeUpdateInfo.builder().nodeExecution(updated).build());
     }
     return updated;
   }
@@ -264,11 +261,8 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       log.error("Failed to mark node as retry");
       return false;
     }
-    nodeUpdateObserverSubject.fireInform(NodeUpdateObxxxxxxxx:onNodeUpdate,
-        NodeUpdateInfo.builder()
-            .nodeExecutionId(nodeExecutionId)
-            .planExecutionId(nodeExecution.getAmbiance().getPlanExecutionId())
-            .build());
+    nodeUpdateObserverSubject.fireInform(
+        NodeUpdateObxxxxxxxx:onNodeUpdate, NodeUpdateInfo.builder().nodeExecution(nodeExecution).build());
     return true;
   }
 
@@ -366,10 +360,15 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   private void emitEvent(NodeExecution nodeExecution, OrchestrationEventType orchestrationEventType) {
+    Document resolvedStepParameters = nodeExecution != null ? nodeExecution.getResolvedStepParameters() : null;
+    String stepParametersJson = resolvedStepParameters != null ? resolvedStepParameters.toJson() : null;
+
     eventEmitter.emitEvent(OrchestrationEvent.builder()
                                .ambiance(nodeExecution.getAmbiance())
-                               .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
+                               .status(nodeExecution.getStatus())
+                               .resolvedStepParameters(stepParametersJson)
                                .eventType(orchestrationEventType)
+                               .serviceName(nodeExecution.getNode().getServiceName())
                                .build());
   }
 }

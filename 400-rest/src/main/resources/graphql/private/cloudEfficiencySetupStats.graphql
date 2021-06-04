@@ -87,6 +87,7 @@ type OverviewStatsData {
   gcpConnectorsPresent: Boolean
   azureConnectorsPresent: Boolean
   applicationDataPresent: Boolean
+  inventoryDataPresent: Boolean
   clusterDataPresent: Boolean
   isSampleClusterPresent: Boolean
   defaultAzurePerspectiveId: String

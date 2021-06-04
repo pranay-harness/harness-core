@@ -23,6 +23,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.servicenow.ServiceNowDelegateService;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
@@ -51,7 +52,12 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 @Singleton
 @Slf4j
 public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService {
+  private static final String LABEL = "label";
+  private static final String STATE = "state";
+  private static final String VALUE = "value";
   @Inject private EncryptionService encryptionService;
+  private static final String NO_ACCESS_SYS_CHOICE =
+      "Can not read field: %s. User might not have explicit read access to sys_choice table";
 
   @Override
   public boolean validateConnector(ServiceNowTaskParameters taskParameters) {
@@ -132,8 +138,8 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
       if (responseObj != null && responseObj.isArray()) {
         for (JsonNode stateObj : responseObj) {
           ServiceNowMetaDTO serviceNowMetaDTO = ServiceNowMetaDTO.builder()
-                                                    .id(stateObj.get("value").textValue())
-                                                    .displayName(stateObj.get("label").textValue())
+                                                    .displayName(getTextValue(stateObj, LABEL, STATE))
+                                                    .id(getTextValue(stateObj, VALUE, STATE))
                                                     .build();
           responseStates.add(serviceNowMetaDTO);
         }
@@ -148,6 +154,15 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
     } catch (Exception e) {
       String errorMsg = "Error in fetching states from serviceNow";
       throw new ServiceNowException(errorMsg + ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
+    }
+  }
+
+  @VisibleForTesting
+  String getTextValue(JsonNode element, String property, String field) {
+    if (element.get(property) != null) {
+      return element.get(property).textValue();
+    } else {
+      throw new ServiceNowException(String.format(NO_ACCESS_SYS_CHOICE, field), SERVICENOW_ERROR, USER);
     }
   }
 
@@ -284,10 +299,10 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
       JsonNode responseObj = response.body().get("result");
       List<ServiceNowMetaDTO> fields = new ArrayList<>();
       if (responseObj.isArray()) {
-        for (JsonNode impactObj : responseObj) {
+        for (JsonNode fieldObj : responseObj) {
           ServiceNowMetaDTO serviceNowMetaDTO = ServiceNowMetaDTO.builder()
-                                                    .id(impactObj.get("value").textValue())
-                                                    .displayName(impactObj.get("label").textValue())
+                                                    .displayName(getTextValue(fieldObj, LABEL, field))
+                                                    .id(getTextValue(fieldObj, VALUE, field))
                                                     .build();
           fields.add(serviceNowMetaDTO);
         }

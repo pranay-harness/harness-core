@@ -4,11 +4,13 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.GARVIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.data.Offset.offset;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.JiraClientException;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 
@@ -17,6 +19,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +34,7 @@ public class JiraIssueUtilsNGTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testSplitByComma() {
+    assertThat(JiraIssueUtilsNG.splitByComma(null)).isEmpty();
     assertThat(JiraIssueUtilsNG.splitByComma(null)).isEmpty();
     assertThat(JiraIssueUtilsNG.splitByComma("  ")).isEmpty();
     assertThat(JiraIssueUtilsNG.splitByComma("abc")).containsExactly("abc");
@@ -55,18 +59,19 @@ public class JiraIssueUtilsNGTest {
     Map<String, Object> currFieldsTmp = new HashMap<>();
     assertThatThrownBy(()
                            -> JiraIssueUtilsNG.updateFieldValues(
-                               currFieldsTmp, issueType.getFields(), ImmutableMap.of("Component/s", "ds")))
-        .isNotNull();
-    assertThatThrownBy(
-        () -> JiraIssueUtilsNG.updateFieldValues(currFieldsTmp, issueType.getFields(), ImmutableMap.of("number", "ds")))
+                               currFieldsTmp, issueType.getFields(), ImmutableMap.of("Component/s", "ds"), true))
         .isNotNull();
     assertThatThrownBy(()
                            -> JiraIssueUtilsNG.updateFieldValues(
-                               currFieldsTmp, issueType.getFields(), ImmutableMap.of("Custom Date", "ds")))
+                               currFieldsTmp, issueType.getFields(), ImmutableMap.of("number", "ds"), true))
         .isNotNull();
     assertThatThrownBy(()
                            -> JiraIssueUtilsNG.updateFieldValues(
-                               currFieldsTmp, issueType.getFields(), ImmutableMap.of("customtime", "ds")))
+                               currFieldsTmp, issueType.getFields(), ImmutableMap.of("Custom Date", "ds"), true))
+        .isNotNull();
+    assertThatThrownBy(()
+                           -> JiraIssueUtilsNG.updateFieldValues(
+                               currFieldsTmp, issueType.getFields(), ImmutableMap.of("customtime", "ds"), true))
         .isNotNull();
 
     Map<String, String> fields = new HashMap<>();
@@ -88,7 +93,7 @@ public class JiraIssueUtilsNGTest {
     fields.put("Remaining Estimate", "2d");
 
     Map<String, Object> currFields = new HashMap<>();
-    JiraIssueUtilsNG.updateFieldValues(currFields, issueType.getFields(), fields);
+    JiraIssueUtilsNG.updateFieldValues(currFields, issueType.getFields(), fields, true);
     assertThat(currFields.size()).isEqualTo(15);
     assertThat(currFields.get("summary")).isEqualTo("summary");
     assertThat(currFields.get("description")).isEqualTo("description");
@@ -119,6 +124,113 @@ public class JiraIssueUtilsNGTest {
 
     assertThat(((JiraTimeTrackingFieldNG) currFields.get("timetracking")).getOriginalEstimate()).isEqualTo("3d");
     assertThat(((JiraTimeTrackingFieldNG) currFields.get("timetracking")).getRemainingEstimate()).isEqualTo("2d");
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testUpdateFieldValuesEmptyCheck() {
+    Map<String, Object> fields = new HashMap<>();
+    assertThatCode(() -> JiraIssueUtilsNG.updateFieldValues(fields, null, null, true)).doesNotThrowAnyException();
+    assertThatCode(
+        () -> JiraIssueUtilsNG.updateFieldValues(fields, Collections.emptyMap(), Collections.emptyMap(), true))
+        .doesNotThrowAnyException();
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testUpdateFieldValuesInvalidFieldsCheck() {
+    Map<String, Object> fields = new HashMap<>();
+    assertThatCode(()
+                       -> JiraIssueUtilsNG.updateFieldValues(fields,
+                           ImmutableMap.of("n1", createOptionalField(1), "n2", createOptionalField(2)), null, true))
+        .doesNotThrowAnyException();
+    assertThatCode(()
+                       -> JiraIssueUtilsNG.updateFieldValues(fields,
+                           ImmutableMap.of("n1", createOptionalField(1), "n2", createOptionalField(2)),
+                           ImmutableMap.of("n1", "abc"), true))
+        .doesNotThrowAnyException();
+    assertThatCode(()
+                       -> JiraIssueUtilsNG.updateFieldValues(fields,
+                           ImmutableMap.of("n1", createOptionalField(1), "n2", createOptionalField(2)),
+                           ImmutableMap.of("n2", "abc"), true))
+        .doesNotThrowAnyException();
+    assertThatCode(()
+                       -> JiraIssueUtilsNG.updateFieldValues(fields,
+                           ImmutableMap.of("n1", createOptionalField(1), "n2", createOptionalField(2)),
+                           ImmutableMap.of("n1", "abc", "n2", "abc"), true))
+        .doesNotThrowAnyException();
+    assertThatThrownBy(()
+                           -> JiraIssueUtilsNG.updateFieldValues(fields,
+                               ImmutableMap.of("n1", createOptionalField(1), "n2", createOptionalField(2)),
+                               ImmutableMap.of("n1", "abc", "n3", "abc"), true))
+        .isInstanceOf(JiraClientException.class);
+    assertThatThrownBy(()
+                           -> JiraIssueUtilsNG.updateFieldValues(fields,
+                               ImmutableMap.of("n1", createOptionalField(1), "n2", createOptionalField(2)),
+                               ImmutableMap.of("n3", "abc"), true))
+        .isInstanceOf(JiraClientException.class);
+    assertThatThrownBy(() -> JiraIssueUtilsNG.updateFieldValues(fields, null, ImmutableMap.of("n3", "abc"), true))
+        .isInstanceOf(JiraClientException.class);
+    assertThatThrownBy(
+        () -> JiraIssueUtilsNG.updateFieldValues(fields, Collections.emptyMap(), ImmutableMap.of("n3", "abc"), true))
+        .isInstanceOf(JiraClientException.class);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testUpdateFieldValuesRequiredFieldsCheck() {
+    Map<String, Object> fields = new HashMap<>();
+    assertThatCode(
+        () -> JiraIssueUtilsNG.updateFieldValues(fields, ImmutableMap.of("n1", createOptionalField(1)), null, true))
+        .doesNotThrowAnyException();
+    assertThatCode(
+        () -> JiraIssueUtilsNG.updateFieldValues(fields, ImmutableMap.of("n1", createOptionalField(1)), null, false))
+        .doesNotThrowAnyException();
+    assertThatThrownBy(
+        () -> JiraIssueUtilsNG.updateFieldValues(fields, ImmutableMap.of("n1", createRequiredField(1)), null, true))
+        .isInstanceOf(JiraClientException.class);
+    assertThatCode(
+        () -> JiraIssueUtilsNG.updateFieldValues(fields, ImmutableMap.of("n1", createRequiredField(1)), null, false))
+        .doesNotThrowAnyException();
+    assertThatCode(()
+                       -> JiraIssueUtilsNG.updateFieldValues(
+                           fields, ImmutableMap.of("n1", createRequiredField(1)), ImmutableMap.of("n1", "abc"), true))
+        .doesNotThrowAnyException();
+    assertThatCode(()
+                       -> JiraIssueUtilsNG.updateFieldValues(fields,
+                           ImmutableMap.of("n1", createRequiredField(1), "n2", createOptionalField(2)),
+                           ImmutableMap.of("n1", "abc"), true))
+        .doesNotThrowAnyException();
+    assertThatThrownBy(()
+                           -> JiraIssueUtilsNG.updateFieldValues(fields,
+                               ImmutableMap.of("n1", createRequiredField(1), "n2", createOptionalField(2)),
+                               ImmutableMap.of("n2", "abc"), true))
+        .isInstanceOf(JiraClientException.class);
+    assertThatCode(()
+                       -> JiraIssueUtilsNG.updateFieldValues(fields,
+                           ImmutableMap.of("n1", createRequiredField(1), "n2", createOptionalField(2)),
+                           ImmutableMap.of("n2", "abc"), false))
+        .doesNotThrowAnyException();
+  }
+
+  private JiraFieldNG createRequiredField(int index) {
+    return createField(index, true);
+  }
+
+  private JiraFieldNG createOptionalField(int index) {
+    return createField(index, false);
+  }
+
+  private JiraFieldNG createField(int index, boolean required) {
+    return JiraFieldNG.builder()
+        .key("k" + index)
+        .name("n" + index)
+        .required(required)
+        .schema(JiraFieldSchemaNG.builder().type(JiraFieldTypeNG.STRING).build())
+        .build();
   }
 
   private String getResource(String path) throws IOException {

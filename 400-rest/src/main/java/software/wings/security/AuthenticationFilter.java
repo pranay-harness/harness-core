@@ -32,6 +32,7 @@ import io.harness.security.JWTAuthenticationFilter;
 import io.harness.security.JWTTokenHandler;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.annotations.DelegateAuth;
+import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.annotations.PublicApi;
@@ -213,6 +214,11 @@ public class AuthenticationFilter implements ContainerRequestFilter {
       throw new InvalidRequestException(INVALID_CREDENTIAL.name(), INVALID_CREDENTIAL, USER);
     }
 
+    if (isInternalRequest(resourceInfo)) {
+      validateInternalRequest(containerRequestContext);
+      return;
+    }
+
     // Bearer token validation is needed for environments without Gateway
     if (checkIfBearerTokenAndValidate(authorization, containerRequestContext)) {
       setSourcePrincipalInContext(containerRequestContext, serviceToJWTTokenHandlerMapping, serviceToSecretMapping,
@@ -244,6 +250,15 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   boolean isNextGenManagerRequest(ResourceInfo requestResourceInfo) {
     return requestResourceInfo.getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null
         || requestResourceInfo.getResourceClass().getAnnotation(NextGenManagerAuth.class) != null;
+  }
+
+  protected boolean isInternalRequest(ResourceInfo requestResourceInfo) {
+    return requestResourceInfo.getResourceMethod().getAnnotation(InternalApi.class) != null
+        || requestResourceInfo.getResourceClass().getAnnotation(InternalApi.class) != null;
+  }
+
+  private void validateInternalRequest(ContainerRequestContext containerRequestContext) {
+    JWTAuthenticationFilter.filter(containerRequestContext, serviceToJWTTokenHandlerMapping, serviceToSecretMapping);
   }
 
   @VisibleForTesting

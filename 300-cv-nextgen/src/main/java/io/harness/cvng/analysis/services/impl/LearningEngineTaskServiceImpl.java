@@ -10,14 +10,18 @@ import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskKeys;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
-import io.harness.cvng.analysis.exceptions.ServiceGuardAnalysisException;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
+import io.harness.cvng.core.entities.VerificationTask;
+import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.metrics.CVNGMetricsUtils;
+import io.harness.cvng.metrics.beans.CVNGMetricContext;
 import io.harness.metrics.service.api.MetricService;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.net.URISyntaxException;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -25,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
 import org.mongodb.morphia.FindAndModifyOptions;
@@ -36,6 +41,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 public class LearningEngineTaskServiceImpl implements LearningEngineTaskService {
   @Inject private HPersistence hPersistence;
   @Inject private MetricService metricService;
+  @Inject private VerificationTaskService verificationTaskService;
+  @Inject private Clock clock;
 
   @Override
   public LearningEngineTask getNextAnalysisTask() {
@@ -56,8 +63,8 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
 
     UpdateOperations<LearningEngineTask> updateOperations =
         hPersistence.createUpdateOperations(LearningEngineTask.class);
-    updateOperations.set(LearningEngineTaskKeys.taskStatus, ExecutionStatus.RUNNING);
-
+    updateOperations.set(LearningEngineTaskKeys.taskStatus, ExecutionStatus.RUNNING)
+        .set(LearningEngineTaskKeys.pickedAt, clock.instant());
     return hPersistence.findAndModify(learningEngineTaskQuery, updateOperations, new FindAndModifyOptions());
   }
 
@@ -65,13 +72,14 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
   public List<String> createLearningEngineTasks(List<LearningEngineTask> tasks) {
     Preconditions.checkNotNull(tasks, "tasks can not be null");
     Preconditions.checkArgument(tasks.size() > 0, "List size can not be zero");
-    tasks.forEach(task -> task.setTaskStatus(ExecutionStatus.QUEUED));
-    return hPersistence.save(tasks);
+    return tasks.stream().map(task -> createLearningEngineTask(task)).collect(Collectors.toList());
   }
 
   @Override
   public String createLearningEngineTask(LearningEngineTask learningEngineTask) {
     learningEngineTask.setTaskStatus(ExecutionStatus.QUEUED);
+    VerificationTask verificationTask = verificationTaskService.get(learningEngineTask.getVerificationTaskId());
+    learningEngineTask.setAccountId(verificationTask.getAccountId());
     return hPersistence.save(learningEngineTask);
   }
 
@@ -88,8 +96,10 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
       if (tasks != null) {
         tasks.forEach(task -> {
           if (hasTaskTimedOut(task)) {
+            // TODO: this should be done using iterator.
             log.info("LearningEngineTask {} for verificationTaskId {} has TIMEDOUT", task.getUuid(),
                 task.getVerificationTaskId());
+            incTaskStatusMetric(task.getAccountId(), ExecutionStatus.TIMEOUT);
             task.setTaskStatus(ExecutionStatus.TIMEOUT);
             timedOutTaskIds.add(task.getUuid());
           }
@@ -107,6 +117,23 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
       return taskStatuses;
     }
     return null;
+  }
+
+  private void incTaskStatusMetric(String accountId, ExecutionStatus status) {
+    try (CVNGMetricContext cvngMetricContext = new CVNGMetricContext(accountId)) {
+      metricService.incCounter(CVNGMetricsUtils.getLearningEngineTaskStatusMetricName(status));
+    }
+  }
+
+  private void addTimeToFinishMetrics(LearningEngineTask task) {
+    try (CVNGMetricContext cvngMetricContext = new CVNGMetricContext(task.getAccountId())) {
+      metricService.recordDuration(CVNGMetricsUtils.LEARNING_ENGINE_TASK_TOTAL_TIME, task.totalTime(clock.instant()));
+      if (task.getPickedAt() != null) { // Remove this in the future after lastPickedAt is populated.
+        metricService.recordDuration(CVNGMetricsUtils.LEARNING_ENGINE_TASK_WAIT_TIME, task.waitTime());
+        metricService.recordDuration(
+            CVNGMetricsUtils.LEARNING_ENGINE_TASK_RUNNING_TIME, task.runningTime(clock.instant()));
+      }
+    }
   }
 
   @Override
@@ -128,26 +155,27 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
 
   @Override
   public void markCompleted(String taskId) {
-    if (taskId == null) {
-      throw new ServiceGuardAnalysisException("Invalid task ID in markFailure");
-    }
+    Preconditions.checkNotNull(taskId, "taskId can not be null.");
     UpdateOperations<LearningEngineTask> updateOperations =
         hPersistence.createUpdateOperations(LearningEngineTask.class);
+    // TODO: add metrics to capture total time taken from running to success.
     updateOperations.set(LearningEngineTaskKeys.taskStatus, ExecutionStatus.SUCCESS);
     hPersistence.update(hPersistence.createQuery(LearningEngineTask.class).filter(LearningEngineTaskKeys.uuid, taskId),
         updateOperations);
+    LearningEngineTask task = get(taskId);
+    incTaskStatusMetric(task.getAccountId(), ExecutionStatus.SUCCESS);
+    addTimeToFinishMetrics(task);
   }
 
   @Override
   public void markFailure(String taskId) {
-    if (taskId == null) {
-      throw new ServiceGuardAnalysisException("Invalid task ID in markFailure");
-    }
+    Preconditions.checkNotNull(taskId, "taskId can not be null.");
     UpdateOperations<LearningEngineTask> updateOperations =
         hPersistence.createUpdateOperations(LearningEngineTask.class);
     updateOperations.set(LearningEngineTaskKeys.taskStatus, ExecutionStatus.FAILED);
     hPersistence.update(hPersistence.createQuery(LearningEngineTask.class).filter(LearningEngineTaskKeys.uuid, taskId),
         updateOperations);
+    incTaskStatusMetric(get(taskId).getAccountId(), ExecutionStatus.FAILED);
   }
 
   private boolean hasTaskTimedOut(LearningEngineTask task) {

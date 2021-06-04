@@ -2,6 +2,7 @@ package io.harness.connector.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.delegate.beans.connector.ConnectorType.SPLUNK;
+import static io.harness.git.model.ChangeType.ADD;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -93,7 +94,7 @@ public class SplunkConnectorTest extends CategoryTest {
                                          .build();
     connectorRequest = ConnectorDTO.builder().connectorInfo(connectorInfo).build();
     connectorResponse = ConnectorResponseDTO.builder().connector(connectorInfo).build();
-    when(connectorRepository.save(connector, connectorRequest)).thenReturn(connector);
+    when(connectorRepository.save(connector, connectorRequest, ADD)).thenReturn(connector);
     when(connectorMapper.writeDTO(connector)).thenReturn(connectorResponse);
     when(connectorMapper.toConnector(connectorRequest, accountIdentifier)).thenReturn(connector);
     doNothing().when(secretRefInputValidationHelper).validateTheSecretInput(any(), any());

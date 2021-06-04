@@ -25,4 +25,5 @@ public class GitEntityDeleteInfoDTO {
   @QueryParam(GitSyncApiConstants.FILE_PATH_KEY) String filePath;
   @QueryParam(GitSyncApiConstants.COMMIT_MSG_KEY) String commitMsg;
   @QueryParam(GitSyncApiConstants.CREATE_PR_KEY) boolean createPr;
+  @QueryParam(GitSyncApiConstants.LAST_OBJECT_ID_KEY) String lastObjectId;
 }

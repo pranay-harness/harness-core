@@ -10,6 +10,7 @@ import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.ff.FeatureFlagModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
@@ -124,6 +125,11 @@ public class FeatureFlagRule implements MethodRule, InjectorRuleMixin, MongoRule
       @Override
       public CfMigrationConfig cfMigrationConfig() {
         return CfMigrationConfig.builder().build();
+      }
+
+      @Override
+      public FeatureFlagConfig featureFlagConfig() {
+        return FeatureFlagConfig.builder().build();
       }
     });
 
