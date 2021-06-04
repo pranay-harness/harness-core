@@ -68,6 +68,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -328,11 +329,17 @@ public class NgUserServiceImpl implements NgUserService {
     Optional<UserInfo> userInfoOptional = getUserById(userId);
     UserInfo userInfo = userInfoOptional.orElseThrow(
         () -> new InvalidRequestException(String.format("User with id %s doesn't exists", userId)));
-    Update update = new Update();
-    update.set(UserMembershipKeys.userId, userInfo.getUuid());
-    update.set(UserMembershipKeys.name, userInfo.getName());
-    update.set(UserMembershipKeys.emailId, userInfo.getEmail());
-    userMembershipRepository.upsert(userId, update);
+    UserMembership userMembership = UserMembership.builder()
+                                        .userId(userInfo.getUuid())
+                                        .name(userInfo.getName())
+                                        .emailId(userInfo.getEmail())
+                                        .build();
+    try {
+      userMembershipRepository.save(userMembership);
+    } catch (DuplicateKeyException e) {
+      log.info(
+          "DuplicateKeyException while creating usermembership for user id {}. This race condition is benign", userId);
+    }
   }
 
   private void addUserToParentScope(String userId, Scope scope, UserMembershipUpdateSource source) {

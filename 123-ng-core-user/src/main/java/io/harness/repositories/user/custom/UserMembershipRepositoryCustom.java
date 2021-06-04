@@ -21,8 +21,6 @@ public interface UserMembershipRepositoryCustom {
 
   Page<String> findAllUserIds(Criteria criteria, Pageable pageable);
 
-  boolean upsert(String userId, Update update);
-
   UserMembership update(String userId, Update update);
 
   Set<String> filterUsersWithMembership(List<String> userIds, String accountIdentifier, @Nullable String orgIdentifier,
