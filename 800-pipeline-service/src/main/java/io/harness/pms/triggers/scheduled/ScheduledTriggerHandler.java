@@ -81,7 +81,7 @@ public class ScheduledTriggerHandler implements Handler<NGTriggerEntity> {
       PlanExecution response = ngTriggerExecutionHelper.resolveRuntimeInputAndSubmitExecutionRequest(
           TriggerDetails.builder()
               .ngTriggerEntity(entity)
-              .ngTriggerConfig(ngTriggerElementMapper.toTriggerConfig(entity.getYaml()))
+              .ngTriggerConfigV2(ngTriggerElementMapper.toTriggerConfigV2(entity))
               .build(),
           TriggerPayload.newBuilder().setType(Type.SCHEDULED).build(),
           TriggerWebhookEvent.builder()

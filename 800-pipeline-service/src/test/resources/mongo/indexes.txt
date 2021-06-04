@@ -144,8 +144,10 @@ timeoutInstances {"name": "createdAt_1", "background": true} {"createdAt": 1}
 timeoutInstances {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 timeoutInstances {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 triggerEventHistory {"name": "accountId_createdAt_desc", "background": true} {"accountId": 1, "createdAt": -1}
+triggerEventHistory {"name": "accountId_eventCorrelationId", "background": true} {"accountId": 1, "eventCorrelationId": 1}
 triggerEventHistory {"name": "las", "background": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "triggerIdentifier": 1, "targetIdentifier": 1, "createdAt": -1}
 triggerWebhookEvents {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+triggersNG {"name": "accId_sourcerepo_index", "background": true} {"accountId": 1, "metadata.webhook.type": 1}
 triggersNG {"name": "nextIterations_1", "background": true} {"nextIterations": 1}
 triggersNG {"name": "type_repoUrl", "background": true} {"type": 1, "metadata.webhook.git.connectorIdentifier": 1, "accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1}
 triggersNG {"name": "unique_accountId_organizationIdentifier_projectIdentifier_identifier", "background": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}

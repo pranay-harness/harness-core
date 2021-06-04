@@ -128,7 +128,8 @@ public class WebhookParserSCMServiceImpl implements WebhookParserSCMService {
             .commentBody(commentHook.getComment().getBody())
             .pullRequestNum(Integer.toString(commentHook.getIssue().getNumber()))
             .repository(repository)
-            .baseAttributes(WebhookBaseAttributes.builder().action(commentHook.getAction().name()).build())
+            .baseAttributes(
+                WebhookBaseAttributes.builder().action(commentHook.getAction().name().toLowerCase()).build())
             .build();
 
     return WebhookPayload.builder().webhookGitUser(webhookGitUser).repository(repository).webhookEvent(webhookEvent);
@@ -271,7 +272,7 @@ public class WebhookParserSCMServiceImpl implements WebhookParserSCMService {
         .authorEmail(author.getEmail())
         .authorAvatar(author.getAvatar())
         .sender(prHook.getSender().getLogin())
-        .action(prHook.getAction().toString().toLowerCase())
+        .action(prHook.getAction().name().toLowerCase())
         .build();
   }
 
