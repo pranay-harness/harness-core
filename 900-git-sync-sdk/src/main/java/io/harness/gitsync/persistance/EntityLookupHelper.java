@@ -2,6 +2,8 @@ package io.harness.gitsync.persistance;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc.HarnessToGitPushInfoServiceBlockingStub;
@@ -37,9 +39,9 @@ public class EntityLookupHelper implements EntityKeySource {
 
   @Override
   public boolean fetchKey(EntityScopeInfo entityScopeInfo) {
-    //    if (isNotBlank(entityScopeInfo.getProjectId())) {
-    //      return true;
-    //    }
+    if (entityScopeInfo.getProjectId() != null && isNotBlank(entityScopeInfo.getProjectId().getValue())) {
+      return true;
+    }
     boolean b = (boolean) keyCache.get(entityScopeInfo, ref -> {
       boolean result = harnessToGitPushInfoServiceBlockingStub.isGitSyncEnabledForScope(entityScopeInfo).getEnabled();
       log.info("Result from service {}", result);
