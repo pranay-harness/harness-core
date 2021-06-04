@@ -19,7 +19,7 @@ public class OrchestrationEventMonitoringMetadataExtractor implements Monitoring
     Map<String, String> logContext = new HashMap<>();
     logContext.putAll(AmbianceUtils.logContextMap(orchestrationEvent.getAmbiance()));
     logContext.put("eventType", orchestrationEvent.getEventType().name());
-    logContext.put("module", orchestrationEvent.getNodeExecution().getNode().getServiceName());
+    logContext.put("module", orchestrationEvent.getServiceName());
     logContext.put("pipelineIdentifier", orchestrationEvent.getAmbiance().getMetadata().getPipelineIdentifier());
     return new ThreadAutoLogContext(logContext, OVERRIDE_NESTS);
   }

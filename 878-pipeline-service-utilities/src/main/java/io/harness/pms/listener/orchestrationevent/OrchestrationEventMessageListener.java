@@ -30,14 +30,17 @@ public class OrchestrationEventMessageListener extends PmsAbstractBaseMessageLis
     this.helper = helper;
   }
 
+  // Todo: Make changes here
   public boolean processMessageInternal(OrchestrationEvent event) {
     try (AutoLogContext ignore = OrchestrationEventUtils.obtainLogContext(event)) {
-      log.error("Orchestration Event Processing Starting for event type {}", event.getEventType());
+      log.info("Orchestration Event Processing Starting for event type {}", event.getEventType());
       helper.handleEvent(io.harness.pms.sdk.core.events.OrchestrationEvent.builder()
                              .eventType(event.getEventType())
                              .ambiance(event.getAmbiance())
                              .createdAt(ProtoUtils.timestampToUnixMillis(event.getCreatedAt()))
-                             .nodeExecutionProto(event.getNodeExecution())
+                             .status(event.getStatus())
+                             .resolvedStepParameters(event.getStepParameters().toStringUtf8())
+                             .serviceName(event.getServiceName())
                              .build());
       return true;
     } catch (Exception ex) {

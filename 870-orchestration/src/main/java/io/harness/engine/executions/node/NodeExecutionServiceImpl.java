@@ -41,6 +41,7 @@ import java.util.function.Consumer;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -177,8 +178,12 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     if (nodeExecution.getVersion() == null) {
       eventEmitter.emitEvent(OrchestrationEvent.builder()
                                  .ambiance(nodeExecution.getAmbiance())
-                                 .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
+                                 .status(nodeExecution.getStatus())
+                                 .resolvedStepParameters(nodeExecution.getResolvedStepParameters() != null
+                                         ? nodeExecution.getResolvedStepParameters().toJson()
+                                         : null)
                                  .eventType(OrchestrationEventType.NODE_EXECUTION_START)
+                                 .serviceName(nodeExecution.getNode().getServiceName())
                                  .build());
 
       nodeExecutionStartSubject.fireInform(
@@ -355,10 +360,15 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   private void emitEvent(NodeExecution nodeExecution, OrchestrationEventType orchestrationEventType) {
+    Document resolvedStepParameters = nodeExecution != null ? nodeExecution.getResolvedStepParameters() : null;
+    String stepParametersJson = resolvedStepParameters != null ? resolvedStepParameters.toJson() : null;
+
     eventEmitter.emitEvent(OrchestrationEvent.builder()
                                .ambiance(nodeExecution.getAmbiance())
-                               .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
+                               .status(nodeExecution.getStatus())
+                               .resolvedStepParameters(stepParametersJson)
                                .eventType(orchestrationEventType)
+                               .serviceName(nodeExecution.getNode().getServiceName())
                                .build());
   }
 }

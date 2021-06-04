@@ -170,6 +170,7 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
     eventEmitter.emitEvent(OrchestrationEvent.builder()
                                .ambiance(ambiance)
                                .eventType(OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE)
+                               .status(planExecution.getStatus())
                                .build());
     planStatusUpdateSubject.fireInform(PlanStatusUpdateObxxxxxxxx:onPlanStatusUpdate, ambiance);
   }

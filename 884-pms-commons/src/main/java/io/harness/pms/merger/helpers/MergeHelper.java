@@ -163,6 +163,9 @@ public class MergeHelper {
 
   public String getPipelineComponent(String inputSetYaml) {
     try {
+      if (EmptyPredicate.isEmpty(inputSetYaml)) {
+        return inputSetYaml;
+      }
       JsonNode node = YamlUtils.readTree(inputSetYaml).getNode().getCurrJsonNode();
       ObjectNode innerMap = (ObjectNode) node.get("inputSet");
       if (innerMap == null) {
