@@ -1,11 +1,13 @@
 package io.harness.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.DelegateType.KUBERNETES;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -20,6 +22,7 @@ import io.harness.delegate.beans.DelegateGroupListing;
 import io.harness.delegate.beans.DelegateInsightsDetails;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateProfile;
+import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.utils.DelegateEntityOwnerMapper;
 import io.harness.persistence.HPersistence;
@@ -36,6 +39,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
@@ -207,5 +211,60 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
     }
 
     return selectorTypeMap;
+  }
+
+  @Override
+  public List<Boolean> validateDelegateGroups(
+      String accountId, String orgId, String projectId, List<String> identifiers) {
+    if (isEmpty(identifiers)) {
+      return emptyList();
+    }
+
+    Query<Delegate> query = persistence.createQuery(Delegate.class)
+                                .filter(DelegateKeys.accountId, accountId)
+                                .filter(DelegateKeys.ng, true)
+                                .field(DelegateKeys.delegateGroupId)
+                                .in(identifiers);
+
+    DelegateEntityOwner owner = DelegateEntityOwnerMapper.buildOwner(orgId, projectId);
+    if (owner != null) {
+      query.filter(DelegateKeys.owner, owner);
+    } else {
+      // Account level delegates
+      query.field(DelegateKeys.owner).doesNotExist();
+    }
+    query.field(DelegateKeys.status)
+        .notEqual(DelegateInstanceStatus.DELETED)
+        .project(DelegateKeys.delegateGroupId, true);
+
+    Set<String> existingRecordsKeys = query.asList().stream().map(Delegate::getDelegateGroupId).collect(toSet());
+
+    return identifiers.stream().map(existingRecordsKeys::contains).collect(toList());
+  }
+
+  @Override
+  public List<Boolean> validateDelegateConfigurations(
+      String accountId, String orgId, String projectId, List<String> identifiers) {
+    if (isEmpty(identifiers)) {
+      return emptyList();
+    }
+
+    Query<DelegateProfile> query = persistence.createQuery(DelegateProfile.class)
+                                       .filter(DelegateProfileKeys.accountId, accountId)
+                                       .filter(DelegateProfileKeys.ng, true);
+
+    DelegateEntityOwner owner = DelegateEntityOwnerMapper.buildOwner(orgId, projectId);
+    if (owner != null) {
+      query.or(query.criteria(DelegateProfileKeys.owner).equal(owner),
+          query.criteria(DelegateProfileKeys.primary).equal(true));
+    } else {
+      // Account level delegate configurations
+      query.field(DelegateProfileKeys.owner).doesNotExist();
+    }
+    query.field(DelegateProfileKeys.uuid).in(identifiers);
+
+    List<String> existingRecordsKeys = query.asKeyList().stream().map(key -> (String) key.getId()).collect(toList());
+
+    return identifiers.stream().map(existingRecordsKeys::contains).collect(toList());
   }
 }
