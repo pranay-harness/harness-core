@@ -10,7 +10,7 @@ import lombok.NonNull;
 @Data
 @Builder
 @OwnedBy(HarnessTeam.CDP)
-public class TerrformStepConfigurationParameters {
+public class TerraformStepConfigurationParameters {
   @NonNull TerraformStepConfigurationType type;
   TerraformExecutionDataParameters spec;
 }

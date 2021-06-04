@@ -109,12 +109,19 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
       infraSectionNodeChildId = InfrastructurePmsPlanCreator.getProvisionerNodeId(infraField);
     }
 
+    YamlField infrastructureDefField =
+        Preconditions.checkNotNull(infraField.getNode().getField(YamlTypes.INFRASTRUCTURE_DEF));
+    PlanNode infraDefPlanNode =
+        InfrastructurePmsPlanCreator.getInfraDefPlanNode(infrastructureDefField, infraSectionNodeChildId);
+    planCreationResponseMap.put(infraDefPlanNode.getUuid(),
+        PlanCreationResponse.builder().node(infraDefPlanNode.getUuid(), infraDefPlanNode).build());
+
     YamlNode infraNode = infraField.getNode();
 
     YamlField rcYamlField = constructResourceConstraintYamlField(infraNode);
 
     PlanNode infraSectionPlanNode = InfrastructurePmsPlanCreator.getInfraSectionPlanNode(
-        infraNode, infraSectionNodeChildId, pipelineInfrastructure, kryoSerializer, infraField, rcYamlField);
+        infraNode, infraDefPlanNode.getUuid(), pipelineInfrastructure, kryoSerializer, infraField, rcYamlField);
     planCreationResponseMap.put(
         infraNode.getUuid(), PlanCreationResponse.builder().node(infraNode.getUuid(), infraSectionPlanNode).build());
 
