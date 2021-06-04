@@ -4,7 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.INVALID_RUNTIME_INPUT_YAML;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TARGET_EXECUTION_REQUESTED;
-import static io.harness.pms.contracts.triggers.Type.GIT;
+import static io.harness.ngtriggers.beans.source.WebhookTriggerType.AWS_CODECOMMIT;
+import static io.harness.ngtriggers.beans.source.WebhookTriggerType.BITBUCKET;
+import static io.harness.ngtriggers.beans.source.WebhookTriggerType.CUSTOM;
+import static io.harness.ngtriggers.beans.source.WebhookTriggerType.GITHUB;
+import static io.harness.ngtriggers.beans.source.WebhookTriggerType.GITLAB;
+import static io.harness.pms.contracts.triggers.Type.WEBHOOK;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.PlanExecution;
@@ -17,7 +22,6 @@ import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.response.TargetExecutionSummary;
 import io.harness.ngtriggers.beans.response.WebhookEventResponse;
-import io.harness.ngtriggers.beans.target.pipeline.PipelineTargetSpec;
 import io.harness.ngtriggers.helpers.WebhookEventMapperHelper;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.pms.contracts.triggers.ParsedPayload;
@@ -28,6 +32,7 @@ import io.harness.pms.contracts.triggers.Type;
 import io.harness.pms.triggers.TriggerExecutionHelper;
 import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,29 +70,34 @@ public class TriggerWebhookExecutionHelper {
     return resultBuilder.responses(eventResponses).build();
   }
 
-  private TriggerPayload getTriggerPayloadForWebhookTrigger(
+  @VisibleForTesting
+  TriggerPayload getTriggerPayloadForWebhookTrigger(
       WebhookEventMappingResponse webhookEventMappingResponse, TriggerWebhookEvent triggerWebhookEvent) {
     Builder builder =
         TriggerPayload.newBuilder().setJsonPayload(triggerWebhookEvent.getPayload()).setType(Type.WEBHOOK);
 
-    if ("CUSTOM".equalsIgnoreCase(triggerWebhookEvent.getSourceRepoType())) {
+    if (CUSTOM.getEntityMetadataName().equalsIgnoreCase(triggerWebhookEvent.getSourceRepoType())) {
       builder.setSourceType(SourceType.CUSTOM_REPO);
-    } else if ("GITHUB".equalsIgnoreCase(triggerWebhookEvent.getSourceRepoType())) {
+    } else if (GITHUB.getEntityMetadataName().equalsIgnoreCase(triggerWebhookEvent.getSourceRepoType())) {
       builder.setSourceType(SourceType.GITHUB_REPO);
-    } else if ("GITLAB".equalsIgnoreCase(triggerWebhookEvent.getSourceRepoType())) {
+    } else if (GITLAB.getEntityMetadataName().equalsIgnoreCase(triggerWebhookEvent.getSourceRepoType())) {
       builder.setSourceType(SourceType.GITLAB_REPO);
-    } else if ("BITBUCKET".equalsIgnoreCase(triggerWebhookEvent.getSourceRepoType())) {
+    } else if (BITBUCKET.getEntityMetadataName().equalsIgnoreCase(triggerWebhookEvent.getSourceRepoType())) {
+      builder.setSourceType(SourceType.BITBUCKET_REPO);
+    } else if (AWS_CODECOMMIT.getEntityMetadataName().equalsIgnoreCase(triggerWebhookEvent.getSourceRepoType())) {
       builder.setSourceType(SourceType.BITBUCKET_REPO);
     }
 
     ParseWebhookResponse parseWebhookResponse = webhookEventMappingResponse.getParseWebhookResponse();
-    if (parseWebhookResponse.hasPr()) {
-      builder.setParsedPayload(ParsedPayload.newBuilder().setPr(parseWebhookResponse.getPr()).build()).build();
-    } else {
-      builder.setParsedPayload(ParsedPayload.newBuilder().setPush(parseWebhookResponse.getPush()).build()).build();
+    if (parseWebhookResponse != null) {
+      if (parseWebhookResponse.hasPr()) {
+        builder.setParsedPayload(ParsedPayload.newBuilder().setPr(parseWebhookResponse.getPr()).build()).build();
+      } else {
+        builder.setParsedPayload(ParsedPayload.newBuilder().setPush(parseWebhookResponse.getPush()).build()).build();
+      }
     }
 
-    return builder.setType(GIT).build();
+    return builder.setType(WEBHOOK).build();
   }
 
   private WebhookEventResponse triggerPipelineExecution(
@@ -95,8 +105,7 @@ public class TriggerWebhookExecutionHelper {
     String runtimeInputYaml = null;
     NGTriggerEntity ngTriggerEntity = triggerDetails.getNgTriggerEntity();
     try {
-      runtimeInputYaml =
-          ((PipelineTargetSpec) triggerDetails.getNgTriggerConfig().getTarget().getSpec()).getRuntimeInputYaml();
+      runtimeInputYaml = triggerDetails.getNgTriggerConfigV2().getInputYaml();
 
       PlanExecution response = triggerExecutionHelper.resolveRuntimeInputAndSubmitExecutionRequest(
           triggerDetails, triggerPayload, triggerWebhookEvent);
@@ -109,9 +118,10 @@ public class TriggerWebhookExecutionHelper {
       return WebhookEventResponseHelper.toResponse(TARGET_EXECUTION_REQUESTED, triggerWebhookEvent, ngTriggerEntity,
           "Pipeline execution was requested successfully", targetExecutionSummary);
     } catch (Exception e) {
-      log.info(" Exception occurred while requesting " + ngTriggerEntity.getTargetType()
-          + " execution. Identifier: " + ngTriggerEntity.getTargetIdentifier()
-          + ", using trigger: " + ngTriggerEntity.getIdentifier() + ". Exception Message: " + e.getMessage());
+      log.error(" Exception occurred while requesting " + ngTriggerEntity.getTargetType()
+              + " execution. Identifier: " + ngTriggerEntity.getTargetIdentifier()
+              + ", using trigger: " + ngTriggerEntity.getIdentifier() + ". Exception Message: " + e.getMessage(),
+          e);
 
       TargetExecutionSummary targetExecutionSummary = WebhookEventResponseHelper.prepareTargetExecutionSummary(
           (PlanExecution) null, triggerDetails, runtimeInputYaml);

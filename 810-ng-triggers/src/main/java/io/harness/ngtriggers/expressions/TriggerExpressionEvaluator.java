@@ -33,7 +33,7 @@ public class TriggerExpressionEvaluator extends EngineExpressionEvaluator {
     if (headerConfigs != null) {
       for (HeaderConfig config : headerConfigs) {
         if (config != null) {
-          builder.putHeaders(config.getKey(), config.getValues().get(0));
+          builder.putHeaders(config.getKey().toLowerCase(), config.getValues().get(0));
         }
       }
     }

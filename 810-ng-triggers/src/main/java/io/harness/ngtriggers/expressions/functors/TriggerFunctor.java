@@ -1,15 +1,11 @@
 package io.harness.ngtriggers.expressions.functors;
 
 import static io.harness.ngtriggers.Constants.BASE_COMMIT_SHA;
-import static io.harness.ngtriggers.Constants.BITBUCKET_REPO_EXPR_VAL;
 import static io.harness.ngtriggers.Constants.BRANCH;
 import static io.harness.ngtriggers.Constants.COMMIT_SHA;
-import static io.harness.ngtriggers.Constants.CUSTOM_REPO_EXPR_VAL;
 import static io.harness.ngtriggers.Constants.CUSTOM_TYPE;
 import static io.harness.ngtriggers.Constants.EVENT;
 import static io.harness.ngtriggers.Constants.EVENT_PAYLOAD;
-import static io.harness.ngtriggers.Constants.GITHUB_REPO_EXPR_VAL;
-import static io.harness.ngtriggers.Constants.GITLAB_REPO_EXPR_VAL;
 import static io.harness.ngtriggers.Constants.GIT_USER;
 import static io.harness.ngtriggers.Constants.HEADER;
 import static io.harness.ngtriggers.Constants.PAYLOAD;
@@ -24,6 +20,12 @@ import static io.harness.ngtriggers.Constants.SOURCE_TYPE;
 import static io.harness.ngtriggers.Constants.TARGET_BRANCH;
 import static io.harness.ngtriggers.Constants.TYPE;
 import static io.harness.ngtriggers.Constants.WEBHOOK_TYPE;
+import static io.harness.ngtriggers.beans.source.WebhookTriggerType.AWS_CODECOMMIT;
+import static io.harness.ngtriggers.beans.source.WebhookTriggerType.BITBUCKET;
+import static io.harness.ngtriggers.beans.source.WebhookTriggerType.CUSTOM;
+import static io.harness.ngtriggers.beans.source.WebhookTriggerType.GITHUB;
+import static io.harness.ngtriggers.beans.source.WebhookTriggerType.GITLAB;
+import static io.harness.pms.contracts.triggers.SourceType.AWS_CODECOMMIT_REPO;
 import static io.harness.pms.contracts.triggers.SourceType.BITBUCKET_REPO;
 import static io.harness.pms.contracts.triggers.SourceType.CUSTOM_REPO;
 import static io.harness.pms.contracts.triggers.SourceType.GITHUB_REPO;
@@ -127,13 +129,15 @@ public class TriggerFunctor implements LateBindingValue {
     if (sourceRepo != null) {
       String sourceTypeVal = null;
       if (sourceRepo == GITHUB_REPO) {
-        sourceTypeVal = GITHUB_REPO_EXPR_VAL;
+        sourceTypeVal = GITHUB.getValue();
       } else if (sourceRepo == GITLAB_REPO) {
-        sourceTypeVal = GITLAB_REPO_EXPR_VAL;
+        sourceTypeVal = GITLAB.getValue();
       } else if (sourceRepo == BITBUCKET_REPO) {
-        sourceTypeVal = BITBUCKET_REPO_EXPR_VAL;
+        sourceTypeVal = BITBUCKET.getValue();
       } else if (sourceRepo == CUSTOM_REPO) {
-        sourceTypeVal = CUSTOM_REPO_EXPR_VAL;
+        sourceTypeVal = CUSTOM.getValue();
+      } else if (sourceRepo == AWS_CODECOMMIT_REPO) {
+        sourceTypeVal = AWS_CODECOMMIT.getValue();
       }
 
       if (isNotBlank(sourceTypeVal)) {
