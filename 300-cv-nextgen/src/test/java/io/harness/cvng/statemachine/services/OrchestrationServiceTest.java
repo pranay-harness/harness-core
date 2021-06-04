@@ -68,8 +68,11 @@ public class OrchestrationServiceTest extends CvNextGenTestBase {
     verificationTaskId = verificationTaskService.create(accountId, cvConfigId);
     timeSeriesAnalysisState = ServiceGuardTimeSeriesAnalysisState.builder().build();
     timeSeriesAnalysisState.setStatus(AnalysisStatus.CREATED);
-    timeSeriesAnalysisState.setInputs(
-        AnalysisInput.builder().startTime(clock.instant()).endTime(clock.instant()).build());
+    timeSeriesAnalysisState.setInputs(AnalysisInput.builder()
+                                          .verificationTaskId(verificationTaskId)
+                                          .startTime(clock.instant())
+                                          .endTime(clock.instant())
+                                          .build());
   }
 
   @Test
@@ -216,7 +219,7 @@ public class OrchestrationServiceTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testOrchestrate_failed() {
     AnalysisOrchestrator orchestrator =
-        AnalysisOrchestrator.builder().verificationTaskId(cvConfigId).status(AnalysisStatus.RUNNING).build();
+        AnalysisOrchestrator.builder().verificationTaskId(verificationTaskId).status(AnalysisStatus.RUNNING).build();
     hPersistence.save(orchestrator);
 
     AnalysisStateMachine stateMachine =
@@ -226,7 +229,7 @@ public class OrchestrationServiceTest extends CvNextGenTestBase {
     stateMachine.getCurrentState().setStatus(AnalysisStatus.FAILED);
     hPersistence.save(stateMachine);
 
-    orchestrationService.orchestrate(cvConfigId);
+    orchestrationService.orchestrate(verificationTaskId);
 
     AnalysisStateMachine savedStateMachine = hPersistence.createQuery(AnalysisStateMachine.class).get();
     assertThat(savedStateMachine).isNotNull();

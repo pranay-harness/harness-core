@@ -18,6 +18,7 @@ import io.harness.cvng.analysis.entities.ClusteredLog.ClusteredLogKeys;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskKeys;
 import io.harness.cvng.analysis.entities.LogClusterLearningEngineTask;
+import io.harness.cvng.analysis.entities.TimeSeriesLearningEngineTask;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.LogClusterService;
 import io.harness.cvng.beans.CVMonitoringCategory;
@@ -62,7 +63,8 @@ import org.mockito.Mockito;
 public class LogClusterServiceImplTest extends CvNextGenTestBase {
   private String serviceGuardVerificationTaskId;
   private String cvConfigId;
-  @Mock LearningEngineTaskService learningEngineTaskService;
+  @Mock LearningEngineTaskService fakeLearningEngineTaskService;
+  @Inject LearningEngineTaskService learningEngineTaskService;
   @Inject HPersistence hPersistence;
   @Inject LogClusterService logClusterService;
   @Inject CVConfigService cvConfigService;
@@ -245,13 +247,13 @@ public class LogClusterServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetTaskStatus() throws Exception {
-    FieldUtils.writeField(logClusterService, "learningEngineTaskService", learningEngineTaskService, true);
+    FieldUtils.writeField(logClusterService, "learningEngineTaskService", fakeLearningEngineTaskService, true);
     Set<String> taskIds = new HashSet<>();
     taskIds.add("task1");
     taskIds.add("task2");
     logClusterService.getTaskStatus(taskIds);
 
-    Mockito.verify(learningEngineTaskService).getTaskStatus(taskIds);
+    Mockito.verify(fakeLearningEngineTaskService).getTaskStatus(taskIds);
   }
 
   @Test
@@ -289,9 +291,14 @@ public class LogClusterServiceImplTest extends CvNextGenTestBase {
   public void testSaveClusteredData() {
     Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     Instant end = start.plus(5, ChronoUnit.MINUTES);
+
     List<LogClusterDTO> clusterDTOList = buildLogClusterDtos(5, start, end);
+    LearningEngineTask taskToSave = TimeSeriesLearningEngineTask.builder().build();
+    taskToSave.setUuid(generateUuid());
+    taskToSave.setVerificationTaskId(serviceGuardVerificationTaskId);
+    learningEngineTaskService.createLearningEngineTask(taskToSave);
     logClusterService.saveClusteredData(
-        clusterDTOList, serviceGuardVerificationTaskId, end, "taskId1", LogClusterLevel.L2);
+        clusterDTOList, serviceGuardVerificationTaskId, end, taskToSave.getUuid(), LogClusterLevel.L2);
     List<ClusteredLog> clusteredLogList =
         hPersistence.createQuery(ClusteredLog.class)
             .filter(ClusteredLogKeys.verificationTaskId, serviceGuardVerificationTaskId)

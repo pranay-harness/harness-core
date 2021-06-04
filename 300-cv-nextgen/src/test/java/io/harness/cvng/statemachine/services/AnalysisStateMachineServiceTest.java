@@ -74,8 +74,11 @@ public class AnalysisStateMachineServiceTest extends CvNextGenTestBase {
 
     timeSeriesAnalysisState = ServiceGuardTimeSeriesAnalysisState.builder().build();
     timeSeriesAnalysisState.setStatus(AnalysisStatus.CREATED);
-    timeSeriesAnalysisState.setInputs(
-        AnalysisInput.builder().startTime(clock.instant()).endTime(clock.instant()).build());
+    timeSeriesAnalysisState.setInputs(AnalysisInput.builder()
+                                          .verificationTaskId(verificationTaskId)
+                                          .startTime(clock.instant())
+                                          .endTime(clock.instant())
+                                          .build());
 
     MockitoAnnotations.initMocks(this);
   }

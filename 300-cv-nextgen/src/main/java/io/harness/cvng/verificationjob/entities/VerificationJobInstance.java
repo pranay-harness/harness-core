@@ -110,10 +110,6 @@ public final class VerificationJobInstance
   private VerificationJob resolvedJob;
   private Map<String, CVConfig> cvConfigMap;
 
-  // TODO: remove this in the next PR.
-  @Deprecated private Instant preActivityVerificationStartTime;
-  @Deprecated private Instant postActivityVerificationStartTime;
-
   @Builder.Default
   @FdTtlIndex
   private Date validUntil =
@@ -321,5 +317,9 @@ public final class VerificationJobInstance
   @Deprecated
   public void setStartTimeFromTest(Instant startTime) {
     this.setStartTime(startTime);
+  }
+
+  public Duration getExtraTimeTakenToFinish(Instant currentTime) {
+    return Duration.between(getEndTime().plus(getDataCollectionDelay()), currentTime);
   }
 }

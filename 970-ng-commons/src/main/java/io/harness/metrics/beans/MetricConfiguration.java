@@ -3,12 +3,15 @@ package io.harness.metrics.beans;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.opencensus.stats.Aggregation;
+import io.opencensus.stats.BucketBoundaries;
 import io.opencensus.stats.Measure;
 import io.opencensus.stats.Measure.MeasureDouble;
 import io.opencensus.stats.Measure.MeasureLong;
 import io.opencensus.stats.View;
 import io.opencensus.tags.TagKey;
+import java.time.Duration;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -30,6 +33,7 @@ public class MetricConfiguration {
     String metricName;
     String metricDefinition;
     String type;
+    List<String> distribution;
     String unit;
     Measure measure;
     View view;
@@ -51,12 +55,35 @@ public class MetricConfiguration {
           this.setMeasure(measure);
           return View.create(View.Name.create(this.getMetricName()), this.getMetricDefinition(), measure,
               Aggregation.Count.create(), tagKeys);
-        case "Mean":
+        case "Duration":
           return View.create(View.Name.create(this.getMetricName()), this.getMetricDefinition(), measure,
-              Aggregation.Sum.create(), tagKeys);
-
+              Aggregation.Distribution.create(BucketBoundaries.create(getDistributionMs())), tagKeys);
         default:
           throw new IllegalStateException("Unsupported metric type");
+      }
+    }
+
+    private List<Double> getDistributionMs() {
+      return distribution.stream().map(durationString -> getMs(durationString)).collect(Collectors.toList());
+    }
+
+    private Double getMs(String distributionStringValue) {
+      if (distributionStringValue.endsWith("ms")) {
+        return Double.valueOf(
+            Duration
+                .ofMillis(Long.parseLong(distributionStringValue.substring(0, distributionStringValue.length() - 2)))
+                .toMillis());
+      }
+      char last = distributionStringValue.charAt(distributionStringValue.length() - 1);
+      long parsedDuration = Long.parseLong(distributionStringValue.substring(0, distributionStringValue.length() - 1));
+      switch (last) {
+        case 'm':
+          return Double.valueOf(Duration.ofMinutes(parsedDuration).toMillis());
+        case 's':
+          return Double.valueOf(Duration.ofSeconds(parsedDuration).toMillis());
+        default:
+          throw new IllegalStateException(
+              "Char: " + last + " can not be parsed to a valid duration. Please use 'm', 's' or 'ms' ");
       }
     }
   }

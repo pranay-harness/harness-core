@@ -169,7 +169,7 @@ public class MetricServiceImpl implements MetricService {
   public void recordMetric(String metricName, double value) {
     try {
       if (!WILL_PUBLISH_METRICS) {
-        log.error("Credentials to APM not set. We will not be able to publish metrics");
+        log.info("Credentials to APM not set. We will not be able to publish metrics");
         return;
       }
 
@@ -211,6 +211,11 @@ public class MetricServiceImpl implements MetricService {
   @Override
   public void incCounter(String metricName) {
     recordMetric(metricName, 1);
+  }
+
+  @Override
+  public void recordDuration(String metricName, java.time.Duration duration) {
+    recordMetric(metricName, duration.toMillis());
   }
 
   private List<String> getLabelValues(List<String> labelNames) {
