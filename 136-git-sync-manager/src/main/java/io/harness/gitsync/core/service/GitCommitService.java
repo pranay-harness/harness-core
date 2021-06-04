@@ -3,28 +3,28 @@ package io.harness.gitsync.core.service;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.gitsync.core.beans.GitCommit;
 import io.harness.gitsync.core.beans.GitCommit.GitCommitProcessingStatus;
+import io.harness.gitsync.core.dtos.GitCommitDTO;
 
 import java.util.List;
 import java.util.Optional;
 
 @OwnedBy(DX)
 public interface GitCommitService {
-  GitCommit save(GitCommit gitCommit);
+  GitCommitDTO save(GitCommitDTO gitCommit);
 
-  Optional<GitCommit> findByAccountIdAndCommitIdAndRepoAndBranchNameAndStatus(
+  Optional<GitCommitDTO> findByAccountIdAndCommitIdAndRepoAndBranchNameAndStatus(
       String accountId, String commitId, String repo, String branchName, List<GitCommitProcessingStatus> status);
 
-  Optional<GitCommit> findGitCommitWithProcessedStatus(
+  Optional<GitCommitDTO> findGitCommitWithProcessedStatus(
       String accountId, String commitId, String repo, String branchName);
 
-  Optional<GitCommit> findLastProcessedGitCommit(String accountId, String repo, String branchName);
+  Optional<GitCommitDTO> findLastProcessedGitCommit(String accountId, String repo, String branchName);
 
-  Optional<GitCommit> findByAccountIdAndCommitIdAndRepoAndBranchName(
+  Optional<GitCommitDTO> findByAccountIdAndCommitIdAndRepoAndBranchName(
       String accountId, String repo, String branchName, List<GitCommitProcessingStatus> status);
 
   boolean isCommitAlreadyProcessed(String accountId, String headCommit, String repo, String branch);
 
-  Optional<GitCommit> findLastGitCommit(String accountIdentifier, String repo, String branchName);
+  Optional<GitCommitDTO> findLastGitCommit(String accountIdentifier, String repo, String branchName);
 }

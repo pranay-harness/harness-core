@@ -4,8 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.gitsync.core.beans.GitCommit.GIT_COMMIT_PROCESSED_STATUS;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.common.helper.GitCommitMapper;
 import io.harness.gitsync.core.beans.GitCommit;
 import io.harness.gitsync.core.beans.GitCommit.GitCommitProcessingStatus;
+import io.harness.gitsync.core.dtos.GitCommitDTO;
 import io.harness.gitsync.core.service.GitCommitService;
 import io.harness.repositories.gitCommit.GitCommitRepository;
 
@@ -22,50 +24,74 @@ public class GitCommitServiceImpl implements GitCommitService {
   private GitCommitRepository gitCommitRepository;
 
   @Override
-  public GitCommit save(GitCommit gitCommit) {
-    return gitCommitRepository.save(gitCommit);
+  public GitCommitDTO save(GitCommitDTO gitCommitDTO) {
+    GitCommit gitCommit = prepareGitCommit(gitCommitDTO);
+    GitCommit gitCommitSaved = gitCommitRepository.save(gitCommit);
+    return GitCommitMapper.toGitCommitDTO(gitCommitSaved);
   }
 
   @Override
-  public Optional<GitCommit> findByAccountIdAndCommitIdAndRepoAndBranchNameAndStatus(
+  public Optional<GitCommitDTO> findByAccountIdAndCommitIdAndRepoAndBranchNameAndStatus(
       String accountId, String commitId, String repo, String branchName, List<GitCommitProcessingStatus> status) {
-    return gitCommitRepository.findByAccountIdentifierAndCommitIdAndRepoURLAndBranchNameAndStatusIn(
-        accountId, commitId, repo, branchName, status);
+    Optional<GitCommit> gitCommit =
+        gitCommitRepository.findByAccountIdentifierAndCommitIdAndRepoURLAndBranchNameAndStatusIn(
+            accountId, commitId, repo, branchName, status);
+    return gitCommit.map(GitCommitMapper::toGitCommitDTO);
   }
 
   @Override
-  public Optional<GitCommit> findGitCommitWithProcessedStatus(
+  public Optional<GitCommitDTO> findGitCommitWithProcessedStatus(
       String accountId, String commitId, String repo, String branchName) {
     return findByAccountIdAndCommitIdAndRepoAndBranchNameAndStatus(
         accountId, commitId, repo, branchName, GIT_COMMIT_PROCESSED_STATUS);
   }
 
   @Override
-  public Optional<GitCommit> findLastProcessedGitCommit(String accountId, String repo, String branchName) {
+  public Optional<GitCommitDTO> findLastProcessedGitCommit(String accountId, String repo, String branchName) {
     return findByAccountIdAndCommitIdAndRepoAndBranchName(accountId, repo, branchName, GIT_COMMIT_PROCESSED_STATUS);
   }
 
   @Override
-  public Optional<GitCommit> findByAccountIdAndCommitIdAndRepoAndBranchName(
+  public Optional<GitCommitDTO> findByAccountIdAndCommitIdAndRepoAndBranchName(
       String accountId, String repo, String branchName, List<GitCommitProcessingStatus> status) {
-    return gitCommitRepository.findFirstByAccountIdentifierAndRepoURLAndBranchNameAndStatusInOrderByCreatedAtDesc(
-        accountId, repo, branchName, status);
+    Optional<GitCommit> gitCommit =
+        gitCommitRepository.findFirstByAccountIdentifierAndRepoURLAndBranchNameAndStatusInOrderByCreatedAtDesc(
+            accountId, repo, branchName, status);
+    return gitCommit.map(GitCommitMapper::toGitCommitDTO);
   }
 
   @Override
   public boolean isCommitAlreadyProcessed(String accountId, String headCommit, String repo, String branch) {
-    final Optional<GitCommit> gitCommit = findGitCommitWithProcessedStatus(accountId, headCommit, repo, branch);
-    if (gitCommit.isPresent()) {
-      log.info("Commit [id:{}] already processed [status:{}] on [date:{}]", gitCommit.get().getCommitId(),
-          gitCommit.get().getStatus(), gitCommit.get().getLastUpdatedAt());
+    final Optional<GitCommitDTO> gitCommitDTO = findGitCommitWithProcessedStatus(accountId, headCommit, repo, branch);
+    if (gitCommitDTO.isPresent()) {
+      log.info("Commit [id:{}] already processed [status:{}] on [date:{}]", gitCommitDTO.get().getCommitId(),
+          gitCommitDTO.get().getStatus(), gitCommitDTO.get().getLastUpdatedAt());
       return true;
     }
     return false;
   }
 
   @Override
-  public Optional<GitCommit> findLastGitCommit(String accountIdentifier, String repo, String branchName) {
-    return gitCommitRepository.findFirstByAccountIdentifierAndRepoURLAndBranchNameOrderByCreatedAtDesc(
-        accountIdentifier, repo, branchName);
+  public Optional<GitCommitDTO> findLastGitCommit(String accountIdentifier, String repo, String branchName) {
+    Optional<GitCommit> gitCommit =
+        gitCommitRepository.findFirstByAccountIdentifierAndRepoURLAndBranchNameOrderByCreatedAtDesc(
+            accountIdentifier, repo, branchName);
+    return gitCommit.map(GitCommitMapper::toGitCommitDTO);
+  }
+
+  // -------------------------- PRIVATE METHODS -------------------------------
+
+  private GitCommit prepareGitCommit(GitCommitDTO gitCommitDTO) {
+    return GitCommit.builder()
+        .accountIdentifier(gitCommitDTO.getAccountIdentifier())
+        .branchName(gitCommitDTO.getBranchName())
+        .commitId(gitCommitDTO.getCommitId())
+        .commitMessage(gitCommitDTO.getCommitMessage())
+        .failureReason(gitCommitDTO.getFailureReason())
+        .fileProcessingSummary(gitCommitDTO.getFileProcessingSummary())
+        .gitSyncDirection(gitCommitDTO.getGitSyncDirection())
+        .repoURL(gitCommitDTO.getRepoURL())
+        .status(gitCommitDTO.getStatus())
+        .build();
   }
 }
