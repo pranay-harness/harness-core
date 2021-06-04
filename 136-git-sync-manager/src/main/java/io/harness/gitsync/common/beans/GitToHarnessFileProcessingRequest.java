@@ -1,6 +1,6 @@
 package io.harness.gitsync.common.beans;
 
-import io.harness.gitsync.ChangeType;
+import io.harness.git.model.ChangeType;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 
 import lombok.Builder;
