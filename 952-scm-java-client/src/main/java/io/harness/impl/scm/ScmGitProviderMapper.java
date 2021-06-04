@@ -34,21 +34,25 @@ public class ScmGitProviderMapper {
   @Inject(optional = true) GithubService githubService;
 
   public Provider mapToSCMGitProvider(ScmConnector scmConnector) {
+    return mapToSCMGitProvider(scmConnector, false);
+  }
+
+  public Provider mapToSCMGitProvider(ScmConnector scmConnector, boolean debug) {
     if (scmConnector instanceof GithubConnectorDTO) {
-      return mapToGithubProvider((GithubConnectorDTO) scmConnector);
+      return mapToGithubProvider((GithubConnectorDTO) scmConnector, debug);
     } else if (scmConnector instanceof GitlabConnectorDTO) {
-      return mapToGitLabProvider((GitlabConnectorDTO) scmConnector);
+      return mapToGitLabProvider((GitlabConnectorDTO) scmConnector, debug);
     } else if (scmConnector instanceof BitbucketConnectorDTO) {
-      return mapToBitbucketProvider((BitbucketConnectorDTO) scmConnector);
+      return mapToBitbucketProvider((BitbucketConnectorDTO) scmConnector, debug);
     } else {
       throw new NotImplementedException(
           String.format("The scm apis for the provider type %s is not supported", scmConnector.getClass()));
     }
   }
 
-  private Provider mapToBitbucketProvider(BitbucketConnectorDTO bitbucketConnector) {
+  private Provider mapToBitbucketProvider(BitbucketConnectorDTO bitbucketConnector, boolean debug) {
     String bitBucketApiURL = GitClientHelper.getBitBucketApiURL(bitbucketConnector.getUrl());
-    Provider.Builder builder = Provider.newBuilder().setEndpoint(bitBucketApiURL);
+    Provider.Builder builder = Provider.newBuilder().setEndpoint(bitBucketApiURL).setDebug(debug);
     if (GitClientHelper.isBitBucketSAAS(bitbucketConnector.getUrl())) {
       builder.setBitbucketCloud(createBitbucketCloudProvider(bitbucketConnector));
     } else {
@@ -82,9 +86,10 @@ public class ScmGitProviderMapper {
         .build();
   }
 
-  private Provider mapToGitLabProvider(GitlabConnectorDTO gitlabConnector) {
+  private Provider mapToGitLabProvider(GitlabConnectorDTO gitlabConnector, boolean debug) {
     return Provider.newBuilder()
         .setGitlab(createGitLabProvider(gitlabConnector))
+        .setDebug(debug)
         .setEndpoint(GitClientHelper.getGitlabApiURL(gitlabConnector.getUrl()))
         .build();
   }
@@ -100,9 +105,10 @@ public class ScmGitProviderMapper {
     return String.valueOf(apiAccessDTO.getTokenRef().getDecryptedValue());
   }
 
-  private Provider mapToGithubProvider(GithubConnectorDTO githubConnector) {
+  private Provider mapToGithubProvider(GithubConnectorDTO githubConnector, boolean debug) {
     return Provider.newBuilder()
         .setGithub(createGithubProvider(githubConnector))
+        .setDebug(debug)
         .setEndpoint(GitClientHelper.getGithubApiURL(githubConnector.getUrl()))
         .build();
   }
