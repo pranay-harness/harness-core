@@ -54,7 +54,7 @@ public class CfMigrationService {
 
   void verifyBehaviorWithCF(FeatureName featureName, boolean featureValue, String accountId) {
     if (cfMigrationConfig.isEnabled()) {
-      if (isEmpty(accountId)) {
+      if (Scope.GLOBAL.equals(featureName.getScope()) || isEmpty(accountId)) {
         /**
          * If accountID is null or empty, use a static accountID
          */
