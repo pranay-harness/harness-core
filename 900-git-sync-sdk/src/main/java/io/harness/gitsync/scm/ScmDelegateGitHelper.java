@@ -41,7 +41,7 @@ public class ScmDelegateGitHelper implements ScmGitHelper {
   public ScmPushResponse pushToGitBasedOnChangeType(
       String yaml, ChangeType changeType, GitEntityInfo gitBranchInfo, InfoForGitPush infoForPush) {
     GitFileDetailsBuilder gitFileDetails = ScmGitUtils.getGitFileDetails(gitBranchInfo, yaml);
-    if (changeType.equals(ChangeType.MODIFY)) {
+    if (changeType.equals(ChangeType.MODIFY) || changeType.equals(ChangeType.DELETE)) {
       gitFileDetails.oldFileSha(gitBranchInfo.getLastObjectId());
     }
     ScmPushTaskParams scmPushTaskParams = ScmPushTaskParams.builder()
