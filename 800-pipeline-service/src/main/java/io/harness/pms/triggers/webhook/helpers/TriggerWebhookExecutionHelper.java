@@ -59,7 +59,8 @@ public class TriggerWebhookExecutionHelper {
       if (isNotEmpty(webhookEventMappingResponse.getTriggers())) {
         for (TriggerDetails triggerDetails : webhookEventMappingResponse.getTriggers()) {
           eventResponses.add(triggerPipelineExecution(triggerWebhookEvent, triggerDetails,
-              getTriggerPayloadForWebhookTrigger(webhookEventMappingResponse, triggerWebhookEvent)));
+              getTriggerPayloadForWebhookTrigger(webhookEventMappingResponse, triggerWebhookEvent),
+              triggerWebhookEvent.getPayload()));
         }
       }
     } else {
@@ -73,8 +74,7 @@ public class TriggerWebhookExecutionHelper {
   @VisibleForTesting
   TriggerPayload getTriggerPayloadForWebhookTrigger(
       WebhookEventMappingResponse webhookEventMappingResponse, TriggerWebhookEvent triggerWebhookEvent) {
-    Builder builder =
-        TriggerPayload.newBuilder().setJsonPayload(triggerWebhookEvent.getPayload()).setType(Type.WEBHOOK);
+    Builder builder = TriggerPayload.newBuilder().setType(Type.WEBHOOK);
 
     if (CUSTOM.getEntityMetadataName().equalsIgnoreCase(triggerWebhookEvent.getSourceRepoType())) {
       builder.setSourceType(SourceType.CUSTOM_REPO);
@@ -100,15 +100,15 @@ public class TriggerWebhookExecutionHelper {
     return builder.setType(WEBHOOK).build();
   }
 
-  private WebhookEventResponse triggerPipelineExecution(
-      TriggerWebhookEvent triggerWebhookEvent, TriggerDetails triggerDetails, TriggerPayload triggerPayload) {
+  private WebhookEventResponse triggerPipelineExecution(TriggerWebhookEvent triggerWebhookEvent,
+      TriggerDetails triggerDetails, TriggerPayload triggerPayload, String payload) {
     String runtimeInputYaml = null;
     NGTriggerEntity ngTriggerEntity = triggerDetails.getNgTriggerEntity();
     try {
       runtimeInputYaml = triggerDetails.getNgTriggerConfigV2().getInputYaml();
 
       PlanExecution response = triggerExecutionHelper.resolveRuntimeInputAndSubmitExecutionRequest(
-          triggerDetails, triggerPayload, triggerWebhookEvent);
+          triggerDetails, triggerPayload, triggerWebhookEvent, payload);
       TargetExecutionSummary targetExecutionSummary =
           WebhookEventResponseHelper.prepareTargetExecutionSummary(response, triggerDetails, runtimeInputYaml);
 

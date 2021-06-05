@@ -66,8 +66,8 @@ public class TriggerExecutionHelper {
   private final PMSExecutionService pmsExecutionService;
   private final PMSYamlSchemaService pmsYamlSchemaService;
 
-  public PlanExecution resolveRuntimeInputAndSubmitExecutionRequest(
-      TriggerDetails triggerDetails, TriggerPayload triggerPayload, TriggerWebhookEvent triggerWebhookEvent) {
+  public PlanExecution resolveRuntimeInputAndSubmitExecutionRequest(TriggerDetails triggerDetails,
+      TriggerPayload triggerPayload, TriggerWebhookEvent triggerWebhookEvent, String payload) {
     String executionTagForGitEvent = generateExecutionTagForEvent(triggerDetails, triggerPayload);
     TriggeredBy embeddedUser = generateTriggerdBy(
         executionTagForGitEvent, triggerDetails.getNgTriggerEntity(), triggerPayload, triggerWebhookEvent.getUuid());
@@ -102,7 +102,7 @@ public class TriggerExecutionHelper {
               .setPipelineIdentifier(pipelineEntityToExecute.get().getIdentifier());
 
       PlanExecutionMetadata.Builder planExecutionMetadataBuilder =
-          PlanExecutionMetadata.builder().planExecutionId(executionId);
+          PlanExecutionMetadata.builder().planExecutionId(executionId).triggerJsonPayload(payload);
 
       String pipelineYaml;
       if (isBlank(runtimeInputYaml)) {
