@@ -244,10 +244,8 @@ public class OrchestrationEngine {
     PlanExecution planExecution = Preconditions.checkNotNull(planExecutionService.get(ambiance.getPlanExecutionId()));
     NodeExecution nodeExecution = prepareNodeExecutionForInvocation(ambiance);
     log.info("Sending NodeExecution START event");
-    StartNodeExecutionEventData startNodeExecutionEventData = StartNodeExecutionEventData.builder()
-                                                                  .facilitatorResponse(facilitatorResponse)
-                                                                  .nodes(planExecution.getPlan().getNodes())
-                                                                  .build();
+    StartNodeExecutionEventData startNodeExecutionEventData =
+        StartNodeExecutionEventData.builder().facilitatorResponse(facilitatorResponse).build();
     NodeExecutionEvent startEvent = NodeExecutionEvent.builder()
                                         .eventType(NodeExecutionEventType.START)
                                         .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
@@ -447,7 +445,7 @@ public class OrchestrationEngine {
     adviserResponseHandler.handleAdvise(updatedNodeExecution, adviserResponse);
   }
 
-  void handleError(Ambiance ambiance, Exception exception) {
+  public void handleError(Ambiance ambiance, Exception exception) {
     try {
       Builder builder = StepResponseProto.newBuilder().setStatus(Status.FAILED);
       List<ResponseMessage> responseMessages = exceptionManager.buildResponseFromException(exception);

@@ -14,7 +14,6 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.UuidAccess;
-import io.harness.plan.Plan;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 
@@ -57,7 +56,7 @@ public class PlanExecution implements PersistentRegularIterable, UuidAccess {
 
   @Wither @Id @org.mongodb.morphia.annotations.Id String uuid;
   @Wither @CreatedDate Long createdAt;
-  Plan plan;
+  String planId;
   Map<String, String> setupAbstractions;
   @Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL_MONTHS).toInstant());
 
