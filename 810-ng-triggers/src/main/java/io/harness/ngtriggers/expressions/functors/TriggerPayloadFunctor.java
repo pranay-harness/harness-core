@@ -5,9 +5,7 @@ import static io.harness.ngtriggers.Constants.PAYLOAD;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.exception.InvalidRequestException;
-import io.harness.execution.PlanExecutionMetadata;
 import io.harness.expression.LateBindingValue;
 import io.harness.ngtriggers.helpers.TriggerAmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -18,27 +16,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class TriggerFunctor implements LateBindingValue {
+public class TriggerPayloadFunctor implements LateBindingValue {
   private final Ambiance ambiance;
-  private final PlanExecutionMetadataService planExecutionMetadataService;
+  private final String payload;
 
-  public TriggerFunctor(Ambiance ambiance, PlanExecutionMetadataService planExecutionMetadataService) {
+  public TriggerPayloadFunctor(Ambiance ambiance, String payload) {
     this.ambiance = ambiance;
-    this.planExecutionMetadataService = planExecutionMetadataService;
+    this.payload = payload;
   }
 
   @Override
   public Object bind() {
-    PlanExecutionMetadata metadata =
-        planExecutionMetadataService.findByPlanExecutionId(ambiance.getPlanExecutionId())
-            .orElseThrow(()
-                             -> new IllegalStateException(
-                                 "No Metadata present for planExecution :" + ambiance.getPlanExecutionId()));
     Map<String, Object> jsonObject = TriggerAmbianceHelper.buildJsonObjectFromAmbiance(ambiance);
-    jsonObject.put(EVENT_PAYLOAD, metadata.getTriggerJsonPayload());
+    jsonObject.put(EVENT_PAYLOAD, payload);
     // payload
     try {
-      jsonObject.put(PAYLOAD, JsonPipelineUtils.read(metadata.getTriggerJsonPayload(), HashMap.class));
+      jsonObject.put(PAYLOAD, JsonPipelineUtils.read(payload, HashMap.class));
     } catch (IOException e) {
       throw new InvalidRequestException("Event payload could not be converted to a hashmap");
     }
