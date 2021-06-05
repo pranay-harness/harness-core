@@ -283,6 +283,8 @@ public enum SettingVariableTypes {
 
   GCP_SECRETS_MANAGER,
 
+  ARGO_SERVER("Argo Server"),
+
   TRIGGER;
 
   @Getter private String displayName;
