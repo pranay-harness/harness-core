@@ -14,12 +14,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.UnsupportedOperationException;
 import io.harness.exception.WingsException;
 import io.harness.gitsync.common.YamlProcessingLogContext;
-import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.beans.YamlChangeSet.YamlChangeSetKeys;
 import io.harness.gitsync.common.beans.YamlChangeSetStatus;
 import io.harness.gitsync.core.dtos.YamlChangeSetDTO;
-import io.harness.gitsync.core.impl.YamlChangeSetEventHandlerFactory;
-import io.harness.gitsync.core.service.YamlChangeSetHandler;
+import io.harness.gitsync.core.service.YamlChangeSetLifeCycleManagerService;
 import io.harness.gitsync.core.service.YamlChangeSetService;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.AccountLogContext;
@@ -37,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -62,9 +59,7 @@ public class GitChangeSetRunnable implements Runnable {
   @Inject private GitChangeSetRunnableHelper gitChangeSetRunnableHelper;
   @Inject private GitChangeSetRunnableQueueHelper gitChangeSetRunnableQueueHelper;
   @Inject private PersistentLocker persistentLocker;
-  @Inject private YamlChangeSetEventHandlerFactory yamlChangeSetHandlerFactory;
-  @Inject private ExecutorService executorService;
-
+  @Inject private YamlChangeSetLifeCycleManagerService yamlChangeSetLifeCycleHandlerService;
   @Override
   public void run() {
     final Stopwatch stopwatch = Stopwatch.createStarted();
@@ -98,13 +93,6 @@ public class GitChangeSetRunnable implements Runnable {
     return getYamlChangeSetsPerQueueKey();
   }
 
-  private AutoLogContext createLogContextForChangeSet(YamlChangeSet yamlChangeSet) {
-    return YamlProcessingLogContext.builder()
-        .changeSetQueueKey(yamlChangeSet.getQueueKey())
-        .changeSetId(yamlChangeSet.getUuid())
-        .build(OVERRIDE_ERROR);
-  }
-
   private AutoLogContext createLogContextForChangeSet(YamlChangeSetDTO yamlChangeSet) {
     return YamlProcessingLogContext.builder().changeSetId(yamlChangeSet.getChangesetId()).build(OVERRIDE_ERROR);
   }
@@ -115,8 +103,7 @@ public class GitChangeSetRunnable implements Runnable {
     try (AccountLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = createLogContextForChangeSet(yamlChangeSet)) {
       log.info("GIT_YAML_LOG_ENTRY: Processing  changeSetId: [{}]", yamlChangeSet.getChangesetId());
-      final YamlChangeSetHandler changeSetHandler = yamlChangeSetHandlerFactory.getChangeSetHandler(yamlChangeSet);
-      executorService.submit(() -> changeSetHandler.process(yamlChangeSet));
+      yamlChangeSetLifeCycleHandlerService.handleChangeSet(yamlChangeSet);
     } catch (UnsupportedOperationException ex) {
       log.error("Couldn't process change set : {}", yamlChangeSet, ex);
     }
