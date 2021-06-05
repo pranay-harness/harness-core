@@ -3,9 +3,11 @@ package io.harness.pms.plan.execution.handlers;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.executions.plan.PlanService;
 import io.harness.engine.observers.OrchestrationStartObserver;
 import io.harness.engine.observers.beans.OrchestrationStartInfo;
 import io.harness.execution.PlanExecution;
+import io.harness.plan.Plan;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
@@ -36,15 +38,17 @@ import org.bson.Document;
 @Singleton
 public class ExecutionSummaryCreateEventHandler implements OrchestrationStartObserver {
   private final PMSPipelineService pmsPipelineService;
+  private final PlanService planService;
   private final PlanExecutionService planExecutionService;
   private final NodeTypeLookupService nodeTypeLookupService;
   private final PmsExecutionSummaryRespository pmsExecutionSummaryRespository;
 
   @Inject
-  public ExecutionSummaryCreateEventHandler(PMSPipelineService pmsPipelineService,
+  public ExecutionSummaryCreateEventHandler(PMSPipelineService pmsPipelineService, PlanService planService,
       PlanExecutionService planExecutionService, NodeTypeLookupService nodeTypeLookupService,
       PmsExecutionSummaryRespository pmsExecutionSummaryRespository) {
     this.pmsPipelineService = pmsPipelineService;
+    this.planService = planService;
     this.planExecutionService = planExecutionService;
     this.nodeTypeLookupService = nodeTypeLookupService;
     this.pmsExecutionSummaryRespository = pmsExecutionSummaryRespository;
@@ -58,6 +62,7 @@ public class ExecutionSummaryCreateEventHandler implements OrchestrationStartObs
     String orgId = AmbianceUtils.getOrgIdentifier(ambiance);
     String planExecutionId = ambiance.getPlanExecutionId();
     PlanExecution planExecution = planExecutionService.get(planExecutionId);
+
     ExecutionMetadata metadata = planExecution.getMetadata();
     String pipelineId = metadata.getPipelineIdentifier();
     Optional<PipelineEntity> pipelineEntity = pmsPipelineService.get(accountId, orgId, projectId, pipelineId, false);
@@ -66,8 +71,9 @@ public class ExecutionSummaryCreateEventHandler implements OrchestrationStartObs
     }
     updateExecutionInfoInPipelineEntity(
         accountId, orgId, projectId, pipelineId, pipelineEntity.get().getExecutionSummaryInfo(), planExecutionId);
-    Map<String, GraphLayoutNode> layoutNodeMap = planExecution.getPlan().getGraphLayoutInfo().getLayoutNodesMap();
-    String startingNodeId = planExecution.getPlan().getGraphLayoutInfo().getStartingNodeId();
+    Plan plan = planService.fetchPlan(ambiance.getPlanId());
+    Map<String, GraphLayoutNode> layoutNodeMap = plan.getGraphLayoutInfo().getLayoutNodesMap();
+    String startingNodeId = plan.getGraphLayoutInfo().getStartingNodeId();
     Map<String, GraphLayoutNodeDTO> layoutNodeDTOMap = new HashMap<>();
     List<String> modules = new ArrayList<>();
     for (Map.Entry<String, GraphLayoutNode> entry : layoutNodeMap.entrySet()) {

@@ -107,6 +107,7 @@ planExecutionsSummary {"name": "accountId_organizationId_projectId_pipelineId_cr
 planExecutionsSummary {"name": "createdAt_1", "background": true} {"createdAt": 1}
 planExecutionsSummary {"name": "planExecutionId_1", "unique": true} {"planExecutionId": 1}
 planExecutionsSummary {"name": "unique_accountId_organizationId_projectId_planExecutionId", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "planExecutionId": 1}
+plans {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 pmsSdkInstances {"name": "createdAt_1", "background": true} {"createdAt": 1}
 pmsSdkInstances {"name": "name_1", "unique": true} {"name": 1}
 preFlightEntity {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}

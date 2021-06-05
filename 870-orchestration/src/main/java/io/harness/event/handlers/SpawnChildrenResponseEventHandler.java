@@ -8,11 +8,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.ExecutionEngineDispatcher;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.executions.plan.PlanService;
 import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.execution.PlanExecution;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildrenExecutableResponse.Child;
@@ -36,7 +35,7 @@ import java.util.concurrent.ExecutorService;
 @Singleton
 @OwnedBy(HarnessTeam.PIPELINE)
 public class SpawnChildrenResponseEventHandler implements SdkResponseEventHandler {
-  @Inject private PlanExecutionService planExecutionService;
+  @Inject private PlanService planService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private OrchestrationEngine engine;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
@@ -48,9 +47,7 @@ public class SpawnChildrenResponseEventHandler implements SdkResponseEventHandle
     SpawnChildrenRequest request = event.getSdkResponseEventRequest().getSpawnChildrenRequest();
     NodeExecution nodeExecution = nodeExecutionService.get(request.getNodeExecutionId());
     Ambiance ambiance = nodeExecution.getAmbiance();
-    PlanExecution planExecution = planExecutionService.get(request.getPlanExecutionId());
-    Plan plan = planExecution.getPlan();
-
+    Plan plan = planService.fetchPlan(nodeExecution.getAmbiance().getPlanId());
     List<String> callbackIds = new ArrayList<>();
     for (Child child : request.getChildren().getChildrenList()) {
       String uuid = generateUuid();

@@ -1,30 +1,36 @@
 package io.harness.plan;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.pms.contracts.plan.GraphLayoutInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
-import io.harness.pms.sdk.core.plan.PlanNode;
-import io.harness.pms.sdk.core.plan.creation.mappers.PlanNodeProtoMapper;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Optional;
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Builder.Default;
+import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.Wither;
+import org.mongodb.morphia.annotations.Entity;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.annotation.Version;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * This is the plan we want to execute during the execution
@@ -41,24 +47,27 @@ import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
 @Value
+@Builder
 @FieldNameConstants(innerTypeName = "PlanKeys")
+@Document("plans")
 @TypeAlias("plan")
+@Entity(value = "plans")
 @StoreIn(DbAliases.PMS)
-public final class Plan implements PersistentEntity {
-  List<PlanNodeProto> nodes;
+public class Plan implements PersistentEntity {
+  private static final long TTL_MONTHS = 6;
+
+  @Default @Wither @Id @org.mongodb.morphia.annotations.Id String uuid = generateUuid();
+  @Singular List<PlanNodeProto> nodes;
 
   @NotNull String startingNodeId;
 
   Map<String, String> setupAbstractions;
   GraphLayoutInfo graphLayoutInfo;
 
-  Plan(List<PlanNodeProto> nodes, String startingNodeId, Map<String, String> setupAbstractions,
-      GraphLayoutInfo graphLayoutInfo) {
-    this.nodes = nodes;
-    this.startingNodeId = startingNodeId;
-    this.setupAbstractions = setupAbstractions;
-    this.graphLayoutInfo = graphLayoutInfo;
-  }
+  @Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL_MONTHS).toInstant());
+
+  @Wither @CreatedDate Long createdAt;
+  @Wither @Version Long version;
 
   public boolean isEmpty() {
     return EmptyPredicate.isEmpty(nodes);
@@ -69,103 +78,10 @@ public final class Plan implements PersistentEntity {
   }
 
   public PlanNodeProto fetchNode(String nodeId) {
-    int nodeIndex = Collections.binarySearch(
-        nodes, PlanNodeProto.newBuilder().setUuid(nodeId).build(), Comparator.comparing(PlanNodeProto::getUuid));
-    if (nodeIndex < 0) {
-      throw new InvalidRequestException("No node found with Id :" + nodeId);
+    Optional<PlanNodeProto> optional = nodes.stream().filter(pn -> pn.getUuid().equals(nodeId)).findFirst();
+    if (optional.isPresent()) {
+      return optional.get();
     }
-    return nodes.get(nodeIndex);
-  }
-
-  // *********************** DO NOT OVERRIDE WITH LOMBOK BUILDER *********************
-
-  // LOMBOK BUILDER DOES NOT PLAY WELL WHEN YOU WANT TO OVERRIDE METHODS
-  // GENERATED WITH A COMBINATION OF @Singular and @Builder
-
-  public static PlanBuilder builder() {
-    return new PlanBuilder(new ArrayList<>(), null, new HashMap<>(), GraphLayoutInfo.newBuilder().build());
-  }
-
-  public static class PlanBuilder {
-    private ArrayList<PlanNodeProto> nodes;
-    private String startingNodeId;
-    private Map<String, String> setupAbstractions;
-    private GraphLayoutInfo graphLayoutInfo;
-
-    public PlanBuilder(ArrayList<PlanNodeProto> nodes, String startingNodeId, Map<String, String> setupAbstractions,
-        GraphLayoutInfo graphLayoutInfo) {
-      this.nodes = nodes;
-      this.startingNodeId = startingNodeId;
-      this.setupAbstractions = setupAbstractions;
-      this.graphLayoutInfo = graphLayoutInfo;
-    }
-
-    public PlanBuilder node(PlanNode node) {
-      if (this.nodes == null) {
-        this.nodes = new ArrayList<>();
-      }
-      this.nodes.add(PlanNodeProtoMapper.toPlanNodeProto(node));
-      return this;
-    }
-
-    public PlanBuilder node(PlanNodeProto node) {
-      if (this.nodes == null) {
-        this.nodes = new ArrayList<>();
-      }
-      this.nodes.add(node);
-      return this;
-    }
-
-    public PlanBuilder nodes(Collection<PlanNode> nodes) {
-      if (this.nodes == null) {
-        this.nodes = new ArrayList<>();
-      }
-      this.nodes.addAll(nodes.stream().map(PlanNodeProtoMapper::toPlanNodeProto).collect(Collectors.toList()));
-      return this;
-    }
-
-    public PlanBuilder startingNodeId(String startingNodeId) {
-      this.startingNodeId = startingNodeId;
-      return this;
-    }
-
-    public PlanBuilder setupAbstractions(Map<String, String> setupAbstractions) {
-      this.setupAbstractions = setupAbstractions;
-      return this;
-    }
-
-    public PlanBuilder layoutNodeInfo(GraphLayoutInfo layoutNodeInfo) {
-      this.graphLayoutInfo = layoutNodeInfo;
-      return this;
-    }
-
-    public Plan build() {
-      if (EmptyPredicate.isEmpty(this.nodes)) {
-        return internalBuild();
-      }
-      this.nodes.sort(Comparator.comparing(PlanNodeProto::getUuid));
-      return internalBuild();
-    }
-
-    public Plan internalBuild() {
-      List<PlanNodeProto> nodes;
-      switch (this.nodes == null ? 0 : this.nodes.size()) {
-        case 0:
-          nodes = Collections.emptyList();
-          break;
-        case 1:
-          nodes = Collections.singletonList(this.nodes.get(0));
-          break;
-        default:
-          nodes = Collections.unmodifiableList(new ArrayList<>(this.nodes));
-      }
-
-      return new Plan(nodes, startingNodeId, setupAbstractions, graphLayoutInfo);
-    }
-
-    public String toString() {
-      return "Plan.PlanBuilder(nodes=" + this.nodes + ", startingNodeId=" + this.startingNodeId
-          + ", setupAbstractions=" + this.setupAbstractions + ")";
-    }
+    throw new InvalidRequestException("No node found with Id :" + nodeId);
   }
 }
