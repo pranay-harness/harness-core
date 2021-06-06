@@ -9,8 +9,8 @@ import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.service.ExecutionSummaryUpdateRequest;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.PmsSdkModuleUtils;
-import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
 import io.harness.pms.sdk.core.execution.PmsExecutionGrpcClient;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 @Slf4j
-public class ExecutionSummaryUpdateEventHandler implements AsyncOrchestrationEventHandler {
+public class ExecutionSummaryUpdateEventHandler implements OrchestrationEventHandler {
   @Inject(optional = true) PmsExecutionGrpcClient pmsClient;
   @Inject(optional = true) ExecutionSummaryModuleInfoProvider executionSummaryModuleInfoProvider;
   @Inject @Named(PmsSdkModuleUtils.SDK_SERVICE_NAME) String serviceName;

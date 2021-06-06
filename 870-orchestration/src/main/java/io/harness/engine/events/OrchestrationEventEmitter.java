@@ -10,9 +10,6 @@ import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
-import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
-import io.harness.pms.sdk.core.events.OrchestrationSubject;
-import io.harness.pms.sdk.core.registries.OrchestrationEventHandlerRegistry;
 import io.harness.pms.utils.PmsConstants;
 import io.harness.queue.QueuePublisher;
 import io.harness.serializer.ProtoUtils;
@@ -22,7 +19,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
 import java.util.Collections;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -31,33 +27,16 @@ import lombok.extern.slf4j.Slf4j;
 public class OrchestrationEventEmitter {
   @Inject private OrchestrationModuleConfig configuration;
   @Inject private OrchestrationEventsFrameworkUtils eventsFrameworkUtils;
-  @Inject private OrchestrationEventHandlerRegistry handlerRegistry;
   @Inject private QueuePublisher<OrchestrationEvent> orchestrationEventQueue;
 
   public void emitEvent(OrchestrationEvent event) {
     try (AutoLogContext ignore = event.autoLogContext()) {
-      OrchestrationSubject subject = new OrchestrationSubject();
-      Set<OrchestrationEventHandler> handlers = handlerRegistry.obtain(event.getEventType());
-      subject.registerAll(handlers);
-      subject.handleEventSync(event);
       String serviceName = event.getServiceName() == null ? PmsConstants.INTERNAL_SERVICE_NAME : event.getServiceName();
-
       if (configuration.isUseRedisForEvents()) {
         emitViaEventsFramework(event, serviceName);
         return;
       }
-
       orchestrationEventQueue.send(Collections.singletonList(serviceName), event);
-      // For calling event handlers in PMS, create a one level clone of the event and then emit
-      if (!serviceName.equals(PmsConstants.INTERNAL_SERVICE_NAME)) {
-        orchestrationEventQueue.send(Collections.singletonList(PmsConstants.INTERNAL_SERVICE_NAME),
-            OrchestrationEvent.builder()
-                .ambiance(event.getAmbiance())
-                .status(event.getStatus())
-                .resolvedStepParameters(event.getResolvedStepParameters())
-                .eventType(event.getEventType())
-                .build());
-      }
     } catch (Exception ex) {
       log.error("Failed to create orchestration event", ex);
       throw ex;
