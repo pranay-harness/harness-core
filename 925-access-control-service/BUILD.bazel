@@ -69,6 +69,11 @@ container_run_and_commit(
         "mkdir /opt/harness/plugins",
     ],
     image = "@platform_alpine//image",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
 )
 
 container_image(
@@ -86,6 +91,11 @@ container_image(
         "keystore.jks",
         ":module_deploy.jar",
     ],
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
 )
 
 container_image(
@@ -93,6 +103,11 @@ container_image(
     base = ":base_image_access_control",
     cmd = "./run.sh",
     repository = "us.gcr.io/harness-playground/access-control-service",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
     workdir = "/opt/harness",
 )
 
@@ -104,4 +119,9 @@ container_push(
     registry = "gcr.io",
     repository = "harness-playground/access-control-service",
     tag = "bazel-docker-image-test",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
 )

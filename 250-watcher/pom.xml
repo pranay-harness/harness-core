@@ -99,11 +99,11 @@
                         </entry>
                         <entry>
                             <key>Application-Version</key>
-                            <value>version=${build.fullVersion}</value>
+                            <value>version=${build.majorVersion}.${build.minorVersion}.${build.number}</value>
                         </entry>
                         <entry>
                             <key>System-Properties</key>
-                            <value>version=${build.fullVersion}</value>
+                            <value>version=${build.majorVersion}.${build.minorVersion}.${build.number}}</value>
                         </entry>
                         <entry>
                             <key>Args</key>
