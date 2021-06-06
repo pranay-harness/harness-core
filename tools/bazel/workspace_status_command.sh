@@ -7,6 +7,11 @@ case ${BUILD_PURPOSE} in
     *) exit 1 ;;
 esac
 
+PROPERTIES=build.properties
+function getProperty () {
+   cat "${PROPERTIES}" | grep "^$1=" | cut -d"=" -f2
+}
+
 echo "TIMESTAMP $(date +'%y%m%d-%H%M')"
 
 if [ "${BUILD_PURPOSE}" = "DEVELOPMENT" -o "${BUILD_PURPOSE}" = "PR_CHECK" ]
@@ -22,14 +27,8 @@ else
   echo "STABLE_GIT_BRANCH $(git rev-parse --abbrev-ref HEAD)"
   echo "STABLE_GIT_COMMIT $(git rev-parse HEAD)"
 
-  echo STABLE_MAJOR_VERSION $(getProperty ${PROPERTIES} "build.majorVersion")
-  echo STABLE_MINOR_VERSION $(getProperty ${PROPERTIES} "build.minorVersion")
-  echo STABLE_BUILD_NUMBER $(getProperty ${PROPERTIES} "build.number")
-  echo STABLE_PATCH $(getProperty ${PROPERTIES} "build.patch")
+  echo STABLE_MAJOR_VERSION $(getProperty "build.majorVersion")
+  echo STABLE_MINOR_VERSION $(getProperty "build.minorVersion")
+  echo STABLE_BUILD_NUMBER $(getProperty "build.number")
+  echo STABLE_PATCH $(getProperty "build.patch")
 fi
-
-function getProperty () {
-   cat "$1" | grep "^$2=" | cut -d"=" -f2
-}
-
-PROPERTIES=build.properties
