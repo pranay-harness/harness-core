@@ -125,6 +125,19 @@ NOTE: the data from it is used for every git operation github does on you behave
     ```
     NOTE: If you have regular bazel installed, please uninstall bazel and install bazelisk. It allows us to use the git repo to synchronize everyone's installation of bazel.
 
+4. Setup the build purpose
+   
+   You need to set environment variable BUILD_PURPOSE with one of the following values:
+   *   DEVELOPMENT - set this when you building for development purposes
+   *   PR_CHECK    - set this when you building for executing check for the pr
+   *   FEATURE     - set this when you building for internal feature testing
+   *   RELEASE     - set this when you building for release
+   
+   if you seting up the project to build locally, you should simply add to your .bash_profile file: 
+   ```
+   export BUILD_PURPOSE=DEVELOPMENT
+   ```
+   
 4. Go to `portal` directory and run
 
     `mvn clean install -DskipTests`
