@@ -2,17 +2,196 @@ package io.harness.gitsync.core.impl;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.exception.InvalidRequestException;
+import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest;
+import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest.GitToHarnessFileProcessingRequestBuilder;
+import io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus;
+import io.harness.gitsync.common.beans.GitToHarnessProcessingStepType;
+import io.harness.gitsync.common.beans.GitToHarnessProgress;
+import io.harness.gitsync.common.beans.YamlChangeSetEventType;
 import io.harness.gitsync.common.beans.YamlChangeSetStatus;
+import io.harness.gitsync.common.dtos.GitDiffResultFileDTO;
+import io.harness.gitsync.common.dtos.GitDiffResultFileListDTO;
+import io.harness.gitsync.common.dtos.GitFileChangeDTO;
+import io.harness.gitsync.common.dtos.GitToHarnessGetFilesStepRequest;
+import io.harness.gitsync.common.dtos.GitToHarnessGetFilesStepResponse;
+import io.harness.gitsync.common.dtos.GitToHarnessProcessMsvcStepRequest;
+import io.harness.gitsync.common.service.GitToHarnessProgressService;
+import io.harness.gitsync.common.service.ScmOrchestratorService;
+import io.harness.gitsync.common.service.YamlGitConfigService;
+import io.harness.gitsync.common.service.gittoharness.GitToHarnessProcessorService;
+import io.harness.gitsync.core.dtos.GitCommitDTO;
 import io.harness.gitsync.core.dtos.YamlChangeSetDTO;
+import io.harness.gitsync.core.service.GitCommitService;
 import io.harness.gitsync.core.service.YamlChangeSetHandler;
+import io.harness.utils.FilePathUtils;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.DX)
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Singleton
+@Slf4j
 public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler {
+  private YamlGitConfigService yamlGitConfigService;
+  private ScmOrchestratorService scmOrchestratorService;
+  private GitCommitService gitCommitService;
+  private GitToHarnessProcessorService gitToHarnessProcessorService;
+  private GitToHarnessProgressService gitToHarnessProgressService;
+
   @Override
   public YamlChangeSetStatus process(YamlChangeSetDTO yamlChangeSetDTO) {
+    String repoURL = yamlChangeSetDTO.getRepoUrl();
+
+    List<YamlGitConfigDTO> yamlGitConfigDTOList = yamlGitConfigService.getByRepo(repoURL);
+    if (yamlGitConfigDTOList.isEmpty()) {
+      log.info("Repo {} doesn't exist, ignoring the branch push change set event : {}", repoURL, yamlChangeSetDTO);
+      return YamlChangeSetStatus.SKIPPED;
+    }
+    // TODO @deepak add check if event already exists in progress service, then return
+
+    // Init Progress Record for this event
+    GitToHarnessProgress gitToHarnessProgressRecord =
+        gitToHarnessProgressService.save(yamlChangeSetDTO, YamlChangeSetEventType.BRANCH_PUSH,
+            GitToHarnessProcessingStepType.GET_FILES, GitToHarnessProcessingStepStatus.TO_DO);
+
+    GitToHarnessGetFilesStepResponse gitToHarnessGetFilesStepResponse =
+        performGetFilesStep(GitToHarnessGetFilesStepRequest.builder()
+                                .yamlChangeSetDTO(yamlChangeSetDTO)
+                                .yamlGitConfigDTOList(yamlGitConfigDTOList)
+                                .gitToHarnessProgress(gitToHarnessProgressRecord)
+                                .build());
+
+    performProcessFilesInMsvcStep(
+        GitToHarnessProcessMsvcStepRequest.builder()
+            .yamlChangeSetDTO(yamlChangeSetDTO)
+            .yamlGitConfigDTO(yamlGitConfigDTOList.get(0))
+            .gitFileChangeDTOList(gitToHarnessGetFilesStepResponse.getGitFileChangeDTOList())
+            .gitDiffResultFileDTOList(gitToHarnessGetFilesStepResponse.getGitDiffResultFileDTOList())
+            .progressRecord(gitToHarnessGetFilesStepResponse.getProgressRecord())
+            .build());
+
     return YamlChangeSetStatus.COMPLETED;
+  }
+
+  // ---------------------------------- PRIVATE METHODS -------------------------------
+
+  private GitToHarnessGetFilesStepResponse performGetFilesStep(GitToHarnessGetFilesStepRequest request) {
+    List<YamlGitConfigDTO> yamlGitConfigDTOList = request.getYamlGitConfigDTOList();
+    YamlChangeSetDTO yamlChangeSetDTO = request.getYamlChangeSetDTO();
+
+    // Mark step status in progress
+    GitToHarnessProgress gitToHarnessProgressRecord = gitToHarnessProgressService.updateStatus(
+        request.getGitToHarnessProgress().getUuid(), GitToHarnessProcessingStepStatus.IN_PROGRESS);
+
+    List<String> rootFolderList = getRootFolderList(yamlGitConfigDTOList);
+    // Fetch files that have changed b/w push event commit id and the local commit id
+    List<GitDiffResultFileDTO> prFiles = getDiffFilesUsingSCM(yamlChangeSetDTO, yamlGitConfigDTOList.get(0));
+    // We need to process only those files which are in root folders
+    List<GitDiffResultFileDTO> prFilesTobeProcessed = getFilePathsToBeProcessed(rootFolderList, prFiles);
+
+    List<GitFileChangeDTO> gitFileChangeDTOList =
+        getAllFileContent(yamlChangeSetDTO, yamlGitConfigDTOList.get(0), prFilesTobeProcessed);
+
+    // Mark step status done
+    gitToHarnessProgressRecord = gitToHarnessProgressService.updateStatus(
+        gitToHarnessProgressRecord.getUuid(), GitToHarnessProcessingStepStatus.DONE);
+
+    return GitToHarnessGetFilesStepResponse.builder()
+        .gitFileChangeDTOList(gitFileChangeDTOList)
+        .gitDiffResultFileDTOList(prFilesTobeProcessed)
+        .progressRecord(gitToHarnessProgressRecord)
+        .build();
+  }
+
+  private void performProcessFilesInMsvcStep(GitToHarnessProcessMsvcStepRequest request) {
+    List<GitToHarnessFileProcessingRequest> fileProcessingRequests =
+        prepareFileProcessingRequests(request.getGitFileChangeDTOList(), request.getGitDiffResultFileDTOList());
+    gitToHarnessProcessorService.processFiles(request.getYamlChangeSetDTO().getAccountId(), fileProcessingRequests,
+        request.getYamlChangeSetDTO().getBranch(), request.getYamlGitConfigDTO(),
+        request.getProgressRecord().getUuid());
+  }
+
+  // Parse root folders from all yaml git configs
+  private List<String> getRootFolderList(List<YamlGitConfigDTO> yamlGitConfigDTOList) {
+    List<String> rootFolderList = new ArrayList<>();
+    yamlGitConfigDTOList.forEach(yamlGitConfigDTO
+        -> yamlGitConfigDTO.getRootFolders().forEach(rootFolder -> rootFolderList.add(rootFolder.getRootFolder())));
+    return rootFolderList;
+  }
+
+  // Fetch list of files in the diff b/w last processed commit and new pushed commit, along with their change status
+  private List<GitDiffResultFileDTO> getDiffFilesUsingSCM(
+      YamlChangeSetDTO yamlChangeSetDTO, YamlGitConfigDTO yamlGitConfigDTO) {
+    Optional<GitCommitDTO> gitCommitDTO = gitCommitService.findLastGitCommit(
+        yamlChangeSetDTO.getAccountId(), yamlChangeSetDTO.getRepoUrl(), yamlChangeSetDTO.getBranch());
+    if (!gitCommitDTO.isPresent()) {
+      String errorLog = String.format("No last git commit found for repoURL : %s and branch  %s",
+          yamlChangeSetDTO.getRepoUrl(), yamlChangeSetDTO.getBranch());
+      throw new InvalidRequestException(errorLog);
+    }
+
+    // Call to SCM api to find diff files in push event commit id and local commit id
+    String initialCommitId = gitCommitDTO.get().getCommitId();
+    String finalCommitId = yamlChangeSetDTO.getGitWebhookRequestAttributes().getHeadCommitId();
+    GitDiffResultFileListDTO gitDiffResultFileListDTO =
+        scmOrchestratorService.processScmRequest(scmClientFacilitatorService
+            -> scmClientFacilitatorService.listCommitsDiffFiles(yamlGitConfigDTO, initialCommitId, finalCommitId),
+            yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
+            yamlGitConfigDTO.getAccountIdentifier());
+
+    return gitDiffResultFileListDTO.getPrFileList();
+  }
+
+  // Get content for all files
+  private List<GitFileChangeDTO> getAllFileContent(
+      YamlChangeSetDTO yamlChangeSetDTO, YamlGitConfigDTO yamlGitConfigDTO, List<GitDiffResultFileDTO> prFile) {
+    List<String> filePaths = new ArrayList<>();
+    prFile.forEach(file -> filePaths.add(file.getPath()));
+
+    return scmOrchestratorService.processScmRequest(scmClientFacilitatorService
+        -> scmClientFacilitatorService.listFilesByFilePaths(yamlGitConfigDTO, filePaths, yamlChangeSetDTO.getBranch()),
+        yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
+        yamlGitConfigDTO.getAccountIdentifier());
+  }
+
+  private List<GitToHarnessFileProcessingRequest> prepareFileProcessingRequests(
+      List<GitFileChangeDTO> gitFileChangeDTOList, List<GitDiffResultFileDTO> gitDiffResultFileDTOList) {
+    List<GitToHarnessFileProcessingRequest> fileProcessingRequests = new ArrayList<>();
+    Map<String, GitToHarnessFileProcessingRequestBuilder> filePathToRequestBuilderMap = new HashMap<>();
+
+    gitFileChangeDTOList.forEach(gitFileChangeDTO
+        -> filePathToRequestBuilderMap.put(
+            gitFileChangeDTO.getPath(), GitToHarnessFileProcessingRequest.builder().fileDetails(gitFileChangeDTO)));
+    gitDiffResultFileDTOList.forEach(gitPRFileDTO -> {
+      fileProcessingRequests.add(
+          filePathToRequestBuilderMap.get(gitPRFileDTO.getPath()).changeType(gitPRFileDTO.getChangeType()).build());
+    });
+    return fileProcessingRequests;
+  }
+
+  // Create list of files that are part of folders in the root folder list
+  private List<GitDiffResultFileDTO> getFilePathsToBeProcessed(
+      List<String> rootFolderList, List<GitDiffResultFileDTO> prFiles) {
+    List<GitDiffResultFileDTO> filesToBeProcessed = new ArrayList<>();
+
+    prFiles.forEach(prFile -> {
+      for (String rootFolder : rootFolderList) {
+        if (FilePathUtils.isFilePartOfFolder(rootFolder, prFile.getPath())) {
+          filesToBeProcessed.add(prFile);
+          break;
+        }
+      }
+    });
+    return filesToBeProcessed;
   }
 }
