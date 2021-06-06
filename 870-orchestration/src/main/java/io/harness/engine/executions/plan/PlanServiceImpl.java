@@ -21,6 +21,11 @@ public class PlanServiceImpl implements PlanService {
   }
 
   @Override
+  public Plan save(Plan plan) {
+    return planRepository.save(plan);
+  }
+
+  @Override
   public PlanNodeProto fetchNode(String planId, String nodeId) {
     return fetchPlan(planId).fetchNode(nodeId);
   }

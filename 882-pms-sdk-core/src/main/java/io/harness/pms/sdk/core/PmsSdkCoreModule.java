@@ -14,11 +14,15 @@ import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.response.publishers.MongoSdkResponseEventPublisher;
 import io.harness.pms.sdk.core.response.publishers.RedisSdkResponseEventPublisher;
 import io.harness.pms.sdk.core.response.publishers.SdkResponseEventPublisher;
+import io.harness.threading.ThreadPool;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class PmsSdkCoreModule extends AbstractModule {
   private static PmsSdkCoreModule instance;
@@ -64,5 +68,13 @@ public class PmsSdkCoreModule extends AbstractModule {
   @Named(PmsSdkModuleUtils.SDK_SERVICE_NAME)
   public String serviceName() {
     return config.getServiceName();
+  }
+
+  @Provides
+  @Singleton
+  @Named(PmsSdkModuleUtils.SDK_EXECUTOR_NAME)
+  public ExecutorService sdkExecutorService() {
+    return ThreadPool.create(5, 20, 30L, TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("PmsSdkOrchestrationEventListener-%d").build());
   }
 }

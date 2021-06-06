@@ -54,7 +54,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "plans")
 @StoreIn(DbAliases.PMS)
 public class Plan implements PersistentEntity {
-  private static final long TTL_MONTHS = 6;
+  static final long TTL_MONTHS = 6;
 
   @Default @Wither @Id @org.mongodb.morphia.annotations.Id String uuid = generateUuid();
   @Singular List<PlanNodeProto> nodes;

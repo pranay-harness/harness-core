@@ -6,6 +6,7 @@ import io.harness.data.algorithm.HashGenerator;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.executions.plan.PlanService;
 import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.engine.observers.OrchestrationStartObserver;
@@ -22,8 +23,8 @@ import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
-import io.harness.repositories.PlanRepository;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.HashMap;
@@ -40,7 +41,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private OrchestrationEventEmitter eventEmitter;
   @Inject private InterruptManager interruptManager;
-  @Inject private PlanRepository planRepository;
+  @Inject private PlanService planService;
   @Inject private PlanExecutionMetadataService planExecutionMetadataService;
   @Inject private TransactionUtils transactionUtils;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
@@ -55,7 +56,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   @Override
   public PlanExecution startExecution(@Valid Plan plan, Map<String, String> setupAbstractions,
       ExecutionMetadata metadata, PlanExecutionMetadata planExecutionMetadata) {
-    Plan savedPlan = planRepository.save(plan);
+    Plan savedPlan = planService.save(plan);
     return executePlan(savedPlan, setupAbstractions, metadata, planExecutionMetadata);
   }
 
@@ -84,7 +85,8 @@ public class OrchestrationServiceImpl implements OrchestrationService {
     return savedPlanExecution;
   }
 
-  private void submitToEngine(Ambiance ambiance, PlanNodeProto planNode) {
+  @VisibleForTesting
+  void submitToEngine(Ambiance ambiance, PlanNodeProto planNode) {
     executorService.submit(() -> orchestrationEngine.triggerExecution(ambiance, planNode));
   }
 
