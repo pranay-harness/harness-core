@@ -308,6 +308,12 @@ replace_key_value yamlSchemaClientConfig.yamlSchemaHttpClientMap.cvng.serviceHtt
 
 replace_key_value useRedisForSdkResponseEvents "$USE_REDIS_FOR_SDK_RESPONSE_EVENTS"
 
+replace_key_value signupNotificationConfiguration.projectId "$SIGNUP_NOTIFICATION_GCS_PROJECT_ID"
+replace_key_value signupNotificationConfiguration.bucketName "$SIGNUP_NOTIFICATION_GCS_BUCKET_NAME"
+
+replace_key_value segmentConfiguration.enabled "$SEGMENT_ENABLED"
+replace_key_value segmentConfiguration.apiKey "$SEGMENT_APIKEY"
+
 replace_key_value gitGrpcClientConfigs.pms.target "$PMS_GITSYNC_TARGET"
 replace_key_value gitGrpcClientConfigs.pms.authority "$PMS_GITSYNC_AUTHORITY"
 
