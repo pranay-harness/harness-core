@@ -66,6 +66,8 @@ import io.harness.ng.accesscontrol.migrations.AccessControlMigrationModule;
 import io.harness.ng.accesscontrol.mockserver.MockRoleAssignmentModule;
 import io.harness.ng.accesscontrol.user.AggregateUserService;
 import io.harness.ng.accesscontrol.user.AggregateUserServiceImpl;
+import io.harness.ng.activitytracker.ActivityHistoryService;
+import io.harness.ng.activitytracker.ActivityHistoryServiceImpl;
 import io.harness.ng.authenticationsettings.AuthenticationSettingsModule;
 import io.harness.ng.cdOverview.service.CDOverviewDashboardService;
 import io.harness.ng.cdOverview.service.CDOverviewDashboardServiceImpl;
@@ -500,6 +502,8 @@ public class NextGenModule extends AbstractModule {
     sourceCodeManagerMapBinder.addBinding(SCMType.GITLAB).to(GitlabSCMMapper.class);
     sourceCodeManagerMapBinder.addBinding(SCMType.AWS_CODE_COMMIT).to(AwsCodeCommitSCMMapper.class);
     sourceCodeManagerMapBinder.addBinding(SCMType.AZURE_DEV_OPS).to(AzureDevOpsSCMMapper.class);
+
+    bind(ActivityHistoryService.class).to(ActivityHistoryServiceImpl.class);
 
     registerEventsFrameworkMessageListeners();
   }
