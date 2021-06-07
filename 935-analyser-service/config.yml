@@ -1,0 +1,62 @@
+xxxxxxxx
+  applicationConnectors:
+    - type: https
+      port: 9015
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
+      maxRequestHeaderSize: 100KiB
+    - type: http
+      port: 9014
+      maxRequestHeaderSize: 100KiB
+  adminConnectors:
+    - type: https
+      port: 9096
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
+  rootPath: /api
+  maxThreads: 1024
+
+allowedOrigins:
+  - "https://localhost:8181"
+  - "https://127.0.0.1:8181"
+  - "http://localhost:8000"
+  - "http://127.0.0.1:8000"
+  - "https://localhost:8000"
+  - "https://127.0.0.1:8000"
+
+mongo:
+  uri: mongodb://localhost:27017/analyserserver
+  connectTimeout: 30000
+  serverSelectionTimeout: 90000
+  maxConnectionIdleTime: 600000
+  connectionsPerHost: 300
+  indexManagerMode: AUTO
+  transactionsEnabled: true
+  aliasDBName: analyserserver
+
+
+eventsFramework:
+  redis:
+    sentinel: false
+    masterName: "test"
+    redisUrl: "redis://localhost:6379"
+    sentinelUrls:
+      - "redis://redis1:26379"
+      - "redis://redis2:26379"
+      - "redis://redis3:26379"
+    envNamespace: ""
+    readMode: MASTER
+    nettyThreads: 16
+    useScriptCache: true
+    userName: ""
+    password: ""
+    sslConfig:
+      enabled: false
+      CATrustStorePath: "/tmp/ca_trust_store"
+      CATrustStorePassword: ""
