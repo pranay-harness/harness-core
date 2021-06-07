@@ -643,7 +643,7 @@ public class AuthHandler2 {
 
   private Map<String, List<Base>> getAppIdServiceMap(String accountId) {
     PageRequest<Service> pageRequest =
-        aPageRequest().addFilter("accountId", Operator.EQ, accountId).addFieldsIncluded("_id", "appId").build();
+        aPageRequest().addFilter("accountId", Operator.EQ, accountId).addFieldsIncluded("_id", "appId", "name").build();
     List<Service> list =
         getAllEntities(pageRequest, () -> serviceResourceService.list(pageRequest, false, false, false, null));
     return list.stream().collect(Collectors.groupingBy(Base::getAppId));
@@ -651,7 +651,7 @@ public class AuthHandler2 {
 
   private Map<String, List<Base>> getAppIdProvisionerMap(String accountId) {
     PageRequest<InfrastructureProvisioner> pageRequest =
-        aPageRequest().addFilter("accountId", Operator.EQ, accountId).addFieldsIncluded("_id", "appId").build();
+        aPageRequest().addFilter("accountId", Operator.EQ, accountId).addFieldsIncluded("_id", "appId", "name").build();
 
     List<InfrastructureProvisioner> list =
         getAllEntities(pageRequest, () -> infrastructureProvisionerService.list(pageRequest));
@@ -661,7 +661,7 @@ public class AuthHandler2 {
   private Map<String, List<Base>> getAppIdEnvMap(String accountId) {
     PageRequest<Environment> pageRequest = aPageRequest()
                                                .addFilter("accountId", Operator.EQ, accountId)
-                                               .addFieldsIncluded("_id", "appId", "environmentType")
+                                               .addFieldsIncluded("_id", "appId", "environmentType", "name")
                                                .build();
 
     List<Environment> list = getAllEntities(pageRequest, () -> environmentService.list(pageRequest, false, null));
@@ -673,7 +673,7 @@ public class AuthHandler2 {
     PageRequest<Workflow> pageRequest =
         aPageRequest()
             .addFilter("accountId", Operator.EQ, accountId)
-            .addFieldsIncluded("_id", "appId", "envId", "templatized", "templateExpressions")
+            .addFieldsIncluded("_id", "appId", "envId", "templatized", "templateExpressions", "name")
             .build();
 
     List<Workflow> list =
