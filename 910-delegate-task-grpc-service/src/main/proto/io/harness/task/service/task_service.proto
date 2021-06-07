@@ -90,6 +90,8 @@ message StepStatus {
   }
   string error_message = 5;
   io.harness.product.ci.engine.proto.Artifact artifact = 6;
+  int64 max_memory_mib = 7;
+  int64 max_milli_cpu = 8;
 }
 
 enum StepExecutionStatus {
