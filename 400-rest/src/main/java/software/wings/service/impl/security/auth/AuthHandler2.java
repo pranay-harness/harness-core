@@ -184,7 +184,7 @@ public class AuthHandler2 {
   @Inject private WorkflowServiceHelper workflowServiceHelper;
 
   public UserPermissionNameInfo evaluateUserPermissionInfo(String accountId, List<UserGroup> userGroups, User user) {
-    UserPermissionNameInfoBuilder userPermissionInfoBuilder = UserPermissionNameInfo.builder().accountId(accountId);
+    UserPermissionNameInfo.UserPermissionNameInfoBuilder userPermissionInfoBuilder = UserPermissionNameInfo.builder().accountId(accountId);
 
     Set<PermissionType> accountPermissionSet = new HashSet<>();
     AccountPermissionSummaryBuilder accountPermissionSummaryBuilder =
@@ -830,7 +830,7 @@ public class AuthHandler2 {
 
     Set<String> entityIds =
         getEntityIds(requiredPermissionAttributes, userRequestContext.getUserPermissionInfo(), appIds);
-    EntityInfo entityInfo = EntityInfo.builder().entityFieldName(entityFieldName).entityIds(entityIds).build();
+    UserRequestContext.EntityInfo entityInfo = UserRequestContext.EntityInfo.builder().entityFieldName(entityFieldName).entityIds(entityIds).build();
     String entityClassName = getEntityClassName(requiredPermissionAttributes);
     userRequestContext.getEntityInfoMap().put(entityClassName, entityInfo);
   }
@@ -873,9 +873,9 @@ public class AuthHandler2 {
         } else if (permissionType == PROVISIONER) {
           entityPermissions = appPermissionSummary.getProvisionerPermissions();
         } else if (permissionType == ENV) {
-          Map<Action, Set<EnvInfo>> envEntityPermissions = appPermissionSummary.getEnvPermissions();
+          Map<Action, Set<AppPermissionSummary.EnvInfo>> envEntityPermissions = appPermissionSummary.getEnvPermissions();
           if (isNotEmpty(envEntityPermissions)) {
-            Set<EnvInfo> envInfoSet = envEntityPermissions.get(action);
+            Set<AppPermissionSummary.EnvInfo> envInfoSet = envEntityPermissions.get(action);
             if (isNotEmpty(envInfoSet)) {
               envInfoSet.forEach(envInfo -> entityIds.add(envInfo.getEnvId()));
             }
@@ -1392,7 +1392,7 @@ public class AuthHandler2 {
             .canCreatePipeline(fromSummary.isCanCreatePipeline())
             .servicePermissions(convertActionEntityIdMapToEntityActionMap(fromSummary.getServicePermissions()))
             .provisionerPermissions(convertActionEntityIdMapToEntityActionMap(fromSummary.getProvisionerPermissions()))
-            .envPermissions(convertActionEnvMapToEnvActionMap(fromSummary.getEnvPermissions()))
+//            .envPermissions(convertActionEnvMapToEnvActionMap(fromSummary.getEnvPermissions()))
             .workflowPermissions(convertActionEntityIdMapToEntityActionMap(fromSummary.getWorkflowPermissions()))
             .pipelinePermissions(convertActionEntityIdMapToEntityActionMap(fromSummary.getPipelinePermissions()))
             .deploymentPermissions(convertActionEntityIdMapToEntityActionMap(fromSummary.getDeploymentPermissions()));

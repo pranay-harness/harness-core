@@ -27,10 +27,10 @@ public class UserPermissionNameInfo {
 
   // Key - appId, Value - app permission summary
   // This structure is optimized for AuthRuleFilter for faster lookup
-   private Map<String, AppPermissionSummary> appPermissionMapInternal;
+   private Map<String, AppPermissionSummaryWithName> appPermissionMapInternal;
    private Map<String, Set<Action>> dashboardPermissions;
 
-  public Map<String, AppPermissionSummary> getAppPermissionMapInternal() {
+  public Map<String, AppPermissionSummaryWithName> getAppPermissionMapInternal() {
     return appPermissionMapInternal;
   }
 
