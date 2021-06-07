@@ -8,6 +8,7 @@ import (
 	"time"
 
 	statuspb "github.com/wings-software/portal/910-delegate-task-grpc-service/src/main/proto/io/harness/task/service"
+	"github.com/wings-software/portal/product/ci/engine/new/metrics"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"github.com/wings-software/portal/product/ci/engine/status"
@@ -109,6 +110,7 @@ func (e *stepExecutor) updateStepStatus(ctx context.Context, step *pb.UnitStep,
 	taskID := step.GetTaskId()
 	stepID := step.GetId()
 	accountID := step.GetAccountId()
+	ctrName := step.GetContainerName()
 
 	stepStatus := statuspb.StepExecutionStatus_SUCCESS
 	errMsg := ""
@@ -124,8 +126,11 @@ func (e *stepExecutor) updateStepStatus(ctx context.Context, step *pb.UnitStep,
 		}
 	}
 
+	ms := metrics.MetricState()
+	mem, cpu := ms.Get(ctrName)
+
 	err := sendStepStatus(ctx, stepID, e.delegateSvcEndpoint, accountID, callbackToken,
-		taskID, int32(1), timeTaken, stepStatus, errMsg, so, artifact, e.log)
+		taskID, int32(1), timeTaken, stepStatus, errMsg, so, artifact, mem, cpu, e.log)
 	if err != nil {
 		e.log.Errorw("Failed to send step status. Failing execution of step",
 			"step_id", stepID, "endpoint", e.delegateSvcEndpoint, zap.Error(err))

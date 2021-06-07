@@ -15,6 +15,7 @@ go_library(
         "//product/ci/addon/grpc/client:go_default_library",
         "//product/ci/addon/proto:go_default_library",
         "//product/ci/engine/new/executor/runtests:go_default_library",
+        "//product/ci/engine/new/metrics:go_default_library",
         "//product/ci/engine/new/state:go_default_library",
         "//product/ci/engine/output:go_default_library",
         "//product/ci/engine/proto:go_default_library",

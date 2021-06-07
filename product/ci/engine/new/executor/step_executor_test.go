@@ -77,7 +77,7 @@ func TestStepValidations(t *testing.T) {
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
 	sendStepStatus = func(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, artifact *pb.Artifact, log *zap.SugaredLogger) error {
+		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, artifact *pb.Artifact, maxMemoryMib, maxMilliCPU int64, log *zap.SugaredLogger) error {
 		return nil
 	}
 	for _, tc := range tests {
@@ -123,7 +123,7 @@ func TestStepError(t *testing.T) {
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
 	sendStepStatus = func(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, artifact *pb.Artifact, log *zap.SugaredLogger) error {
+		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, artifact *pb.Artifact, maxMemoryMib, maxMilliCPU int64, log *zap.SugaredLogger) error {
 		return nil
 	}
 
@@ -179,7 +179,7 @@ func TestStepRunSuccess(t *testing.T) {
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
 	sendStepStatus = func(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, artifact *pb.Artifact, log *zap.SugaredLogger) error {
+		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, artifact *pb.Artifact, maxMemoryMib, maxMilliCPU int64, log *zap.SugaredLogger) error {
 		return nil
 	}
 

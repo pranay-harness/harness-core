@@ -39,9 +39,9 @@ var (
 
 // SendStepStatus sends the step status to delegate task service.
 func SendStepStatus(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-	status pb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, artifact *enginepb.Artifact, log *zap.SugaredLogger) error {
+	status pb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, artifact *enginepb.Artifact, maxMemoryMib, maxMilliCPU int64, log *zap.SugaredLogger) error {
 	start := time.Now()
-	arg := getRequestArg(stepID, accountID, callbackToken, taskID, numRetries, timeTaken, status, errMsg, stepOutput, artifact, log)
+	arg := getRequestArg(stepID, accountID, callbackToken, taskID, numRetries, timeTaken, status, errMsg, stepOutput, artifact, maxMemoryMib, maxMilliCPU, log)
 	err := sendStatusWithRetries(ctx, endpoint, arg, log)
 	if err != nil {
 		log.Errorw(
@@ -62,7 +62,7 @@ func SendStepStatus(ctx context.Context, stepID, endpoint, accountID, callbackTo
 
 // getRequestArg returns arguments for send status rpc
 func getRequestArg(stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-	status pb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, artifact *enginepb.Artifact, log *zap.SugaredLogger) *pb.SendTaskStatusRequest {
+	status pb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, artifact *enginepb.Artifact, maxMemoryMib, maxMilliCPU int64, log *zap.SugaredLogger) *pb.SendTaskStatusRequest {
 	var stepOutputMap map[string]string
 	if stepOutput != nil {
 		stepOutputMap = stepOutput.Output.Variables
@@ -90,7 +90,9 @@ func getRequestArg(stepID, accountID, callbackToken, taskID string, numRetries i
 							Output: stepOutputMap,
 						},
 					},
-					Artifact: artifact,
+					Artifact:     artifact,
+					MaxMemoryMib: maxMemoryMib,
+					MaxMilliCpu:  maxMilliCPU,
 				},
 			},
 		},

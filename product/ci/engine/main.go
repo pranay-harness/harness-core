@@ -8,11 +8,12 @@ import (
 
 	"github.com/alexflint/go-arg"
 	"github.com/wings-software/portal/commons/go/lib/logs"
-	"github.com/wings-software/portal/commons/go/lib/metrics"
+	cmetrics "github.com/wings-software/portal/commons/go/lib/metrics"
 	"github.com/wings-software/portal/product/ci/common/external"
 	"github.com/wings-software/portal/product/ci/engine/consts"
 	"github.com/wings-software/portal/product/ci/engine/executor"
 	"github.com/wings-software/portal/product/ci/engine/grpc"
+	"github.com/wings-software/portal/product/ci/engine/new/metrics"
 	"go.uber.org/zap"
 )
 
@@ -39,6 +40,8 @@ type stageSchema struct {
 var args struct {
 	Stage *stageSchema `arg:"subcommand:stage"`
 
+	Pod                   string `arg:"--pod" help:"pod name"`
+	Namespace             string `arg:"--namespace" help:"namespace"`
 	Verbose               bool   `arg:"--verbose" help:"enable verbose logging mode"`
 	LogMetrics            bool   `arg:"--log_metrics" help:"enable metric logging"`
 	Deployment            string `arg:"env:DEPLOYMENT" help:"name of the deployment"`
@@ -68,7 +71,8 @@ func main() {
 	defer procWriter.Close() // upload the logs to object store and close the stream
 
 	if args.LogMetrics {
-		metrics.Log(int32(os.Getpid()), "engine", log)
+		cmetrics.Log(int32(os.Getpid()), "engine", log)
+		metrics.Collect(args.Pod, args.Namespace, log)
 	}
 
 	if args.Stage != nil {
