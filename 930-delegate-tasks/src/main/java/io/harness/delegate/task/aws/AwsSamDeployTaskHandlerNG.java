@@ -13,6 +13,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.aws.AwsConfig;
 import io.harness.aws.AwsSamClient;
 import io.harness.beans.DecryptableEntity;
+import io.harness.cli.CliResponse;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
@@ -22,6 +23,7 @@ import io.harness.git.model.GitBaseRequest;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.PlanJsonLogOutputStream;
+import io.harness.logging.UnitStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 
@@ -61,7 +63,7 @@ public class AwsSamDeployTaskHandlerNG extends AwsSamAbstractTaskHandler {
     GitBaseRequest gitBaseRequestForConfigFile = awsBaseHelper.getGitBaseRequestForConfigFile(
         taskParameters.getAccountId(), confileFileGitStore, (GitConfigDTO) confileFileGitStore.getGitConfigDTO());
 
-    String baseDir = AWS_SAM_WORKING_DIRECTORY + taskParameters.getAccountId() + taskId ;
+    String baseDir = AWS_SAM_WORKING_DIRECTORY + taskParameters.getAccountId() + taskId;
 
     String awsSamAppDirectory = awsBaseHelper.fetchAwsSamAppDirectory(gitBaseRequestForConfigFile,
         taskParameters.getAccountId(), "", "", confileFileGitStore, logCallback, awsSamProjectDirectoryPath, baseDir);
@@ -88,7 +90,30 @@ public class AwsSamDeployTaskHandlerNG extends AwsSamAbstractTaskHandler {
 
       String samBuildCommand = format("%s sam build", awsSecretsExportCommand);
       Map<String, String> envVariables = new HashMap<>();
-      awsSamClient.runCommand(samBuildCommand, 120000l, envVariables, awsSamAppDirectory, logCallback);
+      CliResponse samBuildCliResponse =
+          awsSamClient.runCommand(samBuildCommand, 120000l, envVariables, awsSamAppDirectory, logCallback);
+
+      if (!UnitStatus.SUCCESS.equals(samBuildCliResponse.getCommandExecutionStatus().getUnitStatus())) {
+        return AwsSamTaskNGResponse.builder()
+            .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+            .errorMessage(samBuildCliResponse.getError())
+            .customMessage("Sam build failed with output => " + samBuildCliResponse.getOutput())
+            .outputs(samBuildCliResponse.getOutput())
+            .build();
+      }
+
+      String samDeployCommand = format("%s sam deploy", awsSecretsExportCommand);
+      CliResponse samDeployCliResponse =
+          awsSamClient.runCommand(samDeployCommand, 120000l, envVariables, awsSamAppDirectory, logCallback);
+
+      if (!UnitStatus.SUCCESS.equals(samDeployCliResponse.getCommandExecutionStatus().getUnitStatus())) {
+        return AwsSamTaskNGResponse.builder()
+            .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+            .errorMessage(samDeployCliResponse.getError())
+            .customMessage("Sam build failed with output => " + samDeployCliResponse.getOutput())
+            .outputs(samDeployCliResponse.getOutput())
+            .build();
+      }
 
       return AwsSamTaskNGResponse.builder()
           .outputs("")

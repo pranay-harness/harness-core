@@ -21,6 +21,7 @@ public class AwsSamTaskNGResponse implements DelegateTaskNotifyResponseData {
   CommandExecutionStatus commandExecutionStatus;
   String errorMessage;
   @NonFinal @Setter UnitProgressData unitProgressData;
+  String customMessage;
 
   Map<String, String> commitIdForConfigFilesMap;
   String outputs;
