@@ -93,8 +93,8 @@ public class AwsBaseHelperImpl implements AwsBaseHelper {
   }
 
   @NonNull
-  public String resolveBaseDir(String accountId, String provisionerId) {
-    return AWS_SAM_BASE_DIR.replace("${ACCOUNT_ID}", accountId).replace("${ENTITY_ID}", provisionerId);
+  public String resolveBaseDir(String accountId) {
+    return AWS_SAM_BASE_DIR.replace("${ACCOUNT_ID}", accountId);
   }
 
   public String resolveScriptDirectory(String workingDir, String scriptPath) {

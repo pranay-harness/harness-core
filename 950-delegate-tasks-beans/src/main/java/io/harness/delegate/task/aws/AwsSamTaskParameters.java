@@ -3,6 +3,7 @@ package io.harness.delegate.task.aws;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -13,6 +14,7 @@ import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.terraform.TFTaskType;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionReflectionUtils;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.yaml.core.variables.NGVariable;
 
 import java.util.List;
@@ -29,6 +31,7 @@ public class AwsSamTaskParameters
   @NonNull TFTaskType taskType;
   @NonNull String entityId;
   @NonNull GitFetchFilesConfig configFile;
+  @NonNull AwsConnectorDTO awsConnectorDTO;
   @NonNull String region;
   @NonNull String stackName;
   @NonNull AwsSamTaskType awsSamTaskType;
@@ -39,6 +42,7 @@ public class AwsSamTaskParameters
   AwsSamCommandUnit awsSamCommandUnit;
 
   long timeoutInMillis;
+  List<EncryptedDataDetail> awsConnectorEncryptionDetails;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

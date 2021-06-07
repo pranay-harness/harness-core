@@ -58,7 +58,9 @@ public class AwsSamDeployTaskHandlerNG extends AwsSamAbstractTaskHandler {
         taskParameters.getAccountId(), "", "", confileFileGitStore, logCallback, awsSamProjectDirectoryPath, baseDir);
 
     try (PlanJsonLogOutputStream planJsonLogOutputStream = new PlanJsonLogOutputStream()) {
-      String samBuildCommand = format("sam build");
+      String awsSecretsExportCommand = "export AWS_ACCESS_KEY_ID=ABC && export AWS_SECRET_ACCESS_KEY=DEF && ";
+
+      String samBuildCommand = format("%s sam build", awsSecretsExportCommand);
       Map<String, String> envVariables = new HashMap<>();
       awsSamClient.runCommand(samBuildCommand, 120000l, envVariables, awsSamAppDirectory, logCallback);
 
