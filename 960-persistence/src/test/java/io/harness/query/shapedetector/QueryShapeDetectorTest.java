@@ -1,5 +1,6 @@
 package io.harness.query.shapedetector;
 
+import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.GARVIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -7,8 +8,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
@@ -53,6 +59,26 @@ public class QueryShapeDetectorTest extends CategoryTest {
             .isEqualTo(hash);
       }
     }
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
+  public void testMongoQueryHash() {
+    int hash1 = 0;
+    int hash2 = 0;
+    ObjectMapper objectMapper = new ObjectMapper();
+    try {
+      String jsonString = "{planExecutionId: \"pid\", status : {$in : [\"RUNNING\", \"WAITING\"]} }";
+      JsonNode jsonNode = objectMapper.readTree(objectMapper.getFactory().createParser(jsonString));
+      hash1 = jsonNode.hashCode();
+      jsonString = "{status : {$in : [\"RUNNING\", \"WAITING\"]}, planExecutionId: \"pid\" }";
+      jsonNode = objectMapper.readTree(objectMapper.getFactory().createParser(jsonString));
+      hash2 = jsonNode.hashCode();
+    } catch (IOException e) {
+      throw new InvalidRequestException("Unable to read the json ", e);
+    }
+    assertThat(hash1).isEqualTo(hash2);
   }
 
   @Value
