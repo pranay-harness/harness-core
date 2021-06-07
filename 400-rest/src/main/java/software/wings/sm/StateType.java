@@ -197,6 +197,7 @@ import software.wings.sm.states.azure.appservices.AzureWebAppSlotSwap;
 import software.wings.sm.states.collaboration.JiraCreateUpdate;
 import software.wings.sm.states.collaboration.ServiceNowCreateUpdateState;
 import software.wings.sm.states.customdeployment.InstanceFetchState;
+import software.wings.sm.states.k8s.K8DelegateDestroyState;
 import software.wings.sm.states.k8s.K8DelegateProvisionState;
 import software.wings.sm.states.k8s.K8sApplyState;
 import software.wings.sm.states.k8s.K8sBlueGreenDeploy;
@@ -779,6 +780,9 @@ public enum StateType implements StateTypeDescriptor {
       asList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
 
   DELEGATE_PROVISION(K8DelegateProvisionState.class, PROVISIONERS, 3, "Provision Delegate", asList(PRE_DEPLOYMENT),
+      ORCHESTRATION_STENCILS),
+
+  DELEGATE_DESTROY(K8DelegateDestroyState.class, PROVISIONERS, 3, "Destroy Delegate", asList(PRE_DEPLOYMENT),
       ORCHESTRATION_STENCILS),
 
   TERRAFORM_DESTROY(DestroyTerraformProvisionState.class, PROVISIONERS, 0, "Terraform Destroy",

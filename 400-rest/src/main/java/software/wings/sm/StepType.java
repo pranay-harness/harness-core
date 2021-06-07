@@ -212,6 +212,7 @@ import software.wings.sm.states.azure.appservices.AzureWebAppSlotSwap;
 import software.wings.sm.states.collaboration.JiraCreateUpdate;
 import software.wings.sm.states.collaboration.ServiceNowCreateUpdateState;
 import software.wings.sm.states.customdeployment.InstanceFetchState;
+import software.wings.sm.states.k8s.K8DelegateProvisionState;
 import software.wings.sm.states.k8s.K8sApplyState;
 import software.wings.sm.states.k8s.K8sBlueGreenDeploy;
 import software.wings.sm.states.k8s.K8sCanaryDeploy;
@@ -583,6 +584,13 @@ public enum StepType {
   SHELL_SCRIPT_PROVISION(ShellScriptProvisionState.class, PROVISION_SHELL_SCRIPT, asList(INFRASTRUCTURE_PROVISIONER),
       asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
       asList(PhaseType.NON_ROLLBACK)),
+
+  DELEGATE_PROVISION(K8DelegateProvisionState.class, "Provision Delegate", asList(INFRASTRUCTURE_PROVISIONER),
+      asList(PRE_DEPLOYMENT), asList(DeploymentType.KUBERNETES), asList(PhaseType.NON_ROLLBACK)),
+
+  DELEGATE_DESTROY(K8DelegateProvisionState.class, "Destroy Delegate", asList(INFRASTRUCTURE_PROVISIONER),
+      asList(POST_DEPLOYMENT), asList(DeploymentType.KUBERNETES), asList(PhaseType.NON_ROLLBACK)),
+
   ARM_CREATE_RESOURCE(ARMProvisionState.class, WorkflowServiceHelper.ARM_CREATE_RESOURCE,
       Collections.singletonList(INFRASTRUCTURE_PROVISIONER),
       asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE, POST_DEPLOYMENT, WRAP_UP),
