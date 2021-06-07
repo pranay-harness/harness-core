@@ -26,6 +26,7 @@ shared_dependencies = [
     "//930-ng-license-manager:module",
     "//940-primary-version-manager:module",
     "//950-telemetry:module",
+    "//950-persistence-tracer:module",
     "//958-ng-file-service-sdk:module",
     "//product/ci/scm/proto:ciscm_java_proto",
     "@jira_client//jar",

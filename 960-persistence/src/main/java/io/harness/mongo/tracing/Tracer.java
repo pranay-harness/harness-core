@@ -4,5 +4,5 @@ import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 public interface Tracer {
-  void trace(Document queryDoc, String collectionName, MongoTemplate mongoTemplate);
+  void trace(Document queryDoc, Document sortDoc, String collectionName, MongoTemplate mongoTemplate);
 }

@@ -24,6 +24,8 @@ import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
+import io.harness.eventsframework.impl.redis.DistributedCache;
+import io.harness.eventsframework.impl.redis.RedisCache;
 import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.filter.FilterType;
 import io.harness.filter.FiltersModule;
@@ -165,6 +167,21 @@ public class PipelineServiceModule extends AbstractModule {
           return RedisProducer.of(QUERY_ANALYSIS_TOPIC, redisConfig, EventsFrameworkConstants.QUERY_ANALYSIS_TOPIC_SIZE,
               PIPELINE_SERVICE.getServiceId());
         }
+      }
+
+      @Override
+      protected DistributedCache cacheProvider() {
+        RedisConfig redisConfig = configuration.getEventsFrameworkConfiguration().getRedisConfig();
+        if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
+          return null;
+        } else {
+          return RedisCache.of(redisConfig, 300, TimeUnit.DAYS);
+        }
+      }
+
+      @Override
+      protected String serviceIdProvider() {
+        return PIPELINE_SERVICE.getServiceId();
       }
     });
     install(PipelineServiceGrpcModule.getInstance());

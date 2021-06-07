@@ -1,5 +1,7 @@
 package io.harness.tracing;
 
+import io.harness.eventsframework.impl.redis.DistributedCache;
+import io.harness.eventsframework.impl.redis.RedisCache;
 import io.harness.mongo.tracing.Tracer;
 import io.harness.threading.ThreadPool;
 
@@ -8,6 +10,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 

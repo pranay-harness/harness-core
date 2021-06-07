@@ -2,6 +2,7 @@ package io.harness.analyserservice;
 
 import static io.harness.AuthorizationServiceHeader.ANALYZER_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.mongo.tracing.TracerConstants.ANALYZER_CACHE_NAME;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.QueryAnalysisMessageListener;
@@ -44,7 +45,7 @@ public class EventsFrameworkModule extends AbstractModule {
         .annotatedWith(Names.named(EventsFrameworkConstants.QUERY_ANALYSIS_TOPIC))
         .to(QueryAnalysisMessageListener.class);
     bind(DistributedCache.class)
-        .annotatedWith(Names.named("analyser_cache"))
+        .annotatedWith(Names.named(ANALYZER_CACHE_NAME))
         .toInstance(RedisCache.of(redisConfig, 10, TimeUnit.HOURS));
   }
 }

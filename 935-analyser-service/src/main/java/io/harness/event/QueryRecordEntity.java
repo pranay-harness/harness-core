@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
@@ -23,9 +24,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("queryRecords")
 @HarnessEntity(exportable = true)
 public class QueryRecordEntity {
-  String hash;
+  @NonNull String hash;
+  @NonNull String version;
+  @NonNull String serviceName;
+
   QueryExplainResult explainResult;
   String data;
-  String version;
-  String serviceName;
 }

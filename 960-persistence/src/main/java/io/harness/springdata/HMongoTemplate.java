@@ -89,19 +89,19 @@ public class HMongoTemplate extends MongoTemplate implements HealthMonitor {
   }
 
   @Override
-  protected <T> List<T> doFind(String collectionName, Document query, Document fields, Class<T> entityClass) {
+  public <T> List<T> find(Query query, Class<T> entityClass, String collectionName) {
     if (traceMode == TraceMode.ENABLED) {
-      traceQuery(query, collectionName);
+      traceQuery(query.getQueryObject(), query.getSortObject(), collectionName);
     }
-    return super.doFind(collectionName, query, fields, entityClass);
+    return super.find(query, entityClass, collectionName);
   }
 
   private <T> void traceQuery(Query query, Class<T> entityClass) {
-    traceQuery(query.getQueryObject(), getCollectionName(entityClass));
+    traceQuery(query.getQueryObject(), query.getSortObject(), getCollectionName(entityClass));
   }
 
-  public void traceQuery(Document query, String collectionName) {
-    tracerSubject.fireInform(Tracer::trace, query, collectionName, this);
+  public void traceQuery(Document queryDoc, Document sortDoc, String collectionName) {
+    tracerSubject.fireInform(Tracer::trace, queryDoc, sortDoc, collectionName, this);
   }
 
   public interface Executor<R> {

@@ -1,4 +1,4 @@
-package io.harness.query.shapedetector;
+package io.harness.tracing.shapedetector;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
