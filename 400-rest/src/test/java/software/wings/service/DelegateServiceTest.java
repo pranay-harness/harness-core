@@ -7,6 +7,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.DelegateProfile.DelegateProfileBuilder;
 import static io.harness.delegate.beans.DelegateProfile.builder;
 import static io.harness.delegate.beans.DelegateType.ECS;
+import static io.harness.delegate.beans.DelegateType.SHELL_SCRIPT;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
 import static io.harness.obfuscate.Obfuscator.obfuscate;
@@ -23,6 +24,7 @@ import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
+import static io.harness.rule.OwnerRule.XIN;
 
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -232,6 +234,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   private static final String PRIMARY_PROFILE_NAME = "primary";
   private static final String TOKEN_NAME = "TOKEN_NAME";
   private static final String TOKEN_VALUE = "TOKEN_VALUE";
+  private static final String LOCATION = "LOCATION";
+  private static final String ANOTHER_LOCATION = "ANOTHER_LOCATION";
 
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private AccountService accountService;
@@ -1274,7 +1278,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SANJA)
   @Category(UnitTests.class)
-  public void shouldRegisterHeartbeatSendSelfDestruct() throws IllegalAccessException, InterruptedException {
+  public void shouldRegisterHeartbeatEcsDelegateNotSendSelfDestruct()
+      throws IllegalAccessException, InterruptedException {
     Delegate delegate = createDelegateBuilder()
                             .accountId(ACCOUNT_ID)
                             .uuid(DELEGATE_ID)
@@ -1308,17 +1313,68 @@ public class DelegateServiceTest extends WingsBaseTest {
         .thenReturn(newerExistingConnection);
     delegateService.registerHeartbeat(ACCOUNT_ID, DELEGATE_ID, heartbeat, ConnectionMode.STREAMING);
     verify(mockConnectionDao).findAndDeletePreviousConnections(ACCOUNT_ID, DELEGATE_ID, delegateConnectionId, VERSION);
-    verify(mockConnectionDao).replaceWithNewerConnection(delegateConnectionId, newerExistingConnection);
-    verify(broadcaster).broadcast(SELF_DESTRUCT + DELEGATE_ID + "-" + delegateConnectionId);
+    verify(mockConnectionDao, never()).replaceWithNewerConnection(delegateConnectionId, newerExistingConnection);
+    verify(broadcaster, never()).broadcast(SELF_DESTRUCT + DELEGATE_ID + "-" + delegateConnectionId);
     FieldUtils.writeField(delegateService, "delegateConnectionDao", delegateConnectionDao, true);
+  }
+
+  @Test
+  @Owner(developers = XIN)
+  @Category(UnitTests.class)
+  public void shouldRegisterHeartbeatShellScriptDelegateSelfDestruct()
+      throws IllegalAccessException, InterruptedException {
+    try {
+      thrown.expect(DuplicateDelegateException.class);
+      Delegate delegate = createDelegateBuilder()
+                              .accountId(ACCOUNT_ID)
+                              .uuid(DELEGATE_ID)
+                              .hostName(HOST_NAME)
+                              .description(DESCRIPTION)
+                              .delegateType(SHELL_SCRIPT)
+                              .ip("127.0.0.1")
+                              .delegateGroupName(DELEGATE_GROUP_NAME)
+                              .version(VERSION)
+                              .proxy(false)
+                              .polllingModeEnabled(false)
+                              .sampleDelegate(false)
+                              .build();
+      DelegateProfile primaryDelegateProfile =
+          createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
+
+      delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
+      when(delegatesFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(Integer.MAX_VALUE);
+      when(delegateProfileService.fetchCgPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
+      delegateService.add(delegate);
+
+      DelegateConnectionDao mockConnectionDao = Mockito.mock(DelegateConnectionDao.class);
+      FieldUtils.writeField(delegateService, "delegateConnectionDao", mockConnectionDao, true);
+      String delegateConnectionId = generateTimeBasedUuid();
+      Thread.sleep(2L);
+      String newerDelegateConnectionId = generateTimeBasedUuid();
+      DelegateConnection newerExistingConnection =
+          DelegateConnection.builder().uuid(newerDelegateConnectionId).location(LOCATION).build();
+      when(mockConnectionDao.findAndDeletePreviousConnections(ACCOUNT_ID, DELEGATE_ID, delegateConnectionId, VERSION))
+          .thenReturn(newerExistingConnection);
+      DelegateConnectionHeartbeat heartbeat = DelegateConnectionHeartbeat.builder()
+                                                  .version(VERSION)
+                                                  .delegateConnectionId(delegateConnectionId)
+                                                  .location(ANOTHER_LOCATION)
+                                                  .build();
+
+      delegateService.registerHeartbeat(ACCOUNT_ID, DELEGATE_ID, heartbeat, ConnectionMode.POLLING);
+      verify(mockConnectionDao)
+          .findAndDeletePreviousConnections(ACCOUNT_ID, DELEGATE_ID, delegateConnectionId, VERSION);
+      verify(mockConnectionDao).replaceWithNewerConnection(delegateConnectionId, newerExistingConnection);
+    } finally {
+      FieldUtils.writeField(delegateService, "delegateConnectionDao", delegateConnectionDao, true);
+    }
   }
 
   @Test
   @Owner(developers = SANJA)
   @Category(UnitTests.class)
-  public void shouldRegisterHeartbeatThrowException() throws IllegalAccessException, InterruptedException {
+  public void registerHeartbeatNotSelfDestruct() throws IllegalAccessException, InterruptedException {
     try {
-      thrown.expect(DuplicateDelegateException.class);
       Delegate delegate = createDelegateBuilder()
                               .accountId(ACCOUNT_ID)
                               .uuid(DELEGATE_ID)
@@ -1346,19 +1402,19 @@ public class DelegateServiceTest extends WingsBaseTest {
       Thread.sleep(2L);
       String newerDelegateConnectionId = generateTimeBasedUuid();
       DelegateConnection newerExistingConnection =
-          DelegateConnection.builder().uuid(newerDelegateConnectionId).location("/location1").build();
+          DelegateConnection.builder().uuid(newerDelegateConnectionId).location(LOCATION).build();
       when(mockConnectionDao.findAndDeletePreviousConnections(ACCOUNT_ID, DELEGATE_ID, delegateConnectionId, VERSION))
           .thenReturn(newerExistingConnection);
       DelegateConnectionHeartbeat heartbeat = DelegateConnectionHeartbeat.builder()
                                                   .version(VERSION)
                                                   .delegateConnectionId(delegateConnectionId)
-                                                  .location("/location2")
+                                                  .location(ANOTHER_LOCATION)
                                                   .build();
 
       delegateService.registerHeartbeat(ACCOUNT_ID, DELEGATE_ID, heartbeat, ConnectionMode.POLLING);
       verify(mockConnectionDao)
           .findAndDeletePreviousConnections(ACCOUNT_ID, DELEGATE_ID, delegateConnectionId, VERSION);
-      verify(mockConnectionDao).replaceWithNewerConnection(delegateConnectionId, newerExistingConnection);
+      verify(mockConnectionDao, never()).replaceWithNewerConnection(delegateConnectionId, newerExistingConnection);
     } finally {
       FieldUtils.writeField(delegateService, "delegateConnectionDao", delegateConnectionDao, true);
     }
