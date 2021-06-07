@@ -149,6 +149,7 @@ import io.harness.cvng.verificationjob.services.impl.VerificationJobInstanceServ
 import io.harness.cvng.verificationjob.services.impl.VerificationJobServiceImpl;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.mongo.MongoPersistence;
+import io.harness.packages.HarnessPackages;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.redis.RedisConfig;
@@ -162,6 +163,7 @@ import io.harness.waiter.WaitNotifyEngine;
 import io.harness.waiter.WaiterConfiguration;
 import io.harness.waiter.WaiterConfiguration.PersistenceLayer;
 import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import software.wings.jersey.JsonViews;
@@ -174,6 +176,7 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -185,10 +188,14 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.dropwizard.jackson.Jackson;
 import java.time.Clock;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
+import org.reflections.Reflections;
 
 /**
  * Guice Module for initializing all beans.
@@ -410,6 +417,18 @@ public class CVServiceModule extends AbstractModule {
     ObjectMapper objectMapper = Jackson.newObjectMapper();
     configureYAMLSchemaObjectMapper(objectMapper);
     return objectMapper;
+  }
+
+  @Provides
+  @Named("yaml-schema-subtypes")
+  @Singleton
+  public Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes() {
+    Reflections reflections = new Reflections(HarnessPackages.IO_HARNESS);
+
+    Set<Class<? extends StepSpecType>> subTypesOfStepSpecType = reflections.getSubTypesOf(StepSpecType.class);
+    Set<Class<?>> set = new HashSet<>(subTypesOfStepSpecType);
+
+    return ImmutableMap.of(StepSpecType.class, set);
   }
 
   @Provides

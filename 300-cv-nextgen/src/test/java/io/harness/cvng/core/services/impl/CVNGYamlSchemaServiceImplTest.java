@@ -37,6 +37,7 @@ public class CVNGYamlSchemaServiceImplTest extends CvNextGenTestBase {
                                                     .build();
     YamlSdkInitHelper.initialize(injector, yamlSdkConfiguration);
   }
+
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)

@@ -73,6 +73,7 @@ import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
@@ -144,6 +145,13 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
         NGPipelineObjectMapperHelper.configureNGObjectMapper(objectMapper);
         objectMapper.registerModule(new PmsBeansJacksonModule());
         return objectMapper;
+      }
+
+      @Provides
+      @Named("yaml-schema-subtypes")
+      @Singleton
+      public Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes() {
+        return Mockito.mock(Map.class);
       }
     });
     modules.add(new AbstractModule() {

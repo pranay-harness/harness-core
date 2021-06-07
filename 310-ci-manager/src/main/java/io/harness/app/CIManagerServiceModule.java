@@ -30,6 +30,7 @@ import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.mongo.MongoPersistence;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
 import io.harness.ngpipeline.pipeline.service.NGPipelineServiceImpl;
+import io.harness.packages.HarnessPackages;
 import io.harness.persistence.HPersistence;
 import io.harness.remote.client.ClientMode;
 import io.harness.secrets.SecretNGManagerClientModule;
@@ -39,9 +40,11 @@ import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.tiserviceclient.TIServiceClientModule;
+import io.harness.yaml.core.StepSpecType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -49,11 +52,15 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.dropwizard.jackson.Jackson;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
+import org.reflections.Reflections;
 
 @Slf4j
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -103,6 +110,18 @@ public class CIManagerServiceModule extends AbstractModule {
   @Singleton
   public ObjectMapper getYamlSchemaObjectMapper() {
     return Jackson.newObjectMapper();
+  }
+
+  @Provides
+  @Named("yaml-schema-subtypes")
+  @Singleton
+  public Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes() {
+    Reflections reflections = new Reflections(HarnessPackages.IO_HARNESS);
+
+    Set<Class<? extends StepSpecType>> subTypesOfStepSpecType = reflections.getSubTypesOf(StepSpecType.class);
+    Set<Class<?>> set = new HashSet<>(subTypesOfStepSpecType);
+
+    return ImmutableMap.of(StepSpecType.class, set);
   }
 
   @Override
