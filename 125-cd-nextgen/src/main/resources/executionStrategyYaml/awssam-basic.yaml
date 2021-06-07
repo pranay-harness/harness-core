@@ -1,0 +1,17 @@
+failureStrategies:
+  - onFailure:
+      errors:
+        - AllErrors
+      action:
+        type: StageRollback
+spec:
+  execution:
+    steps:
+      - step:
+          name: "SAM Deploy"
+          identifier: samDeploy
+          type: AwsSamDeploy
+          timeout: 10m
+          spec:
+            region: us-east-1
+            stackName: sample-deploy-stack
