@@ -85,6 +85,8 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
         }
 
         if (statusSent) {
+          log.info("Successfully sent the git status for sha {}, stage identifier {}",
+              ciBuildStatusPushParameters.getSha(), ciBuildStatusPushParameters.getIdentifier());
           return BuildStatusPushResponse.builder().status(Status.SUCCESS).build();
         } else {
           return BuildStatusPushResponse.builder().status(Status.ERROR).build();

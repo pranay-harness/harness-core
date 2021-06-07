@@ -110,11 +110,11 @@ public class GitBuildStatusUtility {
         String taskId = delegateGrpcClientWrapper.submitAsyncTask(delegateTaskRequest, Duration.ZERO);
         log.info("Submitted git status update request for stage {}, planId {}, commitId {}, status {} with taskId {}",
             buildStatusUpdateParameter.getIdentifier(), ambiance.getPlanExecutionId(),
-            buildStatusUpdateParameter.getSha(), buildStatusUpdateParameter.getState(), taskId);
+            buildStatusUpdateParameter.getSha(), ciBuildStatusPushParameters.getState(), taskId);
       } else {
         log.info("Skipping git status update request for stage {}, planId {}, commitId {}, status {}, scm type {}",
             buildStatusUpdateParameter.getIdentifier(), ambiance.getPlanExecutionId(),
-            buildStatusUpdateParameter.getSha(), buildStatusUpdateParameter.getState(),
+            buildStatusUpdateParameter.getSha(), ciBuildStatusPushParameters.getState(),
             ciBuildStatusPushParameters.getGitSCMType());
       }
     }
