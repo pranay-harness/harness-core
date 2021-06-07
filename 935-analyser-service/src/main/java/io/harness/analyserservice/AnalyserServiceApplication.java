@@ -1,5 +1,7 @@
 package io.harness.analyserservice;
 
+import static io.harness.logging.LoggingInitializer.initializeLogging;
+
 import io.harness.event.QueryAnalyserEventService;
 import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
@@ -10,6 +12,9 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import io.dropwizard.Application;
+import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
+import io.dropwizard.configuration.SubstitutingSourceProvider;
+import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +29,15 @@ public class AnalyserServiceApplication extends Application<AnalyserServiceConfi
     }));
     (new AnalyserServiceApplication()).run(args);
   }
+
+  @Override
+  public void initialize(Bootstrap<AnalyserServiceConfiguration> bootstrap) {
+    // Enable variable substitution with environment variables
+    initializeLogging();
+    bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
+        bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
+  }
+
   @Override
   public void run(AnalyserServiceConfiguration configuration, Environment environment) throws Exception {
     log.info("Starting Pipeline Service Application ...");

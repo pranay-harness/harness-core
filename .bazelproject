@@ -107,6 +107,7 @@ directories:
   950-ng-authentication-service
   950-ng-core
   950-ng-project-n-orgs
+  950-persistence-tracer
   950-telemetry
   950-timeout-engine
   950-wait-engine

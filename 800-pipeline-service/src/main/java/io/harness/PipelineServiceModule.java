@@ -4,6 +4,7 @@ import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
+import static io.harness.eventsframework.EventsFrameworkConstants.QUERY_ANALYSIS_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PIPELINE_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
@@ -20,6 +21,10 @@ import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
+import io.harness.eventsframework.EventsFrameworkConstants;
+import io.harness.eventsframework.api.Producer;
+import io.harness.eventsframework.impl.noop.NoOpProducer;
+import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.filter.FilterType;
 import io.harness.filter.FiltersModule;
 import io.harness.filter.mapper.FilterPropertiesMapper;
@@ -93,6 +98,7 @@ import io.harness.time.TimeModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
+import io.harness.tracing.AbstractPersistenceTracerModule;
 import io.harness.user.UserClientModule;
 import io.harness.usergroups.UserGroupClientModule;
 import io.harness.yaml.YamlSdkModule;
@@ -147,6 +153,18 @@ public class PipelineServiceModule extends AbstractModule {
       @Override
       public UserProvider userProvider() {
         return new NoopUserProvider();
+      }
+    });
+    install(new AbstractPersistenceTracerModule() {
+      @Override
+      public Producer producerProvider() {
+        RedisConfig redisConfig = configuration.getEventsFrameworkConfiguration().getRedisConfig();
+        if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
+          return NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME);
+        } else {
+          return RedisProducer.of(QUERY_ANALYSIS_TOPIC, redisConfig, EventsFrameworkConstants.QUERY_ANALYSIS_TOPIC_SIZE,
+              PIPELINE_SERVICE.getServiceId());
+        }
       }
     });
     install(PipelineServiceGrpcModule.getInstance());

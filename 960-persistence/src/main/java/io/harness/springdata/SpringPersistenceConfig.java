@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import org.mongodb.morphia.AdvancedDatastore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;

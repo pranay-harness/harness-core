@@ -21,11 +21,4 @@ public class TracerModule extends AbstractModule {
 
   @Override
   public void configure() {}
-
-  @Provides
-  @Named(TracingConstants.TRACING_THREAD_POOL)
-  public ExecutorService executorService() {
-    return ThreadPool.create(5, 10, 20L, TimeUnit.SECONDS,
-        new ThreadFactoryBuilder().setNameFormat("mongo-tracing-%d").setPriority(Thread.MIN_PRIORITY).build());
-  }
 }

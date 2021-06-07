@@ -27,18 +27,18 @@ public class EventsFrameworkModule extends AbstractModule {
     RedisConfig redisConfig = this.eventsFrameworkConfiguration.getRedisConfig();
     if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
       bind(Consumer.class)
-          .annotatedWith(Names.named(EventsFrameworkConstants.ANALYZER_SERVICE))
+          .annotatedWith(Names.named(EventsFrameworkConstants.QUERY_ANALYSIS_TOPIC))
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
     } else {
       bind(Consumer.class)
-          .annotatedWith(Names.named(EventsFrameworkConstants.ANALYZER_SERVICE))
-          .toInstance(RedisConsumer.of(EventsFrameworkConstants.ANALYZER_SERVICE, ANALYZER_SERVICE.getServiceId(),
+          .annotatedWith(Names.named(EventsFrameworkConstants.QUERY_ANALYSIS_TOPIC))
+          .toInstance(RedisConsumer.of(EventsFrameworkConstants.QUERY_ANALYSIS_TOPIC, ANALYZER_SERVICE.getServiceId(),
               redisConfig, EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME,
               EventsFrameworkConstants.ENTITY_CRUD_READ_BATCH_SIZE));
     }
     bind(MessageListener.class)
-        .annotatedWith(Names.named(EventsFrameworkConstants.ANALYZER_SERVICE))
+        .annotatedWith(Names.named(EventsFrameworkConstants.QUERY_ANALYSIS_TOPIC))
         .to(QueryAnalysisMessageListener.class);
   }
 }

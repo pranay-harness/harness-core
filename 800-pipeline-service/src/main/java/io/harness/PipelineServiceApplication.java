@@ -99,6 +99,7 @@ import io.harness.serializer.jackson.PipelineServiceJacksonModule;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
+import io.harness.springdata.HMongoTemplate;
 import io.harness.steps.barriers.BarrierInitializer;
 import io.harness.steps.barriers.event.BarrierDropper;
 import io.harness.steps.barriers.event.BarrierPositionHelperEventHandler;
@@ -108,6 +109,7 @@ import io.harness.steps.resourcerestraint.service.ResourceRestraintPersistenceMo
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.timeout.TimeoutEngine;
+import io.harness.tracing.MongoRedisTracer;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -374,6 +376,9 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         injector.getInstance(SdkResponseEventMessageListener.class);
     sdkResponseEventMessageListener.getEventListenerObserverSubject().register(
         injector.getInstance(Key.get(MonitoringRedisEventObserver.class)));
+
+    HMongoTemplate mongoTemplate = (HMongoTemplate) injector.getInstance(MongoTemplate.class);
+    mongoTemplate.getTracerSubject().register(injector.getInstance(MongoRedisTracer.class));
   }
 
   private void registerCorrelationFilter(Environment environment, Injector injector) {

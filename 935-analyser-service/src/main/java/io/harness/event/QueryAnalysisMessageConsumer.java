@@ -1,6 +1,6 @@
 package io.harness.event;
 
-import static io.harness.eventsframework.EventsFrameworkConstants.ANALYZER_SERVICE;
+import static io.harness.eventsframework.EventsFrameworkConstants.QUERY_ANALYSIS_TOPIC;
 
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
@@ -24,7 +24,7 @@ public class QueryAnalysisMessageConsumer implements Runnable {
 
   @Inject
   public QueryAnalysisMessageConsumer(
-      @Named(ANALYZER_SERVICE) Consumer redisConsumer, @Named(ANALYZER_SERVICE) MessageListener queryListener) {
+      @Named(QUERY_ANALYSIS_TOPIC) Consumer redisConsumer, @Named(QUERY_ANALYSIS_TOPIC) MessageListener queryListener) {
     this.redisConsumer = redisConsumer;
     this.messageListener = queryListener;
   }
