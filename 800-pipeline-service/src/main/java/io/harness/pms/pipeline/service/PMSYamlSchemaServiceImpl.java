@@ -10,6 +10,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.encryption.Scope;
+import io.harness.exception.JsonSchemaException;
 import io.harness.exception.JsonSchemaValidationException;
 import io.harness.jackson.JsonNodeUtils;
 import io.harness.network.SafeHttpCall;
@@ -49,6 +50,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -60,14 +62,12 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
   public static final String STAGE_ELEMENT_CONFIG = YamlSchemaUtils.getSwaggerName(StageElementConfig.class);
@@ -80,26 +80,52 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
 
   private static final int CACHE_EVICTION_TIME_HOUR = 1;
 
-  private final YamlSchemaProvider yamlSchemaProvider;
-  private final YamlSchemaGenerator yamlSchemaGenerator;
-  private final Map<String, YamlSchemaClient> yamlSchemaClientMapper;
-  private final YamlSchemaValidator yamlSchemaValidator;
-
-  private final PmsSdkInstanceService pmsSdkInstanceService;
-
   private final LoadingCache<SchemaKey, JsonNode> schemaCache =
       CacheBuilder.newBuilder()
           .expireAfterAccess(CACHE_EVICTION_TIME_HOUR, TimeUnit.HOURS)
           .build(new CacheLoader<SchemaKey, JsonNode>() {
             @Override
             public JsonNode load(@NotNull final SchemaKey schemaKey) {
-              return getPipelineYamlSchema(schemaKey.getProjectId(), schemaKey.getOrgId(), schemaKey.getScope());
+              return getPipelineYamlSchemaInternall(
+                  schemaKey.getProjectId(), schemaKey.getOrgId(), schemaKey.getScope());
             }
           });
 
+  private final YamlSchemaProvider yamlSchemaProvider;
+  private final YamlSchemaGenerator yamlSchemaGenerator;
+  private final Map<String, YamlSchemaClient> yamlSchemaClientMapper;
+  private final Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes;
+  private final YamlSchemaValidator yamlSchemaValidator;
+  private final PmsSdkInstanceService pmsSdkInstanceService;
   private final PmsFeatureFlagHelper pmsFeatureFlagHelper;
 
+  @Inject
+  public PMSYamlSchemaServiceImpl(YamlSchemaProvider yamlSchemaProvider, YamlSchemaGenerator yamlSchemaGenerator,
+      Map<String, YamlSchemaClient> yamlSchemaClientMapper,
+      @Named("yaml-schema-subtypes") Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes,
+      YamlSchemaValidator yamlSchemaValidator, PmsSdkInstanceService pmsSdkInstanceService,
+      PmsFeatureFlagHelper pmsFeatureFlagHelper) {
+    this.yamlSchemaProvider = yamlSchemaProvider;
+    this.yamlSchemaGenerator = yamlSchemaGenerator;
+    this.yamlSchemaClientMapper = yamlSchemaClientMapper;
+    this.yamlSchemaSubtypes = yamlSchemaSubtypes;
+    this.yamlSchemaValidator = yamlSchemaValidator;
+    this.pmsSdkInstanceService = pmsSdkInstanceService;
+    this.pmsFeatureFlagHelper = pmsFeatureFlagHelper;
+  }
+
+  @Override
   public JsonNode getPipelineYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope) {
+    try {
+      return schemaCache.get(
+          SchemaKey.builder().projectId(projectIdentifier).orgId(orgIdentifier).scope(scope).build());
+    } catch (Exception e) {
+      log.error("Failed to get pipeline yaml schema");
+      throw new JsonSchemaException(e.getMessage());
+    }
+  }
+
+  private JsonNode getPipelineYamlSchemaInternall(String projectIdentifier, String orgIdentifier, Scope scope) {
     JsonNode pipelineSchema =
         yamlSchemaProvider.getYamlSchema(EntityType.PIPELINES, orgIdentifier, projectIdentifier, scope);
 
@@ -280,7 +306,8 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
     Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap = new HashMap<>();
     Field typedField = YamlSchemaUtils.getTypedField(STEP_ELEMENT_CONFIG_CLASS);
-    Set<SubtypeClassMap> mapOfSubtypes = YamlSchemaUtils.getMapOfSubtypesUsingReflection(typedField);
+    Set<Class<?>> cachedSubtypes = yamlSchemaSubtypes.get(typedField.getType());
+    Set<SubtypeClassMap> mapOfSubtypes = YamlSchemaUtils.toSetOfSubtypeClassMap(cachedSubtypes);
     Set<FieldSubtypeData> classFieldSubtypeData = new HashSet<>();
     classFieldSubtypeData.add(YamlSchemaUtils.getFieldSubtypeData(typedField, mapOfSubtypes));
     Set<FieldEnumData> fieldEnumData = getFieldEnumData(typedField, mapOfSubtypes);
