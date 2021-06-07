@@ -43,6 +43,7 @@ import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerRegistryProviderType;
 import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
+import io.harness.delegate.beans.connector.dynatrace.DynatraceConnectorDTO;
 import io.harness.delegate.beans.connector.gcpccm.GcpCloudCostConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
@@ -276,5 +277,6 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(AzureKeyVaultConnectorDTO.class, 19670);
     kryo.register(CEFeatures.class, 19671);
     kryo.register(SumoLogicConnectorDTO.class, 19672);
+    kryo.register(DynatraceConnectorDTO.class, 19673);
   }
 }
