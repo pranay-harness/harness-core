@@ -343,6 +343,7 @@ import software.wings.beans.security.access.WhitelistConfig;
 import software.wings.beans.security.access.WhitelistStatus;
 import software.wings.beans.servicenow.ServiceNowFields;
 import software.wings.beans.servicenow.ServiceNowTaskParameters;
+import software.wings.beans.settings.argo.ArgoConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
@@ -1795,5 +1796,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ExecutionWaitCallback.class, 40012);
 
     kryo.register(ResourceTreeRequest.class, 40014);
+    kryo.register(ArgoConfig.class, 40015);
   }
 }
