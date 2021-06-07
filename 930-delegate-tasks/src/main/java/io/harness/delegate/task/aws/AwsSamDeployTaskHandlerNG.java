@@ -8,8 +8,6 @@ import static io.harness.provision.AWSConstants.AWS_SAM_WORKING_DIRECTORY;
 import static io.harness.provision.TerraformConstants.RESOURCE_READY_WAIT_TIME_SECONDS;
 import static io.harness.provision.TerraformConstants.TERRAFORM_BACKEND_CONFIGS_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_VARIABLES_FILE_NAME;
-import static io.harness.provision.TerraformConstants.TF_VAR_FILES_DIR;
-import static io.harness.provision.TerraformConstants.TF_WORKING_DIR;
 import static io.harness.threading.Morpheus.sleep;
 
 import static java.lang.String.format;
@@ -19,9 +17,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cli.CliResponse;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
-import io.harness.delegate.task.terraform.TerraformBaseHelper;
 import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
-import io.harness.delegate.task.terraform.handlers.TerraformAbstractTaskHandler;
 import io.harness.exception.AwsSamCommandExecutionException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.TerraformCommandExecutionException;
@@ -37,19 +33,18 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.Charsets;
 
 @Slf4j
 @OwnedBy(CDP)
-public class AwsSamDeployTaskHandlerNG extends TerraformAbstractTaskHandler {
+public class AwsSamDeployTaskHandlerNG extends AwsSamAbstractTaskHandler {
   @Inject AwsBaseHelper awsBaseHelper;
 
   @Override
-  public TerraformTaskNGResponse executeTaskInternal(AwsSamTaskParameters taskParameters, String delegateId,
-      String taskId, LogCallback logCallback) throws IOException, AwsSamCommandExecutionException {
+  public AwsSamTaskNGResponse executeTaskInternal(AwsSamTaskParameters taskParameters, String delegateId, String taskId,
+      LogCallback logCallback) throws IOException, AwsSamCommandExecutionException {
     GitStoreDelegateConfig confileFileGitStore = taskParameters.getConfigFile().getGitStoreDelegateConfig();
     String awsSamProjectDirectoryPath = confileFileGitStore.getPaths().get(0);
 
@@ -57,7 +52,8 @@ public class AwsSamDeployTaskHandlerNG extends TerraformAbstractTaskHandler {
       logCallback.saveExecutionLog("Branch: " + confileFileGitStore.getBranch(), INFO, CommandExecutionStatus.RUNNING);
     }
 
-    logCallback.saveExecutionLog("Normalized Path: " + awsSamProjectDirectoryPath, INFO, CommandExecutionStatus.RUNNING);
+    logCallback.saveExecutionLog(
+        "Normalized Path: " + awsSamProjectDirectoryPath, INFO, CommandExecutionStatus.RUNNING);
 
     if (isNotEmpty(confileFileGitStore.getCommitId())) {
       logCallback.saveExecutionLog(
@@ -69,28 +65,41 @@ public class AwsSamDeployTaskHandlerNG extends TerraformAbstractTaskHandler {
 
     String baseDir = AWS_SAM_WORKING_DIRECTORY + taskParameters.getEntityId();
 
-    String scriptDirectory = terraformBaseHelper.fetchConfigFileAndPrepareScriptDir(gitBaseRequestForConfigFile,
-        taskParameters.getAccountId(), taskParameters.getWorkspace(), taskParameters.getCurrentStateFileId(),
-        confileFileGitStore, logCallback, awsSamProjectDirectoryPath, baseDir);
+    String awsSamAppDirectory = awsBaseHelper.fetchAwsSamAppDirectory(gitBaseRequestForConfigFile,
+        taskParameters.getAccountId(), "", "", confileFileGitStore, logCallback, awsSamProjectDirectoryPath, baseDir);
 
-    String tfVarDirectory = Paths.get(baseDir, TF_VAR_FILES_DIR).toString();
-    List<String> varFilePaths = terraformBaseHelper.checkoutRemoteVarFileAndConvertToVarFilePaths(
-        taskParameters.getVarFileInfos(), scriptDirectory, logCallback, taskParameters.getAccountId(), tfVarDirectory);
+    try (PlanJsonLogOutputStream planJsonLogOutputStream = new PlanJsonLogOutputStream()) {
 
-    File tfOutputsFile = Paths.get(scriptDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, "output")).toFile();
+    } catch (AwsSamCommandExecutionException awsSamCommandExecutionException) {
+      log.warn("Failed to execute Aws Sam Deploy Step", awsSamCommandExecutionException);
+      logCallback.saveExecutionLog("Failed", ERROR, CommandExecutionStatus.FAILURE);
+      return AwsSamTaskNGResponse.builder()
+          .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+          .errorMessage(ExceptionUtils.getMessage(awsSamCommandExecutionException))
+          .build();
+    } catch (Exception exception) {
+      log.warn("Exception Occurred", exception);
+      logCallback.saveExecutionLog("Failed", ERROR, CommandExecutionStatus.FAILURE);
+      return AwsSamTaskNGResponse.builder()
+          .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+          .errorMessage(ExceptionUtils.getMessage(exception))
+          .build();
+    }
+
+    File tfOutputsFile = Paths.get(awsSamAppDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, "output")).toFile();
 
     try (PlanJsonLogOutputStream planJsonLogOutputStream = new PlanJsonLogOutputStream()) {
       TerraformExecuteStepRequest terraformExecuteStepRequest =
           TerraformExecuteStepRequest.builder()
               .tfBackendConfigsFile(taskParameters.getBackendConfig() != null
                       ? TerraformHelperUtils.createFileFromStringContent(
-                          taskParameters.getBackendConfig(), scriptDirectory, TERRAFORM_BACKEND_CONFIGS_FILE_NAME)
+                          taskParameters.getBackendConfig(), awsSamAppDirectory, TERRAFORM_BACKEND_CONFIGS_FILE_NAME)
                       : taskParameters.getBackendConfig())
               .tfOutputsFile(tfOutputsFile.getAbsolutePath())
               .tfVarFilePaths(varFilePaths)
               .workspace(taskParameters.getWorkspace())
               .targets(taskParameters.getTargets())
-              .scriptDirectory(scriptDirectory)
+              .scriptDirectory(awsSamAppDirectory)
               .encryptedTfPlan(taskParameters.getEncryptedTfPlan())
               .encryptionConfig(taskParameters.getEncryptionConfig())
               .envVars(taskParameters.getEnvironmentVariables())
@@ -114,7 +123,7 @@ public class AwsSamDeployTaskHandlerNG extends TerraformAbstractTaskHandler {
           taskParameters.getAccountId(), taskParameters.getConfigFile().getIdentifier(), gitBaseRequestForConfigFile,
           taskParameters.getVarFileInfos());
 
-      File tfStateFile = TerraformHelperUtils.getTerraformStateFile(scriptDirectory, taskParameters.getWorkspace());
+      File tfStateFile = TerraformHelperUtils.getTerraformStateFile(awsSamAppDirectory, taskParameters.getWorkspace());
 
       String stateFileId = terraformBaseHelper.uploadTfStateFile(
           taskParameters.getAccountId(), delegateId, taskId, taskParameters.getEntityId(), tfStateFile);

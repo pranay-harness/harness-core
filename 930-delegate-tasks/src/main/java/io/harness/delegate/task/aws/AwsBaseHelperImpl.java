@@ -72,26 +72,24 @@ public class AwsBaseHelperImpl implements AwsBaseHelper {
         .build();
   }
 
-  public String fetchConfigFileAndPrepareScriptDir(GitBaseRequest gitBaseRequestForConfigFile, String accountId,
-      String workspace, String currentStateFileId, GitStoreDelegateConfig confileFileGitStore, LogCallback logCallback,
-      String scriptPath, String baseDir) {
+  public String fetchAwsSamAppDirectory(GitBaseRequest gitBaseRequestForConfigFile, String accountId, String workspace,
+      String currentStateFileId, GitStoreDelegateConfig confileFileGitStore, LogCallback logCallback, String scriptPath,
+      String baseDir) {
     fetchConfigFileAndCloneLocally(gitBaseRequestForConfigFile, logCallback);
 
     String workingDir = Paths.get(baseDir, AWS_SAM_APP_REPOSITORY_DIR).toString();
-
-    copyConfigFilestoWorkingDirectory(logCallback, gitBaseRequestForConfigFile, baseDir, workingDir);
-
-    String scriptDirectory = resolveScriptDirectory(workingDir, scriptPath);
-    log.info("Script Directory: " + scriptDirectory);
-    logCallback.saveExecutionLog(
-        format("Script Directory: [%s]", scriptDirectory), INFO, CommandExecutionStatus.RUNNING);
-
     try {
-      ensureLocalCleanup(scriptDirectory);
+      ensureLocalCleanup(workingDir);
     } catch (IOException ioException) {
       log.warn("Exception Occurred when cleaning AWS_SAM local directory", ioException);
     }
-    return scriptDirectory;
+
+    copyConfigFilestoWorkingDirectory(logCallback, gitBaseRequestForConfigFile, baseDir, workingDir);
+
+    log.info("working Directory: " + workingDir);
+    logCallback.saveExecutionLog(format("Script Directory: [%s]", workingDir), INFO, CommandExecutionStatus.RUNNING);
+
+    return workingDir;
   }
 
   @NonNull
@@ -120,7 +118,6 @@ public class AwsBaseHelperImpl implements AwsBaseHelper {
     } catch (IOException e) {
       log.warn("Failed to delete .aws-sam folder");
     }
-    deleteDirectoryAndItsContentIfExists(Paths.get(scriptDirectory, WORKSPACE_DIR_BASE).toString());
   }
 
   public void copyConfigFilestoWorkingDirectory(

@@ -13,9 +13,9 @@ public interface AwsBaseHelper {
     GitBaseRequest getGitBaseRequestForConfigFile(
             String accountId, GitStoreDelegateConfig confileFileGitStore, GitConfigDTO configFileGitConfigDTO);
 
-    String fetchConfigFileAndPrepareScriptDir(GitBaseRequest gitBaseRequestForConfigFile, String accountId,
-                                              String workspace, String currentStateFileId, GitStoreDelegateConfig confileFileGitStore, LogCallback logCallback,
-                                              String scriptPath, String workingDir);
+    String fetchAwsSamAppDirectory(GitBaseRequest gitBaseRequestForConfigFile, String accountId,
+                                   String workspace, String currentStateFileId, GitStoreDelegateConfig confileFileGitStore, LogCallback logCallback,
+                                   String scriptPath, String workingDir);
 
     String resolveBaseDir(String accountId, String provisionerId);
 }
