@@ -1,0 +1,6 @@
+collection(DelegateTask)
+    .filter(_id in list<+>, accountId = <+>, delegateId = <+>, status = <+>)
+    .project(_id, dataTimeout)
+collection(DelegateTask)
+    .filter(_id in list<+>, accountId = <+>, status = <+>)
+    .project(_id, dataTimeout)
