@@ -23,10 +23,8 @@ public class NGBaseFile implements HarnessFile {
   String fileUuid;
   String fileName;
   String accountId;
-
   ChecksumType checksumType = ChecksumType.MD5;
   String checksum;
-
   String mimeType;
   long size;
 }
