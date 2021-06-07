@@ -43,6 +43,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
+import software.wings.sm.states.k8s.OnDemandDelegateHelper;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
@@ -269,6 +270,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, AnalysisContext analysisContext,
       VerificationStateAnalysisExecutionData executionData, Map<String, String> hosts) {
+    OnDemandDelegateHelper.installKubectl();
     String envId = getEnvId(context);
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.APP_DYNAMICS,
         context.getStateExecutionInstanceId(), null, APP_DYNAMICS_VALUES_TO_ANALYZE);
