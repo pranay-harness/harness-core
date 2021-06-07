@@ -70,6 +70,7 @@ directories:
   890-pms-contracts
   890-sm-core
   900-git-sync-sdk
+  900-runtime-usage-sdk
   910-delegate-service-driver
   910-delegate-task-grpc-service
   920-delegate-agent-beans
@@ -134,6 +135,7 @@ directories:
   960-notification-beans
   960-persistence
   960-recaster
+  960-runtime-usage-beans
   960-yaml-sdk
   970-api-services-beans
   970-grpc
