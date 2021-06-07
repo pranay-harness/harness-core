@@ -28,6 +28,7 @@ import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateSizeDetails;
+import io.harness.delegate.utils.DelegateEntityOwnerMapper;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.service.impl.DelegateSetupServiceImpl;
@@ -39,6 +40,7 @@ import software.wings.beans.DelegateConnection;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
@@ -445,5 +447,146 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     Set<String> tags = delegateSetupService.retrieveDelegateImplicitSelectors(delegate).keySet();
     assertThat(tags.size()).isEqualTo(1);
     assertThat(tags).containsExactlyInAnyOrder("group");
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testValidateDelegateGroupsShouldReturnEmptyList() {
+    String accountId = generateUuid();
+    assertThat(delegateSetupService.validateDelegateGroups(accountId, null, null, null)).isEmpty();
+    assertThat(delegateSetupService.validateDelegateGroups(accountId, null, null, Collections.emptyList())).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testValidateDelegateGroupsShouldReturnCorrectResult() {
+    String accountId = generateUuid();
+    String orgId = generateUuid();
+    String projectId = generateUuid();
+
+    Delegate cgDelegate = Delegate.builder()
+                              .accountId(accountId)
+                              .delegateGroupId(generateUuid())
+                              .status(DelegateInstanceStatus.ENABLED)
+                              .build();
+    Delegate deletedDelegate = Delegate.builder()
+                                   .accountId(accountId)
+                                   .ng(true)
+                                   .delegateGroupId(generateUuid())
+                                   .status(DelegateInstanceStatus.DELETED)
+                                   .build();
+    Delegate acctDelegate = Delegate.builder()
+                                .accountId(accountId)
+                                .ng(true)
+                                .delegateGroupId(generateUuid())
+                                .status(DelegateInstanceStatus.ENABLED)
+                                .build();
+    Delegate orgDelegate = Delegate.builder()
+                               .accountId(accountId)
+                               .ng(true)
+                               .delegateGroupId(generateUuid())
+                               .status(DelegateInstanceStatus.ENABLED)
+                               .owner(DelegateEntityOwnerMapper.buildOwner(orgId, null))
+                               .build();
+    Delegate projectDelegate = Delegate.builder()
+                                   .accountId(accountId)
+                                   .ng(true)
+                                   .delegateGroupId(generateUuid())
+                                   .status(DelegateInstanceStatus.ENABLED)
+                                   .owner(DelegateEntityOwnerMapper.buildOwner(orgId, projectId))
+                                   .build();
+
+    persistence.saveBatch(Arrays.asList(cgDelegate, deletedDelegate, acctDelegate, orgDelegate, projectDelegate));
+
+    // Test non-existing delegate
+    assertThat(
+        delegateSetupService.validateDelegateGroups(accountId, null, null, Collections.singletonList(generateUuid())))
+        .containsExactly(false);
+
+    // Test cg delegate
+    assertThat(delegateSetupService.validateDelegateGroups(
+                   accountId, null, null, Collections.singletonList(cgDelegate.getDelegateGroupId())))
+        .containsExactly(false);
+
+    // Test account delegate
+    assertThat(delegateSetupService.validateDelegateGroups(accountId, null, null,
+                   Arrays.asList(deletedDelegate.getDelegateGroupId(), acctDelegate.getDelegateGroupId())))
+        .containsExactly(false, true);
+
+    // Test org delegate
+    assertThat(delegateSetupService.validateDelegateGroups(
+                   accountId, orgId, null, Collections.singletonList(orgDelegate.getDelegateGroupId())))
+        .containsExactly(true);
+
+    // Test project delegate
+    assertThat(delegateSetupService.validateDelegateGroups(
+                   accountId, orgId, projectId, Collections.singletonList(projectDelegate.getDelegateGroupId())))
+        .containsExactly(true);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testValidateDelegateConfigurationsShouldReturnEmptyList() {
+    String accountId = generateUuid();
+    assertThat(delegateSetupService.validateDelegateConfigurations(accountId, null, null, null)).isEmpty();
+    assertThat(delegateSetupService.validateDelegateConfigurations(accountId, null, null, Collections.emptyList()))
+        .isEmpty();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testValidateDelegateConfigurationsShouldReturnCorrectResult() {
+    String accountId = generateUuid();
+    String orgId = generateUuid();
+    String projectId = generateUuid();
+
+    DelegateProfile cgDelegateProfile = DelegateProfile.builder().accountId(accountId).name("cg").build();
+    DelegateProfile primaryDelegateProfile =
+        DelegateProfile.builder().accountId(accountId).name("primary").ng(true).primary(true).build();
+    DelegateProfile acctDelegateProfile = DelegateProfile.builder().accountId(accountId).name("acct").ng(true).build();
+    DelegateProfile orgDelegateProfile = DelegateProfile.builder()
+                                             .accountId(accountId)
+                                             .name("org")
+                                             .ng(true)
+                                             .owner(DelegateEntityOwnerMapper.buildOwner(orgId, null))
+                                             .build();
+    DelegateProfile projectDelegateProfile = DelegateProfile.builder()
+                                                 .accountId(accountId)
+                                                 .name("project")
+                                                 .ng(true)
+                                                 .owner(DelegateEntityOwnerMapper.buildOwner(orgId, projectId))
+                                                 .build();
+
+    persistence.saveBatch(Arrays.asList(
+        cgDelegateProfile, primaryDelegateProfile, acctDelegateProfile, orgDelegateProfile, projectDelegateProfile));
+
+    // Test non-existing delegate profile
+    assertThat(delegateSetupService.validateDelegateConfigurations(
+                   accountId, null, null, Collections.singletonList(generateUuid())))
+        .containsExactly(false);
+
+    // Test cg delegate profile
+    assertThat(delegateSetupService.validateDelegateConfigurations(
+                   accountId, null, null, Collections.singletonList(cgDelegateProfile.getUuid())))
+        .containsExactly(false);
+
+    // Test account delegate profile
+    assertThat(delegateSetupService.validateDelegateConfigurations(accountId, null, null,
+                   Arrays.asList(primaryDelegateProfile.getUuid(), acctDelegateProfile.getUuid())))
+        .containsExactly(true, true);
+
+    // Test org delegate profile
+    assertThat(delegateSetupService.validateDelegateConfigurations(accountId, orgId, null,
+                   Arrays.asList(primaryDelegateProfile.getUuid(), orgDelegateProfile.getUuid())))
+        .containsExactly(true, true);
+
+    // Test project delegate profile
+    assertThat(delegateSetupService.validateDelegateConfigurations(accountId, orgId, projectId,
+                   Arrays.asList(primaryDelegateProfile.getUuid(), projectDelegateProfile.getUuid())))
+        .containsExactly(true, true);
   }
 }

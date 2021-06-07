@@ -6,6 +6,10 @@
   permissionKey: project
 - identifier: CONNECTOR
   permissionKey: connector
+- identifier: DELEGATE
+  permissionKey: delegate
+- identifier: DELEGATECONFIGURATION
+  permissionKey: delegateconfiguration
 - identifier: SECRET
   permissionKey: secret
 - identifier: PIPELINE

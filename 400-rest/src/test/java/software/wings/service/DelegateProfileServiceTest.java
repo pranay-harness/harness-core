@@ -35,6 +35,7 @@ import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileBuilder;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
+import io.harness.eventsframework.api.Producer;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.observer.Subject;
@@ -78,6 +79,7 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
   @Mock private Subject<DelegateProfileObserver> delegateProfileSubject;
   @Mock private AuditServiceHelper auditServiceHelper;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private Producer eventProducer;
   @InjectMocks @Inject private DelegateProfileServiceImpl delegateProfileService;
   @Inject private HPersistence persistence;
 
@@ -327,6 +329,7 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     delegateProfileService.delete(ACCOUNT_ID, nonAssignedDelegateProfile.getUuid());
 
     assertThat(persistence.get(DelegateProfile.class, nonAssignedDelegateProfile.getUuid())).isNull();
+    verify(eventProducer).send(any());
   }
 
   @Test

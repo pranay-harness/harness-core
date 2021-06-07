@@ -22,6 +22,7 @@ import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
 import static io.harness.delegate.message.ManagerMessageConstants.USE_CDN;
 import static io.harness.delegate.message.ManagerMessageConstants.USE_STORAGE_PROXY;
 import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.KubernetesConvention.getAccountIdentifier;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
@@ -111,6 +112,11 @@ import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.utils.DelegateEntityOwnerMapper;
 import io.harness.environment.SystemEnvironment;
 import io.harness.event.handler.impl.EventPublishHelper;
+import io.harness.eventsframework.EventsFrameworkConstants;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.Producer;
+import io.harness.eventsframework.entity_crud.EntityChangeDTO;
+import io.harness.eventsframework.producer.Message;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -200,6 +206,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.protobuf.StringValue;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoGridFSException;
 import freemarker.cache.ClassTemplateLoader;
@@ -347,6 +354,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private AuditHelper auditHelper;
   @Inject private DelegateTokenService delegateTokenService;
   @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
+  @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
 
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
   @Inject @Getter private Subject<DelegateObserver> subject = new Subject<>();
@@ -1939,6 +1947,7 @@ public class DelegateServiceImpl implements DelegateService {
                                     .filter(DelegateKeys.uuid, delegateId)
                                     .project(DelegateKeys.ip, true)
                                     .project(DelegateKeys.hostName, true)
+                                    .project(DelegateKeys.owner, true)
                                     .get();
 
     if (existingDelegate != null) {
@@ -1999,16 +2008,14 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public void deleteDelegateGroup(String accountId, String delegateGroupId, boolean forceDelete) {
     log.info("Deleting delegate group: {} and all belonging delegates.", delegateGroupId);
-    Set<String> groupDelegateIds = persistence.createQuery(Delegate.class)
-                                       .filter(DelegateKeys.accountId, accountId)
-                                       .filter(DelegateKeys.delegateGroupId, delegateGroupId)
-                                       .asKeyList()
-                                       .stream()
-                                       .map(key -> (String) key.getId())
-                                       .collect(Collectors.toSet());
+    List<Delegate> groupDelegates = persistence.createQuery(Delegate.class)
+                                        .filter(DelegateKeys.accountId, accountId)
+                                        .filter(DelegateKeys.delegateGroupId, delegateGroupId)
+                                        .project(DelegateKeys.owner, true)
+                                        .asList();
 
-    for (String delegateId : groupDelegateIds) {
-      delete(accountId, delegateId, forceDelete);
+    for (Delegate delegate : groupDelegates) {
+      delete(accountId, delegate.getUuid(), forceDelete);
     }
 
     if (featureFlagService.isEnabled(DO_DELEGATE_PHYSICAL_DELETE, accountId) || forceDelete) {
@@ -2032,6 +2039,40 @@ public class DelegateServiceImpl implements DelegateService {
 
       persistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
       log.info("Delegate group: {} and all belonging delegates have been marked as deleted.", delegateGroupId);
+    }
+
+    DelegateEntityOwner owner = isNotEmpty(groupDelegates) ? groupDelegates.get(0).getOwner() : null;
+    publishDelegateChangeEventViaEventFramework(accountId, delegateGroupId, owner, DELETE_ACTION);
+  }
+
+  private void publishDelegateChangeEventViaEventFramework(
+      String accountId, String delegateGroupId, DelegateEntityOwner owner, String action) {
+    try {
+      EntityChangeDTO.Builder entityChangeDTOBuilder = EntityChangeDTO.newBuilder()
+                                                           .setAccountIdentifier(StringValue.of(accountId))
+                                                           .setIdentifier(StringValue.of(delegateGroupId));
+
+      if (owner != null) {
+        String orgIdentifier = DelegateEntityOwnerMapper.extractOrgIdFromOwnerIdentifier(owner.getIdentifier());
+        if (isNotBlank(orgIdentifier)) {
+          entityChangeDTOBuilder.setOrgIdentifier(StringValue.of(orgIdentifier));
+        }
+
+        String projectIdentifier = DelegateEntityOwnerMapper.extractProjectIdFromOwnerIdentifier(owner.getIdentifier());
+        if (isNotBlank(projectIdentifier)) {
+          entityChangeDTOBuilder.setProjectIdentifier(StringValue.of(projectIdentifier));
+        }
+      }
+
+      eventProducer.send(
+          Message.newBuilder()
+              .putAllMetadata(ImmutableMap.of("accountId", accountId, EventsFrameworkMetadataConstants.ENTITY_TYPE,
+                  EventsFrameworkMetadataConstants.DELEGATE_ENTITY, EventsFrameworkMetadataConstants.ACTION, action))
+              .setData(entityChangeDTOBuilder.build().toByteString())
+              .build());
+    } catch (Exception ex) {
+      log.error(String.format(
+          "Failed to publish delegate group %s event for accountId %s via event framework.", action, accountId));
     }
   }
 

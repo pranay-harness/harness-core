@@ -4,12 +4,14 @@ import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HPersistence.returnNewOptions;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -23,6 +25,12 @@ import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
+import io.harness.delegate.utils.DelegateEntityOwnerMapper;
+import io.harness.eventsframework.EventsFrameworkConstants;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.Producer;
+import io.harness.eventsframework.entity_crud.EntityChangeDTO;
+import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.observer.Subject;
@@ -36,8 +44,11 @@ import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.account.AccountCrudObserver;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.google.protobuf.StringValue;
 import io.fabric8.utils.Strings;
 import java.util.List;
 import java.util.Optional;
@@ -61,6 +72,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private DelegateCache delegateCache;
+  @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
 
   @Getter private final Subject<DelegateProfileObserver> delegateProfileSubject = new Subject<>();
 
@@ -207,10 +219,50 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
       log.info("Deleting delegate profile: {}", delegateProfileId);
       // Delete and invalidate cache
       persistence.delete(delegateProfile);
-      delegateCache.invalidateDelegateProfileCache(accountId, delegateProfileId);
 
+      delegateCache.invalidateDelegateProfileCache(accountId, delegateProfileId);
       auditServiceHelper.reportDeleteForAuditingUsingAccountId(delegateProfile.getAccountId(), delegateProfile);
       log.info("Auditing deleting of Delegate Profile for accountId={}", delegateProfile.getAccountId());
+
+      publishDelegateProfileChangeEventViaEventFramework(delegateProfile, DELETE_ACTION);
+    }
+  }
+
+  private void publishDelegateProfileChangeEventViaEventFramework(DelegateProfile delegateProfile, String action) {
+    if (delegateProfile == null) {
+      return;
+    }
+
+    try {
+      EntityChangeDTO.Builder entityChangeDTOBuilder =
+          EntityChangeDTO.newBuilder()
+              .setAccountIdentifier(StringValue.of(delegateProfile.getAccountId()))
+              .setIdentifier(StringValue.of(delegateProfile.getUuid()));
+
+      if (delegateProfile.getOwner() != null) {
+        String orgIdentifier =
+            DelegateEntityOwnerMapper.extractOrgIdFromOwnerIdentifier(delegateProfile.getOwner().getIdentifier());
+        if (isNotBlank(orgIdentifier)) {
+          entityChangeDTOBuilder.setOrgIdentifier(StringValue.of(orgIdentifier));
+        }
+
+        String projectIdentifier =
+            DelegateEntityOwnerMapper.extractProjectIdFromOwnerIdentifier(delegateProfile.getOwner().getIdentifier());
+        if (isNotBlank(projectIdentifier)) {
+          entityChangeDTOBuilder.setProjectIdentifier(StringValue.of(projectIdentifier));
+        }
+      }
+
+      eventProducer.send(Message.newBuilder()
+                             .putAllMetadata(ImmutableMap.of("accountId", delegateProfile.getAccountId(),
+                                 EventsFrameworkMetadataConstants.ENTITY_TYPE,
+                                 EventsFrameworkMetadataConstants.DELEGATE_CONFIGURATION_ENTITY,
+                                 EventsFrameworkMetadataConstants.ACTION, action))
+                             .setData(entityChangeDTOBuilder.build().toByteString())
+                             .build());
+    } catch (Exception ex) {
+      log.error(String.format("Failed to publish delegate profile %s event for accountId %s via event framework.",
+          action, delegateProfile.getAccountId()));
     }
   }
 

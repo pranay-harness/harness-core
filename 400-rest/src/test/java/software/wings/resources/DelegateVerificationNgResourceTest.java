@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.NICOLAS;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -7,6 +8,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.powermock.api.mockito.PowerMockito.when;
 
+import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateHeartbeatDetails;
 import io.harness.delegate.beans.DelegateInitializationDetails;
@@ -24,18 +26,21 @@ import org.mockito.Mock;
 
 public class DelegateVerificationNgResourceTest {
   private static final String TEST_ACCOUNT_ID = "testAccountId";
+  private static final String TEST_ORG_ID = generateUuid();
+  private static final String TEST_PROJECT_ID = generateUuid();
   private static final String TEST_SESSION_ID = "testSessionId";
   private static final String TEST_DELEGATE_ID = "testDelegateId";
   private static final long TEST_PROFILE_EXECUTION_TIME = System.currentTimeMillis();
 
   @Mock private DelegateService delegateService;
+  @Mock private AccessControlClient accessControlClient;
 
   private DelegateVerificationNgResource resource;
 
   @Before
   public void setUp() {
     initMocks(this);
-    resource = new DelegateVerificationNgResource(delegateService);
+    resource = new DelegateVerificationNgResource(delegateService, accessControlClient);
   }
 
   @Test
@@ -45,7 +50,7 @@ public class DelegateVerificationNgResourceTest {
     when(delegateService.obtainDelegateIds(any(String.class), any(String.class))).thenReturn(null);
 
     RestResponse<DelegateHeartbeatDetails> delegatesHeartbeatDetails =
-        resource.getDelegatesHeartbeatDetails(TEST_ACCOUNT_ID, TEST_SESSION_ID);
+        resource.getDelegatesHeartbeatDetails(TEST_ACCOUNT_ID, TEST_ORG_ID, TEST_PROJECT_ID, TEST_SESSION_ID);
 
     assertThat(delegatesHeartbeatDetails.getResource()).isNotNull();
     assertThat(delegatesHeartbeatDetails.getResource().getNumberOfRegisteredDelegates()).isZero();
@@ -63,7 +68,7 @@ public class DelegateVerificationNgResourceTest {
         .thenReturn(Collections.emptyList());
 
     RestResponse<DelegateHeartbeatDetails> delegatesHeartbeatDetails =
-        resource.getDelegatesHeartbeatDetails(TEST_ACCOUNT_ID, TEST_SESSION_ID);
+        resource.getDelegatesHeartbeatDetails(TEST_ACCOUNT_ID, TEST_ORG_ID, TEST_PROJECT_ID, TEST_SESSION_ID);
 
     assertThat(delegatesHeartbeatDetails.getResource()).isNotNull();
     assertThat(delegatesHeartbeatDetails.getResource().getNumberOfRegisteredDelegates()).isEqualTo(1);
@@ -81,7 +86,7 @@ public class DelegateVerificationNgResourceTest {
         .thenReturn(Collections.singletonList(TEST_DELEGATE_ID));
 
     RestResponse<DelegateHeartbeatDetails> delegatesHeartbeatDetails =
-        resource.getDelegatesHeartbeatDetails(TEST_ACCOUNT_ID, TEST_SESSION_ID);
+        resource.getDelegatesHeartbeatDetails(TEST_ACCOUNT_ID, TEST_ORG_ID, TEST_PROJECT_ID, TEST_SESSION_ID);
 
     assertThat(delegatesHeartbeatDetails.getResource()).isNotNull();
     assertThat(delegatesHeartbeatDetails.getResource().getNumberOfRegisteredDelegates()).isEqualTo(1);
@@ -95,7 +100,7 @@ public class DelegateVerificationNgResourceTest {
     when(delegateService.obtainDelegateIds(any(String.class), any(String.class))).thenReturn(null);
 
     RestResponse<List<DelegateInitializationDetails>> delegatesInitializationDetails =
-        resource.getDelegatesInitializationDetails(TEST_ACCOUNT_ID, TEST_SESSION_ID);
+        resource.getDelegatesInitializationDetails(TEST_ACCOUNT_ID, TEST_ORG_ID, TEST_PROJECT_ID, TEST_SESSION_ID);
 
     assertThat(delegatesInitializationDetails.getResource()).isEmpty();
   }
@@ -116,7 +121,7 @@ public class DelegateVerificationNgResourceTest {
                                                   .build()));
 
     RestResponse<List<DelegateInitializationDetails>> delegatesInitializationDetails =
-        resource.getDelegatesInitializationDetails(TEST_ACCOUNT_ID, TEST_SESSION_ID);
+        resource.getDelegatesInitializationDetails(TEST_ACCOUNT_ID, TEST_ORG_ID, TEST_PROJECT_ID, TEST_SESSION_ID);
     assertThat(delegatesInitializationDetails).isNotNull();
 
     List<DelegateInitializationDetails> initializationDetails = delegatesInitializationDetails.getResource();
