@@ -54,6 +54,7 @@ public class MessageServiceImpl implements MessageService {
   private static final String FOUNDATION = "msg/";
   private static final String IO = "io/";
   private static final String DATA = "data/";
+  private static final String NO_SPACE_LEFT_ON_DEVICE_ERROR = "No space left on device";
   @VisibleForTesting static final String IN = "IN";
   @VisibleForTesting static final String OUT = "OUT";
   @VisibleForTesting static final String PRIMARY_DELIMITER = "|-|";
@@ -375,7 +376,11 @@ public class MessageServiceImpl implements MessageService {
     } catch (UncheckedTimeoutException e) {
       log.error("Timed out writing data to {}. Couldn't store {}", name, dataToWrite);
     } catch (Exception e) {
-      log.error("Error while writing data to {}. Couldn't store {}", name, dataToWrite, e);
+      if (e.getMessage().contains(NO_SPACE_LEFT_ON_DEVICE_ERROR)) {
+        log.error("Disk space is full.");
+      } else {
+        log.error("Error while writing data to {}. Couldn't store {}", name, dataToWrite, e);
+      }
     }
   }
 
