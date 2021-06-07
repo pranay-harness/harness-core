@@ -70,8 +70,8 @@ public class PluginCompatibleStepSerializer implements ProtobufStepSerializer<Pl
   }
 
   public UnitStep serializeStepWithStepParameters(PluginCompatibleStep pluginCompatibleStep, Integer port,
-      String callbackId, String logKey, String identifier, ParameterField<Timeout> parameterFieldTimeout,
-      String accountId, String stepName) {
+      String ctrName, String callbackId, String logKey, String identifier,
+      ParameterField<Timeout> parameterFieldTimeout, String accountId, String stepName) {
     if (port == null) {
       throw new CIStageExecutionException("Port can not be null");
     }
@@ -105,6 +105,7 @@ public class PluginCompatibleStepSerializer implements ProtobufStepSerializer<Pl
         .setDisplayName(stepName)
         .setPlugin(pluginStep)
         .setLogKey(logKey)
+        .setContainerName(ctrName)
         .build();
   }
 }

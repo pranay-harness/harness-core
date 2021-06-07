@@ -18,4 +18,6 @@ public class StepStatus {
   private ArtifactMetadata artifactMetadata;
   @Builder.Default private StepOutput output = StepMapOutput.builder().build();
   @Builder.Default private String error = "";
+  private long maxMemoryMib;
+  private long maxMilliCPU;
 }

@@ -20,6 +20,8 @@ import static io.harness.common.CIExecutionConstants.SH_COMMAND;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.delegate.beans.ci.pod.SecretParams.Type.TEXT;
 
+import static java.lang.String.format;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
@@ -75,7 +77,8 @@ public class InternalContainerParamsProvider {
   public CIK8ContainerParams getLiteEngineContainerParams(ConnectorDetails containerImageConnectorDetails,
       Map<String, ConnectorDetails> publishArtifactConnectors, K8PodDetails k8PodDetails, Integer stageCpuRequest,
       Integer stageMemoryRequest, Map<String, String> logEnvVars, Map<String, String> tiEnvVars,
-      Map<String, String> volumeToMountPath, String workDirPath, String logPrefix, Ambiance ambiance) {
+      Map<String, String> volumeToMountPath, String workDirPath, String podName, String namespace, String logPrefix,
+      Ambiance ambiance) {
     return CIK8ContainerParams.builder()
         .name(LITE_ENGINE_CONTAINER_NAME)
         .containerResourceParams(getLiteEngineResourceParams(stageCpuRequest, stageMemoryRequest))
@@ -92,6 +95,9 @@ public class InternalContainerParamsProvider {
                 .build())
         .volumeToMountPath(volumeToMountPath)
         .workingDir(workDirPath)
+        .commands(SH_COMMAND)
+        .args(Collections.singletonList(
+            format("/usr/local/bin/ci-lite-engine --pod %s --namespace %s", podName, namespace)))
         .build();
   }
 

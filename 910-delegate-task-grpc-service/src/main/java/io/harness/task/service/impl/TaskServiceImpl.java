@@ -162,6 +162,8 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
                                             .build())
                                 .artifactMetadata(artifactMetadata)
                                 .error(stepStatus.getErrorMessage())
+                                .maxMemoryMib(stepStatus.getMaxMemoryMib())
+                                .maxMilliCPU(stepStatus.getMaxMilliCpu())
                                 .build())
                 .build();
         boolean success = delegateServiceGrpcAgentClient.sendTaskStatus(request.getAccountId(), request.getTaskId(),

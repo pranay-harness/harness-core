@@ -67,9 +67,9 @@ public class PluginStepProtobufSerializer implements ProtobufStepSerializer<Plug
         .build();
   }
 
-  public UnitStep serializeStepWithStepParameters(PluginStepInfo pluginStepInfo, Integer port, String callbackId,
-      String logKey, String identifier, ParameterField<Timeout> parameterFieldTimeout, String accountId,
-      String stepName) {
+  public UnitStep serializeStepWithStepParameters(PluginStepInfo pluginStepInfo, Integer port, String ctrName,
+      String callbackId, String logKey, String identifier, ParameterField<Timeout> parameterFieldTimeout,
+      String accountId, String stepName) {
     if (callbackId == null) {
       throw new CIStageExecutionException("CallbackId can not be null");
     }
@@ -110,6 +110,7 @@ public class PluginStepProtobufSerializer implements ProtobufStepSerializer<Plug
         .setDisplayName(stepName)
         .setPlugin(pluginStep)
         .setLogKey(logKey)
+        .setContainerName(ctrName)
         .build();
   }
 }
