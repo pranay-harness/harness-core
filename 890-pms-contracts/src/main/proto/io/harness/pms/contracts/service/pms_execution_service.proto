@@ -6,6 +6,8 @@ option java_multiple_files = true;
 
 service PmsExecutionService {
   rpc updateExecutionSummary(ExecutionSummaryUpdateRequest) returns (ExecutionSummaryResponse);
+
+  rpc retrieveCommitDetails(CommitDetailsRequest) returns (CommitDetailsResponse);
 }
 
 message ExecutionSummaryUpdateRequest {
@@ -18,3 +20,11 @@ message ExecutionSummaryUpdateRequest {
 }
 
 message ExecutionSummaryResponse {}
+
+message CommitDetailsRequest {
+    string runSequenceId = 1;
+}
+
+message CommitDetailsResponse {
+    string commitSha = 1;
+}

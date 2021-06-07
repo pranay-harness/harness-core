@@ -1,5 +1,7 @@
 package io.harness.pms.sdk.core.execution;
 
+import io.harness.pms.contracts.service.CommitDetailsRequest;
+import io.harness.pms.contracts.service.CommitDetailsResponse;
 import io.harness.pms.contracts.service.ExecutionSummaryUpdateRequest;
 import io.harness.pms.contracts.service.PmsExecutionServiceGrpc.PmsExecutionServiceBlockingStub;
 
@@ -17,5 +19,9 @@ public class PmsExecutionGrpcClient {
 
   public void updateExecutionSummary(ExecutionSummaryUpdateRequest request) {
     pmsExecutionServiceBlockingStub.updateExecutionSummary(request);
+  }
+
+  public CommitDetailsResponse retrieveCommitDetails(CommitDetailsRequest request) {
+    return pmsExecutionServiceBlockingStub.retrieveCommitDetails(request);
   }
 }

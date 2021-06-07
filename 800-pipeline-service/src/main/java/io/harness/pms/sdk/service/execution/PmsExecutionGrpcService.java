@@ -6,6 +6,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
+import io.harness.pms.contracts.service.CommitDetailsRequest;
+import io.harness.pms.contracts.service.CommitDetailsResponse;
 import io.harness.pms.contracts.service.ExecutionSummaryResponse;
 import io.harness.pms.contracts.service.ExecutionSummaryUpdateRequest;
 import io.harness.pms.contracts.service.PmsExecutionServiceGrpc.PmsExecutionServiceImplBase;
@@ -24,6 +26,8 @@ import java.util.Collection;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -48,6 +52,30 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
     updatePipelineInfoJson(request, nodeExecution);
     updateStageModuleInfo(request, nodeExecution);
     responseObserver.onNext(ExecutionSummaryResponse.newBuilder().build());
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void retrieveCommitDetails(CommitDetailsRequest request, StreamObserver<CommitDetailsResponse> responseObserver) {
+    String runSequenceId = request.getRunSequenceId();
+    // Hardcode account ID, org ID, project ID for now
+    String account = "sjmVqavzTuS1segZNyZqbA";
+    String org = "default";
+    String project = "harness";
+    String pipeline = "buildReleaseBranch";
+    Criteria criteria = Criteria.where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.runSequence).is(runSequenceId)
+            .and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.accountId).is(account)
+    .and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.orgIdentifier).is(org)
+            .and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.projectIdentifier).is(project)
+            .and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.pipelineIdentifier).is(pipeline);
+    Page<PipelineExecutionSummaryEntity> summary = pmsExecutionSummaryRepository.findAll(criteria, Pageable.unpaged());
+    String commitId = "";
+    for(PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity: summary.getContent()) {
+     System.out.println(pipelineExecutionSummaryEntity.toString());
+     // Get commit ID here
+      // TODO
+    }
+    responseObserver.onNext(CommitDetailsResponse.newBuilder().setCommitSha(commitId).build());
     responseObserver.onCompleted();
   }
 
