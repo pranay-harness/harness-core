@@ -4,7 +4,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import io.harness.query.shapedetector.QueryHashInfo.QueryHashKey;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,20 +33,21 @@ public class QueryShapeDetector {
 
   ConcurrentMap<QueryHashKey, QueryHashInfo> queryHashCache = new ConcurrentHashMap<>();
 
-  public String getQueryHash(String collectionName, Document queryDoc) {
-    QueryHashKey queryHashKey = calculateQueryHashKey(collectionName, queryDoc);
-    QueryHashInfo queryHashInfo =
-        queryHashCache.computeIfAbsent(queryHashKey, hashKey -> new QueryHashInfo(queryHashKey, queryDoc));
+  public String getQueryHash(String collectionName, Document queryDoc, Document sortDoc) {
+    QueryHashKey queryHashKey = calculateQueryHashKey(collectionName, queryDoc, sortDoc);
+    QueryHashInfo queryHashInfo = queryHashCache.computeIfAbsent(queryHashKey,
+        hashKey -> QueryHashInfo.builder().queryHashKey(queryHashKey).queryDoc(queryDoc).sortDoc(sortDoc).build());
     return String.valueOf(queryHashInfo.getQueryHashKey().hashCode());
   }
 
-  public QueryHashKey calculateQueryHashKey(String collectionName, Document queryDoc) {
-    String queryHash = calculateQueryDocHash(queryDoc);
-    return QueryHashKey.builder().collectionName(collectionName).queryHash(queryHash).build();
+  public QueryHashKey calculateQueryHashKey(String collectionName, Document queryDoc, Document sortDoc) {
+    String queryHash = calculateQueryDocHash(queryDoc, true);
+    String sortHash = calculateQueryDocHash(sortDoc, true);
+    return QueryHashKey.builder().collectionName(collectionName).queryHash(queryHash).sortHash(sortHash).build();
   }
 
-  private String calculateQueryDocHash(Document queryDoc) {
-    Document normalizedQueryDoc = normalizeMap(queryDoc);
+  private String calculateQueryDocHash(Document doc, boolean shouldSort) {
+    Document normalizedQueryDoc = normalizeMap(doc, shouldSort);
     ObjectMapper objectMapper = new ObjectMapper();
     String jsonString = normalizedQueryDoc.toJson();
     try {
@@ -60,21 +60,21 @@ public class QueryShapeDetector {
   }
 
   @VisibleForTesting
-  Object normalizeObject(Object object) {
+  Object normalizeObject(Object object, boolean shouldSort) {
     if (object == null) {
       // null is not converted to default value as null might not work with usual indices
       return null;
     }
     if (object instanceof Map) {
-      return normalizeMap((Map<String, Object>) object);
+      return normalizeMap((Map<String, Object>) object, shouldSort);
     }
     if (object instanceof List) {
-      return normalizeList((List<Object>) object);
+      return normalizeList((List<Object>) object, shouldSort);
     }
     return DEFAULT_VALUE;
   }
 
-  private Document normalizeMap(Map<String, Object> doc) {
+  private Document normalizeMap(Map<String, Object> doc, boolean shouldSort) {
     Document copy = new Document();
     if (EmptyPredicate.isEmpty(doc)) {
       return copy;
@@ -88,22 +88,24 @@ public class QueryShapeDetector {
       if (value instanceof List && needToTrimList(key)) {
         value = Collections.singletonList(DEFAULT_VALUE);
       } else {
-        value = normalizeObject(value);
+        value = normalizeObject(value, shouldSort);
       }
       normalizedEntries.add(ImmutablePair.of(key, value));
     }
 
     // Sort the entries
-    normalizedEntries.sort(Comparator.comparing(ImmutablePair::getLeft));
+    if (shouldSort) {
+      normalizedEntries.sort(Comparator.comparing(ImmutablePair::getLeft));
+    }
     normalizedEntries.forEach(e -> copy.put(e.getLeft(), e.getRight()));
     return copy;
   }
 
-  private List<Object> normalizeList(List<Object> list) {
+  private List<Object> normalizeList(List<Object> list, boolean shouldSort) {
     if (EmptyPredicate.isEmpty(list)) {
       return Collections.emptyList();
     }
-    return list.stream().map(QueryShapeDetector::normalizeObject).collect(Collectors.toList());
+    return list.stream().map(el -> normalizeObject(el, shouldSort)).collect(Collectors.toList());
   }
 
   private boolean needToTrimList(String key) {

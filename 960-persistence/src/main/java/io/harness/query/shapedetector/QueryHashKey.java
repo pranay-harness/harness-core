@@ -5,13 +5,12 @@ import io.harness.annotations.dev.OwnedBy;
 
 import lombok.Builder;
 import lombok.Value;
-import org.bson.Document;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Value
 @Builder
-public class QueryHashInfo {
-  QueryHashKey queryHashKey;
-  Document queryDoc;
-  Document sortDoc;
+public class QueryHashKey {
+  String collectionName;
+  String queryHash;
+  String sortHash;
 }

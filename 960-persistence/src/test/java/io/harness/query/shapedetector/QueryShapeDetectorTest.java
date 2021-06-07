@@ -124,10 +124,12 @@ public class QueryShapeDetectorTest extends CategoryTest {
   @Category(io.harness.category.element.UnitTests.class)
   public void testNormalizeMapSameShape() {
     for (List<CalculateHashParams> sameShapeQueries : sameShapeQueriesList) {
-      String normalized = JsonUtils.asJson(QueryShapeDetector.normalizeObject(sameShapeQueries.get(0).getQueryDoc()));
+      String normalized =
+          JsonUtils.asJson(QueryShapeDetector.normalizeObject(sameShapeQueries.get(0).getQueryDoc(), true));
       for (int i = 1; i < sameShapeQueries.size(); i++) {
         CalculateHashParams params = sameShapeQueries.get(i);
-        assertThat(JsonUtils.asJson(QueryShapeDetector.normalizeObject(params.getQueryDoc()))).isEqualTo(normalized);
+        assertThat(JsonUtils.asJson(QueryShapeDetector.normalizeObject(params.getQueryDoc(), true)))
+            .isEqualTo(normalized);
       }
     }
   }
@@ -138,8 +140,8 @@ public class QueryShapeDetectorTest extends CategoryTest {
   public void testNormalizeMapDiffShape() {
     for (Pair<CalculateHashParams, CalculateHashParams> diffShapeQueries : diffShapeQueriesList) {
       String normalized =
-          JsonUtils.asJson(QueryShapeDetector.normalizeObject(diffShapeQueries.getLeft().getQueryDoc()));
-      assertThat(JsonUtils.asJson(QueryShapeDetector.normalizeObject(diffShapeQueries.getRight().getQueryDoc())))
+          JsonUtils.asJson(QueryShapeDetector.normalizeObject(diffShapeQueries.getLeft().getQueryDoc(), true));
+      assertThat(JsonUtils.asJson(QueryShapeDetector.normalizeObject(diffShapeQueries.getRight().getQueryDoc(), true)))
           .isNotEqualTo(normalized);
     }
   }
