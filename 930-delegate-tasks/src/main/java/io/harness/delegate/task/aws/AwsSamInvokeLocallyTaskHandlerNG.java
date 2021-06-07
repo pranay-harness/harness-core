@@ -14,6 +14,7 @@ import io.harness.aws.AwsConfig;
 import io.harness.aws.AwsSamClient;
 import io.harness.beans.DecryptableEntity;
 import io.harness.cli.CliResponse;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
@@ -88,7 +89,10 @@ public class AwsSamInvokeLocallyTaskHandlerNG extends AwsSamAbstractTaskHandler 
         awsSecretsExportCommand = "";
       }
 
-      String samBuildCommand = format("%s sam build", awsSecretsExportCommand);
+      String samCustomCommandParams = EmptyPredicate.isNotEmpty(taskParameters.getGlobalAdditionalFlags())
+              ? format("%s &&", taskParameters.getGlobalAdditionalFlags())
+              : "";
+      String samBuildCommand = format("%s sam build %s", awsSecretsExportCommand, samCustomCommandParams);
       Map<String, String> envVariables = new HashMap<>();
       CliResponse samBuildCliResponse =
           awsSamClient.runCommand(samBuildCommand, 120000l, envVariables, awsSamAppDirectory, logCallback);
