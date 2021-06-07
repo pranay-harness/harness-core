@@ -124,7 +124,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
 
     String parkedTaskId = queueParkedDelegateTask(ambiance, timeoutInMillis, accountId, ciDelegateTaskExecutor);
     UnitStep unitStep = serialiseStep(ciStepInfo, parkedTaskId, logKey, stepIdentifier,
-        getPort(ambiance, stepIdentifier), accountId, stepParametersName, stringTimeout);
+        getPort(ambiance, stepIdentifier), getCtrName(ambiance, stepIdentifier), accountId, stepParametersName, stringTimeout);
     String liteEngineTaskId =
         queueDelegateTask(ambiance, timeoutInMillis, accountId, ciDelegateTaskExecutor, unitStep, runtimeId);
 
@@ -208,6 +208,9 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
         stepResponseBuilder.stepOutcome(stepArtifactOutcome);
       }
 
+      long mem = stepStatus.getMaxMemoryMib();
+      long cpu = stepStatus.getMaxMilliCPU();
+
       return stepResponseBuilder.status(Status.SUCCEEDED).build();
     } else if (stepStatus.getStepExecutionStatus() == StepExecutionStatus.SKIPPED) {
       return stepResponseBuilder.status(Status.SKIPPED).build();
@@ -232,13 +235,13 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
       Ambiance ambiance, StepElementParameters stepParameters, AsyncExecutableResponse executableResponse) {}
 
   private UnitStep serialiseStep(CIStepInfo ciStepInfo, String taskId, String logKey, String stepIdentifier,
-      Integer port, String accountId, String stepName, String timeout) {
+      Integer port, String ctrName, String accountId, String stepName, String timeout) {
     switch (ciStepInfo.getNonYamlInfo().getStepInfoType()) {
       case RUN:
-        return runStepProtobufSerializer.serializeStepWithStepParameters((RunStepInfo) ciStepInfo, port, taskId, logKey,
+        return runStepProtobufSerializer.serializeStepWithStepParameters((RunStepInfo) ciStepInfo, port, ctrName, taskId, logKey,
             stepIdentifier, ParameterField.createValueField(Timeout.fromString(timeout)), accountId, stepName);
       case PLUGIN:
-        return pluginStepProtobufSerializer.serializeStepWithStepParameters((PluginStepInfo) ciStepInfo, port, taskId,
+        return pluginStepProtobufSerializer.serializeStepWithStepParameters((PluginStepInfo) ciStepInfo, port, ctrName, taskId,
             logKey, stepIdentifier, ParameterField.createValueField(Timeout.fromString(timeout)), accountId, stepName);
       case GCR:
       case DOCKER:
@@ -250,11 +253,11 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
       case RESTORE_CACHE_GCS:
       case SAVE_CACHE_S3:
       case RESTORE_CACHE_S3:
-        return pluginCompatibleStepSerializer.serializeStepWithStepParameters((PluginCompatibleStep) ciStepInfo, port,
+        return pluginCompatibleStepSerializer.serializeStepWithStepParameters((PluginCompatibleStep) ciStepInfo, port, ctrName,
             taskId, logKey, stepIdentifier, ParameterField.createValueField(Timeout.fromString(timeout)), accountId,
             stepName);
       case RUN_TESTS:
-        return runTestsStepProtobufSerializer.serializeStepWithStepParameters((RunTestsStepInfo) ciStepInfo, port,
+        return runTestsStepProtobufSerializer.serializeStepWithStepParameters((RunTestsStepInfo) ciStepInfo, port, ctrName,
             taskId, logKey, stepIdentifier, ParameterField.createValueField(Timeout.fromString(timeout)), accountId,
             stepName);
       case CLEANUP:
@@ -332,6 +335,20 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
     }
 
     return ports.get(0);
+  }
+
+  private String getCtrName(Ambiance ambiance, String stepIdentifier) {
+    // Ports are assigned in lite engine step
+    ContainerPortDetails containerPortDetails = (ContainerPortDetails) executionSweepingOutputResolver.resolve(
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(PORT_DETAILS));
+
+    String ctrName = containerPortDetails.getCtrNameDetails().get(stepIdentifier);
+
+    if (ctrName == null && ctrName == "") {
+      throw new CIStageExecutionException(format("Step [%s] should map to ", stepIdentifier));
+    }
+
+    return ctrName;
   }
 
   private StepStatusTaskResponseData filterStepResponse(Map<String, ResponseData> responseDataMap) {

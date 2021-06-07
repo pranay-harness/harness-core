@@ -92,6 +92,7 @@ message UnitStep {
   string log_key = 12;
   string account_id = 13;
   uint32 container_port = 14;  // Port of the container on which step needs to be executed
+  string container_name = 15;  // Name of the container on which step runs
 }
 
 message ParallelStep {

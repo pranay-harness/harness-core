@@ -216,9 +216,16 @@ public class K8BuildSetupUtils {
     ConnectorDetails gitConnector = getGitConnector(ngAccess, ciCodebase, skipGitClone);
     Map<String, String> gitEnvVars = getGitEnvVariables(gitConnector, ciCodebase);
 
-    List<CIK8ContainerParams> containerParamsList =
-        getContainerParamsList(k8PodDetails, podSetupInfo, ngAccess, harnessInternalImageRegistryConnectorDetails,
-            gitEnvVars, liteEngineTaskStepInfo, taskIds, logPrefix, stepLogKeys, ambiance);
+    Infrastructure infrastructure = liteEngineTaskStepInfo.getInfrastructure();
+
+    if (infrastructure == null || ((K8sDirectInfraYaml) infrastructure).getSpec() == null) {
+      throw new CIStageExecutionException("Input infrastructure can not be empty");
+    }
+    K8sDirectInfraYaml k8sDirectInfraYaml = (K8sDirectInfraYaml) infrastructure;
+
+    List<CIK8ContainerParams> containerParamsList = getContainerParamsList(k8PodDetails, podSetupInfo, ngAccess,
+        harnessInternalImageRegistryConnectorDetails, gitEnvVars, liteEngineTaskStepInfo, taskIds, logPrefix,
+        stepLogKeys, k8sDirectInfraYaml.getSpec().getNamespace(), ambiance);
 
     CIK8ContainerParams setupAddOnContainerParams =
         internalContainerParamsProvider.getSetupAddonContainerParams(harnessInternalImageRegistryConnectorDetails,
@@ -234,13 +241,6 @@ public class K8BuildSetupUtils {
     if (usePVC) {
       pvcParamsList = podSetupInfo.getPvcParamsList();
     }
-
-    Infrastructure infrastructure = liteEngineTaskStepInfo.getInfrastructure();
-
-    if (infrastructure == null || ((K8sDirectInfraYaml) infrastructure).getSpec() == null) {
-      throw new CIStageExecutionException("Input infrastructure can not be empty");
-    }
-    K8sDirectInfraYaml k8sDirectInfraYaml = (K8sDirectInfraYaml) infrastructure;
 
     List<String> containerNames =
         containerParamsList.stream().map(CIK8ContainerParams::getName).collect(Collectors.toList());
@@ -275,7 +275,7 @@ public class K8BuildSetupUtils {
   public List<CIK8ContainerParams> getContainerParamsList(K8PodDetails k8PodDetails, PodSetupInfo podSetupInfo,
       NGAccess ngAccess, ConnectorDetails harnessInternalImageRegistryConnectorDetails, Map<String, String> gitEnvVars,
       LiteEngineTaskStepInfo liteEngineTaskStepInfo, Map<String, String> taskIds, String logPrefix,
-      Map<String, String> stepLogKeys, Ambiance ambiance) {
+      Map<String, String> stepLogKeys, String namespace, Ambiance ambiance) {
     String accountId = AmbianceHelper.getAccountId(ambiance);
     Map<String, String> logEnvVars = getLogServiceEnvVariables(k8PodDetails, accountId);
     Map<String, String> tiEnvVars = getTIServiceEnvVariables(accountId);
@@ -294,11 +294,10 @@ public class K8BuildSetupUtils {
     Map<String, ConnectorDetails> githubApiTokenFunctorConnectors =
         resolveGitAppFunctor(ngAccess, liteEngineTaskStepInfo, ambiance);
 
-    CIK8ContainerParams liteEngineContainerParams =
-        createLiteEngineContainerParams(harnessInternalImageRegistryConnectorDetails, liteEngineTaskStepInfo,
-            k8PodDetails, podSetupInfo.getStageCpuRequest(), podSetupInfo.getStageMemoryRequest(),
-            podSetupInfo.getServiceGrpcPortList(), logEnvVars, tiEnvVars, podSetupInfo.getVolumeToMountPath(),
-            podSetupInfo.getWorkDirPath(), taskIds, logPrefix, stepLogKeys, ambiance);
+    CIK8ContainerParams liteEngineContainerParams = createLiteEngineContainerParams(
+        harnessInternalImageRegistryConnectorDetails, liteEngineTaskStepInfo, k8PodDetails, podSetupInfo.getStageCpuRequest(),
+        podSetupInfo.getStageMemoryRequest(), podSetupInfo.getServiceGrpcPortList(), logEnvVars, tiEnvVars, podSetupInfo.getVolumeToMountPath(),
+        podSetupInfo.getWorkDirPath(), podSetupInfo.getName(), namespace, taskIds, logPrefix, ambiance);
 
     List<CIK8ContainerParams> containerParams = new ArrayList<>();
     containerParams.add(liteEngineContainerParams);
@@ -363,8 +362,12 @@ public class K8BuildSetupUtils {
     Map<String, List<Integer>> portDetails = containerDefinitionInfos.stream().collect(
         Collectors.toMap(ContainerDefinitionInfo::getStepIdentifier, ContainerDefinitionInfo::getPorts));
 
+    Map<String, String> ctrNameDetails = containerDefinitionInfos.stream().collect(
+        Collectors.toMap(ContainerDefinitionInfo::getStepIdentifier, ContainerDefinitionInfo::getName));
+
     executionSweepingOutputResolver.consume(ambiance, PORT_DETAILS,
-        ContainerPortDetails.builder().portDetails(portDetails).build(), StepOutcomeGroup.STAGE.name());
+        ContainerPortDetails.builder().portDetails(portDetails).ctrNameDetails(ctrNameDetails).build(),
+        StepOutcomeGroup.STAGE.name());
   }
 
   private CIK8ContainerParams createCIK8ContainerParams(NGAccess ngAccess,
@@ -445,15 +448,14 @@ public class K8BuildSetupUtils {
   }
 
   private CIK8ContainerParams createLiteEngineContainerParams(ConnectorDetails connectorDetails,
-      LiteEngineTaskStepInfo liteEngineTaskStepInfo, K8PodDetails k8PodDetails, Integer stageCpuRequest,
-      Integer stageMemoryRequest, List<Integer> serviceGrpcPortList, Map<String, String> logEnvVars,
-      Map<String, String> tiEnvVars, Map<String, String> volumeToMountPath, String workDirPath,
-      Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys, Ambiance ambiance) {
+      LiteEngineTaskStepInfo liteEngineTaskStepInfo, K8PodDetails k8PodDetails, Integer stageCpuRequest, Integer stageMemoryRequest, List<Integer> serviceGrpcPortList, Map<String, String> logEnvVars,
+      Map<String, String> tiEnvVars, Map<String, String> volumeToMountPath, String workDirPath, String podName,
+      String namespace, Map<String, String> taskIds, String logPrefix, Ambiance ambiance) {
     Map<String, ConnectorDetails> stepConnectorDetails = new HashMap<>();
 
     return internalContainerParamsProvider.getLiteEngineContainerParams(connectorDetails, stepConnectorDetails,
-        k8PodDetails, stageCpuRequest, stageMemoryRequest, serviceGrpcPortList, logEnvVars, tiEnvVars,
-        volumeToMountPath, workDirPath, logPrefix, ambiance);
+        k8PodDetails, stageCpuRequest, stageMemoryRequest, serviceGrpcPortList, logEnvVars, tiEnvVars, volumeToMountPath, workDirPath,
+        podName, namespace, logPrefix, ambiance);
   }
 
   @NotNull
