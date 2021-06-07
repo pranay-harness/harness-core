@@ -61,7 +61,7 @@ public class AwsSamDeployTaskHandlerNG extends AwsSamAbstractTaskHandler {
     GitBaseRequest gitBaseRequestForConfigFile = awsBaseHelper.getGitBaseRequestForConfigFile(
         taskParameters.getAccountId(), confileFileGitStore, (GitConfigDTO) confileFileGitStore.getGitConfigDTO());
 
-    String baseDir = AWS_SAM_WORKING_DIRECTORY + taskParameters.getAccountId();
+    String baseDir = AWS_SAM_WORKING_DIRECTORY + taskParameters.getAccountId() + taskId ;
 
     String awsSamAppDirectory = awsBaseHelper.fetchAwsSamAppDirectory(gitBaseRequestForConfigFile,
         taskParameters.getAccountId(), "", "", confileFileGitStore, logCallback, awsSamProjectDirectoryPath, baseDir);
