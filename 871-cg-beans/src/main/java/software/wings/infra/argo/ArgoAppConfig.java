@@ -21,8 +21,12 @@ public class ArgoAppConfig {
 
   @Data
   @Builder
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class Sync {
     boolean validate;
     boolean applyOutOfSyncOnly;
+    boolean autoCreateNamespace;
+    boolean replace;
+    boolean pruneLast;
   }
 }

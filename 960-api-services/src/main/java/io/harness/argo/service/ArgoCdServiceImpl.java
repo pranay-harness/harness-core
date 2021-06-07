@@ -2,8 +2,6 @@ package io.harness.argo.service;
 
 import static io.harness.exception.WingsException.USER;
 
-import com.google.inject.Singleton;
-
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.argo.ArgoRestClient;
@@ -20,16 +18,17 @@ import io.harness.argo.beans.UsernamePassword;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
+
+import com.google.inject.Singleton;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @OwnedBy(HarnessTeam.CDP)
 @Singleton
@@ -142,7 +141,7 @@ public class ArgoCdServiceImpl implements ArgoCdService {
     Response<ArgoToken> argoCdToken = argoRestClient
                                           .fetchToken(UsernamePassword.builder()
                                                           .username(argoConfig.getUsername())
-                                                          .password(argoConfig.getPassword())
+                                                          .password(String.valueOf(argoConfig.getPassword()))
                                                           .build())
                                           .execute();
     if (argoCdToken.isSuccessful()) {

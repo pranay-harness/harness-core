@@ -16,9 +16,8 @@ public class ArgoConfigInternal {
   String argoServerUrl;
   String username;
   String password;
-  //  private String encryptedPassword;
   List<EncryptedDataDetail> encryptedDataDetailList;
-  //  boolean decrypted;
+
   boolean isCertValidationRequired;
 
   public boolean hasCredentials() {

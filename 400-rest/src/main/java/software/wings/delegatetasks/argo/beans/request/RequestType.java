@@ -1,4 +1,4 @@
-package io.harness.delegate.beans.argo.request;
+package software.wings.delegatetasks.argo.beans.request;
 
 public enum RequestType {
   APP_CRUD,

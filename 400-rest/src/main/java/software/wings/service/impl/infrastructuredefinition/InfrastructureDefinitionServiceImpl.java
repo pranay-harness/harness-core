@@ -68,7 +68,6 @@ import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.beans.argo.request.ResourceTreeRequest;
 import io.harness.delegate.beans.argo.response.ResourceTreeResponse;
 import io.harness.delegate.beans.azure.ManagementGroupData;
 import io.harness.delegate.task.aws.AwsElbListener;
@@ -129,6 +128,7 @@ import software.wings.beans.customdeployment.CustomDeploymentTypeDTO;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.settings.argo.ArgoConfig;
 import software.wings.common.InfrastructureConstants;
+import software.wings.delegatetasks.argo.beans.request.ResourceTreeRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.expression.ManagerPreviewExpressionEvaluator;
@@ -2226,20 +2226,22 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     }
     DirectKubernetesInfrastructure kubernetesInfrastructure =
         (DirectKubernetesInfrastructure) infra.getInfrastructure();
-    final SettingAttribute argoConnector = settingsService.get(appId, kubernetesInfrastructure.getArgoConnectorId());
+    final SettingAttribute argoConnector = settingsService.get(kubernetesInfrastructure.getArgoConnectorId());
     final ArgoConfig argoConfig = (ArgoConfig) argoConnector.getValue();
     final List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(argoConfig);
-    ResourceTreeRequest resourceTreeRequest =
-        ResourceTreeRequest.builder()
-            .argoConfigInternal(ArgoConfigInternal.builder()
-                                    .argoServerUrl(argoConfig.getArgoServerUrl())
-                                    .username(argoConfig.getUsername())
-                                    .password(argoConfig.getEncryptedPassword())
-                                    .isCertValidationRequired(argoConfig.isCertValidationRequired())
-                                    .build())
-            .encryptedDataDetails(encryptionDetails)
-            .appName(kubernetesInfrastructure.getArgoAppConfig().getAppName())
-            .build();
+    ResourceTreeRequest resourceTreeRequest = ResourceTreeRequest.builder()
+                                                  .argoConfig(argoConfig)
+                                                  .encryptedDataDetails(encryptionDetails)
+                                                  .appName(kubernetesInfrastructure.getArgoAppConfig().getAppName())
+                                                  .build();
+    //    final ResourceTreeRequest resourceTreeRequest = ResourceTreeRequest.builder()
+    //                                                        .argoConfigInternal(ArgoConfigInternal.builder()
+    //                                                                                .argoServerUrl("https://34.136.244.4")
+    //                                                                                .username("admin")
+    //                                                                                .password("4lP62g1rJM@A")
+    //                                                                                .build())
+    //                                                        .appName("guestbook")
+    //                                                        .build();
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(infra.getAccountId())
                                     .data(TaskData.builder()

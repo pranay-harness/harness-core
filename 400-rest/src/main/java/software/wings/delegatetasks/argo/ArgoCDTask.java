@@ -1,17 +1,21 @@
-package io.harness.delegate.task.argo;
+package software.wings.delegatetasks.argo;
 
+import io.harness.argo.beans.ArgoConfigInternal;
 import io.harness.argo.beans.ClusterResourceTreeDTO;
 import io.harness.argo.service.ArgoCdService;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.argo.request.ArgoRequest;
 import io.harness.delegate.beans.argo.response.ResourceTreeResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
+
+import software.wings.beans.settings.argo.ArgoConfig;
+import software.wings.delegatetasks.argo.beans.request.ArgoRequest;
+import software.wings.service.intfc.security.EncryptionService;
 
 import com.google.inject.Inject;
 import java.io.IOException;
@@ -20,6 +24,7 @@ import java.util.function.Consumer;
 
 public class ArgoCDTask extends AbstractDelegateRunnableTask {
   @Inject private ArgoCdService argoCdService;
+  @Inject EncryptionService encryptionService;
   public ArgoCDTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
@@ -33,12 +38,13 @@ public class ArgoCDTask extends AbstractDelegateRunnableTask {
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
     ArgoRequest request = (ArgoRequest) parameters;
+    encryptionService.decrypt(request.getArgoConfig(), request.getEncryptedDataDetails(), false);
+    final ArgoConfigInternal argoConfigInternal = buildArgoConfigInternal(request.getArgoConfig());
     switch (request.requestType()) {
       case RESOURCE_TREE:
         final ClusterResourceTreeDTO clusterResourceTreeDTO;
         try {
-          clusterResourceTreeDTO =
-              argoCdService.fetchResourceTree(request.getArgoConfigInternal(), request.getAppName());
+          clusterResourceTreeDTO = argoCdService.fetchResourceTree(argoConfigInternal, request.getAppName());
           return ResourceTreeResponse.builder()
               .executionStatus(CommandExecutionStatus.SUCCESS)
               .clusterResourceTree(clusterResourceTreeDTO)
@@ -50,10 +56,18 @@ public class ArgoCDTask extends AbstractDelegateRunnableTask {
               .build();
         }
       case APP_SYNC:
-//        argoCdService.syncApp(request.getArgoConfigInternal(),request.getAppName(),null);
+        //        argoCdService.syncApp(request.getArgoConfigInternal(),request.getAppName(),null);
       case MANIFEST_DIFF:
       default:
         throw new InvalidRequestException("Unhandled Argo TaskType");
     }
+  }
+
+  private ArgoConfigInternal buildArgoConfigInternal(ArgoConfig argoConfig) {
+    return ArgoConfigInternal.builder()
+        .argoServerUrl(argoConfig.getArgoServerUrl())
+        .username(argoConfig.getUsername())
+        .password(String.valueOf(argoConfig.getPassword()))
+        .build();
   }
 }

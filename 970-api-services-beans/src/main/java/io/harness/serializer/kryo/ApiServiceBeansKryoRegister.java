@@ -322,5 +322,6 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(KubernetesResourceId.class, 97031);
     kryo.register(ArgoConfigInternal.class, 97032);
     kryo.register(ClusterResourceTreeDTO.class, 97033);
+    kryo.register(ClusterResourceTreeDTO.Node.class, 97034);
   }
 }
