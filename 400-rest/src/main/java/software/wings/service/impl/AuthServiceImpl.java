@@ -166,7 +166,7 @@ public class AuthServiceImpl implements AuthService {
       UserGroupService userGroupService, UsageRestrictionsService usageRestrictionsService,
       HarnessCacheManager harnessCacheManager, @Named(AUTH_TOKEN_CACHE) Cache<String, AuthToken> authTokenCache,
       MainConfiguration configuration, VerificationServiceSecretManager verificationServiceSecretManager,
-      AuthHandler authHandler, HarnessUserGroupService harnessUserGroupService, SecretManager secretManager,
+      AuthHandler authHandler, AuthHandler2 authHandler2, HarnessUserGroupService harnessUserGroupService, SecretManager secretManager,
       VersionInfoManager versionInfoManager, ConfigurationController configurationController) {
     this.dbCache = dbCache;
     this.persistence = persistence;
@@ -178,6 +178,7 @@ public class AuthServiceImpl implements AuthService {
     this.configuration = configuration;
     this.verificationServiceSecretManager = verificationServiceSecretManager;
     this.authHandler = authHandler;
+    this.authHandler2 = authHandler2;
     this.harnessUserGroupService = harnessUserGroupService;
     this.secretManager = secretManager;
     this.versionInfoManager = versionInfoManager;
