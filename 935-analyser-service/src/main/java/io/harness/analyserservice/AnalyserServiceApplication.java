@@ -5,7 +5,10 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import io.harness.event.QueryAnalyserEventService;
 import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
+import io.harness.service.QueryRecordService;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -34,8 +37,13 @@ public class AnalyserServiceApplication extends Application<AnalyserServiceConfi
   public void initialize(Bootstrap<AnalyserServiceConfiguration> bootstrap) {
     // Enable variable substitution with environment variables
     initializeLogging();
+    configureObjectMapper(bootstrap.getObjectMapper());
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
+  }
+
+  public static void configureObjectMapper(final ObjectMapper mapper) {
+    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }
 
   @Override
@@ -55,9 +63,14 @@ public class AnalyserServiceApplication extends Application<AnalyserServiceConfi
 
     registerManagedBeans(environment, injector);
     MaintenanceController.forceMaintenance(false);
+    populateCache(injector);
   }
 
   private void registerManagedBeans(Environment environment, Injector injector) {
     environment.lifecycle().manage(injector.getInstance(QueryAnalyserEventService.class));
+  }
+
+  private void populateCache(Injector injector) {
+    injector.getInstance(QueryRecordService.class).storeHashesInsideCache();
   }
 }
