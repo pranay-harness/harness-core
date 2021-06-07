@@ -10,6 +10,6 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ManifestDiff {
   String resourceIdentifier;
-  String ClusterManifest;
+  String clusterManifest;
   String gitManifest;
 }

@@ -2,10 +2,12 @@ package software.wings.delegatetasks.argo;
 
 import io.harness.argo.beans.ArgoConfigInternal;
 import io.harness.argo.beans.ClusterResourceTreeDTO;
+import io.harness.argo.beans.ManifestDiff;
 import io.harness.argo.service.ArgoCdService;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.argo.response.ManifestDiffResponse;
 import io.harness.delegate.beans.argo.response.ResourceTreeResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
@@ -19,6 +21,7 @@ import software.wings.service.intfc.security.EncryptionService;
 
 import com.google.inject.Inject;
 import java.io.IOException;
+import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
@@ -51,13 +54,25 @@ public class ArgoCDTask extends AbstractDelegateRunnableTask {
               .build();
         } catch (IOException e) {
           return ResourceTreeResponse.builder()
-              .executionStatus(CommandExecutionStatus.SUCCESS)
+              .executionStatus(CommandExecutionStatus.FAILURE)
               .errorMessage(e.getMessage())
               .build();
         }
       case APP_SYNC:
         //        argoCdService.syncApp(request.getArgoConfigInternal(),request.getAppName(),null);
       case MANIFEST_DIFF:
+        try {
+          List<ManifestDiff> manifestDiffs = argoCdService.fetchManifestDiff(argoConfigInternal, request.getAppName());
+          return ManifestDiffResponse.builder()
+              .manifestDiffList(manifestDiffs)
+              .executionStatus(CommandExecutionStatus.SUCCESS)
+              .build();
+        } catch (IOException e) {
+          return ManifestDiffResponse.builder()
+              .executionStatus(CommandExecutionStatus.FAILURE)
+              .errorMessage(e.getMessage())
+              .build();
+        }
       default:
         throw new InvalidRequestException("Unhandled Argo TaskType");
     }

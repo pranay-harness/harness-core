@@ -14,7 +14,22 @@ import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_NA
 import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_TARGET_INSTANCES;
 import static io.harness.validation.Validator.notEmptyCheck;
 import static io.harness.validation.Validator.notNullCheck;
-
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.atteo.evo.inflector.English.plural;
+import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
+import static org.mongodb.morphia.aggregation.Group.grouping;
+import static org.mongodb.morphia.aggregation.Projection.projection;
 import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.AWS_LAMBDA;
@@ -37,25 +52,20 @@ import static software.wings.settings.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.utils.Utils.safe;
 
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
-import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.mapping;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.atteo.evo.inflector.English.plural;
-import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
-import static org.mongodb.morphia.aggregation.Group.grouping;
-import static org.mongodb.morphia.aggregation.Projection.projection;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
-import io.harness.argo.beans.ArgoConfigInternal;
+import com.amazonaws.services.ec2.model.Tag;
+import com.amazonaws.services.ecs.model.LaunchType;
+import com.mongodb.DuplicateKeyException;
+import io.fabric8.utils.CountingMap;
 import io.harness.argo.beans.ClusterResourceTreeDTO;
+import io.harness.argo.beans.ManifestDiff;
 import io.harness.azure.model.SubscriptionData;
 import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.beans.DelegateTask;
@@ -68,6 +78,7 @@ import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.argo.response.ManifestDiffResponse;
 import io.harness.delegate.beans.argo.response.ResourceTreeResponse;
 import io.harness.delegate.beans.azure.ManagementGroupData;
 import io.harness.delegate.task.aws.AwsElbListener;
@@ -97,7 +108,17 @@ import io.harness.reflection.ReflectionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
-
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.jexl3.JexlException;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.aggregation.Group;
+import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Query;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
@@ -128,6 +149,8 @@ import software.wings.beans.customdeployment.CustomDeploymentTypeDTO;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.settings.argo.ArgoConfig;
 import software.wings.common.InfrastructureConstants;
+import software.wings.delegatetasks.argo.beans.request.ArgoRequest;
+import software.wings.delegatetasks.argo.beans.request.ManifestDiffRequest;
 import software.wings.delegatetasks.argo.beans.request.ResourceTreeRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
@@ -204,17 +227,6 @@ import software.wings.sm.StateExecutionContext;
 import software.wings.utils.EcsConvention;
 import software.wings.utils.ServiceVersionConvention;
 
-import com.amazonaws.services.ec2.model.Tag;
-import com.amazonaws.services.ecs.model.LaunchType;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.mongodb.DuplicateKeyException;
-import io.fabric8.utils.CountingMap;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -234,17 +246,6 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.jexl3.JexlException;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.aggregation.Group;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.Query;
 
 @Singleton
 @ValidateOnExecution
@@ -2261,6 +2262,55 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       Thread.currentThread().interrupt();
       throw new InvalidRequestException(ex.getMessage(), WingsException.USER);
     }
+  }
+
+  @Override
+  public List<ManifestDiff> fetchManifestDiff(String appId, String infraDefinitionId) {
+    final InfrastructureDefinition infra = fetchDirectK8SInfra(appId, infraDefinitionId);
+    DirectKubernetesInfrastructure kubernetesInfrastructure =
+        (DirectKubernetesInfrastructure) infra.getInfrastructure();
+    final SettingAttribute argoConnector = settingsService.get(kubernetesInfrastructure.getArgoConnectorId());
+    final ArgoConfig argoConfig = (ArgoConfig) argoConnector.getValue();
+    final List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(argoConfig);
+    ManifestDiffRequest manifestDiffRequest = ManifestDiffRequest.builder()
+                                                  .argoConfig(argoConfig)
+                                                  .encryptedDataDetails(encryptionDetails)
+                                                  .appName(kubernetesInfrastructure.getArgoAppConfig().getAppName())
+                                                  .build();
+    DelegateTask delegateTask = prepareArgoTask(infra.getAccountId(), manifestDiffRequest);
+    try {
+      ManifestDiffResponse manifestDiffResponse = delegateService.executeTask(delegateTask);
+      if (manifestDiffResponse.getExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+        throw new InvalidRequestException("Manifest Diff Failed", USER);
+      }
+      return manifestDiffResponse.getManifestDiffList();
+    } catch (InterruptedException ex) {
+      Thread.currentThread().interrupt();
+      throw new InvalidRequestException(ex.getMessage(), WingsException.USER);
+    }
+  }
+
+  private InfrastructureDefinition fetchDirectK8SInfra(String appId, String infraDefinitionId) {
+    final InfrastructureDefinition infra = get(appId, infraDefinitionId);
+    if (infra == null) {
+      throw new InvalidRequestException("Infra Definition Not Found", USER);
+    }
+    if (!(infra.getInfrastructure() instanceof DirectKubernetesInfrastructure)) {
+      throw new InvalidRequestException("Direct Kubernetes Infra Definition Not Found", USER);
+    }
+    return infra;
+  }
+
+  private DelegateTask prepareArgoTask(String accountId, ArgoRequest argoRequest) {
+    return DelegateTask.builder()
+        .accountId(accountId)
+        .data(TaskData.builder()
+                  .parameters(new Object[] {argoRequest})
+                  .taskType(String.valueOf(TaskType.ARGOCD_TASK))
+                  .async(false)
+                  .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
+                  .build())
+        .build();
   }
 
   private AzureVMSSInfra validateAndGetAzureVMSSInfra(String appId, String infraDefinitionId) {

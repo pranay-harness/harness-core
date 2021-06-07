@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import io.harness.argo.beans.ClusterResourceTreeDTO;
+import io.harness.argo.beans.ManifestDiff;
 import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -9,7 +10,8 @@ import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.delegate.task.azure.appservice.webapp.response.DeploymentSlotData;
 import io.harness.delegate.task.spotinst.response.SpotinstElastigroupRunningCountData;
 import io.harness.spotinst.model.ElastiGroup;
-
+import org.hibernate.validator.constraints.NotBlank;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.infrastructure.Host;
@@ -28,8 +30,6 @@ import java.util.List;
 import java.util.Map;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import org.hibernate.validator.constraints.NotBlank;
-import org.hibernate.validator.constraints.NotEmpty;
 
 public interface InfrastructureDefinitionService extends OwnedByEnvironment {
   PageResponse<InfrastructureDefinition> list(
@@ -186,4 +186,6 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
   List<String> listAzureLoadBalancerBackendPools(String appId, String infraDefinitionId, String loadBalancerName);
 
   ClusterResourceTreeDTO getResourceTree(String appId, String infraDefinitionId);
+
+  List<ManifestDiff> fetchManifestDiff(String appId, String infraDefinitionId);
 }
