@@ -24,6 +24,7 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -123,15 +124,24 @@ public class QueryShapeDetectorTest extends CategoryTest {
       ImmutablePair.of(createCalculateHashParams(Query.query(Criteria.where("_a").is(1))),
           createCalculateHashParams(Query.query(Criteria.where("_a").is(10).and("_b").is(5)))));
 
+  private static final List<Pair<CalculateHashParams, CalculateHashParams>> diffShapeSortQueriesList = Arrays.asList(
+      // Basic types
+      ImmutablePair.of(
+          createCalculateHashParams(Query.query(Criteria.where("a").is(1)).with(Sort.by(Sort.Direction.ASC, "b", "c"))),
+          createCalculateHashParams(
+              Query.query(Criteria.where("a").is(1)).with(Sort.by(Sort.Direction.ASC, "c", "b")))));
+
   @Test
   @Owner(developers = GARVIT)
   @Category(io.harness.category.element.UnitTests.class)
   public void testNormalizeMapSameShape() {
     for (List<CalculateHashParams> sameShapeQueries : sameShapeQueriesList) {
-      String normalized = JsonUtils.asJson(QueryShapeDetector.normalizeObject(sameShapeQueries.get(0).getQueryDoc()));
+      String normalized =
+          JsonUtils.asJson(QueryShapeDetector.normalizeObject(sameShapeQueries.get(0).getQueryDoc(), false));
       for (int i = 1; i < sameShapeQueries.size(); i++) {
         CalculateHashParams params = sameShapeQueries.get(i);
-        assertThat(JsonUtils.asJson(QueryShapeDetector.normalizeObject(params.getQueryDoc()))).isEqualTo(normalized);
+        assertThat(JsonUtils.asJson(QueryShapeDetector.normalizeObject(params.getQueryDoc(), false)))
+            .isEqualTo(normalized);
       }
     }
   }
@@ -141,11 +151,11 @@ public class QueryShapeDetectorTest extends CategoryTest {
   @Category(io.harness.category.element.UnitTests.class)
   public void testQueryHashForSameQueryShape() {
     for (List<CalculateHashParams> sameShapeQueries : sameShapeQueriesList) {
-      String firstElementHash = QueryShapeDetector.getQueryHash(
-          sameShapeQueries.get(0).collectionName, sameShapeQueries.get(0).getQueryDoc(), null);
+      String firstElementHash = QueryShapeDetector.getQueryHash(sameShapeQueries.get(0).collectionName,
+          sameShapeQueries.get(0).getQueryDoc(), sameShapeQueries.get(0).getSortDoc());
       for (CalculateHashParams sameShapeQuery : sameShapeQueries) {
-        String queryHash =
-            QueryShapeDetector.getQueryHash(sameShapeQuery.collectionName, sameShapeQuery.getQueryDoc(), null);
+        String queryHash = QueryShapeDetector.getQueryHash(
+            sameShapeQuery.collectionName, sameShapeQuery.getQueryDoc(), sameShapeQuery.getSortDoc());
         assertThat(queryHash).isEqualTo(firstElementHash);
       }
     }
@@ -156,11 +166,28 @@ public class QueryShapeDetectorTest extends CategoryTest {
   @Category(io.harness.category.element.UnitTests.class)
   public void testQueryHashForDifferentQueryShape() {
     for (Pair<CalculateHashParams, CalculateHashParams> diffShapeQueries : diffShapeQueriesList) {
-      QueryHashKey leftQueryHash = QueryShapeDetector.calculateQueryHashKey(
-          diffShapeQueries.getLeft().collectionName, diffShapeQueries.getLeft().getQueryDoc(), null);
-      QueryHashKey rightQueryHash = QueryShapeDetector.calculateQueryHashKey(
-          diffShapeQueries.getRight().collectionName, diffShapeQueries.getRight().getQueryDoc(), null);
-      assertThat(leftQueryHash).isNotEqualTo(rightQueryHash);
+      QueryHashKey leftQueryHash = QueryShapeDetector.calculateQueryHashKey(diffShapeQueries.getLeft().collectionName,
+          diffShapeQueries.getLeft().getQueryDoc(), diffShapeQueries.getLeft().getSortDoc());
+      QueryHashKey rightQueryHash = QueryShapeDetector.calculateQueryHashKey(diffShapeQueries.getRight().collectionName,
+          diffShapeQueries.getRight().getQueryDoc(), diffShapeQueries.getRight().getSortDoc());
+      assertThat(leftQueryHash.getQueryHash()).isNotEqualTo(rightQueryHash.getQueryHash());
+      assertThat(leftQueryHash.getSortHash()).isEqualTo(rightQueryHash.getSortHash());
+      assertThat(leftQueryHash.hashCode()).isNotEqualTo(rightQueryHash.hashCode());
+    }
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(io.harness.category.element.UnitTests.class)
+  public void testQueryHashForDifferentSortQueryShape() {
+    for (Pair<CalculateHashParams, CalculateHashParams> diffShapeQueries : diffShapeSortQueriesList) {
+      QueryHashKey leftQueryHash = QueryShapeDetector.calculateQueryHashKey(diffShapeQueries.getLeft().collectionName,
+          diffShapeQueries.getLeft().getQueryDoc(), diffShapeQueries.getLeft().getSortDoc());
+      QueryHashKey rightQueryHash = QueryShapeDetector.calculateQueryHashKey(diffShapeQueries.getRight().collectionName,
+          diffShapeQueries.getRight().getQueryDoc(), diffShapeQueries.getRight().getSortDoc());
+      assertThat(leftQueryHash.getSortHash()).isNotEqualTo(rightQueryHash.getSortHash());
+      assertThat(leftQueryHash.getQueryHash()).isEqualTo(rightQueryHash.getQueryHash());
+      assertThat(leftQueryHash.hashCode()).isNotEqualTo(rightQueryHash.hashCode());
     }
   }
 
@@ -170,8 +197,8 @@ public class QueryShapeDetectorTest extends CategoryTest {
   public void testNormalizeMapDiffShape() {
     for (Pair<CalculateHashParams, CalculateHashParams> diffShapeQueries : diffShapeQueriesList) {
       String normalized =
-          JsonUtils.asJson(QueryShapeDetector.normalizeObject(diffShapeQueries.getLeft().getQueryDoc()));
-      assertThat(JsonUtils.asJson(QueryShapeDetector.normalizeObject(diffShapeQueries.getRight().getQueryDoc())))
+          JsonUtils.asJson(QueryShapeDetector.normalizeObject(diffShapeQueries.getLeft().getQueryDoc(), false));
+      assertThat(JsonUtils.asJson(QueryShapeDetector.normalizeObject(diffShapeQueries.getRight().getQueryDoc(), false)))
           .isNotEqualTo(normalized);
     }
   }
@@ -180,10 +207,11 @@ public class QueryShapeDetectorTest extends CategoryTest {
   private static class CalculateHashParams {
     String collectionName;
     Document queryDoc;
+    Document sortDoc;
   }
 
   private static CalculateHashParams createCalculateHashParams(Query query) {
-    new CalculateHashParams("randomColl", query.getQueryObject());
-    return new CalculateHashParams("randomColl", query.getQueryObject());
+    new CalculateHashParams("randomColl", query.getQueryObject(), query.getSortObject());
+    return new CalculateHashParams("randomColl", query.getQueryObject(), query.getSortObject());
   }
 }

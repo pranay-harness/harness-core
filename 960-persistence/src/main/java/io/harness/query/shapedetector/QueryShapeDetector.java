@@ -8,6 +8,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,8 +37,8 @@ public class QueryShapeDetector {
   }
 
   public QueryHashKey calculateQueryHashKey(String collectionName, Document queryDoc, Document sortDoc) {
-    String queryHash = calculateDocHash(normalizeMap(queryDoc));
-    String sortHash = calculateDocHash(sortDoc);
+    String queryHash = calculateDocHash(normalizeMap(queryDoc, false));
+    String sortHash = calculateDocHash(normalizeMap(sortDoc, true));
     return QueryHashKey.builder().collectionName(collectionName).queryHash(queryHash).sortHash(sortHash).build();
   }
 
@@ -50,21 +51,21 @@ public class QueryShapeDetector {
   }
 
   @VisibleForTesting
-  Object normalizeObject(Object object) {
+  Object normalizeObject(Object object, boolean prefixField) {
     if (object == null) {
       // null is not converted to default value as null might not work with usual indices
       return null;
     }
     if (object instanceof Map) {
-      return normalizeMap((Map<String, Object>) object);
+      return normalizeMap((Map<String, Object>) object, prefixField);
     }
     if (object instanceof List) {
-      return normalizeList((List<Object>) object);
+      return normalizeList((List<Object>) object, prefixField);
     }
     return DEFAULT_VALUE;
   }
 
-  private Document normalizeMap(Map<String, Object> doc) {
+  private Document normalizeMap(Map<String, Object> doc, boolean prefixField) {
     Document copy = new Document();
     if (EmptyPredicate.isEmpty(doc)) {
       return copy;
@@ -72,28 +73,30 @@ public class QueryShapeDetector {
 
     List<ImmutablePair<String, Object>> normalizedEntries = new ArrayList<>();
     // Recursively normalize
+    Integer prefixCount = 1;
     for (Map.Entry<String, Object> entry : doc.entrySet()) {
-      String key = entry.getKey();
+      String key = prefixField ? (prefixCount + entry.getKey()) : entry.getKey();
       Object value = entry.getValue();
-      if (value instanceof List && needToTrimList(key)) {
+      if (!prefixField && value instanceof List && needToTrimList(key)) {
         value = Collections.singletonList(DEFAULT_VALUE);
       } else {
-        value = normalizeObject(value);
+        value = normalizeObject(value, prefixField);
       }
       normalizedEntries.add(ImmutablePair.of(key, value));
+      prefixCount++;
     }
 
     // Sort the entries
-    // normalizedEntries.sort(Comparator.comparing(ImmutablePair::getLeft));
+    normalizedEntries.sort(Comparator.comparing(ImmutablePair::getLeft));
     normalizedEntries.forEach(e -> copy.put(e.getLeft(), e.getRight()));
     return copy;
   }
 
-  private List<Object> normalizeList(List<Object> list) {
+  private List<Object> normalizeList(List<Object> list, boolean prefixField) {
     if (EmptyPredicate.isEmpty(list)) {
       return Collections.emptyList();
     }
-    return list.stream().map(QueryShapeDetector::normalizeObject).collect(Collectors.toList());
+    return list.stream().map(object -> normalizeObject(object, prefixField)).collect(Collectors.toList());
   }
 
   private boolean needToTrimList(String key) {
