@@ -11,6 +11,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
+import io.harness.serializer.JsonUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -116,20 +117,20 @@ public class QueryShapeDetectorTest extends CategoryTest {
       // Basic types
       ImmutablePair.of(createCalculateHashParams(Query.query(Criteria.where("_str").is("abc"))),
           createCalculateHashParams(Query.query(Criteria.where("_def").is("def")))),
+      ImmutablePair.of(createCalculateHashParams(Query.query(Criteria.where("_str").is("abc"))),
+          createCalculateHashParams(Query.query(Criteria.where("_str").is(null)))),
       ImmutablePair.of(createCalculateHashParams(Query.query(Criteria.where("_a").is(1))),
           createCalculateHashParams(Query.query(Criteria.where("_a").is(10).and("_b").is(5)))));
 
   @Test
   @Owner(developers = GARVIT)
   @Category(io.harness.category.element.UnitTests.class)
-  public void testCalculateHashSameShape() {
+  public void testNormalizeMapSameShape() {
     for (List<CalculateHashParams> sameShapeQueries : sameShapeQueriesList) {
-      String hash = QueryShapeDetector.calculateQueryHash(
-          sameShapeQueries.get(0).getCollectionName(), sameShapeQueries.get(0).getQueryDoc());
+      String normalized = JsonUtils.asJson(QueryShapeDetector.normalizeObject(sameShapeQueries.get(0).getQueryDoc()));
       for (int i = 1; i < sameShapeQueries.size(); i++) {
         CalculateHashParams params = sameShapeQueries.get(i);
-        assertThat(QueryShapeDetector.calculateQueryHash(params.getCollectionName(), params.getQueryDoc()))
-            .isEqualTo(hash);
+        assertThat(JsonUtils.asJson(QueryShapeDetector.normalizeObject(params.getQueryDoc()))).isEqualTo(normalized);
       }
     }
   }
@@ -137,13 +138,12 @@ public class QueryShapeDetectorTest extends CategoryTest {
   @Test
   @Owner(developers = GARVIT)
   @Category(io.harness.category.element.UnitTests.class)
-  public void testCalculateHashDiffShape() {
+  public void testNormalizeMapDiffShape() {
     for (Pair<CalculateHashParams, CalculateHashParams> diffShapeQueries : diffShapeQueriesList) {
-      String hash = QueryShapeDetector.calculateQueryHash(
-          diffShapeQueries.getLeft().getCollectionName(), diffShapeQueries.getRight().getQueryDoc());
-      assertThat(QueryShapeDetector.calculateQueryHash(
-                     diffShapeQueries.getRight().getCollectionName(), diffShapeQueries.getRight().getQueryDoc()))
-          .isNotEqualTo(hash);
+      String normalized =
+          JsonUtils.asJson(QueryShapeDetector.normalizeObject(diffShapeQueries.getLeft().getQueryDoc()));
+      assertThat(JsonUtils.asJson(QueryShapeDetector.normalizeObject(diffShapeQueries.getRight().getQueryDoc())))
+          .isNotEqualTo(normalized);
     }
   }
 
@@ -239,6 +239,7 @@ public class QueryShapeDetectorTest extends CategoryTest {
   }
 
   private static CalculateHashParams createCalculateHashParams(Query query) {
+    new CalculateHashParams("randomColl", query.getQueryObject());
     return new CalculateHashParams("randomColl", query.getQueryObject());
   }
 }
