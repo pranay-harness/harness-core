@@ -14,6 +14,7 @@ import software.wings.beans.security.UserGroup;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
+import software.wings.security.UserPermissionNameInfo;
 import software.wings.security.UserRequestInfo;
 import software.wings.security.UserRestrictionInfo;
 
@@ -92,6 +93,8 @@ public interface AuthService {
   void validateLearningEngineServiceToken(String learningEngineServiceToken);
 
   UserPermissionInfo getUserPermissionInfo(String accountId, User user, boolean cacheOnly);
+
+  UserPermissionNameInfo getUserPermissionNameInfo(String accountId, User user);
 
   UserRestrictionInfo getUserRestrictionInfo(
       String accountId, User user, UserPermissionInfo userPermissionInfo, boolean cacheOnly);

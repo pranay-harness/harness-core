@@ -81,12 +81,14 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.SecretManager;
 import software.wings.security.UserPermissionInfo;
+import software.wings.security.UserPermissionNameInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserRequestInfo;
 import software.wings.security.UserRestrictionInfo;
 import software.wings.security.UserRestrictionInfo.UserRestrictionInfoBuilder;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.impl.security.auth.AuthHandler2;
 import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -145,6 +147,7 @@ public class AuthServiceImpl implements AuthService {
   private MainConfiguration configuration;
   private VerificationServiceSecretManager verificationServiceSecretManager;
   private AuthHandler authHandler;
+  private AuthHandler2 authHandler2;
   private HarnessUserGroupService harnessUserGroupService;
   private SecretManager secretManager;
   private VersionInfoManager versionInfoManager;
@@ -533,6 +536,16 @@ public class AuthServiceImpl implements AuthService {
 
     // not found in cache. cache write through failed as well. rebuild anyway
     return getUserPermissionInfoFromDB(accountId, user);
+  }
+
+  @Override
+  public UserPermissionNameInfo getUserPermissionNameInfo(String accountId, User user) {
+    return getUserPermissionNameInfoFromDB(accountId, user);
+  }
+
+  private UserPermissionNameInfo getUserPermissionNameInfoFromDB(String accountId, User user) {
+    List<UserGroup> userGroups = getUserGroups(accountId, user);
+    return authHandler2.evaluateUserPermissionInfo(accountId, userGroups, user);
   }
 
   @Override

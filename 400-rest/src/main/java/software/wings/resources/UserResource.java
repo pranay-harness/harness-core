@@ -63,6 +63,7 @@ import software.wings.beans.security.UserGroup;
 import software.wings.scheduler.AccountPasswordExpirationJob;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserPermissionInfo;
+import software.wings.security.UserPermissionNameInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.IdentityServiceAuth;
@@ -538,6 +539,16 @@ public class UserResource {
   public RestResponse<UserPermissionInfo> getUserPermissionInfo(@PathParam("accountId") String accountId) {
     return new RestResponse<>(
         authService.getUserPermissionInfo(accountId, UserThreadLocal.get().getPublicUser(), false));
+  }
+
+  @GET
+  @Path("user-permissions-info/{accountId}")
+  @Scope(value = ResourceType.USER, scope = LOGGED_IN)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<UserPermissionNameInfo> getUserPermissionNameInfo(@PathParam("accountId") String accountId) {
+    return new RestResponse<>(
+            authService.getUserPermissionNameInfo(accountId, UserThreadLocal.get().getPublicUser()));
   }
 
   /**
