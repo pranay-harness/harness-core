@@ -642,6 +642,21 @@ public class DelegateSetupResource {
 
   @PublicApi
   @GET
+  @Path("getKubernetesDelegateYaml")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> getmyYaml(@Context HttpServletRequest request,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("delegateName") @NotEmpty String delegateName,
+      @QueryParam("delegateProfileId") String delegateProfileId,
+      @QueryParam("isCeEnabled") @DefaultValue("false") boolean isCeEnabled,
+      @QueryParam("tokenName") String tokenName) {
+    return new RestResponse<>(
+        delegateService.getYamlForKubernetesDelegate(subdomainUrlHelper.getManagerUrl(request, accountId),
+            getVerificationUrl(request), accountId, delegateName, delegateProfileId, tokenName));
+  }
+
+  @PublicApi
+  @GET
   @Path("kubernetes/account-identifier")
   @Timed
   @ExceptionMetered

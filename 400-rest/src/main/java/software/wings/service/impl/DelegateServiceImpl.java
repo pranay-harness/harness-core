@@ -249,6 +249,7 @@ import okhttp3.Request.Builder;
 import okhttp3.Response;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -1626,6 +1627,37 @@ public class DelegateServiceImpl implements DelegateService {
     File gzipDockerDelegateFile = File.createTempFile(DELEGATE_DIR, TAR_GZ);
     compressGzipFile(dockerDelegateFile, gzipDockerDelegateFile);
     return gzipDockerDelegateFile;
+  }
+
+  public String getYamlForKubernetesDelegate(String managerHost, String verificationUrl, String accountId,
+      String delegateName, String delegateProfile, String tokenName) {
+    String version;
+    if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
+      List<String> delegateVersions = accountService.getDelegateConfiguration(accountId).getDelegateVersions();
+      version = delegateVersions.get(delegateVersions.size() - 1);
+    } else {
+      version = EMPTY_VERSION;
+    }
+    try {
+      File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
+      ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
+          ScriptRuntimeParamMapInquiry.builder()
+              .accountId(accountId)
+              .version(version)
+              .managerHost(managerHost)
+              .verificationHost(verificationUrl)
+              .delegateName(delegateName)
+              .delegateProfile(delegateProfile == null ? "" : delegateProfile)
+              .delegateType(KUBERNETES)
+              .ciEnabled(false)
+              .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
+              .delegateTokenName(tokenName)
+              .build());
+      saveProcessedTemplate(scriptParams, yaml, HARNESS_DELEGATE + ".yaml.ftl");
+      return FileUtils.readFileToString(yaml, "UTF-8");
+    } catch (Exception ex) {
+    }
+    return "Nothing";
   }
 
   @Override

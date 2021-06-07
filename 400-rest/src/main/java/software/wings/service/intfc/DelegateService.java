@@ -166,4 +166,7 @@ public interface DelegateService extends OwnedByAccount {
   void regenerateCapabilityPermissions(String accountId, String delegateId);
 
   DelegateGroup upsertDelegateGroup(String name, String accountId, K8sConfigDetails k8sConfigDetails);
+
+  String getYamlForKubernetesDelegate(String managerHost, String verificationUrl, String accountId, String delegateName,
+      String delegateProfile, String tokenName);
 }
