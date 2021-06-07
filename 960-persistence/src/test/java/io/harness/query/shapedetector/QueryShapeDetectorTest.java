@@ -35,9 +35,6 @@ import org.springframework.data.mongodb.core.query.Query;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class QueryShapeDetectorTest extends CategoryTest {
-  // TODO:
-  // - add test cases for null and define behaviour
-
   private static final List<List<CalculateHashParams>> sameShapeQueriesList = Arrays.asList(
       // Basic types
       Arrays.asList(createCalculateHashParams(Query.query(Criteria.where("_str").is("abc"))),

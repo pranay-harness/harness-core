@@ -2,16 +2,15 @@ package io.harness.query.shapedetector;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.query.shapedetector.QueryHashInfo.QueryHashKey;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
-import io.harness.data.structure.EmptyPredicate;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -31,8 +30,7 @@ import org.bson.Document;
 @UtilityClass
 public class QueryShapeDetector {
   private static final Object DEFAULT_VALUE = 1;
-  private static final Set<String> ARRAY_TRIM_OPERATORS =
-      Sets.newHashSet("$eq", "$in", "$nin", "$all", "$distinct", "$mod");
+  private static final Set<String> ARRAY_TRIM_OPERATORS = Sets.newHashSet("$eq", "$in", "$nin", "$all", "$mod");
 
   ConcurrentMap<QueryHashKey, QueryHashInfo> queryHashCache = new ConcurrentHashMap<>();
 
@@ -64,6 +62,7 @@ public class QueryShapeDetector {
   @VisibleForTesting
   Object normalizeObject(Object object) {
     if (object == null) {
+      // null is not converted to default value as null might not work with usual indices
       return null;
     }
     if (object instanceof Map) {
