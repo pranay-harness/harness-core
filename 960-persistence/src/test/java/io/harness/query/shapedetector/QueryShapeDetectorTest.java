@@ -1,5 +1,6 @@
 package io.harness.query.shapedetector;
 
+import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.GARVIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,9 +30,6 @@ import org.springframework.data.mongodb.core.query.Query;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class QueryShapeDetectorTest extends CategoryTest {
-  // TODO:
-  // - add test cases for null and define behaviour
-
   private static final List<List<CalculateHashParams>> sameShapeQueriesList = Arrays.asList(
       // Basic types
       Arrays.asList(createCalculateHashParams(Query.query(Criteria.where("_str").is("abc"))),
@@ -135,6 +133,34 @@ public class QueryShapeDetectorTest extends CategoryTest {
         CalculateHashParams params = sameShapeQueries.get(i);
         assertThat(JsonUtils.asJson(QueryShapeDetector.normalizeObject(params.getQueryDoc()))).isEqualTo(normalized);
       }
+    }
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(io.harness.category.element.UnitTests.class)
+  public void testQueryHashForSameQueryShape() {
+    for (List<CalculateHashParams> sameShapeQueries : sameShapeQueriesList) {
+      String firstElementHash = QueryShapeDetector.getQueryHash(
+          sameShapeQueries.get(0).collectionName, sameShapeQueries.get(0).getQueryDoc(), null);
+      for (CalculateHashParams sameShapeQuery : sameShapeQueries) {
+        String queryHash =
+            QueryShapeDetector.getQueryHash(sameShapeQuery.collectionName, sameShapeQuery.getQueryDoc(), null);
+        assertThat(queryHash).isEqualTo(firstElementHash);
+      }
+    }
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(io.harness.category.element.UnitTests.class)
+  public void testQueryHashForDifferentQueryShape() {
+    for (Pair<CalculateHashParams, CalculateHashParams> diffShapeQueries : diffShapeQueriesList) {
+      QueryHashKey leftQueryHash = QueryShapeDetector.calculateQueryHashKey(
+          diffShapeQueries.getLeft().collectionName, diffShapeQueries.getLeft().getQueryDoc(), null);
+      QueryHashKey rightQueryHash = QueryShapeDetector.calculateQueryHashKey(
+          diffShapeQueries.getRight().collectionName, diffShapeQueries.getRight().getQueryDoc(), null);
+      assertThat(leftQueryHash).isNotEqualTo(rightQueryHash);
     }
   }
 

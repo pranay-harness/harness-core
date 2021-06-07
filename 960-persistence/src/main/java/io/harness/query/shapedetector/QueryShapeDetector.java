@@ -3,17 +3,11 @@ package io.harness.query.shapedetector;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.InvalidRequestException;
-import io.harness.query.shapedetector.QueryHashInfo.QueryHashKey;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,40 +24,35 @@ import org.bson.Document;
 @UtilityClass
 public class QueryShapeDetector {
   private static final Object DEFAULT_VALUE = 1;
-  private static final Set<String> ARRAY_TRIM_OPERATORS =
-      Sets.newHashSet("$eq", "$in", "$nin", "$all", "$distinct", "$mod");
+  private static final Set<String> ARRAY_TRIM_OPERATORS = Sets.newHashSet("$eq", "$in", "$nin", "$all", "$mod");
 
   ConcurrentMap<QueryHashKey, QueryHashInfo> queryHashCache = new ConcurrentHashMap<>();
 
-  public String getQueryHash(String collectionName, Document queryDoc) {
-    QueryHashKey queryHashKey = calculateQueryHashKey(collectionName, queryDoc);
-    QueryHashInfo queryHashInfo =
-        queryHashCache.computeIfAbsent(queryHashKey, hashKey -> new QueryHashInfo(queryHashKey, queryDoc));
+  public String getQueryHash(String collectionName, Document queryDoc, Document sortDoc) {
+    QueryHashKey queryHashKey = calculateQueryHashKey(collectionName, queryDoc, sortDoc);
+    QueryHashInfo queryHashInfo = queryHashCache.computeIfAbsent(queryHashKey,
+        hashKey -> QueryHashInfo.builder().queryHashKey(queryHashKey).queryDoc(queryDoc).sortDoc(sortDoc).build());
     return String.valueOf(queryHashInfo.getQueryHashKey().hashCode());
   }
 
-  public QueryHashKey calculateQueryHashKey(String collectionName, Document queryDoc) {
-    String queryHash = calculateQueryDocHash(queryDoc);
-    return QueryHashKey.builder().collectionName(collectionName).queryHash(queryHash).build();
+  public QueryHashKey calculateQueryHashKey(String collectionName, Document queryDoc, Document sortDoc) {
+    String queryHash = calculateDocHash(normalizeMap(queryDoc));
+    String sortHash = calculateDocHash(sortDoc);
+    return QueryHashKey.builder().collectionName(collectionName).queryHash(queryHash).sortHash(sortHash).build();
   }
 
-  private String calculateQueryDocHash(Document queryDoc) {
-    Document normalizedQueryDoc = normalizeMap(queryDoc);
-    //    ObjectMapper objectMapper = new ObjectMapper();
-    //    String jsonString = normalizedQueryDoc.toJson();
-    //    try {
-    //      JsonNode jsonNode = objectMapper.readTree(objectMapper.getFactory().createParser(jsonString));
-    //      return String.valueOf(jsonNode.hashCode());
-    //    } catch (IOException e) {
-    //      log.error("Unable to parse the query json", e);
-    //      throw new InvalidRequestException("Unable to parse the query json");
-    //    }
-    return String.valueOf(normalizedQueryDoc.hashCode());
+  private String calculateDocHash(Document doc) {
+    if (doc == null) {
+      return "";
+    }
+    // Document hashCode doesnt take order into account, thus keys order in linkedHashMap doesnt map
+    return String.valueOf(doc.hashCode());
   }
 
   @VisibleForTesting
   Object normalizeObject(Object object) {
     if (object == null) {
+      // null is not converted to default value as null might not work with usual indices
       return null;
     }
     if (object instanceof Map) {
@@ -95,7 +84,7 @@ public class QueryShapeDetector {
     }
 
     // Sort the entries
-    normalizedEntries.sort(Comparator.comparing(ImmutablePair::getLeft));
+    // normalizedEntries.sort(Comparator.comparing(ImmutablePair::getLeft));
     normalizedEntries.forEach(e -> copy.put(e.getLeft(), e.getRight()));
     return copy;
   }
