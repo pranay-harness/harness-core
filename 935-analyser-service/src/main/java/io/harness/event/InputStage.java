@@ -22,4 +22,5 @@ class InputStage {
   boolean isMultiKey;
   boolean isEof;
   long keysExamined;
+  InputStage inputStage;
 }

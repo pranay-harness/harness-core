@@ -19,5 +19,5 @@ public class ExecutionStats {
   long nReturned;
   long executionTimeMillis;
   long totalDocsExamined;
-  InputStage inputStage;
+  InputStage executionStages;
 }

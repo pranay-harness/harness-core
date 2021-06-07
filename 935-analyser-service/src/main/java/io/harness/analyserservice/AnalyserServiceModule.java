@@ -11,8 +11,8 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.service.QueryRecordService;
-import io.harness.service.QueryRecordServiceImpl;
+import io.harness.service.QueryStatsService;
+import io.harness.service.QueryStatsServiceImpl;
 import io.harness.springdata.SpringPersistenceModule;
 
 import com.google.common.collect.ImmutableList;
@@ -90,7 +90,7 @@ public class AnalyserServiceModule extends AbstractModule {
     install(new EventsFrameworkModule(config.getEventsFrameworkConfiguration()));
     install(new SpringPersistenceModule());
     bind(HPersistence.class).to(MongoPersistence.class);
-    bind(QueryRecordService.class).to(QueryRecordServiceImpl.class);
+    bind(QueryStatsService.class).to(QueryStatsServiceImpl.class);
   }
 
   @Provides

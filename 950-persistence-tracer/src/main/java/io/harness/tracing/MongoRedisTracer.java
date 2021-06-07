@@ -15,9 +15,8 @@ import io.harness.version.VersionInfoManager;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Named;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
@@ -30,15 +29,13 @@ public class MongoRedisTracer implements Tracer {
   @Inject @Named(SERVICE_ID) private String serviceId;
   @Inject private VersionInfoManager versionInfoManager;
 
-  @Inject @Named(ANALYZER_CACHE_NAME) DistributedCache queryRecordCache;
-
-  // This is temporary till we have redis cache
-  private static Map<String, String> cache = new ConcurrentHashMap<>();
+  @Inject @Named(ANALYZER_CACHE_NAME) DistributedCache queryStatsCache;
 
   @Override
   public void trace(Document queryDoc, Document sortDoc, String collectionName, MongoTemplate mongoTemplate) {
     String qHash = QueryShapeDetector.getQueryHash(collectionName, queryDoc, sortDoc);
-    if (queryRecordCache.presentInMultiMap(ANALYZER_CACHE_KEY, serviceId, qHash)) {
+    String queryStatsCacheKey = String.format(ANALYZER_CACHE_KEY, serviceId);
+    if (queryStatsCache.presentInMap(ANALYZER_CACHE_KEY, String.format("%s_%s", serviceId, qHash))) {
       log.debug("Cache hit");
       return;
     }
@@ -62,7 +59,7 @@ public class MongoRedisTracer implements Tracer {
                         .putMetadata(QUERY_HASH, qHash)
                         .setData(ByteString.copyFromUtf8(explainResult.toJson()))
                         .build());
-      queryRecordCache.putInsideMultiMap(ANALYZER_CACHE_KEY, serviceId, qHash);
+      queryStatsCache.putInsideMap(ANALYZER_CACHE_KEY, String.format("%s_%s", serviceId, qHash), new AtomicInteger(1));
     });
   }
 }

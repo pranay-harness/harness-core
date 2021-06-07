@@ -48,8 +48,20 @@ public class RedisCache implements DistributedCache {
   }
 
   @Override
+  public <K, V> V getFromMap(String key, K innerKey) {
+    RMapCache<K, V> cache = redissonClient.getMapCache(key);
+    return (V) cache.get(innerKey);
+  }
+
+  @Override
   public <K, V> boolean presentInMultiMap(String key, K innerKey, V value) {
     RListMultimapCache<K, V> cache = redissonClient.getListMultimapCache(key);
     return cache.get(innerKey).contains(value);
+  }
+
+  @Override
+  public <K, V> boolean presentInMap(String key, K innerKey) {
+    RMapCache<K, V> cache = redissonClient.getMapCache(key);
+    return cache.containsKey(innerKey);
   }
 }
