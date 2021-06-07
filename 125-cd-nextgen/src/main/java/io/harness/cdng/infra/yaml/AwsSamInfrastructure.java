@@ -1,5 +1,6 @@
 package io.harness.cdng.infra.yaml;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.infra.beans.InfraMapping;
 
 import lombok.Builder;
@@ -7,8 +8,9 @@ import lombok.Data;
 
 @Data
 @Builder
+@JsonTypeName(InfrastructureKind.AWS_SAM_INFRA)
 public class AwsSamInfrastructure implements Infrastructure {
-  private String awsConnectorRef;
+  private String connectorRef;
 
   @Override
   public InfraMapping getInfraMapping() {
