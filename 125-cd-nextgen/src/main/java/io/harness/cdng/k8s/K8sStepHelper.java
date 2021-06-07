@@ -1017,7 +1017,7 @@ public class K8sStepHelper {
             .map(unitProgress -> {
               if (unitProgress.getStatus() == RUNNING) {
                 LogCallback logCallback = getLogCallback(unitProgress.getUnitName(), ambiance, false);
-                logCallback.saveExecutionLog(exception.getMessage(), LogLevel.ERROR, FAILURE);
+                logCallback.saveExecutionLog(ExceptionUtils.getMessage(exception), LogLevel.ERROR, FAILURE);
                 return UnitProgress.newBuilder(unitProgress)
                     .setStatus(UnitStatus.FAILURE)
                     .setEndTime(System.currentTimeMillis())
