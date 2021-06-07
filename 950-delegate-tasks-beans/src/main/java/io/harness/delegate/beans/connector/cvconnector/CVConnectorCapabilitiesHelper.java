@@ -9,6 +9,8 @@ import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsCapab
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.delegate.beans.connector.datadog.DatadogConnectorDTO;
 import io.harness.delegate.beans.connector.datadogconnector.DatadogCapabilityHelper;
+import io.harness.delegate.beans.connector.dynatrace.DynatraceConnectorDTO;
+import io.harness.delegate.beans.connector.dynatraceconnector.DynatraceCapabilityHelper;
 import io.harness.delegate.beans.connector.gcp.GcpCapabilityHelper;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.k8Connector.K8sTaskCapabilityHelper;
@@ -53,6 +55,8 @@ public class CVConnectorCapabilitiesHelper extends ConnectorTaskParams {
       return DatadogCapabilityHelper.fetchRequiredExecutionCapabilities(maskingEvaluator, connectorDTO);
     } else if (connectorDTO instanceof SumoLogicConnectorDTO) {
       return SumoLogicCapabilityHelper.fetchRequiredExecutionCapabilities(maskingEvaluator, connectorDTO);
+    } else if (connectorDTO instanceof DynatraceConnectorDTO) {
+      return DynatraceCapabilityHelper.fetchRequiredExecutionCapabilities(maskingEvaluator, connectorDTO);
     } else {
       throw new InvalidRequestException("Connector capability not found for " + connectorDTO);
     }

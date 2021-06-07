@@ -1,6 +1,6 @@
 package io.harness.connector.impl;
 
-import static io.harness.delegate.beans.connector.ConnectorType.PROMETHEUS;
+import static io.harness.delegate.beans.connector.ConnectorType.DYNATRACE;
 import static io.harness.rule.OwnerRule.ANJAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,10 +17,11 @@ import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
-import io.harness.connector.entities.embedded.prometheusconnector.PrometheusConnector;
+import io.harness.connector.entities.embedded.dynatraceconnector.DynatraceConnector;
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.validator.ConnectionValidator;
-import io.harness.delegate.beans.connector.prometheusconnector.PrometheusConnectorDTO;
+import io.harness.delegate.beans.connector.dynatrace.DynatraceConnectorDTO;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.git.model.ChangeType;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.rule.Owner;
@@ -30,10 +31,8 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.rules.ExpectedException;
 import org.junit.runners.MethodSorters;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -43,7 +42,7 @@ import org.mockito.Spy;
 @Slf4j
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @OwnedBy(HarnessTeam.CV)
-public class PrometheusConnectorTest extends CategoryTest {
+public class DynatraceConnectorTest extends CategoryTest {
   @Mock ConnectorMapper connectorMapper;
   @Mock ConnectorRepository connectorRepository;
   @Mock ConnectorEntityReferenceHelper connectorEntityReferenceHelper;
@@ -51,76 +50,71 @@ public class PrometheusConnectorTest extends CategoryTest {
 
   @InjectMocks @Spy DefaultConnectorServiceImpl connectorService;
 
-  String url = "https://prometheus.com/";
-  String identifier = "prometheusIdentifier";
-  String name = "Prometheus";
+  String url = "https://dynatraceURL.com/";
+  String apiToken = "1234_api_token";
+  String identifier = "dynatraceIdentifier";
+  String name = "DynatraceConnector";
   ConnectorDTO connectorDTO;
   ConnectorResponseDTO connectorResponseDTO;
-  PrometheusConnector prometheusConnector;
+  DynatraceConnector dynatraceConnector;
   String accountIdentifier = "accountIdentifier";
-
-  @Rule public ExpectedException expectedEx = ExpectedException.none();
 
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
-    prometheusConnector = PrometheusConnector.builder().url(url).build();
-    prometheusConnector.setType(PROMETHEUS);
-    prometheusConnector.setIdentifier(identifier);
-    prometheusConnector.setName(name);
+    dynatraceConnector = DynatraceConnector.builder().url(url).apiTokenRef(apiToken).build();
+    dynatraceConnector.setType(DYNATRACE);
+    dynatraceConnector.setIdentifier(identifier);
+    dynatraceConnector.setName(name);
 
-    PrometheusConnectorDTO prometheusConnectorDTO = PrometheusConnectorDTO.builder().url(url).build();
+    DynatraceConnectorDTO dynatraceConnectorDTO =
+        DynatraceConnectorDTO.builder().apiTokenRef(SecretRefHelper.createSecretRef(apiToken)).url(url).build();
 
     ConnectorInfoDTO connectorInfo = ConnectorInfoDTO.builder()
                                          .name(name)
                                          .identifier(identifier)
-                                         .connectorType(PROMETHEUS)
-                                         .connectorConfig(prometheusConnectorDTO)
+                                         .connectorType(DYNATRACE)
+                                         .connectorConfig(dynatraceConnectorDTO)
                                          .build();
     connectorDTO = ConnectorDTO.builder().connectorInfo(connectorInfo).build();
     connectorResponseDTO = ConnectorResponseDTO.builder().connector(connectorInfo).build();
-    when(connectorRepository.save(prometheusConnector, connectorDTO, ChangeType.ADD)).thenReturn(prometheusConnector);
-    when(connectorMapper.writeDTO(prometheusConnector)).thenReturn(connectorResponseDTO);
-    when(connectorMapper.toConnector(connectorDTO, accountIdentifier)).thenReturn(prometheusConnector);
+    when(connectorRepository.save(dynatraceConnector, connectorDTO, ChangeType.ADD)).thenReturn(dynatraceConnector);
+    when(connectorMapper.writeDTO(dynatraceConnector)).thenReturn(connectorResponseDTO);
+    when(connectorMapper.toConnector(connectorDTO, accountIdentifier)).thenReturn(dynatraceConnector);
     doNothing().when(connectorService).assurePredefined(any(), any());
   }
 
-  private ConnectorResponseDTO createConnector() {
-    return connectorService.create(connectorDTO, accountIdentifier);
-  }
-
   @Test
   @Owner(developers = ANJAN)
   @Category(UnitTests.class)
-  public void testCreateAppDynamicsConnector() {
-    createConnector();
+  public void testCreateDynatraceConnector() {
     when(connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
              anyString(), anyString(), anyString(), anyString(), anyBoolean()))
-        .thenReturn(Optional.of(prometheusConnector));
+        .thenReturn(Optional.of(dynatraceConnector));
     ConnectorResponseDTO connectorResponseDTO = connectorService.create(connectorDTO, accountIdentifier);
-    ensurePrometheusConnectorFieldsAreCorrect(connectorResponseDTO);
+    ensureDynatraceConnectorFieldsAreCorrect(connectorResponseDTO);
   }
 
   @Test
   @Owner(developers = ANJAN)
   @Category(UnitTests.class)
-  public void testGetAppDynamicsConnector() {
-    createConnector();
+  public void testGetDynatraceConnector() {
     when(connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
              anyString(), anyString(), anyString(), anyString(), anyBoolean()))
-        .thenReturn(Optional.of(prometheusConnector));
+        .thenReturn(Optional.of(dynatraceConnector));
     ConnectorResponseDTO connectorDTO = connectorService.get(accountIdentifier, null, null, identifier).get();
-    ensurePrometheusConnectorFieldsAreCorrect(connectorDTO);
+    ensureDynatraceConnectorFieldsAreCorrect(connectorDTO);
   }
 
-  private void ensurePrometheusConnectorFieldsAreCorrect(ConnectorResponseDTO connectorResponse) {
+  private void ensureDynatraceConnectorFieldsAreCorrect(ConnectorResponseDTO connectorResponse) {
     ConnectorInfoDTO connector = connectorResponse.getConnector();
     assertThat(connector).isNotNull();
     assertThat(connector.getName()).isEqualTo(name);
     assertThat(connector.getIdentifier()).isEqualTo(identifier);
-    assertThat(connector.getConnectorType()).isEqualTo(PROMETHEUS);
-    PrometheusConnectorDTO prometheusConnectorDTO = (PrometheusConnectorDTO) connector.getConnectorConfig();
-    assertThat(prometheusConnectorDTO).isNotNull();
-    assertThat(prometheusConnectorDTO.getUrl()).isEqualTo(url);
+    assertThat(connector.getConnectorType()).isEqualTo(DYNATRACE);
+    DynatraceConnectorDTO dynatraceConnectorDTO = (DynatraceConnectorDTO) connector.getConnectorConfig();
+    assertThat(dynatraceConnectorDTO).isNotNull();
+    assertThat(dynatraceConnectorDTO.getUrl()).isEqualTo(url);
+    assertThat(dynatraceConnectorDTO.getApiTokenRef().toSecretRefStringValue()).isEqualTo(apiToken);
   }
 }

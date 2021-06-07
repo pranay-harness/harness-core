@@ -1506,6 +1506,8 @@ public class DelegateModule extends AbstractModule {
         .to(CVConnectorValidationHandler.class);
     connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.SUMOLOGIC.getDisplayName())
         .to(CVConnectorValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.DYNATRACE.getDisplayName())
+        .to(CVConnectorValidationHandler.class);
   }
 
   private void bindExceptionHandlers() {
