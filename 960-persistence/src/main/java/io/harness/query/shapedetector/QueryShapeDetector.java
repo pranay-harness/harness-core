@@ -41,15 +41,14 @@ public class QueryShapeDetector {
   }
 
   public QueryHashKey calculateQueryHashKey(String collectionName, Document queryDoc, Document sortDoc) {
-    String queryHash = calculateQueryDocHash(queryDoc, true);
-    String sortHash = calculateQueryDocHash(sortDoc, true);
+    String queryHash = calculateDocHash(normalizeMap(queryDoc));
+    String sortHash = calculateDocHash(sortDoc);
     return QueryHashKey.builder().collectionName(collectionName).queryHash(queryHash).sortHash(sortHash).build();
   }
 
-  private String calculateQueryDocHash(Document doc, boolean shouldSort) {
-    Document normalizedQueryDoc = normalizeMap(doc, shouldSort);
+  private String calculateDocHash(Document doc) {
     ObjectMapper objectMapper = new ObjectMapper();
-    String jsonString = normalizedQueryDoc.toJson();
+    String jsonString = doc.toJson();
     try {
       JsonNode jsonNode = objectMapper.readTree(objectMapper.getFactory().createParser(jsonString));
       return String.valueOf(jsonNode.hashCode());
@@ -60,21 +59,21 @@ public class QueryShapeDetector {
   }
 
   @VisibleForTesting
-  Object normalizeObject(Object object, boolean shouldSort) {
+  Object normalizeObject(Object object) {
     if (object == null) {
       // null is not converted to default value as null might not work with usual indices
       return null;
     }
     if (object instanceof Map) {
-      return normalizeMap((Map<String, Object>) object, shouldSort);
+      return normalizeMap((Map<String, Object>) object);
     }
     if (object instanceof List) {
-      return normalizeList((List<Object>) object, shouldSort);
+      return normalizeList((List<Object>) object);
     }
     return DEFAULT_VALUE;
   }
 
-  private Document normalizeMap(Map<String, Object> doc, boolean shouldSort) {
+  private Document normalizeMap(Map<String, Object> doc) {
     Document copy = new Document();
     if (EmptyPredicate.isEmpty(doc)) {
       return copy;
@@ -88,24 +87,22 @@ public class QueryShapeDetector {
       if (value instanceof List && needToTrimList(key)) {
         value = Collections.singletonList(DEFAULT_VALUE);
       } else {
-        value = normalizeObject(value, shouldSort);
+        value = normalizeObject(value);
       }
       normalizedEntries.add(ImmutablePair.of(key, value));
     }
 
     // Sort the entries
-    if (shouldSort) {
-      normalizedEntries.sort(Comparator.comparing(ImmutablePair::getLeft));
-    }
+    normalizedEntries.sort(Comparator.comparing(ImmutablePair::getLeft));
     normalizedEntries.forEach(e -> copy.put(e.getLeft(), e.getRight()));
     return copy;
   }
 
-  private List<Object> normalizeList(List<Object> list, boolean shouldSort) {
+  private List<Object> normalizeList(List<Object> list) {
     if (EmptyPredicate.isEmpty(list)) {
       return Collections.emptyList();
     }
-    return list.stream().map(el -> normalizeObject(el, shouldSort)).collect(Collectors.toList());
+    return list.stream().map(el -> normalizeObject(el)).collect(Collectors.toList());
   }
 
   private boolean needToTrimList(String key) {
