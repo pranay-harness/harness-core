@@ -27,6 +27,7 @@ import io.harness.gitsync.scm.SCMGitSyncHelper;
 import io.harness.gitsync.scm.beans.ScmCreateFileResponse;
 import io.harness.manage.GlobalContextManager;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
+import io.harness.ng.core.utils.NGYamlUtils;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
@@ -125,7 +126,8 @@ public class GitAwarePersistenceNewImplTest extends GitSdkTestBase {
         .when(scmGitSyncHelper)
         .pushToGit(any(), anyString(), any(), any());
     doReturn(isGitSyncEnabled).when(gitSyncSdkService).isGitSyncEnabled(anyString(), anyString(), anyString());
-    return gitAwarePersistence.save(sampleBean, sampleBean, ChangeType.ADD, SampleBean.class);
+    return gitAwarePersistence.save(
+        sampleBean, NGYamlUtils.getYamlString(sampleBean), ChangeType.ADD, SampleBean.class);
   }
 
   @Test

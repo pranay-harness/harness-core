@@ -22,7 +22,8 @@ import org.junit.experimental.categories.Category;
 public class AmbianceUtilsTest extends CategoryTest {
   private static final String ACCOUNT_ID = generateUuid();
   private static final String APP_ID = generateUuid();
-  private static final String EXECUTION_INSTANCE_ID = generateUuid();
+  private static final String PLAN_EXECUTION_ID = generateUuid();
+  private static final String PLAN_ID = generateUuid();
   private static final String PHASE_RUNTIME_ID = generateUuid();
   private static final String PHASE_SETUP_ID = generateUuid();
   private static final String SECTION_RUNTIME_ID = generateUuid();
@@ -38,7 +39,8 @@ public class AmbianceUtilsTest extends CategoryTest {
     Ambiance clonedAmbiance = AmbianceUtils.cloneForFinish(ambiance);
     assertThat(clonedAmbiance).isNotNull();
     assertThat(clonedAmbiance.getLevelsList()).hasSize(1);
-    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
+    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(PLAN_EXECUTION_ID);
+    assertThat(clonedAmbiance.getPlanId()).isEqualTo(PLAN_ID);
   }
 
   @Test
@@ -51,7 +53,8 @@ public class AmbianceUtilsTest extends CategoryTest {
     Ambiance clonedAmbiance = AmbianceUtils.cloneForChild(ambiance);
     assertThat(clonedAmbiance).isNotNull();
     assertThat(clonedAmbiance.getLevelsList()).hasSize(2);
-    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
+    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(PLAN_EXECUTION_ID);
+    assertThat(clonedAmbiance.getPlanId()).isEqualTo(PLAN_ID);
   }
 
   @Test
@@ -64,22 +67,26 @@ public class AmbianceUtilsTest extends CategoryTest {
     Ambiance clonedAmbiance = AmbianceUtils.clone(ambiance, 0);
     assertThat(clonedAmbiance).isNotNull();
     assertThat(clonedAmbiance.getLevelsList()).hasSize(0);
-    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
+    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(PLAN_EXECUTION_ID);
+    assertThat(clonedAmbiance.getPlanId()).isEqualTo(PLAN_ID);
 
     clonedAmbiance = AmbianceUtils.clone(ambiance, 1);
     assertThat(clonedAmbiance).isNotNull();
     assertThat(clonedAmbiance.getLevelsList()).hasSize(1);
-    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
+    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(PLAN_EXECUTION_ID);
+    assertThat(clonedAmbiance.getPlanId()).isEqualTo(PLAN_ID);
 
     clonedAmbiance = AmbianceUtils.clone(ambiance, 2);
     assertThat(clonedAmbiance).isNotNull();
     assertThat(clonedAmbiance.getLevelsList()).hasSize(2);
-    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
+    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(PLAN_EXECUTION_ID);
+    assertThat(clonedAmbiance.getPlanId()).isEqualTo(PLAN_ID);
 
     clonedAmbiance = AmbianceUtils.clone(ambiance, 3);
     assertThat(clonedAmbiance).isNotNull();
     assertThat(clonedAmbiance.getLevelsList()).hasSize(2);
-    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
+    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(PLAN_EXECUTION_ID);
+    assertThat(clonedAmbiance.getPlanId()).isEqualTo(PLAN_ID);
   }
 
   @Test
@@ -111,7 +118,8 @@ public class AmbianceUtilsTest extends CategoryTest {
     levels.add(phaseLevel);
     levels.add(sectionLevel);
     return Ambiance.newBuilder()
-        .setPlanExecutionId(EXECUTION_INSTANCE_ID)
+        .setPlanExecutionId(PLAN_EXECUTION_ID)
+        .setPlanId(PLAN_ID)
         .putAllSetupAbstractions(ImmutableMap.of("accountId", ACCOUNT_ID, "appId", APP_ID))
         .addAllLevels(levels)
         .build();

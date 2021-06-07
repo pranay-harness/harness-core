@@ -14,6 +14,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.executions.plan.PlanService;
 import io.harness.engine.observers.beans.OrchestrationStartInfo;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecutionMetadata;
@@ -45,6 +46,7 @@ import org.mockito.Mock;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class ExecutionSummaryCreateEventHandlerTest extends PipelineServiceTestBase {
   @Mock private PMSPipelineService pmsPipelineService;
+  @Mock private PlanService planService;
   @Mock private PlanExecutionService planExecutionService;
   @Mock private NodeTypeLookupService nodeTypeLookupService;
   @Mock private PmsExecutionSummaryRespository pmsExecutionSummaryRespository;
@@ -54,14 +56,16 @@ public class ExecutionSummaryCreateEventHandlerTest extends PipelineServiceTestB
   @Before
   public void setUp() throws Exception {
     executionSummaryCreateEventHandler = new ExecutionSummaryCreateEventHandler(
-        pmsPipelineService, planExecutionService, nodeTypeLookupService, pmsExecutionSummaryRespository);
+        pmsPipelineService, planService, planExecutionService, nodeTypeLookupService, pmsExecutionSummaryRespository);
   }
 
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestOnStart() {
-    Ambiance ambiance = Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build();
+    String planId = generateUuid();
+    String planExecutionId = generateUuid();
+    Ambiance ambiance = Ambiance.newBuilder().setPlanExecutionId(planExecutionId).setPlanId(planId).build();
     PlanExecutionMetadata planExecutionMetadata = PlanExecutionMetadata.builder()
                                                       .planExecutionId(ambiance.getPlanExecutionId())
                                                       .inputSetYaml("some-yaml")
@@ -69,13 +73,6 @@ public class ExecutionSummaryCreateEventHandlerTest extends PipelineServiceTestB
     PlanExecution planExecution =
         PlanExecution.builder()
             .metadata(ExecutionMetadata.newBuilder().setRunSequence(1).setPipelineIdentifier("pipelineId").build())
-            .plan(Plan.builder()
-                      .layoutNodeInfo(GraphLayoutInfo.newBuilder()
-                                          .setStartingNodeId("startId")
-                                          .putLayoutNodes("startId",
-                                              GraphLayoutNode.newBuilder().setNodeGroup("node-group").build())
-                                          .build())
-                      .build())
             .build();
 
     PipelineEntity pipelineEntity = PipelineEntity.builder()
@@ -92,7 +89,15 @@ public class ExecutionSummaryCreateEventHandlerTest extends PipelineServiceTestB
     ArgumentCaptor<PipelineExecutionSummaryEntity> pipelineExecutionSummaryEntityArgumentCaptor =
         ArgumentCaptor.forClass(PipelineExecutionSummaryEntity.class);
 
-    when(planExecutionService.get(anyString())).thenReturn(planExecution);
+    when(planExecutionService.get(planExecutionId)).thenReturn(planExecution);
+    when(planService.fetchPlan(planId))
+        .thenReturn(Plan.builder()
+                        .graphLayoutInfo(GraphLayoutInfo.newBuilder()
+                                             .setStartingNodeId("startId")
+                                             .putLayoutNodes("startId",
+                                                 GraphLayoutNode.newBuilder().setNodeGroup("node-group").build())
+                                             .build())
+                        .build());
 
     when(pmsPipelineService.get(anyString(), anyString(), anyString(), anyString(), anyBoolean()))
         .thenReturn(Optional.of(pipelineEntity));

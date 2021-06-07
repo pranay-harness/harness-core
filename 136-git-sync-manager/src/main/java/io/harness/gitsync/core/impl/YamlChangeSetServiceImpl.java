@@ -138,6 +138,18 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   }
 
   @Override
+  public boolean updateStatusWithRetryCountIncrement(
+      String accountId, YamlChangeSetStatus newStatus, String yamlChangeSetId) {
+    Update updateOps = new Update().set(YamlChangeSetKeys.status, newStatus);
+    updateOps.inc(YamlChangeSetKeys.retryCount);
+
+    Query query = new Query(
+        new Criteria().and(YamlChangeSetKeys.accountId).is(accountId).and(YamlChangeSetKeys.uuid).is(yamlChangeSetId));
+
+    return updateYamlChangeSets(accountId, query, updateOps);
+  }
+
+  @Override
   public boolean updateStatusAndIncrementRetryCountForYamlChangeSets(String accountId, YamlChangeSetStatus newStatus,
       List<YamlChangeSetStatus> currentStatuses, List<String> yamlChangeSetIds) {
     try (AcquiredLock lock = persistentLocker.waitToAcquireLock(

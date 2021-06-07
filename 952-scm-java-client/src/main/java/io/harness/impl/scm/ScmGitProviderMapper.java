@@ -26,9 +26,11 @@ import io.harness.product.ci.scm.proto.Provider;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
 @Singleton
+@Slf4j
 @OwnedBy(DX)
 public class ScmGitProviderMapper {
   @Inject(optional = true) GithubService githubService;
@@ -51,6 +53,7 @@ public class ScmGitProviderMapper {
   }
 
   private Provider mapToBitbucketProvider(BitbucketConnectorDTO bitbucketConnector, boolean debug) {
+    boolean skipVerify = checkScmSkipVerify();
     String bitBucketApiURL = GitClientHelper.getBitBucketApiURL(bitbucketConnector.getUrl());
     Provider.Builder builder = Provider.newBuilder().setEndpoint(bitBucketApiURL).setDebug(debug);
     if (GitClientHelper.isBitBucketSAAS(bitbucketConnector.getUrl())) {
@@ -58,7 +61,16 @@ public class ScmGitProviderMapper {
     } else {
       builder.setBitbucketServer(createBitbucketServerProvider(bitbucketConnector));
     }
-    return builder.build();
+    return builder.setSkipVerify(skipVerify).build();
+  }
+
+  private boolean checkScmSkipVerify() {
+    final String scm_skip_ssl = System.getenv("SCM_SKIP_SSL");
+    boolean skipVerify = "true".equals(scm_skip_ssl);
+    if (skipVerify) {
+      log.info("Skipping verification");
+    }
+    return skipVerify;
   }
 
   private BitbucketCloudProvider createBitbucketCloudProvider(BitbucketConnectorDTO bitbucketConnector) {
@@ -87,10 +99,12 @@ public class ScmGitProviderMapper {
   }
 
   private Provider mapToGitLabProvider(GitlabConnectorDTO gitlabConnector, boolean debug) {
+    boolean skipVerify = checkScmSkipVerify();
     return Provider.newBuilder()
         .setGitlab(createGitLabProvider(gitlabConnector))
         .setDebug(debug)
         .setEndpoint(GitClientHelper.getGitlabApiURL(gitlabConnector.getUrl()))
+        .setSkipVerify(skipVerify)
         .build();
   }
 
@@ -106,10 +120,12 @@ public class ScmGitProviderMapper {
   }
 
   private Provider mapToGithubProvider(GithubConnectorDTO githubConnector, boolean debug) {
+    boolean skipVerify = checkScmSkipVerify();
     return Provider.newBuilder()
         .setGithub(createGithubProvider(githubConnector))
         .setDebug(debug)
         .setEndpoint(GitClientHelper.getGithubApiURL(githubConnector.getUrl()))
+        .setSkipVerify(skipVerify)
         .build();
   }
 

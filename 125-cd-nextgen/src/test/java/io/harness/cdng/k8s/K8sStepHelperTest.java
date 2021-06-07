@@ -1258,7 +1258,8 @@ public class K8sStepHelperTest extends CategoryTest {
     assertThat(unitProgresses.get(0).getEndTime()).isNotZero();
     assertThat(unitProgresses.get(0).getStatus()).isEqualTo(UnitStatus.FAILURE);
 
-    verify(mockLogCallback, times(1)).saveExecutionLog(thrownException.getMessage(), LogLevel.ERROR, FAILURE);
+    verify(mockLogCallback, times(1))
+        .saveExecutionLog(ExceptionUtils.getMessage(thrownException), LogLevel.ERROR, FAILURE);
   }
 
   @Test

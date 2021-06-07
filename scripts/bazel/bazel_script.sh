@@ -5,7 +5,6 @@ set -ex
 local_repo=${HOME}/.m2/repository
 BAZEL_ARGUMENTS=
 if [ "${PLATFORM}" == "jenkins" ]; then
-  GCP="--google_credentials=${GCP_KEY}"
   bazelrc=--bazelrc=bazelrc.remote
   local_repo=/root/.m2/repository
   if [ ! -z "${DISTRIBUTE_TESTING_WORKER}" ]; then
@@ -26,9 +25,13 @@ if [[ -z "${CACHE_TEST_RESULTS}" ]]; then
   export CACHE_TEST_RESULTS=yes
 fi
 
+bazel ${bazelrc} build ${BAZEL_ARGUMENTS}  //:resource
+cat ${BAZEL_DIRS}/out/stable-status.txt
+cat ${BAZEL_DIRS}/out/volatile-status.txt
+
 if [ "${RUN_BAZEL_TESTS}" == "true" ]; then
-  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... \
-  && bazel ${bazelrc} test --cache_test_results=${CACHE_TEST_RESULTS} --define=HARNESS_ARGS=${HARNESS_ARGS} --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- \
+  bazel ${bazelrc} build ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... \
+  && bazel ${bazelrc} test --cache_test_results=${CACHE_TEST_RESULTS} --define=HARNESS_ARGS=${HARNESS_ARGS} --keep_going ${BAZEL_ARGUMENTS} -- \
   //... -//product/... -//commons/... -//200-functional-test/... -//190-deployment-functional-tests/...
   exit $?
 fi

@@ -13,8 +13,8 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.execution.utils.AmbianceUtils;
-import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.service.DelegateGrpcClientWrapper;
 
@@ -27,7 +27,7 @@ import net.jodah.failsafe.RetryPolicy;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CI)
-public class PipelineExecutionUpdateEventHandler implements AsyncOrchestrationEventHandler {
+public class PipelineExecutionUpdateEventHandler implements OrchestrationEventHandler {
   @Inject private GitBuildStatusUtility gitBuildStatusUtility;
   @Inject private PodCleanupUtility podCleanupUtility;
 

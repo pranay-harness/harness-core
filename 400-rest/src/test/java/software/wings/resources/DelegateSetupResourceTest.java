@@ -30,6 +30,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -93,6 +94,7 @@ public class DelegateSetupResourceTest {
   private static DownloadTokenService downloadTokenService = mock(DownloadTokenService.class);
   private static SubdomainUrlHelperIntfc subdomainUrlHelper = mock(SubdomainUrlHelperIntfc.class);
   private static DelegateCache delegateCache = mock(DelegateCache.class);
+  private static AccessControlClient accessControlClient = mock(AccessControlClient.class);
 
   @Parameter public String apiUrl;
 
@@ -104,8 +106,8 @@ public class DelegateSetupResourceTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .instance(new DelegateSetupResource(
-              delegateService, delegateScopeService, downloadTokenService, subdomainUrlHelper, delegateCache))
+          .instance(new DelegateSetupResource(delegateService, delegateScopeService, downloadTokenService,
+              subdomainUrlHelper, delegateCache, accessControlClient))
           .instance(new AbstractBinder() {
             @Override
             protected void configure() {

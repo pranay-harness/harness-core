@@ -3,6 +3,7 @@ package io.harness.gitsync.core.service;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.common.beans.YamlChangeSetStatus;
 import io.harness.gitsync.core.dtos.YamlChangeSetDTO;
 
 /**
@@ -11,5 +12,5 @@ import io.harness.gitsync.core.dtos.YamlChangeSetDTO;
  */
 @OwnedBy(DX)
 public interface YamlChangeSetHandler {
-  void process(YamlChangeSetDTO yamlChangeSetDTO);
+  YamlChangeSetStatus process(YamlChangeSetDTO yamlChangeSetDTO);
 }

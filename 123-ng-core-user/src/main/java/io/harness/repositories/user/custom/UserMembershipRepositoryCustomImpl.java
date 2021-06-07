@@ -11,6 +11,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope.ScopeKeys;
+import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
 
@@ -62,6 +63,24 @@ public class UserMembershipRepositoryCustomImpl implements UserMembershipReposit
     List<String> userIds = userMemberships.stream().map(UserMembership::getUserId).collect(Collectors.toList());
     return PageableExecutionUtils.getPage(
         userIds, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), UserMembership.class));
+  }
+
+  @Override
+  public List<UserMetadataDTO> getUserMetadata(Criteria criteria) {
+    Query query = new Query(criteria);
+    query.fields()
+        .include(UserMembershipKeys.userId)
+        .include(UserMembershipKeys.emailId)
+        .include(UserMembershipKeys.name);
+    List<UserMembership> userMemberships = mongoTemplate.find(query, UserMembership.class);
+    return userMemberships.stream()
+        .map(userMembership
+            -> UserMetadataDTO.builder()
+                   .uuid(userMembership.getUserId())
+                   .email(userMembership.getEmailId())
+                   .name(userMembership.getName())
+                   .build())
+        .collect(Collectors.toList());
   }
 
   @Override

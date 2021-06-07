@@ -3,6 +3,7 @@ package io.harness.repositories.user.custom;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.user.entities.UserMembership;
 
 import java.util.List;
@@ -20,6 +21,8 @@ public interface UserMembershipRepositoryCustom {
   Page<UserMembership> findAll(Criteria criteria, Pageable pageable);
 
   Page<String> findAllUserIds(Criteria criteria, Pageable pageable);
+
+  List<UserMetadataDTO> getUserMetadata(Criteria criteria);
 
   UserMembership update(String userId, Update update);
 

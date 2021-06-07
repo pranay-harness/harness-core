@@ -39,6 +39,7 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.event.MessageListener;
 import io.harness.organization.OrganizationClientModule;
+import io.harness.packages.HarnessPackages;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
@@ -96,6 +97,7 @@ import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.user.UserClientModule;
 import io.harness.usergroups.UserGroupClientModule;
 import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.schema.client.YamlSchemaClientModule;
 
@@ -112,6 +114,7 @@ import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.dropwizard.jackson.Jackson;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -121,6 +124,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.reflections.Reflections;
 import org.springframework.core.convert.converter.Converter;
 
 @OwnedBy(PIPELINE)
@@ -373,6 +377,18 @@ public class PipelineServiceModule extends AbstractModule {
   @Singleton
   public ObjectMapper getYamlSchemaObjectMapper() {
     return Jackson.newObjectMapper();
+  }
+
+  @Provides
+  @Named("yaml-schema-subtypes")
+  @Singleton
+  public Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes() {
+    Reflections reflections = new Reflections(HarnessPackages.IO_HARNESS);
+
+    Set<Class<? extends StepSpecType>> subTypesOfStepSpecType = reflections.getSubTypesOf(StepSpecType.class);
+    Set<Class<?>> set = new HashSet<>(subTypesOfStepSpecType);
+
+    return ImmutableMap.of(StepSpecType.class, set);
   }
 
   @Provides

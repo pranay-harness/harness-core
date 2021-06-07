@@ -51,7 +51,7 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
 
   @Override
   public PipelineEntity save(PipelineEntity pipelineToSave, PipelineConfig yamlDTO) {
-    return gitAwarePersistence.save(pipelineToSave, yamlDTO, ChangeType.ADD, PipelineEntity.class);
+    return gitAwarePersistence.save(pipelineToSave, pipelineToSave.getYaml(), ChangeType.ADD, PipelineEntity.class);
   }
 
   @Override
@@ -72,7 +72,8 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
 
   @Override
   public PipelineEntity updatePipelineYaml(PipelineEntity pipelineToUpdate, PipelineConfig yamlDTO) {
-    return gitAwarePersistence.save(pipelineToUpdate, yamlDTO, ChangeType.MODIFY, PipelineEntity.class);
+    return gitAwarePersistence.save(
+        pipelineToUpdate, pipelineToUpdate.getYaml(), ChangeType.MODIFY, PipelineEntity.class);
   }
 
   @Override
@@ -94,7 +95,8 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
 
   @Override
   public PipelineEntity deletePipeline(PipelineEntity pipelineToUpdate, PipelineConfig yamlDTO) {
-    return gitAwarePersistence.save(pipelineToUpdate, yamlDTO, ChangeType.DELETE, PipelineEntity.class);
+    return gitAwarePersistence.save(
+        pipelineToUpdate, pipelineToUpdate.getYaml(), ChangeType.DELETE, PipelineEntity.class);
   }
 
   private RetryPolicy<Object> getRetryPolicyForPipelineUpdate() {

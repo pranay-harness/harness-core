@@ -32,6 +32,7 @@ import io.harness.serializer.OrchestrationRegistrars;
 import io.harness.serializer.kryo.OrchestrationTestKryoRegistrar;
 import io.harness.service.intfc.DelegateAsyncService;
 import io.harness.service.intfc.DelegateSyncService;
+import io.harness.springdata.HTransactionTemplate;
 import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -135,8 +136,8 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
 
       @Provides
       @Singleton
-      TransactionTemplate mongoTransactionTemplate(Injector injector) {
-        return new TransactionTemplate(injector.getInstance(MongoTransactionManager.class));
+      TransactionTemplate getTransactionTemplate(MongoTransactionManager mongoTransactionManager) {
+        return new HTransactionTemplate(mongoTransactionManager, false);
       }
     });
 

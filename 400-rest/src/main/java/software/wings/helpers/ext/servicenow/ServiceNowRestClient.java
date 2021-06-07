@@ -56,7 +56,7 @@ public interface ServiceNowRestClient {
   @GET("/api/now/table/sys_choice?sysparm_query=element=state%5Ename=problem%5Einactive=false%5Elanguage=en")
   Call<JsonNode> getProblemStates(@Header("Authorization") String authorization);
 
-  @GET("/api/now/table/sys_choice?sysparm_query=element=tate%5Ename=change_request%5Einactive=false%5Elanguage=en")
+  @GET("/api/now/table/sys_choice?sysparm_query=element=state%5Ename=change_request%5Einactive=false%5Elanguage=en")
   Call<JsonNode> getChangeRequestStates(@Header("Authorization") String authorization);
 
   @GET("/api/now/table/sys_choice?sysparm_query=element=state%5Ename=change_task%5Einactive=false%5Elanguage=en")

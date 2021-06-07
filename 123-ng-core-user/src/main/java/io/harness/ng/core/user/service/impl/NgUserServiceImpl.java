@@ -112,8 +112,9 @@ public class NgUserServiceImpl implements NgUserService {
 
   @Override
   public Page<UserInfo> listCurrentGenUsers(String accountIdentifier, String searchString, Pageable pageable) {
-    io.harness.beans.PageResponse<UserInfo> userPageResponse = RestClientUtils.getResponse(userClient.list(
-        accountIdentifier, String.valueOf(pageable.getOffset()), String.valueOf(pageable.getPageSize()), searchString));
+    io.harness.beans.PageResponse<UserInfo> userPageResponse =
+        RestClientUtils.getResponse(userClient.list(accountIdentifier, String.valueOf(pageable.getOffset()),
+            String.valueOf(pageable.getPageSize()), searchString, false));
     List<UserInfo> users = userPageResponse.getResponse();
     return new PageImpl<>(users, pageable, users.size());
   }
@@ -177,7 +178,7 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   @Override
-  public List<String> listUsersHavingRole(Scope scope, String roleIdentifier) {
+  public List<UserMetadataDTO> listUsersHavingRole(Scope scope, String roleIdentifier) {
     PageResponse<RoleAssignmentResponseDTO> roleAssignmentPage =
         getResponse(accessControlAdminClient.getFilteredRoleAssignments(scope.getAccountIdentifier(),
             scope.getOrgIdentifier(), scope.getProjectIdentifier(), 0, DEFAULT_PAGE_SIZE,
@@ -201,7 +202,7 @@ public class NgUserServiceImpl implements NgUserService {
                                                 .build();
     List<UserGroup> userGroups = userGroupService.list(userGroupFilterDTO);
     userGroups.forEach(userGroup -> userIds.addAll(userGroup.getUsers()));
-    return new ArrayList<>(userIds);
+    return getUserMetadata(new ArrayList<>(userIds));
   }
 
   @Override
@@ -233,6 +234,11 @@ public class NgUserServiceImpl implements NgUserService {
       update(userId, update);
     }
     return Optional.of(user);
+  }
+
+  @Override
+  public List<UserMetadataDTO> getUserMetadata(List<String> userIds) {
+    return userMembershipRepository.getUserMetadata(Criteria.where(UserMembershipKeys.userId).in(userIds));
   }
 
   @Override
@@ -436,10 +442,9 @@ public class NgUserServiceImpl implements NgUserService {
       throw new InvalidRequestException(getDeleteUserErrorMessage(scope));
     }
     if (ScopeUtils.isAccountScope(scope)) {
-      List<String> accountAdmins =
+      List<UserMetadataDTO> accountAdmins =
           listUsersHavingRole(Scope.builder().accountIdentifier(scope.getAccountIdentifier()).build(), ACCOUNT_ADMIN);
-      accountAdmins.remove(userId);
-      if (accountAdmins.isEmpty()) {
+      if (accountAdmins.stream().allMatch(userMetadata -> userId.equals(userMetadata.getUuid()))) {
         throw new InvalidRequestException("This user is the only account-admin left. Can't Remove it");
       }
     }

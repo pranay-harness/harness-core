@@ -5,6 +5,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.manage.ManagedExecutorService;
 import io.harness.ng.core.EntityDetail;
 import io.harness.pms.inputset.InputSetErrorDTOPMS;
 import io.harness.pms.inputset.InputSetErrorResponseDTOPMS;
@@ -50,7 +51,7 @@ import org.springframework.data.mongodb.core.query.Update;
 @Singleton
 @OwnedBy(HarnessTeam.PIPELINE)
 public class PreflightServiceImpl implements PreflightService {
-  private static final ExecutorService executorService = Executors.newFixedThreadPool(1);
+  private static final ExecutorService executorService = new ManagedExecutorService(Executors.newFixedThreadPool(1));
 
   @Inject PreFlightRepository preFlightRepository;
   @Inject ConnectorPreflightHandler connectorPreflightHandler;

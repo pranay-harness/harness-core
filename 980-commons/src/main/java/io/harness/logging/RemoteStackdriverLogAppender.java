@@ -311,7 +311,7 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
           ImmutableMap.<String, String>builder()
               .put("source", localhostName)
               .put("processId", processId)
-              .put("version", versionInfoManager.getVersionInfo().getVersion())
+              .put("version", versionInfoManager.getVersionInfo().getFullVersionWithPatch())
               .put("app", getAppName())
               .put("accountId", getAccountId())
               .put("managerHost", getManagerHost());

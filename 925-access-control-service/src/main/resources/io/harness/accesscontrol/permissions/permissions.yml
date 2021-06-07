@@ -113,6 +113,54 @@ permissions:
       - account
       - organization
       - project
+  - identifier: core_delegate_view
+    name: View Delegates
+    status: ACTIVE
+    includeInAllRoles: true
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_delegate_edit
+    name: Create or Edit a Delegate
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_delegate_delete
+    name: Delete Delegate
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_delegateconfiguration_view
+    name: View Delegate Configurations
+    status: ACTIVE
+    includeInAllRoles: true
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_delegateconfiguration_edit
+    name: Create or Edit a Delegate Configuration
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_delegateconfiguration_delete
+    name: Delete Delegate Configuration
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
   - identifier: core_pipeline_view
     name: View Pipeline
     status: ACTIVE

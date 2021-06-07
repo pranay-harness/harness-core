@@ -12,6 +12,7 @@ import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
+import io.harness.eventsframework.impl.redis.GitAwareRedisProducer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.redis.RedisConfig;
@@ -42,7 +43,7 @@ public class EventsFrameworkModule extends AbstractModule {
     } else {
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.SETUP_USAGE))
-          .toInstance(RedisProducer.of(EventsFrameworkConstants.SETUP_USAGE, redisConfig,
+          .toInstance(GitAwareRedisProducer.of(EventsFrameworkConstants.SETUP_USAGE, redisConfig,
               EventsFrameworkConstants.SETUP_USAGE_MAX_TOPIC_SIZE, PIPELINE_SERVICE.getServiceId()));
       bind(Producer.class)
           .annotatedWith(Names.named(WEBHOOK_REQUEST_PAYLOAD_DETAILS))

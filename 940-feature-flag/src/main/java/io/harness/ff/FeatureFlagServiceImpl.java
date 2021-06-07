@@ -236,7 +236,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   }
 
   private boolean cfFeatureFlagEvaluation(@NonNull FeatureName featureName, String accountId) {
-    if (isEmpty(accountId)) {
+    if (Scope.GLOBAL.equals(featureName.getScope()) || isEmpty(accountId)) {
       /**
        * If accountID is null or empty, use a static accountID
        */

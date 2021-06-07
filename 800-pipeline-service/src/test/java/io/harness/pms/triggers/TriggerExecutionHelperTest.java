@@ -13,8 +13,19 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.ngtriggers.beans.config.NGTriggerConfigV2;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
+import io.harness.ngtriggers.beans.source.NGTriggerSourceV2;
+import io.harness.ngtriggers.beans.source.NGTriggerType;
+import io.harness.ngtriggers.beans.source.WebhookTriggerType;
+import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
+import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
+import io.harness.ngtriggers.beans.source.webhook.v2.WebhookTriggerConfigV2;
+import io.harness.ngtriggers.beans.source.webhook.v2.custom.CustomTriggerSpec;
+import io.harness.ngtriggers.beans.source.webhook.v2.github.GithubSpec;
+import io.harness.ngtriggers.beans.source.webhook.v2.github.event.GithubPRSpec;
+import io.harness.ngtriggers.beans.source.webhook.v2.github.event.GithubTriggerEvent;
 import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.contracts.triggers.ParsedPayload;
 import io.harness.pms.contracts.triggers.TriggerPayload;
@@ -69,6 +80,51 @@ public class TriggerExecutionHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGenerateTriggerRef() throws IOException {
     assertThat(triggerExecutionHelper.generateTriggerRef(ngTriggerEntity)).isEqualTo("acc/org/proj/trigger");
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testIsAutoAbort() throws IOException {
+    GithubPRSpec githubPRSpec = GithubPRSpec.builder().autoAbortPreviousExecutions(true).build();
+    NGTriggerConfigV2 ngTriggerConfigV2 =
+        NGTriggerConfigV2.builder()
+            .source(
+                NGTriggerSourceV2.builder()
+                    .type(NGTriggerType.WEBHOOK)
+                    .spec(
+                        WebhookTriggerConfigV2.builder()
+                            .type(WebhookTriggerType.GITHUB)
+                            .spec(GithubSpec.builder().type(GithubTriggerEvent.PULL_REQUEST).spec(githubPRSpec).build())
+                            .build())
+                    .build())
+            .build();
+    assertThat(triggerExecutionHelper.isAutoAbortSelected(ngTriggerConfigV2)).isTrue();
+
+    githubPRSpec.setAutoAbortPreviousExecutions(false);
+    assertThat(triggerExecutionHelper.isAutoAbortSelected(ngTriggerConfigV2)).isFalse();
+
+    ngTriggerConfigV2 = NGTriggerConfigV2.builder()
+                            .source(NGTriggerSourceV2.builder()
+                                        .type(NGTriggerType.WEBHOOK)
+                                        .spec(WebhookTriggerConfigV2.builder()
+                                                  .type(WebhookTriggerType.CUSTOM)
+                                                  .spec(CustomTriggerSpec.builder().build())
+                                                  .build())
+                                        .build())
+                            .build();
+    assertThat(triggerExecutionHelper.isAutoAbortSelected(ngTriggerConfigV2)).isFalse();
+
+    ngTriggerConfigV2 = NGTriggerConfigV2.builder()
+                            .source(NGTriggerSourceV2.builder()
+                                        .type(NGTriggerType.SCHEDULED)
+                                        .spec(ScheduledTriggerConfig.builder()
+                                                  .type("Cron")
+                                                  .spec(CronTriggerSpec.builder().expression("").build())
+                                                  .build())
+                                        .build())
+                            .build();
+    assertThat(triggerExecutionHelper.isAutoAbortSelected(ngTriggerConfigV2)).isFalse();
   }
 
   @Test

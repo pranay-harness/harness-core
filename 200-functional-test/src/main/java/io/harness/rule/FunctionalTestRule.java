@@ -4,6 +4,7 @@ import static io.harness.cache.CacheBackend.NOOP;
 
 import static org.mockito.Mockito.mock;
 
+import io.harness.AccessControlClientConfiguration;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheConfig;
@@ -358,6 +359,17 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
 
     configuration.setLogStreamingServiceConfig(
         LogStreamingServiceConfig.builder().baseUrl("http://localhost:8079").serviceToken("token").build());
+
+    configuration.setAccessControlClientConfiguration(
+        AccessControlClientConfiguration.builder()
+            .enableAccessControl(false)
+            .accessControlServiceSecret("token")
+            .accessControlServiceConfig(ServiceHttpClientConfig.builder()
+                                            .baseUrl("http://localhost:9006/api/")
+                                            .readTimeOutSeconds(15)
+                                            .connectTimeOutSeconds(15)
+                                            .build())
+            .build());
 
     configuration.setMongoConnectionFactory(MongoConfig.builder().uri(mongoUri).build());
     configuration.setElasticsearchConfig(elasticsearchConfig);

@@ -1,12 +1,18 @@
 package software.wings.resources;
 
-import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
+import static io.harness.delegate.utils.RbacConstants.DELEGATE_EDIT_PERMISSION;
+import static io.harness.delegate.utils.RbacConstants.DELEGATE_RESOURCE_TYPE;
 
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.delegate.beans.DelegateHeartbeatDetails;
 import io.harness.delegate.beans.DelegateInitializationDetails;
 import io.harness.rest.RestResponse;
 
-import software.wings.security.annotations.Scope;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.DelegateService;
 
 import com.google.inject.Inject;
@@ -25,21 +31,28 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Api("delegates-verification")
 @Path("/delegates-verification")
 @Produces(MediaType.APPLICATION_JSON)
-@Scope(DELEGATE)
+@AuthRule(permissionType = LOGGED_IN)
+//@Scope(DELEGATE)
+// This NG specific, switching to NG access control
 @Slf4j
 public class DelegateVerificationNgResource {
   private final DelegateService delegateService;
+  private final AccessControlClient accessControlClient;
 
   @Inject
-  public DelegateVerificationNgResource(DelegateService delegateService) {
+  public DelegateVerificationNgResource(DelegateService delegateService, AccessControlClient accessControlClient) {
     this.delegateService = delegateService;
+    this.accessControlClient = accessControlClient;
   }
 
   @GET
   @Path("/heartbeat")
   public RestResponse<DelegateHeartbeatDetails> getDelegatesHeartbeatDetails(
-      @QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("sessionId") @NotEmpty String sessionIdentifier) {
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("orgId") String orgId,
+      @QueryParam("projectId") String projectId, @QueryParam("sessionId") @NotEmpty String sessionIdentifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
+        Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_EDIT_PERMISSION);
+
     List<String> registeredDelegateIds = delegateService.obtainDelegateIds(accountId, sessionIdentifier);
 
     if (CollectionUtils.isNotEmpty(registeredDelegateIds)) {
@@ -57,8 +70,11 @@ public class DelegateVerificationNgResource {
   @GET
   @Path("/initialized")
   public RestResponse<List<DelegateInitializationDetails>> getDelegatesInitializationDetails(
-      @QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("sessionId") @NotEmpty String sessionIdentifier) {
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("orgId") String orgId,
+      @QueryParam("projectId") String projectId, @QueryParam("sessionId") @NotEmpty String sessionIdentifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
+        Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_EDIT_PERMISSION);
+
     List<String> registeredDelegateIds = delegateService.obtainDelegateIds(accountId, sessionIdentifier);
 
     if (CollectionUtils.isNotEmpty(registeredDelegateIds)) {

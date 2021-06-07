@@ -111,6 +111,7 @@ import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.rbac.PipelineRbacHelper;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
@@ -279,8 +280,8 @@ public class K8BuildSetupUtils {
     String accountId = AmbianceHelper.getAccountId(ambiance);
     Map<String, String> logEnvVars = getLogServiceEnvVariables(k8PodDetails, accountId);
     Map<String, String> tiEnvVars = getTIServiceEnvVariables(accountId);
-    Map<String, String> commonEnvVars = getCommonStepEnvVariables(
-        k8PodDetails, logEnvVars, tiEnvVars, gitEnvVars, podSetupInfo.getWorkDirPath(), logPrefix, ambiance);
+    Map<String, String> commonEnvVars =
+        getCommonStepEnvVariables(k8PodDetails, gitEnvVars, podSetupInfo.getWorkDirPath(), logPrefix, ambiance);
     Map<String, ConnectorConversionInfo> stepConnectors =
         ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getStepConnectorRefs();
 
@@ -288,17 +289,16 @@ public class K8BuildSetupUtils {
         LiteEngineSecretEvaluator.builder().secretUtils(secretUtils).build();
     List<SecretVariableDetails> secretVariableDetails =
         liteEngineSecretEvaluator.resolve(liteEngineTaskStepInfo, ngAccess, ambiance.getExpressionFunctorToken());
-    checkSecretAccess(ambiance, secretVariableDetails, accountId, AmbianceHelper.getProjectIdentifier(ambiance),
-        AmbianceHelper.getOrgIdentifier(ambiance));
+    checkSecretAccess(ambiance, secretVariableDetails, accountId, AmbianceUtils.getProjectIdentifier(ambiance),
+        AmbianceUtils.getOrgIdentifier(ambiance));
 
     Map<String, ConnectorDetails> githubApiTokenFunctorConnectors =
         resolveGitAppFunctor(ngAccess, liteEngineTaskStepInfo, ambiance);
 
     CIK8ContainerParams liteEngineContainerParams =
-        createLiteEngineContainerParams(harnessInternalImageRegistryConnectorDetails, liteEngineTaskStepInfo,
-            k8PodDetails, podSetupInfo.getStageCpuRequest(), podSetupInfo.getStageMemoryRequest(),
-            podSetupInfo.getServiceGrpcPortList(), logEnvVars, tiEnvVars, podSetupInfo.getVolumeToMountPath(),
-            podSetupInfo.getWorkDirPath(), taskIds, logPrefix, stepLogKeys, ambiance);
+        createLiteEngineContainerParams(harnessInternalImageRegistryConnectorDetails, k8PodDetails,
+            podSetupInfo.getStageCpuRequest(), podSetupInfo.getStageMemoryRequest(), logEnvVars, tiEnvVars,
+            podSetupInfo.getVolumeToMountPath(), podSetupInfo.getWorkDirPath(), logPrefix, ambiance);
 
     List<CIK8ContainerParams> containerParams = new ArrayList<>();
     containerParams.add(liteEngineContainerParams);
@@ -445,15 +445,14 @@ public class K8BuildSetupUtils {
   }
 
   private CIK8ContainerParams createLiteEngineContainerParams(ConnectorDetails connectorDetails,
-      LiteEngineTaskStepInfo liteEngineTaskStepInfo, K8PodDetails k8PodDetails, Integer stageCpuRequest,
-      Integer stageMemoryRequest, List<Integer> serviceGrpcPortList, Map<String, String> logEnvVars,
-      Map<String, String> tiEnvVars, Map<String, String> volumeToMountPath, String workDirPath,
-      Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys, Ambiance ambiance) {
+      K8PodDetails k8PodDetails, Integer stageCpuRequest, Integer stageMemoryRequest, Map<String, String> logEnvVars,
+      Map<String, String> tiEnvVars, Map<String, String> volumeToMountPath, String workDirPath, String logPrefix,
+      Ambiance ambiance) {
     Map<String, ConnectorDetails> stepConnectorDetails = new HashMap<>();
 
     return internalContainerParamsProvider.getLiteEngineContainerParams(connectorDetails, stepConnectorDetails,
-        k8PodDetails, stageCpuRequest, stageMemoryRequest, serviceGrpcPortList, logEnvVars, tiEnvVars,
-        volumeToMountPath, workDirPath, logPrefix, ambiance);
+        k8PodDetails, stageCpuRequest, stageMemoryRequest, logEnvVars, tiEnvVars, volumeToMountPath, workDirPath,
+        logPrefix, ambiance);
   }
 
   @NotNull
@@ -521,21 +520,16 @@ public class K8BuildSetupUtils {
   }
 
   @NotNull
-  private Map<String, String> getCommonStepEnvVariables(K8PodDetails k8PodDetails, Map<String, String> logEnvVars,
-      Map<String, String> tiEnvVars, Map<String, String> gitEnvVars, String workDirPath, String logPrefix,
-      Ambiance ambiance) {
+  private Map<String, String> getCommonStepEnvVariables(K8PodDetails k8PodDetails, Map<String, String> gitEnvVars,
+      String workDirPath, String logPrefix, Ambiance ambiance) {
     Map<String, String> envVars = new HashMap<>();
-    final String accountID = AmbianceHelper.getAccountId(ambiance);
-    final String orgID = AmbianceHelper.getOrgIdentifier(ambiance);
-    final String projectID = AmbianceHelper.getProjectIdentifier(ambiance);
+    final String accountID = AmbianceUtils.getAccountId(ambiance);
+    final String orgID = AmbianceUtils.getOrgIdentifier(ambiance);
+    final String projectID = AmbianceUtils.getProjectIdentifier(ambiance);
     final String pipelineID = ambiance.getMetadata().getPipelineIdentifier();
     final int buildNumber = ambiance.getMetadata().getRunSequence();
     final String stageID = k8PodDetails.getStageID();
 
-    // Add log service environment variables
-    envVars.putAll(logEnvVars);
-    // Add TI service environment variables
-    envVars.putAll(tiEnvVars);
     // Add git connector environment variables
     envVars.putAll(gitEnvVars);
 

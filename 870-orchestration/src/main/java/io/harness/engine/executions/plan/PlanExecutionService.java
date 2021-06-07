@@ -6,7 +6,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.observers.NodeStatusUpdateObserver;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.contracts.plan.PlanNodeProto;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -24,8 +23,6 @@ public interface PlanExecutionService extends NodeStatusUpdateObserver {
   PlanExecution get(String planExecutionId);
 
   PlanExecution save(PlanExecution planExecution);
-
-  PlanNodeProto fetchExecutionNode(String planExecutionId, String nodeId);
 
   List<PlanExecution> findAllByPlanExecutionIdIn(List<String> planExecutionIds);
 

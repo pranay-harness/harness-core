@@ -39,7 +39,7 @@ public interface NgUserService {
 
   List<UserInfo> listCurrentGenUsers(String accountId, UserFilterNG userFilter);
 
-  List<String> listUsersHavingRole(Scope scope, String roleIdentifier);
+  List<UserMetadataDTO> listUsersHavingRole(Scope scope, String roleIdentifier);
 
   Optional<UserMembership> getUserMembership(String userId);
 
@@ -54,6 +54,8 @@ public interface NgUserService {
    * Use this method with caution, verify that the criteria sort is able to make use of the indexes.
    */
   List<UserMembership> listUserMemberships(Criteria criteria);
+
+  List<UserMetadataDTO> getUserMetadata(List<String> userIds);
 
   void addUserToScope(UserInfo user, Scope scope, UserMembershipUpdateSource source);
 
