@@ -1,6 +1,8 @@
 package metrics
 
 import (
+	"time"
+
 	cmetrics "github.com/wings-software/portal/commons/go/lib/metrics"
 	"go.uber.org/zap"
 )
@@ -19,6 +21,7 @@ func Collect(podName, namespace string, log *zap.SugaredLogger) {
 			ms := MetricState()
 			ms.Update(ctrResourcesByName)
 			log.Infow("Updated max pod metrics resource", "max_resources", ms.ctrResourcesByName)
+			time.Sleep(time.Second * 30)
 		}
 	}()
 }
