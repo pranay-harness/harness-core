@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 import lombok.Value;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.bson.BsonTimestamp;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -33,6 +34,9 @@ import org.springframework.data.mongodb.core.query.Query;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class QueryShapeDetectorTest extends CategoryTest {
+  // TODO:
+  // - add test cases for null and define behaviour
+
   private static final List<List<CalculateHashParams>> sameShapeQueriesList = Arrays.asList(
       // Basic types
       Arrays.asList(createCalculateHashParams(Query.query(Criteria.where("_str").is("abc"))),
@@ -47,8 +51,9 @@ public class QueryShapeDetectorTest extends CategoryTest {
           createCalculateHashParams(Query.query(Criteria.where("_decimal").is(new BigDecimal("456.789"))))),
       Arrays.asList(createCalculateHashParams(Query.query(Criteria.where("_bool").is(true))),
           createCalculateHashParams(Query.query(Criteria.where("_bool").is(false)))),
-      Arrays.asList(createCalculateHashParams(Query.query(Criteria.where("_oid").is(new ObjectId("abc")))),
-          createCalculateHashParams(Query.query(Criteria.where("_oid").is(new ObjectId("def"))))),
+      Arrays.asList(createCalculateHashParams(Query.query(Criteria.where("_oid").is(new ObjectId(new Date())))),
+          createCalculateHashParams(
+              Query.query(Criteria.where("_oid").is(new ObjectId(new Date(System.currentTimeMillis() + 5000)))))),
       Arrays.asList(createCalculateHashParams(Query.query(Criteria.where("_array").is(Arrays.asList(1, 2)))),
           createCalculateHashParams(Query.query(Criteria.where("_array").is(Arrays.asList(3, 4, 5))))),
       Arrays.asList(createCalculateHashParams(Query.query(Criteria.where("_binary").is("abc".getBytes()))),
@@ -107,10 +112,17 @@ public class QueryShapeDetectorTest extends CategoryTest {
                               .and("_a")
                               .is("b")))));
 
+  private static final List<Pair<CalculateHashParams, CalculateHashParams>> diffShapeQueriesList = Arrays.asList(
+      // Basic types
+      ImmutablePair.of(createCalculateHashParams(Query.query(Criteria.where("_str").is("abc"))),
+          createCalculateHashParams(Query.query(Criteria.where("_def").is("def")))),
+      ImmutablePair.of(createCalculateHashParams(Query.query(Criteria.where("_a").is(1))),
+          createCalculateHashParams(Query.query(Criteria.where("_a").is(10).and("_b").is(5)))));
+
   @Test
   @Owner(developers = GARVIT)
   @Category(io.harness.category.element.UnitTests.class)
-  public void testCalculateHash() {
+  public void testCalculateHashSameShape() {
     for (List<CalculateHashParams> sameShapeQueries : sameShapeQueriesList) {
       String hash = QueryShapeDetector.calculateQueryHash(
           sameShapeQueries.get(0).getCollectionName(), sameShapeQueries.get(0).getQueryDoc());
@@ -119,6 +131,19 @@ public class QueryShapeDetectorTest extends CategoryTest {
         assertThat(QueryShapeDetector.calculateQueryHash(params.getCollectionName(), params.getQueryDoc()))
             .isEqualTo(hash);
       }
+    }
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(io.harness.category.element.UnitTests.class)
+  public void testCalculateHashDiffShape() {
+    for (Pair<CalculateHashParams, CalculateHashParams> diffShapeQueries : diffShapeQueriesList) {
+      String hash = QueryShapeDetector.calculateQueryHash(
+          diffShapeQueries.getLeft().getCollectionName(), diffShapeQueries.getRight().getQueryDoc());
+      assertThat(QueryShapeDetector.calculateQueryHash(
+                     diffShapeQueries.getRight().getCollectionName(), diffShapeQueries.getRight().getQueryDoc()))
+          .isNotEqualTo(hash);
     }
   }
 
