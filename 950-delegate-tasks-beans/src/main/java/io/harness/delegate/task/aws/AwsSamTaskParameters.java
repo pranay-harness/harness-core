@@ -1,5 +1,8 @@
 package io.harness.delegate.task.aws;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -13,8 +16,13 @@ import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.yaml.core.variables.NGVariable;
 
 import java.util.List;
+import lombok.Builder;
 import lombok.NonNull;
+import lombok.Value;
 
+@Value
+@Builder
+@OwnedBy(CDP)
 public class AwsSamTaskParameters
     implements TaskParameters, ExecutionCapabilityDemander, ExpressionReflectionUtils.NestedAnnotationResolver {
   @NonNull String accountId;
@@ -23,8 +31,13 @@ public class AwsSamTaskParameters
   @NonNull GitFetchFilesConfig configFile;
   @NonNull String region;
   @NonNull String stackName;
+  @NonNull AwsSamTaskType awsSamTaskType;
   List<NGVariable> overrides;
   String globalAdditionalFlags;
+
+  // To help in logging
+  AwsSamCommandUnit awsSamCommandUnit;
+
   long timeoutInMillis;
 
   @Override
