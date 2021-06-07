@@ -8,10 +8,13 @@ import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.authenticationservice.recaptcha.ReCaptchaVerifier;
+import io.harness.beans.FeatureName;
 import io.harness.exception.SignupException;
+import io.harness.exception.UnavailableFeatureException;
 import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.WeakPasswordException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
@@ -54,12 +57,17 @@ public class SignupServiceImpl implements SignupService {
   private final TelemetryReporter telemetryReporter;
   private final SignupNotificationHelper signupNotificationHelper;
   @Named("NGSignupNotification") private final ExecutorService executorService;
+  private FeatureFlagService featureFlagService;
 
   public static final String FAILED_EVENT_NAME = "Signup attempt failed";
   public static final String SUCCEED_EVENT_NAME = "Signup succeed";
 
   @Override
   public UserInfo signup(SignupDTO dto, String captchaToken) throws WingsException {
+    if (!featureFlagService.isGlobalEnabled(FeatureName.NG_SIGNUP)) {
+      throw new UnavailableFeatureException("NG signup is not available.");
+    }
+
     verifyReCaptcha(dto, captchaToken);
     verifyEmailAndPassword(dto);
 
@@ -106,6 +114,10 @@ public class SignupServiceImpl implements SignupService {
 
   @Override
   public UserInfo oAuthSignup(OAuthSignupDTO dto) {
+    if (!featureFlagService.isGlobalEnabled(FeatureName.NG_SIGNUP)) {
+      throw new UnavailableFeatureException("NG signup is not available.");
+    }
+
     try {
       signupValidator.validateEmail(dto.getEmail());
     } catch (SignupException | UserAlreadyPresentException e) {
