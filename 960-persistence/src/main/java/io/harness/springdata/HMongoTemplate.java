@@ -96,6 +96,14 @@ public class HMongoTemplate extends MongoTemplate implements HealthMonitor {
     return super.find(query, entityClass, collectionName);
   }
 
+  @Override
+  public <T> T findOne(Query query, Class<T> entityClass, String collectionName) {
+    if (traceMode == TraceMode.ENABLED) {
+      traceQuery(query.getQueryObject(), query.getSortObject(), collectionName);
+    }
+    return super.findOne(query, entityClass, collectionName);
+  }
+
   private <T> void traceQuery(Query query, Class<T> entityClass) {
     traceQuery(query.getQueryObject(), query.getSortObject(), getCollectionName(entityClass));
   }

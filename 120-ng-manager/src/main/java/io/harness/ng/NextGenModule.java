@@ -3,7 +3,6 @@ package io.harness.ng;
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
-import static io.harness.eventsframework.EventsFrameworkConstants.QUERY_ANALYSIS_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.SETUP_USAGE;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNECTOR_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
@@ -42,11 +41,6 @@ import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
-import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.impl.noop.NoOpProducer;
-import io.harness.eventsframework.impl.redis.DistributedCache;
-import io.harness.eventsframework.impl.redis.RedisCache;
-import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.exception.exceptionmanager.ExceptionModule;
 import io.harness.file.NGFileServiceModule;
 import io.harness.gitsync.GitSyncModule;
@@ -178,7 +172,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
@@ -430,24 +423,8 @@ public class NextGenModule extends AbstractModule {
     install(OrchestrationStepsModule.getInstance(null));
     install(new AbstractPersistenceTracerModule() {
       @Override
-      public Producer producerProvider() {
-        RedisConfig redisConfig = appConfig.getEventsFrameworkConfiguration().getRedisConfig();
-        if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
-          return NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME);
-        } else {
-          return RedisProducer.of(QUERY_ANALYSIS_TOPIC, redisConfig, EventsFrameworkConstants.QUERY_ANALYSIS_TOPIC_SIZE,
-              NG_MANAGER.getServiceId());
-        }
-      }
-
-      @Override
-      protected DistributedCache cacheProvider() {
-        RedisConfig redisConfig = appConfig.getEventsFrameworkConfiguration().getRedisConfig();
-        if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
-          return null;
-        } else {
-          return RedisCache.of(redisConfig, 300, TimeUnit.DAYS);
-        }
+      protected RedisConfig redisConfigProvider() {
+        return appConfig.getEventsFrameworkConfiguration().getRedisConfig();
       }
 
       @Override

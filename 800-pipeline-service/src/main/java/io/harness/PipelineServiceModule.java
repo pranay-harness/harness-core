@@ -159,24 +159,8 @@ public class PipelineServiceModule extends AbstractModule {
     });
     install(new AbstractPersistenceTracerModule() {
       @Override
-      public Producer producerProvider() {
-        RedisConfig redisConfig = configuration.getEventsFrameworkConfiguration().getRedisConfig();
-        if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
-          return NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME);
-        } else {
-          return RedisProducer.of(QUERY_ANALYSIS_TOPIC, redisConfig, EventsFrameworkConstants.QUERY_ANALYSIS_TOPIC_SIZE,
-              PIPELINE_SERVICE.getServiceId());
-        }
-      }
-
-      @Override
-      protected DistributedCache cacheProvider() {
-        RedisConfig redisConfig = configuration.getEventsFrameworkConfiguration().getRedisConfig();
-        if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
-          return null;
-        } else {
-          return RedisCache.of(redisConfig, 300, TimeUnit.DAYS);
-        }
+      protected RedisConfig redisConfigProvider() {
+        return configuration.getEventsFrameworkConfiguration().getRedisConfig();
       }
 
       @Override
