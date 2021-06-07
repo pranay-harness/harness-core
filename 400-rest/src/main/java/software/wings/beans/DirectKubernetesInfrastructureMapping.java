@@ -6,6 +6,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
+import software.wings.infra.argo.ArgoAppConfig;
 import software.wings.utils.Utils;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -30,6 +31,8 @@ import lombok.experimental.FieldNameConstants;
 public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructureMapping {
   @Attributes(title = "Namespace") private String namespace;
   @Trimmed private String releaseName;
+  private String argoConnectorId;
+  private ArgoAppConfig argoAppConfig;
 
   public DirectKubernetesInfrastructureMapping() {
     super(InfrastructureMappingType.DIRECT_KUBERNETES.name());
@@ -38,7 +41,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
   @lombok.Builder
   public DirectKubernetesInfrastructureMapping(String accountId, String infraMappingType, String cloudProviderType,
       String cloudProviderId, String namespace, String appId, String envId, String deploymentType,
-      String serviceTemplateId) {
+      String serviceTemplateId, ArgoAppConfig argoAppConfig) {
     this();
     this.accountId = accountId;
     super.infraMappingType = infraMappingType;
@@ -49,6 +52,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
     this.envId = envId;
     this.deploymentType = deploymentType;
     this.serviceTemplateId = serviceTemplateId;
+    this.argoAppConfig = argoAppConfig;
   }
 
   @Override
@@ -96,6 +100,8 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
     private boolean sample;
     // auto populate name
     private boolean autoPopulate = true;
+    private ArgoAppConfig argoAppConfig;
+    private String argoConnectorId;
 
     private Builder() {}
 
@@ -120,6 +126,16 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
 
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
+      return this;
+    }
+
+    public Builder withArgoConnectorId(String argoConnectorId) {
+      this.argoConnectorId = argoConnectorId;
+      return this;
+    }
+
+    public Builder withArgoAppConfig(ArgoAppConfig argoAppConfig) {
+      this.argoAppConfig = argoAppConfig;
       return this;
     }
 
@@ -238,6 +254,8 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
       directKubernetesInfrastructureMapping.setAutoPopulate(autoPopulate);
       directKubernetesInfrastructureMapping.setAccountId(accountId);
       directKubernetesInfrastructureMapping.setSample(sample);
+      directKubernetesInfrastructureMapping.setArgoAppConfig(argoAppConfig);
+      directKubernetesInfrastructureMapping.setArgoConnectorId(argoConnectorId);
       return directKubernetesInfrastructureMapping;
     }
   }

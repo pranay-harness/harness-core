@@ -19,6 +19,7 @@ import software.wings.api.CloudProviderType;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
+import software.wings.infra.argo.ArgoAppConfig;
 import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -41,6 +42,8 @@ public class DirectKubernetesInfrastructure
   @IncludeFieldMap @Expression(DISALLOW_SECRETS) private String namespace;
   @Trimmed private String releaseName;
   private Map<String, String> expressions;
+  private String argoConnectorId;
+  private ArgoAppConfig argoAppConfig;
 
   @Override
   public InfrastructureMapping getInfraMapping() {
@@ -50,6 +53,8 @@ public class DirectKubernetesInfrastructure
         .withReleaseName(releaseName)
         .withComputeProviderSettingId(cloudProviderId)
         .withInfraMappingType(InfrastructureMappingType.DIRECT_KUBERNETES.name())
+        .withArgoAppConfig(argoAppConfig)
+        .withArgoConnectorId(argoConnectorId)
         .build();
   }
 
@@ -107,16 +112,18 @@ public class DirectKubernetesInfrastructure
     private String namespace;
     private String releaseName;
     private Map<String, String> expressions;
+    private ArgoAppConfig argoAppConfig;
 
     @Builder
     public Yaml(String type, String cloudProviderName, String clusterName, String namespace, String releaseName,
-        Map<String, String> expressions) {
+        Map<String, String> expressions, ArgoAppConfig argoAppConfig) {
       super(type);
       setCloudProviderName(cloudProviderName);
       setClusterName(clusterName);
       setNamespace(namespace);
       setReleaseName(releaseName);
       setExpressions(expressions);
+      setArgoAppConfig(argoAppConfig);
     }
 
     public Yaml() {

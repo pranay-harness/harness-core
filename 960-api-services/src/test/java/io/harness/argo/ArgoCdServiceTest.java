@@ -3,6 +3,7 @@ package io.harness.argo;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
 import io.harness.ApiServiceTestBase;
+import io.harness.argo.beans.ArgoApp;
 import io.harness.argo.beans.ArgoConfigInternal;
 import io.harness.argo.service.ArgoCdServiceImpl;
 import io.harness.category.element.UnitTests;
@@ -20,14 +21,14 @@ public class ArgoCdServiceTest extends ApiServiceTestBase {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldReturnApp() throws Exception {
-    String appName = argoCdService.fetchApplication(ArgoConfigInternal.builder()
+    ArgoApp app = argoCdService.fetchApplication(ArgoConfigInternal.builder()
             .argoServerUrl("https://34.136.244.4/")
             .username("admin")
             .password("mypassword1234")
             .build(),
         "guestbook");
 
-    System.out.println("appName = " + appName);
+    System.out.println("appName = " + app);
 
   }
 }
