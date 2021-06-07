@@ -22,6 +22,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class AppPermissionSummaryWithName {
+  String appName;
   private boolean canCreateService;
   private boolean canCreateProvisioner;
   private boolean canCreateEnvironment;

@@ -22,13 +22,13 @@ public class UserPermissionNameInfo {
   private String accountId;
   private AccountPermissionSummary accountPermissionSummary;
   // Key - appId, Value - app permission summary
-  private Map<String, AppPermissionSummaryForUI> appPermissionMap;
+//  private Map<String, AppPermissionSummaryForUI> appPermissionMap;
   private boolean hasAllAppAccess;
 
   // Key - appId, Value - app permission summary
   // This structure is optimized for AuthRuleFilter for faster lookup
    private Map<String, AppPermissionSummaryWithName> appPermissionMapInternal;
-   private Map<String, Set<Action>> dashboardPermissions;
+//   private Map<String, Set<Action>> dashboardPermissions;
 
   public Map<String, AppPermissionSummaryWithName> getAppPermissionMapInternal() {
     return appPermissionMapInternal;

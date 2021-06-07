@@ -10,6 +10,7 @@ import software.wings.beans.Application;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -112,6 +113,8 @@ public interface AppService extends OwnedByAccount, Exterminator {
    * @return the app ids by account id
    */
   List<String> getAppIdsByAccountId(String accountId);
+
+  Map<String, String> mapOfAppIdToAppName(String accountId);
 
   /**
    * Gets app ids by account id.

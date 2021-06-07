@@ -193,7 +193,8 @@ public class AuthHandler2 {
     populateRequiredAccountPermissions(userGroups, accountPermissionSet);
 
     // Get all app ids
-    HashSet<String> allAppIds = new HashSet<>(appService.getAppIdsByAccountId(accountId));
+    Map<String, String> mapOfAppIdToAppName = appService.mapOfAppIdToAppName(accountId);
+    HashSet<String> allAppIds = new HashSet<>(mapOfAppIdToAppName.keySet());
 
     // Cache all the entities by app id first
     Map<PermissionType, Set<String>> permissionTypeAppIdSetMap = collectRequiredAppIds(userGroups, allAppIds);
@@ -205,7 +206,11 @@ public class AuthHandler2 {
     // Filter and assign permissions
     Map<String, AppPermissionSummaryWithName> appPermissionMap =
         populateAppPermissions(userGroups, permissionTypeAppIdEntityMap, allAppIds);
-    // TODO: After here
+
+    for (Map.Entry<String, AppPermissionSummaryWithName> entry : appPermissionMap.entrySet()) {
+      AppPermissionSummaryWithName appPermissionSummaryWithName = entry.getValue();
+      appPermissionSummaryWithName.setAppName(mapOfAppIdToAppName.get(entry.getKey()));
+    }
     userPermissionInfoBuilder.appPermissionMapInternal(appPermissionMap)
         .accountPermissionSummary(accountPermissionSummaryBuilder.build());
 

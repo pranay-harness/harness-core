@@ -102,6 +102,8 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -476,6 +478,18 @@ public class AppServiceImpl implements AppService {
         .stream()
         .map(applicationKey -> applicationKey.getId().toString())
         .collect(toList());
+  }
+
+  @Override
+  public Map<String, String> mapOfAppIdToAppName(String accountId) {
+    Map<String, String> mapOfAppIdToAppName = new HashMap<>();
+    wingsPersistence.createQuery(Application.class)
+            .filter(ApplicationKeys.accountId, accountId)
+            .project(ApplicationKeys.uuid, true)
+            .project("name", true)
+            .asList()
+            .forEach(app -> mapOfAppIdToAppName.put(app.getUuid(), app.getName()));
+    return mapOfAppIdToAppName;
   }
 
   @Override
