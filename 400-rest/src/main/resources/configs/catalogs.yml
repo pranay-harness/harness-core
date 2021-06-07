@@ -339,6 +339,8 @@ CLOUD_PROVIDERS:
       value: KUBERNETES_CLUSTER
     - name: Pivotal Cloud Foundry
       value: PCF
+    - name: Argo
+      value: ARGO
 
 FORM_FIELD_TO_ENTITY_TYPE:
     - name: envId

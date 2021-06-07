@@ -4,9 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.network.Http.connectableHttpUrl;
-
 import static java.util.stream.Collectors.toList;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactMetadataKeys;
 import io.harness.artifacts.beans.BuildDetailsInternal;
@@ -31,20 +34,6 @@ import io.harness.expression.RegexFunctor;
 import io.harness.globalcontex.ErrorHandlingGlobalContextData;
 import io.harness.manage.GlobalContextManager;
 import io.harness.network.Http;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -57,6 +46,17 @@ import okhttp3.Headers;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import retrofit2.Response;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Created by anubhaw on 1/6/17.
@@ -358,7 +358,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   private String getToken(
       DockerInternalConfig dockerConfig, Headers headers, DockerRegistryRestClient registryRestClient) {
     String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), dockerConfig.getPassword());
-    String authHeaderValue = headers.get(AUTHENTICATE_HEADER);
+      String authHeaderValue = headers.get(AUTHENTICATE_HEADER);
     if (!cachedBearerTokens.containsKey(authHeaderValue)) {
       DockerRegistryToken dockerRegistryToken = fetchToken(registryRestClient, basicAuthHeader, authHeaderValue);
       if (dockerRegistryToken != null) {

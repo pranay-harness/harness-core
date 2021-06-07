@@ -1,13 +1,14 @@
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-
+import static java.util.Arrays.stream;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.settings.SettingVariableTypes.AMAZON_S3;
 import static software.wings.settings.SettingVariableTypes.AMAZON_S3_HELM_REPO;
 import static software.wings.settings.SettingVariableTypes.APM_VERIFICATION;
 import static software.wings.settings.SettingVariableTypes.APP_DYNAMICS;
+import static software.wings.settings.SettingVariableTypes.ARGO;
 import static software.wings.settings.SettingVariableTypes.ARTIFACTORY;
 import static software.wings.settings.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingVariableTypes.AZURE;
@@ -53,8 +54,11 @@ import static software.wings.settings.SettingVariableTypes.STRING;
 import static software.wings.settings.SettingVariableTypes.SUMO;
 import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
 
-import static java.util.Arrays.stream;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
@@ -76,23 +80,6 @@ import io.harness.persistence.UuidAware;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Update;
 import io.harness.yaml.BaseYaml;
-
-import software.wings.beans.artifact.ArtifactStreamSummary;
-import software.wings.beans.entityinterface.ApplicationAccess;
-import software.wings.security.UsageRestrictions;
-import software.wings.settings.SettingValue;
-import software.wings.settings.SettingVariableTypes;
-import software.wings.settings.validation.ConnectivityValidationAttributes;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.reinert.jjschema.SchemaIgnore;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import java.util.Collections;
-import java.util.List;
-import javax.annotation.Nonnull;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -104,6 +91,18 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.artifact.ArtifactStreamSummary;
+import software.wings.beans.entityinterface.ApplicationAccess;
+import software.wings.security.UsageRestrictions;
+import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
+import software.wings.settings.validation.ConnectivityValidationAttributes;
+
+import java.util.Collections;
+import java.util.List;
+import javax.annotation.Nonnull;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
 @Data
@@ -234,7 +233,7 @@ public class SettingAttribute
   }
 
   public enum SettingCategory {
-    CLOUD_PROVIDER(Lists.newArrayList(PHYSICAL_DATA_CENTER, AWS, AZURE, GCP, KUBERNETES_CLUSTER, PCF, SPOT_INST)),
+    CLOUD_PROVIDER(Lists.newArrayList(PHYSICAL_DATA_CENTER, AWS, AZURE, GCP, KUBERNETES_CLUSTER, PCF, SPOT_INST, ARGO)),
 
     CONNECTOR(Lists.newArrayList(SMTP, JENKINS, BAMBOO, SPLUNK, ELK, LOGZ, SUMO, APP_DYNAMICS, INSTANA, NEW_RELIC,
         DYNA_TRACE, BUG_SNAG, DATA_DOG, APM_VERIFICATION, PROMETHEUS, ELB, SLACK, DOCKER, ECR, GCR, NEXUS, ARTIFACTORY,
