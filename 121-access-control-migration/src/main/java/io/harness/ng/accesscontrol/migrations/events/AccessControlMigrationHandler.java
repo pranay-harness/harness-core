@@ -189,8 +189,8 @@ public class AccessControlMigrationHandler implements MessageListener {
     int maxIterations = 50;
     Set<UserInfo> users = new HashSet<>();
     while (maxIterations > 0) {
-      PageResponse<UserInfo> usersPage =
-          RestClientUtils.getResponse(userClient.list(accountId, String.valueOf(offset), String.valueOf(limit), null));
+      PageResponse<UserInfo> usersPage = RestClientUtils.getResponse(
+          userClient.list(accountId, String.valueOf(offset), String.valueOf(limit), null, true));
       if (isEmpty(usersPage.getResponse())) {
         break;
       }

@@ -112,8 +112,9 @@ public class NgUserServiceImpl implements NgUserService {
 
   @Override
   public Page<UserInfo> listCurrentGenUsers(String accountIdentifier, String searchString, Pageable pageable) {
-    io.harness.beans.PageResponse<UserInfo> userPageResponse = RestClientUtils.getResponse(userClient.list(
-        accountIdentifier, String.valueOf(pageable.getOffset()), String.valueOf(pageable.getPageSize()), searchString));
+    io.harness.beans.PageResponse<UserInfo> userPageResponse =
+        RestClientUtils.getResponse(userClient.list(accountIdentifier, String.valueOf(pageable.getOffset()),
+            String.valueOf(pageable.getPageSize()), searchString, false));
     List<UserInfo> users = userPageResponse.getResponse();
     return new PageImpl<>(users, pageable, users.size());
   }
