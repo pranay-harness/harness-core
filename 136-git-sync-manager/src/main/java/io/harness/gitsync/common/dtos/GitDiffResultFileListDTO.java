@@ -3,8 +3,8 @@ package io.harness.gitsync.common.dtos;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.git.model.ChangeType;
 
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +14,6 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(DX)
-public class GitPRFileDTO {
-  ChangeType changeType;
-  String path;
+public class GitDiffResultFileListDTO {
+  List<GitDiffResultFileDTO> prFileList;
 }

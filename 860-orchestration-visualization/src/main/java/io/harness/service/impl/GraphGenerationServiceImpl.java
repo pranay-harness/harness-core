@@ -75,9 +75,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
         if (orchestrationEventType == OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE) {
           orchestrationGraph = planExecutionStatusUpdateEventHandler.handleEvent(planExecutionId, orchestrationGraph);
         } else {
-          String nodeExecutionId = orchestrationEventLog.getEvent() != null
-              ? orchestrationEventLog.getEvent().getNodeExecutionProto().getUuid()
-              : orchestrationEventLog.getNodeExecutionId();
+          String nodeExecutionId = orchestrationEventLog.getNodeExecutionId();
           orchestrationGraph = graphStatusUpdateHelper.handleEvent(
               planExecutionId, nodeExecutionId, orchestrationEventType, orchestrationGraph);
         }

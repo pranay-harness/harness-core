@@ -19,7 +19,6 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.task.ci.CIBuildStatusPushParameters;
 import io.harness.delegate.task.ci.GitSCMType;
 import io.harness.exception.ngexception.CIStageExecutionException;
-import io.harness.execution.NodeExecution;
 import io.harness.git.GitClientHelper;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
@@ -62,13 +61,19 @@ public class GitBuildStatusUtility {
   @Inject @Named("ngBaseUrl") private String ngBaseUrl;
   @Inject private PipelineUtils pipelineUtils;
 
-  public boolean shouldSendStatus(NodeExecution nodeExecution) {
-    return Objects.equals(nodeExecution.getNode().getGroup(), StepOutcomeGroup.STAGE.name());
+  public boolean shouldSendStatus(String group) {
+    return Objects.equals(group, StepOutcomeGroup.STAGE.name());
   }
 
-  public void sendStatusToGit(NodeExecution nodeExecution, Ambiance ambiance, String accountId) {
+  /**
+   * Status, ResolvedStepParameters
+   * @param nodeExecution
+   * @param ambiance
+   * @param accountId
+   */
+  public void sendStatusToGit(Status status, String resolvedStepParamters, Ambiance ambiance, String accountId) {
     StageElementParameters stageElementParameters =
-        RecastOrchestrationUtils.fromDocument(nodeExecution.getResolvedStepParameters(), StageElementParameters.class);
+        RecastOrchestrationUtils.fromDocumentJson(resolvedStepParamters, StageElementParameters.class);
 
     IntegrationStageStepParametersPMS integrationStageStepParameters =
         (IntegrationStageStepParametersPMS) stageElementParameters.getSpecConfig();
@@ -77,14 +82,14 @@ public class GitBuildStatusUtility {
 
     if (buildStatusUpdateParameter != null) {
       CIBuildStatusPushParameters ciBuildStatusPushParameters =
-          getCIBuildStatusPushParams(ambiance, buildStatusUpdateParameter, nodeExecution.getStatus());
+          getCIBuildStatusPushParams(ambiance, buildStatusUpdateParameter, status);
 
       /* This check is require because delegate is not honouring the ordering and
          there are instances where we are overriding final status with prev state status i.e running specially in case
          time interval is minuscule
       */
 
-      if (isFinalStatus(nodeExecution.getStatus())) {
+      if (isFinalStatus(status)) {
         try {
           Thread.sleep(5000);
         } catch (InterruptedException exception) {

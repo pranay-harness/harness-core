@@ -3,7 +3,7 @@ package io.harness.ngtriggers.beans.source.webhook.v2.custom;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ngtriggers.beans.source.webhook.WebhookCondition;
+import io.harness.ngtriggers.beans.source.webhook.v2.TriggerEventDataCondition;
 import io.harness.ngtriggers.beans.source.webhook.v2.WebhookTriggerSpecV2;
 import io.harness.ngtriggers.beans.source.webhook.v2.git.GitAware;
 import io.harness.ngtriggers.beans.source.webhook.v2.git.PayloadAware;
@@ -21,8 +21,8 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(PIPELINE)
 public class CustomTriggerSpec implements WebhookTriggerSpecV2, PayloadAware {
-  List<WebhookCondition> payloadConditions;
-  List<WebhookCondition> headerConditions;
+  List<TriggerEventDataCondition> payloadConditions;
+  List<TriggerEventDataCondition> headerConditions;
   String jexlCondition;
 
   @Override
@@ -36,12 +36,12 @@ public class CustomTriggerSpec implements WebhookTriggerSpecV2, PayloadAware {
   }
 
   @Override
-  public List<WebhookCondition> fetchHeaderConditions() {
+  public List<TriggerEventDataCondition> fetchHeaderConditions() {
     return headerConditions;
   }
 
   @Override
-  public List<WebhookCondition> fetchPayloadConditions() {
+  public List<TriggerEventDataCondition> fetchPayloadConditions() {
     return payloadConditions;
   }
 

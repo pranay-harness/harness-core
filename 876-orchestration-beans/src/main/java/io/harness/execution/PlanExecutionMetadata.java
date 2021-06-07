@@ -42,6 +42,7 @@ public class PlanExecutionMetadata implements PersistentEntity, UuidAware {
   private String inputSetYaml;
   private String yaml;
   private String processedYaml;
+  private String triggerJsonPayload;
 
   @Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL_MONTHS).toInstant());
 

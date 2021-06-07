@@ -89,6 +89,7 @@ import java.util.concurrent.ExecutorService;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 
 /**
  * Please do not use this class outside of orchestration module. All the interactions with engine must be done via
@@ -243,10 +244,8 @@ public class OrchestrationEngine {
     PlanExecution planExecution = Preconditions.checkNotNull(planExecutionService.get(ambiance.getPlanExecutionId()));
     NodeExecution nodeExecution = prepareNodeExecutionForInvocation(ambiance);
     log.info("Sending NodeExecution START event");
-    StartNodeExecutionEventData startNodeExecutionEventData = StartNodeExecutionEventData.builder()
-                                                                  .facilitatorResponse(facilitatorResponse)
-                                                                  .nodes(planExecution.getPlan().getNodes())
-                                                                  .build();
+    StartNodeExecutionEventData startNodeExecutionEventData =
+        StartNodeExecutionEventData.builder().facilitatorResponse(facilitatorResponse).build();
     NodeExecutionEvent startEvent = NodeExecutionEvent.builder()
                                         .eventType(NodeExecutionEventType.START)
                                         .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
@@ -384,6 +383,11 @@ public class OrchestrationEngine {
     Status status = planExecutionService.calculateStatus(ambiance.getPlanExecutionId());
     PlanExecution planExecution = planExecutionService.updateStatus(
         ambiance.getPlanExecutionId(), status, ops -> ops.set(PlanExecutionKeys.endTs, System.currentTimeMillis()));
+    Document resolvedStepParameters = nodeExecution.getResolvedStepParameters();
+    String stepParameters = null;
+    if (resolvedStepParameters != null) {
+      stepParameters = resolvedStepParameters.toJson();
+    }
     eventEmitter.emitEvent(OrchestrationEvent.builder()
                                .ambiance(Ambiance.newBuilder()
                                              .setPlanExecutionId(planExecution.getUuid())
@@ -391,8 +395,9 @@ public class OrchestrationEngine {
                                                      ? Collections.emptyMap()
                                                      : planExecution.getSetupAbstractions())
                                              .build())
-                               .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
                                .eventType(OrchestrationEventType.ORCHESTRATION_END)
+                               .status(nodeExecution.getStatus())
+                               .resolvedStepParameters(stepParameters)
                                .build());
     orchestrationEndSubject.fireInform(OrchestrationEndObxxxxxxxx:onEnd, ambiance);
   }
@@ -440,7 +445,7 @@ public class OrchestrationEngine {
     adviserResponseHandler.handleAdvise(updatedNodeExecution, adviserResponse);
   }
 
-  void handleError(Ambiance ambiance, Exception exception) {
+  public void handleError(Ambiance ambiance, Exception exception) {
     try {
       Builder builder = StepResponseProto.newBuilder().setStatus(Status.FAILED);
       List<ResponseMessage> responseMessages = exceptionManager.buildResponseFromException(exception);

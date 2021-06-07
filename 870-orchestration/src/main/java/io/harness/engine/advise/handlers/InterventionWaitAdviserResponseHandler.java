@@ -10,7 +10,6 @@ import io.harness.engine.executions.InterventionWaitTimeoutCallback;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.execution.NodeExecutionMapper;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.InterventionWaitAdvise;
 import io.harness.pms.contracts.execution.Status;
@@ -34,6 +33,7 @@ import com.google.protobuf.Duration;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.concurrent.TimeUnit;
+import org.bson.Document;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class InterventionWaitAdviserResponseHandler implements AdviserResponseHandler {
@@ -67,10 +67,17 @@ public class InterventionWaitAdviserResponseHandler implements AdviserResponseHa
         ops
         -> ops.set(NodeExecutionKeys.adviserTimeoutInstanceIds, Arrays.asList(instance.getUuid())),
         EnumSet.noneOf(Status.class));
+    Document resolvedStepParameters = nodeExecution.getResolvedStepParameters();
+    String stepParameters = null;
+    if (resolvedStepParameters != null) {
+      stepParameters = resolvedStepParameters.toJson();
+    }
     eventEmitter.emitEvent(OrchestrationEvent.builder()
                                .eventType(OrchestrationEventType.INTERVENTION_WAIT_START)
                                .ambiance(nodeExecution.getAmbiance())
-                               .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
+                               .status(nodeExecution.getStatus())
+                               .resolvedStepParameters(stepParameters)
+                               .serviceName(nodeExecution.getNode().getServiceName())
                                .build());
   }
 

@@ -15,8 +15,13 @@ trigger:
           connectorRef: conn
           repoName: myrepo
           actions:
-            - Open
+            - Close
             - Edit
+            - Open
+            - Reopen
+            - Label
+            - Unlabel
+            - Synchronize
           payloadConditions:
             - key: k1
               operator: Equals

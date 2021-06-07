@@ -1,4 +1,4 @@
-package io.harness.ngtriggers.functor;
+package io.harness.ngtriggers.expressions.functors;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.LateBindingValue;

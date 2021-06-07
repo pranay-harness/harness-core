@@ -1,12 +1,12 @@
 package io.harness.ngtriggers.mapper;
 
+import static io.harness.NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.Collections.emptyList;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
-import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
@@ -47,9 +47,8 @@ public class TriggerFilterHelper {
     }
     if (EmptyPredicate.isNotEmpty(searchTerm)) {
       Criteria searchCriteria = new Criteria().orOperator(
-          where(NGTriggerEntityKeys.identifier)
-              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-          where(NGTriggerEntityKeys.name).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
+          where(NGTriggerEntityKeys.identifier).regex(searchTerm, CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(NGTriggerEntityKeys.name).regex(searchTerm, CASE_INSENSITIVE_MONGO_OPTIONS));
       criteria.andOperator(searchCriteria);
     }
     return criteria;
@@ -63,9 +62,18 @@ public class TriggerFilterHelper {
       if (triggerWebhookEvent.getTriggerIdentifier() != null) {
         criteria.and(NGTriggerEntityKeys.identifier).is(triggerWebhookEvent.getTriggerIdentifier());
       }
-      criteria.and("metadata.webhook.type").is("CUSTOM");
+      criteria.and("metadata.webhook.type").regex("CUSTOM", CASE_INSENSITIVE_MONGO_OPTIONS);
     }
 
+    return criteria;
+  }
+
+  public Criteria createCriteriaFormWebhookTriggerGetListByRepoType(
+      TriggerWebhookEvent triggerWebhookEvent, String searchTerm, boolean deleted, boolean enabled) {
+    Criteria criteria = createCriteriaForWebhookTriggerGetList(
+        triggerWebhookEvent.getAccountId(), null, null, emptyList(), searchTerm, deleted, enabled);
+    criteria.and("metadata.webhook.type")
+        .regex(triggerWebhookEvent.getSourceRepoType(), CASE_INSENSITIVE_MONGO_OPTIONS);
     return criteria;
   }
 
@@ -92,9 +100,8 @@ public class TriggerFilterHelper {
 
     if (EmptyPredicate.isNotEmpty(searchTerm)) {
       Criteria searchCriteria = new Criteria().orOperator(
-          where(NGTriggerEntityKeys.identifier)
-              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-          where(NGTriggerEntityKeys.name).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
+          where(NGTriggerEntityKeys.identifier).regex(searchTerm, CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(NGTriggerEntityKeys.name).regex(searchTerm, CASE_INSENSITIVE_MONGO_OPTIONS));
       criteria.andOperator(searchCriteria);
     }
     return criteria;
@@ -112,6 +119,7 @@ public class TriggerFilterHelper {
     update.set(NGTriggerEntityKeys.enabled, triggerEntity.getEnabled());
     update.set(NGTriggerEntityKeys.tags, triggerEntity.getTags());
     update.set(NGTriggerEntityKeys.deleted, false);
+    update.set(NGTriggerEntityKeys.ymlVersion, triggerEntity.getYmlVersion());
     if (triggerEntity.getNextIterations() != null) {
       update.set(NGTriggerEntityKeys.nextIterations, triggerEntity.getNextIterations());
     }

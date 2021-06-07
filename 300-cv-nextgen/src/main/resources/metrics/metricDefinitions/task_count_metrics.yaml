@@ -6,3 +6,40 @@ metrics:
     metricDefinition: verification job instance timeout count
     type: Count
     unit: "1"
+  - metricName: verification_job_instance_failed_count
+    metricDefinition: verification job instance failed count
+    type: Count
+    unit: "1"
+  - metricName: verification_job_instance_success_count
+    metricDefinition: verification job instance success count
+    type: Count
+    unit: "1"
+  - metricName: verification_job_instance_verification_passed_count
+    metricDefinition: verification job instance verification passed count
+    type: Count
+    unit: "1"
+  - metricName: verification_job_instance_verification_failed_count
+    metricDefinition: verification job instance verification failed count
+    type: Count
+    unit: "1"
+  - metricName: learning_engine_task_timeout_count
+    metricDefinition: learning engine task timeout count
+    type: Count
+    unit: "1"
+  - metricName: learning_engine_task_failed_count
+    metricDefinition: learning engine task failed count
+    type: Count
+    unit: "1"
+  - metricName: learning_engine_task_success_count
+    metricDefinition: learning engine task success count
+    type: Count
+    unit: "1"
+  - metricName: data_collection_task_failed_count
+    metricDefinition: data collection task failed count
+    type: Count
+    unit: "1"
+  - metricName: data_collection_task_success_count
+    metricDefinition: data collection task success count
+    type: Count
+    unit: "1"
+

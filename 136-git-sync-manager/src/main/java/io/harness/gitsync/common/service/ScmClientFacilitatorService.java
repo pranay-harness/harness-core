@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.gitsync.common.dtos.GitDiffResultFileListDTO;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.ng.beans.PageRequest;
@@ -31,4 +32,7 @@ public interface ScmClientFacilitatorService {
 
   List<GitFileChangeDTO> listFilesByFilePaths(
       YamlGitConfigDTO yamlGitConfigDTO, List<String> filePaths, String branchName);
+
+  GitDiffResultFileListDTO listCommitsDiffFiles(
+      YamlGitConfigDTO yamlGitConfigDTO, String initialCommitId, String finalCommitId);
 }

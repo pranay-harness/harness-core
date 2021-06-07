@@ -1,6 +1,6 @@
 package io.harness.cvng.metrics.beans;
 
-import static io.harness.cvng.metrics.MetricsConstants.METRIC_LABEL_PREFIX;
+import static io.harness.cvng.metrics.CVNGMetricsUtils.METRIC_LABEL_PREFIX;
 
 import java.lang.reflect.Field;
 import java.util.HashSet;

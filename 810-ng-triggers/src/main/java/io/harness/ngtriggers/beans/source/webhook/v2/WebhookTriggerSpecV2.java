@@ -1,6 +1,11 @@
 package io.harness.ngtriggers.beans.source.webhook.v2;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.ngtriggers.Constants.AWS_CODECOMMIT_REPO;
+import static io.harness.ngtriggers.Constants.BITBUCKET_REPO;
+import static io.harness.ngtriggers.Constants.CUSTOM_REPO;
+import static io.harness.ngtriggers.Constants.GITHUB_REPO;
+import static io.harness.ngtriggers.Constants.GITLAB_REPO;
 
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
@@ -19,11 +24,11 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = GithubSpec.class, name = "Github")
-  , @JsonSubTypes.Type(value = GitlabSpec.class, name = "Gitlab"),
-      @JsonSubTypes.Type(value = BitbucketSpec.class, name = "Bitbucket"),
-      @JsonSubTypes.Type(value = AwsCodeCommitSpec.class, name = "AWS CodeCommit"),
-      @JsonSubTypes.Type(value = CustomTriggerSpec.class, name = "Custom")
+  @JsonSubTypes.Type(value = GithubSpec.class, name = GITHUB_REPO)
+  , @JsonSubTypes.Type(value = GitlabSpec.class, name = GITLAB_REPO),
+      @JsonSubTypes.Type(value = BitbucketSpec.class, name = BITBUCKET_REPO),
+      @JsonSubTypes.Type(value = AwsCodeCommitSpec.class, name = AWS_CODECOMMIT_REPO),
+      @JsonSubTypes.Type(value = CustomTriggerSpec.class, name = CUSTOM_REPO)
 })
 @OwnedBy(PIPELINE)
 public interface WebhookTriggerSpecV2 {

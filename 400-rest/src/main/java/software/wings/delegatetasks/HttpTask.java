@@ -19,6 +19,7 @@ import io.harness.http.beans.HttpInternalResponse;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 
 import com.google.inject.Inject;
+import java.io.IOException;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +37,7 @@ public class HttpTask extends AbstractDelegateRunnableTask {
   }
 
   @Override
-  public HttpStateExecutionResponse run(TaskParameters parameters) {
+  public HttpStateExecutionResponse run(TaskParameters parameters) throws IOException {
     HttpTaskParameters httpTaskParameters = (HttpTaskParameters) parameters;
     HttpInternalResponse httpInternalResponse =
         httpService.executeUrl(HttpInternalConfig.builder()
