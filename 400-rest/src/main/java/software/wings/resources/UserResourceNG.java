@@ -45,6 +45,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -98,16 +99,18 @@ public class UserResourceNG {
   @GET
   @Path("/search")
   public RestResponse<PageResponse<UserInfo>> list(@BeanParam PageRequest<User> pageRequest,
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("searchTerm") String searchTerm) {
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("searchTerm") String searchTerm,
+      @DefaultValue("false") boolean requiredAdminStatus) {
     Integer offset = Integer.valueOf(pageRequest.getOffset());
     Integer pageSize = pageRequest.getPageSize();
 
-    List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, true, false);
+    List<User> userList =
+        userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, requiredAdminStatus, false);
 
     PageResponse<UserInfo> pageResponse = aPageResponse()
                                               .withOffset(offset.toString())
                                               .withLimit(pageSize.toString())
-                                              .withResponse(convertUserToNgUser(userList))
+                                              .withResponse(convertUserToNgUser(userList, requiredAdminStatus))
                                               .withTotal(userService.getTotalUserCount(accountId, true))
                                               .build();
 
@@ -152,7 +155,7 @@ public class UserResourceNG {
     if (!isEmpty(userFilterNG.getEmailIds())) {
       userSet.addAll(userService.getUsersByEmail(userFilterNG.getEmailIds(), accountId));
     }
-    return new RestResponse<>(convertUserToNgUser(new ArrayList<>(userSet)));
+    return new RestResponse<>(convertUserToNgUser(new ArrayList<>(userSet), false));
   }
 
   @PUT
@@ -243,14 +246,15 @@ public class UserResourceNG {
     return new RestResponse<>(Optional.ofNullable(url));
   }
 
-  private List<UserInfo> convertUserToNgUser(List<User> userList) {
+  private List<UserInfo> convertUserToNgUser(List<User> userList, boolean requiredAdminStatus) {
     return userList.stream()
         .map(user
             -> UserInfo.builder()
                    .email(user.getEmail())
                    .name(user.getName())
                    .uuid(user.getUuid())
-                   .admin(Optional.ofNullable(user.getUserGroups())
+                   .admin(requiredAdminStatus
+                       && Optional.ofNullable(user.getUserGroups())
                               .map(x
                                   -> x.stream().anyMatch(
                                       y -> ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(y.getName()) && y.isDefault()))
