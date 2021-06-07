@@ -15,13 +15,7 @@ import software.wings.graphql.datafetcher.hackathon.QLRecommendationDataPoint.QL
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 
-import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.FieldList;
-import com.google.cloud.bigquery.FieldValueList;
-import com.google.cloud.bigquery.QueryJobConfiguration;
-import com.google.cloud.bigquery.Schema;
-import com.google.cloud.bigquery.TableResult;
+import com.google.cloud.bigquery.*;
 import com.google.inject.Inject;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
 import com.healthmarketscience.sqlbuilder.CustomSql;
@@ -120,6 +114,9 @@ public class OrphanRecommendationsDataFetcher
             break;
           case "cost":
             dataPointBuilder.cost(Math.round(row.get(field.getName()).getNumericValue().doubleValue() * -100D) / 100D);
+            break;
+          case "resourceLink":
+            dataPointBuilder.resourceLink(row.get(field.getName()).getValue().toString());
             break;
           default:
             break;
