@@ -3,7 +3,6 @@ package io.harness.query.shapedetector;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
-import com.google.common.annotations.VisibleForTesting;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import lombok.experimental.UtilityClass;
@@ -19,8 +18,7 @@ public class QueryShapeDetector {
     return queryHashCache.computeIfAbsent(queryHash, hash -> new QueryHashInfo(collectionName, queryDoc, hash));
   }
 
-  @VisibleForTesting
-  String calculateQueryHash(String collectionName, Document queryDoc) {
+  public String calculateQueryHash(String collectionName, Document queryDoc) {
     return "";
   }
 }
