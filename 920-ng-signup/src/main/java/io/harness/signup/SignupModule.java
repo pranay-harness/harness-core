@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.GTM;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cloud.google.GoogleCloudFileModule;
+import io.harness.ff.FeatureFlagModule;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.signup.notification.SignupNotificationHelper;
 import io.harness.signup.notification.SignupNotificationTemplateLoader;
@@ -37,6 +38,7 @@ public class SignupModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    install(FeatureFlagModule.getInstance());
     install(UserClientModule.getInstance(serviceHttpClientConfig, managerServiceSecret, clientId));
     install(GoogleCloudFileModule.getInstance());
     bind(SignupService.class).to(SignupServiceImpl.class);
