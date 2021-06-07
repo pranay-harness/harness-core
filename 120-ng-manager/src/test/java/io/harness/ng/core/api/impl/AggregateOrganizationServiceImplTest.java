@@ -23,6 +23,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.ng.core.dto.OrganizationAggregateDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
+import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.UserInfo;
@@ -95,7 +96,11 @@ public class AggregateOrganizationServiceImplTest extends CategoryTest {
     when(ngUserService.listCurrentGenUsers(any(), any())).thenReturn(getUsers(userMembershipList));
     List<String> adminIds =
         IntStream.range(0, 4).mapToObj(i -> userMembershipList.get(i).getUserId()).collect(toList());
-    when(ngUserService.listUsersHavingRole(any(), any())).thenReturn(adminIds);
+    List<UserMetadataDTO> adminUserMetadataList =
+        adminIds.stream()
+            .map(userId -> UserMetadataDTO.builder().uuid(userId).name(userId).email(userId).build())
+            .collect(toList());
+    when(ngUserService.listUsersHavingRole(any(), any())).thenReturn(adminUserMetadataList);
   }
 
   @Test
@@ -183,7 +188,11 @@ public class AggregateOrganizationServiceImplTest extends CategoryTest {
                                                         .build()))
                   .build()));
     }
-    when(ngUserService.listUsersHavingRole(any(), any())).thenReturn(userIds.subList(0, 4));
+    List<UserMetadataDTO> userMetadataList =
+        userIds.stream()
+            .map(userId -> UserMetadataDTO.builder().uuid(userId).name(userId).email(userId).build())
+            .collect(toList());
+    when(ngUserService.listUsersHavingRole(any(), any())).thenReturn(userMetadataList.subList(0, 4));
     when(ngUserService.listCurrentGenUsers(any(), any())).thenReturn(getUsers(userMembershipList));
     when(ngUserService.listUserMemberships(any())).thenReturn(userMembershipList);
     return userMembershipList;
