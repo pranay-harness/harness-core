@@ -21,6 +21,7 @@ import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -37,6 +38,11 @@ public class ArgoConfig extends SettingValue implements EncryptableSetting {
 
   @SchemaIgnore @NotEmpty private String accountId;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
+
+  @Override
+  public List<String> fetchRelevantEncryptedSecrets() {
+    return Arrays.asList(encryptedPassword);
+  }
 
   public ArgoConfig() {
     super(SettingVariableTypes.ARGO.name());

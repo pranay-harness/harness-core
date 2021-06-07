@@ -2229,11 +2229,17 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     final SettingAttribute argoConnector = settingsService.get(appId, kubernetesInfrastructure.getArgoConnectorId());
     final ArgoConfig argoConfig = (ArgoConfig) argoConnector.getValue();
     final List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(argoConfig);
-    ResourceTreeRequest resourceTreeRequest = ResourceTreeRequest.builder()
-                                                  .argoConfigInternal(ArgoConfigInternal.builder().build())
-                                                  .encryptedDataDetails(encryptionDetails)
-                                                  .appName(kubernetesInfrastructure.getArgoAppConfig().getAppName())
-                                                  .build();
+    ResourceTreeRequest resourceTreeRequest =
+        ResourceTreeRequest.builder()
+            .argoConfigInternal(ArgoConfigInternal.builder()
+                                    .argoServerUrl(argoConfig.getArgoServerUrl())
+                                    .username(argoConfig.getUsername())
+                                    .password(argoConfig.getEncryptedPassword())
+                                    .isCertValidationRequired(argoConfig.isCertValidationRequired())
+                                    .build())
+            .encryptedDataDetails(encryptionDetails)
+            .appName(kubernetesInfrastructure.getArgoAppConfig().getAppName())
+            .build();
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(infra.getAccountId())
                                     .data(TaskData.builder()

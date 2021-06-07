@@ -2,9 +2,12 @@ package io.harness.argo.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.ToString;
 import lombok.Value;
+
+import java.util.List;
 
 @Value
 @Builder
@@ -13,6 +16,9 @@ public class ArgoConfigInternal {
   String argoServerUrl;
   String username;
   String password;
+  //  private String encryptedPassword;
+  List<EncryptedDataDetail> encryptedDataDetailList;
+  //  boolean decrypted;
   boolean isCertValidationRequired;
 
   public boolean hasCredentials() {
