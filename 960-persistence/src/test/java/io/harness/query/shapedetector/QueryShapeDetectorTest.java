@@ -150,21 +150,86 @@ public class QueryShapeDetectorTest extends CategoryTest {
   @Test
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
-  public void testMongoQueryHash() {
+  public void testMongoQueryHashForSameQueryShape() {
     int hash1 = 0;
     int hash2 = 0;
+    int hash3 = 0;
     ObjectMapper objectMapper = new ObjectMapper();
     try {
-      String jsonString = "{planExecutionId: \"pid\", status : {$in : [\"RUNNING\", \"WAITING\"]} }";
+      String jsonString = "{\"planExecutionId\": \"pid\", \"status\" : {\"$in\" : [\"RUNNING\", \"WAITING\"]} }";
       JsonNode jsonNode = objectMapper.readTree(objectMapper.getFactory().createParser(jsonString));
       hash1 = jsonNode.hashCode();
-      jsonString = "{status : {$in : [\"RUNNING\", \"WAITING\"]}, planExecutionId: \"pid\" }";
+
+      // Query with different field order.
+      jsonString = "{\"status\" : {\"$in\" : [\"RUNNING\", \"WAITING\"]}, \"planExecutionId\": \"pid\" }";
       jsonNode = objectMapper.readTree(objectMapper.getFactory().createParser(jsonString));
       hash2 = jsonNode.hashCode();
+
+      // Query with different field order with different order inside array.
+      jsonString = "{\"status\" : {\"$in\" : [\"WAITING\", \"RUNNING\"]}, \"planExecutionId\": \"pid\" }";
+      jsonNode = objectMapper.readTree(objectMapper.getFactory().createParser(jsonString));
+      hash3 = jsonNode.hashCode();
     } catch (IOException e) {
       throw new InvalidRequestException("Unable to read the json ", e);
     }
     assertThat(hash1).isEqualTo(hash2);
+    assertThat(hash3).isNotEqualTo(hash2);
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
+  public void testMongoQueryHashForDifferentQueryShape() {
+    int hash1 = 0;
+    int hash2 = 0;
+    int hash3 = 0;
+    ObjectMapper objectMapper = new ObjectMapper();
+    try {
+      String jsonString = "{\"planExecutionId\": \"pid\"}";
+      JsonNode jsonNode = objectMapper.readTree(objectMapper.getFactory().createParser(jsonString));
+      hash1 = jsonNode.hashCode();
+
+      // Query with different field order.
+      jsonString = "{\"status\" : \"pid\" }";
+      jsonNode = objectMapper.readTree(objectMapper.getFactory().createParser(jsonString));
+      hash2 = jsonNode.hashCode();
+
+      // Query with different field order with different order inside array.
+      jsonString = "{\"planExecutionId\": \"pid3\"}";
+      jsonNode = objectMapper.readTree(objectMapper.getFactory().createParser(jsonString));
+      hash3 = jsonNode.hashCode();
+    } catch (IOException e) {
+      throw new InvalidRequestException("Unable to read the json ", e);
+    }
+    assertThat(hash1).isNotEqualTo(hash2);
+    assertThat(hash3).isNotEqualTo(hash2);
+
+    // Nested array having objects
+    String jsonString = "{\n"
+        + "    \"errors\": [\n"
+        + "        {\"error\": \"invalid\", \"field\": \"email\"},\n"
+        + "        {\"error\": \"required\", \"field\": \"name\"}\n"
+        + "    ],\n"
+        + "    \"success\": false\n"
+        + "}";
+    try {
+      JsonNode jsonNode = objectMapper.readTree(jsonString);
+      hash1 = jsonNode.hashCode();
+
+      jsonString = "{\n"
+          + " \"success\": false, \n"
+          + "    \"errors\": [\n"
+          + "        {\"error\": \"required\", \"field\": \"name\"},\n"
+          + "        {\"error\": \"invalid\", \"field\": \"email\"}\n"
+          + "    ]\n"
+          + "}";
+      jsonNode = objectMapper.readTree(jsonString);
+      hash2 = jsonNode.hashCode();
+      // errors list has different order of objects which cannot be compared.
+      assertThat(hash1).isNotEqualTo(hash2);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   @Value
