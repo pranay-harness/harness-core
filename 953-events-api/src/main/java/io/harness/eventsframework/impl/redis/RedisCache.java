@@ -4,6 +4,7 @@ import io.harness.redis.RedisConfig;
 
 import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
+import org.redisson.api.RListMultimapCache;
 import org.redisson.api.RMapCache;
 import org.redisson.api.RedissonClient;
 
@@ -25,6 +26,15 @@ public class RedisCache implements DistributedCache {
   public <K, V> void putInsideMap(String key, K innerKey, V value) {
     RMapCache<K, V> cache = redissonClient.getMapCache(key);
     cache.fastPut(innerKey, value, evictTime, timeUnit);
+  }
+
+  public <K, V> RListMultimapCache<K, V> getMultiMap(String key) {
+    return redissonClient.getListMultimapCache(key);
+  }
+
+  public <K, V> void putInsideMultiMap(String key, K innerKey, V value) {
+    RListMultimapCache<K, V> cache = redissonClient.getListMultimapCache(key);
+    cache.put(innerKey, value);
   }
 
   public static RedisCache of(@NotNull RedisConfig redisConfig, long evictTime, TimeUnit timeUnit) {
