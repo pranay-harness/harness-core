@@ -412,3 +412,17 @@ permissions:
       - account
       - organization
       - project
+  - identifier: core_dashboards_view
+    name: View Dashboards
+    status: ACTIVE
+    includeInAllRoles: true
+    allowedScopeLevels:
+      - account
+      - organization
+  - identifier: core_dashboards_edit
+    name: Edit Dashboards
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+      - organization
