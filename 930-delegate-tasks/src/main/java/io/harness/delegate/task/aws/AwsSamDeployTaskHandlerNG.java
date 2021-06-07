@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
+import static io.harness.provision.AWSConstants.AWS_SAM_WORKING_DIRECTORY;
 import static io.harness.provision.TerraformConstants.RESOURCE_READY_WAIT_TIME_SECONDS;
 import static io.harness.provision.TerraformConstants.TERRAFORM_BACKEND_CONFIGS_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_VARIABLES_FILE_NAME;
@@ -44,7 +45,7 @@ import org.apache.commons.io.Charsets;
 @Slf4j
 @OwnedBy(CDP)
 public class AwsSamDeployTaskHandlerNG extends TerraformAbstractTaskHandler {
-  @Inject TerraformBaseHelper terraformBaseHelper;
+  @Inject AwsBaseHelper awsBaseHelper;
 
   @Override
   public TerraformTaskNGResponse executeTaskInternal(AwsSamTaskParameters taskParameters, String delegateId,
@@ -63,10 +64,10 @@ public class AwsSamDeployTaskHandlerNG extends TerraformAbstractTaskHandler {
           format("%nInheriting git state at commit id: [%s]", confileFileGitStore.getCommitId()), INFO,
           CommandExecutionStatus.RUNNING);
     }
-    GitBaseRequest gitBaseRequestForConfigFile = terraformBaseHelper.getGitBaseRequestForConfigFile(
+    GitBaseRequest gitBaseRequestForConfigFile = awsBaseHelper.getGitBaseRequestForConfigFile(
         taskParameters.getAccountId(), confileFileGitStore, (GitConfigDTO) confileFileGitStore.getGitConfigDTO());
 
-    String baseDir = TF_WORKING_DIR + taskParameters.getEntityId();
+    String baseDir = AWS_SAM_WORKING_DIRECTORY + taskParameters.getEntityId();
 
     String scriptDirectory = terraformBaseHelper.fetchConfigFileAndPrepareScriptDir(gitBaseRequestForConfigFile,
         taskParameters.getAccountId(), taskParameters.getWorkspace(), taskParameters.getCurrentStateFileId(),
