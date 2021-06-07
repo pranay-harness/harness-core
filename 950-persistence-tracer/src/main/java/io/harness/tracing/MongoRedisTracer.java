@@ -14,16 +14,17 @@ import io.harness.tracing.shapedetector.QueryShapeDetector;
 import io.harness.version.VersionInfoManager;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
-import javax.inject.Named;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 @Slf4j
 public class MongoRedisTracer implements Tracer {
+  private static final int SAMPLE_SIZE = 100;
+
   @Inject @Named(PersistenceTracerConstants.TRACING_THREAD_POOL) private ExecutorService executorService;
   @Inject @Named(PersistenceTracerConstants.QUERY_ANALYSIS_PRODUCER) private Producer producer;
   @Inject @Named(SERVICE_ID) private String serviceId;
@@ -35,9 +36,14 @@ public class MongoRedisTracer implements Tracer {
   public void trace(Document queryDoc, Document sortDoc, String collectionName, MongoTemplate mongoTemplate) {
     String qHash = QueryShapeDetector.getQueryHash(collectionName, queryDoc, sortDoc);
     String queryStatsCacheKey = String.format(ANALYZER_CACHE_KEY, serviceId);
-    if (queryStatsCache.presentInMap(ANALYZER_CACHE_KEY, String.format("%s_%s", serviceId, qHash))) {
-      log.debug("Cache hit");
-      return;
+    if (queryStatsCache.presentInMap(queryStatsCacheKey, qHash)) {
+      Long count = queryStatsCache.getFromMap(queryStatsCacheKey, qHash);
+      count = count + 1;
+      queryStatsCache.putInsideMap(queryStatsCacheKey, qHash, count);
+      if (count % SAMPLE_SIZE != 0) {
+        return;
+      }
+      log.info("Sampling the query....");
     }
 
     executorService.submit(() -> {
@@ -59,7 +65,7 @@ public class MongoRedisTracer implements Tracer {
                         .putMetadata(QUERY_HASH, qHash)
                         .setData(ByteString.copyFromUtf8(explainResult.toJson()))
                         .build());
-      queryStatsCache.putInsideMap(ANALYZER_CACHE_KEY, String.format("%s_%s", serviceId, qHash), new AtomicInteger(1));
+      queryStatsCache.putInsideMap(queryStatsCacheKey, qHash, 1L);
     });
   }
 }
