@@ -5,12 +5,14 @@ import static java.time.Duration.ofSeconds;
 import io.harness.exception.ExceptionUtils;
 import io.harness.health.HealthMonitor;
 import io.harness.mongo.tracing.TraceMode;
+import io.harness.mongo.tracing.Tracer;
+import io.harness.observer.Subject;
 
 import com.mongodb.MongoSocketOpenException;
 import com.mongodb.MongoSocketReadException;
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.Executors;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -37,6 +39,8 @@ public class HMongoTemplate extends MongoTemplate implements HealthMonitor {
       new FindAndModifyOptions().upsert(true).returnNew(false);
 
   private final TraceMode traceMode;
+
+  @Getter private final Subject<Tracer> tracerSubject = new Subject<>();
 
   public HMongoTemplate(MongoDbFactory mongoDbFactory, MongoConverter mongoConverter) {
     this(mongoDbFactory, mongoConverter, TraceMode.DISABLED);
@@ -97,23 +101,7 @@ public class HMongoTemplate extends MongoTemplate implements HealthMonitor {
   }
 
   public void traceQuery(Document query, String collectionName) {
-    Executors.newSingleThreadExecutor().submit(() -> {
-      // TODO : Check with the ShapeDetector and ge the query hash
-      log.info("Tracing Query {}", query.toJson());
-      Document explainDocument = new Document();
-      explainDocument.put("find", collectionName);
-      explainDocument.put("filter", query);
-
-      Document command = new Document();
-      command.put("explain", explainDocument);
-
-      // TODO: Check if we have this hash stored in cache, if not run explain
-      Document explainResult = getDb().runCommand(command);
-
-      // TODO (prashant) : Send these results to the analyser service via the events framework
-      log.info("Explain Results");
-      log.info(explainResult.toJson());
-    });
+    tracerSubject.fireInform(Tracer::trace, query, collectionName, this);
   }
 
   public interface Executor<R> {
