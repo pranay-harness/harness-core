@@ -79,6 +79,7 @@ import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
 import io.harness.delegate.beans.ci.pod.PVCParams;
 import io.harness.delegate.beans.ci.pod.PodParams;
 import io.harness.delegate.beans.ci.pod.SSHKeyDetails;
+import io.harness.delegate.beans.ci.pod.SecretParams;
 import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.delegate.beans.ci.status.BuildStatusPushResponse;
@@ -770,5 +771,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(GitFileTaskResponseData.class, 543123);
     kryo.register(GitFileTaskType.class, 543124);
     kryo.register(CVConnectorValidationParams.class, 543322);
+
+    kryo.register(SecretParams.class, 543325);
+    kryo.register(SecretParams.Type.class, 543326);
   }
 }
