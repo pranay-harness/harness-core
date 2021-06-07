@@ -11,6 +11,7 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.UnexpectedException;
 import io.harness.logging.MorphiaLoggerFactory;
 import io.harness.mongo.index.migrator.Migrator;
+import io.harness.mongo.tracing.TracerModule;
 import io.harness.morphia.MorphiaModule;
 import io.harness.persistence.Store;
 import io.harness.serializer.KryoModule;
@@ -99,6 +100,7 @@ public class MongoModule extends AbstractModule {
     install(ObjectFactoryModule.getInstance());
     install(MorphiaModule.getInstance());
     install(KryoModule.getInstance());
+    install(TracerModule.getInstance());
 
     MapBinder.newMapBinder(binder(), String.class, Migrator.class);
   }

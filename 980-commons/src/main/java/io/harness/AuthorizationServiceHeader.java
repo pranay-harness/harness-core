@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 @OwnedBy(PL)
 public enum AuthorizationServiceHeader {
+  ANALYZER_SERVICE("AnalyzerService"),
   BEARER("Bearer"),
   MANAGER("Manager"),
   NG_MANAGER("NextGenManager"),

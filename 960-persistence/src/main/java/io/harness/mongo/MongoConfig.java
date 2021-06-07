@@ -6,6 +6,7 @@ import static lombok.AccessLevel.NONE;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.mongo.tracing.TraceMode;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -64,6 +65,8 @@ public class MongoConfig {
   private MongoSSLConfig mongoSSLConfig = MongoSSLConfig.builder().build();
 
   private boolean transactionsEnabled;
+
+  private TraceMode traceMode = TraceMode.DISABLED;
 
   @JsonProperty(defaultValue = "MANUAL") @Default @NotEmpty private IndexManager.Mode indexManagerMode = MANUAL;
 

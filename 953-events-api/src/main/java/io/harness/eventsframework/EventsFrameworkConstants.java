@@ -26,6 +26,7 @@ public final class EventsFrameworkConstants {
   // created for git sdk, dont use outside sdk.
   public static final String GIT_CONFIG_STREAM = "git_config_stream";
   public static final String SAML_AUTHORIZATION_ASSERTION = "saml_authorization_assertion";
+  public static final String ANALYZER_SERVICE = "db_analayzer";
 
   public static final String DUMMY_TOPIC_NAME = "dummy_topic_name";
   public static final String DUMMY_GROUP_NAME = "dummy_group_name";
