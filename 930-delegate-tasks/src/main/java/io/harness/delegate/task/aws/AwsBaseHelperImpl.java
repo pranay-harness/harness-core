@@ -6,8 +6,6 @@ import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.provision.AWSConstants.AWS_SAM_APP_REPOSITORY_DIR;
-import static io.harness.provision.AWSConstants.AWS_SAM_BASE_DIR;
-import static io.harness.provision.AWSConstants.USER_DIR_KEY;
 
 import static java.lang.String.format;
 
@@ -35,7 +33,6 @@ import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 
@@ -90,17 +87,6 @@ public class AwsBaseHelperImpl implements AwsBaseHelper {
     logCallback.saveExecutionLog(format("Script Directory: [%s]", workingDir), INFO, CommandExecutionStatus.RUNNING);
 
     return workingDir;
-  }
-
-  @NonNull
-  public String resolveBaseDir(String accountId) {
-    return AWS_SAM_BASE_DIR.replace("${ACCOUNT_ID}", accountId);
-  }
-
-  public String resolveScriptDirectory(String workingDir, String scriptPath) {
-    return Paths
-        .get(Paths.get(System.getProperty(USER_DIR_KEY)).toString(), workingDir, scriptPath == null ? "" : scriptPath)
-        .toString();
   }
 
   public void copyFilesToWorkingDirectory(String sourceDir, String destinationDir) throws IOException {

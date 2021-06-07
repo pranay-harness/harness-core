@@ -27,7 +27,6 @@ import lombok.Value;
 public class AwsSamTaskParameters
     implements TaskParameters, ExecutionCapabilityDemander, ExpressionReflectionUtils.NestedAnnotationResolver {
   @NonNull String accountId;
-  @NonNull String entityId;
   @NonNull GitFetchFilesConfig configFile;
   @NonNull AwsConnectorDTO awsConnectorDTO;
   @NonNull String region;
