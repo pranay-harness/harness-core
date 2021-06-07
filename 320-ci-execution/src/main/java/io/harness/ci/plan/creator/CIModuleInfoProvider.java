@@ -14,13 +14,13 @@ import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
-import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.plan.TriggerType;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.triggers.ParsedPayload;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.execution.beans.PipelineModuleInfo;
@@ -47,20 +47,19 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
   @Inject OutcomeService outcomeService;
   @Inject private ConnectorUtils connectorUtils;
   @Override
-  public PipelineModuleInfo getPipelineLevelModuleInfo(NodeExecutionProto nodeExecutionProto) {
+  public PipelineModuleInfo getPipelineLevelModuleInfo(OrchestrationEvent event) {
     String branch = null;
     String tag = null;
     String repoName = null;
-
-    if (!isLiteEngineNode(nodeExecutionProto.getNode())) {
+    if (!isLiteEngineNode(AmbianceUtils.getCurrentStepType(event.getAmbiance()))) {
       return null;
     }
 
-    Ambiance ambiance = nodeExecutionProto.getAmbiance();
+    Ambiance ambiance = event.getAmbiance();
     BaseNGAccess baseNGAccess = retrieveBaseNGAccess(ambiance);
     try {
-      StepElementParameters stepElementParameters = RecastOrchestrationUtils.fromDocumentJson(
-          nodeExecutionProto.getResolvedStepParameters(), StepElementParameters.class);
+      StepElementParameters stepElementParameters =
+          RecastOrchestrationUtils.fromDocumentJson(event.getResolvedStepParameters(), StepElementParameters.class);
       LiteEngineTaskStepInfo liteEngineTaskStepInfo = (LiteEngineTaskStepInfo) stepElementParameters.getSpec();
 
       if (liteEngineTaskStepInfo == null) {
@@ -97,7 +96,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     }
     ExecutionSource executionSource = null;
     try {
-      executionSource = getWebhookExecutionSource(nodeExecutionProto.getAmbiance().getMetadata());
+      executionSource = getWebhookExecutionSource(event.getAmbiance().getMetadata());
     } catch (Exception ex) {
       log.error("Failed to retrieve branch and tag for filtering", ex);
     }
@@ -110,7 +109,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
   }
 
   @Override
-  public StageModuleInfo getStageLevelModuleInfo(NodeExecutionProto nodeExecutionProto) {
+  public StageModuleInfo getStageLevelModuleInfo(OrchestrationEvent event) {
     return CIStageModuleInfo.builder().build();
   }
 
@@ -127,8 +126,9 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     return null;
   }
 
-  private boolean isLiteEngineNode(PlanNodeProto node) {
-    return Objects.equals(node.getStepType().getType(), LiteEngineTaskStep.STEP_TYPE.getType());
+  // StepType
+  private boolean isLiteEngineNode(StepType stepType) {
+    return Objects.equals(stepType.getType(), LiteEngineTaskStep.STEP_TYPE.getType());
   }
 
   private BaseNGAccess retrieveBaseNGAccess(Ambiance ambiance) {

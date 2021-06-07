@@ -17,6 +17,6 @@ import lombok.experimental.FieldDefaults;
 @OwnedBy(DX)
 public class GitToHarnessGetFilesStepResponse {
   List<GitFileChangeDTO> gitFileChangeDTOList;
-  List<GitPRFileDTO> gitPRFileDTOList;
+  List<GitDiffResultFileDTO> gitDiffResultFileDTOList;
   GitToHarnessProgress progressRecord;
 }

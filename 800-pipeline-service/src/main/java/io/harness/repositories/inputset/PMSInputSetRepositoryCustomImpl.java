@@ -50,7 +50,7 @@ public class PMSInputSetRepositoryCustomImpl implements PMSInputSetRepositoryCus
 
   @Override
   public InputSetEntity save(InputSetEntity entityToSave, InputSetYamlDTO yamlDTO) {
-    return gitAwarePersistence.save(entityToSave, yamlDTO, ChangeType.ADD, InputSetEntity.class);
+    return gitAwarePersistence.save(entityToSave, entityToSave.getYaml(), ChangeType.ADD, InputSetEntity.class);
   }
 
   @Override
@@ -75,12 +75,12 @@ public class PMSInputSetRepositoryCustomImpl implements PMSInputSetRepositoryCus
 
   @Override
   public InputSetEntity update(InputSetEntity entityToUpdate, InputSetYamlDTO yamlDTO) {
-    return gitAwarePersistence.save(entityToUpdate, yamlDTO, ChangeType.MODIFY, InputSetEntity.class);
+    return gitAwarePersistence.save(entityToUpdate, entityToUpdate.getYaml(), ChangeType.MODIFY, InputSetEntity.class);
   }
 
   @Override
   public InputSetEntity delete(InputSetEntity entityToDelete, InputSetYamlDTO yamlDTO) {
-    return gitAwarePersistence.save(entityToDelete, yamlDTO, ChangeType.DELETE, InputSetEntity.class);
+    return gitAwarePersistence.save(entityToDelete, entityToDelete.getYaml(), ChangeType.DELETE, InputSetEntity.class);
   }
 
   @Override

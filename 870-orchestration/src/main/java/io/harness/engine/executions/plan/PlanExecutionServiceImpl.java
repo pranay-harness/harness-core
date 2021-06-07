@@ -20,12 +20,10 @@ import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.ExecutionMetadataKeys;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.observer.Subject;
-import io.harness.plan.Plan;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
-import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.repositories.PlanExecutionRepository;
@@ -116,16 +114,6 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
   }
 
   @Override
-  public PlanNodeProto fetchExecutionNode(String planExecutionId, String nodeId) {
-    PlanExecution instance = get(planExecutionId);
-    if (instance == null) {
-      throw new InvalidRequestException("Execution Instance is null for id : " + planExecutionId);
-    }
-    Plan plan = instance.getPlan();
-    return plan.fetchNode(nodeId);
-  }
-
-  @Override
   public void onNodeStatusUpdate(NodeUpdateInfo nodeUpdateInfo) {
     NodeStatusUpdateHandler nodeStatusUpdateObserver =
         nodeStatusUpdateHandlerFactory.obtainStepStatusUpdate(nodeUpdateInfo);
@@ -170,6 +158,7 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
     eventEmitter.emitEvent(OrchestrationEvent.builder()
                                .ambiance(ambiance)
                                .eventType(OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE)
+                               .status(planExecution.getStatus())
                                .build());
     planStatusUpdateSubject.fireInform(PlanStatusUpdateObxxxxxxxx:onPlanStatusUpdate, ambiance);
   }

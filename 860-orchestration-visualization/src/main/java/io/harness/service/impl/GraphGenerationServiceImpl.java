@@ -10,6 +10,7 @@ import io.harness.beans.OrchestrationEventLog;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.beans.converter.EphemeralOrchestrationGraphConverter;
 import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
+import io.harness.cache.SpringCacheEntity;
 import io.harness.cache.SpringMongoStore;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.dto.OrchestrationGraphDTO;
@@ -31,7 +32,6 @@ import io.harness.skip.service.VertexSkipperService;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -75,9 +75,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
         if (orchestrationEventType == OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE) {
           orchestrationGraph = planExecutionStatusUpdateEventHandler.handleEvent(planExecutionId, orchestrationGraph);
         } else {
-          String nodeExecutionId = orchestrationEventLog.getEvent() != null
-              ? orchestrationEventLog.getEvent().getNodeExecutionProto().getUuid()
-              : orchestrationEventLog.getNodeExecutionId();
+          String nodeExecutionId = orchestrationEventLog.getNodeExecutionId();
           orchestrationGraph = graphStatusUpdateHelper.handleEvent(
               planExecutionId, nodeExecutionId, orchestrationEventType, orchestrationGraph);
         }
@@ -98,7 +96,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
 
   @Override
   public void cacheOrchestrationGraph(OrchestrationGraph orchestrationGraph) {
-    mongoStore.upsert(orchestrationGraph, Duration.ofDays(10));
+    mongoStore.upsert(orchestrationGraph, SpringCacheEntity.TTL);
   }
 
   @Deprecated

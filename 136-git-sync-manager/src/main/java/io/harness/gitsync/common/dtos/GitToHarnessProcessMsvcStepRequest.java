@@ -21,6 +21,6 @@ public class GitToHarnessProcessMsvcStepRequest {
   YamlChangeSetDTO yamlChangeSetDTO;
   YamlGitConfigDTO yamlGitConfigDTO;
   List<GitFileChangeDTO> gitFileChangeDTOList;
-  List<GitPRFileDTO> gitPRFileDTOList;
+  List<GitDiffResultFileDTO> gitDiffResultFileDTOList;
   GitToHarnessProgress progressRecord;
 }

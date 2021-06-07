@@ -89,7 +89,7 @@ public class HealthVerificationJob extends VerificationJob {
 
   @Override
   public Instant getAnalysisStartTime(Instant startTime) {
-    return getPreActivityVerificationStartTime(startTime, null);
+    return getPreActivityVerificationStartTime(startTime);
   }
 
   @Override
@@ -107,19 +107,11 @@ public class HealthVerificationJob extends VerificationJob {
     }
   }
 
-  public Instant getPreActivityVerificationStartTime(Instant startTime, Instant preActivityStartTime) {
-    // TODO: migration logic. Remove this after the release
-    if (preActivityStartTime != null) {
-      return preActivityStartTime;
-    }
+  public Instant getPreActivityVerificationStartTime(Instant startTime) {
     return startTime.minus(getDuration());
   }
 
-  public Instant getPostActivityVerificationStartTime(Instant startTime, Instant postActivityStartTime) {
-    // TODO: remove this in the next release
-    if (postActivityStartTime != null) {
-      return postActivityStartTime;
-    }
+  public Instant getPostActivityVerificationStartTime(Instant startTime) {
     return startTime;
   }
 

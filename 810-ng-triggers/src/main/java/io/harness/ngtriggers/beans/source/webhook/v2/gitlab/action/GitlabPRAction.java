@@ -12,8 +12,8 @@ public enum GitlabPRAction implements GitAction {
   @JsonProperty("Open") OPEN("open", "Open"),
   @JsonProperty("Close") CLOSE("close", "Close"),
   @JsonProperty("Reopen") REOPEN("reopen", "Reopen"),
-  @JsonProperty("Merge") MERGED("merge", "Merge"),
-  @JsonProperty("Update") UPDATED("update", "Update"),
+  @JsonProperty("Merge") MERGE("merge", "Merge"),
+  @JsonProperty("Update") UPDATE("update", "Update"),
   @JsonProperty("Sync") SYNC("sync", "Sync");
 
   private String value;

@@ -7,7 +7,6 @@ option java_multiple_files = true;
 import "product/ci/scm/proto/scm.proto";
 
 message TriggerPayload {
-  string jsonPayload = 1;
   ParsedPayload parsedPayload = 2;
   Type type = 3;
   map<string, string> headers = 4;
@@ -33,4 +32,5 @@ enum SourceType {
   GITHUB_REPO = 1;
   GITLAB_REPO = 2;
   BITBUCKET_REPO = 3;
+  AWS_CODECOMMIT_REPO = 4;
 }

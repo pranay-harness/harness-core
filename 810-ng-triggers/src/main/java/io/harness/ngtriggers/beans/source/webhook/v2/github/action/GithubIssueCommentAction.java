@@ -9,9 +9,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @OwnedBy(PIPELINE)
 public enum GithubIssueCommentAction implements GitAction {
-  @JsonProperty("Create") CREATED("create", "Create"),
-  @JsonProperty("Edit") EDITED("edit", "Edit"),
-  @JsonProperty("Delete") DELETED("delete", "Delete");
+  @JsonProperty("Create") CREATE("create", "Create"),
+  @JsonProperty("Edit") EDIT("edit", "Edit"),
+  @JsonProperty("Delete") DELETE("delete", "Delete");
 
   private String value;
   private String parsedValue;

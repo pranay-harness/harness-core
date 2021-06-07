@@ -41,7 +41,7 @@ public class ScmDelegateGitHelper implements ScmGitHelper {
   public ScmPushResponse pushToGitBasedOnChangeType(
       String yaml, ChangeType changeType, GitEntityInfo gitBranchInfo, InfoForGitPush infoForPush) {
     GitFileDetailsBuilder gitFileDetails = ScmGitUtils.getGitFileDetails(gitBranchInfo, yaml);
-    if (changeType.equals(ChangeType.MODIFY)) {
+    if (changeType.equals(ChangeType.MODIFY) || changeType.equals(ChangeType.DELETE)) {
       gitFileDetails.oldFileSha(gitBranchInfo.getLastObjectId());
     }
     ScmPushTaskParams scmPushTaskParams = ScmPushTaskParams.builder()
@@ -90,7 +90,7 @@ public class ScmDelegateGitHelper implements ScmGitHelper {
               DeleteFileResponse.parseFrom(scmPushTaskResponseData.getDeleteFileResponse());
           ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
               deleteFileResponse.getStatus(), deleteFileResponse.getError());
-          return ScmGitUtils.createScmDeleteFileResponse(yaml, infoForPush, deleteFileResponse);
+          return ScmGitUtils.createScmDeleteFileResponse(infoForPush, deleteFileResponse);
         case NONE:
         case RENAME:
           throw new NotImplementedException(changeType + " is not Implemented");

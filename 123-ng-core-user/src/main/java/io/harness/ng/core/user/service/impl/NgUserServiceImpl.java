@@ -68,6 +68,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -176,7 +177,7 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   @Override
-  public List<String> listUsersHavingRole(Scope scope, String roleIdentifier) {
+  public List<UserMetadataDTO> listUsersHavingRole(Scope scope, String roleIdentifier) {
     PageResponse<RoleAssignmentResponseDTO> roleAssignmentPage =
         getResponse(accessControlAdminClient.getFilteredRoleAssignments(scope.getAccountIdentifier(),
             scope.getOrgIdentifier(), scope.getProjectIdentifier(), 0, DEFAULT_PAGE_SIZE,
@@ -200,7 +201,7 @@ public class NgUserServiceImpl implements NgUserService {
                                                 .build();
     List<UserGroup> userGroups = userGroupService.list(userGroupFilterDTO);
     userGroups.forEach(userGroup -> userIds.addAll(userGroup.getUsers()));
-    return new ArrayList<>(userIds);
+    return getUserMetadata(new ArrayList<>(userIds));
   }
 
   @Override
@@ -232,6 +233,11 @@ public class NgUserServiceImpl implements NgUserService {
       update(userId, update);
     }
     return Optional.of(user);
+  }
+
+  @Override
+  public List<UserMetadataDTO> getUserMetadata(List<String> userIds) {
+    return userMembershipRepository.getUserMetadata(Criteria.where(UserMembershipKeys.userId).in(userIds));
   }
 
   @Override
@@ -328,11 +334,17 @@ public class NgUserServiceImpl implements NgUserService {
     Optional<UserInfo> userInfoOptional = getUserById(userId);
     UserInfo userInfo = userInfoOptional.orElseThrow(
         () -> new InvalidRequestException(String.format("User with id %s doesn't exists", userId)));
-    Update update = new Update();
-    update.set(UserMembershipKeys.userId, userInfo.getUuid());
-    update.set(UserMembershipKeys.name, userInfo.getName());
-    update.set(UserMembershipKeys.emailId, userInfo.getEmail());
-    userMembershipRepository.upsert(userId, update);
+    UserMembership userMembership = UserMembership.builder()
+                                        .userId(userInfo.getUuid())
+                                        .name(userInfo.getName())
+                                        .emailId(userInfo.getEmail())
+                                        .build();
+    try {
+      userMembershipRepository.save(userMembership);
+    } catch (DuplicateKeyException e) {
+      log.info(
+          "DuplicateKeyException while creating usermembership for user id {}. This race condition is benign", userId);
+    }
   }
 
   private void addUserToParentScope(String userId, Scope scope, UserMembershipUpdateSource source) {
@@ -429,10 +441,9 @@ public class NgUserServiceImpl implements NgUserService {
       throw new InvalidRequestException(getDeleteUserErrorMessage(scope));
     }
     if (ScopeUtils.isAccountScope(scope)) {
-      List<String> accountAdmins =
+      List<UserMetadataDTO> accountAdmins =
           listUsersHavingRole(Scope.builder().accountIdentifier(scope.getAccountIdentifier()).build(), ACCOUNT_ADMIN);
-      accountAdmins.remove(userId);
-      if (accountAdmins.isEmpty()) {
+      if (accountAdmins.stream().allMatch(userMetadata -> userId.equals(userMetadata.getUuid()))) {
         throw new InvalidRequestException("This user is the only account-admin left. Can't Remove it");
       }
     }

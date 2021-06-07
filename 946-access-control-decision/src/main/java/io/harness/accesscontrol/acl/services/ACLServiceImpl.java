@@ -20,6 +20,8 @@ import io.harness.accesscontrol.permissions.PermissionFilter;
 import io.harness.accesscontrol.permissions.PermissionService;
 import io.harness.accesscontrol.preference.services.AccessControlPreferenceService;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.dto.PrincipalType;
 
@@ -169,8 +171,9 @@ public class ACLServiceImpl implements ACLService {
 
     if (userContextAndDifferentPrincipalInBody(contextPrincipal, principalToCheckPermissions)) {
       // a user principal needs elevated permissions to check for permissions of another principal
-      // TODO{phoenikx} Apply access check here
-      log.debug("checking for access control checks here...");
+      // for now, throwing exception since this is not a valid use case right now
+      throw new AccessDeniedException(
+          "Principal not allowed to check permission of a different principal", ErrorCode.NG_ACCESS_DENIED, USER);
     }
 
     if (notPresent(principalToCheckPermissions)) {

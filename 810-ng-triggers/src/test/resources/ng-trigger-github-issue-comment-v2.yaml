@@ -17,6 +17,7 @@ trigger:
           actions:
             - Create
             - Delete
+            - Edit
           payloadConditions:
             - key: k1
               operator: Equals

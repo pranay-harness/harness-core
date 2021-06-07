@@ -34,6 +34,7 @@ import io.harness.gitsync.RepoDetails;
 import io.harness.gitsync.UserPrincipal;
 import io.harness.gitsync.common.beans.BranchSyncStatus;
 import io.harness.gitsync.common.beans.GitBranch;
+import io.harness.gitsync.common.beans.GitSyncDirection;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.common.beans.InfoForGitPush.InfoForGitPushBuilder;
 import io.harness.gitsync.common.beans.YamlChangeSet;
@@ -45,6 +46,10 @@ import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.gitsync.common.service.GitSyncSettingsService;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
+import io.harness.gitsync.core.beans.GitCommit.GitCommitProcessingStatus;
+import io.harness.gitsync.core.dtos.GitCommitDTO;
+import io.harness.gitsync.core.service.GitCommitService;
+import io.harness.gitsync.gitfileactivity.beans.GitFileProcessingSummary;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.gitsync.scm.ScmGitUtils;
@@ -84,6 +89,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   private final SourceCodeManagerService sourceCodeManagerService;
   private final GitSyncSettingsService gitSyncSettingsService;
   private final GitBranchSyncService gitBranchSyncService;
+  private final GitCommitService gitCommitService;
 
   @Inject
   public HarnessToGitHelperServiceImpl(@Named("connectorDecoratorService") ConnectorService connectorService,
@@ -91,7 +97,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
       YamlGitConfigService yamlGitConfigService, EntityDetailProtoToRestMapper entityDetailRestToProtoMapper,
       ExecutorService executorService, GitBranchService gitBranchService, EncryptionHelper encryptionHelper,
       SourceCodeManagerService sourceCodeManagerService, GitSyncSettingsService gitSyncSettingsService,
-      GitBranchSyncService gitBranchSyncService) {
+      GitBranchSyncService gitBranchSyncService, GitCommitService gitCommitService) {
     this.connectorService = connectorService;
     this.decryptScmApiAccess = decryptScmApiAccess;
     this.gitEntityService = gitEntityService;
@@ -103,6 +109,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     this.sourceCodeManagerService = sourceCodeManagerService;
     this.gitSyncSettingsService = gitSyncSettingsService;
     this.gitBranchSyncService = gitBranchSyncService;
+    this.gitCommitService = gitCommitService;
   }
 
   @Override
@@ -240,11 +247,12 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     final EntityDetailProtoDTO entityDetail = pushInfo.getEntityDetail();
     final YamlGitConfigDTO yamlGitConfigDTO = yamlGitConfigService.get(entityRef.getProjectIdentifier(),
         entityRef.getOrgIdentifier(), entityRef.getAccountIdentifier(), pushInfo.getYamlGitConfigId());
-    gitEntityService.save(pushInfo.getAccountId(), entityDetailRestToProtoMapper.createEntityDetailDTO(entityDetail),
-        yamlGitConfigDTO, pushInfo.getFolderPath(), pushInfo.getFilePath(), pushInfo.getCommitId(),
-        pushInfo.getBranchName());
+    // todo(abhinav): Think about what if something happens in middle of operations.
+    saveGitEntity(pushInfo, entityDetail, yamlGitConfigDTO);
+    saveGitCommit(pushInfo, yamlGitConfigDTO);
     shortListTheBranch(
         yamlGitConfigDTO, entityRef.getAccountIdentifier(), pushInfo.getBranchName(), pushInfo.getIsNewBranch());
+
     if (pushInfo.getIsNewBranch()) {
       executorService.submit(
           ()
@@ -253,7 +261,24 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
                   pushInfo.getBranchName(), createTheFilePath(pushInfo.getFilePath(), pushInfo.getFolderPath()),
                   yamlGitConfigDTO.getRepo()));
     }
-    // todo(abhinav): record git commit and git file activity.
+  }
+
+  private void saveGitEntity(PushInfo pushInfo, EntityDetailProtoDTO entityDetail, YamlGitConfigDTO yamlGitConfigDTO) {
+    gitEntityService.save(pushInfo.getAccountId(), entityDetailRestToProtoMapper.createEntityDetailDTO(entityDetail),
+        yamlGitConfigDTO, pushInfo.getFolderPath(), pushInfo.getFilePath(), pushInfo.getCommitId(),
+        pushInfo.getBranchName());
+  }
+
+  private void saveGitCommit(PushInfo pushInfo, YamlGitConfigDTO yamlGitConfigDTO) {
+    gitCommitService.save(GitCommitDTO.builder()
+                              .commitId(pushInfo.getCommitId())
+                              .accountIdentifier(pushInfo.getAccountId())
+                              .branchName(pushInfo.getBranchName())
+                              .gitSyncDirection(GitSyncDirection.HARNESS_TO_GIT)
+                              .fileProcessingSummary(GitFileProcessingSummary.builder().successCount(1L).build())
+                              .repoURL(yamlGitConfigDTO.getRepo())
+                              .status(GitCommitProcessingStatus.COMPLETED)
+                              .build());
   }
 
   private String createTheFilePath(String filePath, String folderPath) {

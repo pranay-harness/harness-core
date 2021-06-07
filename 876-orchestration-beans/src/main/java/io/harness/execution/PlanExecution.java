@@ -3,25 +3,22 @@ package io.harness.execution;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 
-import static java.time.Duration.ofDays;
-
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.logging.AutoLogContext;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.UuidAccess;
-import io.harness.plan.Plan;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
-import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.HashMap;
@@ -55,13 +52,13 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @StoreIn(DbAliases.PMS)
 public class PlanExecution implements PersistentRegularIterable, UuidAccess {
   public static final String EXEC_TAG_SET_BY_TRIGGER = "execution_trigger_tag_needed_for_abort";
-  public static final Duration TTL = ofDays(21);
+  public static final long TTL_MONTHS = 6;
 
   @Wither @Id @org.mongodb.morphia.annotations.Id String uuid;
   @Wither @CreatedDate Long createdAt;
-  Plan plan;
+  String planId;
   Map<String, String> setupAbstractions;
-  @Default Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());
+  @Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL_MONTHS).toInstant());
 
   Status status;
   Long startTs;

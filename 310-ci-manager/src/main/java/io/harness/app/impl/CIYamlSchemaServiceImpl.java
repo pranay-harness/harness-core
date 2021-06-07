@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -38,17 +39,25 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
 
 @OwnedBy(HarnessTeam.CI)
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
   private static final String INTEGRATION_STAGE_CONFIG = YamlSchemaUtils.getSwaggerName(IntegrationStageConfig.class);
   private static final String STEP_ELEMENT_CONFIG = YamlSchemaUtils.getSwaggerName(StepElementConfig.class);
   private static final Class<StepElementConfig> STEP_ELEMENT_CONFIG_CLASS = StepElementConfig.class;
   private static final String CI_NAMESPACE = "ci";
+
   private final YamlSchemaProvider yamlSchemaProvider;
   private final YamlSchemaGenerator yamlSchemaGenerator;
+  private final Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes;
+
+  @Inject
+  public CIYamlSchemaServiceImpl(YamlSchemaProvider yamlSchemaProvider, YamlSchemaGenerator yamlSchemaGenerator,
+      @Named("yaml-schema-subtypes") Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes) {
+    this.yamlSchemaProvider = yamlSchemaProvider;
+    this.yamlSchemaGenerator = yamlSchemaGenerator;
+    this.yamlSchemaSubtypes = yamlSchemaSubtypes;
+  }
 
   @Override
   public PartialSchemaDTO getIntegrationStageYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope) {
@@ -89,7 +98,8 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
     Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap = new HashMap<>();
     Field typedField = YamlSchemaUtils.getTypedField(STEP_ELEMENT_CONFIG_CLASS);
-    Set<SubtypeClassMap> mapOfSubtypes = YamlSchemaUtils.getMapOfSubtypesUsingReflection(typedField);
+    Set<Class<?>> cachedSubtypes = yamlSchemaSubtypes.get(typedField.getType());
+    Set<SubtypeClassMap> mapOfSubtypes = YamlSchemaUtils.toSetOfSubtypeClassMap(cachedSubtypes);
     Set<FieldSubtypeData> classFieldSubtypeData = new HashSet<>();
     classFieldSubtypeData.add(YamlSchemaUtils.getFieldSubtypeData(typedField, mapOfSubtypes));
     Set<FieldEnumData> fieldEnumData = getFieldEnumData(typedField, mapOfSubtypes);

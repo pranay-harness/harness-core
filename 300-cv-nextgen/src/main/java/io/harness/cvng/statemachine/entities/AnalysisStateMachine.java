@@ -5,10 +5,12 @@ import io.harness.annotation.StoreIn;
 import io.harness.cvng.statemachine.beans.AnalysisState;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -37,7 +39,8 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "analysisStateMachines", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @StoreIn(DbAliases.CVNG)
-public final class AnalysisStateMachine implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+public final class AnalysisStateMachine
+    implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -55,6 +58,7 @@ public final class AnalysisStateMachine implements PersistentEntity, UuidAware, 
   }
 
   @Id private String uuid;
+  @FdIndex private String accountId;
   private long createdAt;
   private long lastUpdatedAt;
   private Instant analysisStartTime;

@@ -1,6 +1,6 @@
 package io.harness.pms.plan.execution;
 
-import io.harness.pms.contracts.execution.NodeExecutionProto;
+import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
 import io.harness.pms.sdk.execution.beans.PipelineModuleInfo;
 import io.harness.pms.sdk.execution.beans.StageModuleInfo;
@@ -10,12 +10,12 @@ import lombok.Data;
 
 public class PmsExecutionServiceInfoProvider implements ExecutionSummaryModuleInfoProvider {
   @Override
-  public PipelineModuleInfo getPipelineLevelModuleInfo(NodeExecutionProto nodeExecutionProto) {
+  public PipelineModuleInfo getPipelineLevelModuleInfo(OrchestrationEvent event) {
     return PmsNoopModuleInfo.builder().build();
   }
 
   @Override
-  public StageModuleInfo getStageLevelModuleInfo(NodeExecutionProto nodeExecutionProto) {
+  public StageModuleInfo getStageLevelModuleInfo(OrchestrationEvent event) {
     return PmsNoopModuleInfo.builder().build();
   }
 

@@ -8,7 +8,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ngtriggers.beans.source.webhook.WebhookCondition;
+import io.harness.ngtriggers.beans.source.webhook.v2.TriggerEventDataCondition;
 import io.harness.ngtriggers.beans.source.webhook.v2.git.GitAction;
 import io.harness.ngtriggers.beans.source.webhook.v2.git.GitEvent;
 import io.harness.ngtriggers.beans.source.webhook.v2.github.action.GithubIssueCommentAction;
@@ -29,8 +29,8 @@ public class GithubIssueCommentSpec implements GithubEventSpec {
   String connectorRef;
   String repoName;
   List<GithubIssueCommentAction> actions;
-  List<WebhookCondition> headerConditions;
-  List<WebhookCondition> payloadConditions;
+  List<TriggerEventDataCondition> headerConditions;
+  List<TriggerEventDataCondition> payloadConditions;
   String jexlCondition;
   boolean autoAbortPreviousExecutions;
 
@@ -59,12 +59,12 @@ public class GithubIssueCommentSpec implements GithubEventSpec {
   }
 
   @Override
-  public List<WebhookCondition> fetchHeaderConditions() {
+  public List<TriggerEventDataCondition> fetchHeaderConditions() {
     return headerConditions;
   }
 
   @Override
-  public List<WebhookCondition> fetchPayloadConditions() {
+  public List<TriggerEventDataCondition> fetchPayloadConditions() {
     return payloadConditions;
   }
 

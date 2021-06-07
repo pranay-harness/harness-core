@@ -3,6 +3,7 @@ package io.harness.pms.expressions;
 import io.harness.account.AccountClient;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.engine.expressions.AmbianceExpressionEvaluator;
 import io.harness.engine.expressions.OrchestrationConstants;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
@@ -30,6 +31,7 @@ public class PMSExpressionEvaluator extends AmbianceExpressionEvaluator {
   @Inject private OrganizationClient organizationClient;
   @Inject private ProjectClient projectClient;
   @Inject private ImagePullSecretUtils imagePullSecretUtils;
+  @Inject private PlanExecutionMetadataService planExecutionMetadataService;
 
   public PMSExpressionEvaluator(VariableResolverTracker variableResolverTracker, Ambiance ambiance,
       Set<NodeExecutionEntityType> entityTypes, boolean refObjectSpecific) {
@@ -53,8 +55,8 @@ public class PMSExpressionEvaluator extends AmbianceExpressionEvaluator {
             .build());
 
     // Trigger functors
-    addToContext(SetupAbstractionKeys.eventPayload, new EventPayloadFunctor(ambiance));
-    addToContext(SetupAbstractionKeys.trigger, new TriggerFunctor(ambiance));
+    addToContext(SetupAbstractionKeys.eventPayload, new EventPayloadFunctor(ambiance, planExecutionMetadataService));
+    addToContext(SetupAbstractionKeys.trigger, new TriggerFunctor(ambiance, planExecutionMetadataService));
 
     // Service aliases
     addStaticAlias("serviceConfig", "stage.spec.serviceConfig");

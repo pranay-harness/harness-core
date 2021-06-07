@@ -9,13 +9,16 @@ import io.harness.engine.utils.OrchestrationEventsFrameworkUtils;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.execution.NodeExecution;
-import io.harness.execution.NodeExecutionMapper;
 import io.harness.interrupts.Interrupt;
+import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.interrupts.InterruptEvent;
+import io.harness.pms.contracts.interrupts.InterruptEvent.Builder;
 import io.harness.pms.contracts.interrupts.InterruptType;
+import io.harness.pms.execution.utils.InterruptEventUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
 
 public class RedisInterruptEventPublisher implements InterruptEventPublisher {
   @Inject private NodeExecutionService nodeExecutionService;
@@ -26,17 +29,28 @@ public class RedisInterruptEventPublisher implements InterruptEventPublisher {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     String serviceName = nodeExecution.getNode().getServiceName();
     Producer producer = eventsFrameworkUtils.obtainProducerForInterrupt(serviceName);
-    InterruptEvent interruptEvent = InterruptEvent.newBuilder()
-                                        .setInterruptUuid(interrupt.getUuid())
-                                        .setNodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
-                                        .setType(interruptType)
-                                        .putAllMetadata(CollectionUtils.emptyIfNull(interrupt.getMetadata()))
-                                        .setNotifyId(generateUuid())
-                                        .build();
+    Builder builder =
+        InterruptEvent.newBuilder()
+            .setInterruptUuid(interrupt.getUuid())
+            .setAmbiance(nodeExecution.getAmbiance())
+            .setType(interruptType)
+            .putAllMetadata(CollectionUtils.emptyIfNull(interrupt.getMetadata()))
+            .setNotifyId(generateUuid())
+            .setStepParameters(ByteString.copyFromUtf8(nodeExecution.getResolvedStepParameters().toJson()));
+    InterruptEvent event = populateResponse(nodeExecution, builder);
     producer.send(Message.newBuilder()
                       .putAllMetadata(ImmutableMap.of(SERVICE_NAME, nodeExecution.getNode().getServiceName()))
-                      .setData(interruptEvent.toByteString())
+                      .setData(event.toByteString())
                       .build());
-    return interruptEvent.getNotifyId();
+    return event.getNotifyId();
+  }
+
+  private InterruptEvent populateResponse(NodeExecution nodeExecution, Builder builder) {
+    int responseCount = nodeExecution.getExecutableResponses().size();
+    if (responseCount <= 0) {
+      return builder.build();
+    }
+    ExecutableResponse executableResponse = nodeExecution.getExecutableResponses().get(responseCount - 1);
+    return InterruptEventUtils.buildInterruptEvent(builder, executableResponse);
   }
 }

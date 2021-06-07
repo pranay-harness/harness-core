@@ -122,7 +122,7 @@ public class PipelineDashboardServiceImpl implements PipelineDashboardService {
   public String queryBuilderMedian(String accountId, String orgId, String projectId, String pipelineId,
       long startInterval, long endInterval, String tableName) {
     String selectMedianQuery =
-        "select PERCENTILE_DISC(0.5) within group (order by (endts-startts)) as percentile_disc from " + tableName
+        "select PERCENTILE_DISC(0.5) within group (order by (endts-startts)/1000) as percentile_disc from " + tableName
         + " where ";
     StringBuilder totalBuildSqlBuilder = new StringBuilder();
     totalBuildSqlBuilder.append(selectMedianQuery);

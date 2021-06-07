@@ -12,6 +12,7 @@ import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
@@ -118,6 +119,32 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
+  public Optional<ConnectorResponseDTO> getByName(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String name, boolean isDeletedAllowed) {
+    /***
+     * In db currently we can have multiple connectors with same name
+     * Once cleanup/verification is done, this Page can be converted into optional
+     *
+     */
+    Page<Connector> connectorsWithGivenName =
+        getConnectorsWithGivenName(accountIdentifier, orgIdentifier, projectIdentifier, name, isDeletedAllowed);
+    if (connectorsWithGivenName.getTotalElements() == 0) {
+      return Optional.empty();
+    }
+    Optional<Connector> connectorEntity = connectorsWithGivenName.get().findFirst();
+    return connectorEntity.map(connectorMapper::writeDTO);
+  }
+
+  @Override
+  public Optional<ConnectorResponseDTO> getFromBranch(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String connectorIdentifier, String repo, String branch) {
+    Criteria criteria =
+        createCriteriaToFetchConnector(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+    final Optional<Connector> connectorOptional = connectorRepository.findOne(criteria, repo, branch);
+    return connectorOptional.map(connectorMapper::writeDTO);
+  }
+
+  @Override
   public Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier,
       ConnectorFilterPropertiesDTO filterProperties, String orgIdentifier, String projectIdentifier,
       String filterIdentifier, String searchTerm, Boolean includeAllConnectorsAccessibleAtScope,
@@ -215,8 +242,27 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     }
   }
 
+  /***
+   * Saves a connector
+   *
+   * Note: Don't add any logic in create function, all logic should go inside createInternal method
+   *
+   * @param connectorRequestDTO
+   * @param accountIdentifier
+   * @return
+   */
   @Override
   public ConnectorResponseDTO create(ConnectorDTO connectorRequestDTO, String accountIdentifier) {
+    return createInternal(connectorRequestDTO, accountIdentifier, ChangeType.ADD);
+  }
+
+  @Override
+  public ConnectorResponseDTO create(ConnectorDTO connector, String accountIdentifier, ChangeType gitChangeType) {
+    return createInternal(connector, accountIdentifier, gitChangeType);
+  }
+
+  private ConnectorResponseDTO createInternal(
+      ConnectorDTO connectorRequestDTO, String accountIdentifier, ChangeType changeType) {
     assurePredefined(connectorRequestDTO, accountIdentifier);
     ConnectorInfoDTO connectorInfo = connectorRequestDTO.getConnectorInfo();
     final boolean isIdentifierUnique = validateTheIdentifierIsUnique(accountIdentifier,
@@ -232,7 +278,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     connectorEntity.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
     Connector savedConnectorEntity = null;
     try {
-      savedConnectorEntity = connectorRepository.save(connectorEntity, connectorRequestDTO);
+      savedConnectorEntity = connectorRepository.save(connectorEntity, connectorRequestDTO, changeType);
       connectorEntityReferenceHelper.createSetupUsageForSecret(
           connectorRequestDTO.getConnectorInfo(), accountIdentifier, false);
     } catch (DuplicateKeyException ex) {
@@ -244,16 +290,16 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
   private void validateThatAConnectorWithThisNameDoesNotExists(
       ConnectorInfoDTO connectorRequestDTO, String accountIdentifier) {
-    Page<Connector> connectors = getConnectorsWithGivenNames(accountIdentifier, connectorRequestDTO.getOrgIdentifier(),
-        connectorRequestDTO.getProjectIdentifier(), connectorRequestDTO.getName());
+    Page<Connector> connectors = getConnectorsWithGivenName(accountIdentifier, connectorRequestDTO.getOrgIdentifier(),
+        connectorRequestDTO.getProjectIdentifier(), connectorRequestDTO.getName(), true);
     if (connectors != null && connectors.getSize() >= 1) {
       throw new InvalidRequestException(
           format("Connector with name [%s] already exists", connectorRequestDTO.getName()));
     }
   }
 
-  private Page<Connector> getConnectorsWithGivenNames(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, Object name) {
+  private Page<Connector> getConnectorsWithGivenName(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String name, boolean isDeletedAllowed) {
     Criteria criteria = new Criteria()
                             .and(ConnectorKeys.accountIdentifier)
                             .is(accountIdentifier)
@@ -263,6 +309,9 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
                             .is(projectIdentifier)
                             .and(ConnectorKeys.name)
                             .is(name);
+    if (isDeletedAllowed) {
+      criteria.orOperator(where(ConnectorKeys.deleted).exists(false), where(ConnectorKeys.deleted).is(false));
+    }
     return connectorRepository.findAll(
         criteria, Pageable.unpaged(), projectIdentifier, orgIdentifier, accountIdentifier);
   }
@@ -282,7 +331,6 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
           format("No connector exists with the  Identifier %s", connector.getIdentifier()));
     }
     Connector existingConnector = existingConnectorOptional.get();
-    validateTheUpdateRequestIsValid(existingConnector, connectorRequest.getConnectorInfo(), accountIdentifier);
     Connector newConnector = connectorMapper.toConnector(connectorRequest, accountIdentifier);
     newConnector.setId(existingConnector.getId());
     newConnector.setVersion(existingConnector.getVersion());
@@ -316,46 +364,19 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     return connectorMapper.writeDTO(updatedConnector);
   }
 
+  private Criteria createCriteriaToFetchConnector(
+      Object accountIdentifier, Object orgIdentifier, Object projectIdentifier, Object identifier) {
+    Criteria criteria = new Criteria();
+    criteria.and(ConnectorKeys.accountIdentifier).is(accountIdentifier);
+    criteria.and(ConnectorKeys.orgIdentifier).is(orgIdentifier);
+    criteria.and(ConnectorKeys.projectIdentifier).is(projectIdentifier);
+    criteria.and(ConnectorKeys.identifier).is(identifier);
+    criteria.orOperator(where(ConnectorKeys.deleted).exists(false), where(ConnectorKeys.deleted).is(false));
+    return criteria;
+  }
+
   private void setGitDetails(Connector existingConnector, Connector newConnector) {
     EntityGitDetailsMapper.copyEntityGitDetails(existingConnector, newConnector);
-  }
-
-  private void validateTheUpdateRequestIsValid(
-      Connector existingConnector, ConnectorInfoDTO connectorInfo, String accountIdentifier) {
-    validateTheConnectorTypeIsNotChanged(existingConnector.getType(), connectorInfo.getConnectorType(),
-        accountIdentifier, connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(),
-        connectorInfo.getIdentifier());
-    validateThatAConnectorWithThisNameDoesNotExistsDuringUpdate(
-        connectorInfo, accountIdentifier, existingConnector.getId());
-  }
-
-  private void validateThatAConnectorWithThisNameDoesNotExistsDuringUpdate(
-      ConnectorInfoDTO connectorInfo, String accountIdentifier, String id) {
-    Page<Connector> connectors = getConnectorsWithGivenNames(accountIdentifier, connectorInfo.getOrgIdentifier(),
-        connectorInfo.getProjectIdentifier(), connectorInfo.getName());
-    if (connectors.getSize() > 1 || whetherADifferentConnectorExistsWithThisName(id, connectors)) {
-      throw new InvalidRequestException(format("Connector with name [%s] already exists", connectorInfo.getName()));
-    }
-  }
-
-  private boolean whetherADifferentConnectorExistsWithThisName(String id, Page<Connector> connectors) {
-    if (connectors.getSize() == 1) {
-      Connector connector = connectors.getContent().get(0);
-      return !connector.getId().equals(id);
-    }
-    return false;
-  }
-
-  private void validateTheConnectorTypeIsNotChanged(ConnectorType existingConnectorType,
-      ConnectorType typeInTheUpdateRequest, String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      String connectorIdentifier) {
-    if (existingConnectorType != typeInTheUpdateRequest) {
-      String noConnectorExistsWithTypeMessage = String.format("%s with type %s",
-          connectorErrorMessagesHelper.createConnectorNotFoundMessage(
-              accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier),
-          typeInTheUpdateRequest);
-      throw new InvalidRequestException(noConnectorExistsWithTypeMessage);
-    }
   }
 
   @Override

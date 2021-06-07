@@ -8,6 +8,7 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.pms.inputset.gitsync.InputSetYamlDTOMapper;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity.InputSetEntityKeys;
@@ -57,6 +58,9 @@ public class PMSInputSetServiceImpl implements PMSInputSetService {
 
   @Override
   public InputSetEntity update(InputSetEntity inputSetEntity) {
+    if (GitContextHelper.getGitEntityInfo() != null && GitContextHelper.getGitEntityInfo().isNewBranch()) {
+      return makeInputSetUpdateCall(inputSetEntity);
+    }
     Optional<InputSetEntity> optionalOriginalEntity =
         get(inputSetEntity.getAccountId(), inputSetEntity.getOrgIdentifier(), inputSetEntity.getProjectIdentifier(),
             inputSetEntity.getPipelineIdentifier(), inputSetEntity.getIdentifier(), false);
@@ -80,14 +84,17 @@ public class PMSInputSetServiceImpl implements PMSInputSetService {
                                         .withTags(inputSetEntity.getTags())
                                         .withInputSetReferences(inputSetEntity.getInputSetReferences());
 
-    InputSetEntity updatedEntity =
-        inputSetRepository.update(entityToUpdate, InputSetYamlDTOMapper.toDTO(entityToUpdate));
+    return makeInputSetUpdateCall(entityToUpdate);
+  }
+
+  private InputSetEntity makeInputSetUpdateCall(InputSetEntity entity) {
+    InputSetEntity updatedEntity = inputSetRepository.update(entity, InputSetYamlDTOMapper.toDTO(entity));
 
     if (updatedEntity == null) {
       throw new InvalidRequestException(
           format("Input Set [%s], for pipeline [%s], under Project[%s], Organization [%s] could not be updated.",
-              inputSetEntity.getIdentifier(), inputSetEntity.getPipelineIdentifier(),
-              inputSetEntity.getProjectIdentifier(), inputSetEntity.getOrgIdentifier()));
+              entity.getIdentifier(), entity.getPipelineIdentifier(), entity.getProjectIdentifier(),
+              entity.getOrgIdentifier()));
     }
     return updatedEntity;
   }

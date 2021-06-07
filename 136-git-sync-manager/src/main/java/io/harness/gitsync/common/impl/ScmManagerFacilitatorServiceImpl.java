@@ -12,12 +12,15 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.ScmException;
+import io.harness.gitsync.common.dtos.GitDiffResultFileListDTO;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.gitsync.common.helper.FileBatchResponseMapper;
 import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
+import io.harness.gitsync.common.helper.PRFileListMapper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.impl.ScmResponseStatusUtils;
+import io.harness.product.ci.scm.proto.CompareCommitsResponse;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
 import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
@@ -104,7 +107,17 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
       YamlGitConfigDTO yamlGitConfigDTO, List<String> filePaths, String branchName) {
     final ScmConnector decryptedConnector =
         gitSyncConnectorHelper.getDecryptedConnector(yamlGitConfigDTO, yamlGitConfigDTO.getAccountIdentifier());
-    FileBatchContentResponse filesList = scmClient.listFiles(decryptedConnector, filePaths, branchName);
+    FileBatchContentResponse filesList = scmClient.listFilesByFilePaths(decryptedConnector, filePaths, branchName);
     return FileBatchResponseMapper.createGitFileChangeList(filesList);
+  }
+
+  @Override
+  public GitDiffResultFileListDTO listCommitsDiffFiles(
+      YamlGitConfigDTO yamlGitConfigDTO, String initialCommitId, String finalCommitId) {
+    final ScmConnector decryptedConnector =
+        gitSyncConnectorHelper.getDecryptedConnector(yamlGitConfigDTO, yamlGitConfigDTO.getAccountIdentifier());
+    CompareCommitsResponse compareCommitsResponse =
+        scmClient.compareCommits(decryptedConnector, initialCommitId, finalCommitId);
+    return PRFileListMapper.toGitDiffResultFileListDTO(compareCommitsResponse.getFilesList());
   }
 }
