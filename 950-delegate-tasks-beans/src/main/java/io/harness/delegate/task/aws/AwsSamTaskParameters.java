@@ -18,6 +18,8 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.yaml.core.variables.NGVariable;
 
 import java.util.List;
+import java.util.Map;
+
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
@@ -35,7 +37,7 @@ public class AwsSamTaskParameters
   @NonNull String region;
   @NonNull String stackName;
   @NonNull AwsSamTaskType awsSamTaskType;
-  List<NGVariable> overrides;
+  Map<String, Object> overrides;
   String globalAdditionalFlags;
 
   // To help in logging
