@@ -17,6 +17,7 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -54,21 +55,11 @@ public class AccountLicenseResource {
       value = "Gets Module License By Account And ModuleType", nickname = "getModuleLicenseByAccountAndModuleType")
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   public ResponseDTO<ModuleLicenseDTO>
-  getModuleLicense(
+  getModuleLicenseDTO(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(MODULE_TYPE_KEY) ModuleType moduleType) {
     ModuleLicenseDTO moduleLicenses = licenseService.getModuleLicense(accountIdentifier, moduleType);
     return ResponseDTO.newResponse(moduleLicenses);
-  }
-
-  @GET
-  @Path("account")
-  @ApiOperation(value = "Gets All Module License Information in Account", nickname = "getAccountLicenses")
-  @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
-  public ResponseDTO<AccountLicenseDTO> getAccountLicensesDTO(
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
-    AccountLicenseDTO accountLicenses = licenseService.getAccountLicense(accountIdentifier);
-    return ResponseDTO.newResponse(accountLicenses);
   }
 
   @GET

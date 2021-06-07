@@ -54,11 +54,9 @@ public class LicenseResource {
   }
 
   @GET
-  @ApiOperation(
-      value = "Gets Module License By Account And ModuleType", nickname = "getModuleLicenseByAccountAndModuleType")
+  @ApiOperation(value = "Gets Account License", nickname = "getModuleLicense")
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
-  public ResponseDTO<ModuleLicenseDTO>
-  getModuleLicense(
+  public ResponseDTO<ModuleLicenseDTO> getModuleLicense(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(MODULE_TYPE_KEY) ModuleType moduleType) {
     ModuleLicenseDTO moduleLicenses = licenseService.getModuleLicense(accountIdentifier, moduleType);
@@ -67,9 +65,8 @@ public class LicenseResource {
 
   @GET
   @Path("account")
-  @ApiOperation(value = "Gets All Module License Information in Account", nickname = "getAccountLicenses")
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
-  public ResponseDTO<AccountLicenseDTO> getAccountLicensesDTO(
+  public ResponseDTO<AccountLicenseDTO> getAccountLicense(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     AccountLicenseDTO accountLicenses = licenseService.getAccountLicense(accountIdentifier);
     return ResponseDTO.newResponse(accountLicenses);
@@ -77,9 +74,8 @@ public class LicenseResource {
 
   @GET
   @Path("{identifier}")
-  @ApiOperation(value = "Gets Module License", nickname = "getModuleLicense")
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
-  public ResponseDTO<ModuleLicenseDTO> get(@PathParam("identifier") String identifier,
+  public ResponseDTO<ModuleLicenseDTO> getModuleLicenseById(@PathParam("identifier") String identifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     ModuleLicenseDTO moduleLicense = licenseService.getModuleLicenseById(identifier);
     return ResponseDTO.newResponse(moduleLicense);
@@ -87,7 +83,6 @@ public class LicenseResource {
 
   @POST
   @Path("trial")
-  @ApiOperation(value = "Starts Trail License For A Module", nickname = "startTrialLicense")
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   public ResponseDTO<ModuleLicenseDTO> startTrialLicense(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
