@@ -36,6 +36,7 @@ type runTask struct {
 	id                string
 	displayName       string
 	command           string
+	shellType         pb.ShellType
 	envVarOutputs     []string
 	environment       map[string]string
 	timeoutSecs       int64
@@ -70,6 +71,7 @@ func NewRunTask(step *pb.UnitStep, prevStepOutputs map[string]*pb.StepOutput, tm
 		id:                step.GetId(),
 		displayName:       step.GetDisplayName(),
 		command:           r.GetCommand(),
+		shellType:         r.GetShellType(),
 		tmpFilePath:       tmpFilePath,
 		envVarOutputs:     r.GetEnvVarOutputs(),
 		environment:       r.GetEnvironment(),
@@ -166,7 +168,7 @@ func (r *runTask) execute(ctx context.Context, retryCount int32) (map[string]str
 
 	cmdArgs := []string{"-c", cmdToExecute}
 
-	cmd := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).
+	cmd := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, r.getShell(), cmdArgs...).
 		WithStdout(r.procWriter).WithStderr(r.procWriter).WithEnvVarsMap(envVars)
 	err = runCmd(ctx, cmd, r.id, cmdArgs, retryCount, start, r.logMetrics, r.addonLogger)
 	if err != nil {
@@ -212,6 +214,13 @@ func (r *runTask) getScript(ctx context.Context, outputVarFile string) (string, 
 		return fmt.Sprintf("echo '---%s'\n%s", command, command), nil
 	}
 	return logCmd, nil
+}
+
+func (r *runTask) getShell() string {
+	if r.shellType == pb.ShellType_BASH {
+		return "bash"
+	}
+	return "sh"
 }
 
 // resolveExprInEnv resolves JEXL expressions & env var present in plugin settings environment variables
