@@ -5,6 +5,7 @@ import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
+import io.harness.argo.beans.ClusterResourceTreeDTO;
 import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -125,6 +126,16 @@ public class InfrastructureDefinitionResource {
   public RestResponse<InfraDefinitionDetail> getDetail(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @PathParam("infraDefinitionId") String infraDefinitionId) {
     return new RestResponse<>(infrastructureDefinitionService.getDetail(appId, infraDefinitionId));
+  }
+
+  @GET
+  @Path("resourceTree/{infraDefinitionId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ)
+  public RestResponse<ClusterResourceTreeDTO> getResourceTree(@QueryParam("appId") String appId,
+                                                              @QueryParam("envId") String envId, @PathParam("infraDefinitionId") String infraDefinitionId) {
+    return new RestResponse<>(infrastructureDefinitionService.getResourceTree(appId, infraDefinitionId));
   }
 
   @DELETE

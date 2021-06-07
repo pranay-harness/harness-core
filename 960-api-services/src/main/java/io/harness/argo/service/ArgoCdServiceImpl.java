@@ -13,6 +13,7 @@ import io.harness.argo.beans.ArgoAppRequest;
 import io.harness.argo.beans.ArgoConfigInternal;
 import io.harness.argo.beans.ArgoToken;
 import io.harness.argo.beans.ClusterResourceTree;
+import io.harness.argo.beans.ClusterResourceTreeDTO;
 import io.harness.argo.beans.ManagedResource;
 import io.harness.argo.beans.ManifestDiff;
 import io.harness.argo.beans.UsernamePassword;
@@ -95,7 +96,7 @@ public class ArgoCdServiceImpl implements ArgoCdService {
   }
 
   @Override
-  public ClusterResourceTree fetchResourceTree(ArgoConfigInternal argoConfig, String appName) throws IOException {
+  public ClusterResourceTreeDTO fetchResourceTree(ArgoConfigInternal argoConfig, String appName) throws IOException {
     ArgoRestClient argoRestClient = createArgoRestClient(argoConfig);
     String token = fetchToken(argoConfig, argoRestClient);
 
@@ -103,7 +104,7 @@ public class ArgoCdServiceImpl implements ArgoCdService {
         argoRestClient.fetchResourceTree(BEARER + token, appName).execute();
 
     if (resourceTreeResponse.isSuccessful()) {
-      return resourceTreeResponse.body();
+      return new ClusterResourceTreeDTO(resourceTreeResponse.body(), appName);
     }
     throw new InvalidRequestException("Failure in fetching resource tree " + resourceTreeResponse.message(), USER);
   }

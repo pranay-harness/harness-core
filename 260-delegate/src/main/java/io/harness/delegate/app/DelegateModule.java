@@ -4,6 +4,8 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.argo.service.ArgoCdService;
+import io.harness.argo.service.ArgoCdServiceImpl;
 import io.harness.artifacts.docker.client.DockerRestClientFactory;
 import io.harness.artifacts.docker.client.DockerRestClientFactoryImpl;
 import io.harness.artifacts.docker.service.DockerRegistryService;
@@ -92,6 +94,7 @@ import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.MicrosoftTeamsSenderDelegateTask;
 import io.harness.delegate.task.PagerDutySenderDelegateTask;
 import io.harness.delegate.task.SlackSenderDelegateTask;
+import io.harness.delegate.task.argo.ArgoCDTask;
 import io.harness.delegate.task.artifactory.ArtifactoryDelegateTask;
 import io.harness.delegate.task.artifactory.ArtifactoryValidationHandler;
 import io.harness.delegate.task.artifacts.ArtifactSourceDelegateRequest;
@@ -896,6 +899,7 @@ public class DelegateModule extends AbstractModule {
     bind(TerraformBaseHelper.class).to(TerraformBaseHelperImpl.class);
     bind(DelegateFileManagerBase.class).to(DelegateFileManagerImpl.class);
     bind(TerraformClient.class).to(TerraformClientImpl.class);
+    bind(ArgoCdService.class).to(ArgoCdServiceImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);
@@ -1393,6 +1397,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.SCM_GIT_FILE_TASK).toInstance(ScmGitFileTask.class);
     mapBinder.addBinding(TaskType.SCM_PULL_REQUEST_TASK).toInstance(ScmGitPRTask.class);
     mapBinder.addBinding(TaskType.SCM_GIT_WEBHOOK_TASK).toInstance(ScmGitWebhookTask.class);
+    mapBinder.addBinding(TaskType.ARGOCD_TASK).toInstance(ArgoCDTask.class);
   }
 
   private void registerSecretManagementBindings() {

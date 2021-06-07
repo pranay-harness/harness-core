@@ -54,8 +54,11 @@ import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
 
+import io.harness.argo.beans.ArgoConfigInternal;
+import io.harness.argo.beans.ClusterResourceTreeDTO;
 import io.harness.azure.model.SubscriptionData;
 import io.harness.azure.model.VirtualMachineScaleSetData;
+import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -64,6 +67,9 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.HarnessStringUtils;
+import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.argo.request.ResourceTreeRequest;
+import io.harness.delegate.beans.argo.response.ResourceTreeResponse;
 import io.harness.delegate.beans.azure.ManagementGroupData;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
@@ -84,6 +90,7 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.expression.ExpressionReflectionUtils.NestedAnnotationResolver;
 import io.harness.ff.FeatureFlagService;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.observer.Subject;
 import io.harness.queue.QueuePublisher;
@@ -114,11 +121,13 @@ import software.wings.beans.PcfConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
+import software.wings.beans.TaskType;
 import software.wings.beans.Variable;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.customdeployment.CustomDeploymentTypeDTO;
 import software.wings.beans.infrastructure.Host;
+import software.wings.beans.settings.argo.ArgoConfig;
 import software.wings.common.InfrastructureConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
@@ -166,6 +175,7 @@ import software.wings.service.impl.aws.model.AwsSubnet;
 import software.wings.service.impl.aws.model.AwsVPC;
 import software.wings.service.impl.spotinst.SpotinstHelperServiceManager;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureDefinitionServiceObserver;
@@ -273,6 +283,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Inject private AzureVMSSHelperServiceManager azureVMSSHelperServiceManager;
   @Inject private AzureARMManager azureARMManager;
   @Inject private AzureAppServiceManager azureAppServiceManager;
+  @Inject private DelegateService delegateService;
 
   @Inject @Getter private Subject<InfrastructureDefinitionServiceObserver> subject = new Subject<>();
 
@@ -2201,6 +2212,46 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     } catch (Exception e) {
       log.warn(ExceptionUtils.getMessage(e), e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+  }
+
+  @Override
+  public ClusterResourceTreeDTO getResourceTree(String appId, String infraDefinitionId) {
+    final InfrastructureDefinition infra = get(appId, infraDefinitionId);
+    if (infra == null) {
+      throw new InvalidRequestException("Infra Definition Not Found", USER);
+    }
+    if (!(infra.getInfrastructure() instanceof DirectKubernetesInfrastructure)) {
+      throw new InvalidRequestException("Direct Kubernetes Infra Definition Not Found", USER);
+    }
+    DirectKubernetesInfrastructure kubernetesInfrastructure =
+        (DirectKubernetesInfrastructure) infra.getInfrastructure();
+    final SettingAttribute argoConnector = settingsService.get(appId, kubernetesInfrastructure.getArgoConnectorId());
+    final ArgoConfig argoConfig = (ArgoConfig) argoConnector.getValue();
+    final List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(argoConfig);
+    ResourceTreeRequest resourceTreeRequest = ResourceTreeRequest.builder()
+                                                  .argoConfigInternal(ArgoConfigInternal.builder().build())
+                                                  .encryptedDataDetails(encryptionDetails)
+                                                  .appName(kubernetesInfrastructure.getArgoAppConfig().getAppName())
+                                                  .build();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId(infra.getAccountId())
+                                    .data(TaskData.builder()
+                                              .parameters(new Object[] {resourceTreeRequest})
+                                              .taskType(String.valueOf(TaskType.ARGOCD_TASK))
+                                              .async(false)
+                                              .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
+                                              .build())
+                                    .build();
+    try {
+      ResourceTreeResponse notifyResponseData = delegateService.executeTask(delegateTask);
+      if (notifyResponseData.getExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+        throw new InvalidRequestException("Resource Tree Request Failed", USER);
+      }
+      return notifyResponseData.getClusterResourceTree();
+    } catch (InterruptedException ex) {
+      Thread.currentThread().interrupt();
+      throw new InvalidRequestException(ex.getMessage(), WingsException.USER);
     }
   }
 

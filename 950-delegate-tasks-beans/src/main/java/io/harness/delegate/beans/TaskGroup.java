@@ -2,6 +2,7 @@ package io.harness.delegate.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 
+import com.nimbusds.openid.connect.sdk.claims.ACR;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -14,6 +15,7 @@ public enum TaskGroup {
   HTTP,
   SPLUNK,
   APPDYNAMICS,
+  ARGO,
   INSTANA,
   NEWRELIC,
   STACKDRIVER,

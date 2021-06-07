@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import io.harness.argo.beans.ClusterResourceTreeDTO;
 import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -183,4 +184,6 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
   List<String> listAzureLoadBalancers(String appId, String infraDefinitionId);
 
   List<String> listAzureLoadBalancerBackendPools(String appId, String infraDefinitionId, String loadBalancerName);
+
+  ClusterResourceTreeDTO getResourceTree(String appId, String infraDefinitionId);
 }

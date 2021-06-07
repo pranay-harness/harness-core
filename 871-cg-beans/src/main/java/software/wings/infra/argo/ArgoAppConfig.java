@@ -15,6 +15,7 @@ public class ArgoAppConfig {
   String project;
   String gitRepoUrl;
   String manifestPath;
+  String gitRef;
   Sync sync;
   String clusterUrl;
 

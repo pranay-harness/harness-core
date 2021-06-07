@@ -1,4 +1,4 @@
-package io.harness.delegate.beans.argo;
+package io.harness.delegate.beans.argo.request;
 
 public enum RequestType {
   APP_CRUD,
