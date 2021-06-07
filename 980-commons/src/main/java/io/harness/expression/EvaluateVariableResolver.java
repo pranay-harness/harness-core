@@ -18,6 +18,7 @@ public class EvaluateVariableResolver extends StrLookup<Object> {
 
   @Override
   public String lookup(String variable) {
+    int i;
     String name = prefix + ++varIndex + suffix;
     try {
       final Object evaluated = expressionEvaluator.evaluate(variable, context);
