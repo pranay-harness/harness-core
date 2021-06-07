@@ -24,5 +24,6 @@ import org.springframework.data.annotation.TypeAlias;
 public class ContainerPortDetails implements ExecutionSweepingOutput {
   public static final String PORT_DETAILS = "portDetails";
   Map<String, List<Integer>> portDetails;
+  Map<String, String> ctrNameDetails;
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 }
