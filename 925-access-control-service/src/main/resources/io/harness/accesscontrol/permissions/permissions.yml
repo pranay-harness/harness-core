@@ -460,3 +460,10 @@ permissions:
       - account
       - organization
       - project
+  - identifier: ff_featureflag_toggle
+    name: Toggle a Feature Flag On or Off
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
