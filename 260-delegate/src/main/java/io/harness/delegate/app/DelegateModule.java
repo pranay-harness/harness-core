@@ -104,6 +104,9 @@ import io.harness.delegate.task.artifacts.gcr.GcrArtifactTaskNG;
 import io.harness.delegate.task.aws.AwsCodeCommitApiDelegateTask;
 import io.harness.delegate.task.aws.AwsCodeCommitDelegateTask;
 import io.harness.delegate.task.aws.AwsDelegateTask;
+import io.harness.delegate.task.aws.AwsSamAbstractTaskHandler;
+import io.harness.delegate.task.aws.AwsSamDeployTaskHandlerNG;
+import io.harness.delegate.task.aws.AwsSamTaskType;
 import io.harness.delegate.task.aws.AwsValidationHandler;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceTaskType;
 import io.harness.delegate.task.azure.arm.AzureARMTaskParameters;
@@ -1021,6 +1024,11 @@ public class DelegateModule extends AbstractModule {
     tfTaskTypeToHandlerMap.addBinding(TFTaskType.APPLY).to(TerraformApplyTaskHandler.class);
     tfTaskTypeToHandlerMap.addBinding(TFTaskType.PLAN).to(TerraformPlanTaskHandler.class);
     tfTaskTypeToHandlerMap.addBinding(TFTaskType.DESTROY).to(TerraformDestroyTaskHandler.class);
+
+    // AwsSAM Task Handlers
+    MapBinder<AwsSamTaskType, AwsSamAbstractTaskHandler> awsSamTaskTypeToHandlerMap =
+        MapBinder.newMapBinder(binder(), AwsSamTaskType.class, AwsSamAbstractTaskHandler.class);
+    awsSamTaskTypeToHandlerMap.addBinding(AwsSamTaskType.DEPLOY).to(AwsSamDeployTaskHandlerNG.class);
 
     bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
     bind(HttpService.class).to(HttpServiceImpl.class);
