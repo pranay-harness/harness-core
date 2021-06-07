@@ -7,4 +7,5 @@ import io.harness.annotations.dev.OwnedBy;
 public interface InfrastructureKind {
   String KUBERNETES_DIRECT = "KubernetesDirect";
   String KUBERNETES_GCP = "KubernetesGcp";
+  String AWS_SAM_INFRA = "AwsSamInfra";
 }
