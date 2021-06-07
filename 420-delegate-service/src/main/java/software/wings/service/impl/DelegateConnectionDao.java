@@ -13,6 +13,8 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateConnectionDetails;
 import io.harness.persistence.HPersistence;
 
@@ -118,6 +120,14 @@ public class DelegateConnectionDao {
                .greaterThan(currentTimeMillis() - EXPIRY_TIME.toMillis())
                .count(upToOne)
         > 0;
+  }
+
+  public boolean checkDelegateConnectedByName(String accountId, String delegateName, String version) {
+    Delegate delegate = persistence.createQuery(Delegate.class).filter(DelegateKeys.delegateName, delegateName).get();
+    if (delegate == null) {
+      return false;
+    }
+    return checkDelegateConnected(accountId, delegate.getUuid(), version);
   }
 
   public DelegateConnection upsertCurrentConnection(

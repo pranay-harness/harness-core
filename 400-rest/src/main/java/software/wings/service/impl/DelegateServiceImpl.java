@@ -401,6 +401,12 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
+  public boolean checkDelegateConnectedByName(String accountId, String delegateName) {
+    return delegateConnectionDao.checkDelegateConnectedByName(
+        accountId, delegateName, versionInfoManager.getVersionInfo().getVersion());
+  }
+
+  @Override
   public List<String> getKubernetesDelegateNames(String accountId) {
     return persistence.createQuery(Delegate.class)
         .filter(DelegateKeys.accountId, accountId)
