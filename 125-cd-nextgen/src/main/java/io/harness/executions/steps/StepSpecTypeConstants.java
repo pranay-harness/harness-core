@@ -23,4 +23,6 @@ public interface StepSpecTypeConstants {
 
   String SHELL_SCRIPT = "ShellScript";
   String PLACEHOLDER = "Placeholder";
+
+  String AWS_SAM_DEPLOY = "AwsSamDeploy";
 }
