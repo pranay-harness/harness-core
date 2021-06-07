@@ -174,6 +174,10 @@ if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
   yq write -i $CONFIG_FILE ngManagerServiceSecret "$NEXT_GEN_MANAGER_SECRET"
 fi
 
+if [[ "" != "$MANAGER_SECRET" ]]; then
+  yq write -i $CONFIG_FILE managerServiceSecret "$MANAGER_SECRET"
+fi
+
 if [[ "" != "$JWT_AUTH_SECRET" ]]; then
   yq write -i $CONFIG_FILE jwtAuthSecret "$JWT_AUTH_SECRET"
 fi
