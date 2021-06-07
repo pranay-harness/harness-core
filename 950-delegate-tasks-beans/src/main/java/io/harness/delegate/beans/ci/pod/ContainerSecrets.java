@@ -17,4 +17,5 @@ public class ContainerSecrets {
   @Builder.Default private List<SecretVariableDetails> secretVariableDetails = new ArrayList<>();
   @Builder.Default private Map<String, ConnectorDetails> connectorDetailsMap = new HashMap<>();
   @Builder.Default private Map<String, ConnectorDetails> functorConnectors = new HashMap<>();
+  @Builder.Default private Map<String, SecretParams> plainTextSecretsByName = new HashMap<>();
 }
