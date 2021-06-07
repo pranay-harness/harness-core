@@ -20,6 +20,7 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.authentication.AuthenticationMechanism;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;

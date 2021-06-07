@@ -1,12 +1,11 @@
 package io.harness.migrations.all;
 
-import io.harness.annotations.dev.HarnessModule;
+import io.harness.beans.sso.SSOType;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.LdapSettings;
-import software.wings.beans.sso.SSOType;
 import software.wings.dl.WingsPersistence;
 
 import com.google.common.collect.Lists;

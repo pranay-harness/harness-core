@@ -6,6 +6,7 @@ import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
+import io.harness.beans.ApplicationAccess;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -21,7 +22,6 @@ import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
-import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.ChangeContext;

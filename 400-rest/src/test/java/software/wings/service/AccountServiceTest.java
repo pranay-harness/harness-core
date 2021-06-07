@@ -45,6 +45,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.authentication.AuthenticationMechanism;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -95,7 +96,6 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.impl.security.auth.AuthHandler;

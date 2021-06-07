@@ -17,6 +17,7 @@ import static java.util.stream.Collectors.toList;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ApplicationAccess;
 import io.harness.beans.EmbeddedUser;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.ListUtils;
@@ -42,7 +43,6 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Workflow;
-import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.common.WorkflowConstants;
 import software.wings.exception.DuplicateStateNameException;

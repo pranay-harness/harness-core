@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.beans.ApplicationAccess;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
@@ -21,7 +22,6 @@ import io.harness.validation.Update;
 
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
-import software.wings.beans.entityinterface.ApplicationAccess;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;

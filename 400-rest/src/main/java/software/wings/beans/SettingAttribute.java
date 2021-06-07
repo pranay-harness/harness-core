@@ -57,6 +57,7 @@ import static java.util.Arrays.stream;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ApplicationAccess;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
@@ -78,7 +79,6 @@ import io.harness.validation.Update;
 import io.harness.yaml.BaseYaml;
 
 import software.wings.beans.artifact.ArtifactStreamSummary;
-import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;

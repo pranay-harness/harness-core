@@ -1,12 +1,11 @@
 package software.wings.service.impl;
 
+import static io.harness.authentication.AuthenticationMechanism.LDAP;
+import static io.harness.authentication.AuthenticationMechanism.OAUTH;
+import static io.harness.authentication.AuthenticationMechanism.SAML;
+import static io.harness.authentication.AuthenticationMechanism.USER_PASSWORD;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.UJJAWAL;
-
-import static software.wings.security.authentication.AuthenticationMechanism.LDAP;
-import static software.wings.security.authentication.AuthenticationMechanism.OAUTH;
-import static software.wings.security.authentication.AuthenticationMechanism.SAML;
-import static software.wings.security.authentication.AuthenticationMechanism.USER_PASSWORD;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -17,6 +16,9 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.authentication.OauthProviderType;
+import io.harness.authentication.SSOConfig;
+import io.harness.beans.sso.OauthSettings;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
@@ -25,9 +27,6 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Event;
-import software.wings.beans.sso.OauthSettings;
-import software.wings.security.authentication.OauthProviderType;
-import software.wings.security.authentication.SSOConfig;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SSOService;

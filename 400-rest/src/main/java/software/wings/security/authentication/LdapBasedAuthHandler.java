@@ -11,6 +11,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.authentication.AuthenticationMechanism;
 import io.harness.beans.SecretText;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
@@ -106,7 +107,7 @@ public class LdapBasedAuthHandler implements AuthHandler {
   }
 
   @Override
-  public AuthenticationMechanism getAuthenticationMechanism() {
+  public io.harness.authentication.AuthenticationMechanism getAuthenticationMechanism() {
     return AuthenticationMechanism.LDAP;
   }
 

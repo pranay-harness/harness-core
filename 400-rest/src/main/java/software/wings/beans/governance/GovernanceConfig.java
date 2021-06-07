@@ -5,6 +5,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.beans.ApplicationAccess;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
@@ -19,7 +20,6 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 
-import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

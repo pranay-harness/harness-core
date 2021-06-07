@@ -2,12 +2,12 @@ package io.harness.testframework.restutils;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
+import io.harness.beans.sso.OauthSettings;
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
 
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
-import software.wings.beans.sso.OauthSettings;
 import software.wings.helpers.ext.ldap.LdapResponse;
 
 import com.google.gson.JsonObject;

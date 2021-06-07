@@ -9,8 +9,14 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 
+import io.harness.authentication.AuthenticationMechanism;
+import io.harness.authentication.OauthProviderType;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.beans.sso.OauthSettings;
+import io.harness.beans.sso.SSOSettings;
+import io.harness.beans.sso.SSOSettings.SSOSettingsKeys;
+import io.harness.beans.sso.SSOType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
@@ -28,10 +34,6 @@ import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.SSOSyncFailedAlert;
 import software.wings.beans.sso.LdapSettings;
-import software.wings.beans.sso.OauthSettings;
-import software.wings.beans.sso.SSOSettings;
-import software.wings.beans.sso.SSOSettings.SSOSettingsKeys;
-import software.wings.beans.sso.SSOType;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.LdapFeature;
@@ -41,8 +43,6 @@ import software.wings.features.api.RestrictedApi;
 import software.wings.features.extractors.LdapSettingsAccountIdExtractor;
 import software.wings.features.extractors.SamlSettingsAccountIdExtractor;
 import software.wings.scheduler.LdapGroupSyncJob;
-import software.wings.security.authentication.AuthenticationMechanism;
-import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.authentication.oauth.OauthOptions;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
@@ -231,7 +231,8 @@ public class SSOSettingServiceImpl implements SSOSettingService {
       throw new InvalidRequestException("Ldap settings already exist for this account.");
     }
     settings.encryptFields(secretManager);
-    LdapSettings savedSettings = wingsPersistence.saveAndGet(LdapSettings.class, settings);
+    String id = wingsPersistence.save(settings);
+    LdapSettings savedSettings = wingsPersistence.get(LdapSettings.class, id);
     LdapGroupSyncJob.add(jobScheduler, savedSettings.getAccountId(), savedSettings.getUuid());
     auditServiceHelper.reportForAuditingUsingAccountId(settings.getAccountId(), null, settings, Event.Type.CREATE);
     log.info("Auditing creation of LDAP Settings for account={}", settings.getAccountId());
@@ -255,7 +256,8 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     oldSettings.setUserSettingsList(settings.getUserSettingsList());
     oldSettings.setGroupSettingsList(settings.getGroupSettingsList());
     oldSettings.encryptFields(secretManager);
-    LdapSettings savedSettings = wingsPersistence.saveAndGet(LdapSettings.class, oldSettings);
+    String id = wingsPersistence.save(settings);
+    LdapSettings savedSettings = wingsPersistence.get(LdapSettings.class, id);
     auditServiceHelper.reportForAuditingUsingAccountId(
         settings.getAccountId(), oldSettings, savedSettings, Event.Type.UPDATE);
     log.info("Auditing updation of LDAP for account={}", savedSettings.getAccountId());

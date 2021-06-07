@@ -2,8 +2,7 @@ package software.wings.graphql.datafetcher.userGroup;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-
-import software.wings.beans.sso.SSOType;
+import io.harness.beans.sso.SSOType;
 
 import lombok.Builder;
 import lombok.Data;

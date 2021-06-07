@@ -62,6 +62,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.authentication.AuthenticationMechanism;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -96,7 +97,6 @@ import software.wings.security.GenericEntityFilter.FilterType;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EmailNotificationService;

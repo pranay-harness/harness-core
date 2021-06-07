@@ -15,6 +15,7 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.authentication.AuthenticationMechanism;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -25,7 +26,6 @@ import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.User;
-import software.wings.security.authentication.AuthenticationMechanism;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;

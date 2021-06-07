@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ApplicationAccess;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
@@ -24,7 +25,6 @@ import io.harness.persistence.UuidAware;
 
 import software.wings.api.PhaseElement;
 import software.wings.beans.LoopParams;
-import software.wings.beans.entityinterface.ApplicationAccess;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

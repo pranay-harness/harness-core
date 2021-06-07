@@ -1,4 +1,4 @@
-package software.wings.beans.entityinterface;
+package io.harness.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 

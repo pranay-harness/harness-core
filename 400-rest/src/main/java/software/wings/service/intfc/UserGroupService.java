@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.sso.SSOType;
 
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
@@ -9,7 +10,6 @@ import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
-import software.wings.beans.sso.SSOType;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 

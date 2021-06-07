@@ -17,6 +17,7 @@ import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 import io.harness.beans.SortOrder;
+import io.harness.beans.sso.SSOType;
 import io.harness.ng.authenticationsettings.NGSamlUserGroupSync;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
@@ -33,7 +34,6 @@ import io.harness.ng.core.utils.UserGroupMapper;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 
-import software.wings.beans.sso.SSOType;
 import software.wings.beans.sso.SamlLinkGroupRequest;
 
 import com.google.common.collect.ImmutableList;

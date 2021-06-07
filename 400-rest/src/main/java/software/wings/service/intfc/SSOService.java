@@ -1,13 +1,14 @@
 package software.wings.service.intfc;
 
+import io.harness.authentication.AuthenticationMechanism;
+import io.harness.authentication.OauthProviderType;
+import io.harness.authentication.SSOConfig;
+import io.harness.beans.sso.OauthSettings;
+
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapTestResponse;
-import software.wings.beans.sso.OauthSettings;
 import software.wings.helpers.ext.ldap.LdapResponse;
-import software.wings.security.authentication.AuthenticationMechanism;
-import software.wings.security.authentication.OauthProviderType;
-import software.wings.security.authentication.SSOConfig;
 
 import java.io.InputStream;
 import java.util.Collection;

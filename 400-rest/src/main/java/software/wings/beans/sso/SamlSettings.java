@@ -6,6 +6,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.sso.SSOSettings;
+import io.harness.beans.sso.SSOType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -21,7 +23,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("SAML")
-public class SamlSettings extends SSOSettings {
+public class SamlSettings extends io.harness.beans.sso.SSOSettings {
   @JsonIgnore @NotNull private String metaDataFile;
   @NotNull private String accountId;
   @NotNull private String origin;
@@ -30,11 +32,12 @@ public class SamlSettings extends SSOSettings {
 
   @JsonCreator
   @Builder
-  public SamlSettings(@JsonProperty("type") SSOType ssoType, @JsonProperty("displayName") String displayName,
-      @JsonProperty("url") String url, @JsonProperty("metaDataFile") String metaDataFile,
-      @JsonProperty("accountId") String accountId, @JsonProperty("origin") String origin,
-      @JsonProperty("groupMembershipAttr") String groupMembershipAttr, @JsonProperty("logoutUrl") String logoutUrl) {
-    super(SSOType.SAML, displayName, url);
+  public SamlSettings(@JsonProperty("type") io.harness.beans.sso.SSOType ssoType,
+      @JsonProperty("displayName") String displayName, @JsonProperty("url") String url,
+      @JsonProperty("metaDataFile") String metaDataFile, @JsonProperty("accountId") String accountId,
+      @JsonProperty("origin") String origin, @JsonProperty("groupMembershipAttr") String groupMembershipAttr,
+      @JsonProperty("logoutUrl") String logoutUrl) {
+    super(io.harness.beans.sso.SSOType.SAML, displayName, url);
     this.metaDataFile = metaDataFile;
     this.accountId = accountId;
     this.origin = origin;
@@ -48,7 +51,7 @@ public class SamlSettings extends SSOSettings {
   }
 
   @Override
-  public SSOType getType() {
+  public io.harness.beans.sso.SSOType getType() {
     return SSOType.SAML;
   }
 

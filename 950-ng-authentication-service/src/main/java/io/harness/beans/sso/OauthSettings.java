@@ -1,4 +1,4 @@
-package software.wings.beans.sso;
+package io.harness.beans.sso;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -6,8 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-
-import software.wings.security.authentication.OauthProviderType;
+import io.harness.authentication.OauthProviderType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

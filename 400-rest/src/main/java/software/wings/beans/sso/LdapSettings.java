@@ -7,6 +7,8 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SecretText;
+import io.harness.beans.sso.SSOSettings;
+import io.harness.beans.sso.SSOType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;
@@ -46,7 +48,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("LDAP")
-public class LdapSettings extends SSOSettings implements ExecutionCapabilityDemander {
+public class LdapSettings extends io.harness.beans.sso.SSOSettings implements ExecutionCapabilityDemander {
   @NotBlank String accountId;
   @NotNull @Valid LdapConnectionSettings connectionSettings;
 
@@ -75,7 +77,7 @@ public class LdapSettings extends SSOSettings implements ExecutionCapabilityDema
       @JsonProperty("connectionSettings") LdapConnectionSettings connectionSettings,
       @JsonProperty("userSettingsList") List<LdapUserSettings> userSettingsList,
       @JsonProperty("groupSettingsList") List<LdapGroupSettings> groupSettingsList) {
-    super(SSOType.LDAP, displayName, connectionSettings.generateUrl());
+    super(io.harness.beans.sso.SSOType.LDAP, displayName, connectionSettings.generateUrl());
     this.accountId = accountId;
     this.connectionSettings = connectionSettings;
     this.userSettingsList = userSettingsList;
@@ -121,7 +123,7 @@ public class LdapSettings extends SSOSettings implements ExecutionCapabilityDema
   }
 
   @Override
-  public SSOType getType() {
+  public io.harness.beans.sso.SSOType getType() {
     return SSOType.LDAP;
   }
 

@@ -4,6 +4,11 @@ import static io.harness.remote.client.RestClientUtils.getResponse;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.authentication.AuthenticationMechanism;
+import io.harness.authentication.SSOConfig;
+import io.harness.beans.sso.OauthSettings;
+import io.harness.beans.sso.SSOSettings;
+import io.harness.beans.sso.SSOType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ng.authenticationsettings.dtos.AuthenticationSettingsResponse;
 import io.harness.ng.authenticationsettings.dtos.mechanisms.LDAPSettings;
@@ -17,13 +22,8 @@ import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 import software.wings.beans.loginSettings.LoginSettings;
 import software.wings.beans.loginSettings.PasswordStrengthPolicy;
 import software.wings.beans.sso.LdapSettings;
-import software.wings.beans.sso.OauthSettings;
-import software.wings.beans.sso.SSOSettings;
-import software.wings.beans.sso.SSOType;
 import software.wings.beans.sso.SamlSettings;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.LoginTypeResponse;
-import software.wings.security.authentication.SSOConfig;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

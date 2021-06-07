@@ -6,6 +6,7 @@ load("//:tools/bazel/JavaPackageRules.bzl", "java_package")
 shared_dependencies = [
     "//:lombok",
     "//960-ng-core-beans:module",
+    "//960-persistence:module",
 ]
 
 java_library(

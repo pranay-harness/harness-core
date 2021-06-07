@@ -21,6 +21,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.ApplicationAccess;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
@@ -44,7 +45,6 @@ import software.wings.beans.DeletedEntity;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.User;
-import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.licensing.LicenseService;
 import software.wings.scheduler.events.segment.SegmentGroupEventJobContext;
 import software.wings.service.intfc.UserService;

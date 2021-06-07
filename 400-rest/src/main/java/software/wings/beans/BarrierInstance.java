@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.beans.ApplicationAccess;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -11,7 +12,6 @@ import io.harness.persistence.UuidAware;
 
 import software.wings.beans.BarrierInstancePipeline.BarrierInstancePipelineKeys;
 import software.wings.beans.BarrierInstanceWorkflow.BarrierInstanceWorkflowKeys;
-import software.wings.beans.entityinterface.ApplicationAccess;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;

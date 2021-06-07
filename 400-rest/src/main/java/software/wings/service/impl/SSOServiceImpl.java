@@ -1,5 +1,9 @@
 package software.wings.service.impl;
 
+import static io.harness.authentication.AuthenticationMechanism.LDAP;
+import static io.harness.authentication.AuthenticationMechanism.OAUTH;
+import static io.harness.authentication.AuthenticationMechanism.SAML;
+import static io.harness.authentication.AuthenticationMechanism.USER_PASSWORD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
@@ -7,15 +11,16 @@ import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.security.authentication.AuthenticationMechanism.LDAP;
-import static software.wings.security.authentication.AuthenticationMechanism.OAUTH;
-import static software.wings.security.authentication.AuthenticationMechanism.SAML;
-import static software.wings.security.authentication.AuthenticationMechanism.USER_PASSWORD;
 
 import static java.util.Arrays.asList;
 
+import io.harness.authentication.AuthenticationMechanism;
+import io.harness.authentication.OauthProviderType;
+import io.harness.authentication.SSOConfig;
 import io.harness.beans.FeatureName;
 import io.harness.beans.SecretText;
+import io.harness.beans.sso.OauthSettings;
+import io.harness.beans.sso.SSOSettings;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
@@ -29,8 +34,6 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapTestResponse;
-import software.wings.beans.sso.OauthSettings;
-import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.features.LdapFeature;
@@ -41,9 +44,6 @@ import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
-import software.wings.security.authentication.AuthenticationMechanism;
-import software.wings.security.authentication.OauthProviderType;
-import software.wings.security.authentication.SSOConfig;
 import software.wings.security.authentication.oauth.OauthOptions;
 import software.wings.security.saml.SamlClientService;
 import software.wings.service.impl.security.auth.AuthHandler;

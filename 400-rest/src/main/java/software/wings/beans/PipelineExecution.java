@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ApplicationAccess;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
@@ -13,8 +14,6 @@ import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
-
-import software.wings.beans.entityinterface.ApplicationAccess;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import java.util.ArrayList;

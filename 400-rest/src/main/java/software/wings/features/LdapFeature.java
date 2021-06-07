@@ -1,13 +1,14 @@
 package software.wings.features;
 
+import io.harness.authentication.AuthenticationMechanism;
+import io.harness.authentication.OauthProviderType;
+
 import software.wings.beans.AccountType;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.features.api.AbstractPremiumFeature;
 import software.wings.features.api.ComplianceByRemovingUsage;
 import software.wings.features.api.FeatureRestrictions;
 import software.wings.features.api.Usage;
-import software.wings.security.authentication.AuthenticationMechanism;
-import software.wings.security.authentication.OauthProviderType;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SSOService;
 import software.wings.service.intfc.SSOSettingService;

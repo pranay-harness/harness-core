@@ -7,6 +7,7 @@ import static software.wings.security.PermissionAttribute.PermissionType;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.authentication.AuthenticationMechanism;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.event.model.EventType;
@@ -33,7 +34,6 @@ import software.wings.beans.security.UserGroup;
 import software.wings.resources.UserResource;
 import software.wings.security.JWT_CATEGORY;
 import software.wings.security.UserPermissionInfo;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.LogoutResponse;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 import software.wings.security.authentication.oauth.OauthUserInfo;

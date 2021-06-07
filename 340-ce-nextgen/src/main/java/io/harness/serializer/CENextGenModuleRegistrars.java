@@ -21,6 +21,7 @@ public class CENextGenModuleRegistrars {
           .addAll(CECommonsRegistrars.morphiaRegistrars)
           .addAll(FeatureFlagBeansRegistrars.morphiaRegistrars)
           .addAll(NGCoreClientRegistrars.morphiaRegistrars)
+          .addAll(AuthenticationManagerRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

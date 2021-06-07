@@ -39,6 +39,7 @@ public class ManagerRegistrars {
           .addAll(CgOrchestrationRegistrars.kryoRegistrars)
           .add(CgOrchestrationBeansKryoRegistrar.class)
           .add(ManagerKryoRegistrar.class)
+          .addAll(AuthenticationManagerRegistrars.kryoRegistrars)
           .add(ProjectAndOrgKryoRegistrar.class)
           .addAll(NGCommonsRegistrars.kryoRegistrars)
           .addAll(NGCoreRegistrars.kryoRegistrars)
@@ -71,6 +72,7 @@ public class ManagerRegistrars {
           .add(EventMorphiaRegistrar.class)
           .add(LimitsMorphiaRegistrar.class)
           .add(ManagerMorphiaRegistrar.class)
+          .addAll(AuthenticationManagerRegistrars.morphiaRegistrars)
           .add(ProjectAndOrgMorphiaRegistrar.class)
           .addAll(ViewsModuleRegistrars.morphiaRegistrars)
           .add(CgOrchestrationBeansMorphiaRegistrar.class)
@@ -82,6 +84,7 @@ public class ManagerRegistrars {
       ImmutableSet.<Class<? extends TypeConverter>>builder()
           .addAll(PersistenceRegistrars.morphiaConverters)
           .addAll(DelegateTasksBeansRegistrars.morphiaConverters)
+          .addAll(AuthenticationManagerRegistrars.morphiaConverters)
           .build();
 
   public static final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =

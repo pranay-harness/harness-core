@@ -5,6 +5,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ApplicationAccess;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionInterruptType;
 import io.harness.logging.AccountLogContext;
@@ -20,7 +21,6 @@ import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
 
-import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.service.impl.AppLogContext;
 import software.wings.service.impl.StateExecutionInstanceLogContext;
 import software.wings.service.impl.WorkflowExecutionLogContext;

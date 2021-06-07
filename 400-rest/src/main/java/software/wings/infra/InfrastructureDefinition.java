@@ -6,6 +6,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.ApplicationAccess;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -23,7 +24,6 @@ import io.harness.persistence.UuidAware;
 import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

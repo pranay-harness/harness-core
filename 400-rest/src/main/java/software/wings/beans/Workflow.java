@@ -16,6 +16,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ApplicationAccess;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.data.validator.EntityName;
@@ -26,7 +27,6 @@ import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 
 import software.wings.api.DeploymentType;
-import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;

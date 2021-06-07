@@ -12,6 +12,8 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
+import io.harness.beans.sso.SSOSettings;
+import io.harness.beans.sso.SSOType;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.exception.InvalidRequestException;
 
@@ -24,8 +26,6 @@ import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
-import software.wings.beans.sso.SSOSettings;
-import software.wings.beans.sso.SSOType;
 import software.wings.graphql.schema.mutation.userGroup.input.QLCreateUserGroupInput;
 import software.wings.graphql.schema.mutation.userGroup.payload.QLAddUserToUserGroupPayload;
 import software.wings.graphql.schema.mutation.userGroup.payload.QLCreateUserGroupPayload;

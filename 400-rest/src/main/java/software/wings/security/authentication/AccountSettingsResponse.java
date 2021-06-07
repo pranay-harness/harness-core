@@ -3,6 +3,8 @@ package software.wings.security.authentication;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.authentication.AuthenticationMechanism;
+import io.harness.authentication.OauthProviderType;
 
 import java.util.Set;
 import lombok.AllArgsConstructor;

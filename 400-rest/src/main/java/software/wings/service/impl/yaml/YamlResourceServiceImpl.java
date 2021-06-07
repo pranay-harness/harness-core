@@ -26,6 +26,7 @@ import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ApplicationAccess;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
@@ -62,7 +63,6 @@ import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
-import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.template.Template;
 import software.wings.beans.trigger.Trigger;

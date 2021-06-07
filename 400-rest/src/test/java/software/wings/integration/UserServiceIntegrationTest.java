@@ -14,6 +14,7 @@ import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
+import io.harness.authentication.AuthenticationMechanism;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.data.structure.UUIDGenerator;
@@ -42,7 +43,6 @@ import software.wings.resources.UserResource.ResendInvitationEmailRequest;
 import software.wings.security.AuthenticationFilter;
 import software.wings.security.JWT_CATEGORY;
 import software.wings.security.SecretManager;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.LoginTypeResponse;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.intfc.instance.licensing.InstanceLimitProvider;

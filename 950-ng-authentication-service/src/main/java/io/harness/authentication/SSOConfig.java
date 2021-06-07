@@ -1,10 +1,9 @@
-package software.wings.security.authentication;
+package io.harness.authentication;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-
-import software.wings.beans.sso.SSOSettings;
+import io.harness.beans.sso.SSOSettings;
 
 import java.util.List;
 import lombok.Builder;

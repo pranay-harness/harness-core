@@ -8,6 +8,7 @@ import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ApplicationAccess;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -20,7 +21,6 @@ import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.NameValuePair;
-import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.trigger.ArtifactSelection.ArtifactSelectionKeys;
 import software.wings.beans.trigger.ArtifactTriggerCondition.ArtifactTriggerConditionKeys;

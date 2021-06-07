@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.UTKARSH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.authentication.AuthenticationMechanism;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.OwnerManager;
@@ -20,7 +21,6 @@ import software.wings.security.HarnessUserAccountActions;
 import software.wings.security.JWT_CATEGORY;
 import software.wings.security.SecretManager;
 import software.wings.security.authentication.AccountSettingsResponse;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.oauth.OauthUserInfo;
 
 import com.google.inject.Inject;

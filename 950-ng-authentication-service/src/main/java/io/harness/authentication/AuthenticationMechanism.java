@@ -1,4 +1,4 @@
-package software.wings.security.authentication;
+package io.harness.authentication;
 
 public enum AuthenticationMechanism {
   USER_PASSWORD("NON_SSO"),

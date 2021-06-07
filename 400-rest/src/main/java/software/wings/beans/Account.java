@@ -10,6 +10,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.authentication.AuthenticationMechanism;
 import io.harness.beans.EmbeddedUser;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.delegate.beans.DelegateConfiguration;
@@ -24,7 +25,6 @@ import io.harness.security.EncryptionInterface;
 import io.harness.security.SimpleEncryption;
 import io.harness.validation.Create;
 
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

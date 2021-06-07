@@ -9,6 +9,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.sso.SSOType;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -22,7 +23,6 @@ import software.wings.beans.NotificationChannelType;
 import software.wings.beans.User;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.notification.SlackNotificationSetting;
-import software.wings.beans.sso.SSOType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;

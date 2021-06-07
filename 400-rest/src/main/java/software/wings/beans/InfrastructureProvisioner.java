@@ -6,6 +6,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.ApplicationAccess;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.FdIndex;
@@ -14,7 +15,6 @@ import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 
-import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
 import software.wings.yaml.BaseEntityYaml;

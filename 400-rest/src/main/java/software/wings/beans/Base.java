@@ -8,6 +8,7 @@ import static java.lang.System.currentTimeMillis;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.ApplicationAccess;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.CreatedAtAware;
@@ -18,7 +19,6 @@ import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
 
-import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.security.ThreadLocalUserProvider;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

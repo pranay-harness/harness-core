@@ -428,8 +428,6 @@ import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
 import software.wings.beans.sso.LdapSettings;
-import software.wings.beans.sso.OauthSettings;
-import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.beans.template.CopiedTemplateMetadata;
 import software.wings.beans.template.ImportedTemplate;
@@ -982,7 +980,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(NotificationGroup.class);
     set.add(NotificationReceiverInfo.class);
     set.add(NotificationRulesStatus.class);
-    set.add(OauthSettings.class);
     set.add(PcfInfrastructureMapping.class);
     set.add(PcfServiceSpecification.class);
     set.add(Permit.class);
@@ -1021,7 +1018,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(ShellScriptInfrastructureProvisioner.class);
     set.add(SmbArtifactStream.class);
     set.add(SplunkCVConfiguration.class);
-    set.add(SSOSettings.class);
     set.add(StackdriverCVConfiguration.class);
     set.add(StackDriverMetricCVConfiguration.class);
     set.add(StateExecutionInstance.class);

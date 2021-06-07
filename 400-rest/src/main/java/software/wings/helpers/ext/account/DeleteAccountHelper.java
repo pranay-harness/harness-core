@@ -10,6 +10,8 @@ import static java.lang.reflect.Modifier.isAbstract;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ApplicationAccess;
+import io.harness.beans.sso.SSOSettings;
 import io.harness.ff.FeatureFlagService;
 import io.harness.limits.checker.rate.UsageBucket;
 import io.harness.limits.checker.rate.UsageBucket.UsageBucketKeys;
@@ -27,8 +29,6 @@ import software.wings.beans.DeletedEntity;
 import software.wings.beans.DeletedEntity.DeletedEntityKeys;
 import software.wings.beans.DeletedEntity.DeletedEntityType;
 import software.wings.beans.User;
-import software.wings.beans.entityinterface.ApplicationAccess;
-import software.wings.beans.sso.SSOSettings;
 import software.wings.scheduler.events.segment.SegmentGroupEventJobContext;
 import software.wings.scheduler.events.segment.SegmentGroupEventJobContext.SegmentGroupEventJobContextKeys;
 import software.wings.service.impl.SSOSettingServiceImpl;

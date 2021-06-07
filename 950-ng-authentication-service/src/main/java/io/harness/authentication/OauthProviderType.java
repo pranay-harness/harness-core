@@ -1,4 +1,4 @@
-package software.wings.security.authentication;
+package io.harness.authentication;
 
 /**
  * @author marklu on 2019-05-11

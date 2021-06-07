@@ -1,12 +1,12 @@
 package software.wings.service.intfc;
 
+import io.harness.authentication.OauthProviderType;
+import io.harness.beans.sso.OauthSettings;
+import io.harness.beans.sso.SSOSettings;
 import io.harness.validation.Create;
 
 import software.wings.beans.sso.LdapSettings;
-import software.wings.beans.sso.OauthSettings;
-import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SamlSettings;
-import software.wings.security.authentication.OauthProviderType;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.util.Iterator;

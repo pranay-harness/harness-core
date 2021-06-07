@@ -10,6 +10,7 @@ import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 
 import static com.google.common.base.Charsets.UTF_8;
 
+import io.harness.beans.ApplicationAccess;
 import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.exception.WingsException;
@@ -28,7 +29,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.command.ServiceCommand;
-import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.GitFileChange.Builder;
 import software.wings.beans.yaml.YamlConstants;

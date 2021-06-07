@@ -1,5 +1,6 @@
 package software.wings.security.authentication;
 
+import static io.harness.authentication.AuthenticationMechanism.USER_PASSWORD;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
@@ -12,7 +13,6 @@ import static io.harness.rule.OwnerRule.VIKAS;
 
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.User.Builder.anUser;
-import static software.wings.security.authentication.AuthenticationMechanism.USER_PASSWORD;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -28,6 +28,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.authentication.AuthenticationMechanism;
 import io.harness.category.element.UnitTests;
 import io.harness.configuration.DeployMode;
 import io.harness.eraro.ErrorCode;
@@ -99,8 +100,9 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     assertThat(authenticationManager.getAuthenticationMechanism("testUser")).isEqualTo(USER_PASSWORD);
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
-    when(account1.getAuthenticationMechanism()).thenReturn(AuthenticationMechanism.SAML);
-    assertThat(authenticationManager.getAuthenticationMechanism("testUser")).isEqualTo(AuthenticationMechanism.SAML);
+    when(account1.getAuthenticationMechanism()).thenReturn(io.harness.authentication.AuthenticationMechanism.SAML);
+    assertThat(authenticationManager.getAuthenticationMechanism("testUser"))
+        .isEqualTo(io.harness.authentication.AuthenticationMechanism.SAML);
   }
 
   @Test
@@ -184,7 +186,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     assertThat(loginTypeResponse.getSSORequest()).isNull();
 
     when(mockUser.getAccounts()).thenReturn(Arrays.asList(account1));
-    when(account1.getAuthenticationMechanism()).thenReturn(AuthenticationMechanism.SAML);
+    when(account1.getAuthenticationMechanism()).thenReturn(io.harness.authentication.AuthenticationMechanism.SAML);
     SSORequest SSORequest = new SSORequest();
     SSORequest.setIdpRedirectUrl("TestURL");
     when(SAML_CLIENT_SERVICE.generateSamlRequest(mockUser)).thenReturn(SSORequest);

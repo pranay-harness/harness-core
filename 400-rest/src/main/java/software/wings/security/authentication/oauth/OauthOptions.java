@@ -4,12 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.authentication.OauthProviderType;
+import io.harness.beans.sso.OauthSettings;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
-import software.wings.beans.sso.OauthSettings;
 import software.wings.security.authentication.AuthenticationUtils;
-import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.saml.SSORequest;
 import software.wings.service.impl.SSOSettingServiceImpl;
 

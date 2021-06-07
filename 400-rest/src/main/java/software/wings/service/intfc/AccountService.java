@@ -6,6 +6,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.account.ProvisionStep;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.authentication.AuthenticationMechanism;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -24,7 +25,6 @@ import software.wings.beans.SubdomainUrl;
 import software.wings.beans.TechStack;
 import software.wings.beans.User;
 import software.wings.security.authentication.AccountSettingsResponse;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.service.impl.analysis.CVEnabledService;
 
 import java.util.Collection;

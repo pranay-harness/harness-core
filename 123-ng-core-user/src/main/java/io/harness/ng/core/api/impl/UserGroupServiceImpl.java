@@ -24,7 +24,10 @@ import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.authentication.SSOConfig;
 import io.harness.beans.Scope;
+import io.harness.beans.sso.SSOSettings;
+import io.harness.beans.sso.SSOType;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -55,10 +58,6 @@ import io.harness.user.remote.UserClient;
 import io.harness.user.remote.UserFilterNG;
 import io.harness.utils.RetryUtils;
 import io.harness.utils.ScopeUtils;
-
-import software.wings.beans.sso.SSOSettings;
-import software.wings.beans.sso.SSOType;
-import software.wings.security.authentication.SSOConfig;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;

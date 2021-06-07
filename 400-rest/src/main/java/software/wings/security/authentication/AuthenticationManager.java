@@ -22,6 +22,8 @@ import static org.apache.cxf.common.util.UrlUtils.urlDecode;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.authentication.AuthenticationMechanism;
+import io.harness.authentication.OauthProviderType;
 import io.harness.configuration.DeployMode;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidCredentialsException;
@@ -90,7 +92,7 @@ public class AuthenticationManager {
   private static final List<ErrorCode> NON_INVALID_CREDENTIALS_ERROR_CODES =
       Arrays.asList(USER_LOCKED, PASSWORD_EXPIRED, MAX_FAILED_ATTEMPT_COUNT_EXCEEDED);
 
-  public AuthHandler getAuthHandler(AuthenticationMechanism mechanism) {
+  public AuthHandler getAuthHandler(io.harness.authentication.AuthenticationMechanism mechanism) {
     switch (mechanism) {
       case SAML:
         return samlBasedAuthHandler;
@@ -103,11 +105,11 @@ public class AuthenticationManager {
     }
   }
 
-  private AuthenticationMechanism getAuthenticationMechanism(User user, String accountId) {
+  private io.harness.authentication.AuthenticationMechanism getAuthenticationMechanism(User user, String accountId) {
     if (user.isDisabled()) {
       throw new WingsException(USER_DISABLED, USER);
     }
-    AuthenticationMechanism authenticationMechanism;
+    io.harness.authentication.AuthenticationMechanism authenticationMechanism;
     if (isNotEmpty(accountId)) {
       // First check if the user is associated with the account.
       if (!userService.isUserAssignedToAccount(user, accountId)) {
@@ -134,12 +136,12 @@ public class AuthenticationManager {
     }
 
     if (authenticationMechanism == null) {
-      authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
+      authenticationMechanism = io.harness.authentication.AuthenticationMechanism.USER_PASSWORD;
     }
     return authenticationMechanism;
   }
 
-  public AuthenticationMechanism getAuthenticationMechanism(String userName) {
+  public io.harness.authentication.AuthenticationMechanism getAuthenticationMechanism(String userName) {
     return getAuthenticationMechanism(authenticationUtils.getUser(userName, USER), null);
   }
 
@@ -179,7 +181,7 @@ public class AuthenticationManager {
     } catch (WingsException ex) {
       if (ex.getCode() == ErrorCode.USER_DOES_NOT_EXIST && mainConfiguration.getDeployMode() != null
           && DeployMode.isOnPrem(mainConfiguration.getDeployMode().name())) {
-        return builder.authenticationMechanism(AuthenticationMechanism.USER_PASSWORD).build();
+        return builder.authenticationMechanism(io.harness.authentication.AuthenticationMechanism.USER_PASSWORD).build();
       }
       throw ex;
     }
@@ -195,14 +197,14 @@ public class AuthenticationManager {
     builder.showCaptcha(showCaptcha);
 
     if (user.getAccounts().isEmpty()) {
-      return builder.authenticationMechanism(AuthenticationMechanism.USER_PASSWORD).build();
+      return builder.authenticationMechanism(io.harness.authentication.AuthenticationMechanism.USER_PASSWORD).build();
     }
 
     Account account = userService.getAccountByIdIfExistsElseGetDefaultAccount(
         user, isEmpty(accountId) ? Optional.empty() : Optional.of(accountId));
-    AuthenticationMechanism authenticationMechanism = account.getAuthenticationMechanism();
+    io.harness.authentication.AuthenticationMechanism authenticationMechanism = account.getAuthenticationMechanism();
     if (null == authenticationMechanism) {
-      authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
+      authenticationMechanism = io.harness.authentication.AuthenticationMechanism.USER_PASSWORD;
     }
     builder.isOauthEnabled(account.isOauthEnabled());
     if (account.isOauthEnabled()) {
@@ -307,7 +309,8 @@ public class AuthenticationManager {
 
       if (isNotEmpty(accountId)) {
         User user = authenticationUtils.getUser(userName, USER);
-        AuthenticationMechanism authenticationMechanism = getAuthenticationMechanism(user, accountId);
+        io.harness.authentication.AuthenticationMechanism authenticationMechanism =
+            getAuthenticationMechanism(user, accountId);
         return defaultLoginInternal(userName, password, false, authenticationMechanism);
       } else {
         return defaultLogin(userName, password);
@@ -336,8 +339,8 @@ public class AuthenticationManager {
     return defaultLoginInternal(userName, passwordHash, true, getAuthenticationMechanism(userName));
   }
 
-  private User defaultLoginInternal(
-      String userName, String password, boolean isPasswordHash, AuthenticationMechanism authenticationMechanism) {
+  private User defaultLoginInternal(String userName, String password, boolean isPasswordHash,
+      io.harness.authentication.AuthenticationMechanism authenticationMechanism) {
     try {
       AuthHandler authHandler = getAuthHandler(authenticationMechanism);
       if (authHandler == null) {
@@ -518,7 +521,7 @@ public class AuthenticationManager {
   }
 
   public Response oauth2Redirect(final String provider) {
-    OauthProviderType oauthProvider = OauthProviderType.valueOf(provider.toUpperCase());
+    io.harness.authentication.OauthProviderType oauthProvider = OauthProviderType.valueOf(provider.toUpperCase());
     oauthOptions.getRedirectURI(oauthProvider);
     String returnURI = oauthOptions.getRedirectURI(oauthProvider);
     try {

@@ -1,6 +1,7 @@
 package software.wings.beans.infrastructure.instance;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.beans.ApplicationAccess;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -9,7 +10,6 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 
 import software.wings.beans.Base;
-import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;

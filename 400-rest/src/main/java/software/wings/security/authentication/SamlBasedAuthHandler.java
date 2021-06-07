@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.authentication.AuthenticationMechanism;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
@@ -71,7 +72,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
         SamlSettings samlSettings = ssoSettingService.getSamlSettingsByAccountId(account.getUuid());
 
         // Occurs when SAML settings are being tested before being enabled
-        if (account.getAuthenticationMechanism() != AuthenticationMechanism.SAML) {
+        if (account.getAuthenticationMechanism() != io.harness.authentication.AuthenticationMechanism.SAML) {
           log.info("SAML test login successful for user: [{}]", user.getEmail());
           throw new WingsException(ErrorCode.SAML_TEST_SUCCESS_MECHANISM_NOT_ENABLED);
         }
@@ -267,7 +268,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
   }
 
   @Override
-  public AuthenticationMechanism getAuthenticationMechanism() {
+  public io.harness.authentication.AuthenticationMechanism getAuthenticationMechanism() {
     return AuthenticationMechanism.SAML;
   }
 }

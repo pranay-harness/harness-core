@@ -15,6 +15,7 @@ import static org.mindrot.jbcrypt.BCrypt.checkpw;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.authentication.AuthenticationMechanism;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
@@ -161,7 +162,7 @@ public class PasswordBasedAuthHandler implements AuthHandler {
   }
 
   @Override
-  public AuthenticationMechanism getAuthenticationMechanism() {
+  public io.harness.authentication.AuthenticationMechanism getAuthenticationMechanism() {
     return AuthenticationMechanism.USER_PASSWORD;
   }
 

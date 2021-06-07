@@ -3,6 +3,7 @@ package software.wings.beans.template;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.beans.ApplicationAccess;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -14,8 +15,6 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
-
-import software.wings.beans.entityinterface.ApplicationAccess;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.common.collect.ImmutableList;

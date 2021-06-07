@@ -4,11 +4,11 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.sso.SSOSettings;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 
-import software.wings.beans.sso.SSOSettings;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLSSOProviderQueryParameters;
 import software.wings.graphql.schema.type.QLSSOProvider;

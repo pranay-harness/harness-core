@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
+import io.harness.beans.sso.SSOType;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.UserGroupDTO;
@@ -12,8 +13,6 @@ import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.entities.UserGroup;
 import io.harness.ng.core.user.remote.dto.UserFilter;
-
-import software.wings.beans.sso.SSOType;
 
 import java.util.List;
 import java.util.Optional;

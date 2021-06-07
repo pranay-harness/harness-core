@@ -6,6 +6,7 @@ import static java.lang.Boolean.FALSE;
 
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.sso.SSOType;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -15,8 +16,6 @@ import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.entities.NotificationSettingConfig;
 import io.harness.persistence.PersistentEntity;
-
-import software.wings.beans.sso.SSOType;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;

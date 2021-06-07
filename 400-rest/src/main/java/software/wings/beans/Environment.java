@@ -10,6 +10,7 @@ import static java.util.Arrays.asList;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ApplicationAccess;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
 import io.harness.data.validator.EntityName;
@@ -21,7 +22,6 @@ import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 
-import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.infra.InfrastructureDefinition;

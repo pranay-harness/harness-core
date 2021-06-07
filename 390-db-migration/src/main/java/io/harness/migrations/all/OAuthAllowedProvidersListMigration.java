@@ -2,13 +2,12 @@ package io.harness.migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.annotations.dev.HarnessModule;
+import io.harness.beans.sso.SSOSettings;
+import io.harness.beans.sso.SSOSettings.SSOSettingsKeys;
+import io.harness.beans.sso.SSOType;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 
-import software.wings.beans.sso.SSOSettings;
-import software.wings.beans.sso.SSOSettings.SSOSettingsKeys;
-import software.wings.beans.sso.SSOType;
 import software.wings.dl.WingsPersistence;
 
 import com.google.common.collect.Sets;

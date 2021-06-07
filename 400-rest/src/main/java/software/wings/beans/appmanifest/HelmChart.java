@@ -2,6 +2,7 @@ package software.wings.beans.appmanifest;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ApplicationAccess;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -12,8 +13,6 @@ import io.harness.persistence.NameAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
-
-import software.wings.beans.entityinterface.ApplicationAccess;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;

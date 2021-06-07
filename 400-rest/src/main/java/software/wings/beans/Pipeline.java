@@ -11,6 +11,7 @@ import static java.util.Arrays.asList;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ApplicationAccess;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.validator.EntityName;
@@ -21,7 +22,6 @@ import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 
 import software.wings.api.DeploymentType;
-import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.yaml.BaseEntityYaml;

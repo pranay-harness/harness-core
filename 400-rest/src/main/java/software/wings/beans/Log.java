@@ -13,6 +13,7 @@ import static software.wings.beans.Log.Builder.aLog;
 import static java.lang.System.currentTimeMillis;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.beans.ApplicationAccess;
 import io.harness.beans.EmbeddedUser;
 import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.exception.GeneralException;
@@ -32,8 +33,6 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
-
-import software.wings.beans.entityinterface.ApplicationAccess;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;

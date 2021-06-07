@@ -1,5 +1,6 @@
 package io.harness.serializer.morphia;
 
+import io.harness.beans.ApplicationAccess;
 import io.harness.cache.CacheEntity;
 import io.harness.cache.SpringCacheEntity;
 import io.harness.dataretention.AccountDataRetentionEntity;
@@ -38,6 +39,7 @@ public class PersistenceMorphiaRegistrar implements MorphiaRegistrar {
   public void registerClasses(Set<Class> set) {
     set.add(AccountAccess.class);
     set.add(AccountDataRetentionEntity.class);
+    set.add(ApplicationAccess.class);
     set.add(CacheEntity.class);
     set.add(CreatedAtAccess.class);
     set.add(CreatedAtAware.class);
