@@ -163,6 +163,12 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
                                      .setFeatureFlag(FeatureName.NG_PROVISIONERS.name())
                                      .build();
 
+    StepInfo awsSamDeploy = StepInfo.newBuilder()
+            .setName("AWS SAM Deploy")
+            .setType(StepSpecTypeConstants.AWS_SAM_DEPLOY)
+            .setStepMetaData(StepMetaData.newBuilder().addCategory("AwsSam").setFolderPath("AWS SAM").build())
+            .build();
+
     List<StepInfo> stepInfos = new ArrayList<>();
 
     stepInfos.add(k8sRolling);
@@ -178,6 +184,7 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
     stepInfos.add(terraformPlan);
     stepInfos.add(terraformRollback);
     stepInfos.add(terraformDestroy);
+    stepInfos.add(awsSamDeploy);
     return stepInfos;
   }
 }
