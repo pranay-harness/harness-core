@@ -13,4 +13,5 @@ import lombok.Getter;
 public class BuildsByEnvironment {
   private String envId;
   private List<InstancesByBuild> builds;
+  int i;
 }
