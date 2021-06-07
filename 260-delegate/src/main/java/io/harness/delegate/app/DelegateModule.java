@@ -106,6 +106,7 @@ import io.harness.delegate.task.aws.AwsCodeCommitDelegateTask;
 import io.harness.delegate.task.aws.AwsDelegateTask;
 import io.harness.delegate.task.aws.AwsSamAbstractTaskHandler;
 import io.harness.delegate.task.aws.AwsSamDeployTaskHandlerNG;
+import io.harness.delegate.task.aws.AwsSamInvokeLocallyTaskHandlerNG;
 import io.harness.delegate.task.aws.AwsSamTaskHandlerNG;
 import io.harness.delegate.task.aws.AwsSamTaskType;
 import io.harness.delegate.task.aws.AwsValidationHandler;
@@ -1030,6 +1031,7 @@ public class DelegateModule extends AbstractModule {
     MapBinder<AwsSamTaskType, AwsSamAbstractTaskHandler> awsSamTaskTypeToHandlerMap =
         MapBinder.newMapBinder(binder(), AwsSamTaskType.class, AwsSamAbstractTaskHandler.class);
     awsSamTaskTypeToHandlerMap.addBinding(AwsSamTaskType.DEPLOY).to(AwsSamDeployTaskHandlerNG.class);
+    awsSamTaskTypeToHandlerMap.addBinding(AwsSamTaskType.INVOKE_LOCALLY).to(AwsSamInvokeLocallyTaskHandlerNG.class);
 
     bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
     bind(HttpService.class).to(HttpServiceImpl.class);
