@@ -25,7 +25,9 @@ public enum ServiceDefinitionType {
   @JsonProperty(ServiceSpecType.PCF)
   PCF("Pcf",
       Lists.newArrayList(ExecutionStrategyType.BASIC, ExecutionStrategyType.BLUE_GREEN, ExecutionStrategyType.CANARY),
-      ServiceSpecType.PCF);
+      ServiceSpecType.PCF),
+  @JsonProperty(ServiceSpecType.AWS_SAM)
+  AWS_SAM("AWS SAM", Lists.newArrayList(ExecutionStrategyType.BASIC), ServiceSpecType.AWS_SAM);
 
   private String displayName;
   private String yamlName;

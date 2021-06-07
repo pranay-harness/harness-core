@@ -6,4 +6,5 @@ public interface ServiceSpecType {
   String ECS = "Ecs";
   String NATIVE_HELM = "NativeHelm";
   String PCF = "Pcf";
+  String AWS_SAM = "AwsSam";
 }
