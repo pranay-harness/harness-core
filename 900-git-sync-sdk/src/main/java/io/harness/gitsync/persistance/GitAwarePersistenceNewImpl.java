@@ -30,7 +30,6 @@ import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -69,7 +68,7 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
 
   @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> B save(
-      B objectToSave, Y yaml, ChangeType changeType, Class<B> entityClass, Supplier functor) {
+      B objectToSave, String yaml, ChangeType changeType, Class<B> entityClass, Supplier functor) {
     final GitSdkEntityHandlerInterface gitSdkEntityHandlerInterface =
         gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName());
     final EntityDetail entityDetail = gitSdkEntityHandlerInterface.getEntityDetail(objectToSave);
@@ -94,11 +93,9 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
     return mongoTemplate.save(objectToSave);
   }
 
-  @NotNull
   private <B extends GitSyncableEntity, Y extends YamlDTO> B saveWithGitSyncEnabled(
-      B objectToSave, Y yaml, ChangeType changeType, EntityDetail entityDetail) {
+      B objectToSave, String yamlString, ChangeType changeType, EntityDetail entityDetail) {
     final GitEntityInfo gitBranchInfo = getGitEntityInfo();
-    final String yamlString = NGYamlUtils.getYamlString(yaml, objectMapper);
     final ScmPushResponse scmPushResponse =
         scmGitSyncHelper.pushToGit(gitBranchInfo, yamlString, changeType, entityDetail);
 
@@ -111,7 +108,7 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
 
   @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> B save(
-      B objectToSave, Y yaml, ChangeType changeType, Class<B> entityClass) {
+      B objectToSave, String yaml, ChangeType changeType, Class<B> entityClass) {
     final GitSdkEntityHandlerInterface gitSdkEntityHandlerInterface =
         gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName());
     final EntityDetail entityDetail = gitSdkEntityHandlerInterface.getEntityDetail(objectToSave);
@@ -217,7 +214,8 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
       B objectToSave, ChangeType changeType, Class<B> entityClass, Supplier functor) {
     final Supplier<Y> yamlFromEntity =
         gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName()).getYamlFromEntity(objectToSave);
-    return save(objectToSave, yamlFromEntity.get(), changeType, entityClass, functor);
+    final String yamlString = NGYamlUtils.getYamlString(yamlFromEntity.get(), objectMapper);
+    return save(objectToSave, yamlString, changeType, entityClass, functor);
   }
 
   @Override
@@ -225,7 +223,8 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
       B objectToSave, ChangeType changeType, Class<B> entityClass) {
     final Supplier<Y> yamlFromEntity =
         gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName()).getYamlFromEntity(objectToSave);
-    return save(objectToSave, yamlFromEntity.get(), changeType, entityClass);
+    final String yamlString = NGYamlUtils.getYamlString(yamlFromEntity.get(), objectMapper);
+    return save(objectToSave, yamlString, changeType, entityClass);
   }
 
   private boolean isGitSyncEnabled(String projectIdentifier, String orgIdentifier, String accountIdentifier) {
