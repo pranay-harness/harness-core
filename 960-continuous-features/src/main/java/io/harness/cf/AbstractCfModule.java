@@ -1,5 +1,7 @@
 package io.harness.cf;
 
+import io.harness.ff.FeatureFlagConfig;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -22,7 +24,15 @@ public abstract class AbstractCfModule extends AbstractModule {
     return cfMigrationConfig();
   };
 
+  @Provides
+  @Singleton
+  protected FeatureFlagConfig injectFeatureFlagConfig() {
+    return featureFlagConfig();
+  };
+
   public abstract CfClientConfig cfClientConfig();
 
   public abstract CfMigrationConfig cfMigrationConfig();
+
+  public abstract FeatureFlagConfig featureFlagConfig();
 }

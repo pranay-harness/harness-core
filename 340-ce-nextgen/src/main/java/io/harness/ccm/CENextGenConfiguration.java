@@ -5,11 +5,13 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 import static java.util.stream.Collectors.toSet;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ccm.commons.entities.GcpConfig;
+import io.harness.ccm.commons.beans.config.AwsConfig;
+import io.harness.ccm.commons.beans.config.AzureConfig;
+import io.harness.ccm.commons.beans.config.GcpConfig;
 import io.harness.cf.CfClientConfig;
-import io.harness.cf.CfMigrationConfig;
 import io.harness.configuration.DeployMode;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.timescaledb.TimeScaleDBConfig;
@@ -32,6 +34,7 @@ import java.util.Optional;
 import java.util.Set;
 import javax.ws.rs.Path;
 import lombok.Getter;
+import lombok.Setter;
 import org.reflections.Reflections;
 
 @Getter
@@ -43,7 +46,7 @@ public class CENextGenConfiguration extends Configuration {
   public static final String RESOURCE_PACKAGE = "io.harness.ccm.remote.resources";
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
-  @JsonProperty("events-mongo") private MongoConfig eventsMongoConfig;
+  @Setter @JsonProperty("events-mongo") private MongoConfig eventsMongoConfig;
   @JsonProperty("allowedOrigins") private List<String> allowedOrigins = Lists.newArrayList();
   @JsonProperty("managerClientConfig") private ServiceHttpClientConfig managerClientConfig;
   @JsonProperty("ngManagerClientConfig") private ServiceHttpClientConfig ngManagerClientConfig;
@@ -55,12 +58,13 @@ public class CENextGenConfiguration extends Configuration {
   @JsonProperty(defaultValue = "KUBERNETES") private DeployMode deployMode = DeployMode.KUBERNETES;
   @JsonProperty(value = "featureFlagsEnabled", defaultValue = "") private String featureFlagsEnabled;
   @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
-  @JsonProperty("cfMigrationConfig") private CfMigrationConfig cfMigrationConfig;
+  @JsonProperty("featureFlagConfig") private FeatureFlagConfig featureFlagConfig;
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
 
-  @JsonProperty(value = "awsConnectorTemplate", defaultValue = "") private String awsConnectorTemplate;
   @JsonProperty(value = "gcpConfig") private GcpConfig gcpConfig;
+  @JsonProperty(value = "azureConfig") private AzureConfig azureConfig;
+  @JsonProperty(value = "awsConfig") private AwsConfig awsConfig;
 
   public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {
     SwaggerBundleConfiguration defaultSwaggerConf = new SwaggerBundleConfiguration();

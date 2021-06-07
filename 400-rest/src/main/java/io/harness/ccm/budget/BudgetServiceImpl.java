@@ -6,6 +6,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.budget.dao.BudgetDao;
+import io.harness.ccm.commons.entities.billing.Budget;
 import io.harness.ccm.views.graphql.QLCEViewTimeSeriesData;
 import io.harness.ccm.views.service.CEViewService;
 import io.harness.exception.InvalidRequestException;

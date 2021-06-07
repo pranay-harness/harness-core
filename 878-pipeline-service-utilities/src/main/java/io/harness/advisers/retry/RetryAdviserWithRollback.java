@@ -13,13 +13,13 @@ import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.advisers.EndPlanAdvise;
+import io.harness.pms.contracts.advisers.IgnoreFailureAdvise;
 import io.harness.pms.contracts.advisers.InterventionWaitAdvise;
 import io.harness.pms.contracts.advisers.MarkSuccessAdvise;
 import io.harness.pms.contracts.advisers.NextStepAdvise;
 import io.harness.pms.contracts.advisers.RetryAdvise;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
-import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
@@ -91,13 +91,9 @@ public class RetryAdviserWithRollback implements Adviser {
             .setType(AdviseType.END_PLAN)
             .build();
       case IGNORE:
-        // change here
-        NextStepAdvise.Builder builder = NextStepAdvise.newBuilder();
-        if (EmptyPredicate.isNotEmpty(parameters.getNextNodeId())) {
-          builder.setNextNodeId(parameters.getNextNodeId());
-        }
-        builder.setToStatus(Status.IGNORE_FAILED);
-        return adviserResponseBuilder.setNextStepAdvise(builder.build()).setType(AdviseType.NEXT_STEP).build();
+        return adviserResponseBuilder.setIgnoreFailureAdvise(IgnoreFailureAdvise.newBuilder().build())
+            .setType(AdviseType.IGNORE_FAILURE)
+            .build();
       case STAGE_ROLLBACK:
       case STEP_GROUP_ROLLBACK:
         String nextNodeId = parameters.getStrategyToUuid().get(

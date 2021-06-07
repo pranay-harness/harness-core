@@ -16,6 +16,7 @@ enum AdviseType {
   INTERVENTION_WAIT = 3;
   END_PLAN = 4;
   MARK_SUCCESS = 5;
+  IGNORE_FAILURE = 6;
 }
 
 message AdviserResponse {
@@ -25,6 +26,7 @@ message AdviserResponse {
     InterventionWaitAdvise interventionWaitAdvise = 3;
     EndPlanAdvise endPlanAdvise = 4;
     MarkSuccessAdvise markSuccessAdvise = 6;
+    IgnoreFailureAdvise ignoreFailureAdvise = 8;
   }
   AdviseType type = 5;
   io.harness.pms.contracts.commons.RepairActionCode repairActionCode = 7;
@@ -53,3 +55,5 @@ message EndPlanAdvise {
 message MarkSuccessAdvise {
   string nextNodeId = 1;
 }
+
+message IgnoreFailureAdvise {}

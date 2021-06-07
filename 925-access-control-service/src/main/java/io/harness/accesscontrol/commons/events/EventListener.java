@@ -5,6 +5,7 @@ import static io.harness.AuthorizationServiceHeader.ACCESS_CONTROL_SERVICE;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.redis.RedisPersistentLocker;
@@ -15,12 +16,14 @@ import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
 public abstract class EventListener implements Runnable {
+  private static final int WAIT_TIME_IN_SECONDS = 10;
   private final Consumer redisConsumer;
   private final Set<EventConsumer> eventConsumers;
   private final RedisPersistentLocker redisPersistentLocker;
@@ -41,31 +44,40 @@ public abstract class EventListener implements Runnable {
   public void run() {
     log.info("Started the consumer: " + getListenerName());
     SecurityContextBuilder.setContext(new ServicePrincipal(ACCESS_CONTROL_SERVICE.getServiceId()));
-    AcquiredLock acquiredLock = null;
     try {
       while (!Thread.currentThread().isInterrupted()) {
-        acquiredLock = redisPersistentLocker.tryToAcquireLock(consumerGroupName, Duration.ofMinutes(2));
-        if (acquiredLock == null) {
-          Thread.sleep(1000);
-          continue;
-        }
-        pollAndProcessMessages();
-        redisPersistentLocker.destroy(acquiredLock);
+        readEventsFrameworkMessages();
       }
     } catch (Exception ex) {
       log.error(getListenerName() + " unexpectedly stopped", ex);
+    }
+    SecurityContextBuilder.unsetCompleteContext();
+  }
+
+  private void readEventsFrameworkMessages() throws InterruptedException {
+    AcquiredLock acquiredLock = null;
+    try {
+      acquiredLock = redisPersistentLocker.tryToAcquireLock(consumerGroupName, Duration.ofMinutes(2));
+      if (acquiredLock == null) {
+        Thread.sleep(1000);
+        return;
+      }
+      pollAndProcessMessages();
+      redisPersistentLocker.destroy(acquiredLock);
+    } catch (EventsFrameworkDownException e) {
       if (acquiredLock != null) {
         redisPersistentLocker.destroy(acquiredLock);
       }
+      log.error("Events framework is down for " + getListenerName() + " consumer. Retrying again...", e);
+      TimeUnit.SECONDS.sleep(WAIT_TIME_IN_SECONDS);
     }
-    SecurityContextBuilder.unsetCompleteContext();
   }
 
   private void pollAndProcessMessages() {
     List<Message> messages;
     String messageId;
     boolean messageProcessed;
-    messages = redisConsumer.read(Duration.ofSeconds(10));
+    messages = redisConsumer.read(Duration.ofSeconds(WAIT_TIME_IN_SECONDS));
     for (Message message : messages) {
       messageId = message.getId();
       messageProcessed = handleMessage(message);

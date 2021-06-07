@@ -9,8 +9,10 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
+import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -21,6 +23,8 @@ import io.harness.pms.execution.utils.StatusUtils;
 
 import com.google.inject.Inject;
 import java.util.EnumSet;
+import java.util.List;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 import lombok.NonNull;
 
@@ -29,6 +33,7 @@ public abstract class MarkStatusInterruptHandler implements InterruptHandler {
   @Inject protected NodeExecutionService nodeExecutionService;
   @Inject protected InterruptService interruptService;
   @Inject private OrchestrationEngine orchestrationEngine;
+  @Inject private PlanExecutionService planExecutionService;
 
   @Override
   public Interrupt registerInterrupt(Interrupt interrupt) {
@@ -73,11 +78,23 @@ public abstract class MarkStatusInterruptHandler implements InterruptHandler {
                   .interruptConfig(interrupt.getInterruptConfig())
                   .build()));
 
+      handlePlanStatus(interrupt.getPlanExecutionId(), nodeExecution.getUuid());
       orchestrationEngine.concludeNodeExecution(nodeExecution, status, overrideStatusSet);
     } catch (Exception ex) {
       interruptService.markProcessed(interrupt.getUuid(), PROCESSED_UNSUCCESSFULLY);
       throw ex;
     }
     return interruptService.markProcessed(interrupt.getUuid(), PROCESSED_SUCCESSFULLY);
+  }
+
+  private void handlePlanStatus(String planExecutionId, String nodeExecutionId) {
+    List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutionsWithoutOldRetriesAndStatusIn(
+        planExecutionId, StatusUtils.activeStatuses());
+    List<NodeExecution> filteredExecutions =
+        nodeExecutions.stream().filter(ne -> !ne.getUuid().equals(nodeExecutionId)).collect(Collectors.toList());
+    Status planStatus = OrchestrationUtils.calculateStatus(filteredExecutions, planExecutionId);
+    if (!StatusUtils.isFinalStatus(planStatus)) {
+      planExecutionService.updateStatus(planExecutionId, planStatus);
+    }
   }
 }

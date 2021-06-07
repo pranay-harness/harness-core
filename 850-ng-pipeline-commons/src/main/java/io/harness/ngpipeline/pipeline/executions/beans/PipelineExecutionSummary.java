@@ -1,5 +1,6 @@
 package io.harness.ngpipeline.pipeline.executions.beans;
 
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.persistence.PersistentEntity;
@@ -9,7 +10,9 @@ import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.execution.ExecutionStatus;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
@@ -25,11 +28,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document("pipelineExecutionSummary")
 public class PipelineExecutionSummary implements PersistentEntity {
+  public static final long TTL_MONTHS = 6;
+
   @Id @org.mongodb.morphia.annotations.Id String id;
 
   private String accountIdentifier;
   private String orgIdentifier;
   private String projectIdentifier;
+  @Builder.Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL_MONTHS).toInstant());
 
   private String pipelineIdentifier;
   private String pipelineName;

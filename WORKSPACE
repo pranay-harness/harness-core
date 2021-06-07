@@ -933,8 +933,8 @@ go_repository(
 go_repository(
     name = "com_github_drone_go_scm",
     importpath = "github.com/drone/go-scm",
-    sum = "h1:G+0P1jC425/Uk+7SYYfUIZ933YcvEEYg9zEPuvyO0+g=",
-    version = "v1.14.1",
+    sum = "h1:yBO6lcCeegbEuEaH0QUvJmBVQS/RpYKzuzULHHMT2A4=",
+    version = "v1.15.0",
 )
 
 go_repository(
@@ -1816,6 +1816,7 @@ maven_install(
     override_targets = {
         "org.apache.commons:commons-io": "@maven//:commons_io_commons_io",
         "com.jcraft:jsch": "@maven//:com_jcraft_harness_jsch_0_1_54_harness_patch",
+        "org.mongodb:mongodb-driver": "@maven//:org_mongodb_mongo_java_driver",
     },
     repositories = [
         "https://repo1.maven.org/maven2",
@@ -5349,4 +5350,10 @@ pkg_tar(
 """,
     sha256 = "5edfaefdbb0469d8b24d61c8aef80c076611053b1738029c0232b9a632fe2708",
     urls = ["https://app.harness.io/storage/wingsdelegates/jre/openjdk-8u242/jre_x64_linux_8u242b08.tar.gz"],
+)
+
+http_file(
+    name = "alpn_boot_8.1.13.v20181017",
+    sha256 = "05165e53fd9aeb774f95178c85740c3ee9ea72a9ca489497df837cc397a5da06",
+    urls = ["https://app.harness.io/public/shared/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar"],
 )

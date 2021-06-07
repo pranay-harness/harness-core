@@ -16,6 +16,7 @@ public enum ConnectorType implements EntitySubtype {
   @JsonProperty("Splunk") SPLUNK("Splunk"),
   @JsonProperty("AppDynamics") APP_DYNAMICS("AppDynamics"),
   @JsonProperty("Prometheus") PROMETHEUS("Prometheus"),
+  @JsonProperty("Dynatrace") DYNATRACE("Dynatrace"),
   @JsonProperty("Vault") VAULT("Vault"),
   @JsonProperty("AzureKeyVault") AZURE_KEY_VAULT("AzureKeyVault"),
   @JsonProperty("DockerRegistry") DOCKER("DockerRegistry"),
@@ -40,7 +41,8 @@ public enum ConnectorType implements EntitySubtype {
   @JsonProperty("CEK8sCluster") CE_KUBERNETES_CLUSTER("CEK8sCluster"),
   @JsonProperty("HttpHelmRepo") HTTP_HELM_REPO("HttpHelmRepo"),
   @JsonProperty("NewRelic") NEW_RELIC("NewRelic"),
-  @JsonProperty("Datadog") DATADOG("Datadog");
+  @JsonProperty("Datadog") DATADOG("Datadog"),
+  @JsonProperty("SumoLogic") SUMOLOGIC("SumoLogic");
   private final String displayName;
 
   @JsonCreator

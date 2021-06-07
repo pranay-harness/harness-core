@@ -46,6 +46,8 @@ public class UserMembershipMigrationService implements MongoPersistenceIterator.
     try {
       Optional<UserInfo> userOpt = ngUserService.getUserById(userMembership.getUserId());
       if (!userOpt.isPresent()) {
+        log.error("User {} does not exist in currentgen. Removing it from nextgen.", userMembership.getUserId());
+        ngUserService.removeUser(userMembership.getUserId());
         return;
       }
       UserInfo user = userOpt.get();

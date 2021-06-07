@@ -24,7 +24,8 @@ public interface PMSPipelineRepositoryCustom {
 
   PipelineEntity updatePipelineYaml(PipelineEntity pipelineToUpdate, PipelineConfig yamlDTO);
 
-  PipelineEntity updatePipelineMetadata(Criteria criteria, Update update);
+  PipelineEntity updatePipelineMetadata(
+      String accountId, String orgIdentifier, String projectIdentifier, Criteria criteria, Update update);
 
   PipelineEntity deletePipeline(PipelineEntity pipelineToUpdate, PipelineConfig yamlDTO);
 }

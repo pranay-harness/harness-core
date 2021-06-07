@@ -21,13 +21,12 @@ public class InterruptEventHandlerImpl implements InterruptEventHandler {
       InterruptType interruptType = event.getType();
       switch (interruptType) {
         case ABORT:
-          interruptEventListenerHelper.handleAbort(event.getNodeExecution(), event.getNotifyId());
+          interruptEventListenerHelper.handleAbort(event);
           log.info("[PMS_SDK] Handled ABORT InterruptEvent Successfully");
           handled = true;
           break;
         case CUSTOM_FAILURE:
-          interruptEventListenerHelper.handleFailure(
-              event.getNodeExecution(), event.getMetadata(), event.getInterruptUuid(), event.getNotifyId());
+          interruptEventListenerHelper.handleFailure(event);
           log.info("[PMS_SDK] Handled CUSTOM_FAILURE InterruptEvent Successfully");
           handled = true;
           break;

@@ -31,7 +31,7 @@ public class QueryBuilderPipelineTest {
   @Category(UnitTests.class)
   public void testQueryBuilderMedian() {
     String expectedQueryResult =
-        "select PERCENTILE_DISC(0.5) within group (order by (endts-startts)) as percentile_disc from pipeline_execution_summary_ci where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and pipelineidentifier='pipelineId' and startts>=10 and startts<13 and endts is not null;";
+        "select PERCENTILE_DISC(0.5) within group (order by (endts-startts)/1000) as percentile_disc from pipeline_execution_summary_ci where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and pipelineidentifier='pipelineId' and startts>=10 and startts<13 and endts is not null;";
     String queryResult = new PipelineDashboardServiceImpl().queryBuilderMedian(
         "accountId", "orgId", "projectId", "pipelineId", 10L, 13L, "pipeline_execution_summary_ci");
     assertThat(queryResult).isEqualTo(expectedQueryResult);

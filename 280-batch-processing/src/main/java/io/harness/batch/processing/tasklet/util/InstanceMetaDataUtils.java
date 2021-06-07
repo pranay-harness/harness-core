@@ -2,7 +2,7 @@ package io.harness.batch.processing.tasklet.util;
 
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.entities.batch.InstanceData;
 
 import java.util.Map;
 import java.util.Objects;

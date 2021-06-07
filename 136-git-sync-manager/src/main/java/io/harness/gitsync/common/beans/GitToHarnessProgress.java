@@ -21,7 +21,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
 @Builder
-@Document("gitToHarnessProcessingStatus")
+@Document("gitToHarnessProgress")
 @TypeAlias("io.harness.gitsync.common.beans.GitToHarnessProcessingProgress")
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)

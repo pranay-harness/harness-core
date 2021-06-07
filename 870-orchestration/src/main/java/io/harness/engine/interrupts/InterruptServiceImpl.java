@@ -25,6 +25,7 @@ import io.harness.repositories.InterruptRepository;
 import com.google.inject.Inject;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
@@ -58,11 +59,15 @@ public class InterruptServiceImpl implements InterruptService {
     if (isEmpty(interrupts)) {
       return ExecutionCheck.builder().proceed(true).reason("[InterruptCheck] No Interrupts Found").build();
     }
-    if (interrupts.size() > 1) {
+    if (interrupts.stream().filter(interrupt -> interrupt.getNodeExecutionId() == null).count() > 1) {
       throw new InvalidRequestException("More than 2 active Plan Level Interrupts Present: "
           + interrupts.stream().map(interrupt -> interrupt.getType().toString()).collect(Collectors.joining("|")));
     }
-    Interrupt interrupt = interrupts.get(0);
+
+    Optional<Interrupt> optionalInterrupt =
+        InterruptUtils.obtainOptionalInterruptFromActiveInterrupts(interrupts, planExecutionId, nodeExecutionId);
+
+    Interrupt interrupt = optionalInterrupt.orElseThrow(() -> new InvalidRequestException("Interrupt was not found"));
 
     switch (interrupt.getType()) {
       case PAUSE_ALL:

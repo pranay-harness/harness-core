@@ -15,6 +15,12 @@ roles:
         - core_connector_edit
         - core_connector_delete
         - core_connector_access
+        - core_delegate_view
+        - core_delegate_edit
+        - core_delegate_delete
+        - core_delegateconfiguration_view
+        - core_delegateconfiguration_edit
+        - core_delegateconfiguration_delete
         - core_pipeline_view
         - core_pipeline_edit
         - core_pipeline_delete
@@ -48,6 +54,8 @@ roles:
         - core_project_view
         - core_secret_view
         - core_connector_view
+        - core_delegate_view
+        - core_delegateconfiguration_view
         - core_pipeline_view
         - core_service_view
         - core_environment_view
@@ -77,6 +85,12 @@ roles:
         - core_connector_edit
         - core_connector_delete
         - core_connector_access
+        - core_delegate_view
+        - core_delegate_edit
+        - core_delegate_delete
+        - core_delegateconfiguration_view
+        - core_delegateconfiguration_edit
+        - core_delegateconfiguration_delete
         - core_service_view
         - core_service_edit
         - core_service_delete
@@ -108,6 +122,8 @@ roles:
         - core_project_create
         - core_secret_view
         - core_connector_view
+        - core_delegate_view
+        - core_delegateconfiguration_view
         - core_service_view
         - core_environment_view
         - core_audit_view
@@ -133,6 +149,12 @@ roles:
         - core_connector_edit
         - core_connector_delete
         - core_connector_access
+        - core_delegate_view
+        - core_delegate_edit
+        - core_delegate_delete
+        - core_delegateconfiguration_view
+        - core_delegateconfiguration_edit
+        - core_delegateconfiguration_delete
         - core_service_view
         - core_service_edit
         - core_service_delete
@@ -166,6 +188,8 @@ roles:
         - core_organization_view
         - core_secret_view
         - core_connector_view
+        - core_delegate_view
+        - core_delegateconfiguration_view
         - core_service_view
         - core_environment_view
         - core_audit_view
@@ -218,6 +242,7 @@ roles:
         - ff_environment_apiKeyDelete
         - ff_environment_edit
         - ff_environment_view
+        - ff_featureflag_toggle
       managed: true
       allowedScopeLevels:
         - account
@@ -243,9 +268,10 @@ roles:
       permissions:
         - ff_environment_edit
         - ff_environment_view
+        - ff_featureflag_edit
         - ff_featureflag_view
-        - ff_targetgroup_view
         - ff_targetgroup_edit
+        - ff_targetgroup_view
         - ff_target_view
         - ff_environment_apiKeyView
       managed: true

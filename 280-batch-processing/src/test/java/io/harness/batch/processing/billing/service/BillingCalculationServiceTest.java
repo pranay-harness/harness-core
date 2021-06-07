@@ -40,7 +40,7 @@ import io.harness.ccm.commons.beans.StorageResource;
 import io.harness.ccm.commons.beans.billing.InstanceCategory;
 import io.harness.ccm.commons.constants.CloudProvider;
 import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.entities.batch.InstanceData;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableList;
@@ -581,7 +581,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
         INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.K8S_POD);
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
-        instanceData, utilizationData, 86400.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
+        instanceData, utilizationData, 0.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
     assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount())
         .isEqualTo(new BigDecimal("0.3358799999999999625"));
   }

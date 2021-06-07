@@ -9,6 +9,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
@@ -26,6 +27,7 @@ import io.harness.gitsync.scm.SCMGitSyncHelper;
 import io.harness.gitsync.scm.beans.ScmCreateFileResponse;
 import io.harness.manage.GlobalContextManager;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
+import io.harness.ng.core.utils.NGYamlUtils;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
@@ -39,6 +41,7 @@ import org.mockito.Mock;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @OwnedBy(DX)
 public class GitAwarePersistenceNewImplTest extends GitSdkTestBase {
@@ -73,9 +76,9 @@ public class GitAwarePersistenceNewImplTest extends GitSdkTestBase {
   @Before
   public void setup() {
     initMocks(this);
-    gitAwarePersistence =
-        new io.harness.gitsync.persistance.GitAwarePersistenceNewImpl(mongoTemplate, gitSyncSdkService,
-            gitPersistenceHelperServiceMap, scmGitSyncHelper, gitSyncMsvcHelper, NG_DEFAULT_OBJECT_MAPPER);
+    gitAwarePersistence = new io.harness.gitsync.persistance.GitAwarePersistenceNewImpl(mongoTemplate,
+        gitSyncSdkService, gitPersistenceHelperServiceMap, scmGitSyncHelper, gitSyncMsvcHelper,
+        NG_DEFAULT_OBJECT_MAPPER, mock(TransactionTemplate.class));
     doNothing().when(gitSyncMsvcHelper).postPushInformationToGitMsvc(any(), any(), any());
   }
 
@@ -123,7 +126,8 @@ public class GitAwarePersistenceNewImplTest extends GitSdkTestBase {
         .when(scmGitSyncHelper)
         .pushToGit(any(), anyString(), any(), any());
     doReturn(isGitSyncEnabled).when(gitSyncSdkService).isGitSyncEnabled(anyString(), anyString(), anyString());
-    return gitAwarePersistence.save(sampleBean, sampleBean, ChangeType.ADD, SampleBean.class);
+    return gitAwarePersistence.save(
+        sampleBean, NGYamlUtils.getYamlString(sampleBean), ChangeType.ADD, SampleBean.class);
   }
 
   @Test

@@ -1,9 +1,11 @@
 package software.wings.app;
 
+import static io.harness.AuthorizationServiceHeader.DELEGATE_SERVICE;
 import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
+import io.harness.AccessControlClientModule;
 import io.harness.CgOrchestrationModule;
 import io.harness.SecretManagementCoreModule;
 import io.harness.annotations.dev.HarnessModule;
@@ -51,7 +53,6 @@ import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
 import io.harness.config.PipelineConfig;
 import io.harness.configuration.DeployMode;
 import io.harness.connector.ConnectorResourceClientModule;
-import io.harness.cv.CVCommonsServiceModule;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
 import io.harness.cvng.client.CVNGService;
 import io.harness.cvng.client.CVNGServiceImpl;
@@ -1333,6 +1334,10 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(new SecretNGManagerClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
 
+    // ng-rbac dependencies
+    install(AccessControlClientModule.getInstance(
+        configuration.getAccessControlClientConfiguration(), DELEGATE_SERVICE.getServiceId()));
+
     install(CgOrchestrationModule.getInstance());
     // Orchestration Dependencies
 
@@ -1340,7 +1345,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(HelmChartService.class).to(HelmChartServiceImpl.class);
     bind(LogStreamingServiceRestClient.class).toProvider(LogStreamingServiceClientFactory.class);
     bind(IInstanceReconService.class).to(InstanceReconServiceImpl.class);
-    install(new CVCommonsServiceModule());
   }
 
   private void bindFeatures() {

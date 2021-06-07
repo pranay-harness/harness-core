@@ -6,11 +6,20 @@ option java_multiple_files = true;
 
 import "io/harness/pms/contracts/interrupts/interrupt_type.proto";
 import "io/harness/pms/contracts/execution/node_execution_proto.proto";
+import "io/harness/pms/contracts/execution/executable_response.proto";
+import "io/harness/pms/contracts/ambiance/ambiance.proto";
+import "io/harness/pms/contracts/steps/step_type.proto";
 
 message InterruptEvent {
   string interruptUuid = 1;
   InterruptType type = 2;
-  io.harness.pms.contracts.execution.NodeExecutionProto nodeExecution = 3;
   map<string, string> metadata = 4;
   string notifyId = 5;
+  io.harness.pms.contracts.ambiance.Ambiance ambiance = 6;
+  bytes stepParameters = 7;
+  oneof response {
+    io.harness.pms.contracts.execution.AsyncExecutableResponse async = 8;
+    io.harness.pms.contracts.execution.TaskExecutableResponse task = 9;
+    io.harness.pms.contracts.execution.TaskChainExecutableResponse taskChain = 10;
+  }
 }

@@ -75,7 +75,7 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
   private TaskRequest obtainInlineTask(
       Ambiance ambiance, TerraformApplyStepParameters stepParameters, StepElementParameters stepElementParameters) {
     helper.validateApplyStepConfigFilesInline(stepParameters);
-    TerrformStepConfigurationParameters configuration = stepParameters.getConfiguration();
+    TerraformStepConfigurationParameters configuration = stepParameters.getConfiguration();
     TerraformExecutionDataParameters spec = configuration.getSpec();
     TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder();
     String accountId = AmbianceHelper.getAccountId(ambiance);
@@ -201,7 +201,7 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
       StepResponseBuilder stepResponseBuilder, TerraformTaskNGResponse terraformTaskNGResponse) {
     stepResponseBuilder.stepOutcome(
         StepResponse.StepOutcome.builder()
-            .name(OutcomeExpressionConstants.TERRAFORM_OUTPUT)
+            .name(OutcomeExpressionConstants.OUTPUT)
             .outcome(TerraformApplyOutcome.builder()
                          .outputs(helper.parseTerraformOutputs(terraformTaskNGResponse.getOutputs()))
                          .build())

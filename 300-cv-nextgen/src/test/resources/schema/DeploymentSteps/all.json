@@ -1101,8 +1101,15 @@
               ]
             },
             "value": {
-              "type": "number",
-              "format": "double"
+              "oneOf": [
+                {
+                  "type": "number",
+                  "format": "double"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             }
           }
         }
@@ -1146,7 +1153,8 @@
           "items": {
             "type": "string",
             "enum": [
-              "AnyOther",
+              "Unknown",
+              "AllErrors",
               "Authentication",
               "Connectivity",
               "Timeout",

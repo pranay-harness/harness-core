@@ -449,21 +449,22 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private void heartbeat() {
-    if (!isDiskFull()) {
-      try {
-        Map<String, Object> heartbeatData = new HashMap<>();
-        heartbeatData.put(WATCHER_HEARTBEAT, clock.millis());
-        heartbeatData.put(WATCHER_PROCESS, getProcessId());
-        heartbeatData.put(WATCHER_VERSION, getVersion());
-        messageService.putAllData(WATCHER_DATA, heartbeatData);
-      } catch (Exception e) {
-        if (e.getMessage().contains(NO_SPACE_LEFT_ON_DEVICE_ERROR)) {
-          lastAvailableDiskSpace.set(getDiskFreeSpace());
-          log.error("Disk space is full. Free space: {}", lastAvailableDiskSpace.get());
-        } else {
-          log.error("Error putting all watcher data", e);
-          throw e;
-        }
+    if (isDiskFull()) {
+      return;
+    }
+    try {
+      Map<String, Object> heartbeatData = new HashMap<>();
+      heartbeatData.put(WATCHER_HEARTBEAT, clock.millis());
+      heartbeatData.put(WATCHER_PROCESS, getProcessId());
+      heartbeatData.put(WATCHER_VERSION, getVersion());
+      messageService.putAllData(WATCHER_DATA, heartbeatData);
+    } catch (Exception e) {
+      if (e.getMessage().contains(NO_SPACE_LEFT_ON_DEVICE_ERROR)) {
+        lastAvailableDiskSpace.set(getDiskFreeSpace());
+        log.error("Disk space is full. Free space: {}", lastAvailableDiskSpace.get());
+      } else {
+        log.error("Error putting all watcher data", e);
+        throw e;
       }
     }
   }
@@ -1131,7 +1132,8 @@ public class WatcherServiceImpl implements WatcherService {
         String newDelegateProcess = null;
 
         if (newDelegate.getProcess().isAlive()) {
-          Message message = messageService.waitForMessage(NEW_DELEGATE, TimeUnit.MINUTES.toMillis(4));
+          Message message =
+              messageService.waitForMessage(NEW_DELEGATE, TimeUnit.MINUTES.toMillis(version == null ? 15 : 4));
           if (message != null) {
             newDelegateProcess = message.getParams().get(0);
             log.info("Got process ID from new delegate: {}", newDelegateProcess);

@@ -85,7 +85,6 @@ modules = [
     "//410-cg-rest",
     "//420-delegate-agent",
     "//420-delegate-service",
-    "//425-verification-commons",
     "//430-cv-nextgen-commons",
     "//440-connector-nextgen",
     "//445-cg-connectors",
@@ -254,4 +253,21 @@ toolchain(
     name = "py_toolchain",
     toolchain = ":py_runtime_pair",
     toolchain_type = "@bazel_tools//tools/python:toolchain_type",
+)
+
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
+
+pkg_tar(
+    name = "alpn_boot_8.1.13.v20181017_tar",
+    files = {
+        "@alpn_boot_8.1.13.v20181017//file": "alpn-boot-8.1.13.v20181017.jar",
+    },
+    mode = "0644",
+    package_dir = "/opt/harness-delegate",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+    visibility = ["//visibility:public"],
 )

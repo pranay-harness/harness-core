@@ -21,9 +21,12 @@ import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.metrics.CVNGMetricsUtils;
+import io.harness.cvng.metrics.beans.CVNGMetricContext;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.DataCollectionProgressLog;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
+import io.harness.metrics.service.api.MetricService;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.base.Preconditions;
@@ -58,6 +61,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   @Inject private OrchestrationService orchestrationService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
+  @Inject private MetricService metricService;
 
   // TODO: this is creating reverse dependency. Find a way to get rid of this dependency.
   // Probabally by moving ProgressLog concept to a separate service and model.
@@ -85,6 +89,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
         hPersistence.createUpdateOperations(DataCollectionTask.class)
             .set(DataCollectionTaskKeys.status, DataCollectionExecutionStatus.RUNNING)
             .inc(DataCollectionTaskKeys.retryCount)
+            .set(DataCollectionTaskKeys.lastPickedAt, clock.instant())
             .set(DataCollectionTaskKeys.lastUpdatedAt, clock.millis());
 
     DataCollectionTask task = hPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
@@ -153,6 +158,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     }
 
     DataCollectionTask dataCollectionTask = getDataCollectionTask(result.getDataCollectionTaskId());
+    recordMetricsOnUpdateStatus(dataCollectionTask);
     if (result.getStatus() == DataCollectionExecutionStatus.SUCCESS) {
       // TODO: make this an atomic operation
       if (dataCollectionTask.shouldCreateNextTask()) {
@@ -176,6 +182,20 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
       }
     } else {
       retry(dataCollectionTask);
+    }
+  }
+
+  private void recordMetricsOnUpdateStatus(DataCollectionTask dataCollectionTask) {
+    try (CVNGMetricContext cvngMetricContext = new CVNGMetricContext(dataCollectionTask.getAccountId())) {
+      metricService.incCounter(CVNGMetricsUtils.getDataCollectionTaskStatusMetricName(dataCollectionTask.getStatus()));
+      metricService.recordDuration(
+          CVNGMetricsUtils.DATA_COLLECTION_TASK_TOTAL_TIME, dataCollectionTask.totalTime(clock.instant()));
+      if (dataCollectionTask.getLastPickedAt() != null) { // Remove this in the future after lastPickedAt is populated.
+        // TODO: Too many reties can vary the metric value. Send retry count as a tag once tagging support is added.
+        metricService.recordDuration(CVNGMetricsUtils.DATA_COLLECTION_TASK_WAIT_TIME, dataCollectionTask.waitTime());
+        metricService.recordDuration(
+            CVNGMetricsUtils.DATA_COLLECTION_TASK_RUNNING_TIME, dataCollectionTask.runningTime(clock.instant()));
+      }
     }
   }
 

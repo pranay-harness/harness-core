@@ -8,6 +8,8 @@ import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
 import io.harness.ccm.commons.beans.recommendation.ResourceId;
 import io.harness.ccm.commons.beans.recommendation.ResourceType;
 import io.harness.ccm.commons.dao.recommendation.K8sRecommendationDAO;
+import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation;
+import io.harness.ccm.commons.entities.k8s.recommendation.PartialRecommendationHistogram;
 import io.harness.ccm.graphql.dto.recommendation.ContainerHistogramDTO;
 import io.harness.ccm.graphql.dto.recommendation.ContainerHistogramDTO.HistogramExp;
 import io.harness.ccm.graphql.dto.recommendation.FilterStatsDTO;
@@ -19,9 +21,7 @@ import io.harness.queryconverter.SQLConverter;
 import io.harness.timescaledb.tables.pojos.CeRecommendations;
 
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialHistogramAggragator;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils;
 
 import com.google.inject.Inject;

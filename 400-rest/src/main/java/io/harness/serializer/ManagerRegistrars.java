@@ -20,7 +20,6 @@ import io.harness.serializer.morphia.EventMorphiaRegistrar;
 import io.harness.serializer.morphia.LimitsMorphiaRegistrar;
 import io.harness.serializer.morphia.ManagerMorphiaRegistrar;
 import io.harness.serializer.morphia.ProjectAndOrgMorphiaRegistrar;
-import io.harness.serializer.morphia.ViewsMorphiaRegistrar;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -57,7 +56,6 @@ public class ManagerRegistrars {
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(CvNextGenCommonsRegistrars.morphiaRegistrars)
-          .addAll(VerificationCommonsRegistrars.morphiaRegistrars)
           .addAll(DelegateTasksBeansRegistrars.morphiaRegistrars)
           .addAll(FeatureFlagBeansRegistrars.morphiaRegistrars)
           .addAll(NGCommonsRegistrars.morphiaRegistrars)
@@ -74,7 +72,7 @@ public class ManagerRegistrars {
           .add(LimitsMorphiaRegistrar.class)
           .add(ManagerMorphiaRegistrar.class)
           .add(ProjectAndOrgMorphiaRegistrar.class)
-          .add(ViewsMorphiaRegistrar.class)
+          .addAll(ViewsModuleRegistrars.morphiaRegistrars)
           .add(CgOrchestrationBeansMorphiaRegistrar.class)
           .addAll(NotificationSenderRegistrars.morphiaRegistrars)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)

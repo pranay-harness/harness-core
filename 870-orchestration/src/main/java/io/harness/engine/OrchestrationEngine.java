@@ -24,6 +24,7 @@ import io.harness.engine.facilitation.FacilitationHelper;
 import io.harness.engine.facilitation.RunPreFacilitationChecker;
 import io.harness.engine.facilitation.SkipPreFacilitationChecker;
 import io.harness.engine.interrupts.InterruptService;
+import io.harness.engine.observers.OrchestrationEndObserver;
 import io.harness.engine.pms.EngineAdviseCallback;
 import io.harness.engine.resume.EngineWaitResumeCallback;
 import io.harness.engine.utils.TransactionUtils;
@@ -36,6 +37,7 @@ import io.harness.execution.NodeExecutionMapper;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.logging.AutoLogContext;
+import io.harness.observer.Subject;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -75,6 +77,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import java.util.ArrayList;
@@ -83,8 +86,10 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 
 /**
  * Please do not use this class outside of orchestration module. All the interactions with engine must be done via
@@ -93,6 +98,7 @@ import lombok.extern.slf4j.Slf4j;
 @SuppressWarnings({"rawtypes", "unchecked"})
 @Slf4j
 @OwnedBy(HarnessTeam.PIPELINE)
+@Singleton
 public class OrchestrationEngine {
   @Inject private Injector injector;
   @Inject private WaitNotifyEngine waitNotifyEngine;
@@ -114,6 +120,8 @@ public class OrchestrationEngine {
   @Inject private TransactionUtils transactionUtils;
   @Inject private ExceptionManager exceptionManager;
   @Inject private FacilitationHelper facilitationHelper;
+
+  @Getter private final Subject<OrchestrationEndObserver> orchestrationEndSubject = new Subject<>();
 
   public void startNodeExecution(String nodeExecutionId) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
@@ -236,10 +244,8 @@ public class OrchestrationEngine {
     PlanExecution planExecution = Preconditions.checkNotNull(planExecutionService.get(ambiance.getPlanExecutionId()));
     NodeExecution nodeExecution = prepareNodeExecutionForInvocation(ambiance);
     log.info("Sending NodeExecution START event");
-    StartNodeExecutionEventData startNodeExecutionEventData = StartNodeExecutionEventData.builder()
-                                                                  .facilitatorResponse(facilitatorResponse)
-                                                                  .nodes(planExecution.getPlan().getNodes())
-                                                                  .build();
+    StartNodeExecutionEventData startNodeExecutionEventData =
+        StartNodeExecutionEventData.builder().facilitatorResponse(facilitatorResponse).build();
     NodeExecutionEvent startEvent = NodeExecutionEvent.builder()
                                         .eventType(NodeExecutionEventType.START)
                                         .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
@@ -345,6 +351,9 @@ public class OrchestrationEngine {
     }
     NodeExecution updatedNodeExecution =
         endNodeExecutionHelper.handleStepResponsePreAdviser(nodeExecution, stepResponse);
+    if (updatedNodeExecution == null) {
+      return;
+    }
     queueAdvisingEvent(updatedNodeExecution, nodeExecution.getStatus());
   }
 
@@ -374,6 +383,11 @@ public class OrchestrationEngine {
     Status status = planExecutionService.calculateStatus(ambiance.getPlanExecutionId());
     PlanExecution planExecution = planExecutionService.updateStatus(
         ambiance.getPlanExecutionId(), status, ops -> ops.set(PlanExecutionKeys.endTs, System.currentTimeMillis()));
+    Document resolvedStepParameters = nodeExecution.getResolvedStepParameters();
+    String stepParameters = null;
+    if (resolvedStepParameters != null) {
+      stepParameters = resolvedStepParameters.toJson();
+    }
     eventEmitter.emitEvent(OrchestrationEvent.builder()
                                .ambiance(Ambiance.newBuilder()
                                              .setPlanExecutionId(planExecution.getUuid())
@@ -381,9 +395,11 @@ public class OrchestrationEngine {
                                                      ? Collections.emptyMap()
                                                      : planExecution.getSetupAbstractions())
                                              .build())
-                               .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
                                .eventType(OrchestrationEventType.ORCHESTRATION_END)
+                               .status(nodeExecution.getStatus())
+                               .resolvedStepParameters(stepParameters)
                                .build());
+    orchestrationEndSubject.fireInform(OrchestrationEndObxxxxxxxx:onEnd, ambiance);
   }
 
   public void resume(String nodeExecutionId, Map<String, ByteString> response, boolean asyncError) {
@@ -429,7 +445,7 @@ public class OrchestrationEngine {
     adviserResponseHandler.handleAdvise(updatedNodeExecution, adviserResponse);
   }
 
-  void handleError(Ambiance ambiance, Exception exception) {
+  public void handleError(Ambiance ambiance, Exception exception) {
     try {
       Builder builder = StepResponseProto.newBuilder().setStatus(Status.FAILED);
       List<ResponseMessage> responseMessages = exceptionManager.buildResponseFromException(exception);

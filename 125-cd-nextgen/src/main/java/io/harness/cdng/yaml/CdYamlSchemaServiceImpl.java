@@ -32,16 +32,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.CDP)
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
   private static final String DEPLOYMENT_STAGE_CONFIG = YamlSchemaUtils.getSwaggerName(DeploymentStageConfig.class);
@@ -50,10 +49,22 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
 
   private static final String CD_NAMESPACE = "cd";
   private static final String CVNG_INSTANCE_NAME = "cvng";
+
   private final YamlSchemaProvider yamlSchemaProvider;
   private final YamlSchemaGenerator yamlSchemaGenerator;
 
   private final Map<String, YamlSchemaClient> yamlSchemaClientMapper;
+  private final Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes;
+
+  @Inject
+  public CdYamlSchemaServiceImpl(YamlSchemaProvider yamlSchemaProvider, YamlSchemaGenerator yamlSchemaGenerator,
+      Map<String, YamlSchemaClient> yamlSchemaClientMapper,
+      @Named("yaml-schema-subtypes") Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes) {
+    this.yamlSchemaProvider = yamlSchemaProvider;
+    this.yamlSchemaGenerator = yamlSchemaGenerator;
+    this.yamlSchemaClientMapper = yamlSchemaClientMapper;
+    this.yamlSchemaSubtypes = yamlSchemaSubtypes;
+  }
 
   @Override
   public PartialSchemaDTO getDeploymentStageYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope) {
@@ -117,7 +128,8 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
   private Set<FieldEnumData> getFieldEnumData(Class<?> clazz) {
     Field typedField = YamlSchemaUtils.getTypedField(clazz);
     String fieldName = YamlSchemaUtils.getJsonTypeInfo(typedField).property();
-    Set<SubtypeClassMap> mapOfSubtypes = YamlSchemaUtils.getMapOfSubtypesUsingReflection(typedField);
+    Set<Class<?>> cachedSubtypes = yamlSchemaSubtypes.get(typedField.getType());
+    Set<SubtypeClassMap> mapOfSubtypes = YamlSchemaUtils.toSetOfSubtypeClassMap(cachedSubtypes);
 
     return ImmutableSet.of(
         FieldEnumData.builder()

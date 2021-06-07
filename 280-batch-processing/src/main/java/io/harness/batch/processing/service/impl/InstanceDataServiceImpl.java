@@ -6,7 +6,7 @@ import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.tasklet.util.CacheUtils;
 import io.harness.ccm.commons.beans.InstanceState;
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.entities.batch.InstanceData;
 
 import software.wings.dl.WingsPersistence;
 

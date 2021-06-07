@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.entities.events.CeExceptionRecord;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -21,12 +22,16 @@ public class CeExceptionRecordDaoTest extends WingsBaseTest {
   private String accountId = "ACCOUNT_ID";
   private String clusterId = "CLUSTER_ID";
 
-  private CeExceptionRecord exception;
+  private io.harness.ccm.commons.entities.events.CeExceptionRecord exception;
   @Inject CeExceptionRecordDao ceExceptionRecordDao;
 
   @Before
   public void setUp() {
-    exception = CeExceptionRecord.builder().accountId(accountId).clusterId(clusterId).message("Exception").build();
+    exception = io.harness.ccm.commons.entities.events.CeExceptionRecord.builder()
+                    .accountId(accountId)
+                    .clusterId(clusterId)
+                    .message("Exception")
+                    .build();
   }
 
   @Test

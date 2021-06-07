@@ -1,8 +1,8 @@
 package io.harness.batch.processing.tasklet;
 
 import static io.harness.batch.processing.billing.timeseries.data.PrunedInstanceData.PrunedInstanceDataBuilder;
-import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
 import static io.harness.ccm.commons.constants.CloudProvider.AZURE;
+import static io.harness.ccm.commons.entities.k8s.K8sWorkload.encodeDotsInKey;
 import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.NIKUNJ;
 import static io.harness.rule.OwnerRule.UTSAV;
@@ -33,7 +33,7 @@ import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.constants.CloudProvider;
 import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
-import io.harness.event.grpc.PublishedMessage;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
 import io.harness.ff.FeatureFlagService;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.PodEvent;

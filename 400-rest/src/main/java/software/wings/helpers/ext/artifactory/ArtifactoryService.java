@@ -3,11 +3,10 @@ package software.wings.helpers.ext.artifactory;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifactory.ArtifactoryConfigRequest;
 import io.harness.delegate.task.ListNotifyResponseData;
-import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryType;
@@ -22,74 +21,62 @@ import org.apache.commons.lang3.tuple.Pair;
  */
 @OwnedBy(CDC)
 public interface ArtifactoryService {
-  List<BuildDetails> getBuilds(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails,
+  List<BuildDetails> getBuilds(ArtifactoryConfigRequest artifactoryConfig,
       ArtifactStreamAttributes artifactStreamAttributes, int maxNumberOfBuilds);
 
   /**
-   *
    * @param artifactoryConfig
-   * @param encryptionDetails
    * @param repositoryName
    * @param artifactPath
    * @param repositoryType
    * @param maxVersions
    * @return
    */
-  List<BuildDetails> getFilePaths(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repositoryName, String artifactPath, String repositoryType, int maxVersions);
+  List<BuildDetails> getFilePaths(ArtifactoryConfigRequest artifactoryConfig, String repositoryName,
+      String artifactPath, String repositoryType, int maxVersions);
 
   /**
    * Get Repositories
+   *
+   * @param artifactoryConfig
    * @return map RepoId and Name
    */
-  Map<String, String> getRepositories(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails);
+  Map<String, String> getRepositories(ArtifactoryConfigRequest artifactoryConfig);
 
   /**
    * Get Repositories
+   *
    * @return map RepoId and Name
    */
-  Map<String, String> getRepositories(
-      ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, ArtifactType artifactType);
+  Map<String, String> getRepositories(ArtifactoryConfigRequest artifactoryConfig, ArtifactType artifactType);
 
   /**
    * Get Repositories
+   *
    * @return map RepoId and Name
    */
-  Map<String, String> getRepositories(
-      ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, String packageType);
+  Map<String, String> getRepositories(ArtifactoryConfigRequest artifactoryConfig, String packageType);
 
-  /**
-   * Get Repositories
-   * @return map RepoId and Name
-   */
-  Map<String, String> getRepositories(
-      ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, RepositoryType repositoryType);
+  Map<String, String> getRepositories(ArtifactoryConfigRequest artifactoryConfig, RepositoryType repositoryType);
+
   /***
    * Get docker tags
    * @param artifactoryConfig the Artifactory Config
    * @param repoKey
    * @return List of Repo paths or docker images
    */
-  List<String> getRepoPaths(
-      ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, String repoKey);
+  List<String> getRepoPaths(ArtifactoryConfigRequest artifactoryConfig, String repoKey);
 
-  /**
-   * Download artifacts
-   * @param repoType
-   * @return Input stream
-   */
-  ListNotifyResponseData downloadArtifacts(ArtifactoryConfig artifactoryConfig,
-      List<EncryptedDataDetail> encryptionDetails, String repoType, Map<String, String> metadata, String delegateId,
-      String taskId, String accountId);
+  ListNotifyResponseData downloadArtifacts(ArtifactoryConfigRequest artifactoryConfig, String repoType,
+      Map<String, String> metadata, String delegateId, String taskId, String accountId);
 
-  Pair<String, InputStream> downloadArtifact(ArtifactoryConfig artifactoryConfig,
-      List<EncryptedDataDetail> encryptionDetails, String repositoryName, Map<String, String> metadata);
+  Pair<String, InputStream> downloadArtifact(
+      ArtifactoryConfigRequest artifactoryConfig, String repositoryName, Map<String, String> metadata);
 
-  boolean validateArtifactPath(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoType, String artifactPath, String repositoryType);
+  boolean validateArtifactPath(
+      ArtifactoryConfigRequest artifactoryConfig, String repoType, String artifactPath, String repositoryType);
 
-  Long getFileSize(
-      ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, Map<String, String> metadata);
+  Long getFileSize(ArtifactoryConfigRequest artifactoryConfig, Map<String, String> metadata);
 
-  boolean isRunning(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails);
+  boolean isRunning(ArtifactoryConfigRequest artifactoryConfig);
 }

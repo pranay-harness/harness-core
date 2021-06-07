@@ -19,6 +19,8 @@ build --java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla
 
 build --action_env=HARNESS_GENERATION_PASSPHRASE
 
+build --workspace_status_command=tools/bazel/workspace_status_command.sh
+
 build --strict_java_deps=warn
 build --java_header_compilation=false
 build --javacopt='-XepDisableAllChecks'

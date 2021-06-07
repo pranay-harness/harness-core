@@ -84,17 +84,9 @@ public class InternalContainerParamsProviderTest extends CIExecutionTestBase {
     Integer stageMemoryRequest = 200;
 
     CIK8ContainerParams containerParams = internalContainerParamsProvider.getLiteEngineContainerParams(connectorDetails,
-        publishArtifactConnectorDetailsMap, k8PodDetails, stageCpuRequest, stageMemoryRequest, null, logEnvVars,
-        tiEnvVars, volumeToMountPath, "/step-exec/workspace", "test", ambiance);
+        publishArtifactConnectorDetailsMap, k8PodDetails, stageCpuRequest, stageMemoryRequest, logEnvVars, tiEnvVars,
+        volumeToMountPath, "/step-exec/workspace", "test", ambiance);
 
-    Map<String, String> expectedEnv = new HashMap<>();
-    expectedEnv.put(LOG_SERVICE_ENDPOINT_VARIABLE, logEndpoint);
-    expectedEnv.put(LOG_SERVICE_TOKEN_VARIABLE, logSecret);
-    expectedEnv.put(TI_SERVICE_ENDPOINT_VARIABLE, tiEndpoint);
-    expectedEnv.put(TI_SERVICE_TOKEN_VARIABLE, tiToken);
-
-    Map<String, String> gotEnv = containerParams.getEnvVars();
-    assertThat(gotEnv).containsAllEntriesOf(expectedEnv);
     assertThat(containerParams.getName()).isEqualTo(LITE_ENGINE_CONTAINER_NAME);
     assertThat(containerParams.getContainerType()).isEqualTo(CIContainerType.LITE_ENGINE);
   }

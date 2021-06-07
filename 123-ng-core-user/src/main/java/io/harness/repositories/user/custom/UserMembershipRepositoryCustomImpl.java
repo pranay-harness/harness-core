@@ -11,6 +11,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope.ScopeKeys;
+import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
 
@@ -65,10 +66,21 @@ public class UserMembershipRepositoryCustomImpl implements UserMembershipReposit
   }
 
   @Override
-  public boolean upsert(String userId, Update update) {
-    Criteria criteria = Criteria.where(UserMembershipKeys.userId).is(userId);
+  public List<UserMetadataDTO> getUserMetadata(Criteria criteria) {
     Query query = new Query(criteria);
-    return mongoTemplate.upsert(query, update, UserMembership.class).wasAcknowledged();
+    query.fields()
+        .include(UserMembershipKeys.userId)
+        .include(UserMembershipKeys.emailId)
+        .include(UserMembershipKeys.name);
+    List<UserMembership> userMemberships = mongoTemplate.find(query, UserMembership.class);
+    return userMemberships.stream()
+        .map(userMembership
+            -> UserMetadataDTO.builder()
+                   .uuid(userMembership.getUserId())
+                   .email(userMembership.getEmailId())
+                   .name(userMembership.getName())
+                   .build())
+        .collect(Collectors.toList());
   }
 
   @Override

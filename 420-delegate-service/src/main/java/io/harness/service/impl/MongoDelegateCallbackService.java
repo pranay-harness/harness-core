@@ -71,7 +71,7 @@ public class MongoDelegateCallbackService implements DelegateCallbackService {
     Document document = new Document();
     document.put(ID_FIELD_NAME, delegateTaskId);
     document.put(DelegateAsyncTaskResponseKeys.responseData, responseData);
-    document.put(DelegateAsyncTaskResponseKeys.processAfter, 0);
+    document.put(DelegateAsyncTaskResponseKeys.processAfter, 0l);
 
     Bson update = new Document("$set", document);
 

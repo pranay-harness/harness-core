@@ -1,6 +1,5 @@
 package io.harness.connector.impl;
 
-import static io.harness.delegate.beans.connector.ConnectorType.APP_DYNAMICS;
 import static io.harness.delegate.beans.connector.ConnectorType.PROMETHEUS;
 import static io.harness.rule.OwnerRule.ANJAN;
 
@@ -22,6 +21,7 @@ import io.harness.connector.entities.embedded.prometheusconnector.PrometheusConn
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.prometheusconnector.PrometheusConnectorDTO;
+import io.harness.git.model.ChangeType;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.rule.Owner;
 
@@ -65,7 +65,7 @@ public class PrometheusConnectorTest extends CategoryTest {
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
     prometheusConnector = PrometheusConnector.builder().url(url).build();
-    prometheusConnector.setType(APP_DYNAMICS);
+    prometheusConnector.setType(PROMETHEUS);
     prometheusConnector.setIdentifier(identifier);
     prometheusConnector.setName(name);
 
@@ -79,7 +79,7 @@ public class PrometheusConnectorTest extends CategoryTest {
                                          .build();
     connectorDTO = ConnectorDTO.builder().connectorInfo(connectorInfo).build();
     connectorResponseDTO = ConnectorResponseDTO.builder().connector(connectorInfo).build();
-    when(connectorRepository.save(prometheusConnector, connectorDTO)).thenReturn(prometheusConnector);
+    when(connectorRepository.save(prometheusConnector, connectorDTO, ChangeType.ADD)).thenReturn(prometheusConnector);
     when(connectorMapper.writeDTO(prometheusConnector)).thenReturn(connectorResponseDTO);
     when(connectorMapper.toConnector(connectorDTO, accountIdentifier)).thenReturn(prometheusConnector);
     doNothing().when(connectorService).assurePredefined(any(), any());

@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.PHOENIKX;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static io.harness.rule.OwnerRule.VIKAS;
 
 import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
@@ -43,6 +44,7 @@ import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
 import software.wings.resources.AccountResource;
+import software.wings.resources.ApiKeyResource;
 import software.wings.resources.secretsmanagement.SecretsResourceNG;
 import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AuditService;
@@ -347,6 +349,7 @@ public class AuthenticationFilterTest extends CategoryTest {
       doReturn(false).when(authenticationFilter).identityServiceAPI();
       doReturn(false).when(authenticationFilter).isAdminPortalRequest();
       doReturn(false).when(authenticationFilter).isNextGenManagerRequest(any(ResourceInfo.class));
+      doReturn(false).when(authenticationFilter).isInternalRequest(any(ResourceInfo.class));
       when(authService.validateToken(anyString())).thenThrow(new WingsException(ErrorCode.USER_DOES_NOT_EXIST));
       authenticationFilter.filter(context);
       failBecauseExceptionWasNotThrown(WingsException.class);
@@ -368,6 +371,7 @@ public class AuthenticationFilterTest extends CategoryTest {
       doReturn(false).when(authenticationFilter).identityServiceAPI();
       doReturn(false).when(authenticationFilter).isAdminPortalRequest();
       doReturn(false).when(authenticationFilter).isNextGenManagerRequest(any(ResourceInfo.class));
+      doReturn(false).when(authenticationFilter).isInternalRequest(any(ResourceInfo.class));
       AuthToken authToken = new AuthToken(ACCOUNT_ID, "testUser", 0L);
       authToken.setUser(mock(User.class));
       when(authService.validateToken(anyString())).thenReturn(authToken);
@@ -390,6 +394,7 @@ public class AuthenticationFilterTest extends CategoryTest {
       doReturn(false).when(authenticationFilter).isAdminPortalRequest();
       doReturn(false).when(authenticationFilter).isNextGenManagerRequest(any(ResourceInfo.class));
       doReturn(false).when(authenticationFilter).identityServiceAPI();
+      doReturn(false).when(authenticationFilter).isInternalRequest(any(ResourceInfo.class));
       authenticationFilter.filter(context);
     } catch (WingsException e) {
       assertThatExceptionOfType(WingsException.class);
@@ -435,6 +440,23 @@ public class AuthenticationFilterTest extends CategoryTest {
     assertThat(isAuthorizationValid).isFalse();
   }
 
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testIsInternalRequest_For_NextGenAuthorization() {
+    Class clazz = ApiKeyResource.class;
+    when(resourceInfo.getResourceClass()).thenReturn(clazz);
+    when(resourceInfo.getResourceMethod()).thenReturn(getInternalRequestMockResourceMethod());
+
+    boolean isAuthorizationValid = authenticationFilter.isInternalRequest(resourceInfo);
+    assertThat(isAuthorizationValid).isTrue();
+
+    when(resourceInfo.getResourceMethod()).thenReturn(getMockResourceMethod());
+
+    isAuthorizationValid = authenticationFilter.isInternalRequest(resourceInfo);
+    assertThat(isAuthorizationValid).isFalse();
+  }
+
   private Method getMockResourceMethod() {
     Class mockClass = SecretsResourceNG.class;
     try {
@@ -465,6 +487,15 @@ public class AuthenticationFilterTest extends CategoryTest {
     Class mockClass = DummyTestResource.class;
     try {
       return mockClass.getMethod("testApiKeyAuthorizationAnnotationWithAllowEmptyApiKey");
+    } catch (NoSuchMethodException e) {
+      return null;
+    }
+  }
+
+  private Method getInternalRequestMockResourceMethod() {
+    Class mockClass = ApiKeyResource.class;
+    try {
+      return mockClass.getMethod("validate", String.class, String.class);
     } catch (NoSuchMethodException e) {
       return null;
     }

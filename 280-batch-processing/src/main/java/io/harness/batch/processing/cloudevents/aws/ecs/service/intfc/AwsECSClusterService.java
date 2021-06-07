@@ -1,8 +1,9 @@
 package io.harness.batch.processing.cloudevents.aws.ecs.service.intfc;
 
+import io.harness.ccm.commons.entities.billing.CECloudAccount;
+import io.harness.ccm.commons.entities.billing.CECluster;
+
 import software.wings.beans.ce.CEAwsConfig;
-import software.wings.beans.ce.CECloudAccount;
-import software.wings.beans.ce.CECluster;
 
 import java.util.List;
 

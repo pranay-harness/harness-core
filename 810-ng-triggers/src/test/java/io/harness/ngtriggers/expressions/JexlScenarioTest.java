@@ -160,6 +160,8 @@ public class JexlScenarioTest extends CategoryTest {
     TriggerExpressionEvaluator triggerExpressionEvaluator = new TriggerExpressionEvaluator(null,
         Arrays.asList(HeaderConfig.builder().key("content-type").values(Arrays.asList("application/json")).build()),
         json);
+    assertThat(triggerExpressionEvaluator.renderExpression("<+trigger.header['content-type']>"))
+        .isEqualTo("application/json");
   }
 
   @Test

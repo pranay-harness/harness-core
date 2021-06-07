@@ -14,6 +14,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.observer.Subject;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
@@ -89,6 +90,9 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     PMSPipelineServiceHelper.validatePresenceOfRequiredFields(pipelineEntity.getAccountId(),
         pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier());
 
+    if (GitContextHelper.getGitEntityInfo() != null && GitContextHelper.getGitEntityInfo().isNewBranch()) {
+      return makePipelineUpdateCall(pipelineEntity);
+    }
     Optional<PipelineEntity> optionalOriginalEntity =
         pmsPipelineRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
             pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(),
@@ -103,8 +107,12 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
                                     .withDescription(pipelineEntity.getDescription())
                                     .withTags(pipelineEntity.getTags());
 
+    return makePipelineUpdateCall(tempEntity);
+  }
+
+  private PipelineEntity makePipelineUpdateCall(PipelineEntity pipelineEntity) {
     try {
-      PipelineEntity entityWithUpdatedInfo = pmsPipelineServiceHelper.updatePipelineInfo(tempEntity);
+      PipelineEntity entityWithUpdatedInfo = pmsPipelineServiceHelper.updatePipelineInfo(pipelineEntity);
       PipelineEntity updatedResult = pmsPipelineRepository.updatePipelineYaml(
           entityWithUpdatedInfo, PipelineYamlDtoMapper.toDto(entityWithUpdatedInfo));
 
@@ -114,7 +122,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
             pipelineEntity.getIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()));
       }
       return updatedResult;
-    } catch (IOException | EventsFrameworkDownException exception) {
+    } catch (IOException e) {
+      log.error(e.toString());
       throw new InvalidRequestException(String.format(
           "Unknown exception occurred while updating pipeline with id: [%s]. Please contact Harness Support",
           pipelineEntity.getIdentifier()));
@@ -122,8 +131,10 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
-  public PipelineEntity updatePipelineMetadata(Criteria criteria, Update updateOperations) {
-    return pmsPipelineRepository.updatePipelineMetadata(criteria, updateOperations);
+  public PipelineEntity updatePipelineMetadata(
+      String accountId, String orgIdentifier, String projectIdentifier, Criteria criteria, Update updateOperations) {
+    return pmsPipelineRepository.updatePipelineMetadata(
+        accountId, orgIdentifier, projectIdentifier, criteria, updateOperations);
   }
 
   @Override
@@ -134,7 +145,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
 
     Update update = new Update();
     update.set(PipelineEntityKeys.executionSummaryInfo, executionSummaryInfo);
-    updatePipelineMetadata(criteria, update);
+    updatePipelineMetadata(accountId, orgId, projectId, criteria, update);
   }
 
   @Override
@@ -144,7 +155,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false, null);
     Update update = new Update();
     update.inc(PipelineEntityKeys.runSequence);
-    return Optional.ofNullable(updatePipelineMetadata(criteria, update));
+    return Optional.ofNullable(updatePipelineMetadata(accountId, orgIdentifier, projectIdentifier, criteria, update));
   }
 
   @Override

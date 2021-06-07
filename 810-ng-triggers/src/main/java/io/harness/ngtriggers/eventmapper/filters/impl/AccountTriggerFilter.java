@@ -2,7 +2,7 @@ package io.harness.ngtriggers.eventmapper.filters.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_ENABLED_TRIGGER_FOR_ACCOUNT;
+import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_ENABLED_TRIGGER_FOR_ACCOUNT_SOURCE_REPO;
 
 import static java.util.stream.Collectors.toList;
 
@@ -35,13 +35,18 @@ public class AccountTriggerFilter implements TriggerFilter {
     WebhookEventMappingResponseBuilder builder = initWebhookEventMappingResponse(filterRequestData);
     TriggerWebhookEvent triggerWebhookEvent = filterRequestData.getWebhookPayloadData().getOriginalEvent();
     List<NGTriggerEntity> triggersForAccount =
-        ngTriggerService.listEnabledTriggersForAccount(triggerWebhookEvent.getAccountId());
+        ngTriggerService.findTriggersForWehbookBySourceRepoType(triggerWebhookEvent, false, true);
 
     if (isEmpty(triggersForAccount)) {
-      String errorMsg = "No enabled trigger found for Account:" + triggerWebhookEvent.getAccountId();
+      String errorMsg = new StringBuilder(256)
+                            .append("No enabled trigger found for Account:")
+                            .append(triggerWebhookEvent.getAccountId())
+                            .append(", SourceRepoType: ")
+                            .append(triggerWebhookEvent.getSourceRepoType())
+                            .toString();
       log.info(errorMsg);
       builder.failedToFindTrigger(true).webhookEventResponse(WebhookEventResponseHelper.toResponse(
-          NO_ENABLED_TRIGGER_FOR_ACCOUNT, triggerWebhookEvent, null, null, errorMsg, null));
+          NO_ENABLED_TRIGGER_FOR_ACCOUNT_SOURCE_REPO, triggerWebhookEvent, null, null, errorMsg, null));
     } else {
       addDetails(builder, filterRequestData,
           triggersForAccount.stream()

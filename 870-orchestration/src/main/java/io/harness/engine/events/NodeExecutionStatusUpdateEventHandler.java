@@ -4,9 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdate;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
+import io.harness.engine.observers.NodeStatusUpdateObserver;
+import io.harness.engine.observers.NodeUpdateInfo;
 import io.harness.execution.NodeExecution;
 import io.harness.observer.AsyncInformObserver;
 import io.harness.timeout.TimeoutEngine;
@@ -18,23 +17,13 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 @OwnedBy(PIPELINE)
-public class NodeExecutionStatusUpdateEventHandler implements AsyncInformObserver, StepStatusUpdate {
-  @Inject @Named("PipelineExecutorService") ExecutorService executorService;
-  @Inject private NodeExecutionService nodeExecutionService;
+public class NodeExecutionStatusUpdateEventHandler implements AsyncInformObserver, NodeStatusUpdateObserver {
+  @Inject @Named("EngineExecutorService") ExecutorService executorService;
   @Inject private TimeoutEngine timeoutEngine;
 
   @Override
-  public void onStepStatusUpdate(StepStatusUpdateInfo stepStatusUpdateInfo) {
-    String nodeExecutionId = stepStatusUpdateInfo.getNodeExecutionId();
-    if (nodeExecutionId == null) {
-      return;
-    }
-
-    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
-    if (nodeExecution == null) {
-      return;
-    }
-
+  public void onNodeStatusUpdate(NodeUpdateInfo nodeUpdateInfo) {
+    NodeExecution nodeExecution = nodeUpdateInfo.getNodeExecution();
     List<String> timeoutInstanceIds = nodeExecution.getTimeoutInstanceIds();
     if (EmptyPredicate.isNotEmpty(timeoutInstanceIds)) {
       timeoutEngine.onEvent(timeoutInstanceIds, new StatusUpdateTimeoutEvent(nodeExecution.getStatus()));

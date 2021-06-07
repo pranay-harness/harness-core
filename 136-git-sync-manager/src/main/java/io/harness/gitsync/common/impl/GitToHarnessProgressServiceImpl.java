@@ -6,9 +6,13 @@ import static io.harness.gitsync.common.beans.GitToHarnessProcessingStepType.GET
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest;
+import io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus;
+import io.harness.gitsync.common.beans.GitToHarnessProcessingStepType;
 import io.harness.gitsync.common.beans.GitToHarnessProgress;
 import io.harness.gitsync.common.beans.GitToHarnessProgress.GitToHarnessProgressKeys;
+import io.harness.gitsync.common.beans.YamlChangeSetEventType;
 import io.harness.gitsync.common.service.GitToHarnessProgressService;
+import io.harness.gitsync.core.dtos.YamlChangeSetDTO;
 import io.harness.repositories.gittoharnessstatus.GitToHarnessProgressRepository;
 
 import com.google.inject.Inject;
@@ -32,9 +36,9 @@ public class GitToHarnessProgressServiceImpl implements GitToHarnessProgressServ
   }
 
   @Override
-  public void update(String uuid, Update update) {
-    Criteria criteria = new Criteria().where(GitToHarnessProgressKeys.uuid).is(uuid);
-    gitToHarnessProgressRepository.findAndModify(criteria, update);
+  public GitToHarnessProgress update(String uuid, Update update) {
+    Criteria criteria = Criteria.where(GitToHarnessProgressKeys.uuid).is(uuid);
+    return gitToHarnessProgressRepository.findAndModify(criteria, update);
   }
 
   @Override
@@ -45,5 +49,28 @@ public class GitToHarnessProgressServiceImpl implements GitToHarnessProgressServ
     update.set(GitToHarnessProgressKeys.stepType, GET_FILES);
     update.set(GitToHarnessProgressKeys.stepStatus, DONE);
     update(uuid, update);
+  }
+
+  @Override
+  public GitToHarnessProgress updateStatus(String uuid, GitToHarnessProcessingStepStatus stepStatus) {
+    Update update = new Update();
+    update.set(GitToHarnessProgressKeys.stepStatus, stepStatus);
+    return update(uuid, update);
+  }
+
+  @Override
+  public GitToHarnessProgress save(YamlChangeSetDTO yamlChangeSetDTO, YamlChangeSetEventType eventType,
+      GitToHarnessProcessingStepType stepType, GitToHarnessProcessingStepStatus stepStatus) {
+    GitToHarnessProgress gitToHarnessProgress = GitToHarnessProgress.builder()
+                                                    .accountIdentifier(yamlChangeSetDTO.getAccountId())
+                                                    .yamlChangeSetId(yamlChangeSetDTO.getChangesetId())
+                                                    .repoUrl(yamlChangeSetDTO.getRepoUrl())
+                                                    .branch(yamlChangeSetDTO.getBranch())
+                                                    .eventType(eventType)
+                                                    .stepType(stepType)
+                                                    .stepStatus(stepStatus)
+                                                    .stepStartingTime(System.currentTimeMillis())
+                                                    .build();
+    return save(gitToHarnessProgress);
   }
 }

@@ -7,7 +7,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.advise.AdviserResponseHandler;
 import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.executions.plan.PlanService;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.NextStepAdvise;
@@ -22,7 +22,7 @@ import java.util.EnumSet;
 public class NextStepHandler implements AdviserResponseHandler {
   @Inject private OrchestrationEngine engine;
   @Inject private NodeExecutionService nodeExecutionService;
-  @Inject private PlanExecutionService planExecutionService;
+  @Inject private PlanService planService;
 
   @Override
   public void handleAdvise(NodeExecution nodeExecution, AdviserResponse adviserResponse) {
@@ -32,8 +32,8 @@ public class NextStepHandler implements AdviserResponseHandler {
           nodeExecution.getUuid(), advise.getToStatus(), null, EnumSet.noneOf(Status.class));
     }
     if (EmptyPredicate.isNotEmpty(advise.getNextNodeId())) {
-      PlanNodeProto nextNode = Preconditions.checkNotNull(planExecutionService.fetchExecutionNode(
-          nodeExecution.getAmbiance().getPlanExecutionId(), advise.getNextNodeId()));
+      PlanNodeProto nextNode = Preconditions.checkNotNull(
+          planService.fetchNode(nodeExecution.getAmbiance().getPlanId(), advise.getNextNodeId()));
       engine.triggerExecution(nodeExecution.getAmbiance(), nextNode);
     } else {
       engine.endTransition(nodeExecution);

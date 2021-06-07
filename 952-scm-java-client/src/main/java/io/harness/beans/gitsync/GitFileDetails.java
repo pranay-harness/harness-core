@@ -13,9 +13,9 @@ import lombok.Value;
 public class GitFileDetails {
   String filePath;
   String branch;
-  String fileContent;
+  String fileContent; // not needed in case of delete.
   String commitMessage;
-  String oldFileSha; // Needed only in case of update file.
+  String oldFileSha; // not only in case of create file.
   String userEmail;
   String userName;
 }

@@ -28,6 +28,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.GeneralException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.hash.HashUtils;
 import io.harness.persistence.HQuery;
@@ -474,5 +475,15 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     PageResponse pageResponse = list(pageRequest, userGroup.getAccountId(), false, true);
     List<ApiKeyEntry> apiKeyEntryList = pageResponse.getResponse();
     evictAndRebuildPermissionsAndRestrictions(userGroup.getAccountId(), true, apiKeyEntryList);
+  }
+
+  @Override
+  public Boolean isApiKeyValid(String apiKey, String accountId) {
+    try {
+      validate(apiKey, accountId);
+    } catch (UnauthorizedException | InvalidRequestException exception) {
+      return false;
+    }
+    return true;
   }
 }

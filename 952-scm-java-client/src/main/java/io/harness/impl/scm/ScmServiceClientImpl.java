@@ -14,9 +14,12 @@ import io.harness.beans.gitsync.GitWebhookDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExplanationException;
+import io.harness.exception.ScmException;
 import io.harness.exception.WingsException;
 import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.product.ci.scm.proto.Commit;
+import io.harness.product.ci.scm.proto.CompareCommitsRequest;
+import io.harness.product.ci.scm.proto.CompareCommitsResponse;
 import io.harness.product.ci.scm.proto.CreateBranchRequest;
 import io.harness.product.ci.scm.proto.CreateBranchResponse;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
@@ -53,6 +56,7 @@ import io.harness.product.ci.scm.proto.ListCommitsRequest;
 import io.harness.product.ci.scm.proto.ListCommitsResponse;
 import io.harness.product.ci.scm.proto.ListWebhooksRequest;
 import io.harness.product.ci.scm.proto.ListWebhooksResponse;
+import io.harness.product.ci.scm.proto.PRFile;
 import io.harness.product.ci.scm.proto.PageRequest;
 import io.harness.product.ci.scm.proto.Provider;
 import io.harness.product.ci.scm.proto.SCMGrpc;
@@ -83,7 +87,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
   }
 
   private FileModifyRequest.Builder getFileModifyRequest(ScmConnector scmConnector, GitFileDetails gitFileDetails) {
-    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector, true);
     String slug = scmGitProviderHelper.getSlug(scmConnector);
     return FileModifyRequest.newBuilder()
         .setBranch(gitFileDetails.getBranch())
@@ -110,14 +114,21 @@ public class ScmServiceClientImpl implements ScmServiceClient {
 
   @Override
   public DeleteFileResponse deleteFile(
-      ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails, SCMGrpc.SCMBlockingStub scmBlockingStub) {
-    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+      ScmConnector scmConnector, GitFileDetails gitFileDetails, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector, true);
     String slug = scmGitProviderHelper.getSlug(scmConnector);
     final DeleteFileRequest deleteFileRequest = DeleteFileRequest.newBuilder()
-                                                    .setBranch(gitFilePathDetails.getBranch())
-                                                    .setPath(gitFilePathDetails.getFilePath())
+                                                    .setBranch(gitFileDetails.getBranch())
+                                                    .setPath(gitFileDetails.getFilePath())
                                                     .setProvider(gitProvider)
                                                     .setSlug(slug)
+                                                    .setBlobId(gitFileDetails.getOldFileSha())
+                                                    .setBranch(gitFileDetails.getBranch())
+                                                    .setMessage(gitFileDetails.getCommitMessage())
+                                                    .setSignature(Signature.newBuilder()
+                                                                      .setEmail(gitFileDetails.getUserEmail())
+                                                                      .setName(gitFileDetails.getUserName())
+                                                                      .build())
                                                     .build();
 
     return scmBlockingStub.deleteFile(deleteFileRequest);
@@ -388,6 +399,14 @@ public class ScmServiceClientImpl implements ScmServiceClient {
   }
 
   @Override
+  public FileBatchContentResponse listFilesByFilePaths(
+      ScmConnector connector, List<String> filePaths, String branch, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(connector);
+    String slug = scmGitProviderHelper.getSlug(connector);
+    return getContentOfFiles(filePaths, slug, gitProvider, branch, scmBlockingStub);
+  }
+
+  @Override
   public void createNewBranch(
       ScmConnector scmConnector, String branch, String defaultBranchName, SCMGrpc.SCMBlockingStub scmBlockingStub) {
     String slug = scmGitProviderHelper.getSlug(scmConnector);
@@ -395,7 +414,11 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     String latestShaOfBranch = getLatestShaOfBranch(slug, gitProvider, defaultBranchName, scmBlockingStub);
     final CreateBranchResponse createBranchResponse =
         createNewBranchFromDefault(slug, gitProvider, branch, latestShaOfBranch, scmBlockingStub);
-    ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(createBranchResponse.getStatus(), null);
+    try {
+      ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(createBranchResponse.getStatus(), null);
+    } catch (ScmException e) {
+      throw new ExplanationException(String.format("Failed to create branch %s", branch), e);
+    }
   }
 
   @Override
@@ -493,6 +516,30 @@ public class ScmServiceClientImpl implements ScmServiceClient {
         createWebhook(scmConnector, gitWebhookDetails, scmBlockingStub, existingWebhook);
     ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(createWebhookResponse.getStatus(), null);
     return createWebhookResponse;
+  }
+
+  @Override
+  public CompareCommitsResponse compareCommits(ScmConnector scmConnector, String initialCommitId, String finalCommitId,
+      SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    List<PRFile> prFiles = new ArrayList<>();
+    String slug = scmGitProviderHelper.getSlug(scmConnector);
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+    CompareCommitsRequest.Builder request = CompareCommitsRequest.newBuilder()
+                                                .setSource(initialCommitId)
+                                                .setTarget(finalCommitId)
+                                                .setSlug(slug)
+                                                .setProvider(gitProvider)
+                                                .setPagination(PageRequest.newBuilder().setPage(1).build());
+    CompareCommitsResponse response;
+    // process request in pagination manner
+    do {
+      response = scmBlockingStub.compareCommits(request.build());
+      prFiles.addAll(response.getFilesList());
+      // Set next page in the request
+      request.setPagination(PageRequest.newBuilder().setPage(response.getPagination().getNext()).build());
+    } while (response.getPagination().getNext() != 0);
+
+    return CompareCommitsResponse.newBuilder().addAllFiles(prFiles).build();
   }
 
   private ListWebhooksRequest getListWebhookRequest(String slug, Provider gitProvider) {

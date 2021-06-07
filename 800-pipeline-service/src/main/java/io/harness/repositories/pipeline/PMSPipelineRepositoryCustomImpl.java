@@ -51,7 +51,7 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
 
   @Override
   public PipelineEntity save(PipelineEntity pipelineToSave, PipelineConfig yamlDTO) {
-    return gitAwarePersistence.save(pipelineToSave, yamlDTO, ChangeType.ADD, PipelineEntity.class);
+    return gitAwarePersistence.save(pipelineToSave, pipelineToSave.getYaml(), ChangeType.ADD, PipelineEntity.class);
   }
 
   @Override
@@ -72,11 +72,19 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
 
   @Override
   public PipelineEntity updatePipelineYaml(PipelineEntity pipelineToUpdate, PipelineConfig yamlDTO) {
-    return gitAwarePersistence.save(pipelineToUpdate, yamlDTO, ChangeType.MODIFY, PipelineEntity.class);
+    return gitAwarePersistence.save(
+        pipelineToUpdate, pipelineToUpdate.getYaml(), ChangeType.MODIFY, PipelineEntity.class);
   }
 
   @Override
-  public PipelineEntity updatePipelineMetadata(Criteria criteria, Update update) {
+  public PipelineEntity updatePipelineMetadata(
+      String accountId, String orgIdentifier, String projectIdentifier, Criteria criteria, Update update) {
+    Criteria gitSyncCriteria =
+        gitAwarePersistence.getCriteriaWithGitSync(projectIdentifier, orgIdentifier, accountId, PipelineEntity.class);
+    if (gitSyncCriteria != null) {
+      criteria = new Criteria().andOperator(criteria, gitSyncCriteria);
+    }
+
     Query query = new Query(criteria);
     RetryPolicy<Object> retryPolicy = getRetryPolicyForPipelineUpdate();
     return Failsafe.with(retryPolicy)
@@ -87,7 +95,8 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
 
   @Override
   public PipelineEntity deletePipeline(PipelineEntity pipelineToUpdate, PipelineConfig yamlDTO) {
-    return gitAwarePersistence.save(pipelineToUpdate, yamlDTO, ChangeType.DELETE, PipelineEntity.class);
+    return gitAwarePersistence.save(
+        pipelineToUpdate, pipelineToUpdate.getYaml(), ChangeType.DELETE, PipelineEntity.class);
   }
 
   private RetryPolicy<Object> getRetryPolicyForPipelineUpdate() {

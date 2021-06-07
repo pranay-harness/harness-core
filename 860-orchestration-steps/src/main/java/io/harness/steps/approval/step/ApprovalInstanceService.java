@@ -24,6 +24,7 @@ public interface ApprovalInstanceService {
   void markExpiredInstances();
 
   void finalizeStatus(@NotNull String approvalInstanceId, ApprovalStatus status);
+  void finalizeStatus(@NotNull String approvalInstanceId, ApprovalStatus status, String errorMessage);
   HarnessApprovalInstance addHarnessApprovalActivity(@NotNull String approvalInstanceId, @NotNull EmbeddedUser user,
       @NotNull @Valid HarnessApprovalActivityRequestDTO request);
 }

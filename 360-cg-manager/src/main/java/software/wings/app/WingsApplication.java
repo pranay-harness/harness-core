@@ -63,6 +63,7 @@ import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.exception.WingsException;
 import io.harness.execution.export.background.ExportExecutionsRequestCleanupHandler;
 import io.harness.execution.export.background.ExportExecutionsRequestHandler;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.ff.FeatureFlagService;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.GrpcServiceConfigurationModule;
@@ -522,6 +523,11 @@ public class WingsApplication extends Application<MainConfiguration> {
       @Override
       public CfMigrationConfig cfMigrationConfig() {
         return configuration.getCfMigrationConfig();
+      }
+
+      @Override
+      public FeatureFlagConfig featureFlagConfig() {
+        return configuration.getFeatureFlagConfig();
       }
     });
     Injector injector = Guice.createInjector(modules);

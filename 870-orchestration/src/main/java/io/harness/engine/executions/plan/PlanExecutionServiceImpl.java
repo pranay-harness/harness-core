@@ -9,31 +9,33 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdate;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdateFactory;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
+import io.harness.engine.interrupts.statusupdate.NodeStatusUpdateHandlerFactory;
+import io.harness.engine.observers.NodeStatusUpdateHandler;
+import io.harness.engine.observers.NodeUpdateInfo;
+import io.harness.engine.observers.PlanStatusUpdateObserver;
 import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.ExecutionMetadataKeys;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
-import io.harness.plan.Plan;
+import io.harness.observer.Subject;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
-import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.repositories.PlanExecutionRepository;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
@@ -44,12 +46,15 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(PIPELINE)
 @Slf4j
+@Singleton
 public class PlanExecutionServiceImpl implements PlanExecutionService {
   @Inject private PlanExecutionRepository planExecutionRepository;
   @Inject private MongoTemplate mongoTemplate;
   @Inject private OrchestrationEventEmitter eventEmitter;
-  @Inject private StepStatusUpdateFactory stepStatusUpdateFactory;
+  @Inject private NodeStatusUpdateHandlerFactory nodeStatusUpdateHandlerFactory;
   @Inject private NodeExecutionService nodeExecutionService;
+
+  @Getter private final Subject<PlanStatusUpdateObserver> planStatusUpdateSubject = new Subject<>();
 
   @Override
   public PlanExecution save(PlanExecution planExecution) {
@@ -109,20 +114,11 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
   }
 
   @Override
-  public PlanNodeProto fetchExecutionNode(String planExecutionId, String nodeId) {
-    PlanExecution instance = get(planExecutionId);
-    if (instance == null) {
-      throw new InvalidRequestException("Execution Instance is null for id : " + planExecutionId);
-    }
-    Plan plan = instance.getPlan();
-    return plan.fetchNode(nodeId);
-  }
-
-  @Override
-  public void onStepStatusUpdate(StepStatusUpdateInfo stepStatusUpdateInfo) {
-    StepStatusUpdate stepStatusUpdate = stepStatusUpdateFactory.obtainStepStatusUpdate(stepStatusUpdateInfo);
-    if (stepStatusUpdate != null) {
-      stepStatusUpdate.onStepStatusUpdate(stepStatusUpdateInfo);
+  public void onNodeStatusUpdate(NodeUpdateInfo nodeUpdateInfo) {
+    NodeStatusUpdateHandler nodeStatusUpdateObserver =
+        nodeStatusUpdateHandlerFactory.obtainStepStatusUpdate(nodeUpdateInfo);
+    if (nodeStatusUpdateObserver != null) {
+      nodeStatusUpdateObserver.handleNodeStatusUpdate(nodeUpdateInfo);
     }
   }
 
@@ -158,10 +154,13 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
   }
 
   private void emitEvent(PlanExecution planExecution) {
+    Ambiance ambiance = buildFromPlanExecution(planExecution);
     eventEmitter.emitEvent(OrchestrationEvent.builder()
-                               .ambiance(buildFromPlanExecution(planExecution))
+                               .ambiance(ambiance)
                                .eventType(OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE)
+                               .status(planExecution.getStatus())
                                .build());
+    planStatusUpdateSubject.fireInform(PlanStatusUpdateObxxxxxxxx:onPlanStatusUpdate, ambiance);
   }
 
   private Ambiance buildFromPlanExecution(PlanExecution planExecution) {

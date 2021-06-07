@@ -2,6 +2,7 @@ package io.harness.ng.core.api.impl;
 
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
@@ -12,6 +13,7 @@ import static io.harness.ng.core.SecretManagementModule.SECRET_FILE_SERVICE;
 import static io.harness.ng.core.SecretManagementModule.SECRET_TEXT_SERVICE;
 import static io.harness.ng.core.SecretManagementModule.SSH_SECRET_SERVICE;
 import static io.harness.remote.client.RestClientUtils.getResponse;
+import static io.harness.secretmanagerclient.SecretType.SecretText;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -93,8 +95,8 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     this.secretEntityReferenceHelper = secretEntityReferenceHelper;
     this.ngSecretService = ngSecretService;
     this.eventProducer = eventProducer;
-    secretTypeToServiceMap = new EnumMap<>(ImmutableMap.of(SecretType.SecretText, secretTextService,
-        SecretType.SecretFile, secretFileService, SecretType.SSHKey, sshSecretService));
+    secretTypeToServiceMap = new EnumMap<>(ImmutableMap.of(
+        SecretText, secretTextService, SecretType.SecretFile, secretFileService, SecretType.SSHKey, sshSecretService));
   }
 
   private void checkEqualityOrThrow(Object str1, Object str2) {
@@ -139,6 +141,9 @@ public class SecretCrudServiceImpl implements SecretCrudService {
 
   @Override
   public SecretResponseWrapper create(String accountIdentifier, SecretDTOV2 dto) {
+    if (SecretText.equals(dto.getType()) && isEmpty(((SecretTextSpecDTO) dto.getSpec()).getValue())) {
+      throw new InvalidRequestException("value cannot be empty for a secret text.");
+    }
     EncryptedDataDTO encryptedData = getService(dto.getType()).create(accountIdentifier, dto);
     if (Optional.ofNullable(encryptedData).isPresent()) {
       secretEntityReferenceHelper.createSetupUsageForSecretManager(encryptedData);
@@ -150,8 +155,9 @@ public class SecretCrudServiceImpl implements SecretCrudService {
 
   @Override
   public SecretResponseWrapper createViaYaml(@NotNull String accountIdentifier, SecretDTOV2 dto) {
-    if (dto.getSpec().getErrorMessageForInvalidYaml().isPresent()) {
-      throw new InvalidRequestException(dto.getSpec().getErrorMessageForInvalidYaml().get(), USER);
+    Optional<String> message = dto.getSpec().getErrorMessageForInvalidYaml();
+    if (message.isPresent()) {
+      throw new InvalidRequestException(message.get(), USER);
     }
 
     EncryptedDataDTO encryptedData = getService(dto.getType()).create(accountIdentifier, dto);

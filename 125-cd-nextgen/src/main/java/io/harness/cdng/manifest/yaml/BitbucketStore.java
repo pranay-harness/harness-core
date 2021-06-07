@@ -1,6 +1,7 @@
 package io.harness.cdng.manifest.yaml;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
@@ -15,6 +16,7 @@ import io.harness.validation.OneOfField;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
+import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
@@ -47,6 +49,7 @@ public class BitbucketStore implements GitStoreConfig, Visitable, WithConnectorR
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> branch;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> commitId;
 
+  @YamlSchemaTypes(value = {string})
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
   @Wither
   private ParameterField<List<String>> paths;
@@ -90,10 +93,10 @@ public class BitbucketStore implements GitStoreConfig, Visitable, WithConnectorR
       resultantBitbucketStore = resultantBitbucketStore.withGitFetchType(bitbucketStore.getGitFetchType());
     }
     if (!ParameterField.isNull(bitbucketStore.getBranch())) {
-      resultantBitbucketStore = resultantBitbucketStore.withBranch(bitbucketStore.getBranch());
+      resultantBitbucketStore = resultantBitbucketStore.withBranch(bitbucketStore.getBranch()).withCommitId(null);
     }
     if (!ParameterField.isNull(bitbucketStore.getCommitId())) {
-      resultantBitbucketStore = resultantBitbucketStore.withCommitId(bitbucketStore.getCommitId());
+      resultantBitbucketStore = resultantBitbucketStore.withCommitId(bitbucketStore.getCommitId()).withBranch(null);
     }
     if (!ParameterField.isNull(bitbucketStore.getRepoName())) {
       resultantBitbucketStore = resultantBitbucketStore.withRepoName(bitbucketStore.getRepoName());

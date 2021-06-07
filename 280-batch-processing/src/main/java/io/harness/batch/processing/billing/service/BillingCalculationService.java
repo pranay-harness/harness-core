@@ -1,6 +1,7 @@
 package io.harness.batch.processing.billing.service;
 
 import static io.harness.ccm.commons.beans.InstanceType.K8S_NODE;
+import static io.harness.ccm.commons.beans.InstanceType.K8S_POD;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_PV;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_PVC;
 
@@ -13,7 +14,7 @@ import io.harness.ccm.commons.beans.CostAttribution;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.StorageResource;
 import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.entities.batch.InstanceData;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -69,6 +70,10 @@ public class BillingCalculationService {
     }
     if (null == parentInstanceActiveSecond || parentInstanceActiveSecond == 0) {
       parentInstanceActiveSecond = instanceActiveSeconds;
+      if (instanceData.getInstanceType() == K8S_POD) {
+        log.warn("Instance parent active time is 0 {} {}", instanceData.getInstanceId(), startTime);
+        parentInstanceActiveSecond = 24 * 3600D;
+      }
     }
 
     PricingData pricingData =

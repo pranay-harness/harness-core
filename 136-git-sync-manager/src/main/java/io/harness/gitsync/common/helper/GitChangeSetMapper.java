@@ -8,8 +8,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.git.model.ChangeType;
 import io.harness.gitsync.ChangeSet;
-import io.harness.gitsync.ChangeType;
 import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 import io.harness.ng.core.event.EntityToEntityProtoHelper;
@@ -35,7 +35,7 @@ public class GitChangeSetMapper {
     EntityType entityType = GitSyncUtils.getEntityTypeFromYaml(fileContent.getContent());
     ChangeSet.Builder builder = ChangeSet.newBuilder()
                                     .setAccountId(accountId)
-                                    .setChangeType(changeType)
+                                    .setChangeType(ChangeTypeMapper.toProto(changeType))
                                     .setEntityType(EntityToEntityProtoHelper.getEntityTypeFromProto(entityType))
                                     .setYaml(fileContent.getContent())
                                     .setFilePath(fileContent.getPath());

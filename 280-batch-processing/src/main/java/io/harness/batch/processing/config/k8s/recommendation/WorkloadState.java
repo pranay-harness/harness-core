@@ -1,6 +1,6 @@
 package io.harness.batch.processing.config.k8s.recommendation;
 
-import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
+import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation;
 
 import java.util.HashMap;
 import java.util.Map;

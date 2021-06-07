@@ -19,5 +19,5 @@ import lombok.experimental.FieldDefaults;
 public class TriggerDetails {
   NGTriggerEntity ngTriggerEntity;
   NGTriggerConfig ngTriggerConfig;
-  NGTriggerConfigV2 ngTriggerConfigV1;
+  NGTriggerConfigV2 ngTriggerConfigV2;
 }

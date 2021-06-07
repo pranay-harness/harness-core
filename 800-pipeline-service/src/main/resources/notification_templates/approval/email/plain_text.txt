@@ -1,14 +1,22 @@
-subject: "Approval Required for ${pipelineName} in ${projectName}."
+subject: "Approval required for pipeline ${pipelineName} triggered by ${triggeredBy}"
 body: "
 <html>
-<h4>This is a notification that the <a href=\"${pipelineExecutionLink}\">${pipelineName}</a> is waiting for your approval.</h4>
-<p>Approval message:* ${approvalMessage}
-<p>Pipeline execution summary:</p>
-<p>Started At: ${startedAt}</p>
-<p>Triggered By: ${triggeredBy}</p>
-<p>Finished Stage(s): ${finishedStages}</p>
-<p>Running Stage(s): ${runningStages}</p>
-<p>Upcoming Stage(s): ${upcomingStages}</p>
-<p>Time remaining for approval: ${timeRemainingForApproval}</p>
+<b>Pipeline waiting for approval: <a href=\"${pipelineExecutionLink}\">${pipelineName}</a></b><br><br>
+
+<b>Approval message:</b><br>
+${approvalMessage}<br><br>
+
+<b>Organization:</b> ${orgIdentifier}<br>
+<b>Project:</b> ${projectIdentifier}<br>
+<b>Triggered by:</b> ${triggeredBy}<br><br>
+
+<i>Pipeline started on ${startedAt} and approval expires on ${expiresAt}</i><br>
+<div>
+    <span>
+        <img src=\"https://s3.amazonaws.com/wings-assets/slackicons/paused.png\" height=\"13\" width=\"13\" style=\"padding-right:5px; padding-top:5px;\">
+    </span>
+    <span style=\"color:gray; display:inline-block; vertical-align:top; margin-top:4px;\">
+    </span>${timeRemainingForApproval}</span>
+</div>
 </html>
 "

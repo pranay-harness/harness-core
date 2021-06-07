@@ -14,6 +14,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.observers.NodeUpdateInfo;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
@@ -120,11 +121,7 @@ public class PausedStepStatusUpdateTest extends OrchestrationTestBase {
     mongoTemplate.save(child2);
     mongoTemplate.save(child3);
 
-    stepStatusUpdate.onStepStatusUpdate(StepStatusUpdateInfo.builder()
-                                            .nodeExecutionId(child1Id)
-                                            .planExecutionId(ambiance.getPlanExecutionId())
-                                            .status(Status.PAUSED)
-                                            .build());
+    stepStatusUpdate.handleNodeStatusUpdate(NodeUpdateInfo.builder().nodeExecution(child1).build());
 
     PlanExecution updated =
         mongoTemplate.findOne(query(where(PlanExecutionKeys.uuid).is(planExecutionId)), PlanExecution.class);
@@ -246,11 +243,10 @@ public class PausedStepStatusUpdateTest extends OrchestrationTestBase {
     mongoTemplate.save(fork2Node);
     mongoTemplate.save(child4);
 
-    stepStatusUpdate.onStepStatusUpdate(StepStatusUpdateInfo.builder()
-                                            .nodeExecutionId(child1Id)
-                                            .planExecutionId(ambiance.getPlanExecutionId())
-                                            .status(Status.PAUSED)
-                                            .build());
+    stepStatusUpdate.handleNodeStatusUpdate(NodeUpdateInfo.builder()
+                                                .nodeExecution(child1)
+
+                                                .build());
 
     PlanExecution updated =
         mongoTemplate.findOne(query(where(PlanExecutionKeys.uuid).is(planExecutionId)), PlanExecution.class);

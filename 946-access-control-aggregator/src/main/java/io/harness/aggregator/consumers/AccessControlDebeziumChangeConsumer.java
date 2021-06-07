@@ -31,13 +31,16 @@ public class AccessControlDebeziumChangeConsumer implements DebeziumEngine.Chang
   private final Map<String, Deserializer<? extends AccessControlEntity>> collectionToDeserializerMap;
   private final Map<String, ChangeConsumer<? extends AccessControlEntity>> collectionToConsumerMap;
   private final Retry retry;
+  private final ChangeEventFailureHandler changeEventFailureHandler;
 
   public AccessControlDebeziumChangeConsumer(Deserializer<String> idDeserializer,
       Map<String, Deserializer<? extends AccessControlEntity>> collectionToDeserializerMap,
-      Map<String, ChangeConsumer<? extends AccessControlEntity>> collectionToConsumerMap) {
+      Map<String, ChangeConsumer<? extends AccessControlEntity>> collectionToConsumerMap,
+      ChangeEventFailureHandler changeEventFailureHandler) {
     this.idDeserializer = idDeserializer;
     this.collectionToDeserializerMap = collectionToDeserializerMap;
     this.collectionToConsumerMap = collectionToConsumerMap;
+    this.changeEventFailureHandler = changeEventFailureHandler;
     IntervalFunction intervalFunction = IntervalFunction.ofExponentialBackoff(1000, 2);
     RetryConfig retryConfig = RetryConfig.custom()
                                   .ignoreExceptions(DuplicateKeyException.class, DuplicateFieldException.class)
@@ -67,8 +70,10 @@ public class AccessControlDebeziumChangeConsumer implements DebeziumEngine.Chang
       try {
         handleEvent(changeEvent);
       } catch (Exception exception) {
-        log.error("Exception caught when trying to process event: {}", changeEvent, exception);
-        log.error("Retrying this event with exponential backoff now...");
+        changeEventFailureHandler.handle(changeEvent, exception);
+        log.error(
+            "Exception caught when trying to process event: {}. Retrying this event with exponential backoff now...",
+            changeEvent, exception);
         retry.executeSupplier(() -> handleEvent(changeEvent));
       }
       recordCommitter.markProcessed(changeEvent);

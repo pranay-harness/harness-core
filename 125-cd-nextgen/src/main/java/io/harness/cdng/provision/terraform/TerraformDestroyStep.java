@@ -76,7 +76,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
   private TaskRequest obtainInlineTask(
       Ambiance ambiance, TerraformDestroyStepParameters parameters, StepElementParameters stepElementParameters) {
     helper.validateDestroyStepConfigFilesInline(parameters);
-    TerrformStepConfigurationParameters configuration = parameters.getConfiguration();
+    TerraformStepConfigurationParameters configuration = parameters.getConfiguration();
     TerraformExecutionDataParameters spec = configuration.getSpec();
     TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder();
     String accountId = AmbianceHelper.getAccountId(ambiance);

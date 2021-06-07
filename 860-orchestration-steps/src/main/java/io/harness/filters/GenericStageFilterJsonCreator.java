@@ -7,8 +7,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.SecretRefData;
+import io.harness.eraro.ErrorCode;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
-import io.harness.exception.InvalidRequestException;
+import io.harness.exception.FilterCreatorException;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.stages.stage.StageInfoConfig;
 import io.harness.pms.filter.creation.FilterCreationResponse;
@@ -19,6 +20,7 @@ import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.walktree.visitor.SimpleVisitorFactory;
 import io.harness.walktree.visitor.entityreference.EntityReferenceExtractorVisitor;
 
@@ -71,8 +73,11 @@ public abstract class GenericStageFilterJsonCreator implements FilterJsonCreator
     creationResponse.referredEntities(new ArrayList<>(getReferredEntities(filterCreationContext, stageElementConfig)));
 
     if (stageElementConfig.getStageType() == null || stageElementConfig.getStageType().getExecution() == null) {
-      throw new InvalidRequestException(
-          String.format("Execution section is required in %s stage", stageElementConfig.getType()));
+      throw new FilterCreatorException(
+          String.format("Execution section is required in %s stage [%s]. Please add it and try again",
+              stageElementConfig.getType(),
+              YamlUtils.getFullyQualifiedName(filterCreationContext.getCurrentField().getNode())),
+          ErrorCode.INVALID_YAML_ERROR);
     }
     creationResponse.dependencies(getDependencies(filterCreationContext.getCurrentField()));
 

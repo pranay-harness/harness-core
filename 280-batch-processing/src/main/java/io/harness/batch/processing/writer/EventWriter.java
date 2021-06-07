@@ -1,7 +1,7 @@
 package io.harness.batch.processing.writer;
 
 import io.harness.batch.processing.service.intfc.InstanceDataService;
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.entities.batch.InstanceData;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;

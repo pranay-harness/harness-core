@@ -592,9 +592,6 @@ shared_dependencies = [
     "@maven//:org_ldaptive_ldaptive",
     "@maven//:org_mindrot_jbcrypt",
     "@maven//:org_modelmapper_modelmapper",
-    "@maven//:org_mongodb_mongo_java_driver",
-    "@maven//:org_mongodb_morphia_morphia",
-    "@maven//:org_mongodb_morphia_morphia_logging_slf4j",
     "@maven//:org_mortbay_jetty_alpn_alpn_boot",
     "@maven//:org_mozilla_rhino",
     "@maven//:org_objenesis_objenesis",
@@ -726,4 +723,25 @@ run_tests()
 run_analysis(
     run_checkstyle = False,
     run_pmd = False,
+)
+
+# The //260-delegate:module_deploy.jar is not public, this is why this tar needs to be in
+# the container sub-directory. This os because springboot does not propagate the visibility.
+# If this gets fixed and springboot is dropped move this to the container.
+pkg_tar(
+    name = "delegate_jar",
+    srcs = [
+        "//260-delegate/container:delegatelocal.txt",
+    ],
+    files = {
+        "//260-delegate:module_deploy.jar": "delegate/delegate.jar",
+    },
+    mode = "0644",
+    package_dir = "/local-storage/wingsdelegates",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+    visibility = ["//visibility:public"],
 )

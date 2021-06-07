@@ -8,6 +8,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.OrchestrationService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
+import io.harness.execution.PlanExecutionMetadata;
 import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
@@ -58,29 +59,33 @@ public class PipelineExecuteHelper {
       throw new InvalidRequestException(String.format("The given pipeline id [%s] does not exist", pipelineIdentifier));
     }
 
+    final String executionId = generateUuid();
     String pipelineYaml;
     ExecutionMetadata.Builder executionMetadataBuilder = ExecutionMetadata.newBuilder()
-                                                             .setExecutionUuid(generateUuid())
+                                                             .setExecutionUuid(executionId)
                                                              .setTriggerInfo(triggerInfo)
                                                              .setRunSequence(pipelineEntity.get().getRunSequence());
+
+    PlanExecutionMetadata.Builder planExecutionMetadataBuilder =
+        PlanExecutionMetadata.builder().planExecutionId(executionId);
 
     if (EmptyPredicate.isEmpty(inputSetPipelineYaml)) {
       pipelineYaml = pipelineEntity.get().getYaml();
     } else {
       pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), inputSetPipelineYaml, true);
-      executionMetadataBuilder.setInputSetYaml(inputSetPipelineYaml);
+      planExecutionMetadataBuilder.inputSetYaml(inputSetPipelineYaml);
     }
+    planExecutionMetadataBuilder.yaml(pipelineYaml);
 
     pmsYamlSchemaService.validateYamlSchema(accountId, orgIdentifier, projectIdentifier, pipelineYaml);
 
     pipelineRbacServiceImpl.extractAndValidateStaticallyReferredEntities(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml);
     executionMetadataBuilder.setPipelineIdentifier(pipelineIdentifier);
-    executionMetadataBuilder.setYaml(pipelineYaml);
     executionMetadataBuilder.setPrincipalInfo(principalInfoHelper.getPrincipalInfoFromSecurityContext());
 
-    PlanExecution planExecution =
-        startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, executionMetadataBuilder.build());
+    PlanExecution planExecution = startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml,
+        executionMetadataBuilder.build(), planExecutionMetadataBuilder);
     return PlanExecutionResponseDto.builder()
         .planExecution(planExecution)
         .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(pipelineEntity.get()))
@@ -96,14 +101,21 @@ public class PipelineExecuteHelper {
       throw new InvalidRequestException(String.format("The given pipeline id [%s] does not exist", pipelineIdentifier));
     }
 
+    final String executionId = generateUuid();
     ExecutionMetadata.Builder executionMetadataBuilder = ExecutionMetadata.newBuilder()
-                                                             .setExecutionUuid(generateUuid())
+                                                             .setExecutionUuid(executionId)
                                                              .setTriggerInfo(triggerInfo)
                                                              .setRunSequence(pipelineEntity.get().getRunSequence());
+
+    PlanExecutionMetadata.Builder planExecutionMetadataBuilder =
+        PlanExecutionMetadata.builder().planExecutionId(executionId);
+
     String mergedRuntimeInputYaml = validateAndMergeHelper.getMergeInputSetFromPipelineTemplate(accountId,
         orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences, pipelineBranch, pipelineRepoID);
     String pipelineYaml =
         MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), mergedRuntimeInputYaml, true);
+
+    planExecutionMetadataBuilder.yaml(pipelineYaml).inputSetYaml(mergedRuntimeInputYaml);
 
     pmsYamlSchemaService.validateYamlSchema(accountId, orgIdentifier, projectIdentifier, pipelineYaml);
 
@@ -111,11 +123,10 @@ public class PipelineExecuteHelper {
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml);
 
     executionMetadataBuilder.setPipelineIdentifier(pipelineIdentifier);
-    executionMetadataBuilder.setInputSetYaml(mergedRuntimeInputYaml);
-    executionMetadataBuilder.setYaml(pipelineYaml);
     executionMetadataBuilder.setPrincipalInfo(principalInfoHelper.getPrincipalInfoFromSecurityContext());
-    PlanExecution planExecution =
-        startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, executionMetadataBuilder.build());
+
+    PlanExecution planExecution = startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml,
+        executionMetadataBuilder.build(), planExecutionMetadataBuilder);
     return PlanExecutionResponseDto.builder()
         .planExecution(planExecution)
         .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(pipelineEntity.get()))
@@ -123,7 +134,8 @@ public class PipelineExecuteHelper {
   }
 
   public PlanExecution startExecution(String accountId, String orgIdentifier, String projectIdentifier, String yaml,
-      ExecutionMetadata executionMetadata) throws IOException {
+      ExecutionMetadata executionMetadata, PlanExecutionMetadata.Builder planExecutionMetadataBuuilder)
+      throws IOException {
     ExecutionMetadata.Builder executionMetadataBuilder = ExecutionMetadata.newBuilder(executionMetadata);
     // Set git sync branch context in execute metadata. This will be used for plan creation and execution.
     ByteString gitSyncBranchContext = pmsGitSyncHelper.getGitSyncBranchContextBytesThreadLocal();
@@ -131,7 +143,10 @@ public class PipelineExecuteHelper {
       executionMetadataBuilder.setGitSyncBranchContext(gitSyncBranchContext);
     }
 
-    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(yaml, executionMetadataBuilder);
+    ExecutionMetadata enhancedExecutionMetadata = executionMetadataBuilder.build();
+
+    PlanCreationBlobResponse resp =
+        planCreatorMergeService.createPlan(yaml, enhancedExecutionMetadata, planExecutionMetadataBuuilder);
     Plan plan = PlanExecutionUtils.extractPlan(resp);
     ImmutableMap.Builder<String, String> abstractionsBuilder =
         ImmutableMap.<String, String>builder()
@@ -139,6 +154,7 @@ public class PipelineExecuteHelper {
             .put(SetupAbstractionKeys.orgIdentifier, orgIdentifier)
             .put(SetupAbstractionKeys.projectIdentifier, projectIdentifier);
 
-    return orchestrationService.startExecution(plan, abstractionsBuilder.build(), executionMetadataBuilder.build());
+    return orchestrationService.startExecution(
+        plan, abstractionsBuilder.build(), enhancedExecutionMetadata, planExecutionMetadataBuuilder.build());
   }
 }

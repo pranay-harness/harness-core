@@ -8,5 +8,5 @@ import io.harness.pms.contracts.advisers.AdviserResponse;
 
 @OwnedBy(CDC)
 public interface AdviserResponseHandler {
-  void handleAdvise(NodeExecution ambiance, AdviserResponse advise);
+  void handleAdvise(NodeExecution nodeExecution, AdviserResponse advise);
 }

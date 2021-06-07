@@ -3,9 +3,9 @@ package io.harness.ngtriggers.eventmapper.filters.impl;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_EVENT_ACTION;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.WEBHOOK;
-import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.PULL_REQUEST;
 import static io.harness.rule.OwnerRule.ADWAIT;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -14,7 +14,7 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PRWebhookEvent;
 import io.harness.category.element.UnitTests;
-import io.harness.ngtriggers.beans.config.NGTriggerConfig;
+import io.harness.ngtriggers.beans.config.NGTriggerConfigV2;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
@@ -22,11 +22,13 @@ import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
-import io.harness.ngtriggers.beans.source.NGTriggerSource;
-import io.harness.ngtriggers.beans.source.NGTriggerSpec;
-import io.harness.ngtriggers.beans.source.webhook.GithubTriggerSpec;
-import io.harness.ngtriggers.beans.source.webhook.WebhookEvent;
-import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
+import io.harness.ngtriggers.beans.source.NGTriggerSourceV2;
+import io.harness.ngtriggers.beans.source.WebhookTriggerType;
+import io.harness.ngtriggers.beans.source.webhook.v2.WebhookTriggerConfigV2;
+import io.harness.ngtriggers.beans.source.webhook.v2.github.GithubSpec;
+import io.harness.ngtriggers.beans.source.webhook.v2.github.event.GithubPRSpec;
+import io.harness.ngtriggers.beans.source.webhook.v2.github.event.GithubPushSpec;
+import io.harness.ngtriggers.beans.source.webhook.v2.github.event.GithubTriggerEvent;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.service.NGTriggerService;
@@ -78,19 +80,16 @@ public class TriggerEventActionFilterTest extends CategoryTest {
             .enabled(true)
             .build();
 
-    NGTriggerConfig ngTriggerConfig =
-        NGTriggerConfig.builder()
-            .source(NGTriggerSource.builder()
-                        .type(WEBHOOK)
-                        .spec(WebhookTriggerConfig.builder()
-                                  .type("GITHUB")
-                                  .spec(GithubTriggerSpec.builder().event(WebhookEvent.PUSH).build())
-                                  .build())
-                        .build())
-            .build();
+    GithubSpec githubPushSpec =
+        GithubSpec.builder().type(GithubTriggerEvent.PUSH).spec(GithubPushSpec.builder().build()).build();
+    WebhookTriggerConfigV2 webhookTriggerConfigV1 =
+        WebhookTriggerConfigV2.builder().type(WebhookTriggerType.GITHUB).spec(githubPushSpec).build();
+    NGTriggerSourceV2 ngTriggerSourceV2 =
+        NGTriggerSourceV2.builder().type(WEBHOOK).spec(webhookTriggerConfigV1).build();
+    NGTriggerConfigV2 ngTriggerConfigV2 = NGTriggerConfigV2.builder().source(ngTriggerSourceV2).build();
 
     // No payload match
-    doReturn(ngTriggerConfig).when(ngTriggerElementMapper).toTriggerConfig("yaml");
+    doReturn(ngTriggerConfigV2).when(ngTriggerElementMapper).toTriggerConfigV2(triggerEntityGithub);
     WebhookEventMappingResponse webhookEventMappingResponse = filter.applyFilter(
         FilterRequestData.builder()
             .details(Arrays.asList(TriggerDetails.builder().ngTriggerEntity(triggerEntityGithub).build()))
@@ -104,9 +103,10 @@ public class TriggerEventActionFilterTest extends CategoryTest {
         .isEqualTo(NO_MATCHING_TRIGGER_FOR_EVENT_ACTION);
 
     // Trigger found
-    NGTriggerSpec spec = ngTriggerConfig.getSource().getSpec();
-    ((GithubTriggerSpec) ((WebhookTriggerConfig) spec).getSpec()).setEvent(PULL_REQUEST);
-
+    webhookTriggerConfigV1.setSpec(GithubSpec.builder()
+                                       .type(GithubTriggerEvent.PULL_REQUEST)
+                                       .spec(GithubPRSpec.builder().actions(emptyList()).build())
+                                       .build());
     webhookEventMappingResponse = filter.applyFilter(
         FilterRequestData.builder()
             .details(Arrays.asList(TriggerDetails.builder().ngTriggerEntity(triggerEntityGithub).build()))

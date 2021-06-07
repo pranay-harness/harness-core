@@ -8,6 +8,7 @@ import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.beans.gitsync.GitWebhookDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.product.ci.scm.proto.CompareCommitsResponse;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
 import io.harness.product.ci.scm.proto.CreateWebhookResponse;
@@ -49,7 +50,7 @@ public class JgitGitServiceImpl implements ScmClient {
   }
 
   @Override
-  public DeleteFileResponse deleteFile(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails) {
+  public DeleteFileResponse deleteFile(ScmConnector scmConnector, GitFileDetails gitFileDetails) {
     return null;
   }
 
@@ -110,6 +111,12 @@ public class JgitGitServiceImpl implements ScmClient {
   }
 
   @Override
+  public FileBatchContentResponse listFilesByFilePaths(
+      ScmConnector connector, List<String> filePathsList, String branchName) {
+    return null;
+  }
+
+  @Override
   public void createNewBranch(ScmConnector scmConnector, String branch, String defaultBranchName) {}
 
   @Override
@@ -134,6 +141,12 @@ public class JgitGitServiceImpl implements ScmClient {
 
   @Override
   public CreateWebhookResponse upsertWebhook(ScmConnector scmConnector, GitWebhookDetails gitWebhookDetails) {
+    return null;
+  }
+
+  @Override
+  public CompareCommitsResponse compareCommits(
+      ScmConnector scmConnector, String initialCommitId, String finalCommitId) {
     return null;
   }
 }

@@ -1,6 +1,6 @@
 package io.harness.batch.processing.dao.intfc;
 
-import io.harness.event.grpc.PublishedMessage;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
 
 import java.util.List;
 

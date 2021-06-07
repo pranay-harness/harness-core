@@ -27,6 +27,7 @@ public class QLCEOverviewStatsData {
   Boolean gcpConnectorsPresent;
   Boolean azureConnectorsPresent;
   Boolean applicationDataPresent;
+  Boolean inventoryDataPresent;
   Boolean clusterDataPresent;
   String defaultAzurePerspectiveId;
   @Builder.Default Boolean isSampleClusterPresent = false;

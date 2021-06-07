@@ -9,10 +9,11 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.scm.ScmPushTaskParams;
 import io.harness.delegate.task.scm.ScmPushTaskResponseData;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.ScmException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.UnknownEnumTypeException;
+import io.harness.exception.WingsException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.interceptor.GitEntityInfo;
@@ -40,7 +41,7 @@ public class ScmDelegateGitHelper implements ScmGitHelper {
   public ScmPushResponse pushToGitBasedOnChangeType(
       String yaml, ChangeType changeType, GitEntityInfo gitBranchInfo, InfoForGitPush infoForPush) {
     GitFileDetailsBuilder gitFileDetails = ScmGitUtils.getGitFileDetails(gitBranchInfo, yaml);
-    if (changeType.equals(ChangeType.MODIFY)) {
+    if (changeType.equals(ChangeType.MODIFY) || changeType.equals(ChangeType.DELETE)) {
       gitFileDetails.oldFileSha(gitBranchInfo.getLastObjectId());
     }
     ScmPushTaskParams scmPushTaskParams = ScmPushTaskParams.builder()
@@ -64,27 +65,32 @@ public class ScmDelegateGitHelper implements ScmGitHelper {
       switch (changeType) {
         case ADD:
           try {
+            final CreateFileResponse createFileResponse =
+                CreateFileResponse.parseFrom(scmPushTaskResponseData.getCreateFileResponse());
             ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
-                CreateFileResponse.parseFrom(scmPushTaskResponseData.getCreateFileResponse()).getStatus(),
-                CreateFileResponse.parseFrom(scmPushTaskResponseData.getCreateFileResponse()).getError());
-          } catch (ScmException e) {
-            if (ErrorCode.SCM_CONFLICT_ERROR.equals(e.getCode())) {
+                createFileResponse.getStatus(), createFileResponse.getError());
+            return ScmGitUtils.createScmCreateFileResponse(yaml, infoForPush, createFileResponse);
+          } catch (Exception e) {
+            // If in create file we get same file we have to throw new exception.
+            final WingsException cause = ExceptionUtils.cause(ErrorCode.SCM_CONFLICT_ERROR, e);
+            if (cause != null) {
               throw new InvalidRequestException(String.format(
                   "A file with name %s already exists in the remote Git repository", gitBranchInfo.getFilePath()));
             }
             throw e;
           }
-          return ScmGitUtils.createScmCreateFileResponse(yaml, infoForPush);
         case MODIFY:
+          final UpdateFileResponse updateFileResponse =
+              UpdateFileResponse.parseFrom(scmPushTaskResponseData.getUpdateFileResponse());
           ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
-              UpdateFileResponse.parseFrom(scmPushTaskResponseData.getUpdateFileResponse()).getStatus(),
-              UpdateFileResponse.parseFrom(scmPushTaskResponseData.getUpdateFileResponse()).getError());
-          return ScmGitUtils.createScmUpdateFileResponse(yaml, infoForPush);
+              updateFileResponse.getStatus(), updateFileResponse.getError());
+          return ScmGitUtils.createScmUpdateFileResponse(yaml, infoForPush, updateFileResponse);
         case DELETE:
+          final DeleteFileResponse deleteFileResponse =
+              DeleteFileResponse.parseFrom(scmPushTaskResponseData.getDeleteFileResponse());
           ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
-              DeleteFileResponse.parseFrom(scmPushTaskResponseData.getDeleteFileResponse()).getStatus(),
-              DeleteFileResponse.parseFrom(scmPushTaskResponseData.getDeleteFileResponse()).getError());
-          return ScmGitUtils.createScmDeleteFileResponse(yaml, infoForPush);
+              deleteFileResponse.getStatus(), deleteFileResponse.getError());
+          return ScmGitUtils.createScmDeleteFileResponse(infoForPush, deleteFileResponse);
         case NONE:
         case RENAME:
           throw new NotImplementedException(changeType + " is not Implemented");

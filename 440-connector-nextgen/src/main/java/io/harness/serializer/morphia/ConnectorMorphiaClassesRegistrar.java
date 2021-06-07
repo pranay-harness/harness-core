@@ -32,6 +32,7 @@ import io.harness.connector.entities.embedded.cek8s.CEK8sDetails;
 import io.harness.connector.entities.embedded.datadogconnector.DatadogConnector;
 import io.harness.connector.entities.embedded.docker.DockerConnector;
 import io.harness.connector.entities.embedded.docker.DockerUserNamePasswordAuthentication;
+import io.harness.connector.entities.embedded.dynatraceconnector.DynatraceConnector;
 import io.harness.connector.entities.embedded.gcpccm.GcpBillingExportDetails;
 import io.harness.connector.entities.embedded.gcpccm.GcpCloudCostConfig;
 import io.harness.connector.entities.embedded.gcpconnector.GcpConfig;
@@ -71,6 +72,7 @@ import io.harness.connector.entities.embedded.nexusconnector.NexusConnector;
 import io.harness.connector.entities.embedded.nexusconnector.NexusUserNamePasswordAuthentication;
 import io.harness.connector.entities.embedded.prometheusconnector.PrometheusConnector;
 import io.harness.connector.entities.embedded.splunkconnector.SplunkConnector;
+import io.harness.connector.entities.embedded.sumologic.SumoLogicConnector;
 import io.harness.connector.entities.embedded.vaultconnector.VaultConnector;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
@@ -109,6 +111,8 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(GcpCloudCostConfig.class);
     set.add(PrometheusConnector.class);
     set.add(DatadogConnector.class);
+    set.add(SumoLogicConnector.class);
+    set.add(DynatraceConnector.class);
   }
 
   @Override
