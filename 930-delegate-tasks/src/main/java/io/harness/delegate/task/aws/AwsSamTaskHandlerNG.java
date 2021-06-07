@@ -45,10 +45,10 @@ public class AwsSamTaskHandlerNG extends AbstractDelegateRunnableTask {
 
     if (!awsSamAbstractTaskHandlerMap.containsKey(taskParameters.getAwsSamTaskType())) {
       throw new UnexpectedTypeException(
-          String.format("Unexpected Terraform Task Type: [%s]", taskParameters.getTaskType()));
+          String.format("Unexpected Terraform Task Type: [%s]", taskParameters.getAwsSamTaskType()));
     }
 
-    AwsSamAbstractTaskHandler taskHandler = awsSamAbstractTaskHandlerMap.get(taskParameters.getTaskType());
+    AwsSamAbstractTaskHandler taskHandler = awsSamAbstractTaskHandlerMap.get(taskParameters.getAwsSamTaskType());
     return taskHandler.executeTask(taskParameters, getDelegateId(), getTaskId(), logCallback, commandUnitsProgress);
   }
 

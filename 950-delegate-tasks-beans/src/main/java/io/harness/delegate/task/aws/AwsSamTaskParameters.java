@@ -11,15 +11,12 @@ import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
 import io.harness.delegate.capability.ProcessExecutionCapabilityHelper;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
-import io.harness.delegate.task.terraform.TFTaskType;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.yaml.core.variables.NGVariable;
 
 import java.util.List;
 import java.util.Map;
-
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
@@ -30,7 +27,6 @@ import lombok.Value;
 public class AwsSamTaskParameters
     implements TaskParameters, ExecutionCapabilityDemander, ExpressionReflectionUtils.NestedAnnotationResolver {
   @NonNull String accountId;
-  @NonNull TFTaskType taskType;
   @NonNull String entityId;
   @NonNull GitFetchFilesConfig configFile;
   @NonNull AwsConnectorDTO awsConnectorDTO;
