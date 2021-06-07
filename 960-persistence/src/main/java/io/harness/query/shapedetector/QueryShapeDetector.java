@@ -2,16 +2,15 @@ package io.harness.query.shapedetector;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.query.shapedetector.QueryHashInfo.QueryHashKey;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
-import io.harness.data.structure.EmptyPredicate;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -50,15 +49,16 @@ public class QueryShapeDetector {
 
   private String calculateQueryDocHash(Document queryDoc) {
     Document normalizedQueryDoc = normalizeMap(queryDoc);
-    ObjectMapper objectMapper = new ObjectMapper();
-    String jsonString = normalizedQueryDoc.toJson();
-    try {
-      JsonNode jsonNode = objectMapper.readTree(objectMapper.getFactory().createParser(jsonString));
-      return String.valueOf(jsonNode.hashCode());
-    } catch (IOException e) {
-      log.error("Unable to parse the query json", e);
-      throw new InvalidRequestException("Unable to parse the query json");
-    }
+    //    ObjectMapper objectMapper = new ObjectMapper();
+    //    String jsonString = normalizedQueryDoc.toJson();
+    //    try {
+    //      JsonNode jsonNode = objectMapper.readTree(objectMapper.getFactory().createParser(jsonString));
+    //      return String.valueOf(jsonNode.hashCode());
+    //    } catch (IOException e) {
+    //      log.error("Unable to parse the query json", e);
+    //      throw new InvalidRequestException("Unable to parse the query json");
+    //    }
+    return String.valueOf(normalizedQueryDoc.hashCode());
   }
 
   @VisibleForTesting

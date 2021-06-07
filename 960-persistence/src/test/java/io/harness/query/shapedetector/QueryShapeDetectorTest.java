@@ -1,6 +1,5 @@
 package io.harness.query.shapedetector;
 
-import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.GARVIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,14 +7,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.category.element.UnitTests;
-import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Date;
@@ -76,6 +70,13 @@ public class QueryShapeDetectorTest extends CategoryTest {
           createCalculateHashParams(Query.query(Criteria.where("_a").is("a").and("_b").in(Arrays.asList(1, 2, 3)))),
           createCalculateHashParams(Query.query(Criteria.where("_b").in(Arrays.asList(4, 5)).and("_a").is("b")))),
 
+      // in operator
+      Arrays.asList(
+          createCalculateHashParams(Query.query(
+              Criteria.where("planExecutionId").is("p1").and("status").in(Arrays.asList("RUNNING", "WAITING")))),
+          createCalculateHashParams(Query.query(
+              Criteria.where("status").in(Arrays.asList("WAITING", "RUNNING")).and("planExecutionId").is("p3")))),
+
       // Operators
       Arrays.asList(createCalculateHashParams(Query.query(Criteria.where("_a").is("a").and("_b._c").maxDistance(10))),
           createCalculateHashParams(Query.query(Criteria.where("_b._c").maxDistance(15).and("_a").is("b")))),
@@ -117,6 +118,8 @@ public class QueryShapeDetectorTest extends CategoryTest {
       // Basic types
       ImmutablePair.of(createCalculateHashParams(Query.query(Criteria.where("_str").is("abc"))),
           createCalculateHashParams(Query.query(Criteria.where("_def").is("def")))),
+      ImmutablePair.of(createCalculateHashParams(Query.query(Criteria.where("planExecutionId").is("p1"))),
+          createCalculateHashParams(Query.query(Criteria.where("status").is("s1")))),
       ImmutablePair.of(createCalculateHashParams(Query.query(Criteria.where("_str").is("abc"))),
           createCalculateHashParams(Query.query(Criteria.where("_str").is(null)))),
       ImmutablePair.of(createCalculateHashParams(Query.query(Criteria.where("_a").is(1))),
@@ -144,91 +147,6 @@ public class QueryShapeDetectorTest extends CategoryTest {
           JsonUtils.asJson(QueryShapeDetector.normalizeObject(diffShapeQueries.getLeft().getQueryDoc()));
       assertThat(JsonUtils.asJson(QueryShapeDetector.normalizeObject(diffShapeQueries.getRight().getQueryDoc())))
           .isNotEqualTo(normalized);
-    }
-  }
-
-  @Test
-  @Owner(developers = ARCHIT)
-  @Category(UnitTests.class)
-  public void testMongoQueryHashForSameQueryShape() {
-    int hash1 = 0;
-    int hash2 = 0;
-    int hash3 = 0;
-    ObjectMapper objectMapper = new ObjectMapper();
-    try {
-      String jsonString = "{\"planExecutionId\": \"pid\", \"status\" : {\"$in\" : [\"RUNNING\", \"WAITING\"]} }";
-      JsonNode jsonNode = objectMapper.readTree(objectMapper.getFactory().createParser(jsonString));
-      hash1 = jsonNode.hashCode();
-
-      // Query with different field order.
-      jsonString = "{\"status\" : {\"$in\" : [\"RUNNING\", \"WAITING\"]}, \"planExecutionId\": \"pid\" }";
-      jsonNode = objectMapper.readTree(objectMapper.getFactory().createParser(jsonString));
-      hash2 = jsonNode.hashCode();
-
-      // Query with different field order with different order inside array.
-      jsonString = "{\"status\" : {\"$in\" : [\"WAITING\", \"RUNNING\"]}, \"planExecutionId\": \"pid\" }";
-      jsonNode = objectMapper.readTree(objectMapper.getFactory().createParser(jsonString));
-      hash3 = jsonNode.hashCode();
-    } catch (IOException e) {
-      throw new InvalidRequestException("Unable to read the json ", e);
-    }
-    assertThat(hash1).isEqualTo(hash2);
-    assertThat(hash3).isNotEqualTo(hash2);
-  }
-
-  @Test
-  @Owner(developers = ARCHIT)
-  @Category(UnitTests.class)
-  public void testMongoQueryHashForDifferentQueryShape() {
-    int hash1 = 0;
-    int hash2 = 0;
-    int hash3 = 0;
-    ObjectMapper objectMapper = new ObjectMapper();
-    try {
-      String jsonString = "{\"planExecutionId\": \"pid\"}";
-      JsonNode jsonNode = objectMapper.readTree(objectMapper.getFactory().createParser(jsonString));
-      hash1 = jsonNode.hashCode();
-
-      // Query with different field order.
-      jsonString = "{\"status\" : \"pid\" }";
-      jsonNode = objectMapper.readTree(objectMapper.getFactory().createParser(jsonString));
-      hash2 = jsonNode.hashCode();
-
-      // Query with different field order with different order inside array.
-      jsonString = "{\"planExecutionId\": \"pid3\"}";
-      jsonNode = objectMapper.readTree(objectMapper.getFactory().createParser(jsonString));
-      hash3 = jsonNode.hashCode();
-    } catch (IOException e) {
-      throw new InvalidRequestException("Unable to read the json ", e);
-    }
-    assertThat(hash1).isNotEqualTo(hash2);
-    assertThat(hash3).isNotEqualTo(hash2);
-
-    // Nested array having objects
-    String jsonString = "{\n"
-        + "    \"errors\": [\n"
-        + "        {\"error\": \"invalid\", \"field\": \"email\"},\n"
-        + "        {\"error\": \"required\", \"field\": \"name\"}\n"
-        + "    ],\n"
-        + "    \"success\": false\n"
-        + "}";
-    try {
-      JsonNode jsonNode = objectMapper.readTree(jsonString);
-      hash1 = jsonNode.hashCode();
-
-      jsonString = "{\n"
-          + " \"success\": false, \n"
-          + "    \"errors\": [\n"
-          + "        {\"error\": \"required\", \"field\": \"name\"},\n"
-          + "        {\"error\": \"invalid\", \"field\": \"email\"}\n"
-          + "    ]\n"
-          + "}";
-      jsonNode = objectMapper.readTree(jsonString);
-      hash2 = jsonNode.hashCode();
-      // errors list has different order of objects which cannot be compared.
-      assertThat(hash1).isNotEqualTo(hash2);
-    } catch (IOException e) {
-      e.printStackTrace();
     }
   }
 
