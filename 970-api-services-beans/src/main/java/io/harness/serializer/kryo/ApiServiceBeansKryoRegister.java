@@ -3,6 +3,8 @@ package io.harness.serializer.kryo;
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.argo.beans.ArgoConfigInternal;
+import io.harness.argo.beans.ClusterResourceTreeDTO;
 import io.harness.artifactory.ArtifactoryConfigRequest;
 import io.harness.aws.AwsAccessKeyCredential;
 import io.harness.aws.AwsConfig;
@@ -318,5 +320,7 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(EntityOperationIdentifier.EntityOperation.class, 97022);
 
     kryo.register(KubernetesResourceId.class, 97031);
+    kryo.register(ArgoConfigInternal.class, 97032);
+    kryo.register(ClusterResourceTreeDTO.class, 97033);
   }
 }

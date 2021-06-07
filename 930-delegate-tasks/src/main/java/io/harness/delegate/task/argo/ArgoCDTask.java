@@ -50,6 +50,7 @@ public class ArgoCDTask extends AbstractDelegateRunnableTask {
               .build();
         }
       case APP_SYNC:
+//        argoCdService.syncApp(request.getArgoConfigInternal(),request.getAppName(),null);
       case MANIFEST_DIFF:
       default:
         throw new InvalidRequestException("Unhandled Argo TaskType");
