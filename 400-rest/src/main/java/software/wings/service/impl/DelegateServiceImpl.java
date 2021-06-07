@@ -1358,8 +1358,8 @@ public class DelegateServiceImpl implements DelegateService {
               .put("kubernetesAccountLabel", getAccountIdentifier(inquiry.getAccountId()));
 
       if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES_ONPREM) {
-        params.put("managerTarget", mainConfiguration.getGrpcDelegateServiceClientConfig().getTarget());
-        params.put("managerAuthority", mainConfiguration.getGrpcDelegateServiceClientConfig().getAuthority());
+        params.put("managerTarget", mainConfiguration.getGrpcOnpremDelegateClientConfig().getTarget());
+        params.put("managerAuthority", mainConfiguration.getGrpcOnpremDelegateClientConfig().getAuthority());
       }
 
       if (isNotBlank(inquiry.getDelegateName())) {

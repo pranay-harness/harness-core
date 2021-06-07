@@ -255,6 +255,10 @@ grpcClientConfig:
   target: localhost:9980
   authority: localhost
 
+#This will be used only by OnPrem delegates for grpc communication
+grpcOnpremDelegateClientConfig:
+  target: localhost:9880
+  authority: localhost
 
 mongo:
   uri: mongodb://localhost:27017/harness
