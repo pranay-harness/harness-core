@@ -21,6 +21,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Slf4j
 public class K8DelegateProvisionState extends State implements SweepingOutputStateMixin {
   @Getter @Setter private String kubernetesConnectorId;
+  @Getter @Setter private String delegateName;
   @Getter @Setter private String cpu;
   @Getter @Setter private String memory;
   @Getter @Setter private SweepingOutputInstance.Scope sweepingOutputScope;
