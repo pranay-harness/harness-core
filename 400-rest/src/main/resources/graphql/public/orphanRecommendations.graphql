@@ -1,0 +1,31 @@
+extend type Query {
+    orphanRecommendations(type: String!): RecommendationsData @dataFetcher(name: orphanRecommendations)
+
+    orphanOverview: RecommendationsOverviewData @dataFetcher(name: orphanOverview)
+}
+
+type RecommendationsData {
+    data: [RecommendationsDataPoint]
+}
+
+type RecommendationsDataPoint {
+    resource: String
+    recommendationSubtype: String
+    location: String
+    region: String
+    resourceType: String
+    description: String
+    insight: String
+    resourceLink: String
+    cost: Number
+    currency: String
+    costPeriod: String
+    projectId: String
+}
+
+type RecommendationsOverviewData {
+    totalSavings: Number
+    pdSavings: Number
+    ipSavings: Number
+    vmSavings: Number
+}
