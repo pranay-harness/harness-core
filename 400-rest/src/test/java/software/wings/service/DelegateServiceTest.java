@@ -111,6 +111,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.http.HttpTaskParameters;
+import io.harness.eventsframework.api.Producer;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logstreaming.LogStreamingServiceConfig;
@@ -256,6 +257,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private DelegateSelectionLogsService delegateSelectionLogsService;
   @Mock private DelegateInsightsService delegateInsightsService;
   @Mock private DelegateTokenService delegateTokenService;
+  @Mock private Producer eventProducer;
 
   @Inject private FeatureTestHelper featureTestHelper;
   @Inject private DelegateConnectionDao delegateConnectionDao;
@@ -830,6 +832,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(persistence.get(DelegateGroup.class, delegateGroup.getUuid())).isNull();
     assertThat(persistence.get(Delegate.class, d1.getUuid())).isNull();
     assertThat(persistence.get(Delegate.class, d2.getUuid())).isNull();
+    verify(eventProducer).send(any());
     featureTestHelper.disableFeatureFlag(FeatureName.DO_DELEGATE_PHYSICAL_DELETE);
   }
 

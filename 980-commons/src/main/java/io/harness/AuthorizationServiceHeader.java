@@ -13,6 +13,7 @@ public enum AuthorizationServiceHeader {
   CI_MANAGER("CIManager"),
   CV_NEXT_GEN("CVNextGen"),
   CE_NEXT_GEN("CENextGen"),
+  DELEGATE_SERVICE("DelegateService"),
   IDENTITY_SERVICE("IdentityService"),
   ADMIN_PORTAL("AdminPortal"),
   NOTIFICATION_SERVICE("NotificationService"),

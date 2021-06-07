@@ -1,9 +1,11 @@
 package software.wings.app;
 
+import static io.harness.AuthorizationServiceHeader.DELEGATE_SERVICE;
 import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
+import io.harness.AccessControlClientModule;
 import io.harness.CgOrchestrationModule;
 import io.harness.SecretManagementCoreModule;
 import io.harness.annotations.dev.HarnessModule;
@@ -1331,6 +1333,10 @@ public class WingsModule extends AbstractModule implements ServersModule {
     // ng-secret dependencies
     install(new SecretNGManagerClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+
+    // ng-rbac dependencies
+    install(AccessControlClientModule.getInstance(
+        configuration.getAccessControlClientConfiguration(), DELEGATE_SERVICE.getServiceId()));
 
     install(CgOrchestrationModule.getInstance());
     // Orchestration Dependencies

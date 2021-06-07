@@ -1,10 +1,14 @@
 package io.harness.delegate.resources;
 
+import static io.harness.delegate.utils.RbacConstants.DELEGATE_RESOURCE_TYPE;
+import static io.harness.delegate.utils.RbacConstants.DELEGATE_VIEW_PERMISSION;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
-import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
 
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateGroupDetails;
@@ -15,7 +19,6 @@ import io.harness.rest.RestResponse;
 import io.harness.service.intfc.DelegateSetupService;
 
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.annotations.Scope;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -32,23 +35,30 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Api("/setup/delegates/v2")
 @Path("/setup/delegates/v2")
 @Produces("application/json")
-@Scope(DELEGATE)
+@AuthRule(permissionType = LOGGED_IN)
+//@Scope(DELEGATE)
+// This NG specific, switching to NG access control. AuthRule to be removed also when NG access control is fully
+// enabled.
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
 public class DelegateSetupResource {
   private final DelegateSetupService delegateSetupService;
+  private final AccessControlClient accessControlClient;
 
   @Inject
-  public DelegateSetupResource(DelegateSetupService delegateSetupService) {
+  public DelegateSetupResource(DelegateSetupService delegateSetupService, AccessControlClient accessControlClient) {
     this.delegateSetupService = delegateSetupService;
+    this.accessControlClient = accessControlClient;
   }
 
   @GET
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<DelegateGroupListing> list(@QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("orgId") String orgId, @QueryParam("projectId") String projectId) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
+        Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_VIEW_PERMISSION);
+
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateSetupService.listDelegateGroupDetails(accountId, orgId, projectId));
     }
@@ -58,9 +68,12 @@ public class DelegateSetupResource {
   @Path("{delegateGroupId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<DelegateGroupDetails> get(@PathParam("delegateGroupId") @NotEmpty String delegateGroupId,
-      @QueryParam("accountId") @NotEmpty String accountId) {
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("orgId") String orgId,
+      @QueryParam("projectId") String projectId) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
+        Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_VIEW_PERMISSION);
+
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateSetupService.getDelegateGroupDetails(accountId, delegateGroupId));
     }

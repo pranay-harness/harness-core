@@ -8,6 +8,7 @@ import io.harness.delegate.beans.DelegateGroupListing;
 
 import software.wings.beans.SelectorType;
 
+import java.util.List;
 import java.util.Map;
 
 @OwnedBy(HarnessTeam.DEL)
@@ -19,4 +20,9 @@ public interface DelegateSetupService {
   String getHostNameForGroupedDelegate(String hostname);
 
   Map<String, SelectorType> retrieveDelegateImplicitSelectors(Delegate delegate);
+
+  List<Boolean> validateDelegateGroups(String accountId, String orgId, String projectId, List<String> identifiers);
+
+  List<Boolean> validateDelegateConfigurations(
+      String accountId, String orgId, String projectId, List<String> identifiers);
 }
