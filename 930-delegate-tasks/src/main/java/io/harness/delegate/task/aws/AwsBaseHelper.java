@@ -17,5 +17,5 @@ public interface AwsBaseHelper {
                                    String workspace, String currentStateFileId, GitStoreDelegateConfig confileFileGitStore, LogCallback logCallback,
                                    String scriptPath, String workingDir);
 
-    String resolveBaseDir(String accountId, String provisionerId);
+    String resolveBaseDir(String accountId);
 }

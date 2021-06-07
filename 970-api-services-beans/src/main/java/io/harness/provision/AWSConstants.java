@@ -7,7 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 public final class AWSConstants {
   private AWSConstants() {}
   public static final String AWS_SAM_WORKING_DIRECTORY = "./aws-sam-working-dir/";
-  public static final String AWS_SAM_BASE_DIR = "./aws-sam-working-dir/${ACCOUNT_ID}/${ENTITY_ID}";
+  public static final String AWS_SAM_BASE_DIR = "./aws-sam-working-dir/${ACCOUNT_ID}/";
   public static final String AWS_SAM_APP_REPOSITORY_DIR = "sam-app-repository";
   public static final String USER_DIR_KEY = "user.dir";
 }
