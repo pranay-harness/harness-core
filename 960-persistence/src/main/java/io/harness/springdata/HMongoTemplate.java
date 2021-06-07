@@ -18,6 +18,10 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.lang.Nullable;
 
+/**
+ * This Template will be updated with out inegrations
+ */
+
 @SuppressWarnings("NullableProblems")
 @Slf4j
 public class HMongoTemplate extends MongoTemplate implements HealthMonitor {
