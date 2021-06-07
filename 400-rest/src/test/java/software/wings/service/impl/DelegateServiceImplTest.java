@@ -145,9 +145,9 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @InjectMocks @Inject private DelegateTaskServiceImpl delegateTaskService;
 
   @Mock private AssignDelegateService assignDelegateService;
-  @Mock private FeatureFlagService featureFlagService;
   @Mock private DelegateSelectionLogsService delegateSelectionLogsService;
   @Mock private SettingsService settingsService;
+  @Mock private FeatureFlagService featureFlagService;
 
   @InjectMocks @Spy private DelegateServiceImpl spydelegateService;
   @InjectMocks @Spy private DelegateTaskServiceClassicImpl spydelegateTaskServiceClassic;
