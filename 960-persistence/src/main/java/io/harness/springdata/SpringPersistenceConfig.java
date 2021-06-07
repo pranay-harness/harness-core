@@ -4,6 +4,7 @@ import static com.google.inject.Key.get;
 import static com.google.inject.name.Names.named;
 
 import io.harness.annotation.HarnessRepo;
+import io.harness.mongo.MongoConfig;
 
 import com.google.inject.Injector;
 import com.mongodb.MongoClient;
@@ -56,7 +57,8 @@ public class SpringPersistenceConfig extends AbstractMongoConfiguration {
   @Bean(name = "primary")
   @Primary
   public MongoTemplate mongoTemplate() throws Exception {
-    return new HMongoTemplate(mongoDbFactory(), mappingMongoConverter());
+    MongoConfig config = injector.getInstance(MongoConfig.class);
+    return new HMongoTemplate(mongoDbFactory(), mappingMongoConverter(), config.getTraceMode());
   }
 
   @Bean
