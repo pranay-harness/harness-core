@@ -79,6 +79,8 @@ public class InternalContainerParamsProvider {
       Integer stageMemoryRequest, Map<String, String> logEnvVars, Map<String, String> tiEnvVars,
       Map<String, String> volumeToMountPath, String workDirPath, String podName, String namespace, String logPrefix,
       Ambiance ambiance) {
+    List<String> args = new ArrayList<>(
+        Collections.singletonList(format("/usr/local/bin/ci-lite-engine --pod %s --namespace %s", podName, namespace)));
     return CIK8ContainerParams.builder()
         .name(LITE_ENGINE_CONTAINER_NAME)
         .containerResourceParams(getLiteEngineResourceParams(stageCpuRequest, stageMemoryRequest))
@@ -96,8 +98,7 @@ public class InternalContainerParamsProvider {
         .volumeToMountPath(volumeToMountPath)
         .workingDir(workDirPath)
         .commands(SH_COMMAND)
-        .args(Collections.singletonList(
-            format("/usr/local/bin/ci-lite-engine --pod %s --namespace %s", podName, namespace)))
+        .args(args)
         .build();
   }
 

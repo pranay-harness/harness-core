@@ -150,7 +150,7 @@ public class RunStepTest extends CIExecutionTestBase {
     when(ciExecutionServiceConfig.isLocal()).thenReturn(false);
     when(ciDelegateTaskExecutor.queueTask(any(), any())).thenReturn(callbackId);
     when(runStepProtobufSerializer.serializeStepWithStepParameters(
-             any(), any(), any(), any(), any(), any(), any(), any()))
+             any(), any(), any(), any(), any(), any(), any(), any(), any()))
         .thenReturn(UnitStep.newBuilder().build());
 
     AsyncExecutableResponse asyncExecutableResponse =
