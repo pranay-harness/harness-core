@@ -56,7 +56,7 @@ public class ActivityHistoryServiceImpl implements ActivityHistoryService {
 
     userToActivityHistoryList.forEach((userId, activityList) -> {
       activityHistoryByUserList.add(ActivityHistoryByUser.builder()
-                                        .activityStatsPerTimestampList(aggregateDataPerDay(activityHistoryList))
+                                        .activityStatsPerTimestampList(aggregateDataPerDay(activityList))
                                         .userId(userId)
                                         .build());
     });
@@ -79,7 +79,7 @@ public class ActivityHistoryServiceImpl implements ActivityHistoryService {
 
     userToActivityHistoryList.forEach((projectId, activityList) -> {
       activityHistoryByProjectList.add(ActivityHistoryByProject.builder()
-                                           .activityStatsPerTimestampList(aggregateDataPerDay(activityHistoryList))
+                                           .activityStatsPerTimestampList(aggregateDataPerDay(activityList))
                                            .projectId(projectId)
                                            .build());
     });
