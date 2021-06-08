@@ -78,7 +78,8 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
         if (patchInstruction.getType().equals(Type.ADD_TARGETS_TO_VARIATION_TARGET_MAP)) {
           AddTargetsToVariationTargetMapYamlSpec spec =
               ((AddTargetsToVariationTargetMapYaml) patchInstruction).getSpec();
-          PatchInstruction instruction = cfApi.getAddTargetToVariationMapParams(spec.getVariation(), spec.getTargets());
+          PatchInstruction instruction =
+              cfApi.getAddTargetToVariationMapParams(spec.getVariation().getValue(), spec.getTargets().getValue());
           instructions.add(instruction);
         }
 
@@ -86,7 +87,7 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
           RemoveTargetsToVariationTargetMapYamlSpec spec =
               ((RemoveTargetsToVariationTargetMapYaml) patchInstruction).getSpec();
           PatchInstruction instruction =
-              cfApi.getRemoveTargetToVariationMapParams(spec.getVariation(), spec.getTargets());
+              cfApi.getRemoveTargetToVariationMapParams(spec.getVariation().getValue(), spec.getTargets().getValue());
           instructions.add(instruction);
         }
 
@@ -94,7 +95,7 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
           AddSegmentToVariationTargetMapYamlSpec spec =
               ((AddSegmentToVariationTargetMapYaml) patchInstruction).getSpec();
           PatchInstruction instruction =
-              cfApi.getAddSegmentToVariationMapParams(spec.getVariation(), spec.getSegments());
+              cfApi.getAddSegmentToVariationMapParams(spec.getVariation().getValue(), spec.getSegments().getValue());
           instructions.add(instruction);
         }
 
@@ -102,7 +103,7 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
           RemoveSegmentToVariationTargetMapYamlSpec spec =
               ((RemoveSegmentToVariationTargetMapYaml) patchInstruction).getSpec();
           PatchInstruction instruction =
-              cfApi.getAddSegmentToVariationMapParams(spec.getVariation(), spec.getSegments());
+              cfApi.getAddSegmentToVariationMapParams(spec.getVariation().getValue(), spec.getSegments().getValue());
           instructions.add(instruction);
         }
       }

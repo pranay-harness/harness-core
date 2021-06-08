@@ -1,5 +1,7 @@
 package io.harness.steps.cf;
 
+import io.harness.pms.yaml.ParameterField;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -23,6 +25,8 @@ public class SetFeatureFlagStateYaml implements PatchInstruction {
   @NoArgsConstructor
   @AllArgsConstructor
   public static class SetFeatureFlagStateYamlSpec {
-    private String state;
+    private ParameterField<String> state;
+    private ParameterField<String> identifier;
+    private ParameterField<String> name;
   }
 }
