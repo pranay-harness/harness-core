@@ -8,6 +8,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/tools/clientcmd"
 	metrics "k8s.io/metrics/pkg/client/clientset/versioned"
+	"go.uber.org/zap"
 )
 
 // ContainerResource is the resource taken by a container
@@ -16,7 +17,7 @@ type ContainerResource struct {
 	MilliCPU  int64
 }
 
-func GetPodMetrics(podName, namespace string) (map[string]ContainerResource, error) {
+func GetPodMetrics(podName, namespace string, log *zap.SugaredLogger) (map[string]ContainerResource, error) {
 	ctx := context.Background()
 
 	var kubeconfig, master string //empty, assuming inClusterConfig
@@ -33,6 +34,8 @@ func GetPodMetrics(podName, namespace string) (map[string]ContainerResource, err
 	if err != nil {
 		return nil, err
 	}
+
+	log.Infow("Pod metric returned", "metric", podMetric)
 
 	podContainers := podMetric.Containers
 	ctrResourceByName := make(map[string]ContainerResource)

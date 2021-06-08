@@ -11,7 +11,7 @@ import (
 func Collect(podName, namespace string, log *zap.SugaredLogger) {
 	go func() {
 		for {
-			ctrResourcesByName, err := cmetrics.GetPodMetrics(podName, namespace)
+			ctrResourcesByName, err := cmetrics.GetPodMetrics(podName, namespace, log)
 			if err != nil {
 				log.Infow("failed to fetch pod metrics", zap.Error(err))
 				time.Sleep(time.Second * 5)
