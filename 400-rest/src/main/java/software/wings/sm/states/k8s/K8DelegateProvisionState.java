@@ -98,7 +98,7 @@ public class K8DelegateProvisionState extends State implements SweepingOutputSta
       cvActivityLogService.getLoggerByStateExecutionId(context.getAccountId(), context.getStateExecutionInstanceId())
           .info("Delegate start command successful");
       // wait until delegate is up
-      while (!delegateService.checkDelegateConnected(context.getAccountId(), nameOfDelegate)) {
+      while (!delegateService.checkDelegateConnectedByName(context.getAccountId(), nameOfDelegate)) {
         cvActivityLogService.getLoggerByStateExecutionId(context.getAccountId(), context.getStateExecutionInstanceId())
             .info("Delegate is not up yet, sleeping for 10 seconds.");
         log.info("Delegate is not up yet, sleeping for 10 seconds.");
