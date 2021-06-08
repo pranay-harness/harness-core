@@ -23,13 +23,19 @@ import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import javax.ws.rs.Path;
 import lombok.extern.slf4j.Slf4j;
+import org.glassfish.jersey.server.model.Resource;
+import org.reflections.Reflections;
 
 @Slf4j
 public class AnalyserServiceApplication extends Application<AnalyserServiceConfiguration> {
+  public static final String RESOURCE_PACKAGE = "io.harness.analyserservice";
+
   public static void main(String[] args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       log.info("Shutdown hook, entering maintenance...");
@@ -65,6 +71,7 @@ public class AnalyserServiceApplication extends Application<AnalyserServiceConfi
     });
     modules.add(AnalyserServiceModule.getInstance(configuration));
     Injector injector = Guice.createInjector(modules);
+    registerResources(environment, injector);
 
     registerManagedBeans(environment, injector);
     registerScheduledJobs(injector);
@@ -85,5 +92,17 @@ public class AnalyserServiceApplication extends Application<AnalyserServiceConfi
 
   private void populateCache(Injector injector) {
     injector.getInstance(QueryStatsService.class).storeHashesInsideCache();
+  }
+
+  private void registerResources(Environment environment, Injector injector) {
+    for (Class<?> resource : getResourceClasses()) {
+      if (Resource.isAcceptable(resource)) {
+        environment.jersey().register(injector.getInstance(resource));
+      }
+    }
+  }
+  public static Collection<Class<?>> getResourceClasses() {
+    Reflections reflections = new Reflections(RESOURCE_PACKAGE);
+    return reflections.getTypesAnnotatedWith(Path.class);
   }
 }

@@ -34,4 +34,9 @@ public class QueryStatsRepositoryCustomImpl implements QueryStatsRepositoryCusto
     });
     return true;
   }
+
+  @Override
+  public List<String> findAllServices() {
+    return mongoTemplate.findDistinct("serviceName", QueryStats.class, String.class);
+  }
 }

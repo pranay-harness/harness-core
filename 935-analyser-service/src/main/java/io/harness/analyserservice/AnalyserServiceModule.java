@@ -103,6 +103,7 @@ public class AnalyserServiceModule extends AbstractModule {
     install(new EventsFrameworkModule(config.getEventsFrameworkConfiguration()));
     install(new SpringPersistenceModule());
     bind(HPersistence.class).to(MongoPersistence.class);
+    bind(AnalyserService.class).to(AnalyserServiceImpl.class);
     bind(QueryStatsService.class).to(QueryStatsServiceImpl.class);
     bind(QueryRecordsService.class).to(QueryRecordsServiceImpl.class);
 
