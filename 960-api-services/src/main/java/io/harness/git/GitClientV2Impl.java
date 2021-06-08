@@ -32,10 +32,12 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.GeneralException;
 import io.harness.exception.GitClientException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;
+import io.harness.exception.runtime.JGitRuntimeException;
 import io.harness.filesystem.FileIo;
 import io.harness.git.model.AuthInfo;
 import io.harness.git.model.ChangeType;
@@ -284,6 +286,30 @@ public class GitClientV2Impl implements GitClientV2 {
       return getMessage(e);
     }
     return null; // no error
+  }
+
+  @Override
+  public void validateOrThrow(GitBaseRequest request) {
+    notNullCheck("Validate request cannot be null", request);
+    cleanup(request);
+    notEmptyCheck("url cannot be empty", request.getRepoUrl());
+    String repoUrl = request.getRepoUrl();
+
+    try {
+      // Init Git repo
+      LsRemoteCommand lsRemoteCommand = Git.lsRemoteRepository();
+      lsRemoteCommand = (LsRemoteCommand) getAuthConfiguredCommand(lsRemoteCommand, request);
+      lsRemoteCommand.setRemote(repoUrl).setHeads(true).setTags(true).call();
+      log.info(
+          gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Remote branches found, validation success.");
+    } catch (Exception e) {
+      log.info(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Git validation failed [{}]", e);
+      if (e instanceof GitAPIException) {
+        throw new JGitRuntimeException(e.getMessage(), e);
+      } else {
+        throw new GeneralException(e.getMessage(), e);
+      }
+    }
   }
 
   @Override

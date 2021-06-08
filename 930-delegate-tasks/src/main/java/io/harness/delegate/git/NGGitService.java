@@ -12,7 +12,9 @@ import io.harness.shell.SshSessionConfig;
 
 @OwnedBy(HarnessTeam.DX)
 public interface NGGitService {
-  String validate(GitConfigDTO gitConfig, String accountId, SshSessionConfig sshSessionConfig);
+  void validate(GitConfigDTO gitConfig, String accountId, SshSessionConfig sshSessionConfig);
+
+  void validateOrThrow(GitConfigDTO gitConfig, String accountId, SshSessionConfig sshSessionConfig);
 
   CommitAndPushResult commitAndPush(GitConfigDTO gitConfig, CommitAndPushRequest commitAndPushRequest, String accountId,
       SshSessionConfig sshSessionConfig);

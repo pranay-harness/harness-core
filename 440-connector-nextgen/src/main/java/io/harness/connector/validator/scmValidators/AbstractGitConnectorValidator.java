@@ -1,5 +1,6 @@
 package io.harness.connector.validator.scmValidators;
 
+import static io.harness.connector.helper.GitApiAccessDecryptionHelper.hasApiAccess;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.connector.scm.GitConnectionType.ACCOUNT;
 
@@ -46,15 +47,19 @@ public abstract class AbstractGitConnectorValidator extends AbstractConnectorVal
     if (isNotEmpty(authenticationEncryptedDataDetails)) {
       encryptedDataDetails.addAll(authenticationEncryptedDataDetails);
     }
-    List<EncryptedDataDetail> apiAccessEncryptedDataDetail =
-        gitConfigAuthenticationInfoHelper.getApiAccessEncryptedDataDetail((ScmConnector) connectorConfig, ngAccess);
-    if (isNotEmpty(apiAccessEncryptedDataDetail)) {
-      encryptedDataDetails.addAll(apiAccessEncryptedDataDetail);
+    ScmConnector scmConnector = (ScmConnector) connectorConfig;
+
+    if (hasApiAccess(scmConnector)) {
+      List<EncryptedDataDetail> apiAccessEncryptedDataDetail =
+          gitConfigAuthenticationInfoHelper.getApiAccessEncryptedDataDetail(scmConnector, ngAccess);
+      if (isNotEmpty(apiAccessEncryptedDataDetail)) {
+        encryptedDataDetails.addAll(apiAccessEncryptedDataDetail);
+      }
     }
 
     return GitCommandParams.builder()
         .gitConfig(gitConfig)
-        .scmConnector((ScmConnector) connectorConfig)
+        .scmConnector(scmConnector)
         .sshKeySpecDTO(sshKeySpecDTO)
         .gitCommandType(GitCommandType.VALIDATE)
         .encryptionDetails(encryptedDataDetails)

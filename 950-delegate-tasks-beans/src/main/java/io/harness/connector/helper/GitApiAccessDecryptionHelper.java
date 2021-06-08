@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.exception.InvalidRequestException;
@@ -33,6 +34,8 @@ public class GitApiAccessDecryptionHelper {
       return hasAPIAccess((BitbucketConnectorDTO) scmConnector);
     } else if (scmConnector instanceof GitlabConnectorDTO) {
       return hasAPIAccess((GitlabConnectorDTO) scmConnector);
+    } else if (scmConnector instanceof GitConfigDTO) {
+      return false;
     }
     throw new InvalidRequestException("Unsupported Scm Connector");
   }

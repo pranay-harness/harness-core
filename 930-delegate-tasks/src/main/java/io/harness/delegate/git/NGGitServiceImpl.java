@@ -48,10 +48,16 @@ public class NGGitServiceImpl implements NGGitService {
   @Inject private SshSessionConfigMapper sshSessionConfigMapper;
 
   @Override
-  public String validate(GitConfigDTO gitConfig, String accountId, SshSessionConfig sshSessionConfig) {
+  public void validate(GitConfigDTO gitConfig, String accountId, SshSessionConfig sshSessionConfig) {
     final GitBaseRequest gitBaseRequest = GitBaseRequest.builder().build();
     setGitBaseRequest(gitConfig, accountId, gitBaseRequest, YAML, sshSessionConfig);
-    return gitClientV2.validate(gitBaseRequest);
+    gitClientV2.validate(gitBaseRequest);
+  }
+  @Override
+  public void validateOrThrow(GitConfigDTO gitConfig, String accountId, SshSessionConfig sshSessionConfig) {
+    final GitBaseRequest gitBaseRequest = GitBaseRequest.builder().build();
+    setGitBaseRequest(gitConfig, accountId, gitBaseRequest, YAML, sshSessionConfig);
+    gitClientV2.validateOrThrow(gitBaseRequest);
   }
 
   @VisibleForTesting
