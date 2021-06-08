@@ -58,8 +58,6 @@ public class ArgoSyncExecutionData extends StateExecutionData implements Delegat
         executionDetails, "repoUrl", ExecutionDataValue.builder().value(repoUrl).displayName("Git Repo").build());
     putNotNull(
         executionDetails, "repoRef", ExecutionDataValue.builder().value(repoRef).displayName("Repo Ref").build());
-    putNotNull(executionDetails, "syncOption",
-        ExecutionDataValue.builder().value(syncOption).displayName("Sync Option").build());
     return executionDetails;
   }
 
