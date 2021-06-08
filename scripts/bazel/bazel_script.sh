@@ -36,6 +36,21 @@ if [ "${RUN_BAZEL_TESTS}" == "true" ]; then
   exit $?
 fi
 
+if [ "${RUN_BAZEL_ANALYSIS}" == "true" ]; then
+  bazel ${bazelrc} build ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/...
+  bazel ${bazelrc} test --check_tests_up_to_date --cache_test_results=${CACHE_TEST_RESULTS} --define=HARNESS_ARGS=${HARNESS_ARGS} --keep_going ${BAZEL_ARGUMENTS} -- \
+  //... -//product/... -//commons/... -//200-functional-test/... -//190-deployment-functional-tests/... | grep 'NO STATUS' > data.txt
+  python script.py
+  exit $?
+fi
+
+if [ "${RUN_BAZEL_TESTS_NEW}" == "true" ]; then
+  bazel ${bazelrc} build ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... \
+  && bazel ${bazelrc} test --cache_test_results=${CACHE_TEST_RESULTS} --define=HARNESS_ARGS=${HARNESS_ARGS} --keep_going ${BAZEL_ARGUMENTS} ${TEST_FILES}
+  exit $?
+fi
+
+
 if [ "${RUN_CHECKS}" == "true" ]; then
   TARGETS=$(bazel query 'attr(tags, "checkstyle", //...:*)')
   bazel ${bazelrc} build ${BAZEL_ARGUMENTS} -k ${TARGETS}
