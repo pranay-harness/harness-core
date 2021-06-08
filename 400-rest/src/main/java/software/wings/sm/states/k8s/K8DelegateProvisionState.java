@@ -1,9 +1,6 @@
 package software.wings.sm.states.k8s;
 
-import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
-
 import io.harness.beans.SweepingOutputInstance;
-import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.exception.WingsException;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesHelperService;
@@ -11,7 +8,6 @@ import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
-import io.harness.service.intfc.DelegateSetupService;
 
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
@@ -28,25 +24,16 @@ import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 
 import com.github.reinert.jjschema.Attributes;
 import com.google.inject.Inject;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.SystemUtils;
-import org.checkerframework.checker.units.qual.K;
 import org.mongodb.morphia.annotations.Transient;
-import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.ProcessResult;
 
 @FieldNameConstants(innerTypeName = "K8DelegateSpawnStateKeys")
 @Attributes
