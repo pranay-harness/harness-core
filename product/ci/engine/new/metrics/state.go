@@ -22,16 +22,19 @@ func (s *metricsState) Update(currCtrResourceByName map[string]cmetrics.Containe
 	defer s.mu.Unlock()
 
 	for ctrName, currResource := range currCtrResourceByName {
-		if maxResource, ok := s.ctrResourcesByName[ctrName]; ok {
-			if currResource.MemoryMib > maxResource.MemoryMib {
-				maxResource.MemoryMib = currResource.MemoryMib
-			}
-			if currResource.MilliCPU > maxResource.MilliCPU {
-				maxResource.MilliCPU = currResource.MilliCPU
-			}
-		} else {
-			s.ctrResourcesByName[ctrName] = currResource
+		u := cmetrics.ContainerResource{
+			MemoryMib: currResource.MemoryMib,
+			MilliCPU:  currResource.MilliCPU,
 		}
+		if maxResource, ok := s.ctrResourcesByName[ctrName]; ok {
+			if currResource.MemoryMib < maxResource.MemoryMib {
+				u.MemoryMib = maxResource.MemoryMib
+			}
+			if currResource.MilliCPU < maxResource.MilliCPU {
+				u.MilliCPU = maxResource.MilliCPU
+			}
+		}
+		s.ctrResourcesByName[ctrName] = u
 	}
 }
 

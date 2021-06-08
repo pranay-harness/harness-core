@@ -22,7 +22,7 @@ func Collect(podName, namespace string, log *zap.SugaredLogger) {
 			ms := MetricState()
 			ms.Update(ctrResourcesByName)
 			log.Infow("Updated max pod metrics resource", "max_resources", ms.ctrResourcesByName)
-			time.Sleep(time.Second * 5)
+			time.Sleep(time.Second * 3)
 		}
 	}()
 }
