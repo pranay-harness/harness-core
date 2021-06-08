@@ -27,7 +27,7 @@ def checkThreshold(previous_time, current_time):
     return ((previous_time-current_time)/previous_time) > THRESHOLD 
 
 
-with open ("data.txt", "r") as myfile:
+with open ("scripts/bazel/data.txt", "r") as myfile:
     data=myfile.readlines()
 
 tests=[]
@@ -37,7 +37,7 @@ for i in data:
     test_name=cur.partition("NO STATUS")[0]
     tests.append(test_name.strip())
 
-reader = csv.reader(open('TestClassReport.csv', 'r'))
+reader = csv.reader(open('scripts/jenkins/TestClassReport.csv', 'r'))
 test_times= {}
 totalTime=float(0)
 count=0
@@ -76,11 +76,11 @@ for num_nodes in range(2,MAX_NODES+1):
 print(ideal_test_per_node)
 
 for i in range(5):
-    f = open(str(i)+".txt", "w")
+    f = open('scripts/jenkins/'+str(i)+".txt", "w")
 
 for node in ideal_test_per_node:
     toWrite=""
     for test in ideal_test_per_node[node]:
         toWrite+=test+"/... "
-    f = open(str(node)+".txt", "w")
+    f = open('scripts/jenkins/'+str(node)+".txt", "w")
     f.write(toWrite)

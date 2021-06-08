@@ -1,0 +1,6 @@
+//990-commons-test:io.harness.ExtendsCategoryEnforcerTest             NO STATUS
+//990-commons-test:io.harness.owner.OwnerMetadataTest                 NO STATUS
+//990-commons-test:io.harness.rule.CategoryTimeoutRuleTest            NO STATUS
+//990-commons-test:io.harness.scm.ScmSecretTest                       NO STATUS
+//990-commons-test:io.harness.threading.ConcurrentTest                NO STATUS
+//990-commons-test:io.harness.time.FakeClockTest                      NO STATUS
