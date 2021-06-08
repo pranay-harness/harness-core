@@ -25,6 +25,8 @@ import software.wings.sm.StateType;
 import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 
 import com.github.reinert.jjschema.Attributes;
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -44,7 +46,7 @@ import org.mongodb.morphia.annotations.Transient;
 public class K8DelegateProvisionState extends State implements SweepingOutputStateMixin {
   private static final String kubectlBaseDir = "./client-tools/kubectl/";
   private static final String defaultKubectlVersion = "v1.13.2";
-  private static String kubectlPath;
+  private static String kubectlPath = kubectlBaseDir + defaultKubectlVersion;
   @Getter @Setter private String kubernetesConnectorId;
   @Getter @Setter private String delegateName;
   @Getter @Setter private String cpu;
@@ -94,18 +96,26 @@ public class K8DelegateProvisionState extends State implements SweepingOutputSta
       File yamlFile = delegateService.getYamlForKubernetesDelegate("https://pr.harness.io/hackathon-ondemand",
           "https://pr.harness.io/hackathon-ondemand", context.getAccountId(), nameOfDelegate, null, null);
 
-      Kubectl kubectl = Kubectl.client(kubectlPath, kubeConf.getAbsolutePath());
+      Kubectl kubectl = Kubectl.client(kubectlPath + "/kubectl", kubeConf.getAbsolutePath());
       String finalCmd = kubectl.apply().filename(yamlFile.getAbsolutePath()).command();
       log.info("final command to be executed is " + finalCmd);
-      OnDemandDelegateHelper.executeCommand(finalCmd, 10);
+      boolean response = OnDemandDelegateHelper.executeCommand(finalCmd, 10);
+      if (!response) {
+        log.error("Issue while running command for kubectl");
+        return ExecutionResponse.builder()
+            .async(false)
+            .errorMessage("Error while starting up the delegate with kubectl command")
+            .executionStatus(ExecutionStatus.ERROR)
+            .build();
+      }
       cvActivityLogService.getLoggerByStateExecutionId(context.getAccountId(), context.getStateExecutionInstanceId())
           .info("Delegate start command successful");
       // wait until delegate is up
       while (!delegateService.checkDelegateConnectedByName(context.getAccountId(), nameOfDelegate)) {
         cvActivityLogService.getLoggerByStateExecutionId(context.getAccountId(), context.getStateExecutionInstanceId())
             .info("Delegate is not up yet, sleeping for 10 seconds.");
-        log.info("Delegate is not up yet, sleeping for 10 seconds.");
-        Thread.sleep(10000);
+        log.info("Delegate is not up yet, sleeping for 30 seconds.");
+        Thread.sleep(30000);
       }
 
       cvActivityLogService.getLoggerByStateExecutionId(context.getAccountId(), context.getStateExecutionInstanceId())

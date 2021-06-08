@@ -42,7 +42,7 @@ import org.mongodb.morphia.annotations.Transient;
 public class K8DelegateDestroyState extends State implements SweepingOutputStateMixin {
   private static final String kubectlBaseDir = "./client-tools/kubectl/";
   private static final String defaultKubectlVersion = "v1.13.2";
-  private static String kubectlPath;
+  private static String kubectlPath = kubectlBaseDir + defaultKubectlVersion;
   @Getter @Setter private String kubernetesConnectorId;
   @Getter @Setter private String delegateName;
   @Getter @Setter private SweepingOutputInstance.Scope sweepingOutputScope;
@@ -89,7 +89,7 @@ public class K8DelegateDestroyState extends State implements SweepingOutputState
       File yamlFile = delegateService.getYamlForKubernetesDelegate("https://pr.harness.io/hackathon-ondemand",
           "https://pr.harness.io/hackathon-ondemand", context.getAccountId(), nameOfDelegate, null, null);
 
-      Kubectl kubectl = Kubectl.client(kubectlPath, kubeConf.getAbsolutePath());
+      Kubectl kubectl = Kubectl.client(kubectlPath + "/kubectl", kubeConf.getAbsolutePath());
       String finalCmd = kubectl.delete().filename(yamlFile.getAbsolutePath()).command();
       log.info("final command to be executed is " + finalCmd);
       OnDemandDelegateHelper.executeCommand(finalCmd, 10);

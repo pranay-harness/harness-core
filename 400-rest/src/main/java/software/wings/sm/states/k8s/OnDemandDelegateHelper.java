@@ -147,8 +147,11 @@ public class OnDemandDelegateHelper {
 
   public static boolean executeCommand(String command, int timeoutMinutes) {
     try {
-      ProcessExecutor processExecutor =
-          new ProcessExecutor().timeout(timeoutMinutes, TimeUnit.MINUTES).commandSplit(command).readOutput(true);
+      ProcessExecutor processExecutor = new ProcessExecutor()
+                                            .timeout(timeoutMinutes, TimeUnit.MINUTES)
+
+                                            .commandSplit(command)
+                                            .readOutput(true);
       ProcessResult processResult = processExecutor.execute();
       return processResult.getExitValue() == 0;
     } catch (Exception ex) {
