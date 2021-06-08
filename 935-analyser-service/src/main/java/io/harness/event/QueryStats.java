@@ -63,5 +63,6 @@ public class QueryStats {
   @Getter Long count;
   @CreatedDate Long createdAt;
 
+  // Moving Average executionTime
   long executionTimeMillis;
 }

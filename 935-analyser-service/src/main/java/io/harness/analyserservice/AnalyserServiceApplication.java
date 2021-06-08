@@ -87,7 +87,7 @@ public class AnalyserServiceApplication extends Application<AnalyserServiceConfi
     injector
         .getInstance(Key.get(
             ScheduledExecutorService.class, Names.named(AnalyserServiceConstants.SAMPLE_AGGREGATOR_SCHEDULED_THREAD)))
-        .scheduleWithFixedDelay(injector.getInstance(AnalyserSampleAggregatorService.class), 0L, 15L, TimeUnit.MINUTES);
+        .scheduleWithFixedDelay(injector.getInstance(AnalyserSampleAggregatorService.class), 0L, 2L, TimeUnit.MINUTES);
   }
 
   private void populateCache(Injector injector) {
