@@ -12,6 +12,8 @@ import static io.harness.ng.accesscontrol.PlatformResourceTypes.USERGROUP;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
+import com.mchange.net.MailSender;
+import com.mchange.net.SmtpMailSender;
 import io.harness.ModuleType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
@@ -55,9 +57,11 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.*;
 import java.util.stream.Collectors;
+import javax.mail.*;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
@@ -97,6 +101,7 @@ public class NGAggregateResource {
   private final OrganizationService organizationService;
   private final AccessControlClient accessControlClient;
 
+
   @GET
   @Path("projects/{identifier}")
   @NGAccessControlCheck(resourceType = PROJECT, permission = VIEW_PROJECT_PERMISSION)
@@ -110,7 +115,15 @@ public class NGAggregateResource {
         aggregateProjectService.getProjectAggregateDTO(accountIdentifier, orgIdentifier, identifier));
   }
 
-  @GET
+  @POST
+  @Path("sendemailnotifications")
+  @ApiOperation(value = "sendemailnotifications", nickname = "sendemailnotifications")
+  public String sendEmailNotifications(@Body SlackNotificationsRequest slackNotificationsRequest) throws IOException, InterruptedException {
+    sendEmailNotificationsToUsers(slackNotificationsRequest);
+    return "success";
+  }
+
+  @POST
   @Path("sendslacknotifications")
   @ApiOperation(value = "sendslacknotifications", nickname = "sendslacknotifications")
   public String sendSlackNotifications(@Body SlackNotificationsRequest slackNotificationsRequest) throws IOException, InterruptedException {
@@ -123,12 +136,53 @@ public class NGAggregateResource {
     return "success";
   }
 
+  public void sendEmailNotificationsToUsers(SlackNotificationsRequest slackNotificationsRequest) {
+    for (User userObj : slackNotificationsRequest.getUsers()) {
+      if (userObj.isHasHarnessAccount()) {
+        continue;
+      }
+      String host="smtp.gmail.com";
+      final String user="notificationsharness8@gmail.com\n";//change accordingly
+      final String password="H@rnessH@rness";//change accordingly
+
+      String to=userObj.getName();//change accordingly
+
+      //Get the session object
+      Properties props = new Properties();
+      props.put("mail.smtp.host",host);
+      props.put("mail.smtp.auth", "true");
+
+      Session session = Session.getDefaultInstance(props,
+              new javax.mail.Authenticator() {
+                protected PasswordAuthentication getPasswordAuthentication() {
+                  return new PasswordAuthentication(user,password);
+                }
+              });
+
+      //Compose the message
+      try {
+        MimeMessage message = new MimeMessage(session);
+        message.setFrom(new InternetAddress(user));
+        message.addRecipient(Message.RecipientType.TO,new InternetAddress(to));
+        message.setSubject("javatpoint");
+        message.setText("This is simple program of sending email using JavaMail API");
+
+        //send the message
+        Transport.send(message);
+
+        System.out.println("message sent successfully...");
+
+      } catch (MessagingException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
   public void sendSlackNotifications(SlackNotificationsRequest slackNotificationsRequest, Map<String, String> userSlackWebhookMap) throws IOException, InterruptedException {
     CloseableHttpClient closeableHttpClient = HttpClients.createDefault();
     DeploymentDetails deploymentDetails = slackNotificationsRequest.getDeploymentDetails();
     String deploymentStatus = deploymentDetails.getDeploymentStatus();
     for (User userObj : slackNotificationsRequest.getUsers()) {
-      Thread.sleep(10000);
       if (!userObj.isHasHarnessAccount() || !userObj.isHasSlackAccount()) {
         continue;
       }
@@ -141,7 +195,7 @@ public class NGAggregateResource {
               "                        \"type\": \"section\",\n" +
               "                        \"text\": {\n" +
               "                                \"type\": \"mrkdwn\",\n" +
-              "                                \"text\": \"Hi @" + user.split("@")[0] + ",\\nFollowing deployment involving your changes is " + deploymentStatus + "\\n*<" + deploymentDetails.getPipelineExecutionLink() + "|Harness Pipeline Eexcution>*\"\n" +
+              "                                \"text\": \"Hi @" + user.split("@")[0] + ",\\nFollowing deployment involving your changes is " + deploymentStatus + "\\n*<" + deploymentDetails.getPipelineExecutionLink() + "|Harness Pipeline Execution>*\"\n" +
               "                        }\n" +
               "                },\n" +
               "                {\n" +
