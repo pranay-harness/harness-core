@@ -24,7 +24,9 @@ public class AwsSamClientImpl implements AwsSamClient {
   public CliResponse runCommand(String command, long timeoutInMillis, Map<String, String> envVariables,
       String workingDirectory, @Nonnull LogCallback executionLogCallback)
       throws InterruptedException, TimeoutException, IOException {
-    String loggingCommand = command.indexOf("&&") != -1 ? command.substring(command.indexOf("&&")+2) : command;
+    String loggingCommand = command.indexOf("sam") != -1 ? command.substring(command.indexOf("sam")) : command;
+    loggingCommand  = loggingCommand.indexOf("aws") != -1 ? loggingCommand.substring(command.indexOf("aws")) : loggingCommand;
+
     CliResponse response = cliHelper.executeCliCommand(command, timeoutInMillis, envVariables, workingDirectory,
         executionLogCallback, loggingCommand, new LogCallbackOutputStream(executionLogCallback));
     if (response != null && response.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {

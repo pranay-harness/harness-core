@@ -131,25 +131,30 @@ public class AwsSamDeployTaskHandlerNG extends AwsSamAbstractTaskHandler {
           awsSamClient.runCommand(samDeployCommand, 120000l, envVariables, awsSamAppDirectory, logCallback);
 
       if (!UnitStatus.SUCCESS.equals(samDeployCliResponse.getCommandExecutionStatus().getUnitStatus())) {
-        String cloudformationOutputCommand = format("%s aws cloudformation describe-stacks --stack-name %s",
-            awsSecretsExportCommand, taskParameters.getStackName());
-        CliResponse samCliCloudformationResponse = awsSamClient.runCommand(
-            cloudformationOutputCommand, 120000l, envVariables, awsSamAppDirectory, logCallback);
-        Map<String, String> cfOutput = extractCfOutputFromStackDescription(samCliCloudformationResponse.getOutput());
 
         return AwsSamTaskNGResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
             .errorMessage(samDeployCliResponse.getError())
             .customMessage("Sam build failed with output => " + samDeployCliResponse.getOutput())
             .outputs(samDeployCliResponse.getOutput())
-            .outputMap(cfOutput)
             .build();
       }
+
+      Map<String, String> cfOutput = new HashMap<>();
+      if (taskParameters.getPlan()==false) {
+        String cloudformationOutputCommand = format("%s aws cloudformation describe-stacks --stack-name %s",
+                awsSecretsExportCommand, taskParameters.getStackName());
+        CliResponse samCliCloudformationResponse = awsSamClient.runCommand(
+                cloudformationOutputCommand, 120000l, envVariables, awsSamAppDirectory, logCallback);
+        cfOutput = extractCfOutputFromStackDescription(samCliCloudformationResponse.getOutput());
+      }
+
 
       return AwsSamTaskNGResponse.builder()
           .outputs("")
           .commitIdForConfigFilesMap(new HashMap<>())
           .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+              .outputMap(cfOutput)
           .build();
     } catch (AwsSamCommandExecutionException awsSamCommandExecutionException) {
       log.warn("Failed to execute Aws Sam Deploy Step", awsSamCommandExecutionException);
