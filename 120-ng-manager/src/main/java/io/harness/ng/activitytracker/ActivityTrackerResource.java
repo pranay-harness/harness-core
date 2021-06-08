@@ -2,6 +2,8 @@ package io.harness.ng.activitytracker;
 
 import io.harness.NGResourceFilterConstants;
 import io.harness.ng.activitytracker.models.apiresponses.ActivityHistoryDetailsResponse;
+import io.harness.ng.activitytracker.models.apiresponses.StatsDetailsByProjectResponse;
+import io.harness.ng.activitytracker.models.apiresponses.StatsDetailsByUserResponse;
 import io.harness.ng.activitytracker.models.apiresponses.StatsDetailsResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -31,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
     })
 @Slf4j
 public class ActivityTrackerResource {
-  @Inject ActivityHistoryServiceImpl activityHistoryServiceImpl;
+  @Inject ActivityHistoryService activityHistoryServiceImpl;
 
   @GET
   @Path("/statsdetails")
@@ -40,6 +42,24 @@ public class ActivityTrackerResource {
       @QueryParam("userId") String userId, @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startTime,
       @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endTime) {
     return ResponseDTO.newResponse(activityHistoryServiceImpl.getStatsDetails(projectId, userId, startTime, endTime));
+  }
+
+  @GET
+  @Path("/statsdetailsbyusers")
+  @ApiOperation(value = "Get activity stats by users", nickname = "getActivityStatsByUsers")
+  public ResponseDTO<StatsDetailsByUserResponse> getActivityStatsByUsers(@QueryParam("projectId") String projectId,
+      @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startTime,
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endTime) {
+    return ResponseDTO.newResponse(activityHistoryServiceImpl.getStatsDetailsByUsers(projectId, startTime, endTime));
+  }
+
+  @GET
+  @Path("/statsdetailsbyprojects")
+  @ApiOperation(value = "Get activity stats by projects", nickname = "getActivityStatsByProjects")
+  public ResponseDTO<StatsDetailsByProjectResponse> getActivityStatsByProjects(@QueryParam("userId") String userId,
+      @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startTime,
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endTime) {
+    return ResponseDTO.newResponse(activityHistoryServiceImpl.getStatsDetailsByProjects(userId, startTime, endTime));
   }
 
   @GET

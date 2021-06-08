@@ -2,14 +2,19 @@ package io.harness.ng.activitytracker;
 
 import io.harness.NGDateUtils;
 import io.harness.ng.activitytracker.entities.ActivityHistory;
+import io.harness.ng.activitytracker.models.ActivityHistoryByProject;
+import io.harness.ng.activitytracker.models.ActivityHistoryByUser;
 import io.harness.ng.activitytracker.models.ActivityHistoryDetails;
 import io.harness.ng.activitytracker.models.ActivityStatsPerTimestamp;
 import io.harness.ng.activitytracker.models.ActivityType;
 import io.harness.ng.activitytracker.models.CountPerActivityType;
 import io.harness.ng.activitytracker.models.apiresponses.ActivityHistoryDetailsResponse;
+import io.harness.ng.activitytracker.models.apiresponses.StatsDetailsByProjectResponse;
+import io.harness.ng.activitytracker.models.apiresponses.StatsDetailsByUserResponse;
 import io.harness.ng.activitytracker.models.apiresponses.StatsDetailsResponse;
 import io.harness.repositories.activitytracker.ActivityHistoryRepository;
 
+import com.google.api.client.util.ArrayMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
@@ -32,10 +37,54 @@ public class ActivityHistoryServiceImpl implements ActivityHistoryService {
       activityHistoryList = activityHistoryRepository.findByProjectIdAndCreatedAtBetween(projectId, startTime, endTime);
     }
 
-    List<ActivityStatsPerTimestamp> activityStatsPerTimestampList =
-        aggregateDataPerDay(activityHistoryList, startTime, endTime);
+    List<ActivityStatsPerTimestamp> activityStatsPerTimestampList = aggregateDataPerDay(activityHistoryList);
 
     return StatsDetailsResponse.builder().activityStatsPerTimestampList(activityStatsPerTimestampList).build();
+  }
+
+  public StatsDetailsByUserResponse getStatsDetailsByUsers(String projectId, long startTime, long endTime) {
+    List<ActivityHistory> activityHistoryList =
+        activityHistoryRepository.findByProjectIdAndCreatedAtBetween(projectId, startTime, endTime);
+
+    List<ActivityHistoryByUser> activityHistoryByUserList = new ArrayList<>();
+    Map<String, List<ActivityHistory>> userToActivityHistoryList = new ArrayMap<>();
+    for (ActivityHistory activityHistory : activityHistoryList) {
+      userToActivityHistoryList.putIfAbsent(activityHistory.getUserId(), new ArrayList<>());
+      List<ActivityHistory> activityHistoryListByUser = userToActivityHistoryList.get(activityHistory.getUserId());
+      activityHistoryListByUser.add(activityHistory);
+    }
+
+    userToActivityHistoryList.forEach((userId, activityList) -> {
+      activityHistoryByUserList.add(ActivityHistoryByUser.builder()
+                                        .activityStatsPerTimestampList(aggregateDataPerDay(activityHistoryList))
+                                        .userId(userId)
+                                        .build());
+    });
+
+    return StatsDetailsByUserResponse.builder().activityHistoryByUserList(activityHistoryByUserList).build();
+  }
+
+  public StatsDetailsByProjectResponse getStatsDetailsByProjects(String userId, long startTime, long endTime) {
+    List<ActivityHistory> activityHistoryList =
+        activityHistoryRepository.findByUserIdAndCreatedAtBetween(userId, startTime, endTime);
+
+    List<ActivityHistoryByProject> activityHistoryByProjectList = new ArrayList<>();
+    Map<String, List<ActivityHistory>> userToActivityHistoryList = new ArrayMap<>();
+    for (ActivityHistory activityHistory : activityHistoryList) {
+      userToActivityHistoryList.putIfAbsent(activityHistory.getProjectId(), new ArrayList<>());
+      List<ActivityHistory> activityHistoryListByProject =
+          userToActivityHistoryList.get(activityHistory.getProjectId());
+      activityHistoryListByProject.add(activityHistory);
+    }
+
+    userToActivityHistoryList.forEach((projectId, activityList) -> {
+      activityHistoryByProjectList.add(ActivityHistoryByProject.builder()
+                                           .activityStatsPerTimestampList(aggregateDataPerDay(activityHistoryList))
+                                           .projectId(projectId)
+                                           .build());
+    });
+
+    return StatsDetailsByProjectResponse.builder().activityHistoryByUserList(activityHistoryByProjectList).build();
   }
 
   public ActivityHistoryDetailsResponse getActivityHistoryDetails(
@@ -73,8 +122,7 @@ public class ActivityHistoryServiceImpl implements ActivityHistoryService {
 
   // ------------------------------- PRIVATE METHODS -----------------------------
 
-  List<ActivityStatsPerTimestamp> aggregateDataPerDay(
-      List<ActivityHistory> activityHistoryList, long startTime, long endTime) {
+  List<ActivityStatsPerTimestamp> aggregateDataPerDay(List<ActivityHistory> activityHistoryList) {
     Map<Long, Map<ActivityType, Integer>> detailsPerTimestamp = new HashMap<>();
     Map<Long, Integer> totalCountPerTimestamp = new HashMap<>();
 
