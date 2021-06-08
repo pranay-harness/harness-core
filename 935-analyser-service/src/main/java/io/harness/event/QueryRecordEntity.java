@@ -29,5 +29,5 @@ public class QueryRecordEntity {
   @NonNull String serviceName;
 
   QueryExplainResult explainResult;
-  String data;
+  byte[] data;
 }

@@ -1,5 +1,7 @@
 package io.harness.springdata;
 
+import static io.harness.mongo.MongoConfig.DOT_REPLACEMENT;
+
 import static com.google.inject.Key.get;
 import static com.google.inject.name.Names.named;
 
@@ -24,6 +26,7 @@ import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.guice.annotation.GuiceModule;
@@ -58,7 +61,9 @@ public class SpringPersistenceConfig extends AbstractMongoConfiguration {
   @Primary
   public MongoTemplate mongoTemplate() throws Exception {
     MongoConfig config = injector.getInstance(MongoConfig.class);
-    return new HMongoTemplate(mongoDbFactory(), mappingMongoConverter(), config.getTraceMode());
+    MappingMongoConverter mappingMongoConverter = mappingMongoConverter();
+    mappingMongoConverter.setMapKeyDotReplacement(DOT_REPLACEMENT);
+    return new HMongoTemplate(mongoDbFactory(), mappingMongoConverter, config.getTraceMode());
   }
 
   @Bean

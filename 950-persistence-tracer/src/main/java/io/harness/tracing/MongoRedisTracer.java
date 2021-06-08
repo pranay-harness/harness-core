@@ -10,7 +10,6 @@ import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.redis.DistributedCache;
 import io.harness.eventsframework.producer.Message;
 import io.harness.mongo.tracing.Tracer;
-import io.harness.redis.RedisConfig;
 import io.harness.tracing.shapedetector.QueryShapeDetector;
 import io.harness.version.VersionInfoManager;
 
@@ -30,7 +29,6 @@ public class MongoRedisTracer implements Tracer {
   @Inject @Named(PersistenceTracerConstants.QUERY_ANALYSIS_PRODUCER) private Producer producer;
   @Inject @Named(SERVICE_ID) private String serviceId;
   @Inject private VersionInfoManager versionInfoManager;
-  @Inject private RedisConfig redisConfig;
 
   @Inject @Named(ANALYZER_CACHE_NAME) DistributedCache queryStatsCache;
 
