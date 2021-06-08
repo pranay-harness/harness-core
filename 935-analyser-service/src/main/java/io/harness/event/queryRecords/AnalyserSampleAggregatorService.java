@@ -4,19 +4,25 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.event.QueryRecordEntity;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
-import io.harness.repositories.QueryRecordsRepository;
+import io.harness.service.QueryRecordsService;
+import io.harness.service.QueryStatsService;
+import io.harness.service.beans.QueryRecordKey;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
 @OwnedBy(HarnessTeam.PIPELINE)
 public class AnalyserSampleAggregatorService implements Runnable {
-  @Inject private QueryRecordsRepository queryRecordsRepository;
+  @Inject private QueryRecordsService queryRecordsService;
+  @Inject private QueryStatsService queryStatsService;
 
   @Override
   public void run() {
@@ -29,6 +35,9 @@ public class AnalyserSampleAggregatorService implements Runnable {
 
   public void execute() {
     try {
+      Map<QueryRecordKey, List<QueryRecordEntity>> allEntries = queryRecordsService.findAllEntries();
+      queryStatsService.updateQueryStatsByAggregation(allEntries);
+      log.info("Analyser Sample Aggregation done.");
     } catch (WingsException exception) {
       ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
     } catch (Exception exception) {

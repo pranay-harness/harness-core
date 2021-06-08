@@ -14,6 +14,8 @@ import io.harness.persistence.UserProvider;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ParsedQueryReadConverter;
 import io.harness.serializer.ParsedQueryWriteConverter;
+import io.harness.service.QueryRecordsService;
+import io.harness.service.QueryRecordsServiceImpl;
 import io.harness.service.QueryStatsService;
 import io.harness.service.QueryStatsServiceImpl;
 import io.harness.springdata.SpringPersistenceModule;
@@ -99,6 +101,7 @@ public class AnalyserServiceModule extends AbstractModule {
     install(new SpringPersistenceModule());
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(QueryStatsService.class).to(QueryStatsServiceImpl.class);
+    bind(QueryRecordsService.class).to(QueryRecordsServiceImpl.class);
 
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named(AnalyserServiceConstants.SAMPLE_AGGREGATOR_SCHEDULED_THREAD))

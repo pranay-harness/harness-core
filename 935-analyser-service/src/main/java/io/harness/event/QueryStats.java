@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.alerts.AlertMetadata;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 
@@ -40,6 +41,10 @@ public class QueryStats {
                  .field(QueryStatsKeys.serviceName)
                  .field(QueryStatsKeys.version)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("alertList_category_idx")
+                 .field(QueryStatsKeys.alerts + ".alertCategory")
+                 .build())
         .build();
   }
 
@@ -51,7 +56,7 @@ public class QueryStats {
   QueryExplainResult explainResult;
   String data;
   Boolean indexUsed;
-  List<QueryAlertCategory> alerts;
+  List<AlertMetadata> alerts;
   ParsedQuery parsedQuery;
   String collectionName;
 

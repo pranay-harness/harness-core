@@ -1,14 +1,15 @@
 package io.harness.repositories;
 
 import io.harness.event.QueryRecordEntity;
-import io.harness.utils.PageUtils;
+import io.harness.event.QueryRecordEntity.QueryRecordEntityKeys;
 
 import com.google.inject.Inject;
-import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -18,7 +19,8 @@ public class QueryRecordsRepositoryCustomImpl implements QueryRecordsRepositoryC
 
   @Override
   public List<QueryRecordEntity> findAllHashes(int page, int size) {
-    Pageable pageable = PageUtils.getPageRequest(page, size, new ArrayList<>());
+    Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, QueryRecordEntityKeys.createdAt));
+
     Query query = new Query().with(pageable);
     return mongoTemplate.find(query, QueryRecordEntity.class);
   }
