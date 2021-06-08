@@ -1,0 +1,2 @@
+//990-commons-test:io.harness.scm.ScmSecretTest
+//990-commons-test:io.harness.ExtendsCategoryEnforcerTest
