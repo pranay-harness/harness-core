@@ -3,6 +3,7 @@ package io.harness.cdng.manifest.yaml.kinds;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.data.validator.EntityIdentifier;
 
@@ -20,6 +21,11 @@ public class AwsSamManifest implements ManifestAttributes, ManifestOutcome {
   @Override
   public String getKind() {
     return ManifestType.AwsSamManifest;
+  }
+
+  @Override
+  public StoreConfig getStoreConfig() {
+    return store.getSpec();
   }
 
   @Override

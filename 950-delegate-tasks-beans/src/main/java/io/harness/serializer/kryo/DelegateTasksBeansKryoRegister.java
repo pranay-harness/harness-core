@@ -178,12 +178,7 @@ import io.harness.delegate.task.artifacts.response.ArtifactBuildDetailsNG;
 import io.harness.delegate.task.artifacts.response.ArtifactDelegateResponse;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
-import io.harness.delegate.task.aws.AwsElbListener;
-import io.harness.delegate.task.aws.AwsElbListenerRuleData;
-import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
-import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
-import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
-import io.harness.delegate.task.aws.LoadBalancerType;
+import io.harness.delegate.task.aws.*;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.AzureTaskParameters;
 import io.harness.delegate.task.azure.AzureTaskResponse;
@@ -774,5 +769,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
 
     kryo.register(SecretParams.class, 543325);
     kryo.register(SecretParams.Type.class, 543326);
+
+    kryo.register(AwsSamTaskParameters.class,543327);
+    kryo.register(AwsSamTaskNGResponse.class,543328);
   }
 }
