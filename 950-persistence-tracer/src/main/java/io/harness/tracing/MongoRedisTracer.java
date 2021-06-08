@@ -1,44 +1,77 @@
 package io.harness.tracing;
 
+import static io.harness.mongo.tracing.TracerConstants.ANALYZER_CACHE_KEY;
+import static io.harness.mongo.tracing.TracerConstants.ANALYZER_CACHE_NAME;
+import static io.harness.mongo.tracing.TracerConstants.QUERY_HASH;
+import static io.harness.mongo.tracing.TracerConstants.SERVICE_ID;
+import static io.harness.version.VersionConstants.VERSION_KEY;
+
 import io.harness.eventsframework.api.Producer;
+import io.harness.eventsframework.impl.redis.DistributedCache;
 import io.harness.eventsframework.producer.Message;
 import io.harness.mongo.tracing.Tracer;
-import io.harness.observer.AsyncInformObserver;
+import io.harness.redis.RedisConfig;
+import io.harness.tracing.shapedetector.QueryShapeDetector;
+import io.harness.version.VersionInfoManager;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import java.util.concurrent.ExecutorService;
-import javax.inject.Named;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 @Slf4j
-public class MongoRedisTracer implements Tracer, AsyncInformObserver {
+public class MongoRedisTracer implements Tracer {
+  private static final int SAMPLE_SIZE = 120; // For per seconds poller sample every 2 min
+
   @Inject @Named(PersistenceTracerConstants.TRACING_THREAD_POOL) private ExecutorService executorService;
   @Inject @Named(PersistenceTracerConstants.QUERY_ANALYSIS_PRODUCER) private Producer producer;
+  @Inject @Named(SERVICE_ID) private String serviceId;
+  @Inject private VersionInfoManager versionInfoManager;
+  @Inject private RedisConfig redisConfig;
+
+  @Inject @Named(ANALYZER_CACHE_NAME) DistributedCache queryStatsCache;
 
   @Override
-  public void trace(Document queryDoc, String collectionName, MongoTemplate mongoTemplate) {
-    // TODO : Check with the ShapeDetector and ge the query hash
-    log.debug("Tracing Query {}", queryDoc.toJson());
-    Document explainDocument = new Document();
-    explainDocument.put("find", collectionName);
-    explainDocument.put("filter", queryDoc);
+  public void trace(Document queryDoc, Document sortDoc, String collectionName, MongoTemplate mongoTemplate) {
+    try {
+      String qHash = QueryShapeDetector.getQueryHash(collectionName, queryDoc, sortDoc);
+      String queryStatsCacheKey = String.format(ANALYZER_CACHE_KEY, serviceId);
+      if (queryStatsCache.presentInMap(queryStatsCacheKey, qHash)) {
+        Long count = queryStatsCache.getFromMap(queryStatsCacheKey, qHash);
+        count = count + 1;
+        queryStatsCache.putInsideMap(queryStatsCacheKey, qHash, count);
+        if (count % SAMPLE_SIZE != 0) {
+          return;
+        }
+        log.info("Sampling the query....");
+      }
 
-    Document command = new Document();
-    command.put("explain", explainDocument);
+      executorService.submit(() -> {
+        Document explainDocument = new Document();
+        explainDocument.put("find", collectionName);
+        explainDocument.put("filter", queryDoc);
+        explainDocument.put("sort", sortDoc);
 
-    // TODO: Check if we have this hash stored in cache, if not run explain
-    Document explainResult = mongoTemplate.getDb().runCommand(command);
+        Document command = new Document();
+        command.put("explain", explainDocument);
 
-    log.debug("Explain Results");
-    log.debug(explainResult.toJson());
-    producer.send(Message.newBuilder().setData(ByteString.copyFromUtf8(explainResult.toJson())).build());
-  }
+        Document explainResult = mongoTemplate.getDb().runCommand(command);
 
-  @Override
-  public ExecutorService getInformExecutorService() {
-    return executorService;
+        log.debug("Explain Results");
+        log.debug(explainResult.toJson());
+        producer.send(Message.newBuilder()
+                          .putMetadata(VERSION_KEY, versionInfoManager.getVersionInfo().getVersion())
+                          .putMetadata(SERVICE_ID, serviceId)
+                          .putMetadata(QUERY_HASH, qHash)
+                          .setData(ByteString.copyFromUtf8(explainResult.toJson()))
+                          .build());
+        queryStatsCache.putInsideMap(queryStatsCacheKey, qHash, 1L);
+      });
+    } catch (Exception ex) {
+      log.error("Unable to trace the query {}", queryDoc);
+    }
   }
 }

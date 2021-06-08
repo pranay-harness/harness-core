@@ -24,6 +24,8 @@ import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
+import io.harness.eventsframework.impl.redis.DistributedCache;
+import io.harness.eventsframework.impl.redis.RedisCache;
 import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.filter.FilterType;
 import io.harness.filter.FiltersModule;
@@ -157,14 +159,13 @@ public class PipelineServiceModule extends AbstractModule {
     });
     install(new AbstractPersistenceTracerModule() {
       @Override
-      public Producer producerProvider() {
-        RedisConfig redisConfig = configuration.getEventsFrameworkConfiguration().getRedisConfig();
-        if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
-          return NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME);
-        } else {
-          return RedisProducer.of(QUERY_ANALYSIS_TOPIC, redisConfig, EventsFrameworkConstants.QUERY_ANALYSIS_TOPIC_SIZE,
-              PIPELINE_SERVICE.getServiceId());
-        }
+      protected RedisConfig redisConfigProvider() {
+        return configuration.getEventsFrameworkConfiguration().getRedisConfig();
+      }
+
+      @Override
+      protected String serviceIdProvider() {
+        return PIPELINE_SERVICE.getServiceId();
       }
     });
     install(PipelineServiceGrpcModule.getInstance());

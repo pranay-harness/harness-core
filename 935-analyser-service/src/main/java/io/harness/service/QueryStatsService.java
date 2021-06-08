@@ -1,5 +1,5 @@
 package io.harness.service;
 
-public interface QueryRecordService {
+public interface QueryStatsService {
   void storeHashesInsideCache();
 }

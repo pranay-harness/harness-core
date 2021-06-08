@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
@@ -18,16 +19,19 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-@FieldNameConstants(innerTypeName = "QueryRecordEntityKeys")
-@Entity(value = "queryRecords", noClassnameStored = true)
-@Document("queryRecords")
-@TypeAlias("queryRecords")
+@FieldNameConstants(innerTypeName = "QueryStatsKeys")
+@Entity(value = "queryStats", noClassnameStored = true)
+@Document("queryStats")
+@TypeAlias("queryStats")
 @HarnessEntity(exportable = true)
-public class QueryRecordEntity {
-  @NonNull String hash;
+public class QueryStats {
+  @NonNull @Getter String hash;
   @NonNull String version;
   @NonNull String serviceName;
 
   QueryExplainResult explainResult;
   String data;
+  Boolean indexUsed;
+  QueryAlertCategory alertCategory;
+  @Getter Long count;
 }

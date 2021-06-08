@@ -5,7 +5,7 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import io.harness.event.QueryAnalyserEventService;
 import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
-import io.harness.service.QueryRecordService;
+import io.harness.service.QueryStatsService;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -71,6 +71,6 @@ public class AnalyserServiceApplication extends Application<AnalyserServiceConfi
   }
 
   private void populateCache(Injector injector) {
-    injector.getInstance(QueryRecordService.class).storeHashesInsideCache();
+    injector.getInstance(QueryStatsService.class).storeHashesInsideCache();
   }
 }

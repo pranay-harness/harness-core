@@ -90,8 +90,10 @@ import io.harness.security.annotations.PublicApi;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
+import io.harness.springdata.HMongoTemplate;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
+import io.harness.tracing.MongoRedisTracer;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -148,6 +150,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 @OwnedBy(PL)
 @Slf4j
@@ -283,6 +286,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerMigrations(injector);
     registerQueueListeners(injector);
     EventObserverUtils.registerObservers(injector);
+    registerObservers(injector);
 
     intializeGitSync(injector, appConfig);
     //  This is ordered below health registration so that kubernetes deployment readiness check passes under 10 minutes
@@ -290,6 +294,11 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerManagedBeans(environment, injector);
 
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void registerObservers(Injector injector) {
+    HMongoTemplate hMongoTemplate = (HMongoTemplate) injector.getInstance(MongoTemplate.class);
+    hMongoTemplate.getTracerSubject().register(injector.getInstance(MongoRedisTracer.class));
   }
 
   private void registerQueueListeners(Injector injector) {

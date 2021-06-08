@@ -19,6 +19,10 @@ public class RedisCache implements DistributedCache {
     this.timeUnit = timeUnit;
   }
 
+  public static RedisCache of(@NotNull RedisConfig redisConfig, long evictTime, TimeUnit timeUnit) {
+    return new RedisCache(redisConfig, evictTime, timeUnit);
+  }
+
   public <K, V> RMapCache<K, V> getMap(String key) {
     return redissonClient.getMapCache(key);
   }
@@ -37,7 +41,27 @@ public class RedisCache implements DistributedCache {
     cache.put(innerKey, value);
   }
 
-  public static RedisCache of(@NotNull RedisConfig redisConfig, long evictTime, TimeUnit timeUnit) {
-    return new RedisCache(redisConfig, evictTime, timeUnit);
+  @Override
+  public <K, V> V getFromMultiMap(String key, K innerKey) {
+    RListMultimapCache<K, V> cache = redissonClient.getListMultimapCache(key);
+    return (V) cache.get(innerKey);
+  }
+
+  @Override
+  public <K, V> V getFromMap(String key, K innerKey) {
+    RMapCache<K, V> cache = redissonClient.getMapCache(key);
+    return (V) cache.get(innerKey);
+  }
+
+  @Override
+  public <K, V> boolean presentInMultiMap(String key, K innerKey, V value) {
+    RListMultimapCache<K, V> cache = redissonClient.getListMultimapCache(key);
+    return cache.get(innerKey).contains(value);
+  }
+
+  @Override
+  public <K, V> boolean presentInMap(String key, K innerKey) {
+    RMapCache<K, V> cache = redissonClient.getMapCache(key);
+    return cache.containsKey(innerKey);
   }
 }
