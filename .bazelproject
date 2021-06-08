@@ -72,6 +72,7 @@ directories:
   900-git-sync-sdk
   910-delegate-service-driver
   910-delegate-task-grpc-service
+  910-delegate-task-classic-grpc-service
   920-delegate-agent-beans
   920-delegate-service-beans
   920-ng-signup
