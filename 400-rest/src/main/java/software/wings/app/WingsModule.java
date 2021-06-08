@@ -212,6 +212,8 @@ import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.GkeClusterServiceImpl;
 import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.core.managerConfiguration.ConfigurationController;
+import software.wings.delegatetasks.ondemand.OnDemandDelegateService;
+import software.wings.delegatetasks.ondemand.OnDemandDelegateServiceImpl;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.dl.exportimport.WingsMongoExportImport;
@@ -1074,7 +1076,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(DelegateTaskServiceClassic.class).to(DelegateTaskServiceClassicImpl.class);
 
     bind(GcbService.class).to(GcbServiceImpl.class);
-
+    bind(OnDemandDelegateService.class).to(OnDemandDelegateServiceImpl.class);
     bind(GraphQLRateLimiter.class);
     bind(GraphQLUtils.class);
     bind(DelegateRequestRateLimiter.class);

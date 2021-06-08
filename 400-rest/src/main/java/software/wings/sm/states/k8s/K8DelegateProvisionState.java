@@ -1,6 +1,7 @@
 package software.wings.sm.states.k8s;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
@@ -13,7 +14,10 @@ import io.harness.serializer.KryoSerializer;
 
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.delegatetasks.ondemand.OnDemandDelegateService;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -32,12 +36,14 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.mongodb.morphia.annotations.Transient;
 
 @FieldNameConstants(innerTypeName = "K8DelegateSpawnStateKeys")
@@ -62,6 +68,10 @@ public class K8DelegateProvisionState extends State implements SweepingOutputSta
   @Inject private KubernetesContainerService kubernetesContainerService;
   @Inject private DelegateService delegateService;
   @Inject private CVActivityLogService cvActivityLogService;
+
+  @Inject private FeatureFlagService featureFlagService;
+
+  @Inject private OnDemandDelegateService onDemandDelegateService;
 
   public K8DelegateProvisionState(String name) {
     super(name, StateType.DELEGATE_PROVISION.name());
@@ -96,20 +106,26 @@ public class K8DelegateProvisionState extends State implements SweepingOutputSta
       File yamlFile = delegateService.getYamlForKubernetesDelegate("https://pr.harness.io/hackathon-ondemand",
           "https://pr.harness.io/hackathon-ondemand", context.getAccountId(), nameOfDelegate, null, null);
 
-      Kubectl kubectl = Kubectl.client(kubectlPath + "/kubectl", kubeConf.getAbsolutePath());
-      String finalCmd = kubectl.apply().filename(yamlFile.getAbsolutePath()).command();
-      log.info("final command to be executed is " + finalCmd);
-      boolean response = OnDemandDelegateHelper.executeCommand(finalCmd, 10);
-      if (!response) {
-        log.error("Issue while running command for kubectl");
-        return ExecutionResponse.builder()
-            .async(false)
-            .errorMessage("Error while starting up the delegate with kubectl command")
-            .executionStatus(ExecutionStatus.ERROR)
-            .build();
+      if (featureFlagService.isFeatureFlagEnabled(FeatureName.ONDEMAND_SIDECAR.name(), context.getAccountId())) {
+        onDemandDelegateService.enqueue(
+            context.getAccountId(), kubeConfigFile, FileUtils.readFileToString(yamlFile, "UTF-8"));
+      } else {
+        Kubectl kubectl = Kubectl.client(kubectlPath + "/kubectl", kubeConf.getAbsolutePath());
+        String finalCmd = kubectl.apply().filename(yamlFile.getAbsolutePath()).command();
+        log.info("final command to be executed is " + finalCmd);
+        boolean response = OnDemandDelegateHelper.executeCommand(finalCmd, 10);
+        if (!response) {
+          log.error("Issue while running command for kubectl");
+          return ExecutionResponse.builder()
+              .async(false)
+              .errorMessage("Error while starting up the delegate with kubectl command")
+              .executionStatus(ExecutionStatus.ERROR)
+              .build();
+        }
+        cvActivityLogService.getLoggerByStateExecutionId(context.getAccountId(), context.getStateExecutionInstanceId())
+            .info("Delegate start command successful");
       }
-      cvActivityLogService.getLoggerByStateExecutionId(context.getAccountId(), context.getStateExecutionInstanceId())
-          .info("Delegate start command successful");
+
       // wait until delegate is up
       while (!delegateService.checkDelegateConnectedByName(context.getAccountId(), nameOfDelegate)) {
         cvActivityLogService.getLoggerByStateExecutionId(context.getAccountId(), context.getStateExecutionInstanceId())
