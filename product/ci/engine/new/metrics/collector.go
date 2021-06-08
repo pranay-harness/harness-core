@@ -14,6 +14,7 @@ func Collect(podName, namespace string, log *zap.SugaredLogger) {
 			ctrResourcesByName, err := cmetrics.GetPodMetrics(podName, namespace)
 			if err != nil {
 				log.Infow("failed to fetch pod metrics", zap.Error(err))
+				time.Sleep(time.Second * 5)
 				continue
 			}
 
@@ -21,7 +22,7 @@ func Collect(podName, namespace string, log *zap.SugaredLogger) {
 			ms := MetricState()
 			ms.Update(ctrResourcesByName)
 			log.Infow("Updated max pod metrics resource", "max_resources", ms.ctrResourcesByName)
-			time.Sleep(time.Second * 30)
+			time.Sleep(time.Second * 5)
 		}
 	}()
 }

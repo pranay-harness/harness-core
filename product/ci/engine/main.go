@@ -70,6 +70,7 @@ func main() {
 	procWriter := remoteLogger.Writer
 	defer procWriter.Close() // upload the logs to object store and close the stream
 
+	log.Infow("Pod info", "name", args.Pod, "namespace", args.Namespace)
 	if args.LogMetrics {
 		cmetrics.Log(int32(os.Getpid()), "engine", log)
 		metrics.Collect(args.Pod, args.Namespace, log)
