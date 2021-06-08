@@ -120,7 +120,7 @@ public class AwsSamDeployTaskHandlerNG extends AwsSamAbstractTaskHandler {
             .build();
       }
 
-      if (taskParameters.getOnlyPlan().equals(true)) {
+      if (taskParameters.getPlan().equals(true)) {
         samCustomCommandParams = format("%s  --no-execute-changeset ", samCustomCommandParams);
       }
 
@@ -142,7 +142,7 @@ public class AwsSamDeployTaskHandlerNG extends AwsSamAbstractTaskHandler {
             .errorMessage(samDeployCliResponse.getError())
             .customMessage("Sam build failed with output => " + samDeployCliResponse.getOutput())
             .outputs(samDeployCliResponse.getOutput())
-            .samCFOutput(cfOutput)
+            .outputMap(cfOutput)
             .build();
       }
 
