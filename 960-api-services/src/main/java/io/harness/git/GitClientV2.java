@@ -15,6 +15,8 @@ public interface GitClientV2 {
 
   String validate(GitBaseRequest request);
 
+  void validateOrThrow(GitBaseRequest request);
+
   FetchFilesResult fetchFilesByPath(FetchFilesByPathRequest request);
 
   DiffResult diff(DiffRequest request);

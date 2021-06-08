@@ -18,30 +18,35 @@ import lombok.extern.slf4j.Slf4j;
 public class ScmResponseStatusUtils {
   // If different provider have different status code take provider type as input too.
   public void checkScmResponseStatusAndThrowException(int statusCode, String errorMsg) {
-    try {
-      switch (statusCode) {
-        case 304:
-          throw new ScmException(ErrorCode.SCM_NOT_MODIFIED);
-        case 404:
-          throw new ScmException(ErrorCode.SCM_NOT_FOUND_ERROR);
-        case 409:
-          throw new ScmException(ErrorCode.SCM_CONFLICT_ERROR);
-        case 422:
-          throw new ScmException(ErrorCode.SCM_UNPROCESSABLE_ENTITY);
-        case 401:
-          throw new ScmException(ErrorCode.SCM_UNAUTHORIZED);
-        default:
-          if (statusCode >= 300) {
-            log.error("Encountered new status code: [{}] from scm", statusCode);
-            throw new UnexpectedException("Unexpected error occurred while doing scm operation");
-          }
+    if (statusCode >= 300) {
+      ErrorCode errorCode = convertScmStatusCodeToErrorCode(statusCode);
+      if (errorCode == ErrorCode.UNEXPECTED) {
+        log.error("Encountered new status code: [{}] with message: [{}] from scm", statusCode, errorMsg);
+        throw new UnexpectedException("Unexpected error occurred while doing scm operation");
       }
-    } catch (ScmException e) {
       if (isNotEmpty(errorMsg)) {
-        throw new ExplanationException(errorMsg, e);
+        throw new ExplanationException(errorMsg, new ScmException(errorCode));
       } else {
-        throw e;
+        throw new ScmException(errorCode);
       }
+    }
+  }
+
+  public ErrorCode convertScmStatusCodeToErrorCode(int statusCode) {
+    switch (statusCode) {
+      case 304:
+        return ErrorCode.SCM_NOT_MODIFIED;
+      case 404:
+        return ErrorCode.SCM_NOT_FOUND_ERROR;
+      case 409:
+        return ErrorCode.SCM_CONFLICT_ERROR;
+      case 422:
+        return ErrorCode.SCM_UNPROCESSABLE_ENTITY;
+      case 401:
+      case 403:
+        return ErrorCode.SCM_UNAUTHORIZED;
+      default:
+        return ErrorCode.UNEXPECTED;
     }
   }
 }
