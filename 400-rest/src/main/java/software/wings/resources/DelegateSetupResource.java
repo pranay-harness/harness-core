@@ -80,7 +80,9 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Api("/setup/delegates")
@@ -640,6 +642,7 @@ public class DelegateSetupResource {
     }
   }
 
+  @SneakyThrows
   @PublicApi
   @GET
   @Path("getKubernetesDelegateYaml")
@@ -650,9 +653,10 @@ public class DelegateSetupResource {
       @QueryParam("delegateProfileId") String delegateProfileId,
       @QueryParam("isCeEnabled") @DefaultValue("false") boolean isCeEnabled,
       @QueryParam("tokenName") String tokenName) {
-    return new RestResponse<>(
+    return new RestResponse<>(FileUtils.readFileToString(
         delegateService.getYamlForKubernetesDelegate(subdomainUrlHelper.getManagerUrl(request, accountId),
-            getVerificationUrl(request), accountId, delegateName, delegateProfileId, tokenName));
+            getVerificationUrl(request), accountId, delegateName, delegateProfileId, tokenName),
+        "UTF-8"));
   }
 
   @PublicApi
