@@ -25,6 +25,7 @@ public class K8DelegateProvisionState extends State implements SweepingOutputSta
   @Getter @Setter private String delegateName;
   @Getter @Setter private String cpu;
   @Getter @Setter private String memory;
+  @Getter @Setter private String artifactVersion;
   @Getter @Setter private SweepingOutputInstance.Scope sweepingOutputScope;
   @Getter @Setter private String sweepingOutputName;
   @Transient @Inject @Getter KryoSerializer kryoSerializer;

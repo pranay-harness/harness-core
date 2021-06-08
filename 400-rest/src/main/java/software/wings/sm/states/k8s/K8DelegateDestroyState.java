@@ -6,6 +6,7 @@ import io.harness.serializer.KryoSerializer;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
+import software.wings.sm.StateType;
 import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 
 import com.github.reinert.jjschema.Attributes;
@@ -25,6 +26,10 @@ public class K8DelegateDestroyState extends State implements SweepingOutputState
   @Getter @Setter private SweepingOutputInstance.Scope sweepingOutputScope;
   @Getter @Setter private String sweepingOutputName;
   @Transient @Inject @Getter KryoSerializer kryoSerializer;
+
+  public K8DelegateDestroyState(String name) {
+    super(name, StateType.DELEGATE_DESTROY.name());
+  }
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
