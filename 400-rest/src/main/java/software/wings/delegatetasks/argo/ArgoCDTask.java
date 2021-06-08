@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.argo;
 
+import io.harness.argo.beans.AppSyncOptions;
+import io.harness.argo.beans.ArgoApp;
 import io.harness.argo.beans.ArgoConfigInternal;
 import io.harness.argo.beans.ClusterResourceTreeDTO;
 import io.harness.argo.beans.ManifestDiff;
@@ -7,6 +9,7 @@ import io.harness.argo.service.ArgoCdService;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.argo.response.ArgoSyncResponse;
 import io.harness.delegate.beans.argo.response.ManifestDiffResponse;
 import io.harness.delegate.beans.argo.response.ResourceTreeResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -16,6 +19,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 
 import software.wings.beans.settings.argo.ArgoConfig;
+import software.wings.delegatetasks.argo.beans.request.ArgoAppSyncRequest;
 import software.wings.delegatetasks.argo.beans.request.ArgoRequest;
 import software.wings.service.intfc.security.EncryptionService;
 
@@ -28,6 +32,7 @@ import java.util.function.Consumer;
 public class ArgoCDTask extends AbstractDelegateRunnableTask {
   @Inject private ArgoCdService argoCdService;
   @Inject EncryptionService encryptionService;
+
   public ArgoCDTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
@@ -59,7 +64,16 @@ public class ArgoCDTask extends AbstractDelegateRunnableTask {
               .build();
         }
       case APP_SYNC:
-        //        argoCdService.syncApp(request.getArgoConfigInternal(),request.getAppName(),null);
+        try {
+          ArgoApp argoApp =
+              argoCdService.syncApp(argoConfigInternal, request.getAppName(), AppSyncOptions.DefaultSyncOptions());
+          return ArgoSyncResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).argoApp(argoApp).build();
+        } catch (Exception e) {
+          return ArgoSyncResponse.builder()
+              .executionStatus(CommandExecutionStatus.FAILURE)
+              .errorMessage(e.getMessage())
+              .build();
+        }
       case MANIFEST_DIFF:
         try {
           List<ManifestDiff> manifestDiffs = argoCdService.fetchManifestDiff(argoConfigInternal, request.getAppName());
