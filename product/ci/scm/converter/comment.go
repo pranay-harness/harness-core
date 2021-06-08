@@ -12,7 +12,7 @@ func ConvertIssueCommentHook(h *scm.IssueCommentHook) (*pb.IssueCommentHook, err
 		return nil, nil
 	}
 
-	repo, err := convertRepo(&h.Repo)
+	repo, err := ConvertRepo(&h.Repo)
 	if err != nil {
 		return nil, err
 	}

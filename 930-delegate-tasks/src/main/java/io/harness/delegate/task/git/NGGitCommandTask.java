@@ -9,6 +9,7 @@ import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
@@ -57,13 +58,15 @@ public class NGGitCommandTask extends AbstractDelegateRunnableTask {
         gitCommandParams.getSshKeySpecDTO(), gitCommandParams.getEncryptionDetails());
     GitCommandType gitCommandType = gitCommandParams.getGitCommandType();
     GitBaseRequest gitCommandRequest = gitCommandParams.getGitCommandRequest();
+    ScmConnector scmConnector = gitCommandParams.getScmConnector();
+    gitDecryptionHelper.decryptApiAccessConfig(scmConnector, gitCommandParams.getEncryptionDetails());
 
     try {
       switch (gitCommandType) {
         case VALIDATE:
           GitCommandExecutionResponse delegateResponseData =
               (GitCommandExecutionResponse) gitCommandTaskHandler.handleValidateTask(
-                  gitConfig, getAccountId(), sshSessionConfig);
+                  gitConfig, scmConnector, getAccountId(), sshSessionConfig);
           delegateResponseData.setDelegateMetaInfo(DelegateMetaInfo.builder().id(getDelegateId()).build());
           return delegateResponseData;
         case COMMIT_AND_PUSH:

@@ -14,12 +14,15 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.experimental.SuperBuilder;
 
 @Data
 @SuperBuilder
+@EqualsAndHashCode(callSuper = true)
 public class GitCommandParams extends ConnectorTaskParams implements TaskParameters, ExecutionCapabilityDemander {
-  ScmConnector gitConfig;
+  GitConfigDTO gitConfig;
+  ScmConnector scmConnector;
   GitCommandType gitCommandType;
   List<EncryptedDataDetail> encryptionDetails;
   GitBaseRequest gitCommandRequest;
@@ -28,6 +31,6 @@ public class GitCommandParams extends ConnectorTaskParams implements TaskParamet
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return GitCapabilityHelper.fetchRequiredExecutionCapabilities(
-        maskingEvaluator, (GitConfigDTO) gitConfig, encryptionDetails, sshKeySpecDTO);
+        maskingEvaluator, gitConfig, encryptionDetails, sshKeySpecDTO);
   }
 }

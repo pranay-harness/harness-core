@@ -16,6 +16,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
+import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.ScmValidationParams;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -62,7 +63,9 @@ public class ConnectorHeartbeatPerpetualTaskClientTest extends WingsBaseTest {
     when(ngSecretManagerService.getSecretManager(anyString(), anyString(), anyString(), anyString(), eq(false)))
         .thenReturn(null);
     ScmValidationParams gitValidationParameters =
-        ScmValidationParams.builder().gitConfigDTO(GitConfigDTO.builder().build()).build();
+        ScmValidationParams.builder()
+            .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).build())
+            .build();
     when(call.execute()).thenReturn(Response.success(ResponseDTO.newResponse(gitValidationParameters)));
     FieldUtils.writeField(connectorHeartbeatPerpetualTaskClient, "kryoSerializer", kryoSerializer, true);
     Map<String, String> connectorDetails = ImmutableMap.of(ACCOUNT_KEY, accountIdentifier, ORG_KEY, orgIdentifier,

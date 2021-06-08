@@ -7,7 +7,7 @@ import (
 
 // ConvertPushHook converts scm.PushHook to protobuf object
 func ConvertPushHook(p *scm.PushHook) (*pb.PushHook, error) {
-	repo, err := convertRepo(&p.Repo)
+	repo, err := ConvertRepo(&p.Repo)
 	if err != nil {
 		return nil, err
 	}

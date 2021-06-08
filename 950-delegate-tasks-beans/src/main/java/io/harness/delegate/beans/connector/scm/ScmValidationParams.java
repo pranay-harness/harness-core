@@ -16,6 +16,7 @@ import lombok.Value;
 @Value
 @Builder
 public class ScmValidationParams implements ConnectorValidationParams, ExecutionCapabilityDemander {
+  ScmConnector scmConnector;
   GitConfigDTO gitConfigDTO;
   List<EncryptedDataDetail> encryptedDataDetails;
   SSHKeySpecDTO sshKeySpecDTO;

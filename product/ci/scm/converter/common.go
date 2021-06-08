@@ -85,8 +85,8 @@ func convertLabel(l scm.Label) *pb.Label {
 	}
 }
 
-// convertRepo converts scm.Repository to protobuf object
-func convertRepo(r *scm.Repository) (*pb.Repository, error) {
+// ConvertRepo converts scm.Repository to protobuf object
+func ConvertRepo(r *scm.Repository) (*pb.Repository, error) {
 	createTS, err := ptypes.TimestampProto(r.Created)
 	if err != nil {
 		return nil, err
@@ -127,7 +127,7 @@ func convertSignature(s *scm.Signature) (*pb.Signature, error) {
 	}, nil
 }
 
-// convertCommit converts scm.Commit to protobuf object
+// ConvertCommit converts scm.Commit to protobuf object
 func ConvertCommit(c *scm.Commit) (*pb.Commit, error) {
 	author, err := convertSignature(&c.Author)
 	if err != nil {
