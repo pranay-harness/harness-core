@@ -5,10 +5,7 @@ import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -20,15 +17,9 @@ public class QueryRecordsRepositoryCustomImpl implements QueryRecordsRepositoryC
   private final MongoTemplate mongoTemplate;
 
   @Override
-  public Map<String, Set<String>> findAllHashes(int page, int size) {
-    Map<String, Set<String>> serviceNameToHashes = new HashMap<>();
+  public List<QueryRecordEntity> findAllHashes(int page, int size) {
     Pageable pageable = PageUtils.getPageRequest(page, size, new ArrayList<>());
     Query query = new Query().with(pageable);
-    mongoTemplate.find(query, QueryRecordEntity.class).forEach(queryRecordEntity -> {
-      Set<String> storedHashes = serviceNameToHashes.getOrDefault(queryRecordEntity.getServiceName(), new HashSet<>());
-      storedHashes.add(queryRecordEntity.getHash());
-      serviceNameToHashes.put(queryRecordEntity.getServiceName(), storedHashes);
-    });
-    return serviceNameToHashes;
+    return mongoTemplate.find(query, QueryRecordEntity.class);
   }
 }

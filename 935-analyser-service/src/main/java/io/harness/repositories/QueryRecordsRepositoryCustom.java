@@ -1,8 +1,9 @@
 package io.harness.repositories;
 
-import java.util.Map;
-import java.util.Set;
+import io.harness.event.QueryRecordEntity;
+
+import java.util.List;
 
 public interface QueryRecordsRepositoryCustom {
-  Map<String, Set<String>> findAllHashes(int page, int size);
+  List<QueryRecordEntity> findAllHashes(int page, int size);
 }
