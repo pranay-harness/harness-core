@@ -12,6 +12,8 @@ import io.harness.artifacts.gcr.service.GcrApiService;
 import io.harness.artifacts.gcr.service.GcrApiServiceImpl;
 import io.harness.aws.AwsClient;
 import io.harness.aws.AwsClientImpl;
+import io.harness.aws.AwsSamClient;
+import io.harness.aws.AwsSamClientImpl;
 import io.harness.azure.client.AzureAuthorizationClient;
 import io.harness.azure.client.AzureAutoScaleSettingsClient;
 import io.harness.azure.client.AzureBlueprintClient;
@@ -101,15 +103,7 @@ import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskHandler;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskNG;
 import io.harness.delegate.task.artifacts.ecr.EcrArtifactTaskNG;
 import io.harness.delegate.task.artifacts.gcr.GcrArtifactTaskNG;
-import io.harness.delegate.task.aws.AwsCodeCommitApiDelegateTask;
-import io.harness.delegate.task.aws.AwsCodeCommitDelegateTask;
-import io.harness.delegate.task.aws.AwsDelegateTask;
-import io.harness.delegate.task.aws.AwsSamAbstractTaskHandler;
-import io.harness.delegate.task.aws.AwsSamDeployTaskHandlerNG;
-import io.harness.delegate.task.aws.AwsSamInvokeLocallyTaskHandlerNG;
-import io.harness.delegate.task.aws.AwsSamTaskHandlerNG;
-import io.harness.delegate.task.aws.AwsSamTaskType;
-import io.harness.delegate.task.aws.AwsValidationHandler;
+import io.harness.delegate.task.aws.*;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceTaskType;
 import io.harness.delegate.task.azure.arm.AzureARMTaskParameters;
 import io.harness.delegate.task.cek8s.CEKubernetesTestConnectionDelegateTask;
@@ -1005,6 +999,8 @@ public class DelegateModule extends AbstractModule {
     bind(NGChartMuseumService.class).to(NGChartMuseumServiceImpl.class);
     bind(ScmDelegateClient.class).to(ScmDelegateClientImpl.class);
     bind(ScmServiceClient.class).to(ScmServiceClientImpl.class);
+    bind(AwsBaseHelper.class).to(AwsBaseHelperImpl.class);
+    bind(AwsSamClient.class).to(AwsSamClientImpl.class);
 
     // NG Delegate
     MapBinder<String, K8sRequestHandler> k8sTaskTypeToRequestHandler =

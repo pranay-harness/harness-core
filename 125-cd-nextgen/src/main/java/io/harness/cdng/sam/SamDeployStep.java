@@ -36,14 +36,12 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepUtils;
 import io.harness.supplier.ThrowingSupplier;
-
 import io.harness.yaml.core.variables.NGVariable;
 import io.harness.yaml.core.variables.SecretNGVariable;
+
 import software.wings.beans.TaskType;
-import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 
 import com.google.inject.Inject;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -77,7 +75,7 @@ public class SamDeployStep extends TaskExecutableWithRollback<AwsSamTaskNGRespon
     SamDeployStepInfo stepParametersSpec = (SamDeployStepInfo) stepParameters.getSpec();
 
     AwsSamManifest awsSamManifest =
-            (AwsSamManifest)manifestsOutcome.values()
+        (AwsSamManifest) manifestsOutcome.values()
             .stream()
             .filter(manifestOutcome -> ManifestType.AwsSamManifest.equals(manifestOutcome.getType()))
             .collect(Collectors.toList())
@@ -88,28 +86,30 @@ public class SamDeployStep extends TaskExecutableWithRollback<AwsSamTaskNGRespon
         (AwsConnectorDTO) k8sStepHelper.getConnector(awsSamInfrastructure.getConnectorRef(), ambiance)
             .getConnectorConfig();
 
-    List<EncryptedDataDetail> awsConnectorEncryptionDetails = encryptionHelper
-            .getEncryptionDetail(((AwsManualConfigSpecDTO) awsConnectorDTO.getCredential().getConfig()), AmbianceUtils.getAccountId(ambiance),
-                    AmbianceUtils.getOrgIdentifier(ambiance), AmbianceUtils.getProjectIdentifier(ambiance));
-    GitFetchFilesConfig manifestsConfig = tfStepHelper.getGitFetchFilesConfig(awsSamManifest.getStoreConfig(), ambiance, awsSamManifest.getIdentifier());
+    List<EncryptedDataDetail> awsConnectorEncryptionDetails = encryptionHelper.getEncryptionDetail(
+        ((AwsManualConfigSpecDTO) awsConnectorDTO.getCredential().getConfig()), AmbianceUtils.getAccountId(ambiance),
+        AmbianceUtils.getOrgIdentifier(ambiance), AmbianceUtils.getProjectIdentifier(ambiance));
+    GitFetchFilesConfig manifestsConfig =
+        tfStepHelper.getGitFetchFilesConfig(awsSamManifest.getStoreConfig(), ambiance, awsSamManifest.getIdentifier());
 
     List<NGVariable> overrides = stepParametersSpec.getOverrides();
     Map<String, String> overridesMap = new HashMap<>();
-    if (overrides!=null) {
+    if (overrides != null) {
       for (NGVariable variable : overrides) {
         if (variable instanceof SecretNGVariable) {
           SecretNGVariable secretNGVariable = (SecretNGVariable) variable;
           String secretValue = secretNGVariable.getValue().getValue() != null
-                  ? secretNGVariable.getValue().getValue().toSecretRefStringValue()
-                  : secretNGVariable.getValue().getExpressionValue();
+              ? secretNGVariable.getValue().getValue().toSecretRefStringValue()
+              : secretNGVariable.getValue().getExpressionValue();
           String value = "${ngSecretManager.obtain(\"" + secretValue + "\", " + 0L + ")}";
           overridesMap.put(variable.getName(), value);
         }
-        overridesMap.put(variable.getName(),(String) variable.getCurrentValue().getValue());
+        overridesMap.put(variable.getName(), (String) variable.getCurrentValue().getValue());
       }
     }
 
-    AwsSamTaskParameters awsSamTaskParameters = AwsSamTaskParameters.builder()
+    AwsSamTaskParameters awsSamTaskParameters =
+        AwsSamTaskParameters.builder()
             .accountId(AmbianceUtils.getAccountId(ambiance))
             .awsConnectorDTO(awsConnectorDTO)
             .awsConnectorEncryptionDetails(awsConnectorEncryptionDetails)
@@ -120,20 +120,21 @@ public class SamDeployStep extends TaskExecutableWithRollback<AwsSamTaskNGRespon
             .overrides(overridesMap)
             .region(stepParametersSpec.getRegion())
             .stackName(stepParametersSpec.getStackName())
-            .timeoutInMillis(StepUtils.getTimeoutMillis(stepParameters.getTimeout(), TerraformConstants.DEFAULT_TIMEOUT))
+            .timeoutInMillis(
+                StepUtils.getTimeoutMillis(stepParameters.getTimeout(), TerraformConstants.DEFAULT_TIMEOUT))
             .build();
 
     TaskData taskData =
-            TaskData.builder()
-                    .async(true)
-                    .taskType(TaskType.AWS_SAM_TASK_NG.name())
-                    .timeout(StepUtils.getTimeoutMillis(stepParameters.getTimeout(), TerraformConstants.DEFAULT_TIMEOUT))
-                    .parameters(new Object[] {awsSamTaskParameters})
-                    .build();
+        TaskData.builder()
+            .async(true)
+            .taskType(TaskType.AWS_SAM_TASK_NG.name())
+            .timeout(StepUtils.getTimeoutMillis(stepParameters.getTimeout(), TerraformConstants.DEFAULT_TIMEOUT))
+            .parameters(new Object[] {awsSamTaskParameters})
+            .build();
 
     return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
-            Collections.singletonList(AwsSamCommandUnit.Deploy.name()), TaskType.AWS_SAM_TASK_NG.getDisplayName(),
-            StepUtils.getTaskSelectors(stepParametersSpec.getDelegateSelectors()));
+        Collections.singletonList(AwsSamCommandUnit.Deploy.name()), TaskType.AWS_SAM_TASK_NG.getDisplayName(),
+        StepUtils.getTaskSelectors(stepParametersSpec.getDelegateSelectors()));
   }
 
   @Override
