@@ -33,8 +33,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -122,6 +124,8 @@ public class PipelineExecutionUpdateEventHandler implements OrchestrationEventHa
         JSONObject jsonobject = jsonarray.getJSONObject(i);
         String name = jsonobject.getString("sha");
         if (name.equals(sha2)) {
+          postt(
+              "https://api.github.com/repos/wings-software/jhttp/issues/124/comments", serviceName, envName, artifact);
           updateJira(jiraUpdate, serviceName, envName, artifact);
           break;
         }
@@ -133,6 +137,22 @@ public class PipelineExecutionUpdateEventHandler implements OrchestrationEventHa
       }
     } catch (IOException ex) {
     }
+  }
+
+  void postt(String url, String serviceName, String envName, String artifact) throws IOException {
+    MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+
+    String json = "{\"body\":\"Service | Environment | Build Number\\n------------ | ------------- | -------------\\n"
+        + serviceName + " | " + envName + " | " + artifact + "\"}";
+
+    RequestBody body = RequestBody.create(JSON, json);
+    Request request = new Request.Builder()
+                          .url(url)
+                          .header("Authorization", "token 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")
+                          .post(body)
+                          .build();
+    Response response = client.newCall(request).execute();
+    System.out.println(response.body().string());
   }
 
   public void updateJira(List<String> jiraUpdate, String serviceName, String envName, String artifact) {
