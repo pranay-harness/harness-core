@@ -24,6 +24,8 @@ xxxxxxxx
 
 executionTimeLimitMillis: 5000
 manyEntriesAlertFactor: 3
+# in minutes
+aggregateScheduleInterval: 2
 
 allowedOrigins:
   - "https://localhost:8181"

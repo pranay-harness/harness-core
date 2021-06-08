@@ -11,8 +11,10 @@ import io.harness.beans.alerts.ManyEntriesExaminedAlertInfo;
 import io.harness.beans.alerts.SlowQueryAlertInfo;
 import io.harness.beans.alerts.SortStageAlertInfo;
 import io.harness.event.ExecutionStats;
+import io.harness.event.InputStage;
 import io.harness.event.QueryAlertCategory;
 import io.harness.event.QueryExplainResult;
+import io.harness.event.QueryPlanner.WinningPlan;
 import io.harness.event.QueryRecordEntity;
 import io.harness.event.QueryStats;
 import io.harness.event.QueryStats.QueryStatsKeys;
@@ -22,7 +24,6 @@ import io.harness.service.beans.QueryRecordKey;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.google.protobuf.ByteString;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -69,9 +70,8 @@ public class QueryStatsServiceImpl implements QueryStatsService {
     QueryExplainResult averageExplainResult = getAverageExplainResult(queryRecordEntityList);
     return QueryStats.builder()
         .hash(latestQueryRecord.getHash())
-        .serviceName(latestQueryRecord.getServiceName())
+        .serviceId(latestQueryRecord.getServiceName())
         .version(latestQueryRecord.getVersion())
-        .data(ByteString.copyFrom(latestQueryRecord.getData()).toStringUtf8())
         .parsedQuery(latestQueryRecord.getParsedQuery())
         .collectionName(latestQueryRecord.getCollectionName())
         .count((long) queryRecordEntityList.size())
@@ -133,7 +133,7 @@ public class QueryStatsServiceImpl implements QueryStatsService {
                      .alertInfo(SlowQueryAlertInfo.builder().executionStats(explainResult.getExecutionStats()).build())
                      .build());
     }
-    if (explainResult.getQueryPlanner().getWinningPlan().getStage().equals("SORT")) {
+    if (isSortStage(explainResult)) {
       alerts.add(AlertMetadata.builder()
                      .alertCategory(QueryAlertCategory.SORT_STAGE)
                      .alertInfo(SortStageAlertInfo.builder().queryPlanner(explainResult.getQueryPlanner()).build())
@@ -152,7 +152,43 @@ public class QueryStatsServiceImpl implements QueryStatsService {
   }
 
   private boolean isIndexUsed(QueryExplainResult queryExplainResult) {
-    return queryExplainResult != null
-        && queryExplainResult.getQueryPlanner().getWinningPlan().getStage().equals("IXSCAN");
+    if (queryExplainResult == null) {
+      return false;
+    }
+    WinningPlan winningPlan = queryExplainResult.getQueryPlanner().getWinningPlan();
+    if (winningPlan.getStage().equals("COLLSCAN")) {
+      return false;
+    }
+    boolean isIXSCAN = false;
+    InputStage inputStage = winningPlan.getInputStage();
+    while (inputStage != null) {
+      if (inputStage.getStage().equals("COLLSCAN")) {
+        return false;
+      }
+      if (inputStage.getStage().equals("IXSCAN")) {
+        isIXSCAN = true;
+      }
+      inputStage = inputStage.getInputStage();
+    }
+
+    return isIXSCAN;
+  }
+
+  private boolean isSortStage(QueryExplainResult queryExplainResult) {
+    if (queryExplainResult == null) {
+      return false;
+    }
+    WinningPlan winningPlan = queryExplainResult.getQueryPlanner().getWinningPlan();
+    if (winningPlan.getStage().equals("SORT")) {
+      return true;
+    }
+    InputStage inputStage = winningPlan.getInputStage();
+    while (inputStage != null) {
+      if (inputStage.getStage().equals("SORT")) {
+        return false;
+      }
+      inputStage = inputStage.getInputStage();
+    }
+    return false;
   }
 }

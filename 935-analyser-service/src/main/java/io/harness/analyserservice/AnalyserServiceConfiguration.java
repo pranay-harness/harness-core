@@ -21,4 +21,5 @@ public class AnalyserServiceConfiguration extends Configuration {
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
   @JsonProperty("executionTimeLimitMillis") private Long executionTimeLimitMillis;
   @JsonProperty("manyEntriesAlertFactor") private Integer manyEntriesAlertFactor;
+  @JsonProperty("aggregateScheduleInterval") private Long aggregateScheduleInterval;
 }

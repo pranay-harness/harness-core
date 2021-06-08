@@ -16,7 +16,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "InputStageKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-class InputStage {
+public class InputStage {
   String stage;
   Map<String, String> keyPattern;
   boolean isMultiKey;

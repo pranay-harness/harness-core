@@ -74,7 +74,7 @@ public class AnalyserServiceApplication extends Application<AnalyserServiceConfi
     registerResources(environment, injector);
 
     registerManagedBeans(environment, injector);
-    registerScheduledJobs(injector);
+    registerScheduledJobs(injector, configuration);
     MaintenanceController.forceMaintenance(false);
     populateCache(injector);
   }
@@ -83,11 +83,12 @@ public class AnalyserServiceApplication extends Application<AnalyserServiceConfi
     environment.lifecycle().manage(injector.getInstance(QueryAnalyserEventService.class));
   }
 
-  private void registerScheduledJobs(Injector injector) {
+  private void registerScheduledJobs(Injector injector, AnalyserServiceConfiguration configuration) {
     injector
         .getInstance(Key.get(
             ScheduledExecutorService.class, Names.named(AnalyserServiceConstants.SAMPLE_AGGREGATOR_SCHEDULED_THREAD)))
-        .scheduleWithFixedDelay(injector.getInstance(AnalyserSampleAggregatorService.class), 0L, 2L, TimeUnit.MINUTES);
+        .scheduleWithFixedDelay(injector.getInstance(AnalyserSampleAggregatorService.class), 0L,
+            configuration.getAggregateScheduleInterval(), TimeUnit.MINUTES);
   }
 
   private void populateCache(Injector injector) {

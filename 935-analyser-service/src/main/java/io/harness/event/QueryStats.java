@@ -55,7 +55,6 @@ public class QueryStats {
   @NonNull String serviceId;
 
   QueryExplainResult explainResult;
-  String data;
   Boolean indexUsed;
   List<AlertMetadata> alerts;
   ParsedQuery parsedQuery;
