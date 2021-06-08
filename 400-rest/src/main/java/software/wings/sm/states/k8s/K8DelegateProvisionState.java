@@ -1,8 +1,11 @@
 package software.wings.sm.states.k8s;
 
+import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.beans.SweepingOutputInstance;
-import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesHelperService;
@@ -11,14 +14,24 @@ import io.harness.k8s.model.KubernetesConfig;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 
+import software.wings.beans.DockerConfig;
 import software.wings.beans.KubernetesClusterConfig;
+import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CVActivityLogService;
+import software.wings.settings.SettingValue;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
@@ -31,6 +44,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
@@ -60,6 +74,10 @@ public class K8DelegateProvisionState extends State implements SweepingOutputSta
   @Inject private KubernetesContainerService kubernetesContainerService;
   @Inject private DelegateService delegateService;
   @Inject private CVActivityLogService cvActivityLogService;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private ArtifactService artifactService;
+  @Inject private BuildSourceService buildSourceService;
 
   public K8DelegateProvisionState(String name) {
     super(name, StateType.DELEGATE_PROVISION.name());
@@ -68,6 +86,32 @@ public class K8DelegateProvisionState extends State implements SweepingOutputSta
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     try {
+      String artifactVersion = context.renderExpression(this.artifactVersion);
+      Artifact artifact = (Artifact) ((ExecutionContextImpl) context).getContextMap().get("artifact");
+      String serviceId = artifact.getServiceIds().get(0);
+      PageResponse<Artifact> artifacts =
+          artifactService.listArtifactsForService(context.getAppId(), serviceId, new PageRequest<>());
+      boolean artifactExists = artifacts.stream().anyMatch(
+          existingArtifact -> existingArtifact.getUiDisplayName().equals("Tag# " + artifactVersion));
+      if (artifactExists) {
+        cvActivityLogService.getLoggerByStateExecutionId(context.getAccountId(), context.getStateExecutionInstanceId())
+            .info("Artifact already exists. Continuing the deployment");
+      } else {
+        cvActivityLogService.getLoggerByStateExecutionId(context.getAccountId(), context.getStateExecutionInstanceId())
+            .info("Artifact not collected yet. Continuing to download the artifact");
+        SettingAttribute settingAttribute = settingsService.get(artifact.getSettingId());
+        DockerConfig dockerConfig = (DockerConfig) settingAttribute.getValue();
+        buildSourceService.collectArtifact(context.getAppId(), artifact.getArtifactStreamId(),
+            aBuildDetails()
+                .withNumber(artifactVersion)
+                .withBuildUrl(dockerConfig.getDockerRegistryUrl() + "/" + artifact.getArtifactSourceName() + "/tags/"
+                    + artifactVersion)
+                .withUiDisplayName("Tag# " + artifactVersion)
+                .withMetadata(artifact.getMetadata())
+                .build());
+        cvActivityLogService.getLoggerByStateExecutionId(context.getAccountId(), context.getStateExecutionInstanceId())
+            .info("Artifact " + artifactVersion + " collected. Continuing to deployment");
+      }
       log.info("Installing kubectl");
       cvActivityLogService.getLoggerByStateExecutionId(context.getAccountId(), context.getStateExecutionInstanceId())
           .info("Installing kubectl on harness manager");
