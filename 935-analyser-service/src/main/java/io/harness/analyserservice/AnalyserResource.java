@@ -87,6 +87,8 @@ public class AnalyserResource {
       @NotNull @QueryParam(AnalyserServiceConstants.SERVICE) String service) {
     return ResponseDTO.newResponse(analyserService.getNewQueriesInLatestVersion(service));
   }
+
+  @GET
   @Path("/services")
   @ApiOperation(value = "get information for all services", nickname = "getServices")
   public ResponseDTO<List<ServiceInfo>> getAllServiceInfos() {
