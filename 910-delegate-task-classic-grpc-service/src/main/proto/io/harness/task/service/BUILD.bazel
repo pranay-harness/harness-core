@@ -1,0 +1,37 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
+
+proto_library(
+    name = "910_delegate_task_classic_grpc_service_proto",
+    srcs = ["delegate_task.proto"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//920-delegate-service-beans/src/main/proto/io/harness/callback:920_delegate_service_beans_proto",
+        "//920-delegate-service-beans/src/main/proto/io/harness/delegate:920_delegate_service_beans_proto",
+        "//955-delegate-beans/src/main/proto/io/harness/delegate:955_delegate_beans_proto",
+        "//product/ci/engine/proto:cienginepb_proto",
+        "@com_google_protobuf//:duration_proto",
+    ],
+)
+
+go_proto_library(
+    name = "910_delegate_task_classic_grpc_service_go_proto",
+    compilers = ["@io_bazel_rules_go//proto:go_grpc"],
+    importpath = "github.com/wings-software/portal/910-delegate-task-grpc-service/src/main/proto/io/harness/task/service",
+    proto = ":910_delegate_task_classic_grpc_service_proto",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//920-delegate-service-beans/src/main/proto/io/harness/callback:go_default_library",
+        "//920-delegate-service-beans/src/main/proto/io/harness/delegate:go_default_library",
+        "//955-delegate-beans/src/main/proto/io/harness/delegate:go_default_library",
+        "//product/ci/engine/proto:cienginepb_go_proto",
+    ],
+)
+
+go_library(
+    name = "go_default_library",
+    embed = [":910_delegate_task_classic_grpc_service_go_proto"],
+    importpath = "github.com/wings-software/portal/910-delegate-task-classic-grpc-service/src/main/proto/io/harness/task/service",
+    visibility = ["//visibility:public"],
+)

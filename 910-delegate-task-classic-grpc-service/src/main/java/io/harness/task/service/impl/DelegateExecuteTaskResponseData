@@ -1,0 +1,13 @@
+package io.harness.task.service.impl;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.DelegateResponseData;
+import lombok.NoArgsConstructor;
+
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+
+@OwnedBy(DEL)
+@NoArgsConstructor
+public class DelegateExecuteTaskResponseData implements DelegateResponseData {
+
+}
