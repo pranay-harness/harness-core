@@ -1,6 +1,8 @@
 package io.harness.resourcegroup.resourceclient.dashboard;
 
-import com.google.inject.Inject;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 import io.harness.beans.ScopeLevel;
@@ -8,28 +10,24 @@ import io.harness.eventsframework.consumer.Message;
 import io.harness.resourcegroup.beans.ValidatorType;
 import io.harness.resourcegroup.framework.service.Resource;
 import io.harness.resourcegroup.framework.service.ResourceInfo;
+
+import com.google.inject.Inject;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
-import java.util.Collections;
-import java.util.Set;
-import java.util.Optional;
-import java.util.EnumSet;
-
-
-import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
 
 @OwnedBy(PL)
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @AllArgsConstructor(access = AccessLevel.PUBLIC, onConstructor = @__({ @Inject }))
 @Slf4j
 public class DashboardResourceImpl implements Resource {
-
-  public static final String DASHBOARD = "DASHBOARDS" ;
+  public static final String DASHBOARD = "DASHBOARDS";
 
   @Override
   public List<Boolean> validate(List<String> resourceIds, Scope scope) {
