@@ -52,24 +52,12 @@ public class ArgoSyncExecutionData extends StateExecutionData implements Delegat
     // in activity window
     putNotNull(executionDetails, "activityId",
         ExecutionDataValue.builder().value(activityId).displayName("Activity Id").build());
-    putNotNull(executionDetails, "appId", ExecutionDataValue.builder().value(appId).displayName("App Id").build());
-    putNotNull(executionDetails, "envId", ExecutionDataValue.builder().value(envId).displayName("Env Id").build());
-    putNotNull(executionDetails, "infraMappingId",
-        ExecutionDataValue.builder().value(infraMappingId).displayName("Infra MappingId Id").build());
-    putNotNull(executionDetails, "argoServerUrl",
-        ExecutionDataValue.builder().value(argoServerUrl).displayName("Argo Server Url").build());
-    putNotNull(executionDetails, "clusterUrl",
-        ExecutionDataValue.builder().value(clusterUrl).displayName("K8 Cluster Url").build());
     putNotNull(executionDetails, "argoAppName",
         ExecutionDataValue.builder().value(argoAppName).displayName("Argo Application Name").build());
     putNotNull(
         executionDetails, "repoUrl", ExecutionDataValue.builder().value(repoUrl).displayName("Git Repo").build());
     putNotNull(
         executionDetails, "repoRef", ExecutionDataValue.builder().value(repoRef).displayName("Repo Ref").build());
-    putNotNull(executionDetails, "syncOption",
-        ExecutionDataValue.builder().value(syncOption).displayName("Sync Option").build());
-    putNotNull(executionDetails, "argoConnectorId",
-        ExecutionDataValue.builder().value(argoConnectorId).displayName("Argo Connector Id").build());
     return executionDetails;
   }
 
