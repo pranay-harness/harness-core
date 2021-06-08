@@ -64,6 +64,7 @@ import io.harness.steps.executable.AsyncExecutableWithRbac;
 import io.harness.tasks.ResponseData;
 import io.harness.util.GithubApiFunctor;
 import io.harness.util.GithubApiTokenEvaluator;
+import io.harness.util.MetricCache;
 import io.harness.yaml.core.timeout.Timeout;
 
 import com.google.inject.Inject;
@@ -89,6 +90,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject private CIDelegateTaskExecutor ciDelegateTaskExecutor;
   @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
+  @Inject private MetricCache metricCache;
 
   @Override
   public Class<StepElementParameters> getStepParametersClass() {
@@ -123,8 +125,9 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
     }
 
     String parkedTaskId = queueParkedDelegateTask(ambiance, timeoutInMillis, accountId, ciDelegateTaskExecutor);
-    UnitStep unitStep = serialiseStep(ciStepInfo, parkedTaskId, logKey, stepIdentifier,
-        getPort(ambiance, stepIdentifier), getCtrName(ambiance, stepIdentifier), accountId, stepParametersName, stringTimeout);
+    UnitStep unitStep =
+        serialiseStep(ciStepInfo, parkedTaskId, logKey, stepIdentifier, getPort(ambiance, stepIdentifier),
+            getCtrName(ambiance, stepIdentifier), accountId, stepParametersName, stringTimeout);
     String liteEngineTaskId =
         queueDelegateTask(ambiance, timeoutInMillis, accountId, ciDelegateTaskExecutor, unitStep, runtimeId);
 
@@ -208,8 +211,18 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
         stepResponseBuilder.stepOutcome(stepArtifactOutcome);
       }
 
-      long mem = stepStatus.getMaxMemoryMib();
-      long cpu = stepStatus.getMaxMilliCPU();
+      Integer maxMem = Math.toIntExact(stepStatus.getMaxMemoryMib());
+      Integer maxCpu = Math.toIntExact(stepStatus.getMaxMilliCPU());
+      Integer currCpu = getCurrStepCpu(ambiance, stepIdentifier);
+      Integer currMem = getCurrStepMemory(ambiance, stepIdentifier);
+
+      final String accountID = AmbianceUtils.getAccountId(ambiance);
+      final String orgID = AmbianceUtils.getOrgIdentifier(ambiance);
+      final String projectID = AmbianceUtils.getProjectIdentifier(ambiance);
+      final String pipelineID = ambiance.getMetadata().getPipelineIdentifier();
+      final String stageID = getStageID(ambiance, stepIdentifier);
+      metricCache.populate(
+          accountID, orgID, projectID, pipelineID, stageID, stepIdentifier, maxMem, maxCpu, currMem, currCpu);
 
       return stepResponseBuilder.status(Status.SUCCEEDED).build();
     } else if (stepStatus.getStepExecutionStatus() == StepExecutionStatus.SKIPPED) {
@@ -238,11 +251,13 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
       Integer port, String ctrName, String accountId, String stepName, String timeout) {
     switch (ciStepInfo.getNonYamlInfo().getStepInfoType()) {
       case RUN:
-        return runStepProtobufSerializer.serializeStepWithStepParameters((RunStepInfo) ciStepInfo, port, ctrName, taskId, logKey,
-            stepIdentifier, ParameterField.createValueField(Timeout.fromString(timeout)), accountId, stepName);
+        return runStepProtobufSerializer.serializeStepWithStepParameters((RunStepInfo) ciStepInfo, port, ctrName,
+            taskId, logKey, stepIdentifier, ParameterField.createValueField(Timeout.fromString(timeout)), accountId,
+            stepName);
       case PLUGIN:
-        return pluginStepProtobufSerializer.serializeStepWithStepParameters((PluginStepInfo) ciStepInfo, port, ctrName, taskId,
-            logKey, stepIdentifier, ParameterField.createValueField(Timeout.fromString(timeout)), accountId, stepName);
+        return pluginStepProtobufSerializer.serializeStepWithStepParameters((PluginStepInfo) ciStepInfo, port, ctrName,
+            taskId, logKey, stepIdentifier, ParameterField.createValueField(Timeout.fromString(timeout)), accountId,
+            stepName);
       case GCR:
       case DOCKER:
       case ECR:
@@ -253,13 +268,13 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
       case RESTORE_CACHE_GCS:
       case SAVE_CACHE_S3:
       case RESTORE_CACHE_S3:
-        return pluginCompatibleStepSerializer.serializeStepWithStepParameters((PluginCompatibleStep) ciStepInfo, port, ctrName,
-            taskId, logKey, stepIdentifier, ParameterField.createValueField(Timeout.fromString(timeout)), accountId,
-            stepName);
+        return pluginCompatibleStepSerializer.serializeStepWithStepParameters((PluginCompatibleStep) ciStepInfo, port,
+            ctrName, taskId, logKey, stepIdentifier, ParameterField.createValueField(Timeout.fromString(timeout)),
+            accountId, stepName);
       case RUN_TESTS:
-        return runTestsStepProtobufSerializer.serializeStepWithStepParameters((RunTestsStepInfo) ciStepInfo, port, ctrName,
-            taskId, logKey, stepIdentifier, ParameterField.createValueField(Timeout.fromString(timeout)), accountId,
-            stepName);
+        return runTestsStepProtobufSerializer.serializeStepWithStepParameters((RunTestsStepInfo) ciStepInfo, port,
+            ctrName, taskId, logKey, stepIdentifier, ParameterField.createValueField(Timeout.fromString(timeout)),
+            accountId, stepName);
       case CLEANUP:
       case TEST:
       case BUILD:
@@ -337,6 +352,14 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
     return ports.get(0);
   }
 
+  private String getStageID(Ambiance ambiance, String stepIdentifier) {
+    // Ports are assigned in lite engine step
+    ContainerPortDetails containerPortDetails = (ContainerPortDetails) executionSweepingOutputResolver.resolve(
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(PORT_DETAILS));
+
+    return containerPortDetails.getStageId();
+  }
+
   private String getCtrName(Ambiance ambiance, String stepIdentifier) {
     // Ports are assigned in lite engine step
     ContainerPortDetails containerPortDetails = (ContainerPortDetails) executionSweepingOutputResolver.resolve(
@@ -349,6 +372,30 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
     }
 
     return ctrName;
+  }
+
+  private Integer getCurrStepMemory(Ambiance ambiance, String stepIdentifier) {
+    // Ports are assigned in lite engine step
+    ContainerPortDetails containerPortDetails = (ContainerPortDetails) executionSweepingOutputResolver.resolve(
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(PORT_DETAILS));
+    Integer currMem = containerPortDetails.getStepMemDetails().get(stepIdentifier);
+
+    if (currMem == null) {
+      throw new CIStageExecutionException(format("Step [%s] should map to ", stepIdentifier));
+    }
+    return currMem;
+  }
+
+  private Integer getCurrStepCpu(Ambiance ambiance, String stepIdentifier) {
+    // Ports are assigned in lite engine step
+    ContainerPortDetails containerPortDetails = (ContainerPortDetails) executionSweepingOutputResolver.resolve(
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(PORT_DETAILS));
+    Integer currCpu = containerPortDetails.getStepCpuDetails().get(stepIdentifier);
+
+    if (currCpu == null) {
+      throw new CIStageExecutionException(format("Step [%s] should map to ", stepIdentifier));
+    }
+    return currCpu;
   }
 
   private StepStatusTaskResponseData filterStepResponse(Map<String, ResponseData> responseDataMap) {

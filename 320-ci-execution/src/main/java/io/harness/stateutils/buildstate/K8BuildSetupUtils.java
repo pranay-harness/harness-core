@@ -303,7 +303,8 @@ public class K8BuildSetupUtils {
     List<CIK8ContainerParams> containerParams = new ArrayList<>();
     containerParams.add(liteEngineContainerParams);
     // user input containers with custom entry point
-    consumePortDetails(ambiance, podSetupInfo.getPodSetupParams().getContainerDefinitionInfos());
+    consumePortDetails(
+        ambiance, podSetupInfo.getPodSetupParams().getContainerDefinitionInfos(), k8PodDetails.getStageID());
     for (ContainerDefinitionInfo containerDefinitionInfo :
         podSetupInfo.getPodSetupParams().getContainerDefinitionInfos()) {
       CIK8ContainerParams cik8ContainerParams = createCIK8ContainerParams(ngAccess, containerDefinitionInfo,
@@ -359,15 +360,31 @@ public class K8BuildSetupUtils {
     return EntityDetail.builder().entityRef(connectorRef).type(EntityType.SECRETS).build();
   }
 
-  private void consumePortDetails(Ambiance ambiance, List<ContainerDefinitionInfo> containerDefinitionInfos) {
+  private void consumePortDetails(
+      Ambiance ambiance, List<ContainerDefinitionInfo> containerDefinitionInfos, String stageId) {
     Map<String, List<Integer>> portDetails = containerDefinitionInfos.stream().collect(
         Collectors.toMap(ContainerDefinitionInfo::getStepIdentifier, ContainerDefinitionInfo::getPorts));
 
     Map<String, String> ctrNameDetails = containerDefinitionInfos.stream().collect(
         Collectors.toMap(ContainerDefinitionInfo::getStepIdentifier, ContainerDefinitionInfo::getName));
 
+    Map<String, Integer> stepMemDetails = new HashMap<>();
+    Map<String, Integer> stepCpuDetails = new HashMap<>();
+    for (ContainerDefinitionInfo containerDefinitionInfo : containerDefinitionInfos) {
+      stepMemDetails.put(containerDefinitionInfo.getStepIdentifier(),
+          containerDefinitionInfo.getContainerResourceParams().getResourceLimitMemoryMiB());
+      stepCpuDetails.put(containerDefinitionInfo.getStepIdentifier(),
+          containerDefinitionInfo.getContainerResourceParams().getResourceLimitMilliCpu());
+    }
+
     executionSweepingOutputResolver.consume(ambiance, PORT_DETAILS,
-        ContainerPortDetails.builder().portDetails(portDetails).ctrNameDetails(ctrNameDetails).build(),
+        ContainerPortDetails.builder()
+            .portDetails(portDetails)
+            .ctrNameDetails(ctrNameDetails)
+            .stepCpuDetails(stepCpuDetails)
+            .stepMemDetails(stepMemDetails)
+            .stageId(stageId)
+            .build(),
         StepOutcomeGroup.STAGE.name());
   }
 
