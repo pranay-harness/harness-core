@@ -21,7 +21,7 @@ public class SamDeployStepInfo implements CDStepInfo, SpecParameters {
   String stackName;
   List<NGVariable> overrides;
   String globalAdditionalFlags;
-  String s3BucketName;
+  String s3bucketName;
   Boolean plan;
   private ParameterField<List<String>> delegateSelectors;
 
