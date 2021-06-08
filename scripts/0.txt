@@ -1,2 +1,1 @@
-//990-commons-test:io.harness.time.FakeClockTest
-//990-commons-test:io.harness.rule.CategoryTimeoutRuleTest
+bazel test//990-commons-test:io.harness.time.FakeClockTest/... //990-commons-test:io.harness.rule.CategoryTimeoutRuleTest/... 

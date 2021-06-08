@@ -1,2 +1,1 @@
-//990-commons-test:io.harness.threading.ConcurrentTest
-//990-commons-test:io.harness.owner.OwnerMetadataTest
+bazel test//990-commons-test:io.harness.threading.ConcurrentTest/... //990-commons-test:io.harness.owner.OwnerMetadataTest/... 
