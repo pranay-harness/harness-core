@@ -13,7 +13,6 @@ import io.harness.repositories.activitytracker.ActivityHistoryRepository;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,21 +22,7 @@ public class ActivityHistoryServiceImpl implements ActivityHistoryService {
   @Inject private ActivityHistoryRepository activityHistoryRepository;
 
   public StatsDetailsResponse getStatsDetails(String projectId, String userId, long startTime, long endTime) {
-    if (projectId != null) {
-      ActivityHistory activityHistory =
-          ActivityHistory.builder().activityType(ActivityType.BUILD_PIPELINE).projectId("123").build();
-      //            activityHistoryRepository.save(activityHistory);
-      ActivityStatsPerTimestamp activityStatsPerTimestamp = ActivityStatsPerTimestamp.builder()
-                                                                .timestamp(123L)
-                                                                .countPerActivityTypeList(new ArrayList<>())
-                                                                .totalCount(12)
-                                                                .build();
-      return StatsDetailsResponse.builder()
-          .activityStatsPerTimestampList(Arrays.asList(activityStatsPerTimestamp))
-          .build();
-    }
-
-    List<ActivityHistory> activityHistoryList = new ArrayList<>();
+    List<ActivityHistory> activityHistoryList;
     if (projectId != null && userId != null) {
       activityHistoryList =
           activityHistoryRepository.findByProjectIdAndUserIdAndCreatedAtBetween(projectId, userId, startTime, endTime);
@@ -55,7 +40,7 @@ public class ActivityHistoryServiceImpl implements ActivityHistoryService {
 
   public ActivityHistoryDetailsResponse getActivityHistoryDetails(
       String projectId, String userId, long startTime, long endTime) {
-    List<ActivityHistory> activityHistoryList = new ArrayList<>();
+    List<ActivityHistory> activityHistoryList;
     if (projectId != null && userId != null) {
       activityHistoryList = activityHistoryRepository.findByProjectIdAndUserIdAndCreatedAtBetweenOrderByCreatedAtDesc(
           projectId, userId, startTime, endTime);
