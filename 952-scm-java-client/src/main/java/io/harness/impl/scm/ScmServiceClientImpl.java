@@ -82,6 +82,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
   @Override
   public CreateFileResponse createFile(
       ScmConnector scmConnector, GitFileDetails gitFileDetails, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    int i,j;
     FileModifyRequest fileModifyRequest = getFileModifyRequest(scmConnector, gitFileDetails).build();
     return scmBlockingStub.createFile(fileModifyRequest);
   }
