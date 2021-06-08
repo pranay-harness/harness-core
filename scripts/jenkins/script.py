@@ -72,14 +72,15 @@ for num_nodes in range(2,MAX_NODES+1):
         break
     ideal_time, ideal_test_per_node = current_time, current_tests_per_node
 
+print(" Script ran successfully")
 print(ideal_test_per_node)
 
 for i in range(5):
-    f = open("scripts/jenkins/"+str(i)+".txt", "w")
+    f = open('scripts/jenkins/'+str(i)+".txt", "w")
 
 for node in ideal_test_per_node:
-    toWrite="bazel test"
+    toWrite=""
     for test in ideal_test_per_node[node]:
-        toWrite+=test+"/... "
+        toWrite+=test+" "
     f = open("scripts/jenkins/"+str(node)+".txt", "w")
     f.write(toWrite)
