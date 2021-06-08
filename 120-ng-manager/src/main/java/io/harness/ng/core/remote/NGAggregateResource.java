@@ -137,6 +137,8 @@ public class NGAggregateResource {
   }
 
   public void sendEmailNotificationsToUsers(SlackNotificationsRequest slackNotificationsRequest) {
+    DeploymentDetails deploymentDetails = slackNotificationsRequest.getDeploymentDetails();
+    String deploymentStatus = deploymentDetails.getDeploymentStatus();
     for (User userObj : slackNotificationsRequest.getUsers()) {
       if (userObj.isHasHarnessAccount()) {
         continue;
@@ -166,8 +168,13 @@ public class NGAggregateResource {
         MimeMessage message = new MimeMessage(session);
         message.setFrom(new InternetAddress(user));
         message.addRecipient(Message.RecipientType.TO,new InternetAddress(to));
-        message.setSubject("javatpoint");
-        message.setText("This is simple program of sending email using JavaMail API");
+        message.setSubject("You have been invited to Harness");
+        String someHtmlMessage =
+                "<div dir=\"ltr\">Hi " + userObj.getName().split("@")[0] + ",</div>\n" +
+                "<div dir=\"ltr\"><br />You colleague " + deploymentDetails.getTriggeredBy() + " invited you to join <a style=\"text-decoration: none;\" href=\"app.harness.io\"><strong style=\"color: #00ade4;\">Harness</strong></a></div>\n" +
+                "<div dir=\"ltr\"><img style=\"background-color: black;\" src=\"https://harness.io/wp-content/themes/harnessio/assets/images/Harness-white-logo-rainbow.png\" width=\"219\" height=\"74\" /><br />Harness CI/CD Platform enables software changes of all types to reach production environments in a safe, quick, and sustainable way.<br /><br /></div>\n" +
+                "<div dir=\"ltr\">Get Ship Done.</div>";
+        message.setContent(someHtmlMessage, "text/html; charset=utf-8");
 
         //send the message
         Transport.send(message);
