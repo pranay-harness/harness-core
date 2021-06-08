@@ -2,6 +2,9 @@ package io.harness.app.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import static java.lang.Math.ceil;
+import static java.lang.Math.max;
+
 import io.harness.app.beans.dto.StepResourceMetricDTO;
 import io.harness.app.intfc.CIStepMetricsService;
 import io.harness.util.MetricCache;
@@ -13,6 +16,10 @@ import java.util.List;
 
 @Singleton
 public class CIStepMetricsServiceImpl implements CIStepMetricsService {
+  public static final double SCALING_COEFFICIENT = 1.5;
+  public static final int MIN_SUGGESTION_VALUE_MEM = 100;
+  public static final int MIN_SUGGESTION_VALUE_CPU = 100;
+
   @Inject MetricCache metricCache;
 
   @Override
@@ -55,8 +62,10 @@ public class CIStepMetricsServiceImpl implements CIStepMetricsService {
     int currStepMilliCpu = metricCache.getCurrStepMilliCpu(
         accountIdentifier, orgIdentifier, projectIdentifier, pipelineIdentifier, stageId, stepId);
 
-    int suggestedStepMemoryMib = (int) Math.ceil(((double) maxStepMemoryMib) * 1.5);
-    int suggestedStepMilliCpu = (int) Math.ceil(((double) maxStepMilliCpu) * 1.5);
+    int suggestedStepMemoryMib =
+        max((int) ceil(((double) maxStepMemoryMib) * SCALING_COEFFICIENT), MIN_SUGGESTION_VALUE_MEM);
+    int suggestedStepMilliCpu =
+        max((int) ceil(((double) maxStepMilliCpu) * SCALING_COEFFICIENT), MIN_SUGGESTION_VALUE_CPU);
 
     return StepResourceMetricDTO.builder()
         .currentMilliCpu(currStepMilliCpu)
