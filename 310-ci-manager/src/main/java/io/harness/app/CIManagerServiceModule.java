@@ -7,9 +7,11 @@ import io.harness.CIExecutionServiceModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.impl.CIBuildInfoServiceImpl;
+import io.harness.app.impl.CIStepMetricsServiceImpl;
 import io.harness.app.impl.CIYamlSchemaServiceImpl;
 import io.harness.app.impl.YAMLToObjectImpl;
 import io.harness.app.intfc.CIBuildInfoService;
+import io.harness.app.intfc.CIStepMetricsService;
 import io.harness.app.intfc.CIYamlSchemaService;
 import io.harness.app.intfc.YAMLToObject;
 import io.harness.callback.DelegateCallback;
@@ -135,6 +137,8 @@ public class CIManagerServiceModule extends AbstractModule {
     bind(BuildNumberService.class).to(BuildNumberServiceImpl.class);
     bind(CIYamlSchemaService.class).to(CIYamlSchemaServiceImpl.class).in(Singleton.class);
     bind(CIOverviewDashboardService.class).to(CIOverviewDashboardServiceImpl.class);
+    bind(CIStepMetricsService.class).to(CIStepMetricsServiceImpl.class);
+
     try {
       bind(TimeScaleDBService.class)
           .toConstructor(TimeScaleDBServiceImpl.class.getConstructor(TimeScaleDBConfig.class));

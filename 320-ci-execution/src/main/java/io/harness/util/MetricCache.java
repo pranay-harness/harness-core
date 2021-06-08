@@ -10,18 +10,18 @@ import java.util.concurrent.ConcurrentHashMap;
 @Singleton
 public class MetricCache {
   // accountId:orgId:projectId:pipelineId:stageId:stepId -> [201, 210, 215...]
-  private Map<String, ArrayList<Integer>> maxMemoryMibCache = new ConcurrentHashMap<>();
+  private final Map<String, ArrayList<Integer>> maxMemoryMibCache = new ConcurrentHashMap<>();
 
   // accountId:orgId:projectId:pipelineId:stageId:stepId -> [105, 110, 115...]
-  private Map<String, ArrayList<Integer>> maxMilliCpuCache = new ConcurrentHashMap<>();
+  private final Map<String, ArrayList<Integer>> maxMilliCpuCache = new ConcurrentHashMap<>();
 
   // accountId:orgId:projectId:pipelineId:stageId:stepId -> 105
-  private Map<String, Integer> currMemoryMibCache = new ConcurrentHashMap<>();
+  private final Map<String, Integer> currMemoryMibCache = new ConcurrentHashMap<>();
   // accountId:orgId:projectId:pipelineId:stageId:stepId -> 101
-  private Map<String, Integer> currMilliCpuCache = new ConcurrentHashMap<>();
+  private final Map<String, Integer> currMilliCpuCache = new ConcurrentHashMap<>();
 
   // accountId:orgId:projectId:pipelineId -> [stageId:stepId, ...]
-  private Map<String, ArrayList<String>> currPipelineStepIds = new ConcurrentHashMap<>();
+  private final Map<String, ArrayList<String>> currPipelineStepIds = new ConcurrentHashMap<>();
 
   public int getMaxStepMemoryMib(
       String accountId, String orgId, String projectId, String pipelineId, String stageId, String stepId) {
@@ -53,14 +53,14 @@ public class MetricCache {
     return currPipelineStepIds.get(String.format("%s:%s:%s:%s", accountId, orgId, projectId, pipelineId));
   }
 
-  public String getKey(
+  private String getKey(
       String accountId, String orgId, String projectId, String pipelineId, String stageId, String stepId) {
     return String.format("%s:%s:%s:%s:%s:%s", accountId, orgId, projectId, pipelineId, stageId, stepId);
   }
 
   private void populateMaxStepMemory(String key, Integer memory) {
     if (!maxMemoryMibCache.containsKey(key)) {
-      maxMemoryMibCache.put(key, new ArrayList<Integer>());
+      maxMemoryMibCache.put(key, new ArrayList<>());
     }
 
     maxMemoryMibCache.get(key).add(memory);
@@ -68,7 +68,7 @@ public class MetricCache {
 
   private void populateMaxStepCpu(String key, Integer cpu) {
     if (!maxMilliCpuCache.containsKey(key)) {
-      maxMilliCpuCache.put(key, new ArrayList<Integer>());
+      maxMilliCpuCache.put(key, new ArrayList<>());
     }
 
     maxMilliCpuCache.get(key).add(cpu);
@@ -80,7 +80,7 @@ public class MetricCache {
     String val = String.format("%s:%s", stageId, stepId);
 
     if (!currPipelineStepIds.containsKey(key)) {
-      currPipelineStepIds.put(key, new ArrayList<String>());
+      currPipelineStepIds.put(key, new ArrayList<>());
     }
 
     List<String> s = currPipelineStepIds.get(key);
