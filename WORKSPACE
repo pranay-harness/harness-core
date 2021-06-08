@@ -1085,6 +1085,7 @@ plain_artifacts = [
     "com.google.cloud:google-cloud-kms:1.32.0",
     "com.google.cloud:google-cloud-logging:1.93.0",
     "com.google.cloud:google-cloud-pubsub:1.107.0",
+    "com.google.cloud:google-cloud-recommender:1.5.4",
     "com.google.cloud:google-cloud-resourcemanager:0.117.2-alpha",
     "com.google.cloud:google-cloud-secretmanager:1.2.8",
     "com.google.cloud:google-cloud-storage:1.52.0",

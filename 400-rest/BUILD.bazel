@@ -664,6 +664,7 @@ shared_dependencies = [
     "@maven//:xml_resolver_xml_resolver",
     "@maven//:xpp3_xpp3",
     "@maven//:io_harness_ff_java_server_sdk",
+    "@maven//:com_google_cloud_google_cloud_recommender",
     "@maven_harness//:io_harness_cv_data_collection_dsl",
 ]
 
