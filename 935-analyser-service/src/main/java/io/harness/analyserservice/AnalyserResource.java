@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -78,6 +79,15 @@ public class AnalyserResource {
       @NotNull @QueryParam(AnalyserServiceConstants.VERSION) String version,
       @QueryParam(AnalyserServiceConstants.ALERT_TYPE) QueryAlertCategory alertType) {
     return ResponseDTO.newResponse(analyserService.getQueryStats(service, version, alertType));
+  }
+
+  @GET
+  @Path("/alertcount")
+  @ApiOperation(value = "get count of alerts for a service", nickname = "getAlertsCount")
+  public ResponseDTO<Map<String, Integer>> getAlertsCount(
+      @NotNull @QueryParam(AnalyserServiceConstants.SERVICE) String service,
+      @QueryParam(AnalyserServiceConstants.ALERT_TYPE) QueryAlertCategory alertType) {
+    return ResponseDTO.newResponse(analyserService.getAlertMap(service, alertType));
   }
 
   @GET

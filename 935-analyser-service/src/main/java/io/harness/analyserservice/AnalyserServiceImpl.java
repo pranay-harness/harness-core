@@ -17,7 +17,9 @@ import io.harness.serviceinfo.ServiceInfoServiceImpl;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.NonNull;
@@ -34,6 +36,16 @@ public class AnalyserServiceImpl implements AnalyserService {
   @Override
   public List<QueryStats> getQueryStats(String service, String version) {
     return queryStatsRepository.findByServiceIdAndVersion(service, version);
+  }
+
+  @Override
+  public Map<String, Integer> getAlertMap(String service, QueryAlertCategory alertCategory) {
+    List<String> versions = serviceInfoService.getAllVersions(service);
+    Map<String, Integer> response = new HashMap<>();
+    for (String version : versions) {
+      response.put(version, getQueryStats(service, version, alertCategory).size());
+    }
+    return response;
   }
 
   @Override
