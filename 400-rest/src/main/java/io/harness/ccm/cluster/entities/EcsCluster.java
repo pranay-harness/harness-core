@@ -31,16 +31,16 @@ public class EcsCluster implements Cluster {
   public static final String regionField = ClusterRecordKeys.cluster + "." + EcsClusterKeys.region;
   public static final String clusterNameField = ClusterRecordKeys.cluster + "." + EcsClusterKeys.clusterName;
 
+  @Override
+  public String getClusterType() {
+    return AWS_ECS;
+  }
+  
   @Builder
   public EcsCluster(String cloudProviderId, String region, String clusterName) {
     this.cloudProviderId = cloudProviderId;
     this.region = region;
     this.clusterName = clusterName;
-  }
-
-  @Override
-  public String getClusterType() {
-    return AWS_ECS;
   }
 
   @Override
