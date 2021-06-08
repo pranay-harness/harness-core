@@ -126,7 +126,8 @@ public class SamDeployStep extends TaskExecutableWithRollback<AwsSamTaskNGRespon
             .stackName(stepParametersSpec.getStackName())
             .timeoutInMillis(
                 StepUtils.getTimeoutMillis(stepParameters.getTimeout(), TerraformConstants.DEFAULT_TIMEOUT))
-            .s3BucketName(stepParametersSpec.s3BucketName)
+            .s3BucketName(stepParametersSpec.getS3BucketName())
+            .plan(stepParametersSpec.getPlan())
             .build();
 
     TaskData taskData =

@@ -43,6 +43,7 @@ public class AwsSamTaskParameters
   List<EncryptedDataDetail> awsConnectorEncryptionDetails;
 
   String s3BucketName;
+  Boolean plan;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
