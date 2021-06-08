@@ -5,12 +5,16 @@ import io.harness.cdng.infra.yaml.AwsSamInfrastructure;
 import io.harness.cdng.k8s.K8sStepHelper;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.steps.ManifestsOutcome;
+import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.kinds.AwsSamManifest;
+import io.harness.cdng.provision.terraform.TerraformApplyOutcome;
 import io.harness.cdng.provision.terraform.TerraformStepHelper;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
+import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.helper.EncryptionHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
 import io.harness.delegate.task.aws.AwsSamCommandUnit;
@@ -18,9 +22,11 @@ import io.harness.delegate.task.aws.AwsSamTaskNGResponse;
 import io.harness.delegate.task.aws.AwsSamTaskParameters;
 import io.harness.delegate.task.aws.AwsSamTaskType;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
+import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.UnitProgress;
+import io.harness.ngpipeline.common.ParameterFieldHelper;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollback;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -151,13 +157,12 @@ public class SamDeployStep extends TaskExecutableWithRollback<AwsSamTaskNGRespon
     stepResponseBuilder.unitProgressList(unitProgresses)
         .status(StepUtils.getStepStatus(taskResponse.getCommandExecutionStatus()));
 
-    if (CommandExecutionStatus.SUCCESS == taskResponse.getCommandExecutionStatus()
-        && EmptyPredicate.isNotEmpty(taskResponse.getOutputMap())) {
+    if (CommandExecutionStatus.SUCCESS == taskResponse.getCommandExecutionStatus() && EmptyPredicate.isNotEmpty(taskResponse.getOutputMap())) {
       stepResponseBuilder.stepOutcome(
-          StepResponse.StepOutcome.builder()
-              .name(OutcomeExpressionConstants.OUTPUT)
-              .outcome(SamDeployOutcome.builder().outputs(taskResponse.getOutputMap()).build())
-              .build());
+              StepResponse.StepOutcome.builder()
+                      .name(OutcomeExpressionConstants.OUTPUT)
+                      .outcome(SamDeployOutcome.builder().outputs(taskResponse.getOutputMap()).build())
+                      .build());
     }
     return stepResponseBuilder.build();
   }
