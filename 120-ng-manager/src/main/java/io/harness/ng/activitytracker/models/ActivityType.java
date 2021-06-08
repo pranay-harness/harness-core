@@ -7,5 +7,6 @@ public enum ActivityType {
   RUN_PIPELINE,
   CREATE_PIPELINE,
   UPDATE_PIPELINE,
+  VIEW_PIPELINE,
   VIEW_PROJECT,
 }
