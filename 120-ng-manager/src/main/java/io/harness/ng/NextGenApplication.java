@@ -421,6 +421,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .engineAdvisers(CDServiceAdviserRegistrar.getEngineAdvisers())
         .executionSummaryModuleInfoProviderClass(CDNGModuleInfoProvider.class)
         .eventsFrameworkConfiguration(appConfig.getEventsFrameworkConfiguration())
+        .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())
         .useRedisForSdkResponseEvents(appConfig.getUseRedisForSdkResponseEvents())
         .interruptConsumerConfig(ConsumerConfig.newBuilder()
                                      .setRedis(Redis.newBuilder().setTopicName(PIPELINE_INTERRUPT_TOPIC).build())

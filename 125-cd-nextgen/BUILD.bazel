@@ -10,6 +10,7 @@ java_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "@jira_client//jar",
         "//:lombok",
         "//400-rest:module",
         "//440-connector-nextgen:module",

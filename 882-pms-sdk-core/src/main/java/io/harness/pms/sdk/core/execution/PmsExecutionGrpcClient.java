@@ -1,6 +1,8 @@
 package io.harness.pms.sdk.core.execution;
 
 import io.harness.pms.contracts.service.ExecutionSummaryUpdateRequest;
+import io.harness.pms.contracts.service.Input;
+import io.harness.pms.contracts.service.Output;
 import io.harness.pms.contracts.service.PmsExecutionServiceGrpc.PmsExecutionServiceBlockingStub;
 
 import com.google.inject.Inject;
@@ -17,5 +19,9 @@ public class PmsExecutionGrpcClient {
 
   public void updateExecutionSummary(ExecutionSummaryUpdateRequest request) {
     pmsExecutionServiceBlockingStub.updateExecutionSummary(request);
+  }
+
+  public Output fetchSha(Input request) {
+    return pmsExecutionServiceBlockingStub.fetchSha(request);
   }
 }

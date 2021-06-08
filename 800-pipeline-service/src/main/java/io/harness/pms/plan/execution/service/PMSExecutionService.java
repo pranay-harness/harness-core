@@ -25,6 +25,9 @@ public interface PMSExecutionService {
   PipelineExecutionSummaryEntity getPipelineExecutionSummaryEntity(
       String accountId, String orgId, String projectId, String planExecutionId, boolean pipelineDeleted);
 
+  PipelineExecutionSummaryEntity getPipelineExecutionSummaryEntity(
+      String accountId, String orgId, String projectId, Integer seqId);
+
   OrchestrationGraphDTO getOrchestrationGraph(String stageNodeId, String planExecutionId);
 
   InterruptDTO registerInterrupt(

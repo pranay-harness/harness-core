@@ -6,6 +6,7 @@ option java_multiple_files = true;
 
 service PmsExecutionService {
   rpc updateExecutionSummary(ExecutionSummaryUpdateRequest) returns (ExecutionSummaryResponse);
+  rpc fetchSha(Input) returns (Output);
 }
 
 message ExecutionSummaryUpdateRequest {
@@ -18,3 +19,11 @@ message ExecutionSummaryUpdateRequest {
 }
 
 message ExecutionSummaryResponse {}
+
+message Input {
+  string value = 1;
+}
+
+message Output {
+  string sha = 1;
+}

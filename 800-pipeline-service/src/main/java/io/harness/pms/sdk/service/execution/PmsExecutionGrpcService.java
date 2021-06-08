@@ -8,11 +8,14 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.service.ExecutionSummaryResponse;
 import io.harness.pms.contracts.service.ExecutionSummaryUpdateRequest;
+import io.harness.pms.contracts.service.Input;
+import io.harness.pms.contracts.service.Output;
 import io.harness.pms.contracts.service.PmsExecutionServiceGrpc.PmsExecutionServiceImplBase;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.execution.ExecutionSummaryUpdateUtils;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
+import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
@@ -21,6 +24,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.grpc.stub.StreamObserver;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
@@ -39,6 +43,7 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
 
   @Inject PmsExecutionSummaryRespository pmsExecutionSummaryRepository;
   @Inject private PMSPipelineService pmsPipelineService;
+  @Inject private PMSExecutionService pmsExecutionService;
   @Inject private NodeExecutionService nodeExecutionService;
 
   @Override
@@ -48,6 +53,24 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
     updatePipelineInfoJson(request, nodeExecution);
     updateStageModuleInfo(request, nodeExecution);
     responseObserver.onNext(ExecutionSummaryResponse.newBuilder().build());
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void fetchSha(Input input, StreamObserver<Output> responseObserver) {
+    PipelineExecutionSummaryEntity planExecutionSummaryDTOS = pmsExecutionService.getPipelineExecutionSummaryEntity(
+        "kmpySmUISimoRrJL6NL73w", "default11", "TestCiproject", Integer.valueOf(input.getValue()));
+
+    String sha =
+        (String) ((Document) ((List) ((Document) ((Document) planExecutionSummaryDTOS.getModuleInfo().get("ci").get(
+                                                      "ciExecutionInfoDTO"))
+                                          .get("branch"))
+                                  .get("commits"))
+                      .get(0))
+            .get("id");
+
+    responseObserver.onNext(Output.newBuilder().setSha(sha).build());
+
     responseObserver.onCompleted();
   }
 
