@@ -18,6 +18,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
+import software.wings.beans.PhaseStepType;
 import software.wings.beans.Service;
 import software.wings.beans.TrafficShiftMetadata;
 import software.wings.beans.Variable;
@@ -235,4 +236,7 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
       String appId, List<ArtifactVariable> artifactVariables, WorkflowExecution workflowExecution);
 
   TrafficShiftMetadata readWorkflowTrafficShiftMetadata(@NotNull String appId, @NotNull String workflowId);
+
+  PhaseStep generateRollbackProvisioners(
+      PhaseStep preDeploymentSteps, PhaseStepType phaseStepType, String phaseStepName);
 }

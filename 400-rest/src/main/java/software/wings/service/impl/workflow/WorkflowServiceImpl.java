@@ -1569,7 +1569,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return false;
   }
 
-  private PhaseStep generateRollbackProvisioners(
+  @Override
+  public PhaseStep generateRollbackProvisioners(
       PhaseStep preDeploymentSteps, PhaseStepType phaseStepType, String phaseStepName) {
     if (isARMProvisionState(preDeploymentSteps)) {
       return generateARMRollbackProvisioners(preDeploymentSteps, phaseStepType, phaseStepName);
