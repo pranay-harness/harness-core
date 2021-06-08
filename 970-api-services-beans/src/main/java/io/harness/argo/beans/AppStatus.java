@@ -43,14 +43,22 @@ public class AppStatus {
 
   public enum LastSyncStatus { SUCCESS, FAILED }
 
-  public static AppStatus fromArgoApp(ArgoApp argoApp) {
+  public static AppStatus fromArgoApp(ArgoApp argoApp, RevisionMeta incomingRevision, RevisionMeta syncedRevision) {
     final Health health = getHealth(argoApp);
     final GitSyncStatus syncStatus =
         "OutOfSync".equalsIgnoreCase(argoApp.syncStatus()) ? GitSyncStatus.OUT_OF_SYNC : GitSyncStatus.IN_SYNC;
     final LastSyncStatus lastSyncStatus =
         "Succeeded".equalsIgnoreCase(argoApp.previousSyncStatus()) ? LastSyncStatus.SUCCESS : LastSyncStatus.FAILED;
-    final DeployedMetadata incomingMetadata = DeployedMetadata.builder().revision(argoApp.incomingRevision()).build();
-    final DeployedMetadata deployedMetadata = DeployedMetadata.builder().revision(argoApp.syncedRevision()).build();
+    final DeployedMetadata incomingMetadata = DeployedMetadata.builder()
+                                                  .revision(argoApp.incomingRevision())
+                                                  .author(incomingRevision.getAuthor())
+                                                  .comment(incomingRevision.getMessage())
+                                                  .build();
+    final DeployedMetadata deployedMetadata = DeployedMetadata.builder()
+                                                  .revision(argoApp.syncedRevision())
+                                                  .author(syncedRevision.getAuthor())
+                                                  .comment(syncedRevision.getMessage())
+                                                  .build();
     return AppStatus.builder()
         .health(health)
         .currentSyncDetails(CurrentSyncDetails.builder().status(syncStatus).deployedMetadata(incomingMetadata).build())

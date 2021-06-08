@@ -11,6 +11,7 @@ import static software.wings.sm.states.argo.Constants.PHASE_PARAM;
 import static java.util.Collections.emptyMap;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.argo.ArgoCommandUnitConstants;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
@@ -32,6 +33,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ArgoDummyCommandUnit;
 import software.wings.beans.command.CommandUnitDetails;
+import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.settings.argo.ArgoConfig;
 import software.wings.delegatetasks.argo.beans.request.ManifestDiffRequest;
 import software.wings.infra.argo.ArgoAppConfig;
@@ -64,8 +66,6 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 @OwnedBy(CDP)
 public class ArgoDriftState extends State {
-  public static final String ARGO_DRIFT_COMMAND = "Argo Drift";
-
   @Attributes(title = "Argo Name") @Getter @Setter private String argoName;
   @Inject private transient ActivityService activityService;
   @Inject ArgoStateHelper argoStateHelper;
@@ -119,15 +119,18 @@ public class ArgoDriftState extends State {
     }
 
     ArgoConfig argoConfig = (ArgoConfig) settingAttribute.getValue();
-    Activity activity = argoStateHelper.createActivity(context, null, getStateType(), ARGO_DRIFT_COMMAND,
-        CommandUnitDetails.CommandUnitType.ARGO_DRIFT,
-        ImmutableList.of(new ArgoDummyCommandUnit(PERFORM_DRIFT), new ArgoDummyCommandUnit(DEPLOYMENT_ERROR)));
+    Activity activity = argoStateHelper.createActivity(context, null, getStateType(),
+        ArgoCommandUnitConstants.ARGO_DRIFT_COMMAND, CommandUnitType.ARGO_DRIFT,
+        ImmutableList.of(new ArgoDummyCommandUnit(ArgoCommandUnitConstants.INIT),
+            new ArgoDummyCommandUnit(ArgoCommandUnitConstants.ARGO_DRIFT_COMMAND)));
+    //            new ArgoDummyCommandUnit(DEPLOYMENT_ERROR)));
 
-    ArgoDriftExecutionData argoDriftExecutionData = argoStateHelper.getArgoDriftExecutionData(
-        app, env, infrastructureMapping, argoAppConfig, settingAttribute, argoConfig, activity, ARGO_DRIFT_COMMAND);
+    ArgoDriftExecutionData argoDriftExecutionData =
+        argoStateHelper.getArgoDriftExecutionData(app, env, infrastructureMapping, argoAppConfig, settingAttribute,
+            argoConfig, activity, ArgoCommandUnitConstants.ARGO_DRIFT_COMMAND);
 
     ManifestDiffRequest manifestDiffRequest =
-        generateManifestDiffRequest(context, argoAppConfig, settingAttribute, argoConfig);
+        generateManifestDiffRequest(context, argoAppConfig, settingAttribute, argoConfig, activity.getUuid());
     DelegateTask delegateTask = argoStateHelper.getDelegateTask(app, activity, env, infrastructureMapping,
         manifestDiffRequest, serviceElement, isSelectionLogsTrackingForTasksEnabled());
 
@@ -142,10 +145,14 @@ public class ArgoDriftState extends State {
   }
 
   @NotNull
-  private ManifestDiffRequest generateManifestDiffRequest(
-      ExecutionContext context, ArgoAppConfig argoAppConfig, SettingAttribute settingAttribute, ArgoConfig argoConfig) {
-    ManifestDiffRequest manifestDiffRequest =
-        ManifestDiffRequest.builder().argoConfig(argoConfig).appName(argoAppConfig.getAppName()).build();
+  private ManifestDiffRequest generateManifestDiffRequest(ExecutionContext context, ArgoAppConfig argoAppConfig,
+      SettingAttribute settingAttribute, ArgoConfig argoConfig, String activityId) {
+    ManifestDiffRequest manifestDiffRequest = ManifestDiffRequest.builder()
+                                                  .argoConfig(argoConfig)
+                                                  .appName(argoAppConfig.getAppName())
+                                                  .activityId(activityId)
+                                                  .appId(context.getAppId())
+                                                  .build();
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
     manifestDiffRequest.setEncryptedDataDetails(encryptedDataDetails);

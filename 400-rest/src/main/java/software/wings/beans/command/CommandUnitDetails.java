@@ -1,6 +1,8 @@
 package software.wings.beans.command;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.argo.ArgoCommandUnitConstants.ARGO_DRIFT_COMMAND;
+import static io.harness.argo.ArgoCommandUnitConstants.ARGO_SYNC_COMMAND;
 
 import static software.wings.sm.states.AwsAmiSwitchRoutesState.SWAP_AUTO_SCALING_ROUTES;
 import static software.wings.sm.states.EcsBGUpdateListnerState.ECS_UPDATE_LISTENER_COMMAND;
@@ -18,8 +20,6 @@ import static software.wings.sm.states.HelmDeployState.HELM_COMMAND_NAME;
 import static software.wings.sm.states.JenkinsState.COMMAND_UNIT_NAME;
 import static software.wings.sm.states.KubernetesSteadyStateCheck.KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME;
 import static software.wings.sm.states.KubernetesSwapServiceSelectors.KUBERNETES_SWAP_SERVICE_SELECTORS_COMMAND_NAME;
-import static software.wings.sm.states.argo.drift.ArgoDriftState.ARGO_DRIFT_COMMAND;
-import static software.wings.sm.states.argo.sync.ArgoSyncState.ARGO_SYNC_COMMAND;
 import static software.wings.sm.states.azure.AzureVMSSDeployState.AZURE_VMSS_DEPLOY_COMMAND_NAME;
 import static software.wings.sm.states.azure.AzureVMSSSetupState.AZURE_VMSS_SETUP_COMMAND_NAME;
 import static software.wings.sm.states.azure.AzureVMSSSwitchRoutesState.AZURE_VMSS_SWAP_ROUTE;

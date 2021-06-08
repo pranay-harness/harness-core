@@ -158,6 +158,8 @@ public class ActivityServiceImpl implements ActivityService {
         case SPOTINST_SETUP:
         case SPOTINST_DEPLOY:
         case AWS_ECS_RUN_TASK_DEPLOY:
+        case ARGO_SYNC:
+        case ARGO_DRIFT:
         case SPOTINST_UPDATE_LISTENER:
           List<CommandUnit> commandUnits = activity.getCommandUnits();
           for (CommandUnit commandUnit : commandUnits) {

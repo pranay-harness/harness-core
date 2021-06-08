@@ -16,16 +16,21 @@ import io.harness.argo.beans.ClusterResourceTreeDTO;
 import io.harness.argo.beans.ManagedResource;
 import io.harness.argo.beans.ManagedResourceList;
 import io.harness.argo.beans.ManifestDiff;
+import io.harness.argo.beans.RevisionMeta;
 import io.harness.argo.beans.UsernamePassword;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
 
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
@@ -37,13 +42,16 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 @Singleton
 @Slf4j
 public class ArgoCdServiceImpl implements ArgoCdService {
+  @Inject private ExecutorService executorService;
   public static final String BEARER = "Bearer ";
   private static final String TOKEN_KEY = "TOKEN:";
+  // Use a time based cache here
+  private String token = null;
 
   @Override
   public ArgoApp fetchApplication(ArgoConfigInternal argoConfig, String argoAppName) throws IOException {
     ArgoRestClient argoRestClient = createArgoRestClient(argoConfig);
-    String token = fetchToken(argoConfig, argoRestClient);
+    token = fetchToken(argoConfig, argoRestClient);
     Response<ArgoApp> argoAppResponse = argoRestClient.fetchApp(BEARER + token, argoAppName).execute();
 
     if (argoAppResponse.isSuccessful()) {
@@ -53,14 +61,21 @@ public class ArgoCdServiceImpl implements ArgoCdService {
   }
 
   @Override
-  public AppStatus fetchApplicationStatus(ArgoConfigInternal argoConfig, String argoAppName) throws IOException {
+  public AppStatus fetchApplicationStatus(ArgoConfigInternal argoConfig, String argoAppName)
+      throws IOException, ExecutionException, InterruptedException {
     ArgoRestClient argoRestClient = createArgoRestClient(argoConfig);
-    String token = fetchToken(argoConfig, argoRestClient);
+    token = fetchToken(argoConfig, argoRestClient);
     Response<ArgoApp> argoAppResponse = argoRestClient.fetchApp(BEARER + token, argoAppName).execute();
 
     if (argoAppResponse.isSuccessful()) {
       final ArgoApp argoApp = argoAppResponse.body();
-      return AppStatus.fromArgoApp(argoApp);
+      final Future<RevisionMeta> incomingDetailsFuture =
+          executorService.submit(() -> fetchRevisionMetadata(argoConfig, argoAppName, argoApp.incomingRevision()));
+      final Future<RevisionMeta> syncedDetailsFuture =
+          executorService.submit(() -> fetchRevisionMetadata(argoConfig, argoAppName, argoApp.syncedRevision()));
+      final RevisionMeta incomingRevision = incomingDetailsFuture.get();
+      final RevisionMeta syncedRevision = syncedDetailsFuture.get();
+      return AppStatus.fromArgoApp(argoApp, incomingRevision, syncedRevision);
     }
     throw new InvalidRequestException("Failure in fetching argo App: " + argoAppResponse.message(), USER);
   }
@@ -69,7 +84,7 @@ public class ArgoCdServiceImpl implements ArgoCdService {
   public ArgoApp createApplication(ArgoConfigInternal argoConfig, ArgoAppRequest createAppRequest) throws IOException {
     final ArgoApp argoApp = ArgoApp.ArgoApp(createAppRequest);
     ArgoRestClient argoRestClient = createArgoRestClient(argoConfig);
-    String token = fetchToken(argoConfig, argoRestClient);
+    token = fetchToken(argoConfig, argoRestClient);
 
     final Response<ArgoApp> argoAppResponse = argoRestClient.createApp(BEARER + token, argoApp).execute();
 
@@ -84,7 +99,7 @@ public class ArgoCdServiceImpl implements ArgoCdService {
       throws IOException {
     final ArgoApp argoApp = ArgoApp.ArgoApp(updateAppRequest);
     ArgoRestClient argoRestClient = createArgoRestClient(argoConfig);
-    String token = fetchToken(argoConfig, argoRestClient);
+    token = fetchToken(argoConfig, argoRestClient);
 
     final Response<ArgoApp> argoAppResponse =
         argoRestClient.updateApp(BEARER + token, updateAppRequest.getName(), argoApp).execute();
@@ -99,7 +114,7 @@ public class ArgoCdServiceImpl implements ArgoCdService {
   public ArgoApp syncApp(ArgoConfigInternal argoConfig, String argoAppName, AppSyncOptions syncOptions)
       throws IOException {
     ArgoRestClient argoRestClient = createArgoRestClient(argoConfig);
-    String token = fetchToken(argoConfig, argoRestClient);
+    token = fetchToken(argoConfig, argoRestClient);
 
     final Response<ArgoApp> appSyncResponse =
         argoRestClient.syncApp(BEARER + token, argoAppName, syncOptions).execute();
@@ -113,7 +128,7 @@ public class ArgoCdServiceImpl implements ArgoCdService {
   @Override
   public ClusterResourceTreeDTO fetchResourceTree(ArgoConfigInternal argoConfig, String appName) throws IOException {
     ArgoRestClient argoRestClient = createArgoRestClient(argoConfig);
-    String token = fetchToken(argoConfig, argoRestClient);
+    token = fetchToken(argoConfig, argoRestClient);
 
     final Response<ClusterResourceTree> resourceTreeResponse =
         argoRestClient.fetchResourceTree(BEARER + token, appName).execute();
@@ -127,7 +142,7 @@ public class ArgoCdServiceImpl implements ArgoCdService {
   @Override
   public List<ManifestDiff> fetchManifestDiff(ArgoConfigInternal argoConfig, String appName) throws IOException {
     ArgoRestClient argoRestClient = createArgoRestClient(argoConfig);
-    String token = fetchToken(argoConfig, argoRestClient);
+    token = fetchToken(argoConfig, argoRestClient);
 
     final Response<ManagedResourceList> resourceStates =
         argoRestClient.fetchResourceStates(BEARER + token, appName).execute();
@@ -154,7 +169,25 @@ public class ArgoCdServiceImpl implements ArgoCdService {
     throw new InvalidRequestException("Failure in fetching resource manifest diffs " + resourceStates.message(), USER);
   }
 
+  @Override
+  public RevisionMeta fetchRevisionMetadata(ArgoConfigInternal argoConfig, String appName, String revision)
+      throws IOException {
+    ArgoRestClient argoRestClient = createArgoRestClient(argoConfig);
+    token = fetchToken(argoConfig, argoRestClient);
+
+    final Response<RevisionMeta> revisionMetaResponse =
+        argoRestClient.revisionMeta(BEARER + token, appName, revision).execute();
+
+    if (revisionMetaResponse.isSuccessful()) {
+      return revisionMetaResponse.body();
+    }
+    throw new InvalidRequestException("Failure in fetching revision metadata " + revisionMetaResponse.message(), USER);
+  }
+
   private String fetchToken(ArgoConfigInternal argoConfig, ArgoRestClient argoRestClient) throws IOException {
+    if (token != null) {
+      return token;
+    }
     Response<ArgoToken> argoCdToken = argoRestClient
                                           .fetchToken(UsernamePassword.builder()
                                                           .username(argoConfig.getUsername())

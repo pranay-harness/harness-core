@@ -1,6 +1,8 @@
 package software.wings.sm.states.argo.sync;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.argo.ArgoCommandUnitConstants.ARGO_SYNC_COMMAND;
+import static io.harness.argo.ArgoCommandUnitConstants.INIT;
 import static io.harness.exception.ExceptionUtils.getMessage;
 
 import static software.wings.sm.StateType.ARGO_SYNC;
@@ -11,6 +13,7 @@ import static software.wings.sm.states.argo.Constants.PHASE_PARAM;
 import static java.util.Collections.emptyMap;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.argo.ArgoCommandUnitConstants;
 import io.harness.argo.beans.ArgoApp;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -65,7 +68,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(CDP)
 public class ArgoSyncState extends State {
-  public static final String ARGO_SYNC_COMMAND = "Argo Sync";
   @Attributes(title = "Argo Name") @Getter @Setter private String argoName;
   @Inject private transient ActivityService activityService;
   @Inject ArgoStateHelper argoStateHelper;
@@ -121,7 +123,7 @@ public class ArgoSyncState extends State {
     ArgoConfig argoConfig = (ArgoConfig) settingAttribute.getValue();
     Activity activity = argoStateHelper.createActivity(context, null, getStateType(), ARGO_SYNC_COMMAND,
         CommandUnitDetails.CommandUnitType.ARGO_DRIFT,
-        ImmutableList.of(new ArgoDummyCommandUnit(PERFORM_DRIFT), new ArgoDummyCommandUnit(DEPLOYMENT_ERROR)));
+        ImmutableList.of(new ArgoDummyCommandUnit(INIT), new ArgoDummyCommandUnit(ARGO_SYNC_COMMAND)));
 
     ArgoSyncExecutionData argoSyncExecutionData = argoStateHelper.getArgoSyncExecutionData(
         app, env, infrastructureMapping, argoAppConfig, settingAttribute, argoConfig, activity, ARGO_SYNC_COMMAND);
@@ -132,6 +134,8 @@ public class ArgoSyncState extends State {
                                   .argoConfig(argoConfig)
                                   .encryptedDataDetails(encryptedDataDetails)
                                   .appName(argoAppConfig.getAppName())
+                                  .activityId(activity.getUuid())
+                                  .appId(context.getAppId())
                                   .build();
     DelegateTask delegateTask = argoStateHelper.getDelegateTask(app, activity, env, infrastructureMapping, argoRequest,
         serviceElement, isSelectionLogsTrackingForTasksEnabled());

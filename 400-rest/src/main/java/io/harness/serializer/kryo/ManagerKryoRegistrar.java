@@ -807,6 +807,9 @@ import software.wings.sm.states.KubernetesSwapServiceSelectorsResponse;
 import software.wings.sm.states.ParameterEntry;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 import software.wings.sm.states.ShellScriptState;
+import software.wings.sm.states.argo.ArgoStepExecutionSummary;
+import software.wings.sm.states.argo.drift.ArgoDriftExecutionData;
+import software.wings.sm.states.argo.sync.ArgoSyncExecutionData;
 import software.wings.sm.states.azure.AzureVMSSDeployExecutionSummary;
 import software.wings.sm.states.azure.AzureVMSSSetupContextElement;
 import software.wings.sm.states.azure.AzureVMSSSetupExecutionSummary;
@@ -1801,5 +1804,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ArgoConfig.class, 40015);
     kryo.register(ArgoAppSyncRequest.class, 40016);
     kryo.register(ManifestDiffRequest.class, 40017);
+    kryo.register(ArgoDriftExecutionData.class, 40018);
+    kryo.register(ArgoSyncExecutionData.class, 40019);
+    kryo.register(ArgoStepExecutionSummary.class, 40020);
   }
 }
