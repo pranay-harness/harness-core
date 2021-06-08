@@ -806,6 +806,7 @@ public class GitClientV2Impl implements GitClientV2 {
       log.info("Successfully Checked out commitId: " + request.getNewCommitId());
     } catch (Exception ex) {
       log.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, ex);
+      gitClientHelper.checkIfMissingCommitIdIssue(ex, request.getNewCommitId());
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in checking out commit id " + request.getNewCommitId(), USER);
     }
@@ -1099,6 +1100,7 @@ public class GitClientV2Impl implements GitClientV2 {
       log.info("Successfully Checked out commitId: " + request.getCommitId());
     } catch (Exception ex) {
       log.error(GIT_YAML_LOG_PREFIX + EXCEPTION_STRING, ex);
+      gitClientHelper.checkIfMissingCommitIdIssue(ex, request.getCommitId());
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in checking out commit id " + request.getCommitId(), USER);
     }
