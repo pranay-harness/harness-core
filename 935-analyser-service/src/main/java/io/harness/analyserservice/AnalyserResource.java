@@ -7,6 +7,8 @@ import io.harness.event.OverviewResponse;
 import io.harness.event.QueryAlertCategory;
 import io.harness.event.QueryStats;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.serviceinfo.ServiceInfo;
+import io.harness.serviceinfo.ServiceInfoService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
@@ -31,6 +33,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AnalyserResource {
   AnalyserService analyserService;
+  ServiceInfoService serviceInfoService;
+
   @GET
   @Path("/stats")
   @ApiOperation(value = "get exhaustive set of queries by service and version", nickname = "getQueryStats")
@@ -73,5 +77,12 @@ public class AnalyserResource {
       @NotNull @QueryParam(AnalyserServiceConstants.VERSION) String version,
       @QueryParam(AnalyserServiceConstants.ALERT_TYPE) QueryAlertCategory alertType) {
     return ResponseDTO.newResponse(analyserService.getQueryStats(service, version, alertType));
+  }
+
+  @GET
+  @Path("/services")
+  @ApiOperation(value = "get information for all services", nickname = "getAlerts")
+  public ResponseDTO<List<ServiceInfo>> getAllServiceInfos() {
+    return ResponseDTO.newResponse(serviceInfoService.getAllServices());
   }
 }
