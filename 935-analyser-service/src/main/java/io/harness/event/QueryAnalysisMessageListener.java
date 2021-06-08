@@ -31,6 +31,7 @@ public class QueryAnalysisMessageListener implements MessageListener {
                                               .hash(metadataMap.get(QUERY_HASH))
                                               .version(metadataMap.get(VERSION_KEY))
                                               .serviceName(metadataMap.get(SERVICE_ID))
+                                              .createdAt(System.currentTimeMillis())
                                               .build();
     queryRecordsRepository.save(queryRecordEntity);
     return true;

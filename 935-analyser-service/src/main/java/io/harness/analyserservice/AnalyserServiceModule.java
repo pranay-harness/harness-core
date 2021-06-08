@@ -3,6 +3,7 @@ package io.harness.analyserservice;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoPersistence;
@@ -13,6 +14,8 @@ import io.harness.persistence.UserProvider;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ParsedQueryReadConverter;
 import io.harness.serializer.ParsedQueryWriteConverter;
+import io.harness.service.QueryRecordsService;
+import io.harness.service.QueryRecordsServiceImpl;
 import io.harness.service.QueryStatsService;
 import io.harness.service.QueryStatsServiceImpl;
 import io.harness.springdata.SpringPersistenceModule;
@@ -23,11 +26,13 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
@@ -96,6 +101,11 @@ public class AnalyserServiceModule extends AbstractModule {
     install(new SpringPersistenceModule());
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(QueryStatsService.class).to(QueryStatsServiceImpl.class);
+    bind(QueryRecordsService.class).to(QueryRecordsServiceImpl.class);
+
+    bind(ScheduledExecutorService.class)
+        .annotatedWith(Names.named(AnalyserServiceConstants.SAMPLE_AGGREGATOR_SCHEDULED_THREAD))
+        .toInstance(new ManagedScheduledExecutorService("Analyser-Sample-Aggregator-Thread"));
   }
 
   @Provides
