@@ -22,6 +22,8 @@ xxxxxxxx
   rootPath: /api
   maxThreads: 1024
 
+executionTimeLimitMillis: 5000
+
 allowedOrigins:
   - "https://localhost:8181"
   - "https://127.0.0.1:8181"

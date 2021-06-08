@@ -14,9 +14,11 @@ import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.Wither;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -39,12 +41,13 @@ public class QueryRecordEntity {
     return ImmutableList.<MongoIndex>builder()
         .add(SortCompoundMongoIndex.builder()
                  .name("createdAt_idx")
+                 .field("createdAt")
                  .descSortField(QueryRecordEntityKeys.createdAt)
                  .build())
         .build();
   }
 
-  @Id @org.mongodb.morphia.annotations.Id String id;
+  @Wither @Id @org.mongodb.morphia.annotations.Id String id;
   @NonNull String hash;
   @NonNull String version;
   @NonNull String serviceName;
@@ -54,6 +57,6 @@ public class QueryRecordEntity {
   String collectionName;
   byte[] data;
 
-  @Builder.Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusHours(TTL_HOURS).toInstant());
-  @CreatedDate Long createdAt;
+  @Wither @Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusHours(TTL_HOURS).toInstant());
+  @Wither @CreatedDate Long createdAt;
 }

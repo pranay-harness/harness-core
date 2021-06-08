@@ -14,10 +14,13 @@ import io.harness.persistence.UserProvider;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ParsedQueryReadConverter;
 import io.harness.serializer.ParsedQueryWriteConverter;
+import io.harness.serializer.morphia.AnalyserMorphiaRegistrar;
 import io.harness.service.QueryRecordsService;
 import io.harness.service.QueryRecordsServiceImpl;
 import io.harness.service.QueryStatsService;
 import io.harness.service.QueryStatsServiceImpl;
+import io.harness.serviceinfo.ServiceInfoService;
+import io.harness.serviceinfo.ServiceInfoServiceImpl;
 import io.harness.springdata.SpringPersistenceModule;
 
 import com.google.common.collect.ImmutableList;
@@ -73,7 +76,7 @@ public class AnalyserServiceModule extends AbstractModule {
       @Provides
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
-        return new HashSet<>();
+        return ImmutableSet.of(AnalyserMorphiaRegistrar.class);
       }
 
       @Provides
@@ -100,12 +103,14 @@ public class AnalyserServiceModule extends AbstractModule {
     install(new EventsFrameworkModule(config.getEventsFrameworkConfiguration()));
     install(new SpringPersistenceModule());
     bind(HPersistence.class).to(MongoPersistence.class);
+    bind(AnalyserService.class).to(AnalyserServiceImpl.class);
     bind(QueryStatsService.class).to(QueryStatsServiceImpl.class);
     bind(QueryRecordsService.class).to(QueryRecordsServiceImpl.class);
 
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named(AnalyserServiceConstants.SAMPLE_AGGREGATOR_SCHEDULED_THREAD))
         .toInstance(new ManagedScheduledExecutorService("Analyser-Sample-Aggregator-Thread"));
+    bind(ServiceInfoService.class).to(ServiceInfoServiceImpl.class);
   }
 
   @Provides
