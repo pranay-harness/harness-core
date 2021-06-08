@@ -150,6 +150,7 @@ enableAuth: false
 
 orchestrationStepConfig:
   ffServerBaseUrl: http://127.0.0.1:3000/api/1.0
+  ffServerApiKey: secret
 
 shouldDeployWithGitSync: false
 

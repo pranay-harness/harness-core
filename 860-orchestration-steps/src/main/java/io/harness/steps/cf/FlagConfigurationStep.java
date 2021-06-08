@@ -1,19 +1,18 @@
 package io.harness.steps.cf;
 
-import static java.lang.String.format;
+import static java.lang.Boolean.parseBoolean;
+import static org.joda.time.Minutes.minutes;
 
+import io.harness.OrchestrationStepConfig;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cf.CFApi;
 import io.harness.cf.openapi.model.Feature;
 import io.harness.cf.openapi.model.PatchInstruction;
 import io.harness.cf.openapi.model.PatchOperation;
-import io.harness.logging.CommandExecutionStatus;
-import io.harness.logging.LogLevel;
 import io.harness.logging.UnitProgress;
 import io.harness.logging.UnitStatus;
 import io.harness.logstreaming.LogStreamingStepClientFactory;
-import io.harness.logstreaming.NGLogCallback;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
@@ -23,6 +22,7 @@ import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.security.JWTTokenServiceUtils;
 import io.harness.steps.OrchestrationStepTypes;
 import io.harness.steps.cf.AddSegmentToVariationTargetMapYaml.AddSegmentToVariationTargetMapYamlSpec;
 import io.harness.steps.cf.AddTargetsToVariationTargetMapYaml.AddTargetsToVariationTargetMapYamlSpec;
@@ -31,6 +31,7 @@ import io.harness.steps.cf.RemoveSegmentToVariationTargetMapYaml.RemoveSegmentTo
 import io.harness.steps.cf.RemoveTargetsToVariationTargetMapYaml.RemoveTargetsToVariationTargetMapYamlSpec;
 import io.harness.steps.cf.SetFeatureFlagStateYaml.SetFeatureFlagStateYamlSpec;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
@@ -46,6 +47,7 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
   private static String INFRASTRUCTURE_COMMAND_UNIT = "Execute";
   @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
   @Inject @Named("cfPipelineAPI") private CFApi cfApi;
+  @Inject OrchestrationStepConfig config;
 
   @Override
   public Class<StepElementParameters> getStepParametersClass() {
@@ -57,13 +59,10 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
       StepInputPackage inputPackage, PassThroughData passThroughData) {
     log.info("Executing feature update step..");
     long startTime = System.currentTimeMillis();
-    NGLogCallback ngManagerLogCallback =
-        new NGLogCallback(logStreamingStepClientFactory, ambiance, INFRASTRUCTURE_COMMAND_UNIT, true);
     try {
       FlagConfigurationStepParameters flagConfigurationStepParameters =
           (FlagConfigurationStepParameters) stepParameters.getSpec();
       String featureIdentifier = flagConfigurationStepParameters.getFeature().getValue();
-      ngManagerLogCallback.saveExecutionLog(format("Updating feature flag %s", featureIdentifier));
 
       List<PatchInstruction> instructions = new ArrayList<>();
 
@@ -71,7 +70,7 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
         if (patchInstruction.getType().equals(Type.SET_FEATURE_FLAG_STATE)) {
           SetFeatureFlagStateYamlSpec spec = ((SetFeatureFlagStateYaml) patchInstruction).getSpec();
           PatchInstruction instruction =
-              cfApi.getFeatureFlagOnPatchInstruction(spec.getState().equals("On") || spec.getState().equals("on"));
+              cfApi.getFeatureFlagOnPatchInstruction(parseBoolean(spec.getState().getValue()));
           instructions.add(instruction);
         }
 
@@ -110,13 +109,13 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
 
       PatchOperation patchOperation = PatchOperation.builder().instructions(instructions).build();
 
+      addApiKeyHeader(cfApi);
+
       Feature feature = cfApi.patchFeature(featureIdentifier, ambiance.getSetupAbstractionsMap().get("accountId"),
           ambiance.getSetupAbstractionsMap().get("orgIdentifier"),
           ambiance.getSetupAbstractionsMap().get("projectIdentifier"),
           flagConfigurationStepParameters.getEnvironment().getValue(), patchOperation);
     } catch (Exception e) {
-      ngManagerLogCallback.saveExecutionLog(
-          "Feature flag update failed", LogLevel.ERROR, CommandExecutionStatus.FAILURE);
       return StepResponse.builder()
           .status(Status.FAILED)
           .failureInfo(FailureInfo.newBuilder().setErrorMessage(e.getMessage()).build())
@@ -128,9 +127,6 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
                                                           .build()))
           .build();
     }
-
-    ngManagerLogCallback.saveExecutionLog(
-        "Feature flag update completed", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
 
     return StepResponse.builder()
         .status(Status.SUCCEEDED)
@@ -145,5 +141,12 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
 
   public StepType getType() {
     return STEP_TYPE;
+  }
+
+  private void addApiKeyHeader(CFApi cfApi) {
+    String apiKey = JWTTokenServiceUtils.generateJWTToken(ImmutableMap.of("type", "APIKey", "name", "PIPELINE-SERVICE"),
+        minutes(10).toStandardDuration().getMillis(), config.getFfServerApiKey());
+    cfApi.getApiClient().addDefaultHeader("api-key", "Bearer " + apiKey);
+    log.info("FF Server API Key: {}", apiKey);
   }
 }
