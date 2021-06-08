@@ -391,6 +391,8 @@ import software.wings.beans.yaml.GitPushResult;
 import software.wings.beans.yaml.YamlType;
 import software.wings.cloudprovider.CodeDeployDeploymentInfo;
 import software.wings.collect.ArtifactCollectionCallback;
+import software.wings.delegatetasks.argo.beans.request.ArgoAppSyncRequest;
+import software.wings.delegatetasks.argo.beans.request.ManifestDiffRequest;
 import software.wings.delegatetasks.argo.beans.request.ResourceTreeRequest;
 import software.wings.delegatetasks.buildsource.BuildSourceCallback;
 import software.wings.delegatetasks.buildsource.BuildSourceCleanupCallback;
@@ -1797,5 +1799,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
 
     kryo.register(ResourceTreeRequest.class, 40014);
     kryo.register(ArgoConfig.class, 40015);
+    kryo.register(ArgoAppSyncRequest.class, 40016);
+    kryo.register(ManifestDiffRequest.class, 40017);
   }
 }

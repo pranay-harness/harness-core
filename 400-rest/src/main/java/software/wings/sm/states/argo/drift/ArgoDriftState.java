@@ -3,7 +3,7 @@ package software.wings.sm.states.argo.drift;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.ExceptionUtils.getMessage;
 
-import static software.wings.sm.StateType.ARGI_DRIFT;
+import static software.wings.sm.StateType.ARGO_DRIFT;
 import static software.wings.sm.states.argo.Constants.DEPLOYMENT_ERROR;
 import static software.wings.sm.states.argo.Constants.PERFORM_DRIFT;
 import static software.wings.sm.states.argo.Constants.PHASE_PARAM;
@@ -77,7 +77,7 @@ public class ArgoDriftState extends State {
   @Inject private SecretManager secretManager;
 
   public ArgoDriftState(String name) {
-    super(name, ARGI_DRIFT.name());
+    super(name, ARGO_DRIFT.name());
   }
 
   @Override

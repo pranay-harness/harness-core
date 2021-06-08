@@ -3,7 +3,6 @@ package io.harness.serializer.kryo;
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.argo.beans.ManifestDiff;
 import io.harness.capability.AwsRegionParameters;
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilitySubjectPermission.PermissionResult;
@@ -780,6 +779,5 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
 
     kryo.register(ResourceTreeResponse.class, 543328);
     kryo.register(ManifestDiffResponse.class, 543329);
-    kryo.register(ManifestDiff.class, 543330);
   }
 }

@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.argo.beans.ArgoApp;
 import io.harness.argo.beans.ClusterResourceTreeDTO;
 import io.harness.argo.beans.ManifestDiff;
 import io.harness.azure.model.VirtualMachineScaleSetData;
@@ -130,13 +131,13 @@ public class InfrastructureDefinitionResource {
   }
 
   @GET
-  @Path("resourceTree/{infraDefinitionId}")
+  @Path("clusterDetails/{infraDefinitionId}")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ENV, action = READ)
   public RestResponse<ClusterResourceTreeDTO> getResourceTree(@QueryParam("appId") String appId,
-                                                              @QueryParam("envId") String envId, @PathParam("infraDefinitionId") String infraDefinitionId) {
-    return new RestResponse<>(infrastructureDefinitionService.getResourceTree(appId, infraDefinitionId));
+      @QueryParam("envId") String envId, @PathParam("infraDefinitionId") String infraDefinitionId) {
+    return new RestResponse<>(infrastructureDefinitionService.fetchResourceTree(appId, infraDefinitionId));
   }
 
   @GET
@@ -147,6 +148,16 @@ public class InfrastructureDefinitionResource {
   public RestResponse<List<ManifestDiff>> fetchManifestDiff(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @PathParam("infraDefinitionId") String infraDefinitionId) {
     return new RestResponse<>(infrastructureDefinitionService.fetchManifestDiff(appId, infraDefinitionId));
+  }
+
+  @GET
+  @Path("syncArgoApp/{infraDefinitionId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ)
+  public RestResponse<ArgoApp> syncArgoApp(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
+      @PathParam("infraDefinitionId") String infraDefinitionId) {
+    return new RestResponse<>(infrastructureDefinitionService.syncArgoApp(appId, infraDefinitionId));
   }
 
   @DELETE

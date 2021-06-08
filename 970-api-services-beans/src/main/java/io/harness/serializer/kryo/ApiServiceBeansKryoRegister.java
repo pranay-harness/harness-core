@@ -3,8 +3,10 @@ package io.harness.serializer.kryo;
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.argo.beans.AppStatus;
 import io.harness.argo.beans.ArgoConfigInternal;
 import io.harness.argo.beans.ClusterResourceTreeDTO;
+import io.harness.argo.beans.ManifestDiff;
 import io.harness.artifactory.ArtifactoryConfigRequest;
 import io.harness.aws.AwsAccessKeyCredential;
 import io.harness.aws.AwsConfig;
@@ -323,5 +325,13 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(ArgoConfigInternal.class, 97032);
     kryo.register(ClusterResourceTreeDTO.class, 97033);
     kryo.register(ClusterResourceTreeDTO.Node.class, 97034);
+    kryo.register(ManifestDiff.class, 97035);
+    kryo.register(AppStatus.class, 97036);
+    kryo.register(AppStatus.Health.class, 97037);
+    kryo.register(AppStatus.DeployedMetadata.class, 97038);
+    kryo.register(AppStatus.LastSyncStatus.class, 97039);
+    kryo.register(AppStatus.GitSyncStatus.class, 97040);
+    kryo.register(AppStatus.CurrentSyncDetails.class, 97041);
+    kryo.register(AppStatus.LastSyncDetails.class, 97042);
   }
 }

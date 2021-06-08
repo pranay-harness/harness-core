@@ -857,7 +857,7 @@ public enum StateType implements StateTypeDescriptor {
       ORCHESTRATION_STENCILS),
 
   //---   Hackathon Argo States
-  ARGI_DRIFT(ArgoDriftState.class, KUBERNETES, WorkflowServiceHelper.ARGO_DRIFT,
+  ARGO_DRIFT(ArgoDriftState.class, KUBERNETES, WorkflowServiceHelper.ARGO_DRIFT,
       asList(InfrastructureMappingType.DIRECT_KUBERNETES), asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
   ARGO_SYNC(ArgoSyncState.class, KUBERNETES, WorkflowServiceHelper.ARGO_SYNC,
       asList(InfrastructureMappingType.DIRECT_KUBERNETES), asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS);

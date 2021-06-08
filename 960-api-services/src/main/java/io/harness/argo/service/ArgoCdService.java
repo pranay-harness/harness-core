@@ -1,5 +1,6 @@
 package io.harness.argo.service;
 
+import io.harness.argo.beans.AppStatus;
 import io.harness.argo.beans.AppSyncOptions;
 import io.harness.argo.beans.ArgoApp;
 import io.harness.argo.beans.ArgoAppRequest;
@@ -12,6 +13,7 @@ import java.util.List;
 
 public interface ArgoCdService {
   ArgoApp fetchApplication(ArgoConfigInternal argoConfig, String argoAppName) throws IOException;
+  AppStatus fetchApplicationStatus(ArgoConfigInternal argoConfig, String argoAppName) throws IOException;
   ArgoApp createApplication(ArgoConfigInternal argoConfig, ArgoAppRequest createAppRequest) throws IOException;
   ArgoApp updateArgoApplication(ArgoConfigInternal argoConfig, ArgoAppRequest createAppRequest) throws IOException;
   ArgoApp syncApp(ArgoConfigInternal argoConfig, String argoAppName, AppSyncOptions syncOptions) throws IOException;

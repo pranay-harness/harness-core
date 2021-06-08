@@ -1,5 +1,8 @@
 package software.wings.delegatetasks.argo;
 
+import io.harness.argo.beans.AppStatus;
+import io.harness.argo.beans.AppSyncOptions;
+import io.harness.argo.beans.ArgoApp;
 import io.harness.argo.beans.ArgoConfigInternal;
 import io.harness.argo.beans.ClusterResourceTreeDTO;
 import io.harness.argo.beans.ManifestDiff;
@@ -7,6 +10,7 @@ import io.harness.argo.service.ArgoCdService;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.argo.response.ArgoSyncResponse;
 import io.harness.delegate.beans.argo.response.ManifestDiffResponse;
 import io.harness.delegate.beans.argo.response.ResourceTreeResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -48,6 +52,8 @@ public class ArgoCDTask extends AbstractDelegateRunnableTask {
         final ClusterResourceTreeDTO clusterResourceTreeDTO;
         try {
           clusterResourceTreeDTO = argoCdService.fetchResourceTree(argoConfigInternal, request.getAppName());
+          AppStatus appStatus = argoCdService.fetchApplicationStatus(argoConfigInternal, request.getAppName());
+          clusterResourceTreeDTO.setAppStatus(appStatus);
           return ResourceTreeResponse.builder()
               .executionStatus(CommandExecutionStatus.SUCCESS)
               .clusterResourceTree(clusterResourceTreeDTO)
@@ -59,7 +65,16 @@ public class ArgoCDTask extends AbstractDelegateRunnableTask {
               .build();
         }
       case APP_SYNC:
-        //        argoCdService.syncApp(request.getArgoConfigInternal(),request.getAppName(),null);
+        try {
+          final ArgoApp argoApp =
+              argoCdService.syncApp(argoConfigInternal, request.getAppName(), AppSyncOptions.DefaultSyncOptions());
+          return ArgoSyncResponse.builder().argoApp(argoApp).executionStatus(CommandExecutionStatus.FAILURE).build();
+        } catch (IOException e) {
+          return ArgoSyncResponse.builder()
+              .executionStatus(CommandExecutionStatus.FAILURE)
+              .errorMessage(e.getMessage())
+              .build();
+        }
       case MANIFEST_DIFF:
         try {
           List<ManifestDiff> manifestDiffs = argoCdService.fetchManifestDiff(argoConfigInternal, request.getAppName());

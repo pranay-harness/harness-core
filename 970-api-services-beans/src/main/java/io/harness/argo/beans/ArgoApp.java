@@ -1,24 +1,53 @@
 package io.harness.argo.beans;
 
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Value;
-import lombok.experimental.FieldDefaults;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Value;
+import lombok.experimental.FieldDefaults;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 @Value
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ArgoApp {
   String apiVersion = "argoproj.io/v1alpha1";
   String kind = "Application";
   Map<String, Object> metadata = new HashMap<>();
   Map<String, Object> spec = new HashMap<>();
   Map<String, Object> status = new HashMap<>();
+  Map<String, Object> operation = new HashMap<>();
+
+  public String health() {
+    final Map<String, Object> sync = (Map<String, Object>) status.get("health");
+    return (String) sync.get("status");
+  }
+
+  public String syncStatus() {
+    final Map<String, Object> sync = (Map<String, Object>) status.get("sync");
+    return (String) sync.get("status");
+  }
+
+  public String incomingRevision() {
+    final Map<String, Object> sync = (Map<String, Object>) status.get("sync");
+    return (String) sync.get("revision");
+  }
+
+  public String syncedRevision() {
+    final Map<String, Object> operationState = (Map<String, Object>) status.get("operationState");
+    final Map<String, Object> operation = (Map<String, Object>) operationState.get("operation");
+    final Map<String, Object> sync = (Map<String, Object>) operation.get("sync");
+    return (String) sync.get("revision");
+  }
+
+  public String previousSyncStatus() {
+    final Map<String, Object> operationState = (Map<String, Object>) status.get("operationState");
+    return (String) operationState.get("phase");
+  }
 
   private void setName(String name) {
     metadata.put("name", name);
