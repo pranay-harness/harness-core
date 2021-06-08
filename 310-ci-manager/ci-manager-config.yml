@@ -69,7 +69,7 @@ pmsMongo:
   connectionsPerHost: 300
   indexManagerMode: AUTO
 
-enableAuth: false
+enableAuth: true
 
 scmConnectionConfig:
   url: localhost:8091
