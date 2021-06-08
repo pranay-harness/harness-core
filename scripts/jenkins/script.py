@@ -40,14 +40,14 @@ reader = csv.reader(open('scripts/jenkins/TestClassReport.csv', 'r'))
 test_times= {}
 totalTime=float(0)
 count=0
-for k,z,v in reader:
-    if (v=="Time"):
+for k,z,v,a,b,c,d in reader:
+    if (z=="duration_ms"):
         continue
-    totalTime+= float(v)
+    totalTime+= float(z)
     count+=1
     for test in tests:
         if k.strip() in test:
-            test_times[test] = float(v)
+            test_times[test] = float(z)
 averageTime= totalTime/count
 
 for test in tests:
