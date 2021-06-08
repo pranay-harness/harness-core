@@ -3,6 +3,7 @@ package software.wings.sm.states.k8s;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SweepingOutputInstance;
@@ -16,20 +17,19 @@ import io.harness.serializer.KryoSerializer;
 
 import software.wings.beans.DockerConfig;
 import software.wings.beans.KubernetesClusterConfig;
-import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
-import software.wings.beans.artifact.ArtifactStream;
+import software.wings.delegatetasks.ondemand.OnDemandDelegateService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CVActivityLogService;
-import software.wings.settings.SettingValue;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -43,13 +43,12 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.mongodb.morphia.annotations.Transient;
 
 @FieldNameConstants(innerTypeName = "K8DelegateSpawnStateKeys")
@@ -58,7 +57,7 @@ import org.mongodb.morphia.annotations.Transient;
 public class K8DelegateProvisionState extends State implements SweepingOutputStateMixin {
   private static final String kubectlBaseDir = "./client-tools/kubectl/";
   private static final String defaultKubectlVersion = "v1.13.2";
-  private static String kubectlPath;
+  private static String kubectlPath = kubectlBaseDir + defaultKubectlVersion;
   @Getter @Setter private String kubernetesConnectorId;
   @Getter @Setter private String delegateName;
   @Getter @Setter private String cpu;
@@ -78,6 +77,10 @@ public class K8DelegateProvisionState extends State implements SweepingOutputSta
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ArtifactService artifactService;
   @Inject private BuildSourceService buildSourceService;
+
+  @Inject private FeatureFlagService featureFlagService;
+
+  @Inject private OnDemandDelegateService onDemandDelegateService;
 
   public K8DelegateProvisionState(String name) {
     super(name, StateType.DELEGATE_PROVISION.name());
@@ -138,18 +141,32 @@ public class K8DelegateProvisionState extends State implements SweepingOutputSta
       File yamlFile = delegateService.getYamlForKubernetesDelegate("https://pr.harness.io/hackathon-ondemand",
           "https://pr.harness.io/hackathon-ondemand", context.getAccountId(), nameOfDelegate, null, null);
 
-      Kubectl kubectl = Kubectl.client(kubectlPath, kubeConf.getAbsolutePath());
-      String finalCmd = kubectl.apply().filename(yamlFile.getAbsolutePath()).command();
-      log.info("final command to be executed is " + finalCmd);
-      OnDemandDelegateHelper.executeCommand(finalCmd, 10);
-      cvActivityLogService.getLoggerByStateExecutionId(context.getAccountId(), context.getStateExecutionInstanceId())
-          .info("Delegate start command successful");
+      if (featureFlagService.isFeatureFlagEnabled(FeatureName.ONDEMAND_SIDECAR.name(), context.getAccountId())) {
+        onDemandDelegateService.enqueue(
+            context.getAccountId(), kubeConfigFile, FileUtils.readFileToString(yamlFile, "UTF-8"));
+      } else {
+        Kubectl kubectl = Kubectl.client(kubectlPath + "/kubectl", kubeConf.getAbsolutePath());
+        String finalCmd = kubectl.apply().filename(yamlFile.getAbsolutePath()).command();
+        log.info("final command to be executed is " + finalCmd);
+        boolean response = OnDemandDelegateHelper.executeCommand(finalCmd, 10);
+        if (!response) {
+          log.error("Issue while running command for kubectl");
+          return ExecutionResponse.builder()
+              .async(false)
+              .errorMessage("Error while starting up the delegate with kubectl command")
+              .executionStatus(ExecutionStatus.ERROR)
+              .build();
+        }
+        cvActivityLogService.getLoggerByStateExecutionId(context.getAccountId(), context.getStateExecutionInstanceId())
+            .info("Delegate start command successful");
+      }
+
       // wait until delegate is up
       while (!delegateService.checkDelegateConnectedByName(context.getAccountId(), nameOfDelegate)) {
         cvActivityLogService.getLoggerByStateExecutionId(context.getAccountId(), context.getStateExecutionInstanceId())
             .info("Delegate is not up yet, sleeping for 10 seconds.");
-        log.info("Delegate is not up yet, sleeping for 10 seconds.");
-        Thread.sleep(10000);
+        log.info("Delegate is not up yet, sleeping for 30 seconds.");
+        Thread.sleep(30000);
       }
 
       cvActivityLogService.getLoggerByStateExecutionId(context.getAccountId(), context.getStateExecutionInstanceId())

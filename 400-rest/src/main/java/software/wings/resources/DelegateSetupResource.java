@@ -44,6 +44,8 @@ import io.harness.service.intfc.DelegateCache;
 
 import software.wings.beans.CEDelegateStatus;
 import software.wings.beans.DelegateStatus;
+import software.wings.delegatetasks.ondemand.OnDemandDelegateService;
+import software.wings.delegatetasks.ondemand.OnDemandDelegateTask;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
@@ -111,17 +113,20 @@ public class DelegateSetupResource {
   private final DownloadTokenService downloadTokenService;
   private final SubdomainUrlHelperIntfc subdomainUrlHelper;
   private final AccessControlClient accessControlClient;
+  private final OnDemandDelegateService onDemandDelegateService;
 
   @Inject
   public DelegateSetupResource(DelegateService delegateService, DelegateScopeService delegateScopeService,
       DownloadTokenService downloadTokenService, SubdomainUrlHelperIntfc subdomainUrlHelper,
-      DelegateCache delegateCache, AccessControlClient accessControlClient) {
+      DelegateCache delegateCache, AccessControlClient accessControlClient,
+      OnDemandDelegateService onDemandDelegateService) {
     this.delegateService = delegateService;
     this.delegateScopeService = delegateScopeService;
     this.downloadTokenService = downloadTokenService;
     this.subdomainUrlHelper = subdomainUrlHelper;
     this.delegateCache = delegateCache;
     this.accessControlClient = accessControlClient;
+    this.onDemandDelegateService = onDemandDelegateService;
   }
 
   @GET
@@ -710,6 +715,16 @@ public class DelegateSetupResource {
           .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + HARNESS_DELEGATE_VALUES_YAML + YAML)
           .build();
     }
+  }
+
+  @PublicApi
+  @GET
+  @Path("start-delegate-task")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<OnDemandDelegateTask> downloadDelegateValuesYaml(
+      @QueryParam("accountId") @NotEmpty String accountId) throws IOException {
+    return new RestResponse<>(onDemandDelegateService.getNextTask(accountId));
   }
 
   private String getVerificationUrl(HttpServletRequest request) {
