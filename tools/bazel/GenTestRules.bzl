@@ -106,8 +106,8 @@ def junit_package_test(directory, srcs, deps):
 
         code_filepath = [directory + "/" + test_class + ".java"]
 
-        if (hash(code_filepath[0]) % DISTRIBUTE_TESTING_WORKERS != DISTRIBUTE_TESTING_WORKER):
-            continue
+#        if (hash(code_filepath[0]) % DISTRIBUTE_TESTING_WORKERS != DISTRIBUTE_TESTING_WORKER):
+#            continue
 
         native.genrule(
             name = package + ".AllTests" + index + "-gen",
@@ -185,8 +185,8 @@ EOF""" % code,
     return suites
 
 def optimized_package_test(combined_tests_target_index, package, index, test_class):
-    if (hash(package) % DISTRIBUTE_TESTING_WORKERS != DISTRIBUTE_TESTING_WORKER):
-        return
+#    if (hash(package) % DISTRIBUTE_TESTING_WORKERS != DISTRIBUTE_TESTING_WORKER):
+#        return
 
     native.java_test(
         name = package + ".tests" + index,

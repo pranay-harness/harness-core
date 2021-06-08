@@ -735,18 +735,16 @@ test_dependencies = shared_dependencies + [
     "@maven//:io_fabric8_kubernetes_server_mock",
 ]
 
-#run_package_tests(
-#    data = [
-#        "//400-rest/src/test/resources:resource",
-#    ],
-#    resources = [
-#        "//400-rest/src/main/resources:resource",
-#        "//400-rest/src/test/resources:resource",
-#    ],
-#    deps = test_dependencies,
-#)
-
-run_tests()
+run_package_tests(
+    data = [
+        "//400-rest/src/test/resources:resource",
+    ],
+    resources = [
+        "//400-rest/src/main/resources:resource",
+        "//400-rest/src/test/resources:resource",
+    ],
+    deps = test_dependencies,
+)
 
 java_library(
     name = "tests",

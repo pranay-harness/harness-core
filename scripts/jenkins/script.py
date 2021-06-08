@@ -7,10 +7,9 @@ THRESHOLD = float(0.2)
 def getTime(num_nodes, testsWithTime):
     q = PriorityQueue()
     tests_per_node={}
-    q.put((0,0))
     tests_per_node[0]=[]
-    for i in range(1,num_nodes):
-        q.put((2,i))
+    for i in range(0,num_nodes):
+        q.put((0,i))
         tests_per_node[i]=[]
     for testWithTime in testsWithTime:
         top = q.get()
@@ -23,10 +22,10 @@ def getTime(num_nodes, testsWithTime):
 
 
 def checkThreshold(previous_time, current_time):
-    return ((previous_time-current_time)/previous_time) > THRESHOLD 
+    return ((previous_time-current_time)/previous_time) > THRESHOLD
 
 
-with open ("scripts/bazel/data.txt", "r") as myfile:
+with open ("data.txt", "r") as myfile:
     data=myfile.readlines()
 
 tests=[]
@@ -36,7 +35,7 @@ for i in data:
     test_name=cur.partition("NO STATUS")[0]
     tests.append(test_name.strip())
 
-reader = csv.reader(open('scripts/jenkins/TestClassReport.csv', 'r'))
+reader = csv.reader(open('TestClassReport.csv', 'r'))
 test_times= {}
 totalTime=float(0)
 count=0
@@ -68,19 +67,19 @@ for test in tests:
 
 for num_nodes in range(2,MAX_NODES+1):
     current_time, current_tests_per_node = getTime(num_nodes, tests_with_time)
+    print(current_time," ",ideal_time)
     if (not checkThreshold(float(ideal_time),float(current_time))):
         break
     ideal_time, ideal_test_per_node = current_time, current_tests_per_node
 
-print(" Script ran successfully")
 print(ideal_test_per_node)
 
 for i in range(5):
-    f = open('scripts/jenkins/'+str(i)+".txt", "w")
+    f = open(str(i)+".txt", "w")
 
 for node in ideal_test_per_node:
-    toWrite=""
+    toWrite="bazel test"
     for test in ideal_test_per_node[node]:
-        toWrite+=test+" "
-    f = open('scripts/jenkins/'+str(node)+".txt", "w")
+        toWrite+=test+"/... "
+    f = open(str(node)+".txt", "w")
     f.write(toWrite)
