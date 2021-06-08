@@ -68,7 +68,7 @@ public class ArgoCDTask extends AbstractDelegateRunnableTask {
         try {
           final ArgoApp argoApp =
               argoCdService.syncApp(argoConfigInternal, request.getAppName(), AppSyncOptions.DefaultSyncOptions());
-          return ArgoSyncResponse.builder().argoApp(argoApp).executionStatus(CommandExecutionStatus.FAILURE).build();
+          return ArgoSyncResponse.builder().argoApp(argoApp).executionStatus(CommandExecutionStatus.SUCCESS).build();
         } catch (IOException e) {
           return ArgoSyncResponse.builder()
               .executionStatus(CommandExecutionStatus.FAILURE)

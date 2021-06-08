@@ -27,6 +27,7 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.argo.response.ArgoSyncResponse;
 import io.harness.delegate.beans.argo.response.ManifestDiffResponse;
 import io.harness.delegate.beans.argo.response.ResourceTreeResponse;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
@@ -779,5 +780,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
 
     kryo.register(ResourceTreeResponse.class, 543328);
     kryo.register(ManifestDiffResponse.class, 543329);
+    kryo.register(ArgoSyncResponse.class, 543330);
   }
 }
