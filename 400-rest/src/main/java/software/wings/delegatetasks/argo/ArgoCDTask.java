@@ -32,6 +32,7 @@ import java.util.function.Consumer;
 public class ArgoCDTask extends AbstractDelegateRunnableTask {
   @Inject private ArgoCdService argoCdService;
   @Inject EncryptionService encryptionService;
+
   public ArgoCDTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
