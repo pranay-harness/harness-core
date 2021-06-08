@@ -1,5 +1,7 @@
 package io.harness.app.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import io.harness.app.beans.dto.StepResourceMetricDTO;
 import io.harness.app.intfc.CIStepMetricsService;
 import io.harness.util.MetricCache;
@@ -18,8 +20,14 @@ public class CIStepMetricsServiceImpl implements CIStepMetricsService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String pipelineIdentifier) {
     List<StepResourceMetricDTO> stepResourceMetricDTOList = new ArrayList<>();
 
-    for (String stageStepId :
-        getPipelineSteps(accountIdentifier, orgIdentifier, projectIdentifier, pipelineIdentifier)) {
+    List<String> pipelineSteps =
+        getPipelineSteps(accountIdentifier, orgIdentifier, projectIdentifier, pipelineIdentifier);
+
+    if (isEmpty(pipelineSteps)) {
+      return stepResourceMetricDTOList;
+    }
+
+    for (String stageStepId : pipelineSteps) {
       String[] split = stageStepId.split(":", 2);
       String stageId = split[0];
       String stepId = split[1];
@@ -47,17 +55,17 @@ public class CIStepMetricsServiceImpl implements CIStepMetricsService {
     int currStepMilliCpu = metricCache.getCurrStepMilliCpu(
         accountIdentifier, orgIdentifier, projectIdentifier, pipelineIdentifier, stageId, stepId);
 
-    int suggestedStepMemoryMib = (int) Math.ceil((double) maxStepMemoryMib * 1.2);
-    int suggestedStepMilliCpu = (int) Math.ceil((double) maxStepMilliCpu * 1.2);
+    int suggestedStepMemoryMib = (int) Math.ceil(((double) maxStepMemoryMib) * 1.5);
+    int suggestedStepMilliCpu = (int) Math.ceil(((double) maxStepMilliCpu) * 1.5);
 
     return StepResourceMetricDTO.builder()
         .currentMilliCpu(currStepMilliCpu)
         .suggestedMilliCpu(suggestedStepMilliCpu)
         .maxMilliCpu(maxStepMilliCpu)
-        .currentMemoryMib(currStepMemoryMib)
-        .suggestedMemoryMib(suggestedStepMilliCpu)
-        .maxMemoryMib(maxStepMemoryMib)
         .isCpuOverProvisioned(currStepMilliCpu > suggestedStepMilliCpu)
+        .currentMemoryMib(currStepMemoryMib)
+        .suggestedMemoryMib(suggestedStepMemoryMib)
+        .maxMemoryMib(maxStepMemoryMib)
         .isMemoryOverProvisioned(currStepMemoryMib > suggestedStepMemoryMib)
         .stageId(stageId)
         .stepId(stepId)
