@@ -123,7 +123,6 @@ public class ArgoDriftState extends State {
         ArgoCommandUnitConstants.ARGO_DRIFT_COMMAND, CommandUnitType.ARGO_DRIFT,
         ImmutableList.of(new ArgoDummyCommandUnit(ArgoCommandUnitConstants.INIT),
             new ArgoDummyCommandUnit(ArgoCommandUnitConstants.ARGO_DRIFT_COMMAND)));
-    //            new ArgoDummyCommandUnit(DEPLOYMENT_ERROR)));
 
     ArgoDriftExecutionData argoDriftExecutionData =
         argoStateHelper.getArgoDriftExecutionData(app, env, infrastructureMapping, argoAppConfig, settingAttribute,

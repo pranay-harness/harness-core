@@ -40,6 +40,7 @@ import com.google.gson.JsonParser;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
@@ -141,17 +142,21 @@ public class ArgoCDTask extends AbstractDelegateRunnableTask {
 
   private void logManifestDiff(ArgoRequest request, List<ManifestDiff> manifestDiffs) {
     final ExecutionLogCallback logCallback = getLogCallback(request, ArgoCommandUnitConstants.ARGO_DRIFT_COMMAND);
+    AtomicBoolean diffFound = new AtomicBoolean(false);
     manifestDiffs.forEach(manifestDiff -> {
       if (manifestDiff.getClusterManifest().equalsIgnoreCase(manifestDiff.getGitManifest())) {
         logCallback.saveExecutionLog(
             LogHelper.color("No Diff for Resource:" + manifestDiff.getResourceIdentifier(), LogColor.Yellow), INFO,
             RUNNING);
       } else {
+        diffFound.set(true);
         logCallback.saveExecutionLog(
             LogHelper.color("Diff Found for Resource:" + manifestDiff.getResourceIdentifier(), LogColor.Green), INFO,
             RUNNING);
       }
     });
+    logCallback.saveExecutionLog(
+        "Drift Calculation Done: " + (diffFound.get() ? "Drift Found" : "No Drift Found"), INFO, SUCCESS);
   }
 
   private ExecutionLogCallback getLogCallback(ArgoRequest request, String commandUnitName) {
