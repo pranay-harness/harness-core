@@ -3246,6 +3246,44 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "SamDeployStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "globalAdditionalFlags": {
+              "type": "string"
+            },
+            "overrides": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "$ref": "#/definitions/NumberNGVariable"
+                  },
+                  {
+                    "$ref": "#/definitions/SecretNGVariable"
+                  },
+                  {
+                    "$ref": "#/definitions/StringNGVariable"
+                  }
+                ]
+              }
+            },
+            "region": {
+              "type": "string"
+            },
+            "stackName": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "SecretNGVariable": {
       "allOf": [
         {
@@ -3833,6 +3871,22 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
       "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AwsSamDeploy"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/SamDeployStepInfo"
+              }
+            }
+          }
+        },
         {
           "if": {
             "properties": {
