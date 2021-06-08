@@ -66,7 +66,7 @@ mongo:
   indexManagerMode: AUTO
   transactionsEnabled: false
   aliasDBName: ng-harness
-  traceMode: DISABLED
+  traceMode: ENABLED
 
 #[secondary-db] : Uncomment the following if you want to connect to another database
 #secondary - mongo:

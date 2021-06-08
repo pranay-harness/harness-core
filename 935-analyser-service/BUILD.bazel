@@ -6,6 +6,7 @@ shared_deps = [
     "@maven//:com_google_guava_guava",
     "@maven//:io_netty_netty_all",
 ] + [
+    "//950-persistence-tracer:module",
     "//953-events-api:module",
     "//960-persistence:module",
     "//980-commons:module",

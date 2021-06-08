@@ -7,6 +7,8 @@ import io.harness.event.queryRecords.AnalyserSampleAggregatorService;
 import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.service.QueryStatsService;
+import io.harness.springdata.HMongoTemplate;
+import io.harness.tracing.MongoRedisTracer;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,6 +33,7 @@ import javax.ws.rs.Path;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.server.model.Resource;
 import org.reflections.Reflections;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 @Slf4j
 public class AnalyserServiceApplication extends Application<AnalyserServiceConfiguration> {
@@ -75,8 +78,14 @@ public class AnalyserServiceApplication extends Application<AnalyserServiceConfi
 
     registerManagedBeans(environment, injector);
     registerScheduledJobs(injector, configuration);
+    registerObservers(injector);
     MaintenanceController.forceMaintenance(false);
     populateCache(injector);
+  }
+
+  private void registerObservers(Injector injector) {
+    HMongoTemplate hMongoTemplate = (HMongoTemplate) injector.getInstance(MongoTemplate.class);
+    hMongoTemplate.getTracerSubject().register(injector.getInstance(MongoRedisTracer.class));
   }
 
   private void registerManagedBeans(Environment environment, Injector injector) {

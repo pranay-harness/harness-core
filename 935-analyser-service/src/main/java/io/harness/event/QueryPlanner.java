@@ -3,6 +3,7 @@ package io.harness.event;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.query.SortPattern;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -28,5 +29,6 @@ public class QueryPlanner {
   public static class WinningPlan {
     String stage;
     InputStage inputStage;
+    SortPattern sortPattern;
   }
 }

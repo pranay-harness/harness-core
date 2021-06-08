@@ -1,5 +1,6 @@
 package io.harness.analyserservice;
 
+import static io.harness.AuthorizationServiceHeader.ANALYZER_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -11,9 +12,12 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
+import io.harness.redis.RedisConfig;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ParsedQueryReadConverter;
 import io.harness.serializer.ParsedQueryWriteConverter;
+import io.harness.serializer.SortPatternReadConverter;
+import io.harness.serializer.SortPatternWriteConverter;
 import io.harness.serializer.morphia.AnalyserMorphiaRegistrar;
 import io.harness.service.QueryRecordsService;
 import io.harness.service.QueryRecordsServiceImpl;
@@ -22,6 +26,7 @@ import io.harness.service.QueryStatsServiceImpl;
 import io.harness.serviceinfo.ServiceInfoService;
 import io.harness.serviceinfo.ServiceInfoServiceImpl;
 import io.harness.springdata.SpringPersistenceModule;
+import io.harness.tracing.AbstractPersistenceTracerModule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -91,6 +96,8 @@ public class AnalyserServiceModule extends AbstractModule {
         return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
             .add(ParsedQueryReadConverter.class)
             .add(ParsedQueryWriteConverter.class)
+            .add(SortPatternReadConverter.class)
+            .add(SortPatternWriteConverter.class)
             .build();
       }
 
@@ -106,6 +113,18 @@ public class AnalyserServiceModule extends AbstractModule {
     bind(AnalyserService.class).to(AnalyserServiceImpl.class);
     bind(QueryStatsService.class).to(QueryStatsServiceImpl.class);
     bind(QueryRecordsService.class).to(QueryRecordsServiceImpl.class);
+
+    install(new AbstractPersistenceTracerModule() {
+      @Override
+      protected RedisConfig redisConfigProvider() {
+        return config.getEventsFrameworkConfiguration().getRedisConfig();
+      }
+
+      @Override
+      protected String serviceIdProvider() {
+        return ANALYZER_SERVICE.getServiceId();
+      }
+    });
 
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named(AnalyserServiceConstants.SAMPLE_AGGREGATOR_SCHEDULED_THREAD))

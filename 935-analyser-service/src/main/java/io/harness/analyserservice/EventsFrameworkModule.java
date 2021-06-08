@@ -44,8 +44,8 @@ public class EventsFrameworkModule extends AbstractModule {
     bind(MessageListener.class)
         .annotatedWith(Names.named(EventsFrameworkConstants.QUERY_ANALYSIS_TOPIC))
         .to(QueryAnalysisMessageListener.class);
-    bind(DistributedCache.class)
-        .annotatedWith(Names.named(ANALYZER_CACHE_NAME))
-        .toInstance(RedisCache.of(redisConfig, 10, TimeUnit.HOURS));
+    //    bind(DistributedCache.class)
+    //        .annotatedWith(Names.named(ANALYZER_CACHE_NAME))
+    //        .toInstance(RedisCache.of(redisConfig, 10, TimeUnit.HOURS));
   }
 }

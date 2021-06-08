@@ -25,7 +25,7 @@ xxxxxxxx
 executionTimeLimitMillis: 5000
 manyEntriesAlertFactor: 3
 # in minutes
-aggregateScheduleInterval: 2
+aggregateScheduleInterval: 1
 
 allowedOrigins:
   - "https://localhost:8181"
@@ -44,7 +44,7 @@ mongo:
   indexManagerMode: AUTO
   transactionsEnabled: true
   aliasDBName: analyserserver
-
+  traceMode: ENABLED
 
 eventsFramework:
   redis:

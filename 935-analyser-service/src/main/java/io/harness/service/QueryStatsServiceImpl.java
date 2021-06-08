@@ -136,7 +136,10 @@ public class QueryStatsServiceImpl implements QueryStatsService {
     if (isSortStage(explainResult)) {
       alerts.add(AlertMetadata.builder()
                      .alertCategory(QueryAlertCategory.SORT_STAGE)
-                     .alertInfo(SortStageAlertInfo.builder().queryPlanner(explainResult.getQueryPlanner()).build())
+                     .alertInfo(SortStageAlertInfo.builder()
+                                    .queryPlanner(explainResult.getQueryPlanner())
+                                    .sortPattern(explainResult.getQueryPlanner().getWinningPlan().getSortPattern())
+                                    .build())
                      .build());
     }
     if (explainResult.getExecutionStats().getTotalDocsExamined()

@@ -35,7 +35,7 @@ mongo:
   indexManagerMode: AUTO
   transactionsEnabled: false
   aliasDBName:  pms-harness
-  traceMode: DISABLED
+  traceMode: ENABLED
 
 grpcServerConfig:
   connectors:
