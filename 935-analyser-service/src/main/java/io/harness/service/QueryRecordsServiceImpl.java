@@ -41,6 +41,7 @@ public class QueryRecordsServiceImpl implements QueryRecordsService {
           result.put(queryRecordKey, valuesList);
         }
       }
+      page++;
     } while (!queryRecordEntityList.isEmpty());
     return result;
   }

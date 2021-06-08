@@ -15,7 +15,6 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
-import org.elasticsearch.index.query.ParsedQuery;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -58,4 +57,6 @@ public class QueryStats {
 
   @Getter Long count;
   @CreatedDate Long createdAt;
+
+  long executionTimeMillis;
 }
