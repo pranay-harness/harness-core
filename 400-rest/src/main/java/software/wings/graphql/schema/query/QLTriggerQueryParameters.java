@@ -12,7 +12,7 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants(innerTypeName = "QLTriggerQueryParametersKeys")
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLTriggerQueryParameters {
-  private String triggerId;
   private String triggerName;
+  private String triggerId;
   private String applicationId;
 }

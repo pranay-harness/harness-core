@@ -178,7 +178,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       saveExecutionLog("Branch: " + gitConfig.getBranch(), CommandExecutionStatus.RUNNING, INFO, logCallback);
     }
     saveExecutionLog(
-        "\nNormalized Path: " + parameters.getScriptPath(), CommandExecutionStatus.RUNNING, INFO, logCallback);
+        "\nNormalized Path:" + parameters.getScriptPath(), CommandExecutionStatus.RUNNING, INFO, logCallback);
     gitConfig.setGitRepoType(GitRepositoryType.TERRAFORM);
 
     if (isNotEmpty(gitConfig.getReference())) {

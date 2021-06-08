@@ -83,7 +83,6 @@ public class EcsSetupCommandHandler extends EcsCommandTaskHandler {
             ecsServiceSetupRequest.getAwsConfig(), encryptedDataDetails, ecsServiceSetupRequest.getServiceVariables(),
             ecsServiceSetupRequest.getSafeDisplayServiceVariables(), executionLogCallback, setupParams);
 
-        // 2. Create ECS Service
         if (setupParams.isDaemonSchedulingStrategy()) {
           handleDaemonServiceRequest(setupParams, taskDefinition, executionLogCallback, cloudProviderSetting,
               encryptedDataDetails, commandExecutionDataBuilder, isMultipleLoadBalancersFeatureFlagActive);
