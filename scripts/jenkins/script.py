@@ -81,6 +81,6 @@ for i in range(5):
 for node in ideal_test_per_node:
     toWrite=""
     for test in ideal_test_per_node[node]:
-        toWrite+=test+"/... "
+        toWrite+=test+" "
     f = open('scripts/jenkins/'+str(node)+".txt", "w")
     f.write(toWrite)
