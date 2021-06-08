@@ -38,7 +38,7 @@ public class QueryStats {
                  .name("hash_serviceName_version_idx")
                  .unique(true)
                  .field(QueryStatsKeys.hash)
-                 .field(QueryStatsKeys.serviceName)
+                 .field(QueryStatsKeys.serviceId)
                  .field(QueryStatsKeys.version)
                  .build())
         .add(CompoundMongoIndex.builder()
@@ -51,7 +51,7 @@ public class QueryStats {
   @Id @org.mongodb.morphia.annotations.Id String id;
   @NonNull @Getter String hash;
   @NonNull String version;
-  @NonNull String serviceName;
+  @NonNull String serviceId;
 
   QueryExplainResult explainResult;
   String data;

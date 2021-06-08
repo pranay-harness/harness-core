@@ -11,6 +11,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -68,6 +69,15 @@ public class ServiceInfoServiceImpl implements ServiceInfoService {
     } else {
       throw new GeneralException("Failed to update service info");
     }
+  }
+
+  @Override
+  public List<String> getAllVersions(String service) {
+    ServiceInfo serviceInfo = mongoTemplate.findOne(query(where("serviceId").is(service)), ServiceInfo.class);
+    if (serviceInfo == null) {
+      return Collections.emptyList();
+    }
+    return serviceInfo.getVersions();
   }
 
   @Override

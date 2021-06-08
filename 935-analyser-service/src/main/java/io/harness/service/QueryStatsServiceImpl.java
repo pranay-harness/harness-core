@@ -20,7 +20,6 @@ import java.util.Map;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 
 public class QueryStatsServiceImpl implements QueryStatsService {
   private static final int size = 100;
@@ -45,7 +44,7 @@ public class QueryStatsServiceImpl implements QueryStatsService {
       }
       Query query =
           query(Criteria.where(QueryStatsKeys.hash).is(averageAggregatedStats.getHash()))
-              .addCriteria(Criteria.where(QueryStatsKeys.serviceName).is(averageAggregatedStats.getServiceName()))
+              .addCriteria(Criteria.where(QueryStatsKeys.serviceId).is(averageAggregatedStats.getServiceId()))
               .addCriteria(Criteria.where(QueryStatsKeys.version).is(averageAggregatedStats.getVersion()));
       mongoTemplate.remove(query, QueryStats.class);
       queryStatsRepository.save(averageAggregatedStats);
@@ -59,7 +58,7 @@ public class QueryStatsServiceImpl implements QueryStatsService {
     QueryRecordEntity latestQueryRecord = queryRecordEntityList.get(0);
     QueryStatsBuilder statsBuilder = QueryStats.builder()
                                          .hash(latestQueryRecord.getHash())
-                                         .serviceName(latestQueryRecord.getServiceName())
+                                         .serviceId(latestQueryRecord.getServiceName())
                                          .version(latestQueryRecord.getVersion())
                                          .data(ByteString.copyFrom(latestQueryRecord.getData()).toStringUtf8());
 

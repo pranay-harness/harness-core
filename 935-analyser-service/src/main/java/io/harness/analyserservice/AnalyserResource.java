@@ -18,6 +18,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
@@ -81,8 +82,16 @@ public class AnalyserResource {
 
   @GET
   @Path("/services")
-  @ApiOperation(value = "get information for all services", nickname = "getAlerts")
+  @ApiOperation(value = "get information for all services", nickname = "getServices")
   public ResponseDTO<List<ServiceInfo>> getAllServiceInfos() {
     return ResponseDTO.newResponse(serviceInfoService.getAllServices());
+  }
+
+  @GET
+  @Path("/{service}/versions")
+  @ApiOperation(value = "get information for all versions for a service", nickname = "getVersions")
+  public ResponseDTO<List<String>> getAllVersions(
+      @NotNull @PathParam(AnalyserServiceConstants.SERVICE) String service) {
+    return ResponseDTO.newResponse(serviceInfoService.getAllVersions(service));
   }
 }

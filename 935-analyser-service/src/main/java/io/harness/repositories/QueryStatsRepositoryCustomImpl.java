@@ -29,7 +29,7 @@ public class QueryStatsRepositoryCustomImpl implements QueryStatsRepositoryCusto
       return false;
     }
     queryStatsList.forEach(queryStats -> {
-      queryRecordCache.putInsideMap(String.format(ANALYZER_CACHE_KEY, queryStats.getServiceName()),
+      queryRecordCache.putInsideMap(String.format(ANALYZER_CACHE_KEY, queryStats.getServiceId()),
           queryStats.getHash(), queryStats.getCount() == null ? 0 : queryStats.getCount());
     });
     return true;
