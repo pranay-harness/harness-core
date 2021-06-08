@@ -11,4 +11,6 @@ public interface ArgoRequest extends TaskParameters {
   RequestType requestType();
   List<EncryptedDataDetail> getEncryptedDataDetails();
   ArgoConfig getArgoConfig();
+  String getActivityId();
+  String getAppId();
 }

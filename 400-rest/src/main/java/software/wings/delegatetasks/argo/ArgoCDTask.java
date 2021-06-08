@@ -7,6 +7,7 @@ import io.harness.argo.beans.ArgoConfigInternal;
 import io.harness.argo.beans.ClusterResourceTreeDTO;
 import io.harness.argo.beans.ManifestDiff;
 import io.harness.argo.service.ArgoCdService;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -18,8 +19,11 @@ import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
 
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.settings.argo.ArgoConfig;
+import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.argo.beans.request.ArgoRequest;
 import software.wings.service.intfc.security.EncryptionService;
 
@@ -31,6 +35,7 @@ import java.util.function.Consumer;
 
 public class ArgoCDTask extends AbstractDelegateRunnableTask {
   @Inject private ArgoCdService argoCdService;
+  @Inject private DelegateLogService logService;
   @Inject EncryptionService encryptionService;
 
   public ArgoCDTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
@@ -48,6 +53,7 @@ public class ArgoCDTask extends AbstractDelegateRunnableTask {
     ArgoRequest request = (ArgoRequest) parameters;
     encryptionService.decrypt(request.getArgoConfig(), request.getEncryptedDataDetails(), false);
     final ArgoConfigInternal argoConfigInternal = buildArgoConfigInternal(request.getArgoConfig());
+    boolean enableLogging = EmptyPredicate.isNotEmpty(request.getActivityId());
     switch (request.requestType()) {
       case RESOURCE_TREE:
         final ClusterResourceTreeDTO clusterResourceTreeDTO;
@@ -78,6 +84,7 @@ public class ArgoCDTask extends AbstractDelegateRunnableTask {
         }
       case MANIFEST_DIFF:
         try {
+          //          getLogCallback(request,)
           List<ManifestDiff> manifestDiffs = argoCdService.fetchManifestDiff(argoConfigInternal, request.getAppName());
           return ManifestDiffResponse.builder()
               .manifestDiffList(manifestDiffs)
@@ -92,6 +99,11 @@ public class ArgoCDTask extends AbstractDelegateRunnableTask {
       default:
         throw new InvalidRequestException("Unhandled Argo TaskType");
     }
+  }
+
+  private ExecutionLogCallback getLogCallback(ArgoRequest request, String commandUnitName) {
+    return new ExecutionLogCallback(logService, request.getArgoConfig().getAccountId(), request.getAppId(),
+        request.getActivityId(), commandUnitName);
   }
 
   private ArgoConfigInternal buildArgoConfigInternal(ArgoConfig argoConfig) {

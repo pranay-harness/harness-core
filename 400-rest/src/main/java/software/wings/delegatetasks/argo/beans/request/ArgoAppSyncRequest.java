@@ -15,6 +15,8 @@ public class ArgoAppSyncRequest implements ArgoRequest {
   private List<EncryptedDataDetail> encryptedDataDetails;
   private ArgoConfig argoConfig;
   private String ref;
+  private String activityId;
+  private String appId;
   @Override
   public RequestType requestType() {
     return RequestType.APP_SYNC;

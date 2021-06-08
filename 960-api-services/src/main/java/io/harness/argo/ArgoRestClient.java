@@ -7,6 +7,7 @@ import io.harness.argo.beans.ArgoApp;
 import io.harness.argo.beans.ArgoToken;
 import io.harness.argo.beans.ClusterResourceTree;
 import io.harness.argo.beans.ManagedResource;
+import io.harness.argo.beans.ManagedResourceList;
 import io.harness.argo.beans.RevisionMeta;
 import io.harness.argo.beans.UsernamePassword;
 import retrofit2.Call;
@@ -27,7 +28,7 @@ public interface ArgoRestClient {
   Call<ArgoApp> fetchApp(@Header("Authorization") String bearerAuthHeader, @Path(value = "appName") String appName);
 
   @GET("api/v1/applications/{appName}/managed-resources")
-  Call<List<ManagedResource>> fetchResourceStates(
+  Call<ManagedResourceList> fetchResourceStates(
       @Header("Authorization") String bearerAuthHeader, @Path(value = "appName") String appName);
 
   @GET("api/v1/applications/{appName}/resource-tree")

@@ -15,6 +15,9 @@ public class ManifestDiffRequest implements ArgoRequest {
   private String appName;
   private ArgoConfig argoConfig;
   private List<EncryptedDataDetail> encryptedDataDetails;
+  private String activityId;
+  private String appId;
+
   @Override
   public RequestType requestType() {
     return RequestType.MANIFEST_DIFF;

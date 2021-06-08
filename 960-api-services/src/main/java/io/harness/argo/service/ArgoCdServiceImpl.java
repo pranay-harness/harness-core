@@ -14,12 +14,14 @@ import io.harness.argo.beans.ArgoToken;
 import io.harness.argo.beans.ClusterResourceTree;
 import io.harness.argo.beans.ClusterResourceTreeDTO;
 import io.harness.argo.beans.ManagedResource;
+import io.harness.argo.beans.ManagedResourceList;
 import io.harness.argo.beans.ManifestDiff;
 import io.harness.argo.beans.UsernamePassword;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
 
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import com.google.inject.Singleton;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -127,21 +129,22 @@ public class ArgoCdServiceImpl implements ArgoCdService {
     ArgoRestClient argoRestClient = createArgoRestClient(argoConfig);
     String token = fetchToken(argoConfig, argoRestClient);
 
-    final Response<List<ManagedResource>> resourceStates =
+    final Response<ManagedResourceList> resourceStates =
         argoRestClient.fetchResourceStates(BEARER + token, appName).execute();
 
     List<ManifestDiff> manifestDiffs = new ArrayList<>();
     if (resourceStates.isSuccessful()) {
-      final List<ManagedResource> managedResources = resourceStates.body();
+      final ManagedResourceList managedResourceList = resourceStates.body();
+      final List<ManagedResource> items = managedResourceList.getItems();
 
-      if (EmptyPredicate.isNotEmpty(managedResources)) {
+      if (EmptyPredicate.isNotEmpty(items)) {
         manifestDiffs =
-            managedResources.stream()
+            items.stream()
                 .map(r
                     -> ManifestDiff.builder()
                            .resourceIdentifier(String.format("%s/%s/%s", r.getNamespace(), r.getKind(), r.getName()))
-                           .clusterManifest(r.getNormalizedLiveState())
-                           .gitManifest((r.getPredictedLiveState()))
+                           .clusterManifest(prepareYaml(r.getNormalizedLiveState()))
+                           .gitManifest(prepareYaml(r.getPredictedLiveState()))
                            .build())
                 .collect(Collectors.toList());
       }
@@ -174,5 +177,11 @@ public class ArgoCdServiceImpl implements ArgoCdService {
                             .addConverterFactory(JacksonConverterFactory.create())
                             .build();
     return retrofit.create(ArgoRestClient.class);
+  }
+
+  private String prepareYaml(String str) {
+    Yaml yaml = new Yaml();
+    final Object load = yaml.load(str);
+    return yaml.dump(load);
   }
 }
