@@ -53,9 +53,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.*;
 import java.util.stream.Collectors;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.NotNull;
@@ -70,6 +71,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.springframework.data.mongodb.core.query.Criteria;
 import retrofit2.http.Body;
 
@@ -103,6 +108,84 @@ public class NGAggregateResource {
           DEFAULT_ORG_IDENTIFIER) @OrgIdentifier @io.harness.ng.core.OrgIdentifier String orgIdentifier) {
     return ResponseDTO.newResponse(
         aggregateProjectService.getProjectAggregateDTO(accountIdentifier, orgIdentifier, identifier));
+  }
+
+  @GET
+  @Path("sendslacknotifications")
+  @ApiOperation(value = "sendslacknotifications", nickname = "sendslacknotifications")
+  public String sendSlackNotifications(@Body SlackNotificationsRequest slackNotificationsRequest) throws IOException, InterruptedException {
+    Map<String, String> userSlackWebhookMap = new HashMap<String, String>();
+    userSlackWebhookMap.put("akhilesh.pandey@harness.io", "https://hooks.slack.com/services/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");
+    userSlackWebhookMap.put("sainath.batthala@harness.io", "https://hooks.slack.com/services/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");
+    userSlackWebhookMap.put("meenakshi.raikwar@harness.io", "https://hooks.slack.com/services/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");
+    userSlackWebhookMap.put("prashant.batra@harness.io", "https://hooks.slack.com/services/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");
+    sendSlackNotifications(slackNotificationsRequest, userSlackWebhookMap);
+    return "success";
+  }
+
+  public void sendSlackNotifications(SlackNotificationsRequest slackNotificationsRequest, Map<String, String> userSlackWebhookMap) throws IOException, InterruptedException {
+    CloseableHttpClient closeableHttpClient = HttpClients.createDefault();
+    DeploymentDetails deploymentDetails = slackNotificationsRequest.getDeploymentDetails();
+    String deploymentStatus = deploymentDetails.getDeploymentStatus();
+    for (User userObj : slackNotificationsRequest.getUsers()) {
+      Thread.sleep(10000);
+      if (!userObj.isHasHarnessAccount() || !userObj.isHasSlackAccount()) {
+        continue;
+      }
+      String user = userObj.getName();
+      HttpPost httpPost = new HttpPost(userSlackWebhookMap.get(user));
+      httpPost.setHeader("Content-Type", "application/json");
+      String json = "{\n" +
+              "        \"blocks\": [\n" +
+              "                {\n" +
+              "                        \"type\": \"section\",\n" +
+              "                        \"text\": {\n" +
+              "                                \"type\": \"mrkdwn\",\n" +
+              "                                \"text\": \"Hi @" + user.split("@")[0] + ",\\nFollowing deployment involving your changes is " + deploymentStatus + "\\n*<" + deploymentDetails.getPipelineExecutionLink() + "|Harness Pipeline Eexcution>*\"\n" +
+              "                        }\n" +
+              "                },\n" +
+              "                {\n" +
+              "                        \"type\": \"section\",\n" +
+              "                        \"fields\": [\n" +
+              "                                {\n" +
+              "                                        \"type\": \"mrkdwn\",\n" +
+              "                                        \"text\": \"*Deployment Type:*\\n" + deploymentDetails.getDeploymentType() + "\"\n" +
+              "                                },\n" +
+              "                                {\n" +
+              "                                        \"type\": \"mrkdwn\",\n" +
+              "                                        \"text\": \"*Triggered on:*\\n " + deploymentDetails.getTriggeredOn() + "\"\n" +
+              "                                },\n" +
+              "                                {\n" +
+              "                                        \"type\": \"mrkdwn\",\n" +
+              "                                        \"text\": \"*Triggered by:*\\n " + deploymentDetails.getTriggeredBy() + "\"\n" +
+              "                                },\n" +
+              "                                {\n" +
+              "                                        \"type\": \"mrkdwn\",\n" +
+              "                                        \"text\": \"*Deployment Status:*\\n " + deploymentStatus + "\"\n" +
+              "                                }\n" +
+              "                        ]\n" +
+              "                },\n" +
+              "                {\n" +
+              "                        \"type\": \"actions\",\n" +
+              "                        \"elements\": [\n" +
+              "                                {\n" +
+              "                                        \"type\": \"button\",\n" +
+              "                                        \"text\": {\n" +
+              "                                                \"type\": \"plain_text\",\n" +
+              "                                                \"emoji\": true,\n" +
+              "                                                \"text\": \"View on Harness\"\n" +
+              "                                        },\n" +
+              "                                        \"style\": \"primary\",\n" +
+              "                                        \"value\": \"click_me_123\"\n" +
+              "                                }\n" +
+              "                        ]\n" +
+              "                }\n" +
+              "        ]\n" +
+              "}";
+
+      httpPost.setEntity(new StringEntity(json));
+      closeableHttpClient.execute(httpPost);
+    }
   }
 
   @GET
