@@ -46,7 +46,9 @@ import static java.lang.String.join;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.exception.InvalidRequestException;
 
@@ -72,6 +74,7 @@ import org.mongodb.morphia.annotations.Transient;
 @OwnedBy(CDC)
 @JsonTypeName("CANARY")
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   public CanaryOrchestrationWorkflow() {
     setOrchestrationWorkflowType(CANARY);
@@ -1005,6 +1008,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     return aCanaryOrchestrationWorkflow()
         .withGraph(getGraph())
         .withPreDeploymentSteps(getPreDeploymentSteps())
+        .withRollbackProvisioners(getRollbackProvisioners())
         .withWorkflowPhases(getWorkflowPhases())
         .withWorkflowPhaseIds(getWorkflowPhaseIds())
         .withWorkflowPhaseIdMap(getWorkflowPhaseIdMap())
@@ -1161,6 +1165,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     private List<Variable> derivedVariables = new ArrayList<>();
     private Set<EntityType> requiredEntityTypes;
     private OrchestrationWorkflowType orchestrationWorkflowType = CANARY;
+    private PhaseStep rollbackProvisioners;
 
     private CanaryOrchestrationWorkflowBuilder() {}
 
@@ -1175,6 +1180,11 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
     public CanaryOrchestrationWorkflowBuilder withPreDeploymentSteps(PhaseStep preDeploymentSteps) {
       this.preDeploymentSteps = preDeploymentSteps;
+      return this;
+    }
+
+    public CanaryOrchestrationWorkflowBuilder withRollbackProvisioners(PhaseStep rollbackProvisioners) {
+      this.rollbackProvisioners = rollbackProvisioners;
       return this;
     }
 
@@ -1267,6 +1277,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       canaryOrchestrationWorkflow.setRequiredEntityTypes(requiredEntityTypes);
       canaryOrchestrationWorkflow.setOrchestrationWorkflowType(orchestrationWorkflowType);
       canaryOrchestrationWorkflow.setConcurrencyStrategy(concurrencyStrategy);
+      canaryOrchestrationWorkflow.setRollbackProvisioners(rollbackProvisioners);
       return canaryOrchestrationWorkflow;
     }
   }

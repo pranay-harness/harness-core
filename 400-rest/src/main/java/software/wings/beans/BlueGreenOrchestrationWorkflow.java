@@ -24,6 +24,7 @@ public class BlueGreenOrchestrationWorkflow extends CanaryOrchestrationWorkflow 
     return aBlueGreenOrchestrationWorkflow()
         .withGraph(getGraph())
         .withPreDeploymentSteps(getPreDeploymentSteps())
+        .withRollbackProvisioners(getRollbackProvisioners())
         .withWorkflowPhaseIds(getWorkflowPhaseIds())
         .withWorkflowPhases(getWorkflowPhases())
         .withWorkflowPhaseIdMap(getWorkflowPhaseIdMap())
@@ -54,6 +55,7 @@ public class BlueGreenOrchestrationWorkflow extends CanaryOrchestrationWorkflow 
     private List<Variable> userVariables = new ArrayList<>();
     private List<Variable> derivedVariables = new ArrayList<>();
     private Set<EntityType> requiredEntityTypes;
+    private PhaseStep rollbackProvisioners;
 
     private BlueGreenOrchestrationWorkflowBuilder() {}
     public static BlueGreenOrchestrationWorkflowBuilder aBlueGreenOrchestrationWorkflow() {
@@ -67,6 +69,11 @@ public class BlueGreenOrchestrationWorkflow extends CanaryOrchestrationWorkflow 
 
     public BlueGreenOrchestrationWorkflowBuilder withPreDeploymentSteps(PhaseStep preDeploymentSteps) {
       this.preDeploymentSteps = preDeploymentSteps;
+      return this;
+    }
+
+    public BlueGreenOrchestrationWorkflowBuilder withRollbackProvisioners(PhaseStep rollbackProvisioners) {
+      this.rollbackProvisioners = rollbackProvisioners;
       return this;
     }
 
@@ -152,6 +159,7 @@ public class BlueGreenOrchestrationWorkflow extends CanaryOrchestrationWorkflow 
       blueGreenOrchestrationWorkflow.setDerivedVariables(derivedVariables);
       blueGreenOrchestrationWorkflow.setRequiredEntityTypes(requiredEntityTypes);
       blueGreenOrchestrationWorkflow.setConcurrencyStrategy(concurrencyStrategy);
+      blueGreenOrchestrationWorkflow.setRollbackProvisioners(rollbackProvisioners);
       return blueGreenOrchestrationWorkflow;
     }
   }
