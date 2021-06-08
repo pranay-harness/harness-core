@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DEL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.argo.beans.AppStatus;
+import io.harness.argo.beans.ArgoApp;
 import io.harness.argo.beans.ArgoConfigInternal;
 import io.harness.argo.beans.ClusterResourceTreeDTO;
 import io.harness.argo.beans.ManifestDiff;
@@ -333,5 +334,6 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(AppStatus.GitSyncStatus.class, 97040);
     kryo.register(AppStatus.CurrentSyncDetails.class, 97041);
     kryo.register(AppStatus.LastSyncDetails.class, 97042);
+    kryo.register(ArgoApp.class, 97043);
   }
 }
