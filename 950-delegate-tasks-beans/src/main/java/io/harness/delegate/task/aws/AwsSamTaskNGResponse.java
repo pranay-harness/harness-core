@@ -24,6 +24,7 @@ public class AwsSamTaskNGResponse implements DelegateTaskNotifyResponseData {
   String customMessage;
 
   Map<String, String> commitIdForConfigFilesMap;
+  Map<String, String> samCFOutput;
   String outputs;
   @NonFinal @Setter DelegateMetaInfo delegateMetaInfo;
 }

@@ -24,8 +24,9 @@ public class AwsSamClientImpl implements AwsSamClient {
   public CliResponse runCommand(String command, long timeoutInMillis, Map<String, String> envVariables,
       String workingDirectory, @Nonnull LogCallback executionLogCallback)
       throws InterruptedException, TimeoutException, IOException {
+    String loggingCommand = command.indexOf("&&") != -1 ? command.substring(command.indexOf("&&")+2) : command;
     CliResponse response = cliHelper.executeCliCommand(command, timeoutInMillis, envVariables, workingDirectory,
-        executionLogCallback, command, new LogCallbackOutputStream(executionLogCallback));
+        executionLogCallback, loggingCommand, new LogCallbackOutputStream(executionLogCallback));
     if (response != null && response.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
       throw new AwsSamCommandExecutionException(
           format("Failed to execute aws sam  Command %s : Reason: %s", command, response.getError()),

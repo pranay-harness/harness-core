@@ -35,6 +35,7 @@ public class AwsSamTaskParameters
   @NonNull AwsSamTaskType awsSamTaskType;
   Map<String, String> overrides;
   String globalAdditionalFlags;
+  Boolean onlyPlan;
 
   // To help in logging
   AwsSamCommandUnit awsSamCommandUnit;

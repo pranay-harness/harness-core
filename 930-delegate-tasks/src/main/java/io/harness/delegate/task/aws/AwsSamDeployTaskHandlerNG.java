@@ -34,6 +34,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 @Slf4j
 @OwnedBy(CDP)
@@ -82,7 +84,8 @@ public class AwsSamDeployTaskHandlerNG extends AwsSamAbstractTaskHandler {
           awsConnectorDTO.getCredential().getAwsCredentialType(), encryptedDataDetails);
 
       String awsSecretsExportCommand = format("export AWS_ACCESS_KEY_ID=%s && export AWS_SECRET_ACCESS_KEY=%s && ",
-          awsConfig.getAwsAccessKeyCredential().getAccessKey(), String.valueOf(awsConfig.getAwsAccessKeyCredential().getSecretKey()));
+          awsConfig.getAwsAccessKeyCredential().getAccessKey(),
+          String.valueOf(awsConfig.getAwsAccessKeyCredential().getSecretKey()));
 
       if (isEmpty(awsConfig.getAwsAccessKeyCredential().getAccessKey())
           || isEmpty(awsConfig.getAwsAccessKeyCredential().getSecretKey())) {
@@ -117,17 +120,29 @@ public class AwsSamDeployTaskHandlerNG extends AwsSamAbstractTaskHandler {
             .build();
       }
 
-      String samDeployCommand = format("%s sam deploy %s --stack-name %s --s3-bucket %s --capabilities CAPABILITY_IAM", awsSecretsExportCommand,
-          samCustomCommandParams, taskParameters.getStackName(), taskParameters.getS3BucketName());
+      if (taskParameters.getOnlyPlan().equals(true)) {
+        samCustomCommandParams = format("%s  --no-execute-changeset ", samCustomCommandParams);
+      }
+
+      String samDeployCommand = format("%s sam deploy %s --stack-name %s --s3-bucket %s --capabilities CAPABILITY_IAM",
+          awsSecretsExportCommand, samCustomCommandParams, taskParameters.getStackName(),
+          taskParameters.getS3BucketName());
       CliResponse samDeployCliResponse =
           awsSamClient.runCommand(samDeployCommand, 120000l, envVariables, awsSamAppDirectory, logCallback);
 
       if (!UnitStatus.SUCCESS.equals(samDeployCliResponse.getCommandExecutionStatus().getUnitStatus())) {
+        String cloudformationOutputCommand = format("%s aws cloudformation describe-stacks --stack-name %s",
+            awsSecretsExportCommand, taskParameters.getStackName());
+        CliResponse samCliCloudformationResponse = awsSamClient.runCommand(
+            cloudformationOutputCommand, 120000l, envVariables, awsSamAppDirectory, logCallback);
+        Map<String, String> cfOutput = extractCfOutputFromStackDescription(samCliCloudformationResponse.getOutput());
+
         return AwsSamTaskNGResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
             .errorMessage(samDeployCliResponse.getError())
             .customMessage("Sam build failed with output => " + samDeployCliResponse.getOutput())
             .outputs(samDeployCliResponse.getOutput())
+            .samCFOutput(cfOutput)
             .build();
       }
 
@@ -151,5 +166,23 @@ public class AwsSamDeployTaskHandlerNG extends AwsSamAbstractTaskHandler {
           .errorMessage(ExceptionUtils.getMessage(exception))
           .build();
     }
+  }
+
+  private Map<String, String> extractCfOutputFromStackDescription(String stackDescription) {
+    Map<String, String> cfOutputs = new HashMap<>();
+    JSONObject jsonObject = new JSONObject(stackDescription);
+
+    JSONArray stacks = jsonObject.getJSONArray("Stacks");
+    if (stacks != null && stacks.length() != 0) {
+      JSONArray stackOutputs = stacks.getJSONObject(0).getJSONArray("Outputs");
+      if (stackOutputs != null && stackOutputs.length() != 0) {
+        for (int i = 0; i < stackOutputs.length(); i++) {
+          JSONObject output = stackOutputs.getJSONObject(i);
+          cfOutputs.put(output.getString("OutputKey"), output.getString("OutputValue"));
+        }
+      }
+    }
+
+    return cfOutputs;
   }
 }
