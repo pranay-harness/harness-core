@@ -18,6 +18,7 @@ import lombok.experimental.FieldNameConstants;
 public class QueryPlanner {
   WinningPlan winningPlan;
   String namespace;
+  ParsedQuery parsedQuery;
 }
 
 @OwnedBy(PIPELINE)

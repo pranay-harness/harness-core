@@ -53,7 +53,7 @@ public class QueryRecordEntity {
   QueryExplainResult explainResult;
   ParsedQuery parsedQuery;
   String collectionName;
-  String data;
+  byte[] data;
 
   @Builder.Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusHours(TTL_HOURS).toInstant());
   @CreatedDate Long createdAt;

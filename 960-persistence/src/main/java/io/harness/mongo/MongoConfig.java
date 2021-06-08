@@ -34,6 +34,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 @ToString(onlyExplicitlyIncluded = true)
 @OwnedBy(HarnessTeam.PL)
 public class MongoConfig {
+  public static final String DOT_REPLACEMENT = "__dot__";
+
   @Value
   public static class ReadPref {
     String name;

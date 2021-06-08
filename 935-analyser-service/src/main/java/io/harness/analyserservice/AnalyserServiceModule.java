@@ -12,6 +12,8 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.ParsedQueryReadConverter;
+import io.harness.serializer.ParsedQueryWriteConverter;
 import io.harness.service.QueryStatsService;
 import io.harness.service.QueryStatsServiceImpl;
 import io.harness.springdata.SpringPersistenceModule;
@@ -81,7 +83,10 @@ public class AnalyserServiceModule extends AbstractModule {
       @Provides
       @Singleton
       List<Class<? extends Converter<?, ?>>> springConverters() {
-        return ImmutableList.<Class<? extends Converter<?, ?>>>builder().build();
+        return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+            .add(ParsedQueryReadConverter.class)
+            .add(ParsedQueryWriteConverter.class)
+            .build();
       }
 
       @Override

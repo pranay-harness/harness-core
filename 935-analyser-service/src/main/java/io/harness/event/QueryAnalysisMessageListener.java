@@ -10,6 +10,7 @@ import io.harness.repositories.QueryRecordsRepository;
 import io.harness.serializer.JsonUtils;
 
 import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,7 +26,7 @@ public class QueryAnalysisMessageListener implements MessageListener {
     QueryExplainResult queryExplainResult = JsonUtils.asObject(queryResult, QueryExplainResult.class);
     Map<String, String> metadataMap = message.getMessage().getMetadataMap();
     QueryRecordEntity queryRecordEntity = QueryRecordEntity.builder()
-                                              .data(data)
+                                              .data(ByteString.copyFromUtf8(data).toByteArray())
                                               .explainResult(queryExplainResult)
                                               .hash(metadataMap.get(QUERY_HASH))
                                               .version(metadataMap.get(VERSION_KEY))
