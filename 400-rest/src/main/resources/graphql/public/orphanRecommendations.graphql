@@ -2,10 +2,16 @@ extend type Query {
     orphanRecommendations(type: String!): RecommendationsData @dataFetcher(name: orphanRecommendations)
 
     orphanOverview: RecommendationsOverviewData @dataFetcher(name: orphanOverview)
+
+    orphanDelete(resourceName: String!): RecommendationsDeletionData @dataFetcher(name: orphanDelete)
 }
 
 type RecommendationsData {
     data: [RecommendationsDataPoint]
+}
+
+type RecommendationsDeletionData {
+    isDeleted: Boolean
 }
 
 type RecommendationsDataPoint {

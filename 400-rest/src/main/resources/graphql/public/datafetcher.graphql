@@ -16,6 +16,7 @@ enum DataFetcherEnum {
   budgetTrendStats
   orphanRecommendations
   orphanOverview
+  orphanDelete
   ceClusterBillingData
   ceConnector
   ceHealthStatus

@@ -112,6 +112,7 @@ import software.wings.graphql.datafetcher.execution.PipelineResumeRuntimeDataFet
 import software.wings.graphql.datafetcher.execution.ResumeExecutionDataFetcher;
 import software.wings.graphql.datafetcher.execution.RuntimeExecutionInputsToResumePipelineDataFetcher;
 import software.wings.graphql.datafetcher.execution.StartExecutionDataFetcher;
+import software.wings.graphql.datafetcher.hackathon.OrphanDeleteDataFetcher;
 import software.wings.graphql.datafetcher.hackathon.OrphanOverviewDataFetcher;
 import software.wings.graphql.datafetcher.hackathon.OrphanRecommendationsDataFetcher;
 import software.wings.graphql.datafetcher.infraDefinition.InfrastructureDefinitionConnectionDataFetcher;
@@ -429,6 +430,7 @@ public class GraphQLModule extends AbstractModule {
 
     bindDataFetcherWithAnnotation(OrphanRecommendationsDataFetcher.class);
     bindDataFetcherWithAnnotation(OrphanOverviewDataFetcher.class);
+    bindDataFetcherWithAnnotation(OrphanDeleteDataFetcher.class);
 
     binder()
         .bind(SecretManagerMutationDataFetcher.class)
