@@ -105,7 +105,7 @@ public class OrphanOverviewDataFetcher
           break;
       }
     }
-    builder.totalSavings(totalCost);
+    builder.totalSavings(Math.round(totalCost * 100D) / 100D);
     return builder.build();
   }
 

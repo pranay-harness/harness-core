@@ -62,7 +62,7 @@ public class OrphanRecommendationsDataFetcher
       selectQuery.addCondition(BinaryCondition.equalTo(conditionKey, parameters.getType()));
     }
 
-    selectQuery.addCustomOrdering("cost", OrderObject.Dir.DESCENDING);
+    selectQuery.addCustomOrdering("cost", OrderObject.Dir.ASCENDING);
 
     return selectQuery;
   }
