@@ -51,6 +51,7 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   K8S_DUMMY(K8sDummyCommandUnit.class, "K8s Command Unit", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER),
   SPOTINST_DUMMY(
       SpotinstDummyCommandUnit.class, "Spotinst Command Unit", StencilCategory.SPOTINST, DEFAULT_DISPLAY_ORDER),
+  ARGO_DUMMY(ArgoDummyCommandUnit.class, "Argo Command Unit", StencilCategory.ARGO, DEFAULT_DISPLAY_ORDER),
   HELM_DUMMY(HelmDummyCommandUnit.class, "Helm Command Unit", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER),
   PCF_DUMMY(PcfDummyCommandUnit.class, "PCF Command Unit", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER),
   AZURE_VMSS_DUMMY(

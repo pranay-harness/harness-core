@@ -48,7 +48,10 @@ public enum WorkflowStepType {
   FLOW_CONTROL("Flow Control"),
   CI_SYSTEM("CI System"),
   UTILITY("Utility"),
-  SERVICE_COMMAND("Service Command");
+  SERVICE_COMMAND("Service Command"),
+
+  // ARGO
+  ARGO("Argo");
 
   String displayName;
 

@@ -18,6 +18,8 @@ import static software.wings.sm.states.HelmDeployState.HELM_COMMAND_NAME;
 import static software.wings.sm.states.JenkinsState.COMMAND_UNIT_NAME;
 import static software.wings.sm.states.KubernetesSteadyStateCheck.KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME;
 import static software.wings.sm.states.KubernetesSwapServiceSelectors.KUBERNETES_SWAP_SERVICE_SELECTORS_COMMAND_NAME;
+import static software.wings.sm.states.argo.drift.ArgoDriftState.ARGO_DRIFT_COMMAND;
+import static software.wings.sm.states.argo.sync.ArgoSyncState.ARGO_SYNC_COMMAND;
 import static software.wings.sm.states.azure.AzureVMSSDeployState.AZURE_VMSS_DEPLOY_COMMAND_NAME;
 import static software.wings.sm.states.azure.AzureVMSSSetupState.AZURE_VMSS_SETUP_COMMAND_NAME;
 import static software.wings.sm.states.azure.AzureVMSSSwitchRoutesState.AZURE_VMSS_SWAP_ROUTE;
@@ -99,7 +101,10 @@ public class CommandUnitDetails {
     CUSTOM_DEPLOYMENT_FETCH_INSTANCES(FETCH_INSTANCE_COMMAND_UNIT),
     AZURE_ARM_DEPLOYMENT(AZURE_ARM_COMMAND_UNIT_TYPE),
     AZURE_BLUEPRINT_DEPLOYMENT(AZURE_BLUEPRINT_COMMAND_UNIT_TYPE),
-    TERRAGRUNT_PROVISION(TERRAGRUNT_PROVISION_COMMAND_UNIT_TYPE);
+    TERRAGRUNT_PROVISION(TERRAGRUNT_PROVISION_COMMAND_UNIT_TYPE),
+    // Argo for logs
+    ARGO_DRIFT(ARGO_DRIFT_COMMAND),
+    ARGO_SYNC(ARGO_SYNC_COMMAND);
 
     private String name;
 

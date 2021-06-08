@@ -185,6 +185,8 @@ import software.wings.sm.states.SubWorkflowState;
 import software.wings.sm.states.SumoLogicAnalysisState;
 import software.wings.sm.states.TemplatizedSecretManagerState;
 import software.wings.sm.states.WaitState;
+import software.wings.sm.states.argo.drift.ArgoDriftState;
+import software.wings.sm.states.argo.sync.ArgoSyncState;
 import software.wings.sm.states.azure.AzureVMSSDeployState;
 import software.wings.sm.states.azure.AzureVMSSRollbackState;
 import software.wings.sm.states.azure.AzureVMSSSetupState;
@@ -852,7 +854,13 @@ public enum StateType implements StateTypeDescriptor {
 
   CUSTOM_DEPLOYMENT_FETCH_INSTANCES(InstanceFetchState.class, OTHERS, 5, WorkflowServiceHelper.FETCH_INSTANCES,
       Lists.newArrayList(InfrastructureMappingType.CUSTOM), asList(PhaseStepType.CUSTOM_DEPLOYMENT_PHASE_STEP),
-      ORCHESTRATION_STENCILS);
+      ORCHESTRATION_STENCILS),
+
+  //---   Hackathon Argo States
+  ARGI_DRIFT(ArgoDriftState.class, KUBERNETES, WorkflowServiceHelper.ARGO_DRIFT,
+      asList(InfrastructureMappingType.DIRECT_KUBERNETES), asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  ARGO_SYNC(ArgoSyncState.class, KUBERNETES, WorkflowServiceHelper.ARGO_SYNC,
+      asList(InfrastructureMappingType.DIRECT_KUBERNETES), asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS);
 
   private static final String PCF_MAP_ROUTE_NAME = "Map Route";
   private static final String PCF_UNMAP_ROUTE_NAME = "Unmap Route";

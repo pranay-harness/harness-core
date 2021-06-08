@@ -14,6 +14,7 @@ import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTE
 import static software.wings.beans.PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP;
 import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
 import static software.wings.beans.PhaseStepType.AMI_SWITCH_AUTOSCALING_GROUP_ROUTES;
+import static software.wings.beans.PhaseStepType.ARGO;
 import static software.wings.beans.PhaseStepType.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT;
 import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
 import static software.wings.beans.PhaseStepType.COLLECT_ARTIFACT;
@@ -200,6 +201,8 @@ import software.wings.sm.states.StackDriverLogState;
 import software.wings.sm.states.StackDriverState;
 import software.wings.sm.states.SumoLogicAnalysisState;
 import software.wings.sm.states.TemplatizedSecretManagerState;
+import software.wings.sm.states.argo.drift.ArgoDriftState;
+import software.wings.sm.states.argo.sync.ArgoSyncState;
 import software.wings.sm.states.azure.AzureVMSSDeployState;
 import software.wings.sm.states.azure.AzureVMSSRollbackState;
 import software.wings.sm.states.azure.AzureVMSSSetupState;
@@ -475,6 +478,14 @@ public enum StepType {
   K8S_DEPLOYMENT_ROLLING(K8sRollingDeploy.class, WorkflowConstants.K8S_DEPLOYMENT_ROLLING, asList(KUBERNETES),
       asList(K8S_PHASE_STEP), Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM),
       asList(PhaseType.NON_ROLLBACK), asList(ROLLING, CANARY, MULTI_SERVICE)),
+
+  // ---- ARGO Hackathom
+  ARGO_DRIFT(ArgoDriftState.class, WorkflowServiceHelper.ARGO_DRIFT, asList(KUBERNETES), asList(K8S_PHASE_STEP),
+      Lists.newArrayList(DeploymentType.KUBERNETES), asList(PhaseType.NON_ROLLBACK)),
+
+  ARGO_SYNC(ArgoSyncState.class, WorkflowServiceHelper.ARGO_SYNC, asList(KUBERNETES), asList(K8S_PHASE_STEP),
+      Lists.newArrayList(DeploymentType.KUBERNETES), asList(PhaseType.NON_ROLLBACK)),
+
   K8S_DEPLOYMENT_ROLLING_ROLLBACK(K8sRollingDeployRollback.class, WorkflowConstants.K8S_DEPLOYMENT_ROLLING_ROLLBACK,
       asList(KUBERNETES), asList(K8S_PHASE_STEP, WRAP_UP),
       Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM), asList(PhaseType.ROLLBACK)),

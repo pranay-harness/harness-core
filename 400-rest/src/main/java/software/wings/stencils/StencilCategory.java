@@ -43,6 +43,7 @@ public enum StencilCategory {
   VERIFICATIONS(2),
   ECS("Ecs", 0),
   SPOTINST("Spotinst", 0),
+  ARGO("Argo", 0),
   STAGING_ORIGINAL_EXECUTION(101, true),
   AZURE_VMSS("Azure VMSS", 0),
   AZURE_WEBAPP("Azure WebApp", 0),

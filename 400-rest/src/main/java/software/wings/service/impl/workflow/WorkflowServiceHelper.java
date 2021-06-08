@@ -343,6 +343,11 @@ public class WorkflowServiceHelper {
   private static final String MIN_REPLICAS = "\\$\\{MIN_REPLICAS}";
   private static final String MAX_REPLICAS = "\\$\\{MAX_REPLICAS}";
   private static final String UTILIZATION = "\\$\\{UTILIZATION}";
+
+  //----- ARGO HACKATHON
+
+  public static final String ARGO_DRIFT = "Argo Drift";
+  public static final String ARGO_SYNC = "Argo Sync";
   // yaml template for custom metric HPA for cpu utilization threshold
   private static final String yamlForHPAWithCustomMetric = "apiVersion: autoscaling/v2beta1\n"
       + "kind: HorizontalPodAutoscaler\n"
