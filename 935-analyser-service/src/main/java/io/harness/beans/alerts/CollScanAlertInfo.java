@@ -1,3 +1,12 @@
 package io.harness.beans.alerts;
 
-public class CollScanAlertInfo implements AlertInfo {}
+import io.harness.event.QueryPlanner;
+
+import lombok.Builder;
+import lombok.Value;
+
+@Value
+@Builder
+public class CollScanAlertInfo implements AlertInfo {
+  QueryPlanner queryPlanner;
+}

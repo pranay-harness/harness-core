@@ -16,6 +16,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.Wither;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -48,7 +49,7 @@ public class QueryStats {
         .build();
   }
 
-  @Id @org.mongodb.morphia.annotations.Id String id;
+  @Wither @Id @org.mongodb.morphia.annotations.Id String id;
   @NonNull @Getter String hash;
   @NonNull String version;
   @NonNull String serviceId;
@@ -61,7 +62,8 @@ public class QueryStats {
   String collectionName;
 
   @Getter Long count;
-  @CreatedDate Long createdAt;
+  @Wither @CreatedDate Long createdAt;
 
+  // Moving Average executionTime
   long executionTimeMillis;
 }

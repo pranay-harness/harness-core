@@ -19,14 +19,14 @@ public class QueryPlanner {
   WinningPlan winningPlan;
   String namespace;
   ParsedQuery parsedQuery;
-}
 
-@OwnedBy(PIPELINE)
-@Data
-@Builder
-@FieldNameConstants(innerTypeName = "WinningPlanKeys")
-@FieldDefaults(level = AccessLevel.PRIVATE)
-class WinningPlan {
-  String stage;
-  InputStage inputStage;
+  @OwnedBy(PIPELINE)
+  @Data
+  @Builder
+  @FieldNameConstants(innerTypeName = "WinningPlanKeys")
+  @FieldDefaults(level = AccessLevel.PRIVATE)
+  public static class WinningPlan {
+    String stage;
+    InputStage inputStage;
+  }
 }

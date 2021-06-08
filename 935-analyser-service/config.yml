@@ -23,6 +23,7 @@ xxxxxxxx
   maxThreads: 1024
 
 executionTimeLimitMillis: 5000
+manyEntriesAlertFactor: 3
 
 allowedOrigins:
   - "https://localhost:8181"

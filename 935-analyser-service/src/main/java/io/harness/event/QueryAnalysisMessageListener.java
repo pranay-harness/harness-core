@@ -34,6 +34,8 @@ public class QueryAnalysisMessageListener implements MessageListener {
                                               .version(metadataMap.get(VERSION_KEY))
                                               .serviceName(metadataMap.get(SERVICE_ID))
                                               .createdAt(System.currentTimeMillis())
+                                              .parsedQuery(queryExplainResult.getQueryPlanner().getParsedQuery())
+                                              .collectionName(queryExplainResult.getQueryPlanner().getNamespace())
                                               .build();
     queryRecordsRepository.save(queryRecordEntity);
     serviceInfoService.updateLatest(metadataMap.get(SERVICE_ID), metadataMap.get(VERSION_KEY));

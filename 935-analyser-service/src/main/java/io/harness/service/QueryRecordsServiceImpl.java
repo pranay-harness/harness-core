@@ -22,7 +22,7 @@ public class QueryRecordsServiceImpl implements QueryRecordsService {
 
   @Override
   public Map<QueryRecordKey, List<QueryRecordEntity>> findAllEntries() {
-    int page = 1;
+    int page = 0;
     List<QueryRecordEntity> queryRecordEntityList;
     Map<QueryRecordKey, List<QueryRecordEntity>> result = new HashMap<>();
     do {
