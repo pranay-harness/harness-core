@@ -20,7 +20,11 @@ import io.harness.delegate.task.aws.AwsSamTaskNGResponse;
 import io.harness.delegate.task.aws.AwsSamTaskParameters;
 import io.harness.delegate.task.aws.AwsSamTaskType;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
+import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
 import io.harness.executions.steps.ExecutionNodeType;
+import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.UnitProgress;
+import io.harness.ngpipeline.common.ParameterFieldHelper;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollback;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -122,6 +126,7 @@ public class SamDeployStep extends TaskExecutableWithRollback<AwsSamTaskNGRespon
             .stackName(stepParametersSpec.getStackName())
             .timeoutInMillis(
                 StepUtils.getTimeoutMillis(stepParameters.getTimeout(), TerraformConstants.DEFAULT_TIMEOUT))
+            .s3BucketName(stepParametersSpec.s3BucketName)
             .build();
 
     TaskData taskData =
@@ -140,6 +145,18 @@ public class SamDeployStep extends TaskExecutableWithRollback<AwsSamTaskNGRespon
   @Override
   public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepParameters,
       ThrowingSupplier<AwsSamTaskNGResponse> responseDataSupplier) throws Exception {
-    return null;
+    StepResponse.StepResponseBuilder stepResponseBuilder = StepResponse.builder();
+
+    AwsSamTaskNGResponse taskResponse = responseDataSupplier.get();
+    List<UnitProgress> unitProgresses = taskResponse.getUnitProgressData() == null
+        ? Collections.emptyList()
+        : taskResponse.getUnitProgressData().getUnitProgresses();
+    stepResponseBuilder.unitProgressList(unitProgresses)
+        .status(StepUtils.getStepStatus(taskResponse.getCommandExecutionStatus()));
+
+    if (CommandExecutionStatus.SUCCESS == taskResponse.getCommandExecutionStatus()) {
+      //      addStepOutcomeToStepResponse(stepResponseBuilder, taskResponse);
+    }
+    return stepResponseBuilder.build();
   }
 }

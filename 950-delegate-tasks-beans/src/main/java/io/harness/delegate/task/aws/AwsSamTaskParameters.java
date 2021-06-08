@@ -15,6 +15,7 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import lombok.Builder;
@@ -41,18 +42,21 @@ public class AwsSamTaskParameters
   long timeoutInMillis;
   List<EncryptedDataDetail> awsConnectorEncryptionDetails;
 
+  String s3BucketName;
+
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    List<ExecutionCapability> capabilities = ProcessExecutionCapabilityHelper.generateExecutionCapabilitiesForTerraform(
-        configFile.getGitStoreDelegateConfig().getEncryptedDataDetails(), maskingEvaluator);
-    if (configFile != null) {
-      capabilities.add(GitConnectionNGCapability.builder()
-                           .gitConfig((GitConfigDTO) configFile.getGitStoreDelegateConfig().getGitConfigDTO())
-                           .encryptedDataDetails(configFile.getGitStoreDelegateConfig().getEncryptedDataDetails())
-                           .sshKeySpecDTO(configFile.getGitStoreDelegateConfig().getSshKeySpecDTO())
-                           .build());
-    }
+    //    List<ExecutionCapability> capabilities =
+    //    ProcessExecutionCapabilityHelper.generateExecutionCapabilitiesForTerraform(
+    //        configFile.getGitStoreDelegateConfig().getEncryptedDataDetails(), maskingEvaluator);
+    //    if (configFile != null) {
+    //      capabilities.add(GitConnectionNGCapability.builder()
+    //                           .gitConfig((GitConfigDTO) configFile.getGitStoreDelegateConfig().getGitConfigDTO())
+    //                           .encryptedDataDetails(configFile.getGitStoreDelegateConfig().getEncryptedDataDetails())
+    //                           .sshKeySpecDTO(configFile.getGitStoreDelegateConfig().getSshKeySpecDTO())
+    //                           .build());
+    //    }
 
-    return capabilities;
+    return Collections.emptyList();
   }
 }

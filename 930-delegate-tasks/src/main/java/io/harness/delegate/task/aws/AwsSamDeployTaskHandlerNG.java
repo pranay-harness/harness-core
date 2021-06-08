@@ -82,7 +82,7 @@ public class AwsSamDeployTaskHandlerNG extends AwsSamAbstractTaskHandler {
           awsConnectorDTO.getCredential().getAwsCredentialType(), encryptedDataDetails);
 
       String awsSecretsExportCommand = format("export AWS_ACCESS_KEY_ID=%s && export AWS_SECRET_ACCESS_KEY=%s && ",
-          awsConfig.getAwsAccessKeyCredential().getAccessKey(), awsConfig.getAwsAccessKeyCredential().getSecretKey());
+          awsConfig.getAwsAccessKeyCredential().getAccessKey(), String.valueOf(awsConfig.getAwsAccessKeyCredential().getSecretKey()));
 
       if (isEmpty(awsConfig.getAwsAccessKeyCredential().getAccessKey())
           || isEmpty(awsConfig.getAwsAccessKeyCredential().getSecretKey())) {
@@ -92,6 +92,17 @@ public class AwsSamDeployTaskHandlerNG extends AwsSamAbstractTaskHandler {
       String samCustomCommandParams = EmptyPredicate.isNotEmpty(taskParameters.getGlobalAdditionalFlags())
           ? format("%s &&", taskParameters.getGlobalAdditionalFlags())
           : "";
+      samCustomCommandParams = format("%s --region %s", samCustomCommandParams, taskParameters.getRegion());
+      if (isNotEmpty(taskParameters.getOverrides())) {
+        StringBuilder overrideCommand = new StringBuilder();
+        overrideCommand.append("--parameter-overrides ");
+        for (Map.Entry<String, String> override : taskParameters.getOverrides().entrySet()) {
+          overrideCommand.append(override.getKey()).append("=").append(override.getValue()).append(" ");
+        }
+
+        samCustomCommandParams = format("%s %s", samCustomCommandParams, overrideCommand);
+      }
+
       String samBuildCommand = format("%s sam build %s", awsSecretsExportCommand, samCustomCommandParams);
       Map<String, String> envVariables = new HashMap<>();
       CliResponse samBuildCliResponse =
@@ -106,7 +117,8 @@ public class AwsSamDeployTaskHandlerNG extends AwsSamAbstractTaskHandler {
             .build();
       }
 
-      String samDeployCommand = format("%s sam deploy %s", awsSecretsExportCommand, samCustomCommandParams);
+      String samDeployCommand = format("%s sam deploy %s --stack-name %s --s3-bucket %s --capabilities CAPABILITY_IAM", awsSecretsExportCommand,
+          samCustomCommandParams, taskParameters.getStackName(), taskParameters.getS3BucketName());
       CliResponse samDeployCliResponse =
           awsSamClient.runCommand(samDeployCommand, 120000l, envVariables, awsSamAppDirectory, logCallback);
 

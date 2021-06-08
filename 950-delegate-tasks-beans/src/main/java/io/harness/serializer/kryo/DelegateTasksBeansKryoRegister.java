@@ -772,5 +772,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
 
     kryo.register(AwsSamTaskParameters.class, 543327);
     kryo.register(AwsSamTaskNGResponse.class, 543328);
+    kryo.register(AwsSamCommandUnit.class, 543329);
+    kryo.register(AwsSamTaskType.class, 543330);
   }
 }

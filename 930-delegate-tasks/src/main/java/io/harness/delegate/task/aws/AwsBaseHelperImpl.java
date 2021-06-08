@@ -74,7 +74,7 @@ public class AwsBaseHelperImpl implements AwsBaseHelper {
       String baseDir) {
     fetchConfigFileAndCloneLocally(gitBaseRequestForConfigFile, logCallback);
 
-    String workingDir = Paths.get(baseDir, AWS_SAM_APP_REPOSITORY_DIR).toString();
+    String workingDir = Paths.get(baseDir, AWS_SAM_APP_REPOSITORY_DIR, scriptPath).toString();
     try {
       ensureLocalCleanup(workingDir);
     } catch (IOException ioException) {
@@ -86,7 +86,7 @@ public class AwsBaseHelperImpl implements AwsBaseHelper {
     log.info("working Directory: " + workingDir);
     logCallback.saveExecutionLog(format("Script Directory: [%s]", workingDir), INFO, CommandExecutionStatus.RUNNING);
 
-    return workingDir;
+    return Paths.get(workingDir, scriptPath).toString();
   }
 
   public void copyFilesToWorkingDirectory(String sourceDir, String destinationDir) throws IOException {

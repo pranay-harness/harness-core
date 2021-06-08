@@ -5,7 +5,7 @@ import static java.lang.String.format;
 import io.harness.cli.CliHelper;
 import io.harness.cli.CliResponse;
 import io.harness.cli.LogCallbackOutputStream;
-import io.harness.exception.TerraformCommandExecutionException;
+import io.harness.exception.AwsSamCommandExecutionException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
@@ -27,8 +27,8 @@ public class AwsSamClientImpl implements AwsSamClient {
     CliResponse response = cliHelper.executeCliCommand(command, timeoutInMillis, envVariables, workingDirectory,
         executionLogCallback, command, new LogCallbackOutputStream(executionLogCallback));
     if (response != null && response.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
-      throw new TerraformCommandExecutionException(
-          format("Failed to execute terraform Command %s : Reason: %s", command, response.getError()),
+      throw new AwsSamCommandExecutionException(
+          format("Failed to execute aws sam  Command %s : Reason: %s", command, response.getError()),
           WingsException.SRE);
     }
     return response;

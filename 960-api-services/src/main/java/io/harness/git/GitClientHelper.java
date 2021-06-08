@@ -7,19 +7,7 @@ import static io.harness.exception.WingsException.ADMIN_SRE;
 import static io.harness.exception.WingsException.NOBODY;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER_ADMIN;
-import static io.harness.git.Constants.GIT_DEFAULT_LOG_PREFIX;
-import static io.harness.git.Constants.GIT_HELM_LOG_PREFIX;
-import static io.harness.git.Constants.GIT_REPO_BASE_DIR;
-import static io.harness.git.Constants.GIT_TERRAFORM_LOG_PREFIX;
-import static io.harness.git.Constants.GIT_TERRAGRUNT_LOG_PREFIX;
-import static io.harness.git.Constants.GIT_TRIGGER_LOG_PREFIX;
-import static io.harness.git.Constants.GIT_YAML_LOG_PREFIX;
-import static io.harness.git.Constants.REPOSITORY;
-import static io.harness.git.Constants.REPOSITORY_GIT_FILE_DOWNLOADS;
-import static io.harness.git.Constants.REPOSITORY_GIT_FILE_DOWNLOADS_ACCOUNT;
-import static io.harness.git.Constants.REPOSITORY_GIT_FILE_DOWNLOADS_BASE;
-import static io.harness.git.Constants.REPOSITORY_GIT_FILE_DOWNLOADS_REPO_BASE_DIR;
-import static io.harness.git.Constants.REPOSITORY_GIT_FILE_DOWNLOADS_REPO_DIR;
+import static io.harness.git.Constants.*;
 import static io.harness.git.model.ChangeType.ADD;
 import static io.harness.git.model.ChangeType.DELETE;
 import static io.harness.git.model.ChangeType.MODIFY;
@@ -206,6 +194,9 @@ public class GitClientHelper {
 
       case HELM:
         return GIT_HELM_LOG_PREFIX;
+
+      case AWS_SAM:
+        return GIT_SAM_LOG_PREFIX;
 
       default:
         unhandled(repositoryType);
