@@ -1,6 +1,6 @@
 Portal Project Dev environment setup instructions
 ==================================================
-## On MacOS 
+## On MacOS
 
 ### Prerequisities
 1. Install Homebrew:
@@ -276,7 +276,9 @@ helper shell scripts:
 
 ### IntelliJ Setup
 
-1. Install IntelliJ community edition 2020.1.4
+1. Install IntelliJ
+   
+   **NOTE** Bazel plugin usually doesn't support the latest IntelliJ versions, so install the [last supported version](https://github.com/bazelbuild/intellij/blob/master/intellij_platform_sdk/build_defs.bzl#L11).
 2. Import `portal` as a Bazel project
    1. Open `File > Import Bazel Project...`
    1. Enter `/path/to/repo/portal` for Workspace, click Next
@@ -304,7 +306,7 @@ helper shell scripts:
    - Go to `Preferences -> Editor -> Colorscheme -> Sonarlint`. For Blocker, Critical & Major, untick "Inherit values from" checkbox and configure a different highlighting style. These violations are treated as release blockers and this configuration is to highlight them differently from regular warnings.
     ![config image](img/sonar-highlight-config.png).
    - Just right click on file in intellij and "Analyze with SonarLint" or enable autoscan.
-6. Install the [IntelliJ Checkstyle Plugin](https://plugins.jetbrains.com/plugin/1065-checkstyle-idea).
+6. Install the [Checkstyle-Idea Plugin](https://plugins.jetbrains.com/plugin/1065-checkstyle-idea).
 
    1. Run Maven build of the tools directory
       ```
@@ -322,13 +324,13 @@ helper shell scripts:
 
 9. Install bazel project plugin from the IntelliJ marketplace
 
-10. If facing build issues make sure you have enabled "Always update snapshots" in IntelliJ (Preferences > Build, Execution, Deployment > Build Tools > Maven) 
+10. If facing build issues make sure you have enabled "Always update snapshots" in IntelliJ (Preferences > Build, Execution, Deployment > Build Tools > Maven)
 
 
 ### Run from IntelliJ
 
 Run configurations for the different applications are already checked into the repo. Choose the appropriate run configuration from the menu.
-While running an app from pre checked in configs, Add JAVA_HOME as an environment variable in Intellij. 
+While running an app from pre checked in configs, Add JAVA_HOME as an environment variable in Intellij.
 ![Run configuration menu](img/run_configs.png)
 
 
@@ -352,11 +354,11 @@ Alternatively, use Fish shell: `brew install fish` then set iterms command to `/
 1. Make sure your mongodb is running first.
 
 2. Run API Server (WingsApplication): [Run > Run... > WingsApplication]
-    * If you get ALPN processor missing at start of WingsApp execute following maven command 
-     
+    * If you get ALPN processor missing at start of WingsApp execute following maven command
+
         `mvn dependency:get -Dartifact=org.mortbay.jetty.alpn:alpn-boot:8.1.13.v20181017`
 
-3. Run DataGenApp: [Run > Run... > DataGenApp]. Add HARNESS_GENERATION_PASSPHRASE environment variable to DataGenApp config in intellij. 
+3. Run DataGenApp: [Run > Run... > DataGenApp]. Add HARNESS_GENERATION_PASSPHRASE environment variable to DataGenApp config in intellij.
 
 4. Run DelegateApplication: [Run > Run... > DelegateApplication]
 
@@ -376,8 +378,8 @@ The admin username and password are in BaseIntegrationTest.java.
     * If you have `jsse.jar` but still getting that error, then make sure the default JDK for your maven module is set correctly in IntelliJ. Right Click Module in left sidebar > Open Module Settings > Platform Settings > SDKs)
 * If you go to https://localhost:8000/#/login and don't see content, go to https://localhost:8181/#/login to enable the certificate then try again.
 * If still face not able to login then got to https://localhost:9090/api/version and enable certificate and try again.
-* If you get ALPN processor missing at start of WingsApp execute following maven command 
- 
+* If you get ALPN processor missing at start of WingsApp execute following maven command
+
     `mvn dependency:get -Dartifact=org.mortbay.jetty.alpn:alpn-boot:8.1.13.v20181017`
 
 ### Python
@@ -550,7 +552,7 @@ bazel run //commons/go/lib/logs:go_default_test # an example
 ### Build images
 We have added flexibilities of building docker images with bazel. <br/>
 Docker rule reference: https://github.com/bazelbuild/rules_docker. <br/>
-To build docker images through bazel locally(i.e. access private images, push etc) we need to configure gcloud auth for docker. You can run these 
+To build docker images through bazel locally(i.e. access private images, push etc) we need to configure gcloud auth for docker. You can run these
 commands to configure it locally:
 ```
 gcloud components install docker-credential-gcr
@@ -583,10 +585,10 @@ cd bazel-gazelle
 git reset origin/release-0.21 --hard
 cd cmd/gazelle
 baselisk build gazelle
-$(bazelisk info bazel-bin)/cmd/gazelle/gazelle_/gazelle 
+$(bazelisk info bazel-bin)/cmd/gazelle/gazelle_/gazelle
 # it expands out to something like below, giving the 0.21 binary
 /home/tp/.cache/bazel/_bazel_tp/46ccc68b31f8c833946cfcd24410eb45/execroot/bazel_gazelle/bazel-out/k8-fastbuild/bin/cmd/gazelle/gazelle_/gazelle
-``` 
+```
 
 #### Using gazelle to fix dependencies.
 This can now be used in `portal` to fix dependencies.
