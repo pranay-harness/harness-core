@@ -1267,6 +1267,12 @@ public class DelegateServiceImpl implements DelegateService {
               .put("scmVersion", mainConfiguration.getScmVersion())
               .put("delegateGrpcServicePort", String.valueOf(delegateGrpcConfig.getPort()))
               .put("kubernetesAccountLabel", getAccountIdentifier(inquiry.getAccountId()));
+
+      if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES_ONPREM) {
+        params.put("managerTarget", mainConfiguration.getGrpcOnpremDelegateClientConfig().getTarget());
+        params.put("managerAuthority", mainConfiguration.getGrpcOnpremDelegateClientConfig().getAuthority());
+      }
+
       if (isNotBlank(inquiry.getDelegateName())) {
         params.put("delegateName", inquiry.getDelegateName());
       }
