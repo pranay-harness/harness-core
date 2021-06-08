@@ -62,7 +62,7 @@ public class ServiceInfoServiceImpl implements ServiceInfoService {
         return true;
       }
       Query query = query(where("serviceId").is(serviceId));
-      Update update = new Update().set("latestVersion", version).addToSet("versions", version);
+      Update update = new Update().set("latestVersion", version).push("versions", version);
       ServiceInfo andModify = mongoTemplate.findAndModify(query, update, ServiceInfo.class);
       serviceInfoCache.put(serviceId, Optional.ofNullable(andModify));
       return andModify != null;

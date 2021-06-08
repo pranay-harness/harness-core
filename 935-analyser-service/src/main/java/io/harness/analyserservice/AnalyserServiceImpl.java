@@ -9,14 +9,19 @@ import io.harness.event.OverviewResponse;
 import io.harness.event.QueryAlertCategory;
 import io.harness.event.QueryStats;
 import io.harness.event.QueryStats.QueryStatsKeys;
+import io.harness.exception.GeneralException;
 import io.harness.repositories.QueryStatsRepository;
 import io.harness.serviceinfo.ServiceInfo;
 import io.harness.serviceinfo.ServiceInfoService;
+import io.harness.serviceinfo.ServiceInfoServiceImpl;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -56,10 +61,13 @@ public class AnalyserServiceImpl implements AnalyserService {
     return newQueryStats;
   }
 
+  @SneakyThrows
   @Override
   public List<OverviewResponse> getOverview() {
-    List<ServiceInfo> serviceInfos = serviceInfoService.getAllServices();
+    List<String> serviceNames =
+        serviceInfoService.getAllServices().stream().map(ServiceInfo::getServiceId).collect(Collectors.toList());
     List<OverviewResponse> responses = new ArrayList<>();
+    List<ServiceInfo> serviceInfos = serviceInfoService.getAllServices();
     for (ServiceInfo serviceInfo : serviceInfos) {
       List<QueryStats> queryStats =
           queryStatsRepository.findByServiceIdAndVersion(serviceInfo.getServiceId(), serviceInfo.getLatestVersion());
@@ -72,6 +80,34 @@ public class AnalyserServiceImpl implements AnalyserService {
     }
     return responses;
   }
+
+  @SneakyThrows
+  @Override
+  public List<QueryStats> getNewQueriesInLatestVersion(String serviceName) {
+    Optional<ServiceInfo> serviceInfoOptional =
+        ((ServiceInfoServiceImpl) serviceInfoService).serviceInfoCache.get(serviceName);
+    if (!serviceInfoOptional.isPresent()) {
+      throw new GeneralException("Failed to get version information");
+    }
+    List<String> versions = serviceInfoOptional.get().getVersions();
+    String latestVersion = serviceInfoOptional.get().getLatestVersion();
+    List<QueryStats> latestQueries = queryStatsRepository.findByServiceIdAndVersion(serviceName, latestVersion);
+    if (versions.size() == 1) {
+      return latestQueries;
+    }
+    String previousVersion = versions.get(versions.size() - 2);
+    List<QueryStats> previousQueries = queryStatsRepository.findByServiceIdAndVersion(serviceName, previousVersion);
+    latestQueries.removeAll(previousQueries);
+    return latestQueries;
+  }
+
+  public List<QueryStats> getQueryByService(String serviceName) {
+    return ((List<QueryStats>) queryStatsRepository.findAll())
+        .stream()
+        .filter(e -> e.getServiceId().equals(serviceName))
+        .collect(Collectors.toList());
+  }
+
   boolean checkNotEmpty(List<AlertMetadata> list) {
     return list != null && list.size() > 0;
   }

@@ -12,4 +12,5 @@ public interface AnalyserService {
   List<QueryStats> getQueryStats(String service, String version, QueryAlertCategory alertCategory);
   List<QueryStats> getDisjointQueries(String service, String oldVersion, String newVersion);
   List<OverviewResponse> getOverview();
+  List<QueryStats> getNewQueriesInLatestVersion(String serviceName);
 }
