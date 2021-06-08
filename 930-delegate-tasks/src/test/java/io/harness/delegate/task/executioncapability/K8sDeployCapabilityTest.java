@@ -23,9 +23,9 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsD
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
+import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
@@ -78,8 +78,9 @@ public class K8sDeployCapabilityTest extends CategoryTest {
             .k8sInfraDelegateConfig(k8sInfraDelegateConfig)
             .manifestDelegateConfig(
                 K8sManifestDelegateConfig.builder()
-                    .storeDelegateConfig(
-                        GitStoreDelegateConfig.builder().gitConfigDTO(GitConfigDTO.builder().build()).build())
+                    .storeDelegateConfig(GitStoreDelegateConfig.builder()
+                                             .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).build())
+                                             .build())
                     .build())
             .build();
 
@@ -88,7 +89,7 @@ public class K8sDeployCapabilityTest extends CategoryTest {
     assertThat(executionCapabilities).isNotEmpty();
     assertThat(executionCapabilities.size()).isEqualTo(2);
     assertThat(executionCapabilities.get(0)).isInstanceOf(SelectorCapability.class);
-    assertThat(executionCapabilities.get(1)).isInstanceOf(GitConnectionNGCapability.class);
+    assertThat(executionCapabilities.get(1)).isInstanceOf(HttpConnectionExecutionCapability.class);
   }
 
   @Test
@@ -122,8 +123,9 @@ public class K8sDeployCapabilityTest extends CategoryTest {
             .k8sInfraDelegateConfig(k8sInfraDelegateConfig)
             .manifestDelegateConfig(
                 K8sManifestDelegateConfig.builder()
-                    .storeDelegateConfig(
-                        GitStoreDelegateConfig.builder().gitConfigDTO(GitConfigDTO.builder().build()).build())
+                    .storeDelegateConfig(GitStoreDelegateConfig.builder()
+                                             .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).build())
+                                             .build())
                     .build())
             .build();
 
@@ -132,7 +134,7 @@ public class K8sDeployCapabilityTest extends CategoryTest {
     assertThat(executionCapabilities).isNotEmpty();
     assertThat(executionCapabilities.size()).isEqualTo(2);
     assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
-    assertThat(executionCapabilities.get(1)).isInstanceOf(GitConnectionNGCapability.class);
+    assertThat(executionCapabilities.get(1)).isInstanceOf(HttpConnectionExecutionCapability.class);
   }
 
   @Test
@@ -154,8 +156,9 @@ public class K8sDeployCapabilityTest extends CategoryTest {
             .k8sInfraDelegateConfig(k8sInfraDelegateConfig)
             .manifestDelegateConfig(
                 K8sManifestDelegateConfig.builder()
-                    .storeDelegateConfig(
-                        GitStoreDelegateConfig.builder().gitConfigDTO(GitConfigDTO.builder().build()).build())
+                    .storeDelegateConfig(GitStoreDelegateConfig.builder()
+                                             .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).build())
+                                             .build())
                     .build())
             .build();
 
@@ -164,7 +167,7 @@ public class K8sDeployCapabilityTest extends CategoryTest {
     assertThat(executionCapabilities).isNotEmpty();
     assertThat(executionCapabilities.size()).isEqualTo(2);
     assertThat(executionCapabilities.get(0)).isInstanceOf(SelectorCapability.class);
-    assertThat(executionCapabilities.get(1)).isInstanceOf(GitConnectionNGCapability.class);
+    assertThat(executionCapabilities.get(1)).isInstanceOf(HttpConnectionExecutionCapability.class);
   }
 
   @Test
@@ -190,8 +193,9 @@ public class K8sDeployCapabilityTest extends CategoryTest {
             .k8sInfraDelegateConfig(k8sInfraDelegateConfig)
             .manifestDelegateConfig(
                 K8sManifestDelegateConfig.builder()
-                    .storeDelegateConfig(
-                        GitStoreDelegateConfig.builder().gitConfigDTO(GitConfigDTO.builder().build()).build())
+                    .storeDelegateConfig(GitStoreDelegateConfig.builder()
+                                             .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).build())
+                                             .build())
                     .build())
             .build();
 
@@ -200,7 +204,7 @@ public class K8sDeployCapabilityTest extends CategoryTest {
     assertThat(executionCapabilities).isNotEmpty();
     assertThat(executionCapabilities.size()).isEqualTo(2);
     assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
-    assertThat(executionCapabilities.get(1)).isInstanceOf(GitConnectionNGCapability.class);
+    assertThat(executionCapabilities.get(1)).isInstanceOf(HttpConnectionExecutionCapability.class);
   }
 
   @Test
@@ -466,8 +470,9 @@ public class K8sDeployCapabilityTest extends CategoryTest {
             .k8sInfraDelegateConfig(k8sInfraDelegateConfig)
             .manifestDelegateConfig(
                 KustomizeManifestDelegateConfig.builder()
-                    .storeDelegateConfig(
-                        GitStoreDelegateConfig.builder().gitConfigDTO(GitConfigDTO.builder().build()).build())
+                    .storeDelegateConfig(GitStoreDelegateConfig.builder()
+                                             .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).build())
+                                             .build())
                     .pluginPath(pluginPath)
                     .build())
             .build();
@@ -479,7 +484,7 @@ public class K8sDeployCapabilityTest extends CategoryTest {
     assertThat(executionCapabilities.get(0)).isInstanceOf(KustomizeCapability.class);
     KustomizeCapability kustomizeCapability = (KustomizeCapability) executionCapabilities.get(0);
     assertThat(kustomizeCapability.getPluginRootDir()).isEqualTo(pluginPath);
-    assertThat(executionCapabilities.get(1)).isInstanceOf(GitConnectionNGCapability.class);
+    assertThat(executionCapabilities.get(1)).isInstanceOf(HttpConnectionExecutionCapability.class);
   }
 
   @Test
@@ -501,8 +506,9 @@ public class K8sDeployCapabilityTest extends CategoryTest {
             .k8sInfraDelegateConfig(k8sInfraDelegateConfig)
             .manifestDelegateConfig(
                 KustomizeManifestDelegateConfig.builder()
-                    .storeDelegateConfig(
-                        GitStoreDelegateConfig.builder().gitConfigDTO(GitConfigDTO.builder().build()).build())
+                    .storeDelegateConfig(GitStoreDelegateConfig.builder()
+                                             .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).build())
+                                             .build())
                     .pluginPath(pluginPath)
                     .build())
             .build();
@@ -511,6 +517,6 @@ public class K8sDeployCapabilityTest extends CategoryTest {
         rollingRequest.fetchRequiredExecutionCapabilities(expressionEvaluator);
     assertThat(executionCapabilities).isNotEmpty();
     assertThat(executionCapabilities.size()).isEqualTo(1);
-    assertThat(executionCapabilities.get(0)).isInstanceOf(GitConnectionNGCapability.class);
+    assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
   }
 }

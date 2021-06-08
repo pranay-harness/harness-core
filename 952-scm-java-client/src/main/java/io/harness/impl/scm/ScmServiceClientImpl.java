@@ -41,11 +41,15 @@ import io.harness.product.ci.scm.proto.FindFilesInCommitRequest;
 import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
 import io.harness.product.ci.scm.proto.FindFilesInPRRequest;
 import io.harness.product.ci.scm.proto.FindFilesInPRResponse;
+import io.harness.product.ci.scm.proto.GetAuthenticatedUserRequest;
+import io.harness.product.ci.scm.proto.GetAuthenticatedUserResponse;
 import io.harness.product.ci.scm.proto.GetBatchFileRequest;
 import io.harness.product.ci.scm.proto.GetFileRequest;
 import io.harness.product.ci.scm.proto.GetLatestCommitRequest;
 import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
 import io.harness.product.ci.scm.proto.GetLatestFileRequest;
+import io.harness.product.ci.scm.proto.GetUserReposRequest;
+import io.harness.product.ci.scm.proto.GetUserReposResponse;
 import io.harness.product.ci.scm.proto.IsLatestFileRequest;
 import io.harness.product.ci.scm.proto.IsLatestFileResponse;
 import io.harness.product.ci.scm.proto.ListBranchesRequest;
@@ -549,6 +553,20 @@ public class ScmServiceClientImpl implements ScmServiceClient {
         .setProvider(gitProvider)
         .setPagination(PageRequest.newBuilder().setPage(1).build())
         .build();
+  }
+
+  @Override
+  public GetAuthenticatedUserResponse getAuthenticatedUser(
+      ScmConnector scmConnector, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+    return scmBlockingStub.getAuthenticatedUser(
+        GetAuthenticatedUserRequest.newBuilder().setProvider(gitProvider).build());
+  }
+
+  @Override
+  public GetUserReposResponse getUserRepos(ScmConnector scmConnector, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+    return scmBlockingStub.getUserRepos(GetUserReposRequest.newBuilder().setProvider(gitProvider).build());
   }
 
   private CreateBranchResponse createNewBranchFromDefault(String slug, Provider gitProvider, String branch,

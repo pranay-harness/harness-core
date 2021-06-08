@@ -1,5 +1,6 @@
 package io.harness.connector.validator.scmValidators;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.connector.scm.GitConnectionType.ACCOUNT;
 
 import static software.wings.beans.TaskType.NG_GIT_COMMAND;
@@ -8,6 +9,7 @@ import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.validator.AbstractConnectorValidator;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
@@ -23,6 +25,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -32,14 +35,26 @@ public abstract class AbstractGitConnectorValidator extends AbstractConnectorVal
   @Override
   public <T extends ConnectorConfigDTO> TaskParameters getTaskParameters(
       T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    GitConfigDTO gitConfig = (GitConfigDTO) connectorConfig;
+    final GitConfigDTO gitConfig = getGitConfigFromConnectorConfig(connectorConfig);
     SSHKeySpecDTO sshKeySpecDTO =
         gitConfigAuthenticationInfoHelper.getSSHKey(gitConfig, accountIdentifier, orgIdentifier, projectIdentifier);
     NGAccess ngAccess = getNgAccess(accountIdentifier, orgIdentifier, projectIdentifier);
-    List<EncryptedDataDetail> encryptedDataDetails =
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+
+    List<EncryptedDataDetail> authenticationEncryptedDataDetails =
         gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfig, sshKeySpecDTO, ngAccess);
+    if (isNotEmpty(authenticationEncryptedDataDetails)) {
+      encryptedDataDetails.addAll(authenticationEncryptedDataDetails);
+    }
+    List<EncryptedDataDetail> apiAccessEncryptedDataDetail =
+        gitConfigAuthenticationInfoHelper.getApiAccessEncryptedDataDetail((ScmConnector) connectorConfig, ngAccess);
+    if (isNotEmpty(apiAccessEncryptedDataDetail)) {
+      encryptedDataDetails.addAll(apiAccessEncryptedDataDetail);
+    }
+
     return GitCommandParams.builder()
         .gitConfig(gitConfig)
+        .scmConnector((ScmConnector) connectorConfig)
         .sshKeySpecDTO(sshKeySpecDTO)
         .gitCommandType(GitCommandType.VALIDATE)
         .encryptionDetails(encryptedDataDetails)
@@ -107,7 +122,7 @@ public abstract class AbstractGitConnectorValidator extends AbstractConnectorVal
     }
     validateFieldsPresent(gitConfig);
     GitCommandExecutionResponse gitCommandExecutionResponse = (GitCommandExecutionResponse) super.validateConnector(
-        gitConfig, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+        connectorConfigDTO, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return buildConnectorValidationResult(gitCommandExecutionResponse);
   }
 }
