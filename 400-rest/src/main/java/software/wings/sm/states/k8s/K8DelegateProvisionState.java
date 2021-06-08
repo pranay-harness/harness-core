@@ -47,7 +47,6 @@ import org.checkerframework.checker.units.qual.K;
 import org.mongodb.morphia.annotations.Transient;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
-import sun.jvm.hotspot.debugger.ThreadContext;
 
 @FieldNameConstants(innerTypeName = "K8DelegateSpawnStateKeys")
 @Attributes
