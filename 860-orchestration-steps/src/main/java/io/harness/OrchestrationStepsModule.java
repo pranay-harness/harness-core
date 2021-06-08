@@ -45,11 +45,9 @@ public class OrchestrationStepsModule extends AbstractModule {
   @Named("cfPipelineAPI")
   CFApi providesCfAPI() {
     ApiClient apiClient = new ApiClient();
-
     if (configuration != null) {
       apiClient.setBasePath(configuration.getFfServerBaseUrl());
     }
-
     return new CFApi(apiClient);
   }
 
