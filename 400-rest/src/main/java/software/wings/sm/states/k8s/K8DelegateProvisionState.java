@@ -1,6 +1,8 @@
 package software.wings.sm.states.k8s;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesHelperService;
@@ -28,6 +30,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
@@ -104,11 +107,15 @@ public class K8DelegateProvisionState extends State implements SweepingOutputSta
         log.info("Delegate is not up yet, sleeping for 10 seconds.");
         Thread.sleep(10000);
       }
+
+      cvActivityLogService.getLoggerByStateExecutionId(context.getAccountId(), context.getStateExecutionInstanceId())
+          .info("Delegate is up and running!");
+      log.info("Delegate is up and running");
     } catch (IOException | InterruptedException e) {
       log.error("Exception while provisioning delegate", e);
       throw new WingsException("Exception while provisioning delegate", e);
     }
-    return null;
+    return ExecutionResponse.builder().async(false).executionStatus(ExecutionStatus.SUCCESS).build();
   }
 
   @Override
