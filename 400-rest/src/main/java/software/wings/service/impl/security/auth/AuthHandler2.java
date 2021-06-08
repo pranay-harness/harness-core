@@ -297,15 +297,33 @@ public class AuthHandler2 {
     return permissionMap;
   }
 
-  private Map<Action, Set<EntityInfo>> buildActionPipelineMap(
-      Map<Action, Set<EntityInfo>> permissionMap, Multimap<EntityInfo, Action> pipelineIdActionMap) {
+  private Map<Action, Set<Base>> buildActionEntityMapFullEntity(
+          Map<Action, Set<Base>> permissionMap, Set<Base> entityIdSet, Set<Action> actionSet) {
     if (permissionMap == null) {
       permissionMap = new HashMap<>();
     }
 
-    Map<Action, Set<EntityInfo>> finalPermissionMap = permissionMap;
+    Map<Action, Set<Base>> finalPermissionMap = permissionMap;
+    actionSet.forEach(action -> {
+      Set<Base> existingEntityIdSet = finalPermissionMap.get(action);
+      if (isEmpty(existingEntityIdSet)) {
+        existingEntityIdSet = new HashSet<>();
+        finalPermissionMap.put(action, existingEntityIdSet);
+      }
+      existingEntityIdSet.addAll(entityIdSet);
+    });
+    return permissionMap;
+  }
+
+  private Map<Action, Set<Base>> buildActionPipelineMap(
+      Map<Action, Set<Base>> permissionMap, Multimap<Base, Action> pipelineIdActionMap) {
+    if (permissionMap == null) {
+      permissionMap = new HashMap<>();
+    }
+
+    Map<Action, Set<Base>> finalPermissionMap = permissionMap;
     pipelineIdActionMap.forEach((pipelineEntity, action) -> {
-      Set<EntityInfo> existingPipelineIdSet = finalPermissionMap.get(action);
+      Set<Base> existingPipelineIdSet = finalPermissionMap.get(action);
       if (isEmpty(existingPipelineIdSet)) {
         existingPipelineIdSet = new HashSet<>();
         finalPermissionMap.put(action, existingPipelineIdSet);
@@ -442,16 +460,16 @@ public class AuthHandler2 {
             finalAppPermissionSummary.setWorkflowUpdatePermissionsForEnvs(updatedEnvIdSet);
           }
 
-          Set<EntityInfo> entityIds =
-              getWorkflowIdsByFilter(permissionTypeAppIdEntityMap.get(permissionType).get(appId),
+          Set<Base> workflows = getWorkflowsByFilter(permissionTypeAppIdEntityMap.get(permissionType).get(appId),
                   permissionTypeAppIdEntityMap.get(ENV).get(appId), (WorkflowFilter) entityFilter);
 
-          if (isEmpty(entityIds)) {
+
+          if (isEmpty(workflows)) {
             break;
           }
 
-          Map<Action, Set<EntityInfo>> actionEntityIdMap =
-              buildActionEntityMap(finalAppPermissionSummary.getWorkflowPermissions(), entityIds, entityActions);
+          Map<Action, Set<Base>> actionEntityIdMap =
+                  buildActionEntityMapFullEntity(finalAppPermissionSummary.getWorkflowPermissions(), workflows, entityActions);
           finalAppPermissionSummary.setWorkflowPermissions(actionEntityIdMap);
           break;
         }
@@ -459,15 +477,17 @@ public class AuthHandler2 {
           if (isEmpty(entityActions)) {
             break;
           }
-          Set<EntityInfo> entityIds = getDeploymentIdsByFilter(permissionTypeAppIdEntityMap.get(WORKFLOW).get(appId),
+
+
+          Set<Base> entityIds = getDeploymentsByFilter(permissionTypeAppIdEntityMap.get(WORKFLOW).get(appId),
               permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter, appId);
 
           if (isEmpty(entityIds)) {
             break;
           }
 
-          Map<Action, Set<EntityInfo>> actionEntityIdMap =
-              buildActionEntityMap(finalAppPermissionSummary.getDeploymentPermissions(), entityIds, entityActions);
+          Map<Action, Set<Base>> actionEntityIdMap =
+                  buildActionEntityMapFullEntity(finalAppPermissionSummary.getDeploymentPermissions(), entityIds, entityActions);
           finalAppPermissionSummary.setDeploymentPermissions(actionEntityIdMap);
 
           Set<String> envIdSet =
@@ -552,7 +572,7 @@ public class AuthHandler2 {
       SetView<Action> intersection = Sets.intersection(fixedEntityActions, actions);
       Set<Action> entityActions = new HashSet<>(intersection);
       AppPermissionSummaryWithName finalAppPermissionSummary = appPermissionSummary;
-      Multimap<EntityInfo, Action> pipelineIdActionMap;
+      Multimap<Base, Action> pipelineIdActionMap;
       switch (permissionType) {
         case PIPELINE:
           Set<String> envIdSet = null;
@@ -581,7 +601,7 @@ public class AuthHandler2 {
               permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter, envActionMap, entityActions,
               workflowCache);
 
-          Map<Action, Set<EntityInfo>> actionEntityIdMap =
+          Map<Action, Set<Base>> actionEntityIdMap =
               buildActionPipelineMap(finalAppPermissionSummary.getPipelinePermissions(), pipelineIdActionMap);
           finalAppPermissionSummary.setPipelinePermissions(actionEntityIdMap);
           break;
@@ -678,7 +698,7 @@ public class AuthHandler2 {
     PageRequest<Workflow> pageRequest =
         aPageRequest()
             .addFilter("accountId", Operator.EQ, accountId)
-            .addFieldsIncluded("_id", "appId", "envId", "templatized", "templateExpressions", "name")
+            .addFieldsIncluded("_id", "appId", "envId", "templatized", "templateExpressions", "name", "workflowType")
             .build();
 
     List<Workflow> list =
@@ -1104,7 +1124,54 @@ public class AuthHandler2 {
         .collect(Collectors.toSet());
   }
 
-  private Set<EntityInfo> getDeploymentIdsByFilter(
+  private Set<Base> getWorkflowsByFilter(
+          List<Base> workflows, List<Base> environments, WorkflowFilter workflowFilter) {
+    if (workflows == null) {
+      return new HashSet<>();
+    }
+
+    workflowFilter = getDefaultWorkflowFilterIfNull(workflowFilter);
+
+    Set<String> filterEnvIds = workflowFilter.getIds();
+    if (filterEnvIds == null) {
+      filterEnvIds = new HashSet<>();
+    }
+
+    boolean hasTemplateFilterType = workflowFilter.getFilterTypes().contains(WorkflowFilter.FilterType.TEMPLATES);
+
+    Set<String> finalFilterEnvIds = filterEnvIds;
+    WorkflowFilter finalWorkflowFilter = workflowFilter;
+
+    final Set<String> envIds;
+    if (environments != null) {
+      envIds = environments.stream()
+              .filter(environment
+                      -> finalFilterEnvIds.contains(environment.getUuid())
+                      || finalWorkflowFilter.getFilterTypes().contains(
+                      ((Environment) environment).getEnvironmentType().name()))
+              .map(Base::getUuid)
+              .collect(Collectors.toSet());
+    } else {
+      envIds = Collections.emptySet();
+    }
+
+    return workflows.stream()
+            .filter(workflow -> {
+              Workflow workflowObj = (Workflow) workflow;
+              if (isEnvTemplatized(workflowObj)) {
+                return hasTemplateFilterType;
+              }
+
+              if (workflowObj.getEnvId() == null) {
+                return true;
+              }
+
+              return envIds.contains(workflowObj.getEnvId());
+            })
+            .collect(Collectors.toSet());
+  }
+
+  private Set<Base> getDeploymentsByFilter(
       List<Base> workflows, List<Base> environments, EnvFilter envFilter, String appId) {
     WorkflowFilter workflowFilter = getWorkflowFilterFromEnvFilter(envFilter);
 
@@ -1116,7 +1183,7 @@ public class AuthHandler2 {
       }
     }
 
-    return getWorkflowIdsByFilter(workflows, environments, workflowFilter);
+    return getWorkflowsByFilter(workflows, environments, workflowFilter);
   }
 
   private WorkflowFilter getWorkflowFilterFromEnvFilter(EnvFilter envFilter) {
@@ -1190,10 +1257,10 @@ public class AuthHandler2 {
     return finalWorkflowCache;
   }
 
-  private Multimap<EntityInfo, Action> getPipelineIdsByFilter(List<Base> pipelines, List<Base> environments,
+  private Multimap<Base, Action> getPipelineIdsByFilter(List<Base> pipelines, List<Base> environments,
       EnvFilter envFilter, Multimap<String, Action> envActionMap, Set<Action> entityActionsFromCurrentPermission,
       Map<String, Workflow> workflowCache) {
-    Multimap<EntityInfo, Action> pipelineActionMap = HashMultimap.create();
+    Multimap<Base, Action> pipelineActionMap = HashMultimap.create();
     if (isEmpty(pipelines)) {
       return pipelineActionMap;
     }
@@ -1237,8 +1304,7 @@ public class AuthHandler2 {
       }
 
       if (match) {
-        pipelineActionMap.putAll(
-            EntityInfo.builder().id(pipeline.getUuid()).name(pipeline.getName()).build(), entityActions);
+        pipelineActionMap.putAll(pipeline, entityActions);
       }
     });
     return pipelineActionMap;

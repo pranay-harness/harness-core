@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 
+import software.wings.beans.Base;
 import software.wings.security.PermissionAttribute.Action;
 
 import java.util.Map;
@@ -78,10 +79,10 @@ public class AppPermissionSummaryWithName {
   private Map<Action, Set<EntityInfo>> servicePermissions;
   private Map<Action, Set<EntityInfo>> provisionerPermissions;
   private Map<Action, Set<EnvInfo>> envPermissions;
-  private Map<Action, Set<EntityInfo>> workflowPermissions;
+  private Map<Action, Set<Base>> workflowPermissions;
   // Key - action, Value - set of workflow ids / pipeline ids
-  private Map<Action, Set<EntityInfo>> deploymentPermissions;
-  private Map<Action, Set<EntityInfo>> pipelinePermissions;
+  private Map<Action, Set<Base>> deploymentPermissions;
+  private Map<Action, Set<Base>> pipelinePermissions;
 
   @Data
   @Builder
@@ -100,8 +101,8 @@ public class AppPermissionSummaryWithName {
                                       Set<String> pipelineExecutePermissionsForEnvs, Set<String> workflowExecutePermissionsForEnvs,
                                       Set<String> rollbackWorkflowExecutePermissionsForEnvs, Map<Action, Set<EntityInfo>> servicePermissions,
                                       Map<Action, Set<EntityInfo>> provisionerPermissions, Map<Action, Set<EnvInfo>> envPermissions,
-                                      Map<Action, Set<EntityInfo>> workflowPermissions, Map<Action, Set<EntityInfo>> deploymentPermissions,
-                                      Map<Action, Set<EntityInfo>> pipelinePermissions) {
+                                      Map<Action, Set<Base>> workflowPermissions, Map<Action, Set<Base>> deploymentPermissions,
+                                      Map<Action, Set<Base>> pipelinePermissions) {
     this.canCreateService = canCreateService;
     this.canCreateProvisioner = canCreateProvisioner;
     this.canCreateEnvironment = canCreateEnvironment;
