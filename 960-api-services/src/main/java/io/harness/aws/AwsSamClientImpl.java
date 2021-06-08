@@ -1,6 +1,7 @@
 package io.harness.aws;
 
-import com.google.inject.Inject;
+import static java.lang.String.format;
+
 import io.harness.cli.CliHelper;
 import io.harness.cli.CliResponse;
 import io.harness.cli.LogCallbackOutputStream;
@@ -9,12 +10,11 @@ import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 
-import javax.annotation.Nonnull;
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
-
-import static java.lang.String.format;
+import javax.annotation.Nonnull;
 
 public class AwsSamClientImpl implements AwsSamClient {
   @Inject CliHelper cliHelper;
@@ -24,8 +24,8 @@ public class AwsSamClientImpl implements AwsSamClient {
   public CliResponse runCommand(String command, long timeoutInMillis, Map<String, String> envVariables,
       String workingDirectory, @Nonnull LogCallback executionLogCallback)
       throws InterruptedException, TimeoutException, IOException {
-    CliResponse response = cliHelper.executeCliCommand(
-        command, timeoutInMillis, envVariables, workingDirectory, executionLogCallback, command, new LogCallbackOutputStream(executionLogCallback));
+    CliResponse response = cliHelper.executeCliCommand(command, timeoutInMillis, envVariables, workingDirectory,
+        executionLogCallback, command, new LogCallbackOutputStream(executionLogCallback));
     if (response != null && response.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
       throw new TerraformCommandExecutionException(
           format("Failed to execute terraform Command %s : Reason: %s", command, response.getError()),

@@ -32,7 +32,7 @@ public class AwsSamTaskParameters
   @NonNull String region;
   @NonNull String stackName;
   @NonNull AwsSamTaskType awsSamTaskType;
-  Map<String, Object> overrides;
+  Map<String, String> overrides;
   String globalAdditionalFlags;
 
   // To help in logging

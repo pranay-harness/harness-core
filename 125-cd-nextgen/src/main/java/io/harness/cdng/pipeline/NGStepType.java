@@ -91,7 +91,7 @@ public enum NGStepType {
   TEMPLATIZED_SECRET_MANAGER("Templatized Secret Manager", Arrays.asList(ServiceDefinitionType.values()),
       "Utilites/Non-Scripted/", StepSpecTypeConstants.PLACEHOLDER),
 
-  //SAM
+  // SAM
   @JsonProperty(StepSpecTypeConstants.AWS_SAM_DEPLOY)
   SAM_DEPLOY("SAM Deploy", Arrays.asList(ServiceDefinitionType.AWS_SAM), "AWS SAM", StepSpecTypeConstants.PLACEHOLDER);
 

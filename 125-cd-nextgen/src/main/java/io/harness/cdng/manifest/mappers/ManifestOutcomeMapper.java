@@ -1,12 +1,7 @@
 package io.harness.cdng.manifest.mappers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.cdng.manifest.ManifestType.HelmChart;
-import static io.harness.cdng.manifest.ManifestType.K8Manifest;
-import static io.harness.cdng.manifest.ManifestType.Kustomize;
-import static io.harness.cdng.manifest.ManifestType.OpenshiftParam;
-import static io.harness.cdng.manifest.ManifestType.OpenshiftTemplate;
-import static io.harness.cdng.manifest.ManifestType.VALUES;
+import static io.harness.cdng.manifest.ManifestType.*;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ngpipeline.common.ParameterFieldHelper.getBooleanParameterFieldValue;
@@ -28,16 +23,11 @@ import io.harness.cdng.manifest.yaml.OpenshiftParamManifestOutcome;
 import io.harness.cdng.manifest.yaml.S3StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
-import io.harness.cdng.manifest.yaml.kinds.HelmChartManifest;
+import io.harness.cdng.manifest.yaml.kinds.*;
 import io.harness.cdng.manifest.yaml.kinds.HelmChartManifest.HelmChartManifestKeys;
-import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest.K8sManifestKeys;
-import io.harness.cdng.manifest.yaml.kinds.KustomizeManifest;
 import io.harness.cdng.manifest.yaml.kinds.KustomizeManifest.KustomizeManifestKeys;
-import io.harness.cdng.manifest.yaml.kinds.OpenshiftManifest;
 import io.harness.cdng.manifest.yaml.kinds.OpenshiftManifest.OpenshiftManifestKeys;
-import io.harness.cdng.manifest.yaml.kinds.OpenshiftParamManifest;
-import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.pms.yaml.ParameterField;
@@ -71,9 +61,11 @@ public class ManifestOutcomeMapper {
         return getOpenshiftOutcome(manifestAttributes);
       case OpenshiftParam:
         return getOpenshiftParamOutcome(manifestAttributes);
+      case AwsSamManifest:
+        return (io.harness.cdng.manifest.yaml.kinds.AwsSamManifest) manifestAttributes;
       default:
         throw new UnsupportedOperationException(
-            format("Unknown Artifact Config type: [%s]", manifestAttributes.getKind()));
+            format("Unknown Manifest Config type: [%s]", manifestAttributes.getKind()));
     }
   }
 

@@ -24,9 +24,8 @@ import java.util.function.Consumer;
 public class AwsSamTaskHandlerNG extends AbstractDelegateRunnableTask {
   @Inject private Map<AwsSamTaskType, AwsSamAbstractTaskHandler> awsSamAbstractTaskHandlerMap;
 
-  public AwsSamTaskHandlerNG(DelegateTaskPackage delegateTaskPackage,
-                             ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> consumer,
-                             BooleanSupplier preExecute) {
+  public AwsSamTaskHandlerNG(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
+      Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
   }
 

@@ -14,7 +14,7 @@ import javax.annotation.Nonnull;
 @OwnedBy(HarnessTeam.CDP)
 public interface AwsSamClient {
   @Nonnull
-  public CliResponse runCommand(String command, long timeoutInMillis,
-      Map<String, String> envVariables, String scriptDirectory, @Nonnull LogCallback executionLogCallback)
+  public CliResponse runCommand(String command, long timeoutInMillis, Map<String, String> envVariables,
+      String scriptDirectory, @Nonnull LogCallback executionLogCallback)
       throws InterruptedException, TimeoutException, IOException;
 }

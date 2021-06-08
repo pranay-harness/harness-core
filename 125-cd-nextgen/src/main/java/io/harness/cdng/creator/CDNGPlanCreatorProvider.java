@@ -163,7 +163,8 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
                                      .setFeatureFlag(FeatureName.NG_PROVISIONERS.name())
                                      .build();
 
-    StepInfo awsSamDeploy = StepInfo.newBuilder()
+    StepInfo awsSamDeploy =
+        StepInfo.newBuilder()
             .setName("AWS SAM Deploy")
             .setType(StepSpecTypeConstants.AWS_SAM_DEPLOY)
             .setStepMetaData(StepMetaData.newBuilder().addCategory("AwsSam").setFolderPath("AWS SAM").build())

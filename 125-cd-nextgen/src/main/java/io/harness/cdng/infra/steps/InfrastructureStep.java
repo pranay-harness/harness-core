@@ -119,6 +119,8 @@ public class InfrastructureStep implements SyncExecutableWithRbac<Infrastructure
         validateExpression(k8sGcpInfrastructure.getConnectorRef(), k8sGcpInfrastructure.getNamespace(),
             k8sGcpInfrastructure.getReleaseName(), k8sGcpInfrastructure.getCluster());
         break;
+      case InfrastructureKind.AWS_SAM_INFRA:
+        break;
       default:
         throw new InvalidArgumentsException(format("Unknown Infrastructure Kind : [%s]", infrastructure.getKind()));
     }

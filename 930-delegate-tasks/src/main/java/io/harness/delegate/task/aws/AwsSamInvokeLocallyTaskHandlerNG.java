@@ -90,8 +90,8 @@ public class AwsSamInvokeLocallyTaskHandlerNG extends AwsSamAbstractTaskHandler 
       }
 
       String samCustomCommandParams = EmptyPredicate.isNotEmpty(taskParameters.getGlobalAdditionalFlags())
-              ? format("%s &&", taskParameters.getGlobalAdditionalFlags())
-              : "";
+          ? format("%s &&", taskParameters.getGlobalAdditionalFlags())
+          : "";
       String samBuildCommand = format("%s sam build %s", awsSecretsExportCommand, samCustomCommandParams);
       Map<String, String> envVariables = new HashMap<>();
       CliResponse samBuildCliResponse =

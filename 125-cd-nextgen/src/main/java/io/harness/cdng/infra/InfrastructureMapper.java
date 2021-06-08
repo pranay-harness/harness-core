@@ -8,10 +8,7 @@ import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;
-import io.harness.cdng.infra.yaml.Infrastructure;
-import io.harness.cdng.infra.yaml.InfrastructureKind;
-import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
-import io.harness.cdng.infra.yaml.K8sGcpInfrastructure;
+import io.harness.cdng.infra.yaml.*;
 import io.harness.exception.InvalidArgumentsException;
 
 import javax.annotation.Nonnull;
@@ -41,7 +38,8 @@ public class InfrastructureMapper {
             .releaseName(k8sGcpInfrastructure.getReleaseName().getValue())
             .environment(environmentOutcome)
             .build();
-
+      case InfrastructureKind.AWS_SAM_INFRA:
+        return (AwsSamInfrastructure) infrastructure;
       default:
         throw new InvalidArgumentsException(format("Unknown Infrastructure Kind : [%s]", infrastructure.getKind()));
     }
