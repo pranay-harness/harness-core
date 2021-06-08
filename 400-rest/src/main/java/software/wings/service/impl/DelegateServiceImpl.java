@@ -1635,7 +1635,7 @@ public class DelegateServiceImpl implements DelegateService {
     return gzipDockerDelegateFile;
   }
 
-  public String getYamlForKubernetesDelegate(String managerHost, String verificationUrl, String accountId,
+  public File getYamlForKubernetesDelegate(String managerHost, String verificationUrl, String accountId,
       String delegateName, String delegateProfile, String tokenName) {
     String version;
     if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
@@ -1660,10 +1660,10 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateTokenName(tokenName)
               .build());
       saveProcessedTemplate(scriptParams, yaml, HARNESS_DELEGATE + ".yaml.ftl");
-      return FileUtils.readFileToString(yaml, "UTF-8");
+      return yaml;
     } catch (Exception ex) {
     }
-    return "Nothing";
+    return null;
   }
 
   @Override
