@@ -4,7 +4,6 @@ from queue import PriorityQueue
 MAX_NODES=5
 THRESHOLD = float(0.2)
 
-
 def getTime(num_nodes, testsWithTime):
     q = PriorityQueue()
     tests_per_node={}
@@ -73,6 +72,7 @@ for num_nodes in range(2,MAX_NODES+1):
         break
     ideal_time, ideal_test_per_node = current_time, current_tests_per_node
 
+print(" Script ran successfully")
 print(ideal_test_per_node)
 
 for i in range(5):
