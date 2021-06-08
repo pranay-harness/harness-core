@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.hackathon;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
+import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.*;
 
 import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.recommendations;
 
@@ -20,13 +21,12 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.compute.Compute;
-import com.google.api.services.compute.model.Disk;
+import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -52,7 +52,7 @@ public class OrphanDeleteDataFetcher
     BigQuery bigQuery = bigQueryService.get();
     String query = String.format(DELETE_QUERY, cloudProviderTableName, parameters.getResourceName());
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(query).build();
-    log.info("Orphan overview query: {}", query);
+    log.info("Orphan Delete query: {}", query);
     try {
       bigQuery.query(queryConfig);
     } catch (InterruptedException e) {
@@ -67,25 +67,22 @@ public class OrphanDeleteDataFetcher
     String project = "ccm-play";
     String zone = "us-central1-c";
 
-    Compute computeService = createComputeService();
-    //    Compute.Disks.Delete request = computeService.disks().delete(project, zone, disk);
-    //    Operation response = request.execute();
-
-    Compute.Disks.Get getRequest = computeService.disks().get(project, zone, resourceName);
-    Disk diskResponse = getRequest.execute();
-    log.info("Get Call Disk Response {}", diskResponse);
+    try {
+      Compute computeService = createComputeService();
+      Compute.Disks.Delete request = computeService.disks().delete(project, zone, resourceName);
+      request.execute();
+    } catch (Exception e) {
+      log.error("Exception {}", e);
+    }
   }
 
   public static Compute createComputeService() throws IOException, GeneralSecurityException {
     HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
     JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
 
-    GoogleCredential credential = GoogleCredential.getApplicationDefault();
-    if (credential.createScopedRequired()) {
-      credential = credential.createScoped(Arrays.asList("https://www.googleapis.com/auth/cloud-platform"));
-    }
-
-    return new Compute.Builder(httpTransport, jsonFactory, credential)
+    ServiceAccountCredentials serviceAccountCredentials = getCredentials(CE_GCP_CREDENTIALS_PATH);
+    GoogleCredential googleCredential = toGoogleCredential(serviceAccountCredentials);
+    return new Compute.Builder(httpTransport, jsonFactory, googleCredential)
         .setApplicationName("Google-ComputeSample/0.1")
         .build();
   }
