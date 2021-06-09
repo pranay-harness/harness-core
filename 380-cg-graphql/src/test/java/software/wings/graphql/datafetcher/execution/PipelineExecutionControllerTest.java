@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.execution;
 
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.PRABU;
 
 import static software.wings.beans.EntityType.ENVIRONMENT;
@@ -922,6 +923,40 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
                                         .build())
                 .build()))
         .build();
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldAllowMultiSelectFromAllowedValues() {
+    Pipeline pipeline = Pipeline.builder().build();
+    pipeline.getPipelineVariables().add(aVariable().name("var").allowedList(asList("1", "2", "3")).build());
+    doReturn(pipeline).when(pipelineService).readPipeline(any(), any(), eq(true));
+    doNothing().when(authService).checkIfUserAllowedToDeployPipelineToEnv(any(), anyString());
+
+    QLStartExecutionInput startExecutionInput =
+        QLStartExecutionInput.builder()
+            .applicationId(APP_ID)
+            .variableInputs(
+                asList(QLVariableInput.builder()
+                           .name("var")
+                           .variableValue(QLVariableValue.builder().type(QLVariableValueType.ID).value("2, 1").build())
+                           .build()))
+            .build();
+    MutationContext mutationContext = MutationContext.builder()
+                                          .accountId("accountId")
+                                          .dataFetchingEnvironment(Mockito.mock(DataFetchingEnvironment.class))
+                                          .build();
+    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), any(), any(), eq(null)))
+        .thenReturn(WorkflowExecution.builder().uuid(WORKFLOW_EXECUTION_ID).status(ExecutionStatus.RUNNING).build());
+    when(pipelineService.fetchDeploymentMetadata(
+             eq(APP_ID), eq(PIPELINE_ID), any(), eq(null), eq(null), eq(false), eq(null)))
+        .thenReturn(DeploymentMetadata.builder().build());
+
+    QLStartExecutionPayload startExecutionPayload =
+        pipelineExecutionController.startPipelineExecution(startExecutionInput, mutationContext);
+    assertThat(startExecutionPayload).isNotNull();
+    assertThat(startExecutionPayload.getExecution().getStatus()).isEqualTo(QLExecutionStatus.RUNNING);
   }
 
   private Variable buildVariable(String name, EntityType entityType, Boolean isRuntime) {
