@@ -4,14 +4,7 @@ CREATE OR REPLACE function is_alive(instanceStartTime TIMESTAMPTZ, instanceStopT
 returns boolean
 language plpgsql
 as
-$$
-begin
-    IF (instanceStartTime <= jobStartTime AND ( instanceStopTime IS NULL OR jobStartTime < instanceStopTime) ) OR (jobStartTime <= instanceStartTime AND instanceStartTime < jobStopTime) THEN
-        RETURN TRUE;
-END IF;
-RETURN FALSE;
-end;
-$$;
+$$ begin IF (instanceStartTime <= jobStartTime AND ( instanceStopTime IS NULL OR jobStartTime < instanceStopTime) ) OR (jobStartTime <= instanceStartTime AND instanceStartTime < jobStopTime) THEN RETURN TRUE; END IF; RETURN FALSE; end; $$;
 COMMIT;
 ---------- is_alive FUNCTION END ------------
 
