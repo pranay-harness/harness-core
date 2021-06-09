@@ -1182,7 +1182,7 @@ public class DelegateServiceImpl implements DelegateService {
       if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
         log.info("Multi-Version is enabled");
         latestVersion = inquiry.getVersion();
-        String minorVersion = Optional.ofNullable(getMinorVersion(inquiry.getVersion())).orElse(0).toString();
+        String minorVersion = Optional.ofNullable(getDelegateBuildVersion(inquiry.getVersion())).orElse(null);
         delegateJarDownloadUrl = infraDownloadService.getDownloadUrlForDelegate(minorVersion, inquiry.getAccountId());
         if (useCDN) {
           delegateStorageUrl = cdnConfig.getUrl();
@@ -1431,6 +1431,14 @@ public class DelegateServiceImpl implements DelegateService {
       } catch (NumberFormatException e) {
         // Leave it null
       }
+    }
+    return delegateVersionNumber;
+  }
+
+  private String getDelegateBuildVersion(String delegateVersion) {
+    String delegateVersionNumber = null;
+    if (isNotBlank(delegateVersion)) {
+      delegateVersionNumber = delegateVersion.substring(delegateVersion.lastIndexOf('.') + 1);
     }
     return delegateVersionNumber;
   }
