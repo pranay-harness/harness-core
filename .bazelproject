@@ -102,6 +102,7 @@ directories:
   950-common-entities
   950-delegate-tasks-beans
   950-events-framework
+  950-events-framework-monitor
   950-log-client
   950-ng-audit-commons
   950-ng-authentication-service
