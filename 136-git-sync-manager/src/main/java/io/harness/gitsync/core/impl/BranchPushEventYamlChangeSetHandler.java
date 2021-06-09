@@ -8,7 +8,6 @@ import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest;
 import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest.GitToHarnessFileProcessingRequestBuilder;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingStepType;
-import io.harness.gitsync.common.beans.GitToHarnessProgress;
 import io.harness.gitsync.common.beans.YamlChangeSetEventType;
 import io.harness.gitsync.common.beans.YamlChangeSetStatus;
 import io.harness.gitsync.common.dtos.GitDiffResultFileDTO;
@@ -17,6 +16,7 @@ import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 import io.harness.gitsync.common.dtos.GitToHarnessGetFilesStepRequest;
 import io.harness.gitsync.common.dtos.GitToHarnessGetFilesStepResponse;
 import io.harness.gitsync.common.dtos.GitToHarnessProcessMsvcStepRequest;
+import io.harness.gitsync.common.dtos.GitToHarnessProgressDTO;
 import io.harness.gitsync.common.service.GitToHarnessProgressService;
 import io.harness.gitsync.common.service.ScmOrchestratorService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
@@ -60,7 +60,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
     // TODO @deepak add check if event already exists in progress service, then return
 
     // Init Progress Record for this event
-    GitToHarnessProgress gitToHarnessProgressRecord =
+    GitToHarnessProgressDTO gitToHarnessProgressRecord =
         gitToHarnessProgressService.save(yamlChangeSetDTO, YamlChangeSetEventType.BRANCH_PUSH,
             GitToHarnessProcessingStepType.GET_FILES, GitToHarnessProcessingStepStatus.TO_DO);
 
@@ -90,7 +90,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
     YamlChangeSetDTO yamlChangeSetDTO = request.getYamlChangeSetDTO();
 
     // Mark step status in progress
-    GitToHarnessProgress gitToHarnessProgressRecord = gitToHarnessProgressService.updateStatus(
+    GitToHarnessProgressDTO gitToHarnessProgressRecord = gitToHarnessProgressService.updateStatus(
         request.getGitToHarnessProgress().getUuid(), GitToHarnessProcessingStepStatus.IN_PROGRESS);
 
     List<String> rootFolderList = getRootFolderList(yamlGitConfigDTOList);
