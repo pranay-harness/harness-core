@@ -1,4 +1,4 @@
-package software.wings.graphql.datafetcher.ce.recommendation.entity;
+package io.harness.ccm.commons.entities.k8s.recommendation;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
 
@@ -8,6 +8,9 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+
+import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
+import software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement;
 
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
