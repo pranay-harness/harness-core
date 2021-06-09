@@ -36,6 +36,7 @@ public class BasicWorkflowYamlHandler extends WorkflowYamlHandler<BasicWorkflowY
         .withNotificationRules(workflowInfo.getNotificationRules())
         .withPostDeploymentSteps(workflowInfo.getPostDeploymentSteps())
         .withPreDeploymentSteps(workflowInfo.getPreDeploymentSteps())
+        .withRollbackProvisioners(workflowInfo.getRollbackProvisioners())
         .withRollbackWorkflowPhaseIdMap(workflowInfo.getRollbackPhaseMap())
         .withUserVariables(workflowInfo.getUserVariables())
         .withWorkflowPhases(phaseList);

@@ -251,7 +251,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       }
 
       if (phaseSubWorkflow == null && executionInterrupts != null
-          && executionInterrupts.stream().anyMatch(ex -> ex.getExecutionInterruptType() == ROLLBACK)) {
+          && executionInterrupts.stream().anyMatch(ex -> ex.getExecutionInterruptType() == ROLLBACK)
+          && !rollbackProvisioners) {
         return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.END_EXECUTION).build();
       }
 
