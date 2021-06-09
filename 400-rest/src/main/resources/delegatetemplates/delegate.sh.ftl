@@ -215,6 +215,7 @@ if [ ! -z "$CF_CLI7_PATH" ] && ! `grep cfCli7Path config-delegate.yml > /dev/nul
   echo "cfCli7Path: $CF_CLI7_PATH" >> config-delegate.yml
 fi
 
+
 rm -f -- *.bak
 
 export KUBECTL_VERSION=${kubectlVersion}
