@@ -1,6 +1,7 @@
 package io.harness;
 
 import io.harness.beans.DelegateHeartbeatResponse;
+import io.harness.beans.DelegateTaskEventsResponse;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.data.structure.HarnessStringUtils;
@@ -48,11 +49,12 @@ class MicroserviceInterfaceTool {
   // We have a static Set of classes for the same for now.
   // Eventually the plan is to move this communication to Kryo also.
   private static Map<String, String> computeJsonHashes() throws Exception {
-    Set<Class> jsonClasses = new HashSet<>(Arrays.asList(DelegateRegisterResponse.class, DelegateParams.class,
-        DelegateConnectionHeartbeat.class, DelegateProfileParams.class, FileBucket.class, DelegateFile.class,
-        ChecksumType.class, DelegateScripts.class, AccessTokenBean.class, DelegateTaskEvent.class,
-        DelegateTaskAbortEvent.class, ConnectorHeartbeatDelegateResponse.class, ConnectorValidationResult.class,
-        ConnectivityStatus.class, ErrorDetail.class, DelegateHeartbeatResponse.class));
+    Set<Class> jsonClasses = new HashSet<>(
+        Arrays.asList(DelegateRegisterResponse.class, DelegateParams.class, DelegateConnectionHeartbeat.class,
+            DelegateProfileParams.class, FileBucket.class, DelegateFile.class, ChecksumType.class,
+            DelegateScripts.class, AccessTokenBean.class, DelegateTaskEvent.class, DelegateTaskAbortEvent.class,
+            ConnectorHeartbeatDelegateResponse.class, ConnectorValidationResult.class, ConnectivityStatus.class,
+            ErrorDetail.class, DelegateHeartbeatResponse.class, DelegateTaskEventsResponse.class));
     Map<String, String> jsonHashes = new HashMap<>();
     for (Class jsonClass : jsonClasses) {
       jsonHashes.put(jsonClass.getCanonicalName(), calculateStringHash(jsonClass));
