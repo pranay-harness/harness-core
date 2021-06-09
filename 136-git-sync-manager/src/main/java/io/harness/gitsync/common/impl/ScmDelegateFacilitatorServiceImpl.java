@@ -164,11 +164,14 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
         getScmConnector(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
             yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getGitConnectorRef());
     scmConnector.setUrl(yamlGitConfigDTO.getRepo());
+    final List<EncryptedDataDetail> encryptionDetails =
+        getEncryptedDataDetails(accountIdentifier, orgIdentifier, projectIdentifier, scmConnector);
     ScmGitFileTaskParams scmGitFileTaskParams = ScmGitFileTaskParams.builder()
                                                     .gitFileTaskType(GitFileTaskType.GET_FILE_CONTENT_BATCH)
                                                     .branchName(branchName)
                                                     .scmConnector(scmConnector)
                                                     .foldersList(foldersList)
+                                                    .encryptedDataDetails(encryptionDetails)
                                                     .build();
     DelegateTaskRequest delegateTaskRequest =
         getDelegateTaskRequest(identifierRef.getAccountIdentifier(), scmGitFileTaskParams, TaskType.SCM_GIT_FILE_TASK);
