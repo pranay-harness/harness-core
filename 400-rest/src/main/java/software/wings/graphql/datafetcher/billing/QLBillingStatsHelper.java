@@ -69,7 +69,11 @@ public class QLBillingStatsHelper {
       throws SQLException {
     switch (field) {
       case INSTANCEID:
-        return resultSet.getString(BillingDataMetaDataFields.INSTANCENAME.getFieldName());
+        try {
+          return resultSet.getString(BillingDataMetaDataFields.INSTANCENAME.getFieldName());
+        } catch (Exception e) {
+          return entityId;
+        }
       default:
         return getEntityName(field, entityId);
     }
