@@ -11,12 +11,12 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.govern.ProviderModule;
 import io.harness.ng.core.activityhistory.service.NGActivityService;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.api.impl.NGSecretManagerServiceImpl;
+import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
 import io.harness.outbox.api.OutboxService;
 import io.harness.redis.RedisConfig;
@@ -51,7 +51,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class SecretManagementModuleTest extends CategoryTest {
   private SecretManagementModule secretManagementModule;
   private SecretManagementClientModule secretManagementClientModule;
-  private EntitySetupUsageClientModule entityReferenceClientModule;
   @Mock private SecretRepository secretRepository;
   public static final String OUTBOX_TRANSACTION_TEMPLATE = "OUTBOX_TRANSACTION_TEMPLATE";
 
@@ -66,14 +65,10 @@ public class SecretManagementModuleTest extends CategoryTest {
   public void testSecretManagementModule() {
     ServiceHttpClientConfig secretManagerClientConfig =
         ServiceHttpClientConfig.builder().baseUrl("http://localhost:7143").build();
-    ServiceHttpClientConfig ngManagerClientConfig =
-        ServiceHttpClientConfig.builder().baseUrl("http://localhost:3457").build();
     String serviceSecret = "test_secret";
     secretManagementModule = new SecretManagementModule();
     secretManagementClientModule =
         new SecretManagementClientModule(secretManagerClientConfig, serviceSecret, "NextGenManager");
-    entityReferenceClientModule =
-        new EntitySetupUsageClientModule(ngManagerClientConfig, serviceSecret, "NextGenManager");
 
     List<Module> modules = new ArrayList<>();
     modules.add(new ProviderModule() {
@@ -88,6 +83,13 @@ public class SecretManagementModuleTest extends CategoryTest {
       @Singleton
       SecretRepository repository() {
         return mock(SecretRepository.class);
+      }
+    });
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      EntitySetupUsageService entitySetupUsageService() {
+        return mock(EntitySetupUsageService.class);
       }
     });
     modules.add(new ProviderModule() {
@@ -131,7 +133,6 @@ public class SecretManagementModuleTest extends CategoryTest {
     });
     modules.add(secretManagementModule);
     modules.add(secretManagementClientModule);
-    modules.add(entityReferenceClientModule);
     Injector injector = Guice.createInjector(modules);
 
     NGSecretManagerService ngSecretManagerService = injector.getInstance(NGSecretManagerService.class);
