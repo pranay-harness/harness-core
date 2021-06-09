@@ -17,6 +17,8 @@ import static software.wings.beans.command.PcfDummyCommandUnit.Wrapup;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.pcf.PcfManifestFileData;
@@ -67,6 +69,7 @@ import org.cloudfoundry.operations.applications.ApplicationSummary;
 @Singleton
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(HarnessTeam.CDP)
 public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
   private int MAX_RELEASE_VERSIONS_TO_KEEP = 3;
 
@@ -104,6 +107,9 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
               .endpointUrl(pcfConfig.getEndpointUrl())
               .timeOutIntervalInMins(pcfCommandSetupRequest.getTimeoutIntervalInMin())
               .useCFCLI(pcfCommandSetupRequest.isUseCfCLI())
+              .cfCliPath(pcfCommandTaskHelper.getCfCliPathOnDelegate(
+                  pcfCommandRequest.isUseCfCLI(), pcfCommandRequest.getCfCliVersion()))
+              .cfCliVersion(pcfCommandRequest.getCfCliVersion())
               .cfHomeDirPath(workingDirectory.getAbsolutePath())
               .limitPcfThreads(pcfCommandSetupRequest.isLimitPcfThreads())
               .ignorePcfConnectionContextCache(pcfCommandSetupRequest.isIgnorePcfConnectionContextCache())

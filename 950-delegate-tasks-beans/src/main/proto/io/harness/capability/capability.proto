@@ -16,7 +16,7 @@ option go_package = "240_capability";
 // - consistent (they are either allowed, or not)
 // - self proving (validation through use)
 
-// Next ID: 17
+// Next ID: 19
 message CapabilityParameters {
   oneof capability {
     AwsRegionParameters aws_region_parameters = 4;
@@ -27,6 +27,7 @@ message CapabilityParameters {
     KustomizeParameters kustomize_parameters = 13;
     PcfAutoScalarParameters pcf_auto_scalar_parameters = 14;
     PcfConnectivityParameters pcf_connectivity_parameters = 15;
+    PcfInstallationParameters pcf_installation_parameters = 18;
     ProcessExecutorParameters process_executor_parameters = 7;
     SftpCapabilityParameters sftp_capability_parameters = 3;
     SmbConnectionParameters smb_connection_parameters = 2;
@@ -112,10 +113,29 @@ message KustomizeParameters {
   string plugin_root_dir = 1;
 }
 
-message PcfAutoScalarParameters {}
+message PcfAutoScalarParameters {
+  // Next ID: 3
+  enum CfCliVersion {
+    CF_VERSION_UNSPECIFIED = 0;
+    V6 = 1;
+    V7 = 2;
+  }
+  CfCliVersion cf_cli_version = 1;
+}
 
 message PcfConnectivityParameters {
   string endpoint_url = 1;
+}
+
+// Whether the specified version of CF CLI is installed or not
+message PcfInstallationParameters {
+  // Next ID: 3
+  enum CfCliVersion {
+    CF_VERSION_UNSPECIFIED = 0;
+    V6 = 1;
+    V7 = 2;
+  }
+  CfCliVersion cf_cli_version = 1;
 }
 
 // A testing method for capabilities

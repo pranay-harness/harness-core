@@ -54,6 +54,7 @@ import io.harness.git.model.GitFile;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.pcf.PcfFileTypeChecker;
+import io.harness.pcf.model.CfCliVersion;
 import io.harness.pcf.model.ManifestType;
 import io.harness.pcf.model.PcfConstants;
 
@@ -274,6 +275,7 @@ public class PcfStateHelper {
                 featureFlagService.isEnabled(LIMIT_PCF_THREADS, queueRequestData.getPcfConfig().getAccountId()))
             .ignorePcfConnectionContextCache(featureFlagService.isEnabled(
                 IGNORE_PCF_CONNECTION_CONTEXT_CACHE, queueRequestData.getPcfConfig().getAccountId()))
+            .cfCliVersion(getCfCliVersionOrDefault(app.getAppId(), setupSweepingOutputPcf.getServiceId()))
             .build();
 
     PcfRouteUpdateStateExecutionData stateExecutionData =
@@ -927,5 +929,10 @@ public class PcfStateHelper {
                                 .updateDetails(new StringBuilder().append(logMessage).toString())
                                 .build())
         .build();
+  }
+
+  public CfCliVersion getCfCliVersionOrDefault(final String appId, final String serviceId) {
+    Service service = serviceResourceService.get(appId, serviceId);
+    return service != null && service.getCfCliVersion() != null ? service.getCfCliVersion() : CfCliVersion.V6;
   }
 }
