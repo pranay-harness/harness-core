@@ -410,7 +410,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
           if (resultSet.getString("endts") != null) {
             endTime.add(Long.valueOf(resultSet.getString("endts")));
           } else {
-            endTime.add(null);
+            endTime.add(-1L);
           }
           commitMessage.add(resultSet.getString("moduleinfo_branch_commit_message"));
         }
