@@ -34,6 +34,9 @@ public class DelegateConfiguration {
   private String helmPath;
   private String helm3Path;
 
+  private String cfCli6Path;
+  private String cfCli7Path;
+
   private boolean grpcServiceEnabled;
   private Integer grpcServiceConnectorPort;
 

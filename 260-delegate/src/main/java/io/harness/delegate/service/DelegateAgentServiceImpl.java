@@ -13,6 +13,7 @@ import static io.harness.delegate.configuration.InstallUtils.installKustomize;
 import static io.harness.delegate.configuration.InstallUtils.installOc;
 import static io.harness.delegate.configuration.InstallUtils.installScm;
 import static io.harness.delegate.configuration.InstallUtils.installTerraformConfigInspect;
+import static io.harness.delegate.configuration.InstallUtils.validateCfCliExists;
 import static io.harness.delegate.message.ManagerMessageConstants.JRE_VERSION;
 import static io.harness.delegate.message.ManagerMessageConstants.MIGRATE;
 import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
@@ -65,6 +66,7 @@ import static io.harness.network.SafeHttpCall.execute;
 import static io.harness.threading.Morpheus.sleep;
 
 import static java.lang.Boolean.TRUE;
+import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofMinutes;
@@ -76,6 +78,7 @@ import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 
@@ -107,6 +110,7 @@ import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.configuration.DelegateConfiguration;
+import io.harness.delegate.configuration.InstallUtils;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.logging.DelegateStackdriverLogAppender;
 import io.harness.delegate.message.Message;
@@ -432,6 +436,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       boolean kustomizeInstalled = installKustomize(delegateConfiguration);
       boolean scmInstalled = installScm(delegateConfiguration);
 
+      logCfCliConfiguration();
+
       long start = clock.millis();
       String descriptionFromConfigFile = isBlank(delegateDescription) ? "" : delegateDescription;
       String description = "description here".equals(delegateConfiguration.getDescription())
@@ -720,6 +726,20 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     log.info("No proxy for hosts with suffix in: {}", nonProxyHosts);
   }
 
+  private void logCfCliConfiguration() {
+    String cfCli6Path = delegateConfiguration.getCfCli6Path();
+    if (isNoneBlank(cfCli6Path)) {
+      log.info(format("Found custom CF CLI6 binary path: %s", cfCli6Path));
+    }
+
+    String cfCli7Path = delegateConfiguration.getCfCli7Path();
+    if (isNoneBlank(cfCli7Path)) {
+      log.info(format("Found custom CF CLI7 binary path: %s", cfCli7Path));
+    }
+
+    validateCfCliExists();
+  }
+
   private void handleOpen(Object o) {
     log.info("Event:{}, message:[{}]", Event.OPEN.name(), o.toString());
   }
@@ -940,8 +960,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         if (errorResponse.contains(INVALID_TOKEN.name())) {
           log.warn("Delegate used invalid token. Self destruct procedure will be initiated.");
           initiateSelfDestruct();
-        } else if (errorResponse.contains(
-                       String.format(DUPLICATE_DELEGATE_ERROR_MESSAGE, delegateId, delegateConnectionId))) {
+        } else if (errorResponse.contains(format(DUPLICATE_DELEGATE_ERROR_MESSAGE, delegateId, delegateConnectionId))) {
           initiateSelfDestruct();
         } else if (errorResponse.contains(EXPIRED_TOKEN.name())) {
           log.warn("Delegate used expired token. It will be frozen and drained.");

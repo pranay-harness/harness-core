@@ -1,5 +1,10 @@
 package io.harness.pcf.model;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(CDP)
 public interface PcfConstants {
   String REPOSITORY_DIR_PATH = "./repository";
   String PCF_ARTIFACT_DOWNLOAD_DIR_PATH = "./repository/pcfartifacts";
@@ -11,9 +16,8 @@ public interface PcfConstants {
   String CF_DOCKER_CREDENTIALS = "CF_DOCKER_PASSWORD";
   String CF_PLUGIN_HOME = "CF_PLUGIN_HOME";
   String SYS_VAR_CF_PLUGIN_HOME = "harness.pcf.plugin.home";
-  String CF_COMMAND_FOR_CHECKING_AUTOSCALAR = "cf plugins | grep autoscaling-apps";
-  String CF_COMMAND_FOR_CHECKING_APP_AUTOSCALAR_BINDING = "cf autoscaling-apps | grep <APP_NAME>";
-  String CF_COMMAND_FOR_APP_LOG_TAILING = "cf logs <APP_NAME>";
+  String BIN_BASH = "/bin/bash";
+  String AUTOSCALING_APPS_PLUGIN_NAME = "autoscaling-apps";
   String APP_TOKEN = "<APP_NAME>";
   String ENABLE_AUTOSCALING = "enable-autoscaling";
   String DISABLE_AUTOSCALING = "disable-autoscaling";
@@ -77,6 +81,7 @@ public interface PcfConstants {
 
   String FILE_START_SERVICE_MANIFEST_REGEX = "\\$\\{service\\.manifest}";
   String FILE_START_REPO_ROOT_REGEX = "\\$\\{service\\.manifest\\.repoRoot}";
+  String SERVICE_CLI_REGEX = "\\$\\{service\\.cli}";
 
   String PCF_AUTOSCALAR_MANIFEST_INSTANCE_LIMITS_ELE = "instance_limits";
   String PCF_AUTOSCALAR_MANIFEST_RULES_ELE = "rules";

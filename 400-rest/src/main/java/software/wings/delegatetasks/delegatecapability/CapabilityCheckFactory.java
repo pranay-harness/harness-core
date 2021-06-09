@@ -1,6 +1,8 @@
 package software.wings.delegatetasks.delegatecapability;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.task.executioncapability.AlwaysFalseValidationCapabilityCheck;
@@ -14,6 +16,7 @@ import io.harness.delegate.task.executioncapability.KustomizeCapabilityCheck;
 import io.harness.delegate.task.executioncapability.LiteEngineConnectionCapabilityCheck;
 import io.harness.delegate.task.executioncapability.PcfAutoScalarCapabilityCheck;
 import io.harness.delegate.task.executioncapability.PcfConnectivityCapabilityCheck;
+import io.harness.delegate.task.executioncapability.PcfInstallationCapabilityCheck;
 import io.harness.delegate.task.executioncapability.ProcessExecutorCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SftpCapabilityCheck;
 import io.harness.delegate.task.executioncapability.SmbConnectionCapabilityCheck;
@@ -33,6 +36,7 @@ import com.google.inject.Singleton;
 
 @Singleton
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(HarnessTeam.DEL)
 public class CapabilityCheckFactory {
   @Inject SocketConnectivityCapabilityCheck socketConnectivityCapabilityCheck;
   @Inject ProcessExecutorCapabilityCheck processExecutorCapabilityCheck;
@@ -47,6 +51,7 @@ public class CapabilityCheckFactory {
   @Inject SftpCapabilityCheck sftpCapabilityCheck;
   @Inject PcfConnectivityCapabilityCheck pcfConnectivityCapabilityCheck;
   @Inject PcfAutoScalarCapabilityCheck pcfAutoScalarCapabilityCheck;
+  @Inject PcfInstallationCapabilityCheck pcInstallationCapabilityCheck;
   @Inject HelmCommandCapabilityCheck helmCommandCapabilityCheck;
   @Inject HelmInstallationCapabilityCheck helmInstallationCapabilityCheck;
   @Inject ChartMuseumCapabilityCheck chartMuseumCapabilityCheck;
@@ -83,6 +88,8 @@ public class CapabilityCheckFactory {
         return pcfConnectivityCapabilityCheck;
       case PCF_AUTO_SCALAR:
         return pcfAutoScalarCapabilityCheck;
+      case PCF_INSTALL:
+        return pcInstallationCapabilityCheck;
       case HELM_COMMAND:
         return helmCommandCapabilityCheck;
       case HELM_INSTALL:

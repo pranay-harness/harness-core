@@ -19,6 +19,7 @@ import io.harness.beans.FeatureName;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.HelmVersion;
+import io.harness.pcf.model.CfCliVersion;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.AllowedValueYaml;
@@ -84,6 +85,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     String applicationStack = appContainer != null ? appContainer.getName() : null;
     String deploymentType = service.getDeploymentType() != null ? service.getDeploymentType().name() : null;
     String helmVersion = service.getHelmVersion() != null ? service.getHelmVersion().toString() : null;
+    String cfCliVersion = service.getCfCliVersion() != null ? service.getCfCliVersion().toString() : null;
 
     YamlBuilder yamlBuilder = Yaml.builder()
                                   .harnessApiVersion(getHarnessApiVersion())
@@ -93,7 +95,8 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
                                   .configMapYaml(service.getConfigMapYaml())
                                   .configVariables(nameValuePairList)
                                   .applicationStack(applicationStack)
-                                  .helmVersion(helmVersion);
+                                  .helmVersion(helmVersion)
+                                  .cfCliVersion(cfCliVersion);
     if (isNotBlank(service.getDeploymentTypeTemplateId())) {
       yamlBuilder.deploymentTypeTemplateUri(
           customDeploymentTypeService.fetchDeploymentTemplateUri(service.getDeploymentTypeTemplateId()));
@@ -169,6 +172,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
       currentService.setAppContainer(appContainer);
     }
     setHelmVersion(yaml, currentService);
+    setCfCliVersion(yaml, currentService);
     Service previousService = get(accountId, yamlFilePath);
 
     boolean syncFromGit = changeContext.getChange().isSyncFromGit();
@@ -235,6 +239,17 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
         currentService.setHelmVersion(helmVersion);
       } catch (IllegalArgumentException enumNotFound) {
         throw new InvalidRequestException("helmVersion must be one of: " + Arrays.toString(HelmVersion.values()));
+      }
+    }
+  }
+
+  void setCfCliVersion(Yaml yaml, Service currentService) {
+    if (yaml.getCfCliVersion() != null) {
+      try {
+        CfCliVersion cfCliVersion = CfCliVersion.valueOf(yaml.getCfCliVersion());
+        currentService.setCfCliVersion(cfCliVersion);
+      } catch (IllegalArgumentException enumNotFound) {
+        throw new InvalidRequestException("cfCliVersion must be one of: " + Arrays.toString(CfCliVersion.values()));
       }
     }
   }

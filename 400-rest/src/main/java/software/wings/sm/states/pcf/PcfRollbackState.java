@@ -111,6 +111,8 @@ public class PcfRollbackState extends PcfDeployState {
         .limitPcfThreads(featureFlagService.isEnabled(LIMIT_PCF_THREADS, pcfConfig.getAccountId()))
         .ignorePcfConnectionContextCache(
             featureFlagService.isEnabled(IGNORE_PCF_CONNECTION_CONTEXT_CACHE, pcfConfig.getAccountId()))
+        .cfCliVersion(
+            pcfStateHelper.getCfCliVersionOrDefault(application.getAppId(), setupSweepingOutputPcf.getServiceId()))
         .build();
   }
 

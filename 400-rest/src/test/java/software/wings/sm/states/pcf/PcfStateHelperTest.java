@@ -8,6 +8,7 @@ import static io.harness.pcf.model.PcfConstants.LEGACY_NAME_PCF_MANIFEST;
 import static io.harness.pcf.model.PcfConstants.MANIFEST_YML;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RIHAZ;
 import static io.harness.rule.OwnerRule.TMACARI;
@@ -66,9 +67,11 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.GitFile;
+import io.harness.pcf.model.CfCliVersion;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
+import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElement;
 import software.wings.api.PcfInstanceElement;
 import software.wings.api.PhaseElement;
@@ -1458,5 +1461,44 @@ public class PcfStateHelperTest extends WingsBaseTest {
     SweepingOutputInstance sweepingOutputInstance = captor.getValue();
     InfoVariables savedInfoVariables = (InfoVariables) sweepingOutputInstance.getValue();
     assertThat(savedInfoVariables.getNewAppRoutes().get(0)).isEqualTo("NEW_ROUTE");
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGetCfCliVersionOrDefaultWithDefaultV6Version() {
+    Service pcfService = Service.builder().deploymentType(DeploymentType.PCF).cfCliVersion(null).build();
+    doReturn(pcfService).when(serviceResourceService).get("app-id", "service-id");
+
+    CfCliVersion cfCliVersionOrDefault = pcfStateHelper.getCfCliVersionOrDefault("app-id", "service-id");
+
+    assertThat(cfCliVersionOrDefault).isNotNull();
+    assertThat(cfCliVersionOrDefault).isEqualTo(CfCliVersion.V6);
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGetCfCliVersionWithV7Version() {
+    Service pcfService = Service.builder().deploymentType(DeploymentType.PCF).cfCliVersion(CfCliVersion.V7).build();
+    doReturn(pcfService).when(serviceResourceService).get("app-id", "service-id");
+
+    CfCliVersion cfCliVersionOrDefault = pcfStateHelper.getCfCliVersionOrDefault("app-id", "service-id");
+
+    assertThat(cfCliVersionOrDefault).isNotNull();
+    assertThat(cfCliVersionOrDefault).isEqualTo(CfCliVersion.V7);
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGetCfCliVersionWithV6Version() {
+    Service pcfService = Service.builder().deploymentType(DeploymentType.PCF).cfCliVersion(CfCliVersion.V6).build();
+    doReturn(pcfService).when(serviceResourceService).get("app-id", "service-id");
+
+    CfCliVersion cfCliVersionOrDefault = pcfStateHelper.getCfCliVersionOrDefault("app-id", "service-id");
+
+    assertThat(cfCliVersionOrDefault).isNotNull();
+    assertThat(cfCliVersionOrDefault).isEqualTo(CfCliVersion.V6);
   }
 }

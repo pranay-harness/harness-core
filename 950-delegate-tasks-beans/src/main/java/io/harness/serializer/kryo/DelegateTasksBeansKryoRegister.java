@@ -133,6 +133,7 @@ import io.harness.delegate.beans.executioncapability.KustomizeCapability;
 import io.harness.delegate.beans.executioncapability.LiteEngineConnectionCapability;
 import io.harness.delegate.beans.executioncapability.PcfAutoScalarCapability;
 import io.harness.delegate.beans.executioncapability.PcfConnectivityCapability;
+import io.harness.delegate.beans.executioncapability.PcfInstallationCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.beans.executioncapability.SftpCapability;
@@ -743,6 +744,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ScmPushTaskParams.class, 553286);
     kryo.register(ScmPushTaskResponseData.class, 553287);
     kryo.register(PushTaskType.class, 553288);
+    kryo.register(PcfInstallationCapability.class, 553289);
 
     kryo.register(ArtifactMetadata.class, 543301);
     kryo.register(ArtifactMetadataType.class, 543302);
