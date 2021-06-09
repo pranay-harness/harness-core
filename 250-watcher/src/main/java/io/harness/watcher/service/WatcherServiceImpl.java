@@ -580,6 +580,8 @@ public class WatcherServiceImpl implements WatcherService {
                 upgradeJre(delegateJreVersion, migrateToJreVersion);
               }
               String delegateVersion = (String) delegateData.get(DELEGATE_VERSION);
+              log.info("Got delegate version from delegateData: {}", delegateVersion);
+              log.info("Got expected delegate version from delegateData: {}", expectedVersions);
               runningVersions.put(delegateVersion, delegateProcess);
               int delegateMinorVersion = getMinorVersion(delegateVersion);
               boolean delegateMinorVersionMismatch =
@@ -1148,6 +1150,7 @@ public class WatcherServiceImpl implements WatcherService {
             Map<String, Object> delegateData = new HashMap<>();
             delegateData.put(DELEGATE_IS_NEW, true);
             if (version != null) {
+              log.info("Updating delegateData with version: {}", version);
               delegateData.put(DELEGATE_VERSION, version);
             }
             delegateData.put(DELEGATE_HEARTBEAT, clock.millis());
