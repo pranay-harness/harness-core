@@ -3,7 +3,6 @@ package io.harness.gitsync.common.dtos;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.gitsync.common.beans.GitToHarnessProgress;
 
 import java.util.List;
 import lombok.AccessLevel;
@@ -18,5 +17,5 @@ import lombok.experimental.FieldDefaults;
 public class GitToHarnessGetFilesStepResponse {
   List<GitFileChangeDTO> gitFileChangeDTOList;
   List<GitDiffResultFileDTO> gitDiffResultFileDTOList;
-  GitToHarnessProgress progressRecord;
+  GitToHarnessProgressDTO progressRecord;
 }

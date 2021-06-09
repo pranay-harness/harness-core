@@ -8,7 +8,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "FileProcessingResponseKeys")
 public class FileProcessingResponseDTO {
-  String fileProcessingStatus;
+  FileProcessingStatus fileProcessingStatus;
   String errorMessage;
   String filePath;
 }
