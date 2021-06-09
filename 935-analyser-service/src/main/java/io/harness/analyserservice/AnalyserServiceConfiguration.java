@@ -9,6 +9,9 @@ import io.harness.mongo.MongoConfig;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
+import java.util.ArrayList;
+import java.util.List;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -22,4 +25,5 @@ public class AnalyserServiceConfiguration extends Configuration {
   @JsonProperty("executionTimeLimitMillis") private Long executionTimeLimitMillis;
   @JsonProperty("manyEntriesAlertFactor") private Integer manyEntriesAlertFactor;
   @JsonProperty("aggregateScheduleInterval") private Long aggregateScheduleInterval;
+  @Builder.Default @JsonProperty("allowedOrigins") private List<String> allowedOrigins = new ArrayList<>();
 }

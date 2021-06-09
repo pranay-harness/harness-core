@@ -2,6 +2,8 @@ package io.harness.analyserservice;
 
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
+import static com.google.common.collect.ImmutableMap.of;
+
 import io.harness.event.QueryAnalyserEventService;
 import io.harness.event.queryRecords.AnalyserSampleAggregatorService;
 import io.harness.govern.ProviderModule;
@@ -26,11 +28,15 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import javax.servlet.DispatcherType;
+import javax.servlet.FilterRegistration;
 import javax.ws.rs.Path;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.server.model.Resource;
 import org.reflections.Reflections;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -74,6 +80,7 @@ public class AnalyserServiceApplication extends Application<AnalyserServiceConfi
     });
     modules.add(AnalyserServiceModule.getInstance(configuration));
     Injector injector = Guice.createInjector(modules);
+    registerCorsFilter(configuration, environment);
     registerResources(environment, injector);
 
     registerManagedBeans(environment, injector);
@@ -81,6 +88,15 @@ public class AnalyserServiceApplication extends Application<AnalyserServiceConfi
     registerObservers(injector);
     MaintenanceController.forceMaintenance(false);
     populateCache(injector);
+  }
+
+  private void registerCorsFilter(AnalyserServiceConfiguration configuration, Environment environment) {
+    FilterRegistration.Dynamic cors = environment.servlets().addFilter("CORS", CrossOriginFilter.class);
+    String allowedOrigins = String.join(",", configuration.getAllowedOrigins());
+    cors.setInitParameters(of("allowedOrigins", allowedOrigins, "allowedHeaders",
+        "X-Requested-With,Content-Type,Accept,Origin,Authorization,X-api-key", "allowedMethods",
+        "OPTIONS,GET,PUT,POST,DELETE,HEAD", "preflightMaxAge", "86400"));
+    cors.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
   }
 
   private void registerObservers(Injector injector) {
