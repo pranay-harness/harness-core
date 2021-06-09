@@ -164,6 +164,19 @@ else
   sed -i.bak "s|^cdnUrl:.*$|cdnUrl: ${cdnUrl}|" config-delegate.yml
 fi
 
+<#if managerTarget??>
+if ! `grep managerTarget config-delegate.yml > /dev/null`; then
+  echo "managerTarget: ${managerTarget}" >> config-delegate.yml
+else
+  sed -i.bak "s|^managerTarget:.*$|managerTarget: ${managerTarget}|" config-delegate.yml
+fi
+if ! `grep managerAuthority config-delegate.yml > /dev/null`; then
+  echo "managerAuthority: ${managerAuthority}" >> config-delegate.yml
+else
+  sed -i.bak "s|^managerAuthority:.*$|managerAuthority: ${managerAuthority}|" config-delegate.yml
+fi
+</#if>
+
 if ! `grep grpcServiceEnabled config-delegate.yml > /dev/null`; then
   echo "grpcServiceEnabled: $GRPC_SERVICE_ENABLED" >> config-delegate.yml
 else

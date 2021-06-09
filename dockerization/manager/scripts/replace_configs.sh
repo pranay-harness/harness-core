@@ -784,6 +784,14 @@ if [[ "" != "$DELEGATE_SERVICE_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE grpcDelegateServiceClientConfig.authority "$DELEGATE_SERVICE_AUTHORITY"
 fi
 
+if [[ "" != "$DELEGATE_GRPC_TARGET" ]]; then
+  yq write -i $CONFIG_FILE grpcOnpremDelegateClientConfig.target "$DELEGATE_GRPC_TARGET"
+fi
+
+if [[ "" != "$DELEGATE_GRPC_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE grpcOnpremDelegateClientConfig.authority "$DELEGATE_GRPC_AUTHORITY"
+fi
+
 if [[ "" != "$NG_MANAGER_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE grpcClientConfig.authority "$NG_MANAGER_AUTHORITY"
 fi

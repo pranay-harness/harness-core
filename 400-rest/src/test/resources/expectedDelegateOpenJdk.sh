@@ -217,6 +217,7 @@ else
   sed -i.bak "s|^cdnUrl:.*$|cdnUrl: http://localhost:9500|" config-delegate.yml
 fi
 
+
 if ! `grep grpcServiceEnabled config-delegate.yml > /dev/null`; then
   echo "grpcServiceEnabled: $GRPC_SERVICE_ENABLED" >> config-delegate.yml
 else
