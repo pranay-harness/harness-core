@@ -45,12 +45,8 @@ public class GitSyncThreadDecorator implements ContainerRequestFilter, Container
         getRequestParamFromContext(GitSyncApiConstants.COMMIT_MSG_KEY, pathParameters, queryParameters);
     final String lastObjectId =
         getRequestParamFromContext(GitSyncApiConstants.LAST_OBJECT_ID_KEY, pathParameters, queryParameters);
-    final String createPrKey =
-        getRequestParamFromContext(GitSyncApiConstants.CREATE_PR_KEY, pathParameters, queryParameters);
     final String isNewBranch =
         getRequestParamFromContext(GitSyncApiConstants.NEW_BRANCH, pathParameters, queryParameters);
-    final String targetBranch =
-        getRequestParamFromContext(GitSyncApiConstants.TARGET_BRANCH_FOR_PR, pathParameters, queryParameters);
     final String findDefaultFromOtherBranches =
         getRequestParamFromContext(GitSyncApiConstants.DEFAULT_FROM_OTHER_REPO, pathParameters, queryParameters);
     final String baseBranch =
@@ -62,9 +58,7 @@ public class GitSyncThreadDecorator implements ContainerRequestFilter, Container
                                          .commitMsg(commitMsg)
                                          .lastObjectId(lastObjectId)
                                          .folderPath(folderPath)
-                                         .createPr(Boolean.valueOf(createPrKey))
                                          .isNewBranch(Boolean.valueOf(isNewBranch))
-                                         .targetBranch(targetBranch)
                                          .findDefaultFromOtherBranches(Boolean.valueOf(findDefaultFromOtherBranches))
                                          .baseBranch(baseBranch)
                                          .build();
