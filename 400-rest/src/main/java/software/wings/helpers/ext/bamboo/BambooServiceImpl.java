@@ -19,6 +19,7 @@ import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArtifactServerException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -102,8 +103,7 @@ public class BambooServiceImpl implements BambooService {
     log.info("Retrieving job keys for plan key {}", planKey);
     Call<JsonNode> request =
         getBambooClient(bambooConfig, encryptionDetails)
-            .listPlanWithJobDetails(
-                Credentials.basic(bambooConfig.getUsername(), new String(bambooConfig.getPassword())), planKey);
+            .listPlanWithJobDetails(getBasicAuthCredentials(bambooConfig, encryptionDetails), planKey);
     Response<JsonNode> response = null;
     try {
       response = getHttpRequestExecutionResponse(request);
@@ -177,8 +177,11 @@ public class BambooServiceImpl implements BambooService {
    * @param bambooConfig the bamboo config
    * @return the basic auth credentials
    */
-  private String getBasicAuthCredentials(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails) {
+  String getBasicAuthCredentials(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails) {
     encryptionService.decrypt(bambooConfig, encryptionDetails, false);
+    if (isEmpty(bambooConfig.getPassword())) {
+      throw new InvalidRequestException("Failed to decrypt password for Bamboo connector");
+    }
     return Credentials.basic(bambooConfig.getUsername(), new String(bambooConfig.getPassword()));
   }
 
@@ -194,8 +197,8 @@ public class BambooServiceImpl implements BambooService {
         BambooRestClient bambooRestClient = getBambooClient(bambooConfig, encryptionDetails);
         log.info("Retrieving plan keys for bamboo server {}", bambooConfig);
         log.info("Fetching plans starting at index: [0] from bamboo server {}", bambooConfig.getBambooUrl());
-        Call<JsonNode> request = bambooRestClient.listProjectPlans(
-            Credentials.basic(bambooConfig.getUsername(), new String(bambooConfig.getPassword())), maxResults);
+        Call<JsonNode> request =
+            bambooRestClient.listProjectPlans(getBasicAuthCredentials(bambooConfig, encryptionDetails), maxResults);
         Map<String, String> planNameMap = new HashMap<>();
         Response<JsonNode> response = null;
         int size = 0;
@@ -218,8 +221,7 @@ public class BambooServiceImpl implements BambooService {
               log.info("Fetching plans starting at index: [{}] from bamboo server {}", startIndex,
                   bambooConfig.getBambooUrl());
               request = bambooRestClient.listProjectPlansWithPagination(
-                  Credentials.basic(bambooConfig.getUsername(), new String(bambooConfig.getPassword())), maxResults,
-                  startIndex);
+                  getBasicAuthCredentials(bambooConfig, encryptionDetails), maxResults, startIndex);
 
               response = getHttpRequestExecutionResponse(request);
               if (response.body() != null) {
