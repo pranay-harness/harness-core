@@ -146,6 +146,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     synchronized (cache) {
       cache.put(FeatureName.valueOf(featureName), featureFlag);
     }
+    cfMigrationService.syncFeatureFlagWithCF(featureFlag);
     return featureFlag;
   }
 
