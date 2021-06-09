@@ -3,9 +3,11 @@ package software.wings.beans;
 import static software.wings.beans.HarnessTagType.USER;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -43,6 +45,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "HarnessTagKeys")
 @Entity(value = "tags", noClassnameStored = true)
 @HarnessEntity(exportable = true)
+@StoreIn(DbAliases.ALL)
 public class HarnessTag implements PersistentEntity, UuidAware, UpdatedAtAware, UpdatedByAware, CreatedAtAware,
                                    CreatedByAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {

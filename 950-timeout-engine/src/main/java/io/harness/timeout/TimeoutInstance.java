@@ -4,10 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static java.time.Duration.ofDays;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.UuidAccess;
 
 import java.time.Duration;
@@ -32,6 +34,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "timeoutInstances")
 @Document("timeoutInstances")
 @TypeAlias("timeoutInstance")
+@StoreIn(DbAliases.ALL)
 public class TimeoutInstance implements PersistentRegularIterable, UuidAccess {
   public static final Duration TTL = ofDays(21);
 

@@ -1,7 +1,9 @@
 package software.wings.beans.container;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.FdUniqueIndex;
+import io.harness.ng.DbAliases;
 
 import software.wings.beans.DeploymentSpecification;
 
@@ -23,6 +25,7 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "UserDataSpecificationKeys")
 @Entity("userDataSpecifications")
 @HarnessEntity(exportable = true)
+@StoreIn(DbAliases.ALL)
 public class UserDataSpecification extends DeploymentSpecification {
   @NotEmpty @FdUniqueIndex private String serviceId;
   @NotNull private String data;

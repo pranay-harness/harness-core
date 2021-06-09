@@ -3,6 +3,7 @@ package io.harness.beans.shared;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
@@ -10,6 +11,7 @@ import io.harness.distribution.constraint.Constraint;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -46,6 +48,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("resourceConstraint")
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@StoreIn(DbAliases.ALL)
 public class ResourceConstraint implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                            UpdatedByAware, AccountAccess, ResourceRestraint {
   public static List<MongoIndex> mongoIndexes() {

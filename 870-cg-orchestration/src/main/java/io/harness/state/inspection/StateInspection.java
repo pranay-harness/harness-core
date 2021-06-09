@@ -3,8 +3,10 @@ package io.harness.state.inspection;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.FdTtlIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.state.StateInspectionUtils;
 
@@ -23,6 +25,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "stateInspections", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "StateInspectionKeys")
+@StoreIn(DbAliases.ALL)
 public final class StateInspection implements PersistentEntity {
   @Id private final String stateExecutionInstanceId;
   private final Map<String, StateInspectionData> data;
