@@ -722,9 +722,19 @@ public class DelegateSetupResource {
   @Path("start-delegate-task")
   @Timed
   @ExceptionMetered
-  public RestResponse<OnDemandDelegateTask> downloadDelegateValuesYaml(
-      @QueryParam("accountId") @NotEmpty String accountId) throws IOException {
+  public RestResponse<OnDemandDelegateTask> startDelegateTask(@QueryParam("accountId") @NotEmpty String accountId)
+      throws IOException {
     return new RestResponse<>(onDemandDelegateService.getNextTask(accountId));
+  }
+
+  @PublicApi
+  @GET
+  @Path("complete-start-delegate-task")
+  @Timed
+  @ExceptionMetered
+  public void markDoneTask(@QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("taskId") @NotEmpty String id) throws IOException {
+    onDemandDelegateService.markDone(accountId, id);
   }
 
   private String getVerificationUrl(HttpServletRequest request) {

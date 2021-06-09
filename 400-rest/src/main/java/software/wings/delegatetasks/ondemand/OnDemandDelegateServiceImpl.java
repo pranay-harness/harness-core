@@ -26,4 +26,11 @@ public class OnDemandDelegateServiceImpl implements OnDemandDelegateService {
         .filter(OnDemandDelegateTaskKeys.status, OnDemandDelegateTask.OnDemandExecStatus.QUEUED)
         .get();
   }
+
+  @Override
+  public void markDone(String accountId, String uuid) {
+    OnDemandDelegateTask task = wingsPersistence.get(OnDemandDelegateTask.class, uuid);
+    task.setStatus(OnDemandDelegateTask.OnDemandExecStatus.COMPLETED);
+    wingsPersistence.save(task);
+  }
 }
