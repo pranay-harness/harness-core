@@ -31,7 +31,7 @@ public class TerraformExecuteStepRequest {
   boolean isRunPlanOnly; // Needed to send inline variable values in CG
   EncryptedRecordData encryptedTfPlan;
   EncryptionConfig encryptionConfig;
-  boolean isSkipRefreshBeforeApplyingPlan;
+  @Builder.Default boolean isSkipRefreshBeforeApplyingPlan = true;
   boolean isSaveTerraformJson;
   @Nonnull LogCallback logCallback;
   @Nonnull PlanJsonLogOutputStream planJsonLogOutputStream;
