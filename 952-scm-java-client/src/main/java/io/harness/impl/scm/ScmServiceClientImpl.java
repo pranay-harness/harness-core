@@ -421,10 +421,10 @@ public class ScmServiceClientImpl implements ScmServiceClient {
 
   @Override
   public void createNewBranch(
-      ScmConnector scmConnector, String branch, String defaultBranchName, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+      ScmConnector scmConnector, String branch, String baseBranchName, SCMGrpc.SCMBlockingStub scmBlockingStub) {
     String slug = scmGitProviderHelper.getSlug(scmConnector);
     Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
-    String latestShaOfBranch = getLatestShaOfBranch(slug, gitProvider, defaultBranchName, scmBlockingStub);
+    String latestShaOfBranch = getLatestShaOfBranch(slug, gitProvider, baseBranchName, scmBlockingStub);
     final CreateBranchResponse createBranchResponse =
         createNewBranchFromDefault(slug, gitProvider, branch, latestShaOfBranch, scmBlockingStub);
     try {
