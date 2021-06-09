@@ -740,6 +740,16 @@ public class DelegateModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("asyncTaskDispatchExecutor")
+  public ExecutorService asyncTaskDispatchExecutor() {
+    ExecutorService asyncTaskDispatchExecutor = ThreadPool.create(10, 10, 3, TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("async-task-dispatch-%d").setPriority(Thread.MAX_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { asyncTaskDispatchExecutor.shutdownNow(); }));
+    return asyncTaskDispatchExecutor;
+  }
+
+  @Provides
+  @Singleton
   @Named("jenkinsExecutor")
   public ExecutorService jenkinsExecutor() {
     ExecutorService jenkinsExecutor = ThreadPool.create(1, 40, 1, TimeUnit.SECONDS,
