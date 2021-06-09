@@ -219,6 +219,10 @@ public class SecretCrudServiceImpl implements SecretCrudService {
         getResponse(secretManagerClient.getSecret(identifier, accountIdentifier, orgIdentifier, projectIdentifier));
     Optional<SecretResponseWrapper> optionalSecret =
         get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    if (optionalSecret.isPresent()) {
+      secretEntityReferenceHelper.validateSecretIsNotUsedByOthers(
+          accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    }
 
     boolean remoteDeletionSuccess = true, localDeletionSuccess = false;
     if (encryptedData != null) {
