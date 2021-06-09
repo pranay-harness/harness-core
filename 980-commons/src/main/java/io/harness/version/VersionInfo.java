@@ -16,5 +16,4 @@ public class VersionInfo {
   private String gitBranch;
   private String timestamp;
   private String patch;
-  private String fullVersionWithPatch;
 }
