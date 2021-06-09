@@ -221,7 +221,6 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTestBas
     assertThat(row0.getCreateTime()).isEqualTo(0L);
     assertThat(row0.getDeleteTime()).isEqualTo(0L);
     assertThat(row0.getNodePoolName()).isEqualTo(defaultStringValue);
-    assertThat(row0.getName()).isEqualTo(INSTANCE_NAME);
   }
 
   @Test
@@ -237,7 +236,7 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTestBas
     filters.add(makeClusterFilter(new String[] {CLUSTER_ID}));
     filters.add(makeTimeFilter(0L));
 
-    List<QLCCMGroupBy> groupBy = Arrays.asList(makeNodeEntityGroupBy(), makeClusterEntityGroupBy());
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makePodEntityGroupBy(), makeClusterEntityGroupBy());
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
     List<QLCCMAggregationFunction> aggregationFunctions = Arrays.asList(makeBillingAmtAggregation(),
         makeIdleCostAggregation(), makeUnallocatedCostAggregation(), makeNetworkCostAggregation());
