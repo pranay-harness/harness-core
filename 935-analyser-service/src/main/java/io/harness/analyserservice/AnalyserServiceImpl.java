@@ -113,13 +113,6 @@ public class AnalyserServiceImpl implements AnalyserService {
     return latestQueries;
   }
 
-  public List<QueryStats> getQueryByService(String serviceName) {
-    return ((List<QueryStats>) queryStatsRepository.findAll())
-        .stream()
-        .filter(e -> e.getServiceId().equals(serviceName))
-        .collect(Collectors.toList());
-  }
-
   boolean checkNotEmpty(List<AlertMetadata> list) {
     return list != null && list.size() > 0;
   }
