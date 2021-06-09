@@ -4,21 +4,25 @@ load("//:tools/bazel/macros.bzl", "run_analysis")
 
 HarnessTeam = "PL"
 
-java_library(
+java_binary(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     data = ["//:resource"],
-    resource_jars = [
-        "//953-events-api/src/main/proto:953_events_api_java_proto",
+    main_class = "io.harness.eventsframework.monitor.EventsFrameworkMonitorApplication",
+    resource_jars = [],
+    resources = [
+        "//950-events-framework-monitor/src/main/resources:resource",
     ],
-    resources = [],
     visibility = ["//visibility:public"],
     runtime_deps = [
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
     deps = [
+        "@maven//:com_google_guava_guava",
+        "@maven//:io_netty_netty_all",
+    ] + [
         "//:lombok",
-        "//953-events-api/src/main/proto:953_events_api_java_proto",
+        "//953-events-api:module",
         "//960-persistence:module",
         "@maven//:aopalliance_aopalliance",
         "@maven//:cglib_cglib_nodep",
@@ -80,7 +84,6 @@ java_library(
         "@maven//:com_google_code_findbugs_jsr305",
         "@maven//:com_google_code_gson_gson",
         "@maven//:com_google_errorprone_error_prone_annotations",
-        "@maven//:com_google_guava_guava",
         "@maven//:com_google_http_client_google_http_client",
         "@maven//:com_google_http_client_google_http_client_appengine",
         "@maven//:com_google_http_client_google_http_client_jackson",
@@ -160,7 +163,6 @@ java_library(
         "@maven//:io_grpc_grpc_netty_shaded",
         "@maven//:io_grpc_grpc_protobuf",
         "@maven//:io_grpc_grpc_stub",
-        "@maven//:io_netty_netty_all",
         "@maven//:io_netty_netty_buffer",
         "@maven//:io_netty_netty_codec",
         "@maven//:io_netty_netty_codec_dns",
@@ -289,32 +291,6 @@ java_library(
         "@maven//:org_threeten_threetenbp",
         "@maven//:org_yaml_snakeyaml",
         "@maven//:org_zeroturnaround_zt_exec",
-    ],
-)
-
-java_library(
-    name = "tests",
-    testonly = True,
-    srcs = glob(["src/test/**/*.java"]),
-    visibility = ["//visibility:public"],
-    runtime_deps = [
-        "@maven//:javax_ws_rs_javax_ws_rs_api",
-    ],
-    deps = [
-        ":module",
-        "//:lombok",
-    ],
-)
-
-java_binary(
-    name = "events_framework_test",
-    testonly = True,
-    data = ["//:resource"],
-    main_class = "io.harness.EventsClientApplication",
-    visibility = ["//visibility:private"],
-    runtime_deps = [
-        ":tests",
-        "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
 )
 
