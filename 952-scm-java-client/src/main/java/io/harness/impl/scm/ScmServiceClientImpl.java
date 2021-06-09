@@ -75,9 +75,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
-@Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Slf4j
+@Singleton
 @OwnedBy(DX)
 public class ScmServiceClientImpl implements ScmServiceClient {
   ScmGitProviderMapper scmGitProviderMapper;
@@ -225,7 +227,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     final String slug = scmGitProviderHelper.getSlug(scmConnector);
     final Provider provider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
     int pageNumber = 1;
-    ListBranchesResponse branchList = null;
+    ListBranchesResponse branchListResponse = null;
     List<String> branchesList = new ArrayList<>();
     do {
       ListBranchesRequest listBranchesRequest = ListBranchesRequest.newBuilder()
@@ -233,10 +235,17 @@ public class ScmServiceClientImpl implements ScmServiceClient {
                                                     .setProvider(provider)
                                                     .setPagination(PageRequest.newBuilder().setPage(pageNumber).build())
                                                     .build();
-      branchList = scmBlockingStub.listBranches(listBranchesRequest);
-      branchesList.addAll(branchList.getBranchesList());
-      pageNumber = branchList.getPagination().getNext();
-    } while (hasMoreBranches(branchList));
+      branchListResponse = null;
+      try {
+        branchListResponse = scmBlockingStub.listBranches(listBranchesRequest);
+      } catch (Exception ex) {
+        // todo : When scm provides the status and error messages for all the cases, change this code and message
+        log.error("Error encountered while fetching branch list for the slug {}", slug, ex);
+        ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(401, ex.getMessage());
+      }
+      branchesList.addAll(branchListResponse.getBranchesList());
+      pageNumber = branchListResponse.getPagination().getNext();
+    } while (hasMoreBranches(branchListResponse));
     return ListBranchesResponse.newBuilder().addAllBranches(branchesList).build();
   }
 
