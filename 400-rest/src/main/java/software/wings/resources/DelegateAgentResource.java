@@ -15,6 +15,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.beans.DelegateHeartbeatResponse;
+import io.harness.beans.DelegateTaskEventsResponse;
+import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateConfiguration;
@@ -33,6 +35,7 @@ import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.validation.DelegateConnectionResultDetail;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.managerclient.AccountPreference;
@@ -108,6 +111,7 @@ public class DelegateAgentResource {
   private ConnectorHearbeatPublisher connectorHearbeatPublisher;
   private KryoSerializer kryoSerializer;
   private ConfigurationController configurationController;
+  private FeatureFlagService featureFlagService;
   private DelegateTaskServiceClassic delegateTaskServiceClassic;
 
   @Inject
@@ -116,7 +120,8 @@ public class DelegateAgentResource {
       ArtifactCollectionResponseHandler artifactCollectionResponseHandler, InstanceHelper instanceHelper,
       ManifestCollectionResponseHandler manifestCollectionResponseHandler,
       ConnectorHearbeatPublisher connectorHearbeatPublisher, KryoSerializer kryoSerializer,
-      ConfigurationController configurationController, DelegateTaskServiceClassic delegateTaskServiceClassic) {
+      ConfigurationController configurationController, FeatureFlagService featureFlagService,
+      DelegateTaskServiceClassic delegateTaskServiceClassic) {
     this.instanceHelper = instanceHelper;
     this.delegateService = delegateService;
     this.accountService = accountService;
@@ -128,6 +133,7 @@ public class DelegateAgentResource {
     this.connectorHearbeatPublisher = connectorHearbeatPublisher;
     this.kryoSerializer = kryoSerializer;
     this.configurationController = configurationController;
+    this.featureFlagService = featureFlagService;
     this.delegateTaskServiceClassic = delegateTaskServiceClassic;
   }
 
@@ -390,11 +396,18 @@ public class DelegateAgentResource {
   @Path("{delegateId}/task-events")
   @Timed
   @ExceptionMetered
-  public List<DelegateTaskEvent> getDelegateTaskEvents(@PathParam("delegateId") @NotEmpty String delegateId,
+  public DelegateTaskEventsResponse getDelegateTaskEvents(@PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("syncOnly") boolean syncOnly) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      return delegateTaskServiceClassic.getDelegateTaskEvents(accountId, delegateId, syncOnly);
+      boolean processDelegateTaskEventsAsyncEnabled =
+          featureFlagService.isEnabled(FeatureName.PROCESS_DELEGATE_TASK_EVENTS_ASYNC, accountId);
+      List<DelegateTaskEvent> delegateTaskEvents =
+          delegateTaskServiceClassic.getDelegateTaskEvents(accountId, delegateId, syncOnly);
+      return DelegateTaskEventsResponse.builder()
+          .delegateTaskEvents(delegateTaskEvents)
+          .processTaskEventsAsync(processDelegateTaskEventsAsyncEnabled)
+          .build();
     }
   }
 
