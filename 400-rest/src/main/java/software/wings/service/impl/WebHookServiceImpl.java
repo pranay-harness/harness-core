@@ -24,6 +24,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
+import io.harness.beans.SecretUsageLog;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
@@ -44,6 +45,7 @@ import software.wings.beans.instance.dashboard.ArtifactSummary;
 import software.wings.beans.trigger.GithubAction;
 import software.wings.beans.trigger.ReleaseAction;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.beans.trigger.TriggerExecution;
 import software.wings.beans.trigger.TriggerExecution.Status;
 import software.wings.beans.trigger.TriggerExecution.TriggerExecutionBuilder;
@@ -318,6 +320,11 @@ public class WebHookServiceImpl implements WebHookService {
     log.info("Trigger execution for the trigger {}", trigger.getUuid());
     WorkflowExecution workflowExecution =
         triggerService.triggerExecutionByWebHook(trigger, resolvedParameters, triggerExecution);
+
+    String accountId = isEmpty(trigger.getAccountId()) ? getAccountId(trigger) : trigger.getAccountId();
+    if (featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, accountId)) {
+      updateRuntimeUsageForSecret(trigger, workflowExecution.getUuid(), accountId);
+    }
     if (webhookTriggerProcessor.checkFileContentOptionSelected(trigger)) {
       WebHookResponse webHookResponse =
           WebHookResponse.builder()
@@ -333,6 +340,28 @@ public class WebHookServiceImpl implements WebHookService {
                                             .build();
 
       return prepareResponse(webHookResponse, Response.Status.OK);
+    }
+  }
+
+  private void updateRuntimeUsageForSecret(Trigger trigger, String workflowExecutionId, String accountId) {
+    if (trigger.getCondition().getConditionType() == TriggerConditionType.WEBHOOK) {
+      WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
+      if (isNotEmpty(webHookTriggerCondition.getWebHookSecret()) && isNotEmpty(workflowExecutionId)) {
+        WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, workflowExecutionId);
+        if (workflowExecution == null) {
+          log.warn("No workflow execution with id {} found.", workflowExecutionId);
+        } else {
+          SecretUsageLog usageLog = SecretUsageLog.builder()
+                                        .encryptedDataId(webHookTriggerCondition.getWebHookSecret())
+                                        .workflowExecutionId(workflowExecutionId)
+                                        .accountId(accountId)
+                                        .appId(workflowExecution.getAppId())
+                                        .envId(workflowExecution.getEnvId())
+                                        .pipelineExecution(workflowExecution.getWorkflowType() == PIPELINE)
+                                        .build();
+          wingsPersistence.save(usageLog);
+        }
+      }
     }
   }
 

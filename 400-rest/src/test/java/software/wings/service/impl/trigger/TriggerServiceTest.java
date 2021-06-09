@@ -35,6 +35,7 @@ import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_COLLECTED
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_DEPLOYED;
 import static software.wings.beans.trigger.ArtifactSelection.Type.PIPELINE_SOURCE;
 import static software.wings.beans.trigger.ArtifactSelection.Type.WEBHOOK_VARIABLE;
+import static software.wings.beans.trigger.WebHookTriggerCondition.WEBHOOK_SECRET;
 import static software.wings.beans.trigger.WebhookEventType.PULL_REQUEST;
 import static software.wings.beans.trigger.WebhookEventType.PUSH;
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
@@ -109,6 +110,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
+import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -191,6 +193,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.service.intfc.trigger.TriggerExecutionService;
 import software.wings.service.intfc.yaml.YamlPushService;
+import software.wings.settings.SettingVariableTypes;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -201,6 +204,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -3878,5 +3882,76 @@ public class TriggerServiceTest extends WingsBaseTest {
                        .parameters(ImmutableMap.of("MyVar", "MyVal"))
                        .build())
         .build();
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testAddSecretParentOnTriggerService() {
+    Trigger trigger = createWebHookTriggerWithSecret(GITHUB);
+    when(featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, ACCOUNT_ID)).thenReturn(true);
+    wingsPersistence.save(EncryptedData.builder().uuid(SECRET_ID).build());
+
+    Trigger savedTrigger = triggerService.save(trigger);
+    assertThat(savedTrigger).isNotNull();
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, SECRET_ID);
+    assertThat(encryptedData).isNotNull();
+    assertThat(encryptedData.getParents()).hasSize(1);
+    assertThat(encryptedData.getParents())
+        .isEqualTo(new HashSet(singletonList(
+            new EncryptedDataParent(savedTrigger.getUuid(), SettingVariableTypes.TRIGGER, WEBHOOK_SECRET))));
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testUpdateSecretParentOnTriggerService() {
+    Trigger trigger = createWebHookTriggerWithSecret(GITHUB);
+    when(featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, ACCOUNT_ID)).thenReturn(true);
+    wingsPersistence.save(EncryptedData.builder().uuid(SECRET_ID).build());
+    wingsPersistence.save(EncryptedData.builder().uuid(SECRET_ID + 2).build());
+    triggerService.save(trigger);
+
+    Trigger newTrigger = Trigger.builder()
+                             .workflowId(WORKFLOW_ID)
+                             .workflowType(ORCHESTRATION)
+                             .uuid(TRIGGER_ID)
+                             .appId(APP_ID)
+                             .name(TRIGGER_NAME)
+                             .accountId(ACCOUNT_ID)
+                             .condition(WebHookTriggerCondition.builder()
+                                            .webhookSource(GITHUB)
+                                            .webHookToken(WebHookToken.builder().build())
+                                            .webHookSecret(SECRET_ID + 2)
+                                            .parameters(ImmutableMap.of("MyVar", "MyVal"))
+                                            .build())
+                             .build();
+
+    Trigger updatedTrigger = triggerService.update(newTrigger, false);
+    assertThat(updatedTrigger).isNotNull();
+    EncryptedData oldEncryptedData = wingsPersistence.get(EncryptedData.class, SECRET_ID);
+    assertThat(oldEncryptedData).isNotNull();
+    assertThat(oldEncryptedData.getParents()).isEmpty();
+    EncryptedData newEncryptedData = wingsPersistence.get(EncryptedData.class, SECRET_ID + 2);
+    assertThat(newEncryptedData).isNotNull();
+    assertThat(newEncryptedData.getParents()).hasSize(1);
+    assertThat(newEncryptedData.getParents())
+        .isEqualTo(new HashSet(singletonList(
+            new EncryptedDataParent(updatedTrigger.getUuid(), SettingVariableTypes.TRIGGER, WEBHOOK_SECRET))));
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testDeleteSecretParentOnTriggerService() {
+    Trigger trigger = createWebHookTriggerWithSecret(GITHUB);
+    when(featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, ACCOUNT_ID)).thenReturn(true);
+    wingsPersistence.save(EncryptedData.builder().uuid(SECRET_ID).build());
+    triggerService.save(trigger);
+
+    triggerService.delete(APP_ID, TRIGGER_ID);
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, SECRET_ID);
+    assertThat(encryptedData).isNotNull();
+    assertThat(encryptedData.getParents()).isEmpty();
   }
 }

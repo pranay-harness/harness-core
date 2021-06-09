@@ -5,6 +5,7 @@ import static io.harness.secrets.setupusage.SecretSetupUsageBuilders.CONFIG_FILE
 import static io.harness.secrets.setupusage.SecretSetupUsageBuilders.SECRET_MANAGER_CONFIG_SETUP_USAGE_BUILDER;
 import static io.harness.secrets.setupusage.SecretSetupUsageBuilders.SERVICE_VARIABLE_SETUP_USAGE_BUILDER;
 import static io.harness.secrets.setupusage.SecretSetupUsageBuilders.SETTING_ATTRIBUTE_SETUP_USAGE_BUILDER;
+import static io.harness.secrets.setupusage.SecretSetupUsageBuilders.TRIGGER_SETUP_USAGE_BUILDER;
 
 import io.harness.annotations.dev.OwnedBy;
 
@@ -80,6 +81,7 @@ public class SecretSetupUsageBuilderRegistry {
     registeredSecretSetupUsageBuilders.put(SettingVariableTypes.SERVICE_VARIABLE, SERVICE_VARIABLE_SETUP_USAGE_BUILDER);
 
     registeredSecretSetupUsageBuilders.put(SettingVariableTypes.CONFIG_FILE, CONFIG_FILE_SETUP_USAGE_BUILDER);
+    registeredSecretSetupUsageBuilders.put(SettingVariableTypes.TRIGGER, TRIGGER_SETUP_USAGE_BUILDER);
   }
 
   public Optional<SecretSetupUsageBuilder> getSecretSetupUsageBuilder(SettingVariableTypes type) {

@@ -163,6 +163,7 @@ import io.harness.secrets.setupusage.builders.ConfigFileSetupUsageBuilder;
 import io.harness.secrets.setupusage.builders.SecretManagerSetupUsageBuilder;
 import io.harness.secrets.setupusage.builders.ServiceVariableSetupUsageBuilder;
 import io.harness.secrets.setupusage.builders.SettingAttributeSetupUsageBuilder;
+import io.harness.secrets.setupusage.builders.TriggerSetupUsageBuilder;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.seeddata.SampleDataProviderService;
 import io.harness.seeddata.SampleDataProviderServiceImpl;
@@ -1577,6 +1578,10 @@ public class WingsModule extends AbstractModule implements ServersModule {
         .bind(SecretSetupUsageBuilder.class)
         .annotatedWith(Names.named(SecretSetupUsageBuilders.SECRET_MANAGER_CONFIG_SETUP_USAGE_BUILDER.getName()))
         .to(SecretManagerSetupUsageBuilder.class);
+    binder()
+        .bind(SecretSetupUsageBuilder.class)
+        .annotatedWith(Names.named(SecretSetupUsageBuilders.TRIGGER_SETUP_USAGE_BUILDER.getName()))
+        .to(TriggerSetupUsageBuilder.class);
   }
 
   private void bindGcpMarketplaceProductHandlers() {

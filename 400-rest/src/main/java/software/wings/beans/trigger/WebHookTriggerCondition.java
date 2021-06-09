@@ -27,6 +27,8 @@ import lombok.EqualsAndHashCode;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 public class WebHookTriggerCondition extends TriggerCondition {
+  public static final String WEBHOOK_SECRET = "webhookSecret";
+
   private WebHookToken webHookToken;
   private String artifactStreamId;
   @Builder.Default private Map<String, String> parameters = new HashMap<>();
