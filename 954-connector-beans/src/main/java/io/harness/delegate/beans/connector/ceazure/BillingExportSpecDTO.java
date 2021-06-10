@@ -19,4 +19,5 @@ public class BillingExportSpecDTO {
   @NotNull String storageAccountName;
   @NotNull String containerName;
   @NotNull String directoryName;
+  @NotNull String reportName;
 }
