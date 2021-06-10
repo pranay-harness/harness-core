@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -133,5 +134,15 @@ public class ACLRepositoryCustomImpl implements ACLRepositoryCustom {
     Query query = new Query();
     query.addCriteria(criteria);
     return mongoTemplate.findDistinct(query, ACLKeys.principalIdentifier, ACL.class, String.class);
+  }
+
+  @Override
+  public Set<String> getByAclQueryStringInAndEnabled(List<String> aclQueries, boolean enabled) {
+    Query query = new Query(Criteria.where(ACLKeys.aclQueryString).in(aclQueries).and(ACLKeys.enabled).is(enabled));
+    query.fields().include(ACLKeys.aclQueryString);
+    return mongoTemplate.find(query, ACL.class)
+        .stream()
+        .map(acl -> acl.getAclQueryString())
+        .collect(Collectors.toSet());
   }
 }

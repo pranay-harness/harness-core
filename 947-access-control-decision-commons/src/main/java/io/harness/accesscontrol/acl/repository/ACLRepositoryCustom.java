@@ -33,4 +33,6 @@ public interface ACLRepositoryCustom {
   List<String> getDistinctPermissionsInACLsForRoleAssignment(String roleAssignmentId);
 
   List<String> getDistinctPrincipalsInACLsForRoleAssignment(String id);
+
+  Set<String> getByAclQueryStringInAndEnabled(List<String> aclQueries, boolean enabled);
 }
