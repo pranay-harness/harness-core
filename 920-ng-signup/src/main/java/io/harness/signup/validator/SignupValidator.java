@@ -62,7 +62,7 @@ public class SignupValidator {
     boolean userExists = RestClientUtils.getResponse(userClient.getUserByEmailId(email.toLowerCase())).isPresent();
 
     if (userExists) {
-      throw new UserAlreadyPresentException("This email is already registered to a user. email=" + emailAddress);
+      throw new UserAlreadyPresentException("This email is already registered to a user. Please sign in.");
     }
 
     final String clonedEmailAddress = clonedEmail.trim();
