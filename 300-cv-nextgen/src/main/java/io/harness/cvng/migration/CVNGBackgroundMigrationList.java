@@ -7,6 +7,7 @@ import io.harness.cvng.migration.list.AddDeploymentMonitoringSourcePerpetualTask
 import io.harness.cvng.migration.list.AddMonitoringSourcesToVerificationJobMigration;
 import io.harness.cvng.migration.list.CVNGBaseMigration;
 import io.harness.cvng.migration.list.CreateDefaultVerificationJobsMigration;
+import io.harness.cvng.migration.list.DeleteInvalidOrchestratorsMigration;
 import io.harness.cvng.migration.list.FixRuntimeParamInCanaryBlueGreenVerificationJob;
 import io.harness.cvng.migration.list.FixRuntimeParamsInDefaultHealthJob;
 import io.harness.cvng.migration.list.RecoverMonitoringSourceWorkerId;
@@ -47,6 +48,8 @@ public class CVNGBackgroundMigrationList {
         .add(Pair.of(13, FixRuntimeParamInCanaryBlueGreenVerificationJob.class))
         .add(Pair.of(14, UpdateApdexMetricCriteria.class))
         .add(Pair.of(15, FixRuntimeParamInCanaryBlueGreenVerificationJob.class))
+        .add(Pair.of(16, DeleteInvalidOrchestratorsMigration.class))
+
         .build();
   }
 }

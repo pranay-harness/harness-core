@@ -309,6 +309,10 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
                       .filter(VerificationJobInstanceKeys.uuid, verificationJobInstanceId),
               verificationJobInstanceUpdateOperations, new UpdateOptions());
 
+      Set<String> verificatioTaskIds = verificationTaskService.getVerificationTaskIds(
+          verificationJobInstance.getAccountId(), verificationJobInstanceId);
+      orchestrationService.markCompleted(verificatioTaskIds);
+
       alertRuleService.processDeploymentVerificationJobInstanceId(verificationJobInstanceId);
     }
   }
