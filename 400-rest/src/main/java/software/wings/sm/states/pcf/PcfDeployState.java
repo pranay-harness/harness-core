@@ -109,6 +109,7 @@ public class PcfDeployState extends State {
   @Getter @Setter private boolean useAppResizeV2;
   @Attributes(title = "Instance Unit Type")
   private InstanceUnitType downsizeInstanceUnitType = InstanceUnitType.PERCENTAGE;
+  @Getter @Setter private List<String> tags;
   public static final String PCF_RESIZE_COMMAND = "PCF Resize";
   static final String NO_PREV_DEPLOYMENT_MSG = "No rollback required, skipping rollback";
 
@@ -211,6 +212,11 @@ public class PcfDeployState extends State {
     PcfCommandRequest commandRequest = getPcfCommandRequest(context, app, activity.getUuid(), setupSweepingOutputPcf,
         pcfConfig, upsizeUpdateCount, downsizeUpdateCount, stateExecutionData, pcfInfrastructureMapping);
 
+    if (isRollback() && isNotEmpty(stateExecutionData.getSetupSweepingOutputPcf().getTags())) {
+      tags = pcfStateHelper.getRenderedTags(context, stateExecutionData.getSetupSweepingOutputPcf().getTags());
+    }
+    List<String> renderedTags = pcfStateHelper.getRenderedTags(context, tags);
+
     DelegateTask task =
         pcfStateHelper.getDelegateTask(PcfDelegateTaskCreationData.builder()
                                            .appId(app.getUuid())
@@ -227,6 +233,7 @@ public class PcfDeployState extends State {
                                                    : setupSweepingOutputPcf.getTimeoutIntervalInMinutes())
                                            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
                                            .taskDescription("PCF Deploy task execution")
+                                           .tagList(renderedTags)
                                            .build());
 
     delegateService.queueTask(task);

@@ -1,6 +1,8 @@
 package software.wings.sm.states.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -14,7 +16,6 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -55,6 +56,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(CDP)
@@ -67,6 +70,8 @@ public class PcfSwitchBlueGreenRoutes extends State {
   @Inject private transient PcfStateHelper pcfStateHelper;
   @Inject private transient SweepingOutputService sweepingOutputService;
   @Inject protected transient FeatureFlagService featureFlagService;
+
+  @Getter @Setter private List<String> tags;
 
   public static final String PCF_BG_SWAP_ROUTE_COMMAND = "PCF BG Swap Route";
   static final String PCF_BG_SKIP_SWAP_ROUTE_MESG = "Skipping route swapping";
@@ -134,6 +139,11 @@ public class PcfSwitchBlueGreenRoutes extends State {
       if (sweepingOutputInstance != null) {
         SwapRouteRollbackSweepingOutputPcf swapRouteRollbackSweepingOutputPcf =
             (SwapRouteRollbackSweepingOutputPcf) sweepingOutputInstance.getValue();
+
+        if (isEmpty(tags) && isNotEmpty(swapRouteRollbackSweepingOutputPcf.getTags())) {
+          tags = swapRouteRollbackSweepingOutputPcf.getTags();
+        }
+
         // it means no update route happened.
         if (swapRouteRollbackSweepingOutputPcf.getPcfRouteUpdateRequestConfigData() != null) {
           downsizeOldApps =
@@ -151,6 +161,9 @@ public class PcfSwitchBlueGreenRoutes extends State {
 
     // update value as for rollback, we need to readt it from SweepingOutput
     requestConfigData.setDownsizeOldApplication(downsizeOldApps);
+
+    List<String> renderedTags = pcfStateHelper.getRenderedTags(context, tags);
+
     return pcfStateHelper.queueDelegateTaskForRouteUpdate(
         PcfRouteUpdateQueueRequestData.builder()
             .pcfConfig(pcfConfig)
@@ -166,15 +179,15 @@ public class PcfSwitchBlueGreenRoutes extends State {
             .downsizeOldApps(downsizeOldApps)
             .useCfCli(true)
             .build(),
-        setupSweepingOutputPcf, context.getStateExecutionInstanceId(), isSelectionLogsTrackingForTasksEnabled());
+        setupSweepingOutputPcf, context.getStateExecutionInstanceId(), isSelectionLogsTrackingForTasksEnabled(),
+        renderedTags);
   }
 
   private PcfRouteUpdateRequestConfigData getPcfRouteUpdateRequestConfigData(
       SetupSweepingOutputPcf setupSweepingOutputPcf) {
     List<String> existingAppNames;
 
-    if (setupSweepingOutputPcf != null
-        && EmptyPredicate.isNotEmpty(setupSweepingOutputPcf.getAppDetailsToBeDownsized())) {
+    if (setupSweepingOutputPcf != null && isNotEmpty(setupSweepingOutputPcf.getAppDetailsToBeDownsized())) {
       existingAppNames = setupSweepingOutputPcf.getAppDetailsToBeDownsized()
                              .stream()
                              .map(PcfAppSetupTimeDetails::getApplicationName)
@@ -231,6 +244,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
                 .name(pcfStateHelper.obtainSwapRouteSweepingOutputName(context, false))
                 .value(SwapRouteRollbackSweepingOutputPcf.builder()
                            .pcfRouteUpdateRequestConfigData(stateExecutionData.getPcfRouteUpdateRequestConfigData())
+                           .tags(stateExecutionData.getTags())
                            .build())
                 .build());
       }

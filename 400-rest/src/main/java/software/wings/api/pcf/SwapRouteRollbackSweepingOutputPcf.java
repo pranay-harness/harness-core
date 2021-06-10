@@ -8,6 +8,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.List;
+
 @Value
 @Builder
 @JsonTypeName("swapRouteRollbackSweepingOutputPcf")
@@ -16,6 +18,7 @@ public class SwapRouteRollbackSweepingOutputPcf implements SweepingOutput {
   private String uuid;
   private String name;
   private PcfRouteUpdateRequestConfigData pcfRouteUpdateRequestConfigData;
+  private List<String> tags;
 
   @Override
   public String getType() {
