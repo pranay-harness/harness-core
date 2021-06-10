@@ -262,9 +262,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 @ValidateOnExecution
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
-@BreakDependencyOn("io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander")
-@BreakDependencyOn("software.wings.helpers.ext.pcf.request.PcfCommandRequest")
-@BreakDependencyOn("software.wings.helpers.ext.pcf.request.PcfCommandTaskParameters")
 @BreakDependencyOn("software.wings.service.intfc.AccountService")
 @OwnedBy(DEL)
 public class DelegateServiceImpl implements DelegateService {

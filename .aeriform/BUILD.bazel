@@ -12,7 +12,13 @@ aeriform("//121-access-control-migration:module")
 
 aeriform("//121-instance:module")
 
-aeriform("//122-ng-core-user:module")
+aeriform("//121-instance:tests")
+
+aeriform("//122-ng-authentication-settings:module")
+
+aeriform("//123-ng-core-user:module")
+
+aeriform("//123-ng-core-user:tests")
 
 aeriform("//125-cd-nextgen:module")
 
@@ -141,6 +147,8 @@ aeriform("//460-capability:tests")
 aeriform("//470-alert:module")
 
 aeriform("//490-ce-commons:module")
+
+aeriform("//490-ce-commons:tests")
 
 aeriform("//800-pipeline-service/src/test/java/io/harness/pms/sample/cd:module")
 
@@ -323,6 +331,8 @@ aeriform("//950-common-entities:module")
 aeriform("//950-delegate-tasks-beans:module")
 
 aeriform("//950-delegate-tasks-beans:tests")
+
+aeriform("//950-events-framework-monitor:module")
 
 aeriform("//950-events-framework:module")
 
