@@ -3,6 +3,7 @@ package io.harness.delegate.beans.connector.scm.adapter;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.delegate.beans.connector.scm.GitAuthType.HTTP;
 import static io.harness.delegate.beans.connector.scm.GitAuthType.SSH;
+import static io.harness.delegate.beans.connector.scm.GitConnectionType.ACCOUNT;
 import static io.harness.delegate.beans.connector.scm.GitConnectionType.REPO;
 import static io.harness.rule.OwnerRule.DEEPAK;
 
@@ -53,6 +54,7 @@ public class GitlabToGitMapperTest extends CategoryTest {
     final String appId = "appId";
     final String insId = "insId";
     final String privateKeyRef = "privateKeyRef";
+    final String validationRepo = "validationRepo";
 
     GitlabAuthenticationDTO gitlabAuthenticationDTO =
         GitlabAuthenticationDTO.builder()
@@ -68,7 +70,8 @@ public class GitlabToGitMapperTest extends CategoryTest {
 
     GitlabConnectorDTO gitlabConnectorDTO = GitlabConnectorDTO.builder()
                                                 .url(url)
-                                                .connectionType(REPO)
+                                                .validationRepo(validationRepo)
+                                                .connectionType(ACCOUNT)
                                                 .authentication(gitlabAuthenticationDTO)
                                                 .delegateSelectors(delegateSelectors)
                                                 .build();
@@ -77,8 +80,9 @@ public class GitlabToGitMapperTest extends CategoryTest {
     assertThat(gitConfigDTO.getGitAuthType()).isEqualTo(HTTP);
     assertThat(gitConfigDTO.getDelegateSelectors()).isEqualTo(delegateSelectors);
     GitHTTPAuthenticationDTO gitAuthentication = (GitHTTPAuthenticationDTO) gitConfigDTO.getGitAuth();
-    assertThat(gitConfigDTO.getGitConnectionType()).isEqualTo(REPO);
+    assertThat(gitConfigDTO.getGitConnectionType()).isEqualTo(ACCOUNT);
     assertThat(gitConfigDTO.getUrl()).isEqualTo(url);
+    assertThat(gitConfigDTO.getValidationRepo()).isEqualTo(validationRepo);
     assertThat(gitAuthentication.getUsername()).isEqualTo(username);
     assertThat(gitAuthentication.getPasswordRef().toSecretRefStringValue()).isEqualTo(passwordRef);
   }

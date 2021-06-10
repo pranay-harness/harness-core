@@ -5,10 +5,9 @@ import io.harness.beans.SweepingOutput;
 import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
-
-import java.util.List;
 
 @Value
 @Builder

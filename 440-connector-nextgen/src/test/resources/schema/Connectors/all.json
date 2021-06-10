@@ -824,6 +824,9 @@
             },
             "url": {
               "type": "string"
+            },
+            "validationRepo": {
+              "type": "string"
             }
           }
         }
@@ -2040,6 +2043,9 @@
             },
             "url": {
               "type": "string"
+            },
+            "validationRepo": {
+              "type": "string"
             }
           }
         },
@@ -2317,6 +2323,9 @@
               ]
             },
             "url": {
+              "type": "string"
+            },
+            "validationRepo": {
               "type": "string"
             }
           }
@@ -2612,6 +2621,9 @@
               ]
             },
             "url": {
+              "type": "string"
+            },
+            "validationRepo": {
               "type": "string"
             }
           }

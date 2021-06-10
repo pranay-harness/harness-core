@@ -48,6 +48,7 @@ public class GitlabEntityToDTOTest {
     final String passwordRef = "passwordRef";
     final String username = "username";
     final String privateKeyRef = "privateKeyRef";
+    final String validationRepo = "validationRepo";
 
     final GitlabAuthenticationDTO gitlabAuthenticationDTO =
         GitlabAuthenticationDTO.builder()
@@ -68,7 +69,8 @@ public class GitlabEntityToDTOTest {
             .build();
     final GitlabConnectorDTO gitlabConnectorDTO = GitlabConnectorDTO.builder()
                                                       .url(url)
-                                                      .connectionType(GitConnectionType.REPO)
+                                                      .validationRepo(validationRepo)
+                                                      .connectionType(GitConnectionType.ACCOUNT)
                                                       .authentication(gitlabAuthenticationDTO)
                                                       .apiAccess(gitlabApiAccessDTO)
                                                       .build();
@@ -77,8 +79,9 @@ public class GitlabEntityToDTOTest {
         GitlabConnector.builder()
             .hasApiAccess(true)
             .url(url)
+            .validationRepo(validationRepo)
             .gitlabApiAccess(GitlabTokenApiAccess.builder().tokenRef(privateKeyRef).build())
-            .connectionType(GitConnectionType.REPO)
+            .connectionType(GitConnectionType.ACCOUNT)
             .authType(HTTP)
             .authenticationDetails(
                 GitlabHttpAuthentication.builder()
