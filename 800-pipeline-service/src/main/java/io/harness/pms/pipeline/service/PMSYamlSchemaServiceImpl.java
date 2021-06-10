@@ -9,6 +9,7 @@ import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
+import io.harness.cf.pipeline.FeatureFlagStageConfig;
 import io.harness.encryption.Scope;
 import io.harness.exception.JsonSchemaException;
 import io.harness.exception.JsonSchemaValidationException;
@@ -73,10 +74,12 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
   public static final String STAGE_ELEMENT_CONFIG = YamlSchemaUtils.getSwaggerName(StageElementConfig.class);
   public static final Class<StageElementConfig> STAGE_ELEMENT_CONFIG_CLASS = StageElementConfig.class;
 
+  private static final String FEATURE_FLAG_STAGE_CONFIG = YamlSchemaUtils.getSwaggerName(FeatureFlagStageConfig.class);
   private static final String APPROVAL_STAGE_CONFIG = YamlSchemaUtils.getSwaggerName(ApprovalStageConfig.class);
   private static final String STEP_ELEMENT_CONFIG = YamlSchemaUtils.getSwaggerName(StepElementConfig.class);
   private static final Class<StepElementConfig> STEP_ELEMENT_CONFIG_CLASS = StepElementConfig.class;
   private static final String APPROVAL_NAMESPACE = "approval";
+  private static final String FEATURE_FLAG_NAMESPACE = "cf";
 
   private static final int CACHE_EVICTION_TIME_HOUR = 1;
 
@@ -151,6 +154,9 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     }
     processPartialStageSchema(mergedDefinitions, pipelineStepsDefinitions, stageElementConfig,
         getApprovalStage(projectIdentifier, orgIdentifier, scope));
+
+    processPartialStageSchema(mergedDefinitions, pipelineStepsDefinitions, stageElementConfig,
+        getFeatureFlagStage(projectIdentifier, orgIdentifier, scope));
 
     return ((ObjectNode) pipelineSchema).set(DEFINITIONS_NODE, pipelineDefinitions);
   }
@@ -302,6 +308,36 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
         .build();
   }
 
+  public PartialSchemaDTO getFeatureFlagStage(String projectIdentifier, String orgIdentifier, Scope scope) {
+    JsonNode featureFlagStageSchema =
+        yamlSchemaProvider.getYamlSchema(EntityType.FEATURE_FLAG_STAGE, orgIdentifier, projectIdentifier, scope);
+
+    JsonNode definitions = featureFlagStageSchema.get(DEFINITIONS_NODE);
+
+    JsonNode jsonNode = definitions.get(StepElementConfig.class.getSimpleName());
+    modifyStepElementSchema((ObjectNode) jsonNode);
+
+    jsonNode = definitions.get(ParallelStepElementConfig.class.getSimpleName());
+    if (jsonNode.isObject()) {
+      flatten((ObjectNode) jsonNode);
+    }
+
+    removeUnwantedNodes(definitions);
+
+    yamlSchemaGenerator.modifyRefsNamespace(featureFlagStageSchema, FEATURE_FLAG_NAMESPACE);
+    ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
+    JsonNode node = mapper.createObjectNode().set(FEATURE_FLAG_NAMESPACE, definitions);
+
+    JsonNode partialApprovalSchema = ((ObjectNode) featureFlagStageSchema).set(DEFINITIONS_NODE, node);
+
+    return PartialSchemaDTO.builder()
+        .namespace(FEATURE_FLAG_NAMESPACE)
+        .nodeName(FEATURE_FLAG_STAGE_CONFIG)
+        .schema(partialApprovalSchema)
+        .nodeType(getFeatureFlagStageTypeName())
+        .build();
+  }
+
   private void modifyStepElementSchema(ObjectNode jsonNode) {
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
     Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap = new HashMap<>();
@@ -322,6 +358,11 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
 
   private String getApprovalStageTypeName() {
     JsonTypeName annotation = ApprovalStageConfig.class.getAnnotation(JsonTypeName.class);
+    return annotation.value();
+  }
+
+  private String getFeatureFlagStageTypeName() {
+    JsonTypeName annotation = FeatureFlagStageConfig.class.getAnnotation(JsonTypeName.class);
     return annotation.value();
   }
 
