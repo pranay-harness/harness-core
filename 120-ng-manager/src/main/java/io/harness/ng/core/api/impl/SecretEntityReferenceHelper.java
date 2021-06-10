@@ -145,28 +145,4 @@ public class SecretEntityReferenceHelper {
           String.format("Could not delete the secret %s as it is referenced by other entities", secretIdentifier));
     }
   }
-
-  public void validateSecretIsNotUsedByOthers(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String secretIdentifier) {
-    boolean isEntityReferenced;
-    IdentifierRef identifierRef = IdentifierRef.builder()
-                                      .accountIdentifier(accountIdentifier)
-                                      .orgIdentifier(orgIdentifier)
-                                      .projectIdentifier(projectIdentifier)
-                                      .identifier(secretIdentifier)
-                                      .build();
-    String referredEntityFQN = identifierRef.getFullyQualifiedName();
-    try {
-      isEntityReferenced =
-          entitySetupUsageService.isEntityReferenced(accountIdentifier, referredEntityFQN, EntityType.SECRETS);
-    } catch (Exception ex) {
-      log.info("Encountered exception while requesting the Entity Reference records of [{}], with exception",
-          secretIdentifier, ex);
-      throw new UnexpectedException("Error while deleting the secret");
-    }
-    if (isEntityReferenced) {
-      throw new InvalidRequestException(
-          String.format("Could not delete the secret %s as it is referenced by other entities", secretIdentifier));
-    }
-  }
 }
