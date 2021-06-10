@@ -267,8 +267,7 @@
           "required": [
             "environment",
             "feature",
-            "instructions",
-            "state"
+            "instructions"
           ],
           "properties": {
             "environment": {
@@ -298,9 +297,6 @@
                   }
                 ]
               }
-            },
-            "state": {
-              "type": "string"
             }
           }
         }
