@@ -67,6 +67,9 @@ public enum EntityType {
   @JsonProperty(EntityTypeConstants.APPROVAL_STAGE)
   APPROVAL_STAGE(
       ModuleType.CD, EntityTypeConstants.APPROVAL_STAGE, EntityYamlRootNames.APPROVAL_STAGE, IdentifierRef.class),
+  @JsonProperty(EntityTypeConstants.FEATURE_FLAG_STAGE)
+  FEATURE_FLAG_STAGE(ModuleType.CF, EntityTypeConstants.FEATURE_FLAG_STAGE, EntityYamlRootNames.FEATURE_FLAG_STAGE,
+      IdentifierRef.class),
   @JsonProperty(EntityTypeConstants.TRIGGERS)
   TRIGGERS(ModuleType.CD, EntityTypeConstants.TRIGGERS, EntityYamlRootNames.TRIGGERS, TriggerReference.class);
 
