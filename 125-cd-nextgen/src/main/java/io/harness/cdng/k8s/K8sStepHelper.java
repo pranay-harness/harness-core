@@ -3,6 +3,8 @@ package io.harness.cdng.k8s;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_GCP;
+import static io.harness.common.ParameterFieldHelper.getBooleanParameterFieldValue;
+import static io.harness.common.ParameterFieldHelper.getParameterFieldValue;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -15,8 +17,6 @@ import static io.harness.k8s.manifest.ManifestHelper.getValuesYamlGitFilePath;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.UnitStatus.RUNNING;
-import static io.harness.ngpipeline.common.ParameterFieldHelper.getBooleanParameterFieldValue;
-import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
 import static io.harness.steps.StepUtils.prepareTaskRequestWithTaskSelector;
 import static io.harness.validation.Validator.notEmptyCheck;
 
