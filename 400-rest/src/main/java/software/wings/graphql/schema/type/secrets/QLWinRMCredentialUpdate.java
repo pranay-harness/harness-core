@@ -22,7 +22,9 @@ public class QLWinRMCredentialUpdate {
   RequestField<WinRmConnectionAttributes.AuthenticationScheme> authenticationScheme;
   RequestField<String> domain;
   RequestField<String> userName;
-  RequestField<String> passwordSecretId;
+  //  RequestField<String> passwordSecretId;
+  RequestField<QLKerberosWinRMAuthentication> qlKerberosWinRMAuthenticationInputRequestField;
+  RequestField<QLNtlmAuthentication> qlNtlmAuthenticationRequestField;
   RequestField<Boolean> useSSL;
   RequestField<Boolean> skipCertCheck;
   RequestField<Integer> port;

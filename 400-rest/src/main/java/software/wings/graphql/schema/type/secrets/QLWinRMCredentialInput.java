@@ -16,7 +16,8 @@ public class QLWinRMCredentialInput {
   private String domain;
   private QLAuthScheme authenticationScheme;
   private String userName;
-  private String passwordSecretId;
+  private QLKerberosWinRMAuthentication qlKerberosWinRMAuthentication;
+  private QLNtlmAuthentication qlNtlmAuthentication;
   private Boolean useSSL;
   private Boolean skipCertCheck;
   private Integer port;
