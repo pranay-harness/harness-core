@@ -23,6 +23,7 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
+import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
@@ -53,8 +54,8 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
   @Inject private CVNGStepTaskService cvngStepTaskService;
   @Inject private Clock clock;
   @Override
-  public AsyncExecutableResponse executeAsync(
-      Ambiance ambiance, CVNGStepParameter stepParameters, StepInputPackage inputPackage) {
+  public AsyncExecutableResponse executeAsync(Ambiance ambiance, CVNGStepParameter stepParameters,
+      StepInputPackage inputPackage, PassThroughData passThroughData) {
     log.info("ExecuteAsync called for CVNGStep");
     String accountId = AmbianceUtils.getAccountId(ambiance);
     String projectIdentifier = AmbianceUtils.getProjectIdentifier(ambiance);
