@@ -13,6 +13,7 @@ import static software.wings.service.impl.security.customsecretsmanager.CustomSe
 import static java.time.Duration.ofMillis;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.encryptors.CustomEncryptor;
 import io.harness.exception.CommandExecutionException;
@@ -30,8 +31,8 @@ import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsMan
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.time.Duration;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
@@ -62,8 +63,8 @@ public class CustomSecretsManagerEncryptor implements CustomEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(
-            () -> fetchSecretValueInternal(encryptedRecord, customSecretsManagerConfig), 20, TimeUnit.SECONDS, true);
+        return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(20),
+            () -> fetchSecretValueInternal(encryptedRecord, customSecretsManagerConfig));
       } catch (SecretManagementDelegateException e) {
         throw e;
       } catch (Exception e) {
