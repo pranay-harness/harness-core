@@ -126,6 +126,8 @@ public class TerraformPlanTaskHandler extends TerraformAbstractTaskHandler {
       EncryptedRecordData encryptedTfPlan = terraformBaseHelper.encryptPlan(
           Files.readAllBytes(Paths.get(scriptDirectory, planName)), planName, taskParameters.getEncryptionConfig());
 
+      logCallback.saveExecutionLog("\nDone \n", INFO, CommandExecutionStatus.SUCCESS);
+
       return TerraformTaskNGResponse.builder()
           .commitIdForConfigFilesMap(commitIdToFetchedFilesMap)
           .encryptedTfPlan(encryptedTfPlan)
