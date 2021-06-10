@@ -16,6 +16,7 @@ public enum ConnectorType implements EntitySubtype {
   @JsonProperty("Splunk") SPLUNK("Splunk"),
   @JsonProperty("AppDynamics") APP_DYNAMICS("AppDynamics"),
   @JsonProperty("Prometheus") PROMETHEUS("Prometheus"),
+  @JsonProperty("Dynatrace") DYNATRACE("Dynatrace"),
   @JsonProperty("Vault") VAULT("Vault"),
   @JsonProperty("AzureKeyVault") AZURE_KEY_VAULT("AzureKeyVault"),
   @JsonProperty("DockerRegistry") DOCKER("DockerRegistry"),

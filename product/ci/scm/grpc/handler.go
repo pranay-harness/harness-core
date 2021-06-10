@@ -173,3 +173,12 @@ func (h *handler) DeleteWebhook(ctx context.Context, in *pb.DeleteWebhookRequest
 func (h *handler) ListWebhooks(ctx context.Context, in *pb.ListWebhooksRequest) (*pb.ListWebhooksResponse, error) {
 	return repo.ListWebhooks(ctx, in, h.log)
 }
+
+// GetAuthenticatedUser is used to get authenticated user.
+func (h *handler) GetAuthenticatedUser(ctx context.Context, in *pb.GetAuthenticatedUserRequest) (*pb.GetAuthenticatedUserResponse, error) {
+	return git.GetAuthenticatedUser(ctx, in, h.log)
+}
+
+func (h *handler) GetUserRepos (ctx context.Context, in *pb.GetUserReposRequest) (*pb.GetUserReposResponse, error) {
+	return git.GetUserRepos(ctx, in, h.log)
+}

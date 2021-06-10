@@ -60,7 +60,8 @@ public class BarrierStepTest extends OrchestrationStepsTestBase {
     when(barrierService.findByIdentifierAndPlanExecutionId(barrierIdentifier, ambiance.getPlanExecutionId()))
         .thenReturn(barrier);
 
-    AsyncExecutableResponse stepResponse = barrierStep.executeAsync(ambiance, stepElementParameters, stepInputPackage);
+    AsyncExecutableResponse stepResponse =
+        barrierStep.executeAsync(ambiance, stepElementParameters, stepInputPackage, null);
 
     assertThat(stepResponse).isNotNull();
     assertThat(stepResponse.getCallbackIdsList()).contains(uuid);

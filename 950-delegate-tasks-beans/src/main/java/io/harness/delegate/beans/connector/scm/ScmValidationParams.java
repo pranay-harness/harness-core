@@ -16,6 +16,7 @@ import lombok.Value;
 @Value
 @Builder
 public class ScmValidationParams implements ConnectorValidationParams, ExecutionCapabilityDemander {
+  ScmConnector scmConnector;
   GitConfigDTO gitConfigDTO;
   List<EncryptedDataDetail> encryptedDataDetails;
   SSHKeySpecDTO sshKeySpecDTO;
@@ -23,8 +24,7 @@ public class ScmValidationParams implements ConnectorValidationParams, Execution
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return GitCapabilityHelper.fetchRequiredExecutionCapabilities(
-        maskingEvaluator, gitConfigDTO, encryptedDataDetails, sshKeySpecDTO);
+    return GitCapabilityHelper.fetchRequiredExecutionCapabilities(maskingEvaluator, gitConfigDTO);
   }
 
   @Override

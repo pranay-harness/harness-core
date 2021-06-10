@@ -106,6 +106,10 @@ if [[ "" != "$JWT_IDENTITY_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE nextGen.jwtIdentityServiceSecret "$JWT_IDENTITY_SERVICE_SECRET"
 fi
 
+if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
+  yq write -i $CONFIG_FILE nextGen.pipelineServiceSecret "$NEXT_GEN_MANAGER_SECRET"
+fi
+
 if [[ "" != "$AUTH_ENABLED" ]]; then
   yq write -i $CONFIG_FILE enableAuth "$AUTH_ENABLED"
 fi
@@ -286,6 +290,8 @@ replace_key_value outboxPollConfig.maximumRetryAttemptsForAnEvent "$OUTBOX_MAX_R
 
 replace_key_value notificationClient.httpClient.baseUrl "$NOTIFICATION_BASE_URL"
 
+replace_key_value notificationClient.secrets.notificationClientSecret "$NEXT_GEN_MANAGER_SECRET"
+
 replace_key_value notificationClient.messageBroker.uri "${NOTIFICATION_MONGO_URI//\\&/&}"
 
 replace_key_value accessControlAdminClient.mockAccessControlService "${MOCK_ACCESS_CONTROL_SERVICE:-true}"
@@ -293,6 +299,8 @@ replace_key_value accessControlAdminClient.mockAccessControlService "${MOCK_ACCE
 replace_key_value gitSdkConfiguration.scmConnectionConfig.url "$SCM_SERVICE_URL"
 
 replace_key_value resourceGroupClientConfig.serviceConfig.baseUrl "$RESOURCE_GROUP_BASE_URL"
+
+replace_key_value resourceGroupClientConfig.secret "$NEXT_GEN_MANAGER_SECRET"
 
 replace_key_value baseUrls.currentGenUiUrl "$CURRENT_GEN_UI_URL"
 replace_key_value baseUrls.nextGenUiUrl "$NEXT_GEN_UI_URL"
@@ -309,6 +317,12 @@ replace_key_value yamlSchemaClientConfig.yamlSchemaHttpClientMap.cvng.secret "$C
 replace_key_value yamlSchemaClientConfig.yamlSchemaHttpClientMap.cvng.serviceHttpClientConfig.baseUrl $CVNG_BASE_URL
 
 replace_key_value useRedisForSdkResponseEvents "$USE_REDIS_FOR_SDK_RESPONSE_EVENTS"
+
+replace_key_value signupNotificationConfiguration.projectId "$SIGNUP_NOTIFICATION_GCS_PROJECT_ID"
+replace_key_value signupNotificationConfiguration.bucketName "$SIGNUP_NOTIFICATION_GCS_BUCKET_NAME"
+
+replace_key_value segmentConfiguration.enabled "$SEGMENT_ENABLED"
+replace_key_value segmentConfiguration.apiKey "$SEGMENT_APIKEY"
 
 replace_key_value gitGrpcClientConfigs.pms.target "$PMS_GITSYNC_TARGET"
 replace_key_value gitGrpcClientConfigs.pms.authority "$PMS_GITSYNC_AUTHORITY"

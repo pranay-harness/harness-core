@@ -41,11 +41,15 @@ import io.harness.product.ci.scm.proto.FindFilesInCommitRequest;
 import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
 import io.harness.product.ci.scm.proto.FindFilesInPRRequest;
 import io.harness.product.ci.scm.proto.FindFilesInPRResponse;
+import io.harness.product.ci.scm.proto.GetAuthenticatedUserRequest;
+import io.harness.product.ci.scm.proto.GetAuthenticatedUserResponse;
 import io.harness.product.ci.scm.proto.GetBatchFileRequest;
 import io.harness.product.ci.scm.proto.GetFileRequest;
 import io.harness.product.ci.scm.proto.GetLatestCommitRequest;
 import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
 import io.harness.product.ci.scm.proto.GetLatestFileRequest;
+import io.harness.product.ci.scm.proto.GetUserReposRequest;
+import io.harness.product.ci.scm.proto.GetUserReposResponse;
 import io.harness.product.ci.scm.proto.IsLatestFileRequest;
 import io.harness.product.ci.scm.proto.IsLatestFileResponse;
 import io.harness.product.ci.scm.proto.ListBranchesRequest;
@@ -71,9 +75,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
-@Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Slf4j
+@Singleton
 @OwnedBy(DX)
 public class ScmServiceClientImpl implements ScmServiceClient {
   ScmGitProviderMapper scmGitProviderMapper;
@@ -221,7 +227,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     final String slug = scmGitProviderHelper.getSlug(scmConnector);
     final Provider provider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
     int pageNumber = 1;
-    ListBranchesResponse branchList = null;
+    ListBranchesResponse branchListResponse = null;
     List<String> branchesList = new ArrayList<>();
     do {
       ListBranchesRequest listBranchesRequest = ListBranchesRequest.newBuilder()
@@ -229,10 +235,17 @@ public class ScmServiceClientImpl implements ScmServiceClient {
                                                     .setProvider(provider)
                                                     .setPagination(PageRequest.newBuilder().setPage(pageNumber).build())
                                                     .build();
-      branchList = scmBlockingStub.listBranches(listBranchesRequest);
-      branchesList.addAll(branchList.getBranchesList());
-      pageNumber = branchList.getPagination().getNext();
-    } while (hasMoreBranches(branchList));
+      branchListResponse = null;
+      try {
+        branchListResponse = scmBlockingStub.listBranches(listBranchesRequest);
+      } catch (Exception ex) {
+        // todo : When scm provides the status and error messages for all the cases, change this code and message
+        log.error("Error encountered while fetching branch list for the slug {}", slug, ex);
+        ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(401, ex.getMessage());
+      }
+      branchesList.addAll(branchListResponse.getBranchesList());
+      pageNumber = branchListResponse.getPagination().getNext();
+    } while (hasMoreBranches(branchListResponse));
     return ListBranchesResponse.newBuilder().addAllBranches(branchesList).build();
   }
 
@@ -408,10 +421,10 @@ public class ScmServiceClientImpl implements ScmServiceClient {
 
   @Override
   public void createNewBranch(
-      ScmConnector scmConnector, String branch, String defaultBranchName, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+      ScmConnector scmConnector, String branch, String baseBranchName, SCMGrpc.SCMBlockingStub scmBlockingStub) {
     String slug = scmGitProviderHelper.getSlug(scmConnector);
     Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
-    String latestShaOfBranch = getLatestShaOfBranch(slug, gitProvider, defaultBranchName, scmBlockingStub);
+    String latestShaOfBranch = getLatestShaOfBranch(slug, gitProvider, baseBranchName, scmBlockingStub);
     final CreateBranchResponse createBranchResponse =
         createNewBranchFromDefault(slug, gitProvider, branch, latestShaOfBranch, scmBlockingStub);
     try {
@@ -549,6 +562,20 @@ public class ScmServiceClientImpl implements ScmServiceClient {
         .setProvider(gitProvider)
         .setPagination(PageRequest.newBuilder().setPage(1).build())
         .build();
+  }
+
+  @Override
+  public GetAuthenticatedUserResponse getAuthenticatedUser(
+      ScmConnector scmConnector, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+    return scmBlockingStub.getAuthenticatedUser(
+        GetAuthenticatedUserRequest.newBuilder().setProvider(gitProvider).build());
+  }
+
+  @Override
+  public GetUserReposResponse getUserRepos(ScmConnector scmConnector, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+    return scmBlockingStub.getUserRepos(GetUserReposRequest.newBuilder().setProvider(gitProvider).build());
   }
 
   private CreateBranchResponse createNewBranchFromDefault(String slug, Provider gitProvider, String branch,

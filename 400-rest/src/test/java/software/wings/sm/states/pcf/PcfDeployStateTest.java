@@ -68,6 +68,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.pcf.model.CfCliVersion;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
 
@@ -172,9 +173,10 @@ public class PcfDeployStateTest extends WingsBaseTest {
   private StateExecutionInstance stateExecutionInstance =
       pcfStateTestHelper.getStateExecutionInstanceForDeployState(workflowStandardParams, phaseElement, serviceElement);
 
-  private Application app = anApplication().uuid(APP_ID).name(APP_NAME).build();
+  private Application app = anApplication().uuid(APP_ID).name(APP_NAME).appId(APP_ID).build();
   private Environment env = anEnvironment().appId(APP_ID).uuid(ENV_ID).name(ENV_NAME).build();
-  private Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build();
+  private Service service =
+      Service.builder().appId(APP_ID).uuid(SERVICE_ID).cfCliVersion(CfCliVersion.V7).name(SERVICE_NAME).build();
   private SettingAttribute computeProvider =
       aSettingAttribute()
           .withValue(PcfConfig.builder().accountId(ACCOUNT_ID).endpointUrl(URL).username(USER_NAME_DECRYPTED).build())
@@ -197,6 +199,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
           .uuid(serviceElement.getUuid())
           .name(PCF_SERVICE_NAME)
           .maxInstanceCount(10)
+          .serviceId(serviceElement.getUuid())
           .desiredActualFinalCount(10)
           .pcfCommandRequest(PcfCommandSetupRequest.builder().space(SPACE).organization(ORG).build())
           .newPcfApplicationDetails(PcfAppSetupTimeDetails.builder()
@@ -218,6 +221,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
     PcfStateHelper pcfStateHelper = new PcfStateHelper();
     on(pcfStateHelper).set("sweepingOutputService", sweepingOutputService);
     on(pcfStateHelper).set("workflowExecutionService", workflowExecutionService);
+    on(pcfStateHelper).set("serviceResourceService", serviceResourceService);
     FieldUtils.writeField(pcfDeployState, "secretManager", secretManager, true);
     FieldUtils.writeField(pcfDeployState, "pcfStateHelper", pcfStateHelper, true);
 
@@ -229,6 +233,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
     when(appService.get(APP_ID)).thenReturn(app);
     when(appService.getApplicationWithDefaults(APP_ID)).thenReturn(app);
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(service);
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(service);
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(env);
 
     ServiceCommand serviceCommand =
@@ -304,6 +309,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
     assertThat(pcfCommandRequest.getRouteMaps()).hasSize(2);
     assertThat(pcfCommandRequest.getRouteMaps().contains("R1")).isTrue();
     assertThat(pcfCommandRequest.getRouteMaps().contains("R2")).isTrue();
+    assertThat(pcfCommandRequest.getCfCliVersion()).isEqualTo(CfCliVersion.V7);
   }
 
   @Test

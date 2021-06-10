@@ -31,6 +31,7 @@ import io.harness.repositories.pipeline.PMSPipelineRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.grpc.StatusRuntimeException;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
@@ -72,9 +73,13 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
                                             pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()),
           USER_SRE, ex);
     } catch (IOException | EventsFrameworkDownException exception) {
+      log.error(exception.toString());
       throw new InvalidRequestException(String.format(
           "Unknown exception occurred while updating pipeline with id: [%s]. Please contact Harness Support",
           pipelineEntity.getIdentifier()));
+    } catch (StatusRuntimeException e) {
+      log.error(e.toString());
+      throw new InvalidRequestException("Pipeline could not be created." + e.getMessage());
     }
   }
 
@@ -127,6 +132,9 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       throw new InvalidRequestException(String.format(
           "Unknown exception occurred while updating pipeline with id: [%s]. Please contact Harness Support",
           pipelineEntity.getIdentifier()));
+    } catch (StatusRuntimeException e) {
+      log.error(e.toString());
+      throw new InvalidRequestException("Pipeline could not be created." + e.getMessage());
     }
   }
 

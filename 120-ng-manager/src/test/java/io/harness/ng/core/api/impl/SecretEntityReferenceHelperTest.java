@@ -37,6 +37,7 @@ import org.mockito.MockitoAnnotations;
 
 @OwnedBy(PL)
 @Slf4j
+@OwnedBy(PL)
 public class SecretEntityReferenceHelperTest extends CategoryTest {
   @InjectMocks SecretEntityReferenceHelper secretEntityReferenceHelper;
   @Mock EntitySetupUsageService entitySetupUsageService;

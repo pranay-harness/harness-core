@@ -8,6 +8,8 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.git.model.GitBaseRequest;
 import io.harness.logging.LogCallback;
+import io.harness.security.encryption.EncryptedRecordData;
+import io.harness.security.encryption.EncryptionConfig;
 import io.harness.terraform.request.TerraformExecuteStepRequest;
 
 import java.io.File;
@@ -57,4 +59,8 @@ public interface TerraformBaseHelper {
 
   List<String> checkoutRemoteVarFileAndConvertToVarFilePaths(List<TerraformVarFileInfo> varFileInfo, String scriptDir,
       LogCallback logCallback, String accountId, String tfVarDirectory) throws IOException;
+
+  EncryptedRecordData encryptPlan(byte[] content, String planName, EncryptionConfig encryptionConfig);
+
+  String getPlanName(TerraformCommand terraformCommand);
 }

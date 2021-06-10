@@ -1,6 +1,5 @@
 package io.harness.connector.impl;
 
-import static io.harness.delegate.beans.connector.ConnectorType.APP_DYNAMICS;
 import static io.harness.delegate.beans.connector.ConnectorType.PROMETHEUS;
 import static io.harness.rule.OwnerRule.ANJAN;
 
@@ -66,7 +65,7 @@ public class PrometheusConnectorTest extends CategoryTest {
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
     prometheusConnector = PrometheusConnector.builder().url(url).build();
-    prometheusConnector.setType(APP_DYNAMICS);
+    prometheusConnector.setType(PROMETHEUS);
     prometheusConnector.setIdentifier(identifier);
     prometheusConnector.setName(name);
 

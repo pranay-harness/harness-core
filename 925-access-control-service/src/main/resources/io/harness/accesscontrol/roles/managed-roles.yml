@@ -242,6 +242,7 @@ roles:
         - ff_environment_apiKeyDelete
         - ff_environment_edit
         - ff_environment_view
+        - ff_featureflag_toggle
       managed: true
       allowedScopeLevels:
         - account
@@ -267,9 +268,10 @@ roles:
       permissions:
         - ff_environment_edit
         - ff_environment_view
+        - ff_featureflag_edit
         - ff_featureflag_view
-        - ff_targetgroup_view
         - ff_targetgroup_edit
+        - ff_targetgroup_view
         - ff_target_view
         - ff_environment_apiKeyView
       managed: true

@@ -28,6 +28,7 @@ import static software.wings.beans.trigger.ArtifactSelection.Type.WEBHOOK_VARIAB
 import static software.wings.beans.trigger.TriggerConditionType.NEW_MANIFEST;
 import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
+import static software.wings.beans.trigger.WebHookTriggerCondition.WEBHOOK_SECRET;
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
 import static software.wings.beans.trigger.WebhookSource.GITHUB;
 import static software.wings.beans.trigger.WebhookSource.GITLAB;
@@ -51,6 +52,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EncryptedData;
+import io.harness.beans.EncryptedData.EncryptedDataKeys;
+import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
@@ -147,6 +150,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.service.intfc.trigger.TriggerExecutionService;
 import software.wings.service.intfc.yaml.YamlPushService;
+import software.wings.settings.SettingVariableTypes;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -172,6 +176,9 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.mongodb.morphia.FindAndModifyOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.quartz.TriggerKey;
 
 @OwnedBy(CDC)
@@ -293,6 +300,9 @@ public class TriggerServiceImpl implements TriggerService {
       ScheduledTriggerJob.add(jobScheduler, accountId, savedTrigger.getAppId(), savedTrigger.getUuid(), trigger);
     }
 
+    if (featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, trigger.getAccountId())) {
+      addSecretParent(savedTrigger);
+    }
     if (featureFlagService.isEnabled(FeatureName.TRIGGER_YAML, accountId)) {
       yamlPushService.pushYamlChangeSet(accountId, null, savedTrigger, Type.CREATE, trigger.isSyncFromGit(), false);
     } else {
@@ -300,6 +310,22 @@ public class TriggerServiceImpl implements TriggerService {
       auditServiceHelper.reportForAuditingUsingAppId(trigger.getAppId(), null, trigger, Type.CREATE);
     }
     return savedTrigger;
+  }
+
+  private void addSecretParent(Trigger trigger) {
+    if (trigger.getCondition().getConditionType() == WEBHOOK) {
+      WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
+      if (webHookTriggerCondition.getWebHookSecret() != null) {
+        Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
+                                         .filter(EncryptedDataKeys.uuid, webHookTriggerCondition.getWebHookSecret());
+        UpdateOperations<EncryptedData> updateOperations =
+            wingsPersistence.createUpdateOperations(EncryptedData.class)
+                .addToSet(EncryptedDataKeys.parents,
+                    new EncryptedDataParent(trigger.getUuid(), SettingVariableTypes.TRIGGER, WEBHOOK_SECRET));
+
+        wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
+      }
+    }
   }
 
   @Override
@@ -319,6 +345,10 @@ public class TriggerServiceImpl implements TriggerService {
         duplicateCheck(() -> wingsPersistence.saveAndGet(Trigger.class, trigger), "name", trigger.getName());
     addOrUpdateCronForScheduledJob(trigger, existingTrigger);
 
+    if (featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, updatedTrigger.getAccountId())) {
+      updateSecretParent(existingTrigger, updatedTrigger);
+    }
+
     boolean isRename = !existingTrigger.getName().equals(trigger.getName());
     if (!migration) {
       if (featureFlagService.isEnabled(FeatureName.TRIGGER_YAML, accountId)) {
@@ -334,6 +364,22 @@ public class TriggerServiceImpl implements TriggerService {
     return updatedTrigger;
   }
 
+  private void updateSecretParent(Trigger oldTrigger, Trigger newTrigger) {
+    if (isSecretIdChanged(oldTrigger.getCondition(), newTrigger.getCondition())) {
+      removeSecretParent(oldTrigger);
+      addSecretParent(newTrigger);
+    }
+  }
+
+  private boolean isSecretIdChanged(TriggerCondition oldTriggerCondition, TriggerCondition newTriggerCondition) {
+    return newTriggerCondition.getConditionType() != WEBHOOK || oldTriggerCondition.getConditionType() != WEBHOOK
+        || ((WebHookTriggerCondition) oldTriggerCondition).getWebHookSecret() == null
+        || ((WebHookTriggerCondition) newTriggerCondition).getWebHookSecret() == null
+        || !((WebHookTriggerCondition) oldTriggerCondition)
+                .getWebHookSecret()
+                .equals(((WebHookTriggerCondition) newTriggerCondition).getWebHookSecret());
+  }
+
   @Override
   public boolean delete(String appId, String triggerId) {
     return delete(appId, triggerId, false);
@@ -347,6 +393,9 @@ public class TriggerServiceImpl implements TriggerService {
     String accountId = appService.getAccountIdByAppId(appId);
     if (answer) {
       harnessTagService.pruneTagLinks(accountId, triggerId);
+      if (featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, trigger.getAccountId())) {
+        removeSecretParent(trigger);
+      }
     }
     if (featureFlagService.isEnabled(FeatureName.TRIGGER_YAML, accountId) && (trigger != null)) {
       yamlPushService.pushYamlChangeSet(accountId, trigger, null, Type.DELETE, syncFromGit, false);
@@ -355,6 +404,22 @@ public class TriggerServiceImpl implements TriggerService {
       auditServiceHelper.reportDeleteForAuditing(trigger.getAppId(), trigger);
     }
     return answer;
+  }
+
+  private void removeSecretParent(Trigger trigger) {
+    if (trigger.getCondition().getConditionType() == WEBHOOK) {
+      WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
+      if (webHookTriggerCondition.getWebHookSecret() != null) {
+        Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
+                                         .filter(EncryptedDataKeys.uuid, webHookTriggerCondition.getWebHookSecret());
+        UpdateOperations<EncryptedData> updateOperations =
+            wingsPersistence.createUpdateOperations(EncryptedData.class)
+                .removeAll(EncryptedDataKeys.parents,
+                    new EncryptedDataParent(trigger.getUuid(), SettingVariableTypes.TRIGGER, WEBHOOK_SECRET));
+
+        wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
+      }
+    }
   }
 
   @Override

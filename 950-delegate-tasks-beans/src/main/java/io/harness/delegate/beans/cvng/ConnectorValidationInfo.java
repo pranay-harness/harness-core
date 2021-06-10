@@ -3,12 +3,14 @@ package io.harness.delegate.beans.cvng;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.delegate.beans.connector.datadog.DatadogConnectorDTO;
+import io.harness.delegate.beans.connector.dynatrace.DynatraceConnectorDTO;
 import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
 import io.harness.delegate.beans.connector.prometheusconnector.PrometheusConnectorDTO;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.delegate.beans.connector.sumologic.SumoLogicConnectorDTO;
 import io.harness.delegate.beans.cvng.appd.AppDynamicsConnectorValidationInfo;
 import io.harness.delegate.beans.cvng.datadog.DatadogConnectorValidationInfo;
+import io.harness.delegate.beans.cvng.dynatrace.DynatraceConnectorValidationInfo;
 import io.harness.delegate.beans.cvng.newrelic.NewRelicConnectorValidationInfo;
 import io.harness.delegate.beans.cvng.prometheus.PrometheusConnectorValidationInfo;
 import io.harness.delegate.beans.cvng.splunk.SplunkConnectorValidationInfo;
@@ -40,6 +42,8 @@ public abstract class ConnectorValidationInfo<T extends ConnectorConfigDTO> {
       connectorValidationInfo = DatadogConnectorValidationInfo.builder().build();
     } else if (connectorConfigDTO instanceof SumoLogicConnectorDTO) {
       connectorValidationInfo = SumoLogicConnectorValidationInfo.builder().build();
+    } else if (connectorConfigDTO instanceof DynatraceConnectorDTO) {
+      connectorValidationInfo = DynatraceConnectorValidationInfo.builder().build();
     } else {
       throw new IllegalStateException(
           "Class: " + connectorConfigDTO.getClass().getSimpleName() + " does not have ValidationInfo object");

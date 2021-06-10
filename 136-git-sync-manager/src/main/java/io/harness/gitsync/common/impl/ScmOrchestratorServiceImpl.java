@@ -5,6 +5,7 @@ import static io.harness.gitsync.GitSyncModule.SCM_ON_DELEGATE;
 import static io.harness.gitsync.GitSyncModule.SCM_ON_MANAGER;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.common.dtos.GitSyncSettingsDTO;
 import io.harness.gitsync.common.service.GitSyncSettingsService;
 import io.harness.gitsync.common.service.ScmClientFacilitatorService;
@@ -40,8 +41,12 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
       String orgIdentifier, String accountId) {
     final Optional<GitSyncSettingsDTO> gitSyncSettingsDTO =
         gitSyncSettingsService.get(accountId, orgIdentifier, projectIdentifier);
-    // todo(abhinav): Throw exception if optional not present.
-    final boolean executeOnDelegate = gitSyncSettingsDTO.isPresent() && gitSyncSettingsDTO.get().isExecuteOnDelegate();
+    GitSyncSettingsDTO gitSyncSettings = gitSyncSettingsDTO.orElseThrow(
+        ()
+            -> new InvalidRequestException(String.format(
+                "No Git Sync Setting found for accountIdentifier %s, organizationIdentifier %s and projectIdentifier %s",
+                accountId, orgIdentifier, projectIdentifier)));
+    final boolean executeOnDelegate = gitSyncSettings.isExecuteOnDelegate();
     if (executeOnDelegate) {
       return scmRequest.apply(scmClientDelegateService);
     }

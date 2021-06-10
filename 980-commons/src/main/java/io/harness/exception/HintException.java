@@ -41,6 +41,20 @@ public class HintException extends WingsException {
   public static final String HINT_ILLEGAL_IMAGE_PATH = "Please provide valid image path";
   public static final String HINT_HOST_UNREACHABLE = "Please ensure that registry host [%s] is reachable";
 
+  public static final String HINT_INVALID_GIT_REPO = "Please provide valid git repository url";
+  public static final String HINT_INVALID_GIT_HOST =
+      "Please provide valid git repository url and ensure delegate to git provider connectivity";
+  public static final String HINT_INVALID_GIT_AUTHORIZATION = "Please ensure that the credentials are correct.";
+  public static final String HINT_INVALID_GIT_AUTHENTICATION =
+      "Please ensure that the authentication is supported by git provider.";
+
+  public static final String HINT_INVALID_GIT_API_AUTHORIZATION =
+      "Please ensure that the api access credentials are correct.";
+
+  public static final String HINT_MALFORMED_GIT_SSH_KEY = "Please provide valid git ssh private key in PEM format.";
+  public static final String HINT_INVALID_GIT_SSH_KEY =
+      "Please provide correct git ssh private key with 'git' username.";
+
   public static final HintException MOVE_TO_THE_PARENT_OBJECT =
       new HintException("Navigate back to the parent object page and continue from there.");
   public static final HintException REFRESH_THE_PAGE = new HintException("Refresh the web page to update the data.");

@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.pcf.model.CfCliVersion;
 
 import software.wings.beans.PcfConfig;
 
@@ -23,10 +24,10 @@ public class PcfInstanceSyncRequest extends PcfCommandRequest {
   public PcfInstanceSyncRequest(String accountId, String appId, String commandName, String activityId,
       PcfCommandType pcfCommandType, String organization, String space, PcfConfig pcfConfig, String workflowExecutionId,
       Integer timeoutIntervalInMin, String pcfApplicationName, boolean useCLIForPcfAppCreation, boolean limitPcfThreads,
-      boolean ignorePcfConnectionContextCache) {
+      boolean ignorePcfConnectionContextCache, CfCliVersion cfCliVersion) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
         workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation, false, false, limitPcfThreads,
-        ignorePcfConnectionContextCache);
+        ignorePcfConnectionContextCache, cfCliVersion);
     this.pcfApplicationName = pcfApplicationName;
   }
 }

@@ -22,6 +22,7 @@ import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreat
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
+import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 
 import com.google.common.collect.ImmutableMap;
@@ -118,6 +119,30 @@ public class SecretEntityReferenceHelper {
       log.info(ENTITY_REFERENCE_LOG_PREFIX
               + "The entity reference was not deleted when the secret [{}] was deleted from the secret manager [{}] with the exception [{}]",
           secretFQN, secretMangerFQN, ex.getMessage());
+    }
+  }
+
+  public void validateSecretIsNotUsedByOthers(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String secretIdentifier) {
+    boolean isEntityReferenced;
+    IdentifierRef identifierRef = IdentifierRef.builder()
+                                      .accountIdentifier(accountIdentifier)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .identifier(secretIdentifier)
+                                      .build();
+    String referredEntityFQN = identifierRef.getFullyQualifiedName();
+    try {
+      isEntityReferenced =
+          entitySetupUsageService.isEntityReferenced(accountIdentifier, referredEntityFQN, EntityType.SECRETS);
+    } catch (Exception ex) {
+      log.info("Encountered exception while requesting the Entity Reference records of [{}], with exception",
+          secretIdentifier, ex);
+      throw new UnexpectedException("Error while deleting the secret");
+    }
+    if (isEntityReferenced) {
+      throw new InvalidRequestException(
+          String.format("Could not delete the secret %s as it is referenced by other entities", secretIdentifier));
     }
   }
 

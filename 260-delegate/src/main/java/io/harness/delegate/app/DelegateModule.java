@@ -55,6 +55,8 @@ import io.harness.delegate.exceptionhandler.handler.AmazonServiceExceptionHandle
 import io.harness.delegate.exceptionhandler.handler.DockerServerExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.GcpClientExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.InterruptedIOExceptionHandler;
+import io.harness.delegate.exceptionhandler.handler.JGitExceptionHandler;
+import io.harness.delegate.exceptionhandler.handler.SCMExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.SecretExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.SocketExceptionHandler;
 import io.harness.delegate.git.NGGitService;
@@ -734,6 +736,16 @@ public class DelegateModule extends AbstractModule {
         new ThreadFactoryBuilder().setNameFormat("task-poll-%d").setPriority(Thread.MAX_PRIORITY).build());
     Runtime.getRuntime().addShutdownHook(new Thread(() -> { taskPollExecutorService.shutdownNow(); }));
     return taskPollExecutorService;
+  }
+
+  @Provides
+  @Singleton
+  @Named("asyncTaskDispatchExecutor")
+  public ExecutorService asyncTaskDispatchExecutor() {
+    ExecutorService asyncTaskDispatchExecutor = ThreadPool.create(10, 10, 3, TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("async-task-dispatch-%d").setPriority(Thread.MAX_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { asyncTaskDispatchExecutor.shutdownNow(); }));
+    return asyncTaskDispatchExecutor;
   }
 
   @Provides
@@ -1506,6 +1518,8 @@ public class DelegateModule extends AbstractModule {
         .to(CVConnectorValidationHandler.class);
     connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.SUMOLOGIC.getDisplayName())
         .to(CVConnectorValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.DYNATRACE.getDisplayName())
+        .to(CVConnectorValidationHandler.class);
   }
 
   private void bindExceptionHandlers() {
@@ -1526,5 +1540,9 @@ public class DelegateModule extends AbstractModule {
         exception -> exceptionHandlerMapBinder.addBinding(exception).to(SocketExceptionHandler.class));
     InterruptedIOExceptionHandler.exceptions().forEach(
         exception -> exceptionHandlerMapBinder.addBinding(exception).to(InterruptedIOExceptionHandler.class));
+    JGitExceptionHandler.exceptions().forEach(
+        exception -> exceptionHandlerMapBinder.addBinding(exception).to(JGitExceptionHandler.class));
+    SCMExceptionHandler.exceptions().forEach(
+        exception -> exceptionHandlerMapBinder.addBinding(exception).to(SCMExceptionHandler.class));
   }
 }

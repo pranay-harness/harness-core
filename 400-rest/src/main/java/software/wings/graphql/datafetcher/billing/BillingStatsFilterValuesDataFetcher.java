@@ -5,10 +5,11 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.ccm.cluster.InstanceDataServiceImpl;
+import io.harness.ccm.cluster.InstanceDataService;
 import io.harness.ccm.cluster.dao.K8sWorkloadDao;
 import io.harness.ccm.cluster.entities.K8sLabelFilter;
 import io.harness.ccm.cluster.entities.TagFilter;
+import io.harness.ccm.commons.entities.batch.InstanceData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -46,7 +47,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -67,7 +67,7 @@ public class BillingStatsFilterValuesDataFetcher
   @Inject QLBillingStatsHelper statsHelper;
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject K8sLabelConnectionDataFetcher k8sLabelConnectionDataFetcher;
-  @Inject InstanceDataServiceImpl instanceDataService;
+  @Inject InstanceDataService instanceDataService;
   @Inject K8sWorkloadDao k8sWorkloadDao;
   @Inject HarnessTagService harnessTagService;
   @Inject CeAccountExpirationChecker accountChecker;
@@ -127,7 +127,7 @@ public class BillingStatsFilterValuesDataFetcher
       }
     });
 
-    Map<String, String> instanceIds = new HashMap<>();
+    Set<String> instanceIds = new HashSet<>();
     if (!groupByNodeAndPodList.isEmpty()) {
       instanceIds = getInstanceIdValues(accountId,
           getFiltersForInstanceIdQuery(filters, isGroupByPodPresent(groupByNodeAndPodList)), groupByNodeAndPodList,
@@ -164,7 +164,7 @@ public class BillingStatsFilterValuesDataFetcher
     return null;
   }
 
-  private Map<String, String> getInstanceIdValues(String accountId, List<QLBillingDataFilter> filters,
+  private Set<String> getInstanceIdValues(String accountId, List<QLBillingDataFilter> filters,
       List<QLCCMEntityGroupBy> groupByNodeAndPodList, List<QLBillingSortCriteria> sortCriteria, Integer limit,
       Integer offset) {
     ResultSet resultSet = null;
@@ -173,7 +173,7 @@ public class BillingStatsFilterValuesDataFetcher
     BillingDataQueryMetadata queryData = billingDataQueryBuilder.formFilterValuesQuery(
         accountId, filters, groupByNodeAndPodList, sortCriteria, limit, offset);
     log.info("BillingStatsFilterValuesDataFetcher query to get InstanceIds!! {}", queryData.getQuery());
-    Map<String, String> instanceIds = new HashMap<>();
+    Set<String> instanceIds = new HashSet<>();
     while (!successful && retryCount < MAX_RETRY) {
       try (Connection connection = timeScaleDBService.getDBConnection();
            Statement statement = connection.createStatement()) {
@@ -183,8 +183,7 @@ public class BillingStatsFilterValuesDataFetcher
           for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
             switch (field) {
               case INSTANCEID:
-                instanceIds.put(resultSet.getString(field.getFieldName()),
-                    resultSet.getString(BillingDataMetaDataFields.INSTANCENAME.getFieldName()));
+                instanceIds.add(resultSet.getString(field.getFieldName()));
                 break;
               default:
                 break;
@@ -252,8 +251,8 @@ public class BillingStatsFilterValuesDataFetcher
   }
 
   private QLFilterValuesListData generateFilterValuesData(BillingDataQueryMetadata queryData, ResultSet resultSet,
-      Map<String, String> instanceIds, String accountId, K8sLabelFilter labelFilter, TagFilter tagFilter,
-      Long totalCount) throws SQLException {
+      Set<String> instanceIds, String accountId, K8sLabelFilter labelFilter, TagFilter tagFilter, Long totalCount)
+      throws SQLException {
     QLFilterValuesDataBuilder filterValuesDataBuilder = QLFilterValuesData.builder();
     Set<String> cloudServiceNames = new HashSet<>();
     Set<String> workloadNames = new HashSet<>();
@@ -349,10 +348,14 @@ public class BillingStatsFilterValuesDataFetcher
     }
 
     if (!instanceIds.isEmpty()) {
-      instanceIds.keySet().forEach(id
+      List<InstanceData> instanceData =
+          instanceDataService.fetchInstanceDataForGivenInstances(new ArrayList<>(instanceIds));
+      Map<String, String> instanceIdToName = instanceData.stream().collect(Collectors.toMap(
+          InstanceData::getInstanceId, InstanceData::getInstanceName, (entry1, entry2) -> { return entry1; }));
+      instanceIds.forEach(instanceId
           -> instances.add(QLEntityData.builder()
-                               .name(instanceIds.get(id))
-                               .id(id)
+                               .name(instanceIdToName.get(instanceId))
+                               .id(instanceId)
                                .type(BillingDataMetaDataFields.INSTANCEID.getFieldName())
                                .build()));
     }

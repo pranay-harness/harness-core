@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.advisers.rollback.OnFailRollbackParameters;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.common.ParameterFieldHelper;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.plancreator.steps.common.StageElementParameters.StageElementParametersBuilder;
@@ -46,7 +47,8 @@ public class StepParametersUtils {
     StageElementParametersBuilder stageBuilder = StageElementParameters.builder();
     stageBuilder.name(stageElementConfig.getName());
     stageBuilder.identifier(stageElementConfig.getIdentifier());
-    stageBuilder.description(stageElementConfig.getDescription());
+    stageBuilder.description(
+        ParameterFieldHelper.getParameterFieldHandleValueNull(stageElementConfig.getDescription()));
     stageBuilder.failureStrategies(stageElementConfig.getFailureStrategies());
     stageBuilder.skipCondition(stageElementConfig.getSkipCondition());
     stageBuilder.when(stageElementConfig.getWhen());

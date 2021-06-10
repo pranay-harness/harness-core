@@ -3,6 +3,7 @@ package io.harness.connector.impl;
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
 import static io.harness.connector.ConnectivityStatus.FAILURE;
+import static io.harness.connector.ConnectivityStatus.UNKNOWN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.errorhandling.NGErrorHelper.DEFAULT_ERROR_SUMMARY;
@@ -38,6 +39,7 @@ import io.harness.connector.services.ConnectorFilterService;
 import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.stats.ConnectorStatistics;
+import io.harness.connector.stats.ConnectorStatusStats;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
@@ -578,7 +580,21 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   @Override
   public ConnectorStatistics getConnectorStatistics(
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    return connectorStatisticsHelper.getStats(accountIdentifier, orgIdentifier, projectIdentifier);
+    ConnectorStatistics stats = connectorStatisticsHelper.getStats(accountIdentifier, orgIdentifier, projectIdentifier);
+    changeTheNullStatusToUnknown(stats);
+    return stats;
+  }
+
+  private void changeTheNullStatusToUnknown(ConnectorStatistics stats) {
+    if (stats == null) {
+      return;
+    }
+    List<ConnectorStatusStats> statusStats = stats.getStatusStats();
+    for (ConnectorStatusStats connectorStatusStats : statusStats) {
+      if (connectorStatusStats.getStatus() == null) {
+        connectorStatusStats.setStatus(UNKNOWN);
+      }
+    }
   }
 
   @Override

@@ -6,6 +6,7 @@ import static io.harness.eraro.ErrorCode.GIT_CONNECTION_ERROR;
 import static io.harness.exception.WingsException.ADMIN_SRE;
 import static io.harness.exception.WingsException.NOBODY;
 import static io.harness.exception.WingsException.SRE;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.git.Constants.GIT_DEFAULT_LOG_PREFIX;
 import static io.harness.git.Constants.GIT_HELM_LOG_PREFIX;
@@ -316,6 +317,15 @@ public class GitClientHelper {
     if ((ex instanceof GitAPIException && ex.getCause() instanceof TransportException)
         || ex instanceof JGitInternalException || ex instanceof MissingObjectException) {
       throw new GitConnectionDelegateException(GIT_CONNECTION_ERROR, ex.getCause(), ex.getMessage(), USER_ADMIN);
+    }
+  }
+
+  public void checkIfMissingCommitIdIssue(Exception ex, String commitId) {
+    if ((ex instanceof JGitInternalException && ex.getCause() instanceof MissingObjectException)
+        || ex instanceof MissingObjectException) {
+      throw new GitClientException(
+          format("Unable to find any references with commit id: %s. Check provided value for commit id", commitId),
+          USER);
     }
   }
 

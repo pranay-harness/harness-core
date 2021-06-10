@@ -681,6 +681,7 @@
       "required": [
         "containerName",
         "directoryName",
+        "reportName",
         "storageAccountName"
       ],
       "properties": {
@@ -688,6 +689,9 @@
           "type": "string"
         },
         "directoryName": {
+          "type": "string"
+        },
+        "reportName": {
           "type": "string"
         },
         "storageAccountName": {
@@ -1124,6 +1128,7 @@
             "Splunk",
             "AppDynamics",
             "Prometheus",
+            "Dynatrace",
             "Vault",
             "AzureKeyVault",
             "DockerRegistry",
@@ -1340,6 +1345,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/DockerConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Dynatrace"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/DynatraceConnectorDTO"
               }
             }
           }
@@ -1778,6 +1799,36 @@
               ]
             }
           ]
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "DynatraceConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "apiTokenRef",
+            "url"
+          ],
+          "properties": {
+            "apiTokenRef": {
+              "type": "string"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "url": {
+              "type": "string"
+            }
+          }
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"

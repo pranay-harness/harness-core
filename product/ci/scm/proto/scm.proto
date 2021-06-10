@@ -605,6 +605,27 @@ message ListWebhooksResponse {
   PageResponse pagination = 4;
 }
 
+message GetAuthenticatedUserRequest {
+  Provider provider = 1;
+}
+
+message GetAuthenticatedUserResponse {
+  string username = 1;
+  string error = 2;
+}
+
+message GetUserReposRequest {
+  PageRequest pagination = 1;
+  Provider provider = 2;
+}
+
+message GetUserReposResponse {
+  repeated Repository repos = 1;
+  PageResponse pagination = 2;
+  int32 status = 3;
+  string error = 4;
+}
+
 service SCM {
   // RPC to stop tailing on a file.
   rpc ParseWebhook(ParseWebhookRequest) returns (ParseWebhookResponse);
@@ -633,6 +654,10 @@ service SCM {
 
   // Push Request functions.
   rpc ListCommitsInPR(ListCommitsInPRRequest) returns (ListCommitsInPRResponse);
+
+  // User functions
+  rpc GetAuthenticatedUser(GetAuthenticatedUserRequest) returns (GetAuthenticatedUserResponse);
+  rpc GetUserRepos(GetUserReposRequest) returns (GetUserReposResponse);
 
   // repo functions from go-scm
   rpc CreateWebhook(CreateWebhookRequest) returns (CreateWebhookResponse);

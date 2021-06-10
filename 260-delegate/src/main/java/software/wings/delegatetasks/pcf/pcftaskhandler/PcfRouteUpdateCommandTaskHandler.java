@@ -7,6 +7,8 @@ import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.filesystem.FileIo;
@@ -40,6 +42,7 @@ import org.cloudfoundry.operations.applications.ApplicationDetail;
 @Singleton
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(HarnessTeam.CDP)
 public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
   /**
    * Performs RouteSwapping for Blue-Green deployment
@@ -81,6 +84,9 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
               .timeOutIntervalInMins(pcfCommandRouteUpdateRequest.getTimeoutIntervalInMin())
               .cfHomeDirPath(workingDirectory.getAbsolutePath())
               .useCFCLI(pcfCommandRouteUpdateRequest.isUseCfCLI())
+              .cfCliPath(pcfCommandTaskHelper.getCfCliPathOnDelegate(
+                  pcfCommandRequest.isUseCfCLI(), pcfCommandRequest.getCfCliVersion()))
+              .cfCliVersion(pcfCommandRequest.getCfCliVersion())
               .limitPcfThreads(pcfCommandRequest.isLimitPcfThreads())
               .ignorePcfConnectionContextCache(pcfCommandRequest.isIgnorePcfConnectionContextCache())
               .build();

@@ -194,4 +194,4 @@ eventsFramework:
       CATrustStorePath: "/tmp/ca_trust_store"
       CATrustStorePassword: ""
 
-useRedisForSdkResponseEvents: false
+useRedisForSdkResponseEvents: true

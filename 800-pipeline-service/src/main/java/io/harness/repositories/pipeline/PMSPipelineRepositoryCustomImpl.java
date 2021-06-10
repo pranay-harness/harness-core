@@ -3,10 +3,17 @@ package io.harness.repositories.pipeline;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.persistance.GitAwarePersistence;
 import io.harness.gitsync.persistance.GitSyncableHarnessRepo;
+import io.harness.outbox.OutboxEvent;
+import io.harness.outbox.api.OutboxService;
 import io.harness.plancreator.pipeline.PipelineConfig;
+import io.harness.pms.events.PipelineCreateEvent;
+import io.harness.pms.events.PipelineDeleteEvent;
+import io.harness.pms.events.PipelineUpdateEvent;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 
@@ -14,6 +21,7 @@ import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +45,7 @@ import org.springframework.data.repository.support.PageableExecutionUtils;
 public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCustom {
   private final MongoTemplate mongoTemplate;
   private final GitAwarePersistence gitAwarePersistence;
+  OutboxService outboxService;
 
   @Override
   public Page<PipelineEntity> findAll(
@@ -51,7 +60,10 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
 
   @Override
   public PipelineEntity save(PipelineEntity pipelineToSave, PipelineConfig yamlDTO) {
-    return gitAwarePersistence.save(pipelineToSave, pipelineToSave.getYaml(), ChangeType.ADD, PipelineEntity.class);
+    Supplier<OutboxEvent> supplier = ()
+        -> outboxService.save(new PipelineCreateEvent(pipelineToSave.getAccountIdentifier(),
+            pipelineToSave.getOrgIdentifier(), pipelineToSave.getProjectIdentifier(), pipelineToSave));
+    return gitAwarePersistence.save(pipelineToSave, yamlDTO.toString(), ChangeType.ADD, PipelineEntity.class, supplier);
   }
 
   @Override
@@ -72,8 +84,20 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
 
   @Override
   public PipelineEntity updatePipelineYaml(PipelineEntity pipelineToUpdate, PipelineConfig yamlDTO) {
-    return gitAwarePersistence.save(
-        pipelineToUpdate, pipelineToUpdate.getYaml(), ChangeType.MODIFY, PipelineEntity.class);
+    Optional<PipelineEntity> pipelineEntityOptional =
+        findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(pipelineToUpdate.getAccountId(),
+            pipelineToUpdate.getOrgIdentifier(), pipelineToUpdate.getProjectIdentifier(),
+            pipelineToUpdate.getIdentifier(), true);
+    if (pipelineEntityOptional.isPresent()) {
+      PipelineEntity oldPipeline = pipelineEntityOptional.get();
+      Supplier<OutboxEvent> supplier = ()
+          -> outboxService.save(
+              new PipelineUpdateEvent(pipelineToUpdate.getAccountIdentifier(), pipelineToUpdate.getOrgIdentifier(),
+                  pipelineToUpdate.getProjectIdentifier(), pipelineToUpdate, oldPipeline));
+      return gitAwarePersistence.save(
+          pipelineToUpdate, yamlDTO.toString(), ChangeType.MODIFY, PipelineEntity.class, supplier);
+    }
+    throw new InvalidRequestException("No such pipeline exist", WingsException.USER);
   }
 
   @Override
@@ -95,8 +119,18 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
 
   @Override
   public PipelineEntity deletePipeline(PipelineEntity pipelineToUpdate, PipelineConfig yamlDTO) {
-    return gitAwarePersistence.save(
-        pipelineToUpdate, pipelineToUpdate.getYaml(), ChangeType.DELETE, PipelineEntity.class);
+    Optional<PipelineEntity> pipelineEntityOptional =
+        findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(pipelineToUpdate.getAccountId(),
+            pipelineToUpdate.getOrgIdentifier(), pipelineToUpdate.getProjectIdentifier(),
+            pipelineToUpdate.getIdentifier(), true);
+    if (pipelineEntityOptional.isPresent()) {
+      Supplier<OutboxEvent> supplier = ()
+          -> outboxService.save(new PipelineDeleteEvent(pipelineToUpdate.getAccountIdentifier(),
+              pipelineToUpdate.getOrgIdentifier(), pipelineToUpdate.getProjectIdentifier(), pipelineToUpdate));
+      return gitAwarePersistence.save(
+          pipelineToUpdate, yamlDTO.toString(), ChangeType.DELETE, PipelineEntity.class, supplier);
+    }
+    throw new InvalidRequestException("No such pipeline exists");
   }
 
   private RetryPolicy<Object> getRetryPolicyForPipelineUpdate() {

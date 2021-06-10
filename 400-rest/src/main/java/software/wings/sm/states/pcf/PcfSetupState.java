@@ -172,6 +172,7 @@ public class PcfSetupState extends State {
   @Getter @Setter private boolean enforceSslValidation;
   @Getter @Setter private boolean useArtifactProcessingScript;
   @Getter @Setter private String artifactProcessingScript;
+  @Getter @Setter private List<String> tags;
 
   public PcfSetupState(String name) {
     super(name, StateType.PCF_SETUP.name());
@@ -322,6 +323,7 @@ public class PcfSetupState extends State {
             .limitPcfThreads(featureFlagService.isEnabled(LIMIT_PCF_THREADS, pcfConfig.getAccountId()))
             .ignorePcfConnectionContextCache(
                 featureFlagService.isEnabled(IGNORE_PCF_CONNECTION_CONTEXT_CACHE, pcfConfig.getAccountId()))
+            .cfCliVersion(pcfStateHelper.getCfCliVersionOrDefault(app.getAppId(), serviceElement.getUuid()))
             .build();
 
     if (featureFlagService.isEnabled(CF_CUSTOM_EXTRACTION, pcfConfig.getAccountId()) && useArtifactProcessingScript
@@ -360,9 +362,12 @@ public class PcfSetupState extends State {
             .pcfManifestsPackage(pcfManifestsPackage)
             .useArtifactProcessingScript(useArtifactProcessingScript)
             .artifactProcessingScript(artifactProcessingScript)
+            .tags(tags)
             .build();
 
     String waitId = generateUuid();
+
+    List<String> renderedTags = pcfStateHelper.getRenderedTags(context, tags);
 
     DelegateTask delegateTask = pcfStateHelper.getDelegateTask(
         PcfDelegateTaskCreationData.builder()
@@ -378,6 +383,7 @@ public class PcfSetupState extends State {
             .taskDescription("PCF setup task execution")
             .serviceId(pcfInfrastructureMapping.getServiceId())
             .timeout(timeoutIntervalInMinutes == null ? DEFAULT_PCF_TASK_TIMEOUT_MIN : timeoutIntervalInMinutes)
+            .tagList(renderedTags)
             .build());
 
     delegateService.queueTask(delegateTask);
@@ -409,6 +415,7 @@ public class PcfSetupState extends State {
     finalRouteMap = pcfSetupStateExecutionData.getFinalRoutesOnSetupState();
     useArtifactProcessingScript = pcfSetupStateExecutionData.isUseArtifactProcessingScript();
     artifactProcessingScript = pcfSetupStateExecutionData.getArtifactProcessingScript();
+    tags = pcfSetupStateExecutionData.getTags();
   }
 
   @VisibleForTesting
@@ -631,6 +638,7 @@ public class PcfSetupState extends State {
             .useAppAutoscalar(stateExecutionData.isUseAppAutoscalar())
             .enforceSslValidation(stateExecutionData.isEnforceSslValidation())
             .pcfManifestsPackage(stateExecutionData.getPcfManifestsPackage())
+            .tags(stateExecutionData.getTags())
             .isUseCfCli(true);
 
     if (!isPcfSetupCommandResponseNull) {
@@ -765,6 +773,8 @@ public class PcfSetupState extends State {
       ExecutionContext context, Map<K8sValuesLocation, ApplicationManifest> appManifestMap, String activityId) {
     final DelegateTask gitFetchFileTask = pcfStateHelper.createGitFetchFileAsyncTask(
         context, appManifestMap, activityId, isSelectionLogsTrackingForTasksEnabled());
+    gitFetchFileTask.setTags(pcfStateHelper.getRenderedTags(context, tags));
+
     final String delegateTaskId = delegateService.queueTask(gitFetchFileTask);
     appendDelegateTaskDetails(context, gitFetchFileTask);
     return ExecutionResponse.builder()
@@ -787,6 +797,7 @@ public class PcfSetupState extends State {
                                 .finalRoutesOnSetupState(finalRouteMap)
                                 .useArtifactProcessingScript(useArtifactProcessingScript)
                                 .artifactProcessingScript(artifactProcessingScript)
+                                .tags(tags)
                                 .build())
         .delegateTaskId(delegateTaskId)
         .build();

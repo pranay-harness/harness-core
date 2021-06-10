@@ -8,8 +8,10 @@ import io.harness.gitsync.FileProcessingResponse;
 import io.harness.gitsync.ProcessingFailureStage;
 import io.harness.gitsync.ProcessingResponse;
 import io.harness.gitsync.common.beans.FileProcessingResponseDTO;
+import io.harness.gitsync.common.beans.FileProcessingStatus;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingResponseDTO;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingResponseDTO.GitToHarnessProcessingResponseDTOBuilder;
+import io.harness.gitsync.common.beans.MsvcProcessingFailureStage;
 
 import com.google.protobuf.StringValue;
 import java.util.List;
@@ -24,7 +26,7 @@ public class ProcessingResponseMapper {
     return FileProcessingResponseDTO.builder()
         .filePath(fileProcessingResponse.getFilePath())
         .errorMessage(errorMsg.getValue())
-        .fileProcessingStatus(String.valueOf(fileProcessingResponse.getStatus()))
+        .fileProcessingStatus(FileProcessingStatus.valueOf(fileProcessingResponse.getStatus().toString()))
         .build();
   }
 
@@ -40,7 +42,10 @@ public class ProcessingResponseMapper {
         GitToHarnessProcessingResponseDTO.builder()
             .accountId(processingResponse.getAccountId())
             .fileResponses(fileProcessingResponseDTOList);
-    gitToHarnessProcessingResponseDTOBuilder.processingStageFailure(String.valueOf(processingFailureStage));
+    if (processingFailureStage != null) {
+      gitToHarnessProcessingResponseDTOBuilder.msvcProcessingFailureStage(
+          MsvcProcessingFailureStage.valueOf(processingFailureStage.toString()));
+    }
     return gitToHarnessProcessingResponseDTOBuilder.build();
   }
 }

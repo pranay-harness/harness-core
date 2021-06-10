@@ -15,6 +15,7 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.NameAccess;
 
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AllowedValueYaml;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
@@ -26,10 +27,12 @@ import software.wings.beans.trigger.ArtifactSelection.ArtifactSelectionKeys;
 import software.wings.beans.trigger.ArtifactTriggerCondition.ArtifactTriggerConditionKeys;
 import software.wings.beans.trigger.ManifestTriggerCondition.ManifestTriggerConditionKeys;
 import software.wings.beans.trigger.TriggerCondition.TriggerConditionKeys;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.BaseEntityYaml;
 import software.wings.yaml.trigger.TriggerConditionYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -56,7 +59,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "triggers")
 @HarnessEntity(exportable = true)
 
-public class Trigger extends Base implements NameAccess, TagAware, ApplicationAccess {
+public class Trigger extends Base implements NameAccess, TagAware, ApplicationAccess, EncryptableSetting {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -172,6 +175,13 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
       }
     }
     return workflowVariables;
+  }
+
+  @Override
+  @JsonIgnore
+  @SchemaIgnore
+  public SettingVariableTypes getSettingType() {
+    return SettingVariableTypes.TRIGGER;
   }
 
   @Data
