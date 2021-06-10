@@ -28,6 +28,7 @@ public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO, 
     return GitConfig.builder()
         .connectionType(gitConnectionType)
         .url(getGitURL(configDTO))
+        .validationRepo(configDTO.getValidationRepo())
         .authType(configDTO.getGitAuthType())
         .supportsGitSync(isGitSyncSupported)
         .branchName(getBranchName(configDTO))

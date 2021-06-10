@@ -16,27 +16,29 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 @OwnedBy(DX)
 public class GitConfigCreater {
-  public static GitConfigDTO getGitConfigForHttp(GitConnectionType gitConnectionType, String url, String username,
-      SecretRefData usernameRef, SecretRefData passwordRef, Set<String> delegateSelectors) {
+  public static GitConfigDTO getGitConfigForHttp(GitConnectionType gitConnectionType, String url, String validationRepo,
+      String username, SecretRefData usernameRef, SecretRefData passwordRef, Set<String> delegateSelectors) {
     final GitHTTPAuthenticationDTO gitHTTPAuthenticationDTO =
         GitHTTPAuthenticationDTO.builder().passwordRef(passwordRef).username(username).usernameRef(usernameRef).build();
     return GitConfigDTO.builder()
         .gitConnectionType(gitConnectionType)
         .gitAuthType(GitAuthType.HTTP)
         .url(url)
+        .validationRepo(validationRepo)
         .gitAuth(gitHTTPAuthenticationDTO)
         .delegateSelectors(delegateSelectors)
         .build();
   }
 
-  public static GitConfigDTO getGitConfigForSsh(
-      GitConnectionType gitConnectionType, String url, SecretRefData sshKey, Set<String> delegateSelectors) {
+  public static GitConfigDTO getGitConfigForSsh(GitConnectionType gitConnectionType, String url, String validationRepo,
+      SecretRefData sshKey, Set<String> delegateSelectors) {
     final GitSSHAuthenticationDTO gitSSHAuthenticationDTO =
         GitSSHAuthenticationDTO.builder().encryptedSshKey(sshKey).build();
     return GitConfigDTO.builder()
         .gitConnectionType(gitConnectionType)
         .gitAuthType(GitAuthType.SSH)
         .url(url)
+        .validationRepo(validationRepo)
         .gitAuth(gitSSHAuthenticationDTO)
         .delegateSelectors(delegateSelectors)
         .build();
