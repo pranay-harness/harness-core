@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
@@ -119,6 +120,25 @@ public class OrchestrationServiceImpl implements OrchestrationService {
       throw e;
     }
   }
+
+  @Override
+  public void markCompleted(String verificationTaskId) {
+    updateStatusOfOrchestrator(verificationTaskId, AnalysisStatus.COMPLETED);
+  }
+
+  @Override
+  public void markCompleted(Set<String> verificationTaskIds) {
+    Query<AnalysisOrchestrator> orchestratorQuery = hPersistence.createQuery(AnalysisOrchestrator.class)
+                                                        .field(AnalysisOrchestratorKeys.verificationTaskId)
+                                                        .in(verificationTaskIds);
+
+    UpdateOperations<AnalysisOrchestrator> updateOperations =
+        hPersistence.createUpdateOperations(AnalysisOrchestrator.class)
+            .set(AnalysisOrchestratorKeys.status, AnalysisStatus.COMPLETED);
+
+    hPersistence.update(orchestratorQuery, updateOperations);
+  }
+
   private void orchestrateAtRunningState(AnalysisOrchestrator orchestrator) {
     if (orchestrator == null) {
       String errMsg = "No orchestrator available to execute currently.";
@@ -159,7 +179,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
         break;
       case COMPLETED:
         log.info("Analysis for the entire duration is done. Time to close down");
-        orchestrator.setStatus(AnalysisStatus.COMPLETED);
+        markCompleted(orchestrator.getVerificationTaskId());
         break;
       default:
         log.info("Unknown analysis status of the state machine under execution");
