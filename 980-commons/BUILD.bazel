@@ -57,7 +57,6 @@ java_library(
         "@maven//:com_hazelcast_hazelcast",
         "@maven//:com_hubspot_jackson_jackson_datatype_protobuf",
         "@maven//:com_jayway_jsonpath_json_path",
-        "@maven//:com_nimbusds_nimbus_jose_jwt",
         "@maven//:com_squareup_okhttp3_logging_interceptor",
         "@maven//:com_squareup_okhttp3_okhttp",
         "@maven//:com_squareup_retrofit2_converter_jackson",
