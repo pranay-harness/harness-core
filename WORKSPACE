@@ -1424,12 +1424,12 @@ plain_artifacts = [
     "org.apache.cxf:cxf-rt-wsdl:3.3.5",
     "org.apache.geronimo.specs:geronimo-jta_1.1_spec:1.1.1",
     "org.apache.geronimo.specs:geronimo-ws-metadata_2.0_spec:1.1.3",
-    "org.apache.httpcomponents:fluent-hc:4.5.1",
-    "org.apache.httpcomponents:httpasyncclient:4.1.1",
-    "org.apache.httpcomponents:httpclient:4.5.10",
-    "org.apache.httpcomponents:httpcore-nio:4.4.12",
-    "org.apache.httpcomponents:httpcore:4.4.1",
-    "org.apache.httpcomponents:httpmime:4.3.6",
+    "org.apache.httpcomponents:fluent-hc:4.5.13",
+    "org.apache.httpcomponents:httpasyncclient:4.1.4",
+    "org.apache.httpcomponents:httpclient:4.5.13",
+    "org.apache.httpcomponents:httpcore-nio:4.4.14",
+    "org.apache.httpcomponents:httpcore:4.4.14",
+    "org.apache.httpcomponents:httpmime:4.5.13",
     "org.apache.ibatis:ibatis-core:3.0",
     "org.apache.kafka:connect-api:2.6.1",
     "org.apache.kafka:connect-runtime:2.6.1",
@@ -1854,27 +1854,6 @@ maven_install(
         "https://repo1.maven.org/maven2",
         "https://%s:%s@harness.jfrog.io/artifactory/harness-internal" % (JFROG_USERNAME, JFROG_PASSWORD),
     ],
-)
-
-maven_install(
-    name = "delegate",
-    artifacts = [
-        "org.apache.httpcomponents:httpmime:4.5.1",
-    ],
-    repositories = [
-        "https://repo1.maven.org/maven2",
-        "https://harness.jfrog.io/harness/thirdparty-annonymous",
-        "https://dl.bintray.com/michaelklishin/maven",
-        "https://repo.spring.io/plugins-release",
-        "https://palantir.bintray.com/releases",
-        "https://oss.sonatype.org/content/repositories/releases",
-        "https://jitpack.io",
-        "https://jcenter.bintray.com",
-        "https://github.com/bkper/mvn-repo/raw/master/releases",
-        "https://harness.jfrog.io/harness/datacollection-dsl",
-        "http://packages.confluent.io/maven",
-    ],
-    version_conflict_policy = "pinned",
 )
 
 maven_install(
