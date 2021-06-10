@@ -1,17 +1,18 @@
 package grpc
 
 import (
+	"io"
+
 	"github.com/wings-software/portal/commons/go/lib/images"
-	"github.com/wings-software/portal/product/ci/engine/jexl"
+	"github.com/wings-software/portal/product/ci/engine/legacy/jexl"
+	"github.com/wings-software/portal/product/ci/engine/legacy/state"
 	"github.com/wings-software/portal/product/ci/engine/new/executor"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
-	"github.com/wings-software/portal/product/ci/engine/state"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"io"
 )
 
 var (

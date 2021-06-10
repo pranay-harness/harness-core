@@ -6,7 +6,7 @@ go_library(
         "parallel_executor_mock.go",
         "unit_executor_mock.go",
     ],
-    importpath = "github.com/wings-software/portal/product/ci/engine/executor/mocks",
+    importpath = "github.com/wings-software/portal/product/ci/engine/legacy/executor/mocks",
     visibility = ["//visibility:public"],
     deps = [
         "//product/ci/engine/output:go_default_library",

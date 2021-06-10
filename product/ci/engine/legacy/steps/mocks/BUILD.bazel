@@ -9,7 +9,7 @@ go_library(
         "run_mock.go",
         "save_cache_mock.go",
     ],
-    importpath = "github.com/wings-software/portal/product/ci/engine/steps/mocks",
+    importpath = "github.com/wings-software/portal/product/ci/engine/legacy/steps/mocks",
     visibility = ["//visibility:public"],
     deps = [
         "//product/ci/engine/output:go_default_library",

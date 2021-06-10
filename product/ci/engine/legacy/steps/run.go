@@ -10,7 +10,7 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	caddon "github.com/wings-software/portal/product/ci/addon/grpc/client"
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
-	"github.com/wings-software/portal/product/ci/engine/jexl"
+	"github.com/wings-software/portal/product/ci/engine/legacy/jexl"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"

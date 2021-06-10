@@ -8,7 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/wings-software/portal/commons/go/lib/logs"
-	mexecutor "github.com/wings-software/portal/product/ci/engine/executor/mocks"
+	mexecutor "github.com/wings-software/portal/product/ci/engine/legacy/executor/mocks"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 )
