@@ -301,10 +301,17 @@ fi
 
 cd ../..
 
+
 mkdir -p dist/eventsapi-monitor
 cd dist/eventsapi-monitor
 
-cp -r ../../953-events-api/src/monitoring/* .
+cp ${HOME}/.bazel-dirs/bin/950-events-framework-monitor/module_deploy.jar eventsapi-monitor-capsule.jar
+cp ../../950-events-framework-monitor/config.yml .
+cp ../../950-events-framework-monitor/redis/* .
+cp ../../alpn-boot-8.1.13.v20181017.jar .
+cp ../../dockerization/eventsapi-monitor/Dockerfile-eventsapi-monitor-jenkins-k8-openjdk ./Dockerfile
+cp ../../dockerization/eventsapi-monitor/Dockerfile-eventsapi-monitor-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
+cp -r ../../dockerization/eventsapi-monitor/scripts/ .
 
 echo ${JDK} > jdk.txt
 echo ${VERSION} > version.txt
