@@ -42,6 +42,8 @@ replace_key_value eventsFramework.redis.sslConfig.CATrustStorePassword $EVENTS_F
 
 replace_key_value gcpConfig.gcpProjectId "$GCP_PROJECT_ID"
 replace_key_value azureConfig.azureAppClientId "$AZURE_APP_CLIENT_ID"
+replace_key_value awsConfig.harnessAwsAccountId "$AWS_ACCOUNT_ID"
+replace_key_value awsConfig.awsConnectorTemplate "$AWS_TEMPLATE_LINK"
 replace_key_value cfClientConfig.apiKey "$CF_CLIENT_API_KEY"
 replace_key_value cfClientConfig.configUrl "$CF_CLIENT_CONFIG_URL"
 replace_key_value cfClientConfig.eventUrl "$CF_CLIENT_EVENT_URL"

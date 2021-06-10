@@ -681,6 +681,7 @@
       "required": [
         "containerName",
         "directoryName",
+        "reportName",
         "storageAccountName"
       ],
       "properties": {
@@ -688,6 +689,9 @@
           "type": "string"
         },
         "directoryName": {
+          "type": "string"
+        },
+        "reportName": {
           "type": "string"
         },
         "storageAccountName": {

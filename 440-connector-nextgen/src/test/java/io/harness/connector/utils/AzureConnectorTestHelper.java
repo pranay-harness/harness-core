@@ -23,6 +23,7 @@ public class AzureConnectorTestHelper {
   List<CEFeatures> FEATURES_ENABLED = ImmutableList.of(CEFeatures.OPTIMIZATION, CEFeatures.BILLING);
 
   String CONTAINER_NAME = "containerName";
+  String REPORT_NAME = "reportName";
   String DIRECTORY_NAME = "directoryName";
   String STORAGE_ACCOUNT_NAME = "storageAccountName";
 
@@ -61,6 +62,7 @@ public class AzureConnectorTestHelper {
         .storageAccountName(STORAGE_ACCOUNT_NAME)
         .directoryName(DIRECTORY_NAME)
         .containerName(CONTAINER_NAME)
+        .reportName(REPORT_NAME)
         .build();
   }
 
@@ -69,6 +71,7 @@ public class AzureConnectorTestHelper {
         .storageAccountName(STORAGE_ACCOUNT_NAME)
         .containerName(CONTAINER_NAME)
         .directoryName(DIRECTORY_NAME)
+        .reportName(REPORT_NAME)
         .build();
   }
 
