@@ -1,7 +1,6 @@
 package io.harness.cdng.infra;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
 
 import static java.lang.String.format;
 
@@ -15,6 +14,7 @@ import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.infra.yaml.InfrastructureKind;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.cdng.infra.yaml.K8sGcpInfrastructure;
+import io.harness.common.ParameterFieldHelper;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.pms.yaml.ParameterField;
 
@@ -56,24 +56,24 @@ public class InfrastructureMapper {
 
   private void validateK8sDirectInfrastructure(K8SDirectInfrastructure infrastructure) {
     if (ParameterField.isNull(infrastructure.getNamespace())
-        || isEmpty(getParameterFieldValue(infrastructure.getNamespace()))) {
+        || isEmpty(ParameterFieldHelper.getParameterFieldValue(infrastructure.getNamespace()))) {
       throw new InvalidArgumentsException(Pair.of("namespace", "cannot be empty"));
     }
 
     if (ParameterField.isNull(infrastructure.getReleaseName())
-        || isEmpty(getParameterFieldValue(infrastructure.getReleaseName()))) {
+        || isEmpty(ParameterFieldHelper.getParameterFieldValue(infrastructure.getReleaseName()))) {
       throw new InvalidArgumentsException(Pair.of("releaseName", "cannot be empty"));
     }
   }
 
   private void validateK8sGcpInfrastructure(K8sGcpInfrastructure infrastructure) {
     if (ParameterField.isNull(infrastructure.getNamespace())
-        || isEmpty(getParameterFieldValue(infrastructure.getNamespace()))) {
+        || isEmpty(ParameterFieldHelper.getParameterFieldValue(infrastructure.getNamespace()))) {
       throw new InvalidArgumentsException(Pair.of("namespace", "cannot be empty"));
     }
 
     if (ParameterField.isNull(infrastructure.getReleaseName())
-        || isEmpty(getParameterFieldValue(infrastructure.getReleaseName()))) {
+        || isEmpty(ParameterFieldHelper.getParameterFieldValue(infrastructure.getReleaseName()))) {
       throw new InvalidArgumentsException(Pair.of("releaseName", "cannot be empty"));
     }
   }
