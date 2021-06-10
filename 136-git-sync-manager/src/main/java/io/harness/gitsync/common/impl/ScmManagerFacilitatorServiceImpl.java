@@ -12,6 +12,7 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.ScmException;
+import io.harness.gitsync.common.dtos.CreatePRDTO;
 import io.harness.gitsync.common.dtos.GitDiffResultFileListDTO;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 import io.harness.gitsync.common.dtos.GitFileContent;
@@ -76,7 +77,7 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
   }
 
   @Override
-  public boolean createPullRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+  public CreatePRDTO createPullRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String yamlGitConfigRef, GitPRCreateRequest gitCreatePRRequest) {
     // since project level ref = ref
     ScmConnector decryptScmConnector = gitSyncConnectorHelper.getDecryptedConnector(
@@ -90,7 +91,7 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
     } catch (Exception ex) {
       throw new ScmException(PR_CREATION_ERROR);
     }
-    return true;
+    return CreatePRDTO.builder().prNumber(createPRResponse.getNumber()).build();
   }
 
   @Override
