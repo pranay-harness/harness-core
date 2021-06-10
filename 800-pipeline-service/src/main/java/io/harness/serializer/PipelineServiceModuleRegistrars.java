@@ -46,6 +46,7 @@ public class PipelineServiceModuleRegistrars {
           .addAll(NGPipelineRegistrars.morphiaRegistrars)
           .addAll(GitSyncSdkRegistrar.morphiaRegistrars)
           .addAll(PersistenceRegistrars.morphiaRegistrars)
+          .addAll(OutboxEventRegistrars.morphiaRegistrars)
           .build();
 
   public final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

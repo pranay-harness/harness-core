@@ -179,6 +179,13 @@ timescaledb:
   logUnclosedConnections: false
   loggerLevel: OFF
 
+auditClientConfig:
+  baseUrl: http://localhost:9005/api/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+enableAudit: false
+
 useRedisForInterrupts: false
 useRedisForOrchestrationEvents: false
 useRedisForSdkResponseEvents: false

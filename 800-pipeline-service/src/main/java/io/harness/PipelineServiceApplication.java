@@ -47,6 +47,7 @@ import io.harness.monitoring.MonitoringRedisEventObserver;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.notification.module.NotificationClientModule;
+import io.harness.outbox.OutboxEventPollService;
 import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.approval.ApprovalInstanceExpirationJob;
@@ -513,6 +514,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     environment.lifecycle().manage(injector.getInstance(InterruptRedisConsumerService.class));
     environment.lifecycle().manage(injector.getInstance(OrchestrationEventEventConsumerService.class));
     environment.lifecycle().manage(injector.getInstance(SdkResponseEventRedisConsumerService.class));
+    environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
   }
 
   private void registerCorsFilter(PipelineServiceConfiguration appConfig, Environment environment) {
