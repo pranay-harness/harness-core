@@ -16,10 +16,10 @@ import (
 	caddon "github.com/wings-software/portal/product/ci/addon/grpc/client"
 	amgrpc "github.com/wings-software/portal/product/ci/addon/grpc/client/mocks"
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
-	mexecutor "github.com/wings-software/portal/product/ci/engine/executor/mocks"
+	mexecutor "github.com/wings-software/portal/product/ci/engine/legacy/executor/mocks"
+	"github.com/wings-software/portal/product/ci/engine/legacy/state"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
-	"github.com/wings-software/portal/product/ci/engine/state"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )

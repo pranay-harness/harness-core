@@ -3,7 +3,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 go_library(
     name = "go_default_library",
     srcs = ["evaluator.go"],
-    importpath = "github.com/wings-software/portal/product/ci/engine/jexl",
+    importpath = "github.com/wings-software/portal/product/ci/engine/legacy/jexl",
     visibility = ["//visibility:public"],
     deps = [
         "//960-expression-service/src/main/proto/io/harness/expression/service:go_default_library",

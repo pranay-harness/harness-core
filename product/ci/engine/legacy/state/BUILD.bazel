@@ -3,6 +3,6 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 go_library(
     name = "go_default_library",
     srcs = ["execution_state.go"],
-    importpath = "github.com/wings-software/portal/product/ci/engine/state",
+    importpath = "github.com/wings-software/portal/product/ci/engine/legacy/state",
     visibility = ["//visibility:public"],
 )
