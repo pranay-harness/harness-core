@@ -2332,9 +2332,14 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private String getVersionWithPatch() {
     if (versionInfoManager.getVersionInfo().getPatch() != null) {
-      return versionInfoManager.getVersionInfo().getVersion() + "-" + versionInfoManager.getVersionInfo().getPatch();
+      String versionWithPatch =
+          versionInfoManager.getVersionInfo().getVersion() + "-" + versionInfoManager.getVersionInfo().getPatch();
+      log.info("heartbeat value versionwithpath {}", versionWithPatch);
+      return versionWithPatch;
     } else {
-      return versionInfoManager.getVersionInfo().getVersion();
+      String version = versionInfoManager.getVersionInfo().getVersion();
+      log.info("heartbeat value version {}", version);
+      return version;
     }
   }
 
