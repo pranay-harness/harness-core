@@ -1429,7 +1429,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             statusData.put(DELEGATE_SELF_DESTRUCT, true);
           } else {
             statusData.put(DELEGATE_HEARTBEAT, clock.millis());
-            statusData.put(DELEGATE_VERSION, getVersion());
+            statusData.put(DELEGATE_VERSION, getVersionWithPatch());
             statusData.put(DELEGATE_IS_NEW, false);
             statusData.put(DELEGATE_RESTART_NEEDED, doRestartDelegate());
             statusData.put(DELEGATE_UPGRADE_NEEDED, upgradeNeeded.get());
@@ -2328,6 +2328,14 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private String getVersion() {
     return versionInfoManager.getVersionInfo().getVersion();
+  }
+
+  private String getVersionWithPatch() {
+    if (versionInfoManager.getVersionInfo().getPatch() != null) {
+      return versionInfoManager.getVersionInfo().getVersion() + "-" + versionInfoManager.getVersionInfo().getPatch();
+    } else {
+      return return versionInfoManager.getVersionInfo().getVersion();
+    }
   }
 
   private void initiateSelfDestruct() {
