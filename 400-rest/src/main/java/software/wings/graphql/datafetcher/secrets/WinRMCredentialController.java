@@ -3,6 +3,7 @@ package software.wings.graphql.datafetcher.secrets;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme.KERBEROS;
 import static software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme.NTLM;
 import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
 
@@ -40,8 +41,20 @@ public class WinRMCredentialController {
   @Inject UsageScopeController usageScopeController;
 
   public QLWinRMCredential populateWinRMCredential(@NotNull SettingAttribute settingAttribute) {
-    QLAuthScheme authScheme = QLAuthScheme.NTLM;
+    QLAuthScheme authScheme;
     WinRmConnectionAttributes winRmConnectionAttributes = (WinRmConnectionAttributes) settingAttribute.getValue();
+    switch (winRmConnectionAttributes.getAuthenticationScheme()) {
+      case KERBEROS: {
+        authScheme = QLAuthScheme.KERBEROS;
+        break;
+      }
+      case NTLM: {
+        authScheme = QLAuthScheme.NTLM;
+        break;
+      }
+      default:
+        authScheme = QLAuthScheme.NTLM;
+    }
     return QLWinRMCredential.builder()
         .id(settingAttribute.getUuid())
         .name(settingAttribute.getName())
@@ -61,9 +74,22 @@ public class WinRMCredentialController {
       throw new InvalidRequestException("The username cannot be blank for the winRM credential input");
     }
 
-    if (isBlank(winRMCredentialInput.getPasswordSecretId())
-        || secretManager.getSecretById(accountId, winRMCredentialInput.getPasswordSecretId()) == null) {
-      throw new InvalidRequestException("The password secret id is invalid for the winRM credential input");
+    if (winRMCredentialInput.getAuthenticationScheme().equals(QLAuthScheme.KERBEROS)) {
+      if (isBlank(winRMCredentialInput.getQlKerberosWinRMAuthentication().getKeyTabFilePath())) {
+        if (isBlank(winRMCredentialInput.getQlKerberosWinRMAuthentication().getPasswordSecretId())
+            || secretManager.getSecretById(
+                   accountId, winRMCredentialInput.getQlKerberosWinRMAuthentication().getPasswordSecretId())
+                == null) {
+          throw new InvalidRequestException("The password secret id is invalid for the winRM credential input");
+        }
+      }
+    } else {
+      if (isBlank(winRMCredentialInput.getQlNtlmAuthentication().getPasswordSecretId())
+          || secretManager.getSecretById(
+                 accountId, winRMCredentialInput.getQlNtlmAuthentication().getPasswordSecretId())
+              == null) {
+        throw new InvalidRequestException("The password secret id is invalid for the winRM credential input");
+      }
     }
 
     if (isBlank(winRMCredentialInput.getName())) {
@@ -74,7 +100,19 @@ public class WinRMCredentialController {
   public SettingAttribute createSettingAttribute(
       @NotNull QLWinRMCredentialInput winRMCredentialInput, String accountId) {
     validateSettingAttribute(winRMCredentialInput, accountId);
-    WinRmConnectionAttributes.AuthenticationScheme authenticationScheme = NTLM;
+    WinRmConnectionAttributes.AuthenticationScheme authenticationScheme;
+    switch (winRMCredentialInput.getAuthenticationScheme()) {
+      case KERBEROS: {
+        authenticationScheme = KERBEROS;
+        break;
+      }
+      case NTLM: {
+        authenticationScheme = NTLM;
+        break;
+      }
+      default:
+        authenticationScheme = NTLM;
+    }
     boolean skipCertChecks = true;
     boolean useSSL = true;
     if (winRMCredentialInput.getSkipCertCheck() != null) {
@@ -169,6 +207,8 @@ public class WinRMCredentialController {
       existingWinRMCredential.setUsageRestrictions(
           usageScopeController.populateUsageRestrictions(usageScope, accountId));
     }
+
+    // do I need to update for auth type too???
 
     existingWinRMCredential.setValue(settingValue);
     return settingService.updateWithSettingFields(
