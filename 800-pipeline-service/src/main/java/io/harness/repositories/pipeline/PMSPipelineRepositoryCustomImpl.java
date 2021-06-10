@@ -63,7 +63,8 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
     Supplier<OutboxEvent> supplier = ()
         -> outboxService.save(new PipelineCreateEvent(pipelineToSave.getAccountIdentifier(),
             pipelineToSave.getOrgIdentifier(), pipelineToSave.getProjectIdentifier(), pipelineToSave));
-    return gitAwarePersistence.save(pipelineToSave, yamlDTO.toString(), ChangeType.ADD, PipelineEntity.class, supplier);
+    return gitAwarePersistence.save(
+        pipelineToSave, pipelineToSave.getYaml(), ChangeType.ADD, PipelineEntity.class, supplier);
   }
 
   @Override
@@ -95,7 +96,7 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
               new PipelineUpdateEvent(pipelineToUpdate.getAccountIdentifier(), pipelineToUpdate.getOrgIdentifier(),
                   pipelineToUpdate.getProjectIdentifier(), pipelineToUpdate, oldPipeline));
       return gitAwarePersistence.save(
-          pipelineToUpdate, yamlDTO.toString(), ChangeType.MODIFY, PipelineEntity.class, supplier);
+          pipelineToUpdate, pipelineToUpdate.getYaml(), ChangeType.MODIFY, PipelineEntity.class, supplier);
     }
     throw new InvalidRequestException("No such pipeline exist", WingsException.USER);
   }
@@ -128,7 +129,7 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
           -> outboxService.save(new PipelineDeleteEvent(pipelineToUpdate.getAccountIdentifier(),
               pipelineToUpdate.getOrgIdentifier(), pipelineToUpdate.getProjectIdentifier(), pipelineToUpdate));
       return gitAwarePersistence.save(
-          pipelineToUpdate, yamlDTO.toString(), ChangeType.DELETE, PipelineEntity.class, supplier);
+          pipelineToUpdate, pipelineToUpdate.getYaml(), ChangeType.DELETE, PipelineEntity.class, supplier);
     }
     throw new InvalidRequestException("No such pipeline exists");
   }

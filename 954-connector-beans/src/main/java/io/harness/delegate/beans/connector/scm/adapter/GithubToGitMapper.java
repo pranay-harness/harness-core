@@ -24,6 +24,7 @@ public class GithubToGitMapper {
     final GitAuthType authType = githubConnectorDTO.getAuthentication().getAuthType();
     final GitConnectionType connectionType = githubConnectorDTO.getConnectionType();
     final String url = githubConnectorDTO.getUrl();
+    final String validationRepo = githubConnectorDTO.getValidationRepo();
     if (authType == GitAuthType.HTTP) {
       final GithubHttpCredentialsDTO credentials =
           (GithubHttpCredentialsDTO) githubConnectorDTO.getAuthentication().getCredentials();
@@ -42,15 +43,15 @@ public class GithubToGitMapper {
         usernameRef = githubUsernameTokenDTO.getUsernameRef();
         passwordRef = githubUsernameTokenDTO.getTokenRef();
       }
-      return GitConfigCreater.getGitConfigForHttp(
-          connectionType, url, username, usernameRef, passwordRef, githubConnectorDTO.getDelegateSelectors());
+      return GitConfigCreater.getGitConfigForHttp(connectionType, url, validationRepo, username, usernameRef,
+          passwordRef, githubConnectorDTO.getDelegateSelectors());
 
     } else if (authType == GitAuthType.SSH) {
       final GithubSshCredentialsDTO credentials =
           (GithubSshCredentialsDTO) githubConnectorDTO.getAuthentication().getCredentials();
       final SecretRefData sshKeyRef = credentials.getSshKeyRef();
       return GitConfigCreater.getGitConfigForSsh(
-          connectionType, url, sshKeyRef, githubConnectorDTO.getDelegateSelectors());
+          connectionType, url, validationRepo, sshKeyRef, githubConnectorDTO.getDelegateSelectors());
     }
     throw new InvalidRequestException("Unknown auth type: " + authType);
   }

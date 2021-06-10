@@ -24,6 +24,7 @@ public class GitEntityToDTO implements ConnectorEntityToDTOMapper<GitConfigDTO, 
         .gitAuthType(gitConnector.getAuthType())
         .gitConnectionType(gitConnector.getConnectionType())
         .url(gitConnector.getUrl())
+        .validationRepo(gitConnector.getValidationRepo())
         .branchName(gitConnector.getBranchName())
         .gitAuth(gitAuth)
         .gitSyncConfig(gitSyncConfig)

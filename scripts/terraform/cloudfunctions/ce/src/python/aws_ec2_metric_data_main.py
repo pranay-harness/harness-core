@@ -43,14 +43,16 @@ def main(event, context):
 
     create_dataset(client, jsonData["datasetName"])
     dataset = client.dataset(jsonData["datasetName"])
-
+    # Make sure the table name in util also matches
     awsEc2InventoryMetricTableRef = dataset.table("awsEc2InventoryMetric")
     awsEc2InventoryMetricTableName = TABLE_NAME_FORMAT % (
         jsonData["projectName"], jsonData["accountIdBQ"], "awsEc2InventoryMetric")
 
     if not if_tbl_exists(client, awsEc2InventoryMetricTableRef):
         print_("%s table does not exists, creating table..." % awsEc2InventoryMetricTableRef)
-        createTable(client, awsEc2InventoryMetricTableName)
+        if not createTable(client, awsEc2InventoryMetricTableName):
+            # No need to fetch CPU data at this point
+            return
 
     ec2_data_map, added_at = get_ec2_cpu_data(jsonData)
     print_("Total instances for which CPU data was fetched: %s" % len(ec2_data_map))

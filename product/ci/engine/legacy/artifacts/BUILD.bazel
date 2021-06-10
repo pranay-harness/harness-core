@@ -6,7 +6,7 @@ go_library(
         "publish.go",
         "validate.go",
     ],
-    importpath = "github.com/wings-software/portal/product/ci/engine/artifacts",
+    importpath = "github.com/wings-software/portal/product/ci/engine/legacy/artifacts",
     visibility = ["//visibility:public"],
     deps = [
         "//commons/go/lib/awsutils:go_default_library",

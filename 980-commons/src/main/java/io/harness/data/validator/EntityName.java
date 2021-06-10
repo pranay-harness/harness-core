@@ -21,4 +21,5 @@ public @interface EntityName {
   Class<?>[] groups() default {};
   Class<? extends Payload>[] payload() default {};
   String charSetString() default "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_ ";
+  String displayName() default "";
 }

@@ -55,6 +55,7 @@ public class GithubDTOToEntityTest extends CategoryTest {
     final String appId = "appId";
     final String insId = "insId";
     final String privateKeyRef = "privateKeyRef";
+    final String validationRepo = "validationRepo";
 
     final GithubAuthenticationDTO githubAuthenticationDTO =
         GithubAuthenticationDTO.builder()
@@ -79,13 +80,15 @@ public class GithubDTOToEntityTest extends CategoryTest {
             .build();
     final GithubConnectorDTO githubConnectorDTO = GithubConnectorDTO.builder()
                                                       .url(url)
-                                                      .connectionType(GitConnectionType.REPO)
+                                                      .validationRepo(validationRepo)
+                                                      .connectionType(GitConnectionType.ACCOUNT)
                                                       .authentication(githubAuthenticationDTO)
                                                       .apiAccess(githubApiAccessDTO)
                                                       .build();
     final GithubConnector githubConnector = githubDTOToEntity.toConnectorEntity(githubConnectorDTO);
     assertThat(githubConnector).isNotNull();
     assertThat(githubConnector.getUrl()).isEqualTo(url);
+    assertThat(githubConnector.getValidationRepo()).isEqualTo(validationRepo);
     assertThat(githubConnector.getApiAccessType()).isEqualTo(GITHUB_APP);
     assertThat(githubConnector.getAuthType()).isEqualTo(HTTP);
     assertThat(githubConnector.getAuthenticationDetails())
