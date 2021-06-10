@@ -149,7 +149,7 @@ var Harness = function() {
                 {$unwind: {path:"$connection_docs", preserveNullAndEmptyArrays: true}},
                 {$group:{
                     _id:"$accountId",
-                    delegates: {$sum: NumberInt(1)},
+                    delegates: { $addToSet: "$_id" },
                     distinctConnections: { $addToSet: "$connection_docs.delegateId" }
                 }},
                 {$lookup:{
@@ -163,8 +163,9 @@ var Harness = function() {
                     _id: 0,
                     accountId: "$_id",
                     accountName: "$account_docs.accountName",
-                    delegates: 1,
-                    connectedDelegates: {$size: "$distinctConnections"}
+                    delegates: {$size: "$delegates"},
+                    connectedDelegates: {$size: "$distinctConnections"},
+                    disconnected: {$subtract: [{$size: "$delegates"}, {$size: "$distinctConnections"}] }
                 }},
                 {$sort:{connectedDelegates:-1, accountName:1}}
             ]);
