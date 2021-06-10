@@ -470,7 +470,7 @@ permissions:
   - identifier: core_dashboards_view
     name: View Dashboards
     status: ACTIVE
-    includeInAllRoles: true
+    includeInAllRoles: false
     allowedScopeLevels:
       - account
       - organization
