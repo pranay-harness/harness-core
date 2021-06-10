@@ -332,8 +332,8 @@ public class NGTriggerElementMapper {
       WebhookDetailsBuilder webhookDetails = WebhookDetails.builder();
 
       webhookDetails.webhookSourceRepo(ngTriggerEntity.getMetadata().getWebhook().getType()).build();
-
       if (ngTriggerEntity.getMetadata().getWebhook().getType().equalsIgnoreCase("CUSTOM")) {
+        webhookDetails.webhookSourceRepo(CUSTOM.getValue()).build();
         CustomMetadata customMedata = ngTriggerEntity.getMetadata().getWebhook().getCustom();
         if (customMedata != null
             && "inline".equals(ngTriggerEntity.getMetadata().getWebhook().getCustom().getCustomAuthTokenType())) {

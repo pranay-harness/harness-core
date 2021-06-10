@@ -36,6 +36,7 @@ import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.TriggerType;
 import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.contracts.triggers.ParsedPayload;
+import io.harness.pms.contracts.triggers.SourceType;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.contracts.triggers.Type;
 import io.harness.pms.merger.helpers.MergeHelper;
@@ -180,7 +181,7 @@ public class TriggerExecutionHelper {
   @VisibleForTesting
   TriggerType findTriggerType(TriggerPayload triggerPayload) {
     TriggerType triggerType = WEBHOOK;
-    if (triggerPayload.getType() == CUSTOM) {
+    if (triggerPayload.getSourceType() == SourceType.CUSTOM_REPO) {
       triggerType = WEBHOOK_CUSTOM;
     } else if (triggerPayload.getType() == Type.SCHEDULED) {
       triggerType = TriggerType.SCHEDULER_CRON;
