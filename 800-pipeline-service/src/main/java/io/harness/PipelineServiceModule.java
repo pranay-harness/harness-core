@@ -11,6 +11,7 @@ import static io.harness.lock.DistributedLockImplementation.MONGO;
 import io.harness.account.AccountClientModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
+import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
@@ -39,6 +40,10 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.event.MessageListener;
 import io.harness.organization.OrganizationClientModule;
+import io.harness.outbox.OutboxPollConfiguration;
+import io.harness.outbox.OutboxSDKConstants;
+import io.harness.outbox.TransactionOutboxModule;
+import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.packages.HarnessPackages;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
@@ -55,6 +60,7 @@ import io.harness.pms.expressions.PMSExpressionEvaluatorProvider;
 import io.harness.pms.jira.JiraStepHelperServiceImpl;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetServiceImpl;
+import io.harness.pms.outbox.PipelineOutboxEventHandler;
 import io.harness.pms.pipeline.mappers.PipelineFilterPropertiesMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
@@ -205,7 +211,11 @@ public class PipelineServiceModule extends AbstractModule {
     install(new EntitySetupUsageClientModule(this.configuration.getNgManagerServiceHttpClientConfig(),
         this.configuration.getManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(new LogStreamingModule(configuration.getLogStreamingServiceConfig().getBaseUrl()));
+    install(new AuditClientModule(this.configuration.getAuditClientConfig(),
+        this.configuration.getManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
+    install(new TransactionOutboxModule());
 
+    bind(OutboxEventHandler.class).to(PipelineOutboxEventHandler.class);
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
     bind(PreflightService.class).to(PreflightServiceImpl.class);
@@ -393,8 +403,22 @@ public class PipelineServiceModule extends AbstractModule {
 
   @Provides
   @Singleton
+  public ObjectMapper getYamlSchemaObjectMapperWithoutNamed() {
+    return Jackson.newObjectMapper();
+  }
+
+  @Provides
+  @Singleton
   public LogStreamingServiceConfiguration getLogStreamingServiceConfiguration() {
     return configuration.getLogStreamingServiceConfig();
+  }
+
+  @Provides
+  @Singleton
+  public OutboxPollConfiguration getOutboxPollConfiguration() {
+    OutboxPollConfiguration outboxPollConfiguration = OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
+    outboxPollConfiguration.setLockId(PIPELINE_SERVICE.getServiceId());
+    return outboxPollConfiguration;
   }
 
   @Provides
