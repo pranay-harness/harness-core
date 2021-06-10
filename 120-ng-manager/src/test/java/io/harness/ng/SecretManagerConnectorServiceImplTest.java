@@ -7,6 +7,7 @@ import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -139,7 +140,7 @@ public class SecretManagerConnectorServiceImplTest extends CategoryTest {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testDeleteSecretManager() {
-    when(ngSecretManagerService.deleteSecretManager(any(), any(), any(), any())).thenReturn(true);
+    when(ngSecretManagerService.getSecretManager(any(), any(), any(), any(), eq(true))).thenReturn(null);
     when(defaultConnectorService.delete(any(), any(), any(), any())).thenReturn(true);
     boolean success = secretManagerConnectorService.delete(ACCOUNT, null, null, "identifier");
     assertThat(success).isEqualTo(true);
