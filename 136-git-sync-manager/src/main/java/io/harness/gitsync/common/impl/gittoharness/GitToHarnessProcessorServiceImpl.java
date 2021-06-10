@@ -32,6 +32,7 @@ import io.harness.gitsync.helpers.ProcessingResponseMapper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.StringValue;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,7 +52,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
   @Override
   public List<GitToHarnessProcessingResponse> processFiles(String accountId,
       List<GitToHarnessFileProcessingRequest> fileContentsList, String branchName, YamlGitConfigDTO yamlGitConfigDTO,
-      String gitToHarnessProgressRecordId) {
+      String commitId, String gitToHarnessProgressRecordId) {
     List<ChangeSet> changeSets = GitChangeSetMapper.toChangeSetList(fileContentsList, accountId);
     Map<EntityType, List<ChangeSet>> mapOfEntityTypeAndContent = createMapOfEntityTypeAndFileContent(changeSets);
     Map<Microservice, List<ChangeSet>> groupedFilesByMicroservices =
@@ -79,6 +80,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
                                                                   .setChangeSets(changeSetForThisMicroservice)
                                                                   .setGitToHarnessBranchInfo(gitToHarnessInfo)
                                                                   .setAccountId(accountId)
+                                                                  .setCommitId(StringValue.of(commitId))
                                                                   .build();
       log.info("Sending to microservice {}", entry.getKey());
       ProcessingResponse processingResponse = gitToHarnessServiceBlockingStub.process(gitToHarnessProcessRequest);

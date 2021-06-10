@@ -2,6 +2,7 @@ package io.harness.gitsync.common.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus.TO_DO;
 
 import static java.util.stream.Collectors.toList;
@@ -58,8 +59,9 @@ public class GitBranchSyncServiceImpl implements GitBranchSyncService {
             .collect(toList());
     gitToHarnessProgressService.updateFilesInProgressRecord(
         gitToHarnessProgressRecord.getUuid(), gitToHarnessFilesToProcess);
-    gitToHarnessProcessorService.processFiles(
-        accountId, gitToHarnessFilesToProcess, branchName, yamlGitConfig, gitToHarnessProgressRecord.getUuid());
+    // todo: get commit id.
+    gitToHarnessProcessorService.processFiles(accountId, gitToHarnessFilesToProcess, branchName, yamlGitConfig,
+        generateUuid(), gitToHarnessProgressRecord.getUuid());
   }
 
   private GitToHarnessProgressDTO saveGitToHarnessStatusRecord(
