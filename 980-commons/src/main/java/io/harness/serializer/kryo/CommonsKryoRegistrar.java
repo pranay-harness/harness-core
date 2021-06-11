@@ -6,6 +6,8 @@ import io.harness.beans.KeyValuePair;
 import io.harness.encryption.Scope;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ArtifactoryServerException;
+import io.harness.exception.AuthenticationException;
+import io.harness.exception.AuthorizationException;
 import io.harness.exception.ConnectException;
 import io.harness.exception.ContextException;
 import io.harness.exception.DelegateErrorHandlerException;
@@ -90,5 +92,7 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(UnresolvedExpressionsException.class, 980008);
     kryo.register(JiraClientException.class, 980009);
     kryo.register(InvalidYamlException.class, 980010);
+    kryo.register(AuthenticationException.class, 980011);
+    kryo.register(AuthorizationException.class, 980012);
   }
 }
