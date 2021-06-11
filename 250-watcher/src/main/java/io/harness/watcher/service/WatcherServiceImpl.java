@@ -458,6 +458,7 @@ public class WatcherServiceImpl implements WatcherService {
       heartbeatData.put(WATCHER_HEARTBEAT, clock.millis());
       heartbeatData.put(WATCHER_PROCESS, getProcessId());
       heartbeatData.put(WATCHER_VERSION, getVersion());
+      log.info("Updating watcher data : ", WATCHER_DATA);
       messageService.putAllData(WATCHER_DATA, heartbeatData);
     } catch (Exception e) {
       if (e.getMessage().contains(NO_SPACE_LEFT_ON_DEVICE_ERROR)) {
