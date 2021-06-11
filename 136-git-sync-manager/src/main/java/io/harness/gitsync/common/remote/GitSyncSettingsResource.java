@@ -1,9 +1,14 @@
 package io.harness.gitsync.common.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.ng.core.rbac.ProjectPermissions.EDIT_PROJECT_PERMISSION;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.connector.accesscontrol.ResourceTypes;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.common.dtos.GitSyncSettingsDTO;
 import io.harness.gitsync.common.service.GitSyncSettingsService;
@@ -31,10 +36,17 @@ import org.hibernate.validator.constraints.NotEmpty;
 @OwnedBy(DX)
 public class GitSyncSettingsResource {
   private final GitSyncSettingsService gitSyncSettingsService;
+  private final AccessControlClient accessControlClient;
 
   @POST
   @ApiOperation(value = "Create a Git Sync Setting", nickname = "postGitSyncSetting")
   public ResponseDTO<GitSyncSettingsDTO> create(@NotNull GitSyncSettingsDTO gitSyncSettings) {
+    // todo(abhinav): when git sync comes at other level see for new permission
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(gitSyncSettings.getAccountIdentifier(), gitSyncSettings.getOrganizationIdentifier(),
+            gitSyncSettings.getProjectIdentifier()),
+        Resource.of(ResourceTypes.PROJECT, gitSyncSettings.getProjectIdentifier()), EDIT_PROJECT_PERMISSION);
+
     return ResponseDTO.newResponse(gitSyncSettingsService.save(gitSyncSettings));
   }
 
