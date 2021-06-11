@@ -172,7 +172,7 @@ public class NotificationServiceModule extends AbstractModule {
     install(DelegateServiceDriverModule.getInstance(false));
     install(new DelegateServiceDriverGrpcClientModule(appConfig.getPlatformSecrets().getNgManagerServiceSecret(),
         this.appConfig.getNotificationServiceConfig().getDelegateServiceGrpcConfig().getTarget(),
-        this.appConfig.getNotificationServiceConfig().getDelegateServiceGrpcConfig().getAuthority()));
+        this.appConfig.getNotificationServiceConfig().getDelegateServiceGrpcConfig().getAuthority(), true));
 
     install(VersionModule.getInstance());
     install(PrimaryVersionManagerModule.getInstance());

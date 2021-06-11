@@ -16,9 +16,6 @@ import io.harness.annotations.retry.RetryOnException;
 import io.harness.annotations.retry.RetryOnExceptionInterceptor;
 import io.harness.artifacts.gcr.service.GcrApiService;
 import io.harness.artifacts.gcr.service.GcrApiServiceImpl;
-import io.harness.callback.DelegateCallback;
-import io.harness.callback.DelegateCallbackToken;
-import io.harness.callback.MongoDatabase;
 import io.harness.ccm.anomaly.service.impl.AnomalyServiceImpl;
 import io.harness.ccm.anomaly.service.itfc.AnomalyService;
 import io.harness.ccm.billing.GcpBillingService;
@@ -114,7 +111,6 @@ import io.harness.governance.pipeline.service.evaluators.OnWorkflow;
 import io.harness.governance.pipeline.service.evaluators.PipelineStatusEvaluator;
 import io.harness.governance.pipeline.service.evaluators.WorkflowStatusEvaluator;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
-import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.invites.NgInviteClientModule;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.KubernetesContainerService;
@@ -719,7 +715,6 @@ import software.wings.utils.CdnStorageUrlGenerator;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
 
-import com.google.common.base.Suppliers;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -743,7 +738,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -767,27 +761,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
    */
   public WingsModule(MainConfiguration configuration) {
     this.configuration = configuration;
-  }
-
-  @Provides
-  @Singleton
-  Supplier<DelegateCallbackToken> getDelegateCallbackTokenSupplier(
-      DelegateServiceGrpcClient delegateServiceGrpcClient) {
-    return Suppliers.memoize(() -> getDelegateCallbackToken(delegateServiceGrpcClient, configuration));
-  }
-
-  private DelegateCallbackToken getDelegateCallbackToken(
-      DelegateServiceGrpcClient delegateServiceClient, MainConfiguration appConfig) {
-    log.info("Generating Delegate callback token");
-    final DelegateCallbackToken delegateCallbackToken = delegateServiceClient.registerCallback(
-        DelegateCallback.newBuilder()
-            .setMongoDatabase(MongoDatabase.newBuilder()
-                                  .setCollectionNamePrefix("ngManager")
-                                  .setConnection(appConfig.getMongoConnectionFactory().getUri())
-                                  .build())
-            .build());
-    log.info("delegate callback token generated =[{}]", delegateCallbackToken.getToken());
-    return delegateCallbackToken;
   }
 
   @Provides
@@ -856,7 +829,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(DelegateServiceDriverModule.getInstance(false));
     install(new DelegateServiceDriverGrpcClientModule(configuration.getPortal().getJwtNextGenManagerSecret(),
         configuration.getGrpcDelegateServiceClientConfig().getTarget(),
-        configuration.getGrpcDelegateServiceClientConfig().getAuthority()));
+        configuration.getGrpcDelegateServiceClientConfig().getAuthority(), false));
     install(PersistentLockModule.getInstance());
     install(AlertModule.getInstance());
 
