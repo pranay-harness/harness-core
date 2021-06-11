@@ -925,7 +925,7 @@ public class WatcherServiceImpl implements WatcherService {
   public List<String> findExpectedDelegateVersions() {
     try {
       if (multiVersion) {
-        RestResponse<DelegateConfiguration> restResponse = callInterruptible(timeLimiter, ofSeconds(15),
+        RestResponse<DelegateConfiguration> restResponse = callInterruptible(timeLimiter, ofSeconds(30),
             () -> SafeHttpCall.execute(managerClient.getDelegateConfiguration(watcherConfiguration.getAccountId())));
 
         if (restResponse == null) {
@@ -938,7 +938,7 @@ public class WatcherServiceImpl implements WatcherService {
           selfDestruct();
         }
 
-        return config.getDelegateVersions();
+        return config != null ? config.getDelegateVersions() : null;
       } else {
         String delegateMetadata =
             Http.getResponseStringFromUrl(watcherConfiguration.getDelegateCheckLocation(), 10, 10);
